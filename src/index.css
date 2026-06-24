@@ -1,0 +1,130 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply antialiased text-ink-navy bg-canvas-white font-sans;
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+  
+  .glass-panel-cobalt {
+    background: rgba(239, 246, 255, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .micro-border {
+    border: 1px solid rgba(226, 232, 240, 0.8);
+  }
+
+  .micro-border-cobalt {
+    border: 1px solid rgba(191, 219, 254, 0.5);
+  }
+}
+
+/* ─── Scrollbar ──────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+
+/* ─── Shadows ────────────────────────────────────────────── */
+.canva-shadow        { box-shadow: 0 4px 24px rgba(15, 23, 42, 0.04), 0 1px 4px rgba(0,0,0,0.02); }
+.canva-shadow-active { box-shadow: 0 8px 32px rgba(29, 78, 216, 0.14), 0 2px 8px rgba(29, 78, 216, 0.06); }
+.glow-cobalt         { box-shadow: 0 0 0 0 rgba(29, 78, 216, 0); transition: box-shadow 0.3s ease; }
+.glow-cobalt:hover   { box-shadow: 0 0 24px rgba(29, 78, 216, 0.18), 0 4px 16px rgba(29, 78, 216, 0.1); }
+
+/* ─── Animated Hero Gradient ─────────────────────────────── */
+@keyframes gradient-drift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.hero-gradient {
+  background: linear-gradient(135deg, #EFF6FF 0%, #F8FAFC 30%, #DBEAFE 60%, #F0F9FF 100%);
+  background-size: 300% 300%;
+  animation: gradient-drift 8s ease infinite;
+}
+
+/* ─── Floating Orbs ──────────────────────────────────────── */
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  50%       { transform: translateY(-18px) scale(1.04); }
+}
+@keyframes float-medium {
+  0%, 100% { transform: translateY(0px) translateX(0px); }
+  33%       { transform: translateY(-12px) translateX(8px); }
+  66%       { transform: translateY(6px) translateX(-6px); }
+}
+@keyframes pulse-ring {
+  0%   { transform: scale(1);    opacity: 0.6; }
+  50%  { transform: scale(1.15); opacity: 0.25; }
+  100% { transform: scale(1);    opacity: 0.6; }
+}
+
+.orb-float-slow   { animation: float-slow   6s ease-in-out infinite; }
+.orb-float-medium { animation: float-medium 9s ease-in-out infinite; }
+.pulse-ring       { animation: pulse-ring   3s ease-in-out infinite; }
+
+/* ─── Card Shimmer on Hover ──────────────────────────────── */
+@keyframes shimmer-sweep {
+  0%   { left: -100%; }
+  100% { left: 150%;  }
+}
+.card-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.card-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 60%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+  transition: none;
+  pointer-events: none;
+}
+.card-shimmer:hover::after {
+  animation: shimmer-sweep 0.55s ease forwards;
+}
+
+/* ─── Brand Tab Active Pill ──────────────────────────────── */
+@keyframes pill-slide-in {
+  from { opacity: 0; transform: scaleX(0.5); }
+  to   { opacity: 1; transform: scaleX(1);   }
+}
+.brand-tab-active-pill {
+  animation: pill-slide-in 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* ─── Count-Up Number Highlight ──────────────────────────── */
+@keyframes number-pop {
+  0%   { transform: scale(0.85); opacity: 0; }
+  70%  { transform: scale(1.08); }
+  100% { transform: scale(1);    opacity: 1; }
+}
+.number-pop { animation: number-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+
+/* ─── Step Progress Bar ──────────────────────────────────── */
+@keyframes progress-fill {
+  from { width: 0%; }
+  to   { width: var(--progress-width); }
+}
+.progress-fill { animation: progress-fill 0.5s ease-out forwards; }
+
+/* ─── Cobalt Pulse on CTA ────────────────────────────────── */
+@keyframes cta-pulse {
+  0%   { box-shadow: 0 0 0 0   rgba(29, 78, 216, 0.4); }
+  70%  { box-shadow: 0 0 0 10px rgba(29, 78, 216, 0);   }
+  100% { box-shadow: 0 0 0 0   rgba(29, 78, 216, 0);   }
+}
+.cta-pulse { animation: cta-pulse 2.2s ease-out infinite; }
