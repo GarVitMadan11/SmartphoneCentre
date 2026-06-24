@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { BRANDS, MODELS, Model, Variant, generateVariantsForModel } from '../data/mockDatabase';
 import { Search, ChevronRight, Smartphone, Calendar, Layers, ShieldCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -12,6 +12,18 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({ onVariantSelecte
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedModel, setSelectedModel] = useState<Model | null>(null);
   const [tempVariant, setTempVariant] = useState<Variant | null>(null);
+  const variantSelectorRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (selectedModel && variantSelectorRef.current) {
+      const isMobile = window.innerWidth < 1024;
+      if (isMobile) {
+        setTimeout(() => {
+          variantSelectorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 150);
+      }
+    }
+  }, [selectedModel]);
 
   // Filter models based on brand and search query
   const filteredModels = useMemo(() => {
@@ -172,6 +184,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({ onVariantSelecte
         <AnimatePresence>
           {selectedModel && (
             <motion.div
+              ref={variantSelectorRef}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
