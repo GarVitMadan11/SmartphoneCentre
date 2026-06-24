@@ -53,15 +53,13 @@ export function calculateValuation(
 
   const totalDeductedSum = deductions.reduce((sum, d) => sum + d.totalDeducted, 0);
   
-  // Calculate final price using the formula, clamping to a minimum buyback price (e.g., ₹1,000 for parts value)
-  // or ₹0 if total deductions exceed the base price.
+  // Calculate final price using the formula, clamping to a minimum baseline recycle offer
+  // (at least 5% of base price, minimum ₹500) for a device that still turns on.
   let finalPrice = basePrice - totalDeductedSum;
+  const baselineRecycleOffer = Math.max(500, Math.round(basePrice * 0.05));
   
-  if (finalPrice < 0) {
-    finalPrice = 0;
-  } else if (finalPrice < Math.max(1000, basePrice * 0.05)) {
-    // If it's still turning on but has many issues, give at least a 5% baseline recycle offer (min ₹500)
-    finalPrice = Math.max(500, Math.round(basePrice * 0.05));
+  if (finalPrice < baselineRecycleOffer) {
+    finalPrice = baselineRecycleOffer;
   }
 
   return {

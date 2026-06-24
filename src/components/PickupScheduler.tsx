@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   Calendar, Clock, User, MapPin, CreditCard, 
   CheckCircle, ArrowLeft, ShieldAlert, Award, Star
@@ -53,8 +53,10 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
     '06:00 PM - 09:00 PM (Night)'
   ];
 
-  // Assign a random agent for the pickup
-  const assignedAgent = AGENTS[Math.floor(Math.random() * AGENTS.length)];
+  // Assign a random agent for the pickup (memoized to prevent flickering on input changes)
+  const assignedAgent = useMemo(() => {
+    return AGENTS[Math.floor(Math.random() * AGENTS.length)];
+  }, []);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-IN', {

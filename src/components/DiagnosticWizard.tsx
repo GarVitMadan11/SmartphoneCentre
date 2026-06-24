@@ -258,7 +258,14 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                     return (
                       <div
                         key={defect.id}
-                        onClick={() => handleToggleDefect(defect, defect.id === 'defect-screen-cracked' ? 'defect-screen-scratches' : undefined)}
+                        onClick={() => handleToggleDefect(
+                          defect, 
+                          defect.id === 'defect-screen-cracked' 
+                            ? 'defect-screen-scratches' 
+                            : defect.id === 'defect-screen-scratches' 
+                            ? 'defect-screen-cracked' 
+                            : undefined
+                        )}
                         className={`p-4 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${
                           isSelected
                             ? 'border-cobalt bg-cobalt-light/30 shadow-sm'
@@ -327,7 +334,14 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                     return (
                       <div
                         key={defect.id}
-                        onClick={() => handleToggleDefect(defect, defect.id === 'defect-body-dented' ? 'defect-body-scuffs' : undefined)}
+                        onClick={() => handleToggleDefect(
+                          defect, 
+                          defect.id === 'defect-body-dented' 
+                            ? 'defect-body-scuffs' 
+                            : defect.id === 'defect-body-scuffs' 
+                            ? 'defect-body-dented' 
+                            : undefined
+                        )}
                         className={`p-4 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${
                           isSelected
                             ? 'border-cobalt bg-cobalt-light/30 shadow-sm'
