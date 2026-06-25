@@ -11,32 +11,32 @@ export default {
       },
       colors: {
         canvas: {
-          white: '#FAFAFA',
-          pure: '#FFFFFF',
+          white: '#09090B', // Obsidian base
+          pure: '#121214',  // Card background
         },
         ink: {
-          navy: '#0F172A',
-          slate: '#475569',
-          muted: '#64748B',
+          navy: '#F4F4F5',  // Zinc 100
+          slate: '#A1A1AA', // Zinc 400
+          muted: '#71717A', // Zinc 500
         },
         cobalt: {
-          DEFAULT: '#1D4ED8',
-          hover: '#1E40AF',
-          light: '#EFF6FF',
-          border: '#BFDBFE',
+          DEFAULT: '#3B82F6', // Vivid blue accent
+          hover: '#60A5FA',
+          light: 'rgba(59, 130, 246, 0.12)',
+          border: 'rgba(59, 130, 246, 0.3)',
         },
         ice: {
-          gray: '#F8FAFC',
-          border: '#E2E8F0',
+          gray: '#1C1C1F',   // Zinc 800-like background
+          border: 'rgba(255, 255, 255, 0.06)', // Low-opacity white line
         }
       },
       fontFamily: {
         sans: ['Outfit', 'Inter', 'sans-serif'],
       },
       boxShadow: {
-        premium: '0 4px 30px rgba(15, 23, 42, 0.03)',
-        tactile: '0 2px 8px rgba(29, 78, 216, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02)',
-        card: '0 10px 40px -10px rgba(15, 23, 42, 0.06)',
+        premium: 'none',
+        tactile: 'none',
+        card: 'none',
       }
     },
   },

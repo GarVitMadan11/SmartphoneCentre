@@ -4,10 +4,9 @@ import { DeviceSelector } from './components/DeviceSelector';
 import { DiagnosticWizard } from './components/DiagnosticWizard';
 import { PickupScheduler } from './components/PickupScheduler';
 import { 
-  Smartphone, Award, ShieldCheck, Zap, Info, 
-  RefreshCw, TrendingUp, HelpCircle, FileText, Menu, X
+  Award, ShieldCheck, Zap, 
+  RefreshCw, TrendingUp, FileText, Menu, X
 } from 'lucide-react';
-import premiumBanner from './assets/premium_banner.png';
 
 export default function App() {
   const [activeStage, setActiveStage] = useState<'select' | 'diagnose' | 'schedule'>('select');
@@ -39,33 +38,33 @@ export default function App() {
     <div className="min-h-screen bg-canvas-white text-ink-navy flex flex-col font-sans">
 
       {/* ── Header ────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-40 bg-canvas-pure/95 backdrop-blur-md border-b border-ice-border shadow-premium">
+      <header className="sticky top-0 z-40 bg-canvas-pure/90 backdrop-blur-md border-b border-ice-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
 
           {/* Logo */}
           <div className="flex items-center gap-2.5 cursor-pointer flex-shrink-0" onClick={handleReset}>
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-cobalt flex items-center justify-center text-white shadow-tactile font-black text-lg sm:text-xl">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-sm bg-cobalt flex items-center justify-center text-white font-black text-base sm:text-lg">
               S
             </div>
-            <div>
-              <h1 className="font-extrabold text-base sm:text-lg tracking-tight text-ink-navy leading-none">SmartphoneCentre</h1>
-              <span className="text-[9px] sm:text-[10px] uppercase font-bold text-cobalt tracking-widest block mt-0.5">Disruptive Trade-In</span>
+            <div className="text-left">
+              <h1 className="font-light text-base sm:text-lg tracking-tight text-ink-navy leading-none">SmartphoneCentre</h1>
+              <span className="text-[8px] sm:text-[9px] font-mono tracking-[0.15em] text-zinc-500 uppercase block mt-0.5">Disruptive Trade-In</span>
             </div>
           </div>
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-4 lg:gap-6 text-sm font-semibold text-ink-slate">
-            <span className="hover:text-cobalt cursor-pointer transition-colors flex items-center gap-1">
+            <span className="hover:text-cobalt cursor-pointer transition-colors flex items-center gap-1 font-light">
               <ShieldCheck className="w-4 h-4 text-cobalt" />
               <span className="hidden lg:inline">Quality Stamp</span>
             </span>
-            <span className="hover:text-cobalt cursor-pointer transition-colors flex items-center gap-1">
+            <span className="hover:text-cobalt cursor-pointer transition-colors flex items-center gap-1 font-light">
               <RefreshCw className="w-4 h-4 text-cobalt" />
               <span className="hidden lg:inline">How it Works</span>
             </span>
             <a 
               href="file:///f:/SmartphoneCentre/prd_system_design.md" 
-              className="px-3 py-2 rounded-lg bg-cobalt-light text-cobalt border border-cobalt-border hover:bg-cobalt hover:text-white transition-all flex items-center gap-1 text-xs"
+              className="px-3 py-2 rounded-sm bg-cobalt-light text-cobalt border border-white/[0.06] hover:bg-cobalt hover:text-white transition-all flex items-center gap-1 text-xs font-mono"
             >
               <FileText className="w-3.5 h-3.5" />
               <span className="hidden lg:inline">System Spec</span>
@@ -74,7 +73,7 @@ export default function App() {
 
           {/* Mobile hamburger */}
           <button
-            className="md:hidden p-2 rounded-lg border border-ice-border text-ink-slate hover:border-cobalt hover:text-cobalt transition-all"
+            className="md:hidden p-2 rounded-sm border border-ice-border text-ink-slate hover:border-cobalt hover:text-cobalt transition-all"
             onClick={() => setMobileMenuOpen(o => !o)}
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -83,16 +82,16 @@ export default function App() {
 
         {/* Mobile drop-down menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-ice-border bg-canvas-pure px-4 py-3 space-y-2">
-            <button className="w-full flex items-center gap-2 text-sm font-semibold text-ink-slate py-2 px-3 rounded-lg hover:bg-ice-gray transition-colors">
+          <div className="md:hidden border-t border-ice-border bg-canvas-pure px-4 py-3 space-y-2 text-left">
+            <button className="w-full flex items-center gap-2 text-sm font-semibold text-ink-slate py-2 px-3 rounded-sm hover:bg-ice-gray transition-colors">
               <ShieldCheck className="w-4 h-4 text-cobalt" /> Quality Stamp
             </button>
-            <button className="w-full flex items-center gap-2 text-sm font-semibold text-ink-slate py-2 px-3 rounded-lg hover:bg-ice-gray transition-colors">
+            <button className="w-full flex items-center gap-2 text-sm font-semibold text-ink-slate py-2 px-3 rounded-sm hover:bg-ice-gray transition-colors">
               <RefreshCw className="w-4 h-4 text-cobalt" /> How it Works
             </button>
             <a
               href="file:///f:/SmartphoneCentre/prd_system_design.md"
-              className="flex items-center gap-2 text-sm font-semibold text-cobalt py-2 px-3 rounded-lg bg-cobalt-light border border-cobalt-border"
+              className="flex items-center gap-2 text-sm font-semibold text-cobalt py-2 px-3 rounded-sm bg-cobalt-light border border-white/[0.06]"
             >
               <FileText className="w-4 h-4" /> View System Spec
             </a>
@@ -109,46 +108,37 @@ export default function App() {
           {activeStage === 'select' && (
             <div>
               {/* Hero Banner */}
-              <div className="relative rounded-2xl overflow-hidden mb-4 sm:mb-8 border border-cobalt-border shadow-card hero-gradient p-5 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
-                {/* Orbs — hidden on very small screens to avoid clutter */}
-                <div className="hidden sm:block absolute -top-8 -right-8 w-48 h-48 rounded-full bg-cobalt/8 orb-float-slow pointer-events-none" />
-                <div className="hidden sm:block absolute top-12 right-24 w-20 h-20 rounded-full bg-blue-300/15 orb-float-medium pointer-events-none" />
-                <div className="hidden sm:block absolute -bottom-6 right-12 w-32 h-32 rounded-full bg-cobalt-light/60 pulse-ring pointer-events-none" />
-
-                <div className="space-y-3 sm:space-y-4 max-w-lg z-10">
-                  <span className="inline-flex items-center gap-1.5 text-[10px] sm:text-xs uppercase font-extrabold text-cobalt bg-white/70 backdrop-blur border border-cobalt-border px-2.5 sm:px-3 py-1 rounded-full tracking-wider shadow-sm">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0" />
+              <div className="relative rounded-sm overflow-hidden mb-4 sm:mb-8 border border-white/[0.06] hero-gradient p-6 sm:p-10 flex flex-col items-start gap-4 justify-between">
+                <div className="space-y-3 sm:space-y-4 max-w-2xl z-10 text-left">
+                  <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-1">
                     Live Pricing Engine Active
                   </span>
-                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-ink-navy leading-tight tracking-tight">
-                    Evaluate Honestly. <br /><span className="text-cobalt">Get Paid Instantly.</span>
+                  <h2 className="text-3xl sm:text-4xl md:text-5xl font-light text-ink-navy leading-tight tracking-tight">
+                    Evaluate Honestly. <br />
+                    <span className="text-cobalt font-semibold">Get Paid Instantly.</span>
                   </h2>
-                  <p className="text-xs sm:text-sm text-ink-muted leading-relaxed">
-                    Dynamic C2B pricing for your exact device variant. Zero hidden fees, free doorstep verification, immediate bank payout.
+                  <p className="text-xs sm:text-sm text-ink-slate leading-relaxed max-w-lg font-light">
+                    Sell your device in 3 simple steps. Get an instant valuation, enjoy free doorstep pick-up, and receive on-the-spot digital payment.
                   </p>
-                  <div className="flex flex-wrap items-center gap-2 sm:gap-4 pt-1">
+                  <div className="flex flex-wrap items-center gap-4 pt-2 border-t border-white/[0.04] w-full">
                     {['No Hidden Deductions', '7-Day Quote Lock', 'Free Pickup'].map(t => (
-                      <div key={t} className="flex items-center gap-1 text-[10px] sm:text-xs font-semibold text-ink-slate">
+                      <div key={t} className="flex items-center gap-1.5 text-[9px] font-mono tracking-[0.1em] text-zinc-400 uppercase">
                         <span className="text-emerald-500">✓</span> {t}
                       </div>
                     ))}
                   </div>
                 </div>
-
-                {/* Banner image — hidden on mobile */}
-                <div className="hidden sm:block w-full sm:w-48 md:w-56 h-36 sm:h-44 rounded-xl overflow-hidden border border-cobalt-border flex-shrink-0 relative" style={{boxShadow: '0 0 40px rgba(29,78,216,0.12)'}}>
-                  <img src={premiumBanner} alt="Premium banner" className="w-full h-full object-cover hover:scale-105 transition-all duration-700" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-blue-900/20 via-transparent to-transparent pointer-events-none" />
-                </div>
               </div>
 
               {/* Device Selector Card */}
-              <div className="bg-canvas-pure border border-ice-border rounded-2xl p-4 sm:p-6 canva-shadow">
-                <div className="mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-ice-gray">
-                  <h3 className="text-lg sm:text-xl font-bold text-ink-navy flex items-center gap-2">
-                    <Smartphone className="w-4 h-4 sm:w-5 sm:h-5 text-cobalt flex-shrink-0" /> Select Brand & Model
+              <div className="bg-canvas-pure border border-ice-border rounded-sm p-4 sm:p-6">
+                <div className="mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-white/[0.04] text-left">
+                  <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-1">
+                    Catalog / Hardware Selector
+                  </span>
+                  <h3 className="text-3xl font-light text-ink-navy tracking-tight">
+                    Select Brand & Model
                   </h3>
-                  <p className="text-xs text-ink-muted mt-1">Pick your brand, find your model, select variant.</p>
                 </div>
                 <DeviceSelector onVariantSelected={handleVariantSelected} />
               </div>
@@ -177,59 +167,78 @@ export default function App() {
         <aside className="w-full xl:col-span-3 grid grid-cols-1 sm:grid-cols-3 xl:grid-cols-1 gap-4 xl:gap-6">
 
           {/* Live Operations */}
-          <div className="bg-canvas-pure border border-ice-border rounded-2xl p-4 sm:p-5 canva-shadow">
-            <h4 className="font-extrabold text-xs sm:text-sm text-ink-navy border-b border-ice-gray pb-2 sm:pb-3 mb-3 sm:mb-4 flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0" />
-              Live Operations
-            </h4>
+          <div className="bg-canvas-pure border border-ice-border rounded-sm p-4 sm:p-5">
+            <div className="border-b border-white/[0.04] pb-2 mb-3 text-left">
+              <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-1">Telemetry Feed</span>
+              <h4 className="font-light text-xl text-ink-navy">Live Operations</h4>
+            </div>
             <div className="space-y-3 sm:space-y-4">
               {[
                 { icon: <Zap className="w-4 h-4" />, bg: 'bg-cobalt-light text-cobalt', label: 'Avg. Agent Arrival', value: '~15 Min', delay: '0s' },
-                { icon: <TrendingUp className="w-4 h-4" />, bg: 'bg-emerald-50 text-emerald-600 border border-emerald-100', label: 'Quote Accuracy', value: '99.4%', delay: '0.1s' },
-                { icon: <Award className="w-4 h-4" />, bg: 'bg-blue-50 text-blue-700 border border-blue-100', label: 'Devices Processed', value: '12,400+', delay: '0.2s' },
+                { icon: <TrendingUp className="w-4 h-4" />, bg: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20', label: 'Quote Accuracy', value: '99.4%', delay: '0.1s' },
+                { icon: <Award className="w-4 h-4" />, bg: 'bg-blue-500/10 text-blue-400 border border-blue-500/20', label: 'Devices Processed', value: '12,400+', delay: '0.2s' },
               ].map(s => (
-                <div key={s.label} className="flex items-center gap-3 group">
-                  <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg ${s.bg} flex items-center justify-center font-bold group-hover:scale-110 transition-transform flex-shrink-0`}>
+                <div key={s.label} className="flex items-center gap-3 group text-left">
+                  <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-sm ${s.bg} flex items-center justify-center font-bold group-hover:scale-105 transition-transform flex-shrink-0`}>
                     {s.icon}
                   </div>
                   <div>
-                    <span className="text-[9px] sm:text-[10px] text-ink-muted uppercase block">{s.label}</span>
+                    <span className="text-[9px] sm:text-[10px] text-zinc-500 font-mono tracking-wider uppercase block">{s.label}</span>
                     <span className="text-xs sm:text-sm font-bold text-ink-navy number-pop" style={{animationDelay: s.delay}}>{s.value}</span>
                   </div>
                 </div>
               ))}
-              <div className="pt-2 border-t border-ice-gray">
-                <div className="flex justify-between text-[9px] sm:text-[10px] text-ink-muted mb-1.5">
+              <div className="pt-2 border-t border-white/[0.04] text-left">
+                <div className="flex justify-between text-[9px] text-zinc-500 font-mono tracking-wider mb-1.5 uppercase">
                   <span>Today's Pickups</span>
                   <span className="font-bold text-cobalt">74%</span>
                 </div>
-                <div className="h-1.5 rounded-full bg-ice-gray overflow-hidden">
-                  <div className="h-full rounded-full bg-gradient-to-r from-cobalt to-blue-400 progress-fill" style={{'--progress-width': '74%'} as React.CSSProperties} />
+                <div className="h-1 rounded-full bg-ice-gray overflow-hidden">
+                  <div className="h-full rounded-full bg-cobalt progress-fill" style={{'--progress-width': '74%'} as React.CSSProperties} />
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Valuation Formula */}
-          <div className="bg-canvas-pure border border-ice-border rounded-2xl p-4 sm:p-5 canva-shadow text-xs space-y-2 sm:space-y-3">
-            <h4 className="font-bold text-ink-navy flex items-center gap-1.5 text-xs sm:text-sm">
-              <Info className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cobalt flex-shrink-0" /> Valuation Matrix
-            </h4>
-            <p className="text-ink-muted leading-relaxed text-[10px] sm:text-xs">
-              Price fluctuates with component demand, refurb cost trends, and market liquidity indices.
-            </p>
-            <div className="bg-slate-50 p-2 sm:p-2.5 rounded-lg border border-ice-border font-mono text-[8px] sm:text-[9px] text-ink-slate">
-              Price = Base - Σ(Fixed + Base × Pct)
+          {/* Trade-In Guarantee Card */}
+          <div className="bg-canvas-pure border border-ice-border rounded-sm p-4 sm:p-5 text-xs space-y-2 sm:space-y-3 text-left">
+            <div className="border-b border-white/[0.04] pb-2 mb-2">
+              <span className="text-[10px] font-mono tracking-[0.2em] text-cobalt uppercase block mb-1">Our Promise</span>
+              <h4 className="font-light text-xl text-ink-navy">Trade-In Guarantee</h4>
+            </div>
+            <div className="space-y-3 text-[11px] font-light text-ink-slate leading-relaxed">
+              <div className="flex gap-2 items-start">
+                <span className="text-emerald-500 font-bold">✓</span>
+                <div>
+                  <strong className="text-ink-navy block">7-Day Value Lock</strong>
+                  Once you book, your quote is secured for 7 full days.
+                </div>
+              </div>
+              <div className="flex gap-2 items-start">
+                <span className="text-emerald-500 font-bold">✓</span>
+                <div>
+                  <strong className="text-ink-navy block">Doorstep Verification</strong>
+                  Zero hassle. We come to you and complete the deal.
+                </div>
+              </div>
+              <div className="flex gap-2 items-start">
+                <span className="text-emerald-500 font-bold">✓</span>
+                <div>
+                  <strong className="text-ink-navy block">Secure Data Sanitation</strong>
+                  Full compliance military-grade data wipe guarantee.
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Help */}
-          <div className="bg-cobalt-light/40 border border-cobalt-border rounded-2xl p-4 sm:p-5 text-xs text-cobalt flex flex-col justify-between gap-3">
+          <div className="bg-canvas-pure border border-ice-border rounded-sm p-4 sm:p-5 text-xs flex flex-col justify-between gap-3 text-left">
             <div>
-              <h4 className="font-bold flex items-center gap-1 text-xs sm:text-sm"><HelpCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" /> Need Help?</h4>
-              <p className="mt-1 text-ink-slate font-medium text-[10px] sm:text-xs leading-relaxed">Corporate trade-in, bulk logistics, or carrier lock valuations?</p>
+              <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-1">Support desk</span>
+              <h4 className="font-light text-xl text-ink-navy">Need Help?</h4>
+              <p className="mt-1 text-ink-muted text-[10px] sm:text-xs leading-relaxed font-light">Corporate trade-in, bulk logistics, or carrier lock valuations?</p>
             </div>
-            <button className="w-full bg-cobalt hover:bg-cobalt-hover text-white py-2 rounded-lg font-bold text-xs shadow-sm transition-all">
+            <button className="w-full bg-cobalt hover:bg-cobalt-hover text-white py-2 rounded-sm font-bold text-xs transition-all">
               Connect to Helpdesk
             </button>
           </div>

@@ -99,10 +99,10 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({ onVariantSelecte
                 setSelectedStorage(null);
                 setTempVariant(null);
               }}
-              className={`flex-shrink-0 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-medium text-xs sm:text-sm transition-all duration-300 flex items-center gap-1.5 sm:gap-2 border ${
+              className={`flex-shrink-0 px-4 sm:px-6 py-2.5 sm:py-3 rounded-sm font-medium text-xs sm:text-sm transition-all duration-300 flex items-center gap-1.5 sm:gap-2 border ${
                 isActive
-                  ? 'bg-cobalt text-white border-cobalt shadow-tactile scale-[1.02]'
-                  : 'bg-canvas-pure text-ink-slate border-ice-border hover:border-cobalt/40 hover:bg-cobalt-light/10'
+                  ? 'bg-cobalt text-white border-cobalt scale-[1.01] opacity-100'
+                  : 'bg-canvas-pure text-ink-slate border-ice-border hover:border-cobalt/40 hover:bg-cobalt-light/10 opacity-60 hover:opacity-100'
               }`}
             >
               <span className="text-base sm:text-lg font-bold">{brand.logo}</span>
@@ -123,7 +123,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({ onVariantSelecte
               placeholder="Search model (e.g. iPhone 15 Pro, S24)..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="w-full pl-9 sm:pl-12 pr-4 py-3 sm:py-4 rounded-xl border border-ice-border bg-canvas-pure text-ink-navy text-sm placeholder:text-ink-muted focus:outline-none focus:border-cobalt focus:ring-1 focus:ring-cobalt/20 transition-all duration-300 canva-shadow"
+              className="w-full pl-9 sm:pl-12 pr-4 py-3 sm:py-4 rounded-sm border border-ice-border bg-canvas-pure text-ink-navy text-sm placeholder:text-ink-muted focus:outline-none focus:border-cobalt focus:ring-1 focus:ring-cobalt/20 transition-all duration-300"
             />
           </div>
 
@@ -132,43 +132,46 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({ onVariantSelecte
             <AnimatePresence mode="popLayout">
               {filteredModels.map(model => {
                 const isSelected = selectedModel?.id === model.id;
+                const hasSelection = selectedModel !== null;
                 return (
                     <motion.div
                     layoutId={`model-card-${model.id}`}
                     key={model.id}
                     onClick={() => handleModelClick(model)}
-                    className={`p-4 sm:p-5 rounded-xl border cursor-pointer transition-all duration-300 bg-canvas-pure relative card-shimmer ${
+                    className={`p-4 sm:p-5 rounded-sm border cursor-pointer transition-all duration-300 bg-canvas-pure relative card-shimmer ${
                       isSelected
-                        ? 'border-cobalt ring-1 ring-cobalt/20 canva-shadow-active'
-                        : 'border-ice-border hover:border-cobalt/40 canva-shadow hover:-translate-y-1 glow-cobalt'
+                        ? 'border-cobalt ring-1 ring-cobalt/20 scale-[1.01] opacity-100 z-10'
+                        : hasSelection
+                        ? 'border-ice-border opacity-40 hover:opacity-75 hover:scale-[1.005]'
+                        : 'border-ice-border hover:border-cobalt/40 hover:-translate-y-0.5'
                     }`}
                   >
                     {/* Canva style premium layout */}
                     <div className="flex flex-col h-full justify-between">
-                      <div>
+                      <div className="text-left">
                         <div className="flex items-center justify-between mb-3">
-                          <span className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full ${
+                          <span className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-sm ${
                             model.category === 'flagship'
-                              ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                              ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                               : model.category === 'premium'
-                              ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                              : 'bg-slate-50 text-slate-700 border border-slate-200'
+                              ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                              : 'bg-zinc-500/10 text-zinc-400 border border-zinc-500/20'
                           }`}>
                             {model.category}
                           </span>
-                          <span className="text-[11px] text-ink-muted flex items-center gap-1">
+                          <span className="text-[11px] text-ink-muted flex items-center gap-1 font-mono">
                             <Calendar className="w-3 h-3" /> {model.releaseYear}
                           </span>
                         </div>
-                        <h3 className="font-semibold text-lg text-ink-navy leading-tight mb-2">
+                        <h3 className="font-light text-lg text-ink-navy leading-tight mb-2">
                           {model.name}
                         </h3>
                       </div>
                       
-                      <div className="pt-4 border-t border-ice-gray flex items-center justify-between">
-                        <div>
-                          <span className="text-[10px] text-ink-muted block uppercase tracking-tight">C2B Offer From</span>
-                          <span className="text-sm font-bold text-cobalt">{formatPrice(model.basePrice128GB)}</span>
+                      <div className="pt-4 border-t border-white/[0.04] flex items-center justify-between">
+                        <div className="text-left">
+                          <span className="text-[9px] text-zinc-500 block uppercase font-mono tracking-wider">Payout Up To</span>
+                          <span className="text-sm font-semibold text-cobalt">{formatPrice(model.basePrice128GB)}</span>
                         </div>
                         <ChevronRight className={`w-4 h-4 transition-transform duration-300 ${isSelected ? 'translate-x-1 text-cobalt' : 'text-ink-muted'}`} />
                       </div>
@@ -188,32 +191,36 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({ onVariantSelecte
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
-              className="lg:col-span-5 bg-canvas-pure rounded-2xl border border-ice-border p-4 sm:p-6 canva-shadow"
+              className="lg:col-span-5 bg-canvas-pure rounded-sm border border-ice-border p-4 sm:p-6"
             >
-              <div className="mb-6 pb-6 border-b border-ice-gray">
+              <div className="mb-6 pb-6 border-b border-white/[0.04] text-left">
                 <div className="flex items-center gap-3 mb-2">
                   <Smartphone className="w-6 h-6 text-cobalt" />
-                  <h3 className="text-xl font-bold text-ink-navy">{selectedModel.name}</h3>
+                  <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block">Selected Model Spec</span>
                 </div>
-                <p className="text-sm text-ink-muted">Configure the exact specifications of your device to get an accurate dynamic quote.</p>
+                <h3 className="text-3xl font-light text-ink-navy tracking-tight">{selectedModel.name}</h3>
+                <p className="text-xs text-ink-muted mt-2 font-light">Select your device's storage capacity and color to load the live trade-in value.</p>
               </div>
 
               {/* Step 1: Storage */}
               <div className="mb-6">
-                <label className="text-xs uppercase tracking-wider font-bold text-ink-slate block mb-3 flex items-center gap-1.5">
+                <label className="text-xs uppercase tracking-wider font-bold text-ink-slate block mb-3 flex items-center gap-1.5 font-mono">
                   <Layers className="w-3.5 h-3.5 text-cobalt" /> Select Storage Capacity
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   {storageOptions.map(storage => {
                     const isSelected = selectedStorage === storage;
+                    const hasSelection = selectedStorage !== null;
                     return (
                       <button
                         key={storage}
                         onClick={() => handleStorageSelect(storage)}
-                        className={`py-3 rounded-lg border text-sm font-semibold transition-all ${
+                        className={`py-3 rounded-sm border text-sm font-semibold transition-all duration-300 ${
                           isSelected
-                            ? 'bg-cobalt text-white border-cobalt shadow-tactile'
-                            : 'bg-canvas-white text-ink-navy border-ice-border hover:border-cobalt/30'
+                            ? 'bg-cobalt text-white border-cobalt scale-[1.01] opacity-100'
+                            : hasSelection
+                            ? 'bg-canvas-white text-ink-navy border-ice-border opacity-40 hover:opacity-75'
+                            : 'bg-canvas-white text-ink-navy border-ice-border hover:border-cobalt/30 hover:scale-[1.005]'
                         }`}
                       >
                         {storage >= 1024 ? '1 TB' : `${storage} GB`}
@@ -230,24 +237,27 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({ onVariantSelecte
                   animate={{ opacity: 1, y: 0 }}
                   className="mb-8"
                 >
-                  <label className="text-xs uppercase tracking-wider font-bold text-ink-slate block mb-3 flex items-center gap-1.5">
+                  <label className="text-xs uppercase tracking-wider font-bold text-ink-slate block mb-3 flex items-center gap-1.5 font-mono">
                     <ShieldCheck className="w-3.5 h-3.5 text-cobalt" /> Select Color & Carrier
                   </label>
                   <div className="grid grid-cols-2 gap-2">
                     {colorOptions.map(variant => {
                       const isSelected = tempVariant?.id === variant.id;
+                      const hasSelection = tempVariant !== null;
                       return (
                         <button
                           key={variant.id}
                           onClick={() => handleColorSelect(variant)}
-                          className={`p-3 rounded-lg border text-left text-xs transition-all flex flex-col justify-between ${
+                          className={`p-3 rounded-sm border text-left text-xs transition-all duration-300 flex flex-col justify-between ${
                             isSelected
-                              ? 'bg-cobalt-light/50 border-cobalt ring-1 ring-cobalt/20 shadow-sm'
-                              : 'bg-canvas-white text-ink-navy border-ice-border hover:border-cobalt/20'
+                              ? 'bg-cobalt-light border-cobalt ring-1 ring-cobalt/20 scale-[1.01] opacity-100'
+                              : hasSelection
+                              ? 'bg-canvas-white text-ink-navy border-ice-border opacity-40 hover:opacity-75'
+                              : 'bg-canvas-white text-ink-navy border-ice-border hover:border-cobalt/20 hover:scale-[1.005]'
                           }`}
                         >
                           <span className="font-semibold text-ink-navy">{variant.color}</span>
-                          <span className="text-[10px] text-ink-muted mt-1">Unlocked</span>
+                          <span className="text-[10px] text-ink-muted mt-1 font-mono uppercase">Unlocked</span>
                         </button>
                       );
                     })}
@@ -263,17 +273,17 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({ onVariantSelecte
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 10 }}
                   >
-                    <div className="bg-cobalt-light/40 rounded-xl p-4 mb-6 border border-cobalt-border flex items-center justify-between">
+                    <div className="bg-canvas-white rounded-sm p-4 mb-6 border border-white/[0.06] flex items-center justify-between text-left">
                       <div>
-                        <span className="text-[10px] uppercase font-bold text-cobalt tracking-wider block">Base Value Quote</span>
-                        <span className="text-xl font-extrabold text-cobalt">{formatPrice(tempVariant.basePrice)}</span>
+                        <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-1">Base Price / Mint</span>
+                        <span className="text-xl font-bold text-cobalt">{formatPrice(tempVariant.basePrice)}</span>
                       </div>
-                      <span className="text-xs text-ink-muted text-right">Mint Condition</span>
+                      <span className="text-xs text-ink-slate font-light">Reference Spec</span>
                     </div>
 
                     <button
                       onClick={handleConfirm}
-                      className="w-full bg-cobalt hover:bg-cobalt-hover text-white py-4 rounded-xl font-bold transition-all duration-300 flex items-center justify-center gap-2 shadow-tactile hover:scale-[1.01] cta-pulse"
+                      className="w-full bg-cobalt hover:bg-cobalt-hover text-white py-4 rounded-sm font-bold transition-all duration-300 flex items-center justify-center gap-2 hover:scale-[1.01]"
                     >
                       Diagnose Condition
                       <ChevronRight className="w-5 h-5" />
