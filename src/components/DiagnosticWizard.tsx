@@ -3,9 +3,10 @@ import { Model, Variant, getDefectRulesForCategory, DefectRule } from '../data/m
 import { calculateValuation } from '../utils/valuation';
 import { 
   ArrowLeft, Check, ChevronRight, Activity, Sparkles, 
-  Smartphone, ShieldAlert, Box, Zap, Trash2, ShieldCheck
+  Smartphone, Box, Zap, Trash2, ShieldCheck
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getIllustration } from './Illustrations';
 
 const getEngineeringLabel = (description: string) => {
   const mapping: { [key: string]: string } = {
@@ -217,8 +218,8 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                     onClick={() => handlePowerCheck(true)}
                     className="p-6 rounded-sm border border-ice-border hover:border-cobalt bg-canvas-white hover:bg-cobalt-light/10 text-left transition-all duration-300 group"
                   >
-                    <div className="w-12 h-12 rounded-sm bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 mb-4 group-hover:scale-105 transition-transform">
-                      <Zap className="w-6 h-6 fill-emerald-500/10" />
+                    <div className="w-12 h-12 rounded-sm bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
+                      {getIllustration('power-on')}
                     </div>
                     <h4 className="font-semibold text-lg text-ink-navy">Powers On</h4>
                     <p className="text-xs text-ink-muted mt-1 font-light">The device boots up to the lock screen and the screen functions fully.</p>
@@ -228,8 +229,8 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                     onClick={() => handlePowerCheck(false)}
                     className="p-6 rounded-sm border border-ice-border hover:border-red-500 bg-canvas-white hover:bg-red-500/10 text-left transition-all duration-300 group"
                   >
-                    <div className="w-12 h-12 rounded-sm bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400 mb-4 group-hover:scale-105 transition-transform">
-                      <ShieldAlert className="w-6 h-6" />
+                    <div className="w-12 h-12 rounded-sm bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
+                      {getIllustration('defect-critical-power')}
                     </div>
                     <h4 className="font-semibold text-lg text-ink-navy">Dead / Fails to Boot</h4>
                     <p className="text-xs text-ink-muted mt-1 font-light">Device does not turn on, has heavy water damage, or is stuck on boot loop.</p>
@@ -260,17 +261,20 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                     return (
                       <div
                         onClick={() => setSelectedDefects(prev => prev.filter(d => d.category !== 'screen'))}
-                        className={`p-4 rounded-sm border cursor-pointer transition-all duration-300 flex items-center justify-between ${
+                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-4 text-left ${
                           isSelected
                             ? 'border-cobalt bg-cobalt-light scale-[1.01] opacity-100 z-10'
                             : 'border-ice-border bg-canvas-white opacity-40 hover:opacity-75 hover:scale-[1.005]'
                         }`}
                       >
-                        <div>
+                        <div className="w-14 h-14 flex-shrink-0 bg-ice-gray rounded-sm border border-ice-border flex items-center justify-center overflow-hidden">
+                          {getIllustration('screen-flawless')}
+                        </div>
+                        <div className="flex-1 min-w-0">
                           <h4 className="font-semibold text-sm text-ink-navy">Flawless Display</h4>
                           <p className="text-xs text-ink-muted mt-0.5 font-light">No scratches, micro-abrasions, cracks, or screen bleeding.</p>
                         </div>
-                        <div className={`w-5 h-5 rounded-sm border flex items-center justify-center ${
+                        <div className={`w-5 h-5 rounded-sm border flex items-center justify-center flex-shrink-0 ${
                           isSelected ? 'bg-cobalt border-cobalt text-white' : 'border-ice-border'
                         }`}>
                           {isSelected && <Check className="w-3 h-3" />}
@@ -294,7 +298,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                             ? 'defect-screen-cracked' 
                             : undefined
                         )}
-                        className={`p-4 rounded-sm border cursor-pointer transition-all duration-300 flex items-center justify-between ${
+                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-4 text-left ${
                           isSelected
                             ? 'border-cobalt bg-cobalt-light scale-[1.01] opacity-100 z-10'
                             : isAnyScreenSelected
@@ -302,7 +306,10 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                             : 'border-ice-border bg-canvas-white hover:border-cobalt/30 hover:scale-[1.005]'
                         }`}
                       >
-                        <div>
+                        <div className="w-14 h-14 flex-shrink-0 bg-ice-gray rounded-sm border border-ice-border flex items-center justify-center overflow-hidden">
+                          {getIllustration(defect.id)}
+                        </div>
+                        <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <h4 className="font-semibold text-sm text-ink-navy">{defect.description}</h4>
                             <span className="text-[9px] font-mono bg-red-500/10 text-red-400 px-1.5 py-0.5 rounded-sm border border-red-500/20">
@@ -311,7 +318,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           </div>
                           <p className="text-xs text-ink-muted mt-0.5 font-light">{defect.subText}</p>
                         </div>
-                        <div className={`w-5 h-5 rounded-sm border flex items-center justify-center ${
+                        <div className={`w-5 h-5 rounded-sm border flex items-center justify-center flex-shrink-0 ${
                           isSelected ? 'bg-cobalt border-cobalt text-white' : 'border-ice-border'
                         }`}>
                           {isSelected && <Check className="w-3 h-3" />}
@@ -345,17 +352,20 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                     return (
                       <div
                         onClick={() => setSelectedDefects(prev => prev.filter(d => d.category !== 'body'))}
-                        className={`p-4 rounded-sm border cursor-pointer transition-all duration-300 flex items-center justify-between ${
+                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-4 text-left ${
                           isSelected
                             ? 'border-cobalt bg-cobalt-light scale-[1.01] opacity-100 z-10'
                             : 'border-ice-border bg-canvas-white opacity-40 hover:opacity-75 hover:scale-[1.005]'
                         }`}
                       >
-                        <div>
+                        <div className="w-14 h-14 flex-shrink-0 bg-ice-gray rounded-sm border border-ice-border flex items-center justify-center overflow-hidden">
+                          {getIllustration('body-flawless')}
+                        </div>
+                        <div className="flex-1 min-w-0">
                           <h4 className="font-semibold text-sm text-ink-navy">Flawless Frame</h4>
                           <p className="text-xs text-ink-muted mt-0.5 font-light">No dents, bends, or paint scuffs. Device looks brand new.</p>
                         </div>
-                        <div className={`w-5 h-5 rounded-sm border flex items-center justify-center ${
+                        <div className={`w-5 h-5 rounded-sm border flex items-center justify-center flex-shrink-0 ${
                           isSelected ? 'bg-cobalt border-cobalt text-white' : 'border-ice-border'
                         }`}>
                           {isSelected && <Check className="w-3 h-3" />}
@@ -379,7 +389,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                             ? 'defect-body-dented' 
                             : undefined
                         )}
-                        className={`p-4 rounded-sm border cursor-pointer transition-all duration-300 flex items-center justify-between ${
+                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-4 text-left ${
                           isSelected
                             ? 'border-cobalt bg-cobalt-light scale-[1.01] opacity-100 z-10'
                             : isAnyBodySelected
@@ -387,7 +397,10 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                             : 'border-ice-border bg-canvas-white hover:border-cobalt/30 hover:scale-[1.005]'
                         }`}
                       >
-                        <div>
+                        <div className="w-14 h-14 flex-shrink-0 bg-ice-gray rounded-sm border border-ice-border flex items-center justify-center overflow-hidden">
+                          {getIllustration(defect.id)}
+                        </div>
+                        <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <h4 className="font-semibold text-sm text-ink-navy">{defect.description}</h4>
                             <span className="text-[9px] font-mono bg-red-500/10 text-red-400 px-1.5 py-0.5 rounded-sm border border-red-500/20">
@@ -396,7 +409,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           </div>
                           <p className="text-xs text-ink-muted mt-0.5 font-light">{defect.subText}</p>
                         </div>
-                        <div className={`w-5 h-5 rounded-sm border flex items-center justify-center ${
+                        <div className={`w-5 h-5 rounded-sm border flex items-center justify-center flex-shrink-0 ${
                           isSelected ? 'bg-cobalt border-cobalt text-white' : 'border-ice-border'
                         }`}>
                           {isSelected && <Check className="w-3 h-3" />}
@@ -430,7 +443,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                       <div
                         key={defect.id}
                         onClick={() => handleToggleDefect(defect)}
-                        className={`p-4 rounded-sm border cursor-pointer transition-all duration-300 flex items-center justify-between ${
+                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-4 text-left ${
                           isSelected
                             ? 'border-cobalt bg-cobalt-light scale-[1.01] opacity-100 z-10'
                             : isAnyFuncSelected
@@ -438,7 +451,10 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                             : 'border-ice-border bg-canvas-white hover:border-cobalt/30 hover:scale-[1.005]'
                         }`}
                       >
-                        <div>
+                        <div className="w-14 h-14 flex-shrink-0 bg-ice-gray rounded-sm border border-ice-border flex items-center justify-center overflow-hidden">
+                          {getIllustration(defect.id)}
+                        </div>
+                        <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <h4 className="font-semibold text-sm text-ink-navy">{defect.description}</h4>
                             <span className="text-[9px] font-mono bg-red-500/10 text-red-400 px-1.5 py-0.5 rounded-sm border border-red-500/20">
@@ -447,7 +463,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           </div>
                           <p className="text-xs text-ink-muted mt-0.5 font-light">{defect.subText}</p>
                         </div>
-                        <div className={`w-5 h-5 rounded-sm border flex items-center justify-center ${
+                        <div className={`w-5 h-5 rounded-sm border flex items-center justify-center flex-shrink-0 ${
                           isSelected ? 'bg-cobalt border-cobalt text-white' : 'border-ice-border'
                         }`}>
                           {isSelected && <Check className="w-3 h-3" />}
@@ -481,7 +497,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                       <div
                         key={defect.id}
                         onClick={() => handleToggleDefect(defect)}
-                        className={`p-4 rounded-sm border cursor-pointer transition-all duration-300 flex items-center justify-between ${
+                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-4 text-left ${
                           isSelected
                             ? 'border-red-500/40 bg-red-500/10 scale-[1.01] opacity-100 z-10'
                             : isAnyAccSelected
@@ -489,7 +505,10 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                             : 'border-ice-border bg-canvas-white hover:border-cobalt/30 hover:scale-[1.005]'
                         }`}
                       >
-                        <div>
+                        <div className="w-14 h-14 flex-shrink-0 bg-ice-gray rounded-sm border border-ice-border flex items-center justify-center overflow-hidden">
+                          {getIllustration(defect.id)}
+                        </div>
+                        <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <h4 className="font-semibold text-sm text-ink-navy">{defect.description}</h4>
                             <span className="text-[9px] font-mono bg-red-500/10 text-red-400 px-1.5 py-0.5 rounded-sm border border-red-500/20">
@@ -498,7 +517,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           </div>
                           <p className="text-xs text-ink-muted mt-0.5 font-light">{defect.subText}</p>
                         </div>
-                        <div className={`w-5 h-5 rounded-sm border flex items-center justify-center ${
+                        <div className={`w-5 h-5 rounded-sm border flex items-center justify-center flex-shrink-0 ${
                           isSelected ? 'bg-red-500 border-red-500 text-white' : 'border-ice-border'
                         }`}>
                           {isSelected && <Check className="w-3 h-3" />}
