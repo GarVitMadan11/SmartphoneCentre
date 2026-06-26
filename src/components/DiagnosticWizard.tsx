@@ -3,7 +3,7 @@ import { Model, Variant, getDefectRulesForCategory, DefectRule } from '../data/m
 import { calculateValuation } from '../utils/valuation';
 import { 
   ArrowLeft, Check, ChevronRight, Activity, Sparkles, 
-  Smartphone, Box, Zap, Trash2, ShieldCheck
+  Smartphone, ShieldAlert, Box, Zap, Trash2, ShieldCheck
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getIllustration } from './Illustrations';
@@ -216,9 +216,9 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
                   <button
                     onClick={() => handlePowerCheck(true)}
-                    className="p-6 rounded-sm border border-ice-border hover:border-cobalt bg-canvas-white hover:bg-cobalt-light/10 text-left transition-all duration-300 group"
+                    className="p-6 rounded-sm border border-ice-border hover:border-emerald-500/50 bg-canvas-white hover:bg-emerald-500/5 text-left transition-all duration-300 group"
                   >
-                    <div className="w-12 h-12 rounded-sm bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
+                    <div className="w-16 h-16 rounded-sm bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform overflow-hidden">
                       {getIllustration('power-on')}
                     </div>
                     <h4 className="font-semibold text-lg text-ink-navy">Powers On</h4>
@@ -227,9 +227,9 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
                   <button
                     onClick={() => handlePowerCheck(false)}
-                    className="p-6 rounded-sm border border-ice-border hover:border-red-500 bg-canvas-white hover:bg-red-500/10 text-left transition-all duration-300 group"
+                    className="p-6 rounded-sm border border-ice-border hover:border-red-500/50 bg-canvas-white hover:bg-red-500/5 text-left transition-all duration-300 group"
                   >
-                    <div className="w-12 h-12 rounded-sm bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
+                    <div className="w-16 h-16 rounded-sm bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform overflow-hidden">
                       {getIllustration('defect-critical-power')}
                     </div>
                     <h4 className="font-semibold text-lg text-ink-navy">Dead / Fails to Boot</h4>
@@ -261,13 +261,13 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                     return (
                       <div
                         onClick={() => setSelectedDefects(prev => prev.filter(d => d.category !== 'screen'))}
-                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-4 text-left ${
+                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-3 text-left ${
                           isSelected
                             ? 'border-cobalt bg-cobalt-light scale-[1.01] opacity-100 z-10'
                             : 'border-ice-border bg-canvas-white opacity-40 hover:opacity-75 hover:scale-[1.005]'
                         }`}
                       >
-                        <div className="w-14 h-14 flex-shrink-0 bg-ice-gray rounded-sm border border-ice-border flex items-center justify-center overflow-hidden">
+                        <div className="w-14 h-14 flex-shrink-0 rounded-sm bg-ice-gray border border-ice-border flex items-center justify-center overflow-hidden">
                           {getIllustration('screen-flawless')}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -298,7 +298,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                             ? 'defect-screen-cracked' 
                             : undefined
                         )}
-                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-4 text-left ${
+                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-3 text-left ${
                           isSelected
                             ? 'border-cobalt bg-cobalt-light scale-[1.01] opacity-100 z-10'
                             : isAnyScreenSelected
@@ -306,14 +306,14 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                             : 'border-ice-border bg-canvas-white hover:border-cobalt/30 hover:scale-[1.005]'
                         }`}
                       >
-                        <div className="w-14 h-14 flex-shrink-0 bg-ice-gray rounded-sm border border-ice-border flex items-center justify-center overflow-hidden">
+                        <div className="w-14 h-14 flex-shrink-0 rounded-sm bg-ice-gray border border-ice-border flex items-center justify-center overflow-hidden">
                           {getIllustration(defect.id)}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <h4 className="font-semibold text-sm text-ink-navy">{defect.description}</h4>
                             <span className="text-[9px] font-mono bg-red-500/10 text-red-400 px-1.5 py-0.5 rounded-sm border border-red-500/20">
-                              {defect.deductionPercentage > 0 ? `-${defect.deductionPercentage * 100}%` : `-${formatPrice(defect.deductionFixed)}`}
+                              {defect.deductionPercentage > 0 ? `-${parseFloat((defect.deductionPercentage * 100).toFixed(1))}%` : `-${formatPrice(defect.deductionFixed)}`}
                             </span>
                           </div>
                           <p className="text-xs text-ink-muted mt-0.5 font-light">{defect.subText}</p>
@@ -352,13 +352,13 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                     return (
                       <div
                         onClick={() => setSelectedDefects(prev => prev.filter(d => d.category !== 'body'))}
-                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-4 text-left ${
+                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-3 text-left ${
                           isSelected
                             ? 'border-cobalt bg-cobalt-light scale-[1.01] opacity-100 z-10'
                             : 'border-ice-border bg-canvas-white opacity-40 hover:opacity-75 hover:scale-[1.005]'
                         }`}
                       >
-                        <div className="w-14 h-14 flex-shrink-0 bg-ice-gray rounded-sm border border-ice-border flex items-center justify-center overflow-hidden">
+                        <div className="w-14 h-14 flex-shrink-0 rounded-sm bg-ice-gray border border-ice-border flex items-center justify-center overflow-hidden">
                           {getIllustration('body-flawless')}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -389,7 +389,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                             ? 'defect-body-dented' 
                             : undefined
                         )}
-                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-4 text-left ${
+                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-3 text-left ${
                           isSelected
                             ? 'border-cobalt bg-cobalt-light scale-[1.01] opacity-100 z-10'
                             : isAnyBodySelected
@@ -397,14 +397,14 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                             : 'border-ice-border bg-canvas-white hover:border-cobalt/30 hover:scale-[1.005]'
                         }`}
                       >
-                        <div className="w-14 h-14 flex-shrink-0 bg-ice-gray rounded-sm border border-ice-border flex items-center justify-center overflow-hidden">
+                        <div className="w-14 h-14 flex-shrink-0 rounded-sm bg-ice-gray border border-ice-border flex items-center justify-center overflow-hidden">
                           {getIllustration(defect.id)}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <h4 className="font-semibold text-sm text-ink-navy">{defect.description}</h4>
                             <span className="text-[9px] font-mono bg-red-500/10 text-red-400 px-1.5 py-0.5 rounded-sm border border-red-500/20">
-                              {defect.deductionPercentage > 0 ? `-${defect.deductionPercentage * 100}%` : `-${formatPrice(defect.deductionFixed)}`}
+                              {defect.deductionPercentage > 0 ? `-${parseFloat((defect.deductionPercentage * 100).toFixed(1))}%` : `-${formatPrice(defect.deductionFixed)}`}
                             </span>
                           </div>
                           <p className="text-xs text-ink-muted mt-0.5 font-light">{defect.subText}</p>
@@ -443,7 +443,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                       <div
                         key={defect.id}
                         onClick={() => handleToggleDefect(defect)}
-                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-4 text-left ${
+                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-3 text-left ${
                           isSelected
                             ? 'border-cobalt bg-cobalt-light scale-[1.01] opacity-100 z-10'
                             : isAnyFuncSelected
@@ -451,14 +451,14 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                             : 'border-ice-border bg-canvas-white hover:border-cobalt/30 hover:scale-[1.005]'
                         }`}
                       >
-                        <div className="w-14 h-14 flex-shrink-0 bg-ice-gray rounded-sm border border-ice-border flex items-center justify-center overflow-hidden">
+                        <div className="w-14 h-14 flex-shrink-0 rounded-sm bg-ice-gray border border-ice-border flex items-center justify-center overflow-hidden">
                           {getIllustration(defect.id)}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <h4 className="font-semibold text-sm text-ink-navy">{defect.description}</h4>
                             <span className="text-[9px] font-mono bg-red-500/10 text-red-400 px-1.5 py-0.5 rounded-sm border border-red-500/20">
-                              {defect.deductionPercentage > 0 ? `-${defect.deductionPercentage * 100}%` : `-${formatPrice(defect.deductionFixed)}`}
+                              {defect.deductionPercentage > 0 ? `-${parseFloat((defect.deductionPercentage * 100).toFixed(1))}%` : `-${formatPrice(defect.deductionFixed)}`}
                             </span>
                           </div>
                           <p className="text-xs text-ink-muted mt-0.5 font-light">{defect.subText}</p>
@@ -497,7 +497,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                       <div
                         key={defect.id}
                         onClick={() => handleToggleDefect(defect)}
-                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-4 text-left ${
+                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-3 text-left ${
                           isSelected
                             ? 'border-red-500/40 bg-red-500/10 scale-[1.01] opacity-100 z-10'
                             : isAnyAccSelected
@@ -505,7 +505,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                             : 'border-ice-border bg-canvas-white hover:border-cobalt/30 hover:scale-[1.005]'
                         }`}
                       >
-                        <div className="w-14 h-14 flex-shrink-0 bg-ice-gray rounded-sm border border-ice-border flex items-center justify-center overflow-hidden">
+                        <div className="w-14 h-14 flex-shrink-0 rounded-sm bg-ice-gray border border-ice-border flex items-center justify-center overflow-hidden">
                           {getIllustration(defect.id)}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -546,9 +546,9 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
                   {/* Animated Engineering Receipt */}
                   <div className="border border-dashed border-white/[0.12] bg-zinc-950/40 rounded-sm p-5 mb-6 text-sm relative overflow-hidden text-left">
-                    {/* Watermark/stamp */}
-                    <div className="absolute -right-4 -top-4 w-24 h-24 rounded-sm border-2 border-emerald-500/20 flex items-center justify-center rotate-12 select-none pointer-events-none">
-                      <span className="text-[8px] font-mono text-emerald-500/30 uppercase tracking-widest">VERIFIED</span>
+                    {/* Watermark/stamp — circular badge */}
+                    <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full border-2 border-emerald-500/25 flex items-center justify-center rotate-12 select-none pointer-events-none">
+                      <span className="text-[8px] font-mono text-emerald-500/40 uppercase tracking-widest">VERIFIED</span>
                     </div>
 
                     <div className="flex justify-between items-center mb-6 pb-6 border-b border-white/[0.06] font-mono">
@@ -645,30 +645,41 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
             {/* Price Ring meter */}
             <div className="flex flex-col items-center py-6">
-              <div className="relative w-40 h-40 rounded-sm border-8 border-cobalt-light flex items-center justify-center">
-                <svg className="absolute inset-0 w-full h-full -rotate-90">
+              <div className="relative w-40 h-40 rounded-full flex items-center justify-center">
+                <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 160 160">
+                  {/* Track circle */}
                   <circle
                     cx="80"
                     cy="80"
-                    r="72"
+                    r="70"
+                    stroke="rgba(59,130,246,0.12)"
+                    strokeWidth="8"
+                    fill="transparent"
+                  />
+                  {/* Progress circle */}
+                  <circle
+                    cx="80"
+                    cy="80"
+                    r="70"
                     stroke="#3B82F6"
                     strokeWidth="8"
                     fill="transparent"
-                    strokeDasharray="452"
+                    strokeLinecap="round"
+                    strokeDasharray="440"
                     strokeDashoffset={
                       valuation.isCritical
-                        ? 452
-                        : 452 - (452 * (valuation.finalPrice / variant.basePrice))
+                        ? 440
+                        : 440 - (440 * (valuation.finalPrice / variant.basePrice))
                     }
                     className="transition-all duration-700 ease-out"
                   />
                 </svg>
-                <div className="text-center z-10 px-2 text-left">
+                <div className="text-center z-10 px-2">
                   <span className="text-[9px] font-mono tracking-[0.1em] text-zinc-500 uppercase block">Live Estimate</span>
                   <span className="text-2xl font-black text-ink-navy">{formatPrice(valuation.finalPrice)}</span>
                 </div>
               </div>
-              <span className="text-xs text-ink-slate font-light mt-4 bg-ice-gray px-3 py-1 rounded-sm border border-white/[0.06]">
+              <span className="text-xs text-ink-slate font-light mt-3">
                 Base Value: {formatPrice(variant.basePrice)}
               </span>
             </div>
