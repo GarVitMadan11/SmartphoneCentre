@@ -3,7 +3,7 @@ import { Model, Variant, getDefectRulesForCategory, DefectRule } from '../data/m
 import { calculateValuation } from '../utils/valuation';
 import { 
   ArrowLeft, Check, ChevronRight, Activity, Sparkles, 
-  Smartphone, ShieldAlert, Box, Zap, Trash2, ShieldCheck
+  Smartphone, Box, Zap, Trash2, ShieldCheck, Printer
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getIllustration } from './Illustrations';
@@ -59,6 +59,9 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
   const valuation = useMemo(() => {
     return calculateValuation(variant, selectedDefects);
   }, [variant, selectedDefects]);
+
+  // Stable receipt reference code — generated once per wizard session
+  const receiptRef = useMemo(() => Math.random().toString(36).substr(2, 6).toUpperCase(), []);
 
   // Toggle selection helper
   const handleToggleDefect = (defect: DefectRule, mutuallyExclusiveId?: string) => {
@@ -436,6 +439,39 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                 </div>
 
                 <div className="space-y-3 mt-6 text-left">
+                  {/* Affirmative: Everything Works Fine */}
+                  {(() => {
+                    const funcDefectIds = rules
+                      .filter(r => ['camera', 'battery'].includes(r.category) || r.id === 'defect-critical-security')
+                      .map(r => r.id);
+                    const isAnyFuncSelected = selectedDefects.some(d => funcDefectIds.includes(d.id));
+                    const isSelected = !isAnyFuncSelected;
+                    return (
+                      <div
+                        onClick={() => setSelectedDefects(prev => prev.filter(d => !funcDefectIds.includes(d.id)))}
+                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-3 text-left ${
+                          isSelected
+                            ? 'border-cobalt bg-cobalt-light scale-[1.01] opacity-100 z-10'
+                            : 'border-ice-border bg-canvas-white opacity-40 hover:opacity-75 hover:scale-[1.005]'
+                        }`}
+                      >
+                        <div className="w-14 h-14 flex-shrink-0 rounded-sm bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                          <ShieldCheck className="w-7 h-7 text-emerald-500" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-sm text-ink-navy">Everything Works Fine</h4>
+                          <p className="text-xs text-ink-muted mt-0.5 font-light">Camera, battery, and biometrics are all fully functional.</p>
+                        </div>
+                        <div className={`w-5 h-5 rounded-sm border flex items-center justify-center flex-shrink-0 ${
+                          isSelected ? 'bg-cobalt border-cobalt text-white' : 'border-ice-border'
+                        }`}>
+                          {isSelected && <Check className="w-3 h-3" />}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Hardware defect options */}
                   {rules.filter(r => ['camera', 'battery'].includes(r.category) || r.id === 'defect-critical-security').map(defect => {
                     const isAnyFuncSelected = selectedDefects.some(d => ['camera', 'battery'].includes(d.category) || d.id === 'defect-critical-security');
                     const isSelected = selectedDefects.some(d => d.id === defect.id);
@@ -490,6 +526,39 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                 </div>
 
                 <div className="space-y-3 mt-6 text-left">
+                  {/* Affirmative: Box & Charger Included */}
+                  {(() => {
+                    const accDefectIds = rules
+                      .filter(r => r.category === 'accessories' && !r.isCriticalFailure && r.id !== 'defect-critical-security')
+                      .map(r => r.id);
+                    const isAnyAccSelected = selectedDefects.some(d => accDefectIds.includes(d.id));
+                    const isSelected = !isAnyAccSelected;
+                    return (
+                      <div
+                        onClick={() => setSelectedDefects(prev => prev.filter(d => !accDefectIds.includes(d.id)))}
+                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-3 text-left ${
+                          isSelected
+                            ? 'border-cobalt bg-cobalt-light scale-[1.01] opacity-100 z-10'
+                            : 'border-ice-border bg-canvas-white opacity-40 hover:opacity-75 hover:scale-[1.005]'
+                        }`}
+                      >
+                        <div className="w-14 h-14 flex-shrink-0 rounded-sm bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                          <Box className="w-7 h-7 text-emerald-500" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-sm text-ink-navy">Box & Charger Included</h4>
+                          <p className="text-xs text-ink-muted mt-0.5 font-light">Original retail box and OEM charging cable are available.</p>
+                        </div>
+                        <div className={`w-5 h-5 rounded-sm border flex items-center justify-center flex-shrink-0 ${
+                          isSelected ? 'bg-cobalt border-cobalt text-white' : 'border-ice-border'
+                        }`}>
+                          {isSelected && <Check className="w-3 h-3" />}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Accessories defect options */}
                   {rules.filter(r => r.category === 'accessories' && !r.isCriticalFailure && r.id !== 'defect-critical-security').map(defect => {
                     const isAnyAccSelected = selectedDefects.some(d => d.category === 'accessories' && !d.isCriticalFailure && d.id !== 'defect-critical-security');
                     const isSelected = selectedDefects.some(d => d.id === defect.id);
@@ -558,7 +627,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                       </div>
                       <div className="text-right">
                         <span className="text-[9px] text-zinc-500 uppercase block font-mono tracking-wider">REF CODE</span>
-                        <span className="text-[10px] text-zinc-400">#SCH-{Math.random().toString(36).substr(2, 6).toUpperCase()}</span>
+                      <span className="text-[10px] text-zinc-400">#SCH-{receiptRef}</span>
                       </div>
                     </div>
 
@@ -600,13 +669,23 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   </div>
                 </div>
 
-                <button
-                  onClick={() => onComplete(valuation.finalPrice, selectedDefects)}
-                  className="w-full bg-cobalt hover:bg-cobalt-hover text-white py-4 rounded-sm font-bold text-center transition-all flex items-center justify-center gap-2 group mt-4 hover:scale-[1.01]"
-                >
-                  Book Instant Doorstep Payout
-                  <ChevronRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
-                </button>
+                <div className="flex gap-3 mt-4">
+                  <button
+                    onClick={() => window.print()}
+                    className="flex-shrink-0 px-4 py-4 rounded-sm border border-ice-border text-ink-slate hover:border-cobalt hover:text-cobalt transition-all flex items-center gap-2 text-sm font-semibold"
+                    title="Print / Save as PDF"
+                  >
+                    <Printer className="w-4 h-4" />
+                    <span className="hidden sm:inline">Print Quote</span>
+                  </button>
+                  <button
+                    onClick={() => onComplete(valuation.finalPrice, selectedDefects)}
+                    className="flex-1 bg-cobalt hover:bg-cobalt-hover text-white py-4 rounded-sm font-bold text-center transition-all flex items-center justify-center gap-2 group hover:scale-[1.01]"
+                  >
+                    Book Instant Doorstep Payout
+                    <ChevronRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
+                  </button>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>

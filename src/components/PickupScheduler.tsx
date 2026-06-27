@@ -1,10 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { 
   Calendar, Clock, User, MapPin, CreditCard, 
-  CheckCircle, ArrowLeft, ShieldAlert, Award, Star
+  CheckCircle, ArrowLeft, ShieldAlert, Award, Star, Smartphone
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
+import emailjs from '@emailjs/browser';
 
 interface PickupSchedulerProps {
   finalPrice: number;
@@ -26,6 +27,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [imei, setImei] = useState('');
   const [address, setAddress] = useState('');
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>('');
@@ -66,7 +68,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
     }).format(price);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !email || !phone || !address || !selectedDate || !selectedTimeSlot) {
       alert('Please fill out all required fields.');
@@ -74,18 +76,46 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
     }
 
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setIsConfirmed(true);
-      
-      // Trigger canvas-confetti
-      confetti({
-        particleCount: 150,
-        spread: 80,
-        origin: { y: 0.6 },
-        colors: ['#3B82F6', '#60A5FA', '#93C5FD', '#1E3A8A', '#FAFAFA']
-      });
-    }, 1500);
+
+    // Build template parameters for EmailJS
+    const templateParams = {
+      to_name: name,
+      to_email: email,
+      phone: `+91 ${phone}`,
+      imei: imei || 'Not provided',
+      address,
+      pickup_date: selectedDate,
+      time_slot: selectedTimeSlot,
+      payment_method: paymentMethod.toUpperCase(),
+      payment_details: paymentDetails || 'N/A',
+      payout_amount: new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(finalPrice),
+      agent_name: assignedAgent.name,
+      agent_phone: assignedAgent.phone,
+    };
+
+    try {
+      const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+      const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+      const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+
+      if (serviceId && templateId && publicKey &&
+          !serviceId.includes('xxxxxxx') && !publicKey.includes('your_public')) {
+        await emailjs.send(serviceId, templateId, templateParams, publicKey);
+      }
+      // If credentials not configured, skip silently (demo mode)
+    } catch (err) {
+      console.warn('EmailJS not configured — booking confirmed locally only.', err);
+    }
+
+    setIsSubmitting(false);
+    setIsConfirmed(true);
+
+    confetti({
+      particleCount: 150,
+      spread: 80,
+      origin: { y: 0.6 },
+      colors: ['#3B82F6', '#60A5FA', '#93C5FD', '#1E3A8A', '#FAFAFA']
+    });
   };
 
   return (
@@ -153,13 +183,31 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                     <input
                       type="tel"
                       required
-                      pattern="[0-9]{10}"
+                      pattern="[6-9][0-9]{9}"
                       value={phone}
                       onChange={e => setPhone(e.target.value)}
                       placeholder="9876543210"
                       className="w-full pl-10 pr-3 py-3 rounded-sm border border-ice-border bg-canvas-white text-ink-navy text-sm focus:outline-none focus:border-cobalt/40 focus:ring-1 focus:ring-cobalt/20 transition-all font-light"
                     />
                   </div>
+                </div>
+
+                {/* IMEI Field */}
+                <div>
+                  <label className="text-xs font-light text-ink-slate mb-1 flex items-center gap-1.5">
+                    <Smartphone className="w-3 h-3" />
+                    Device IMEI
+                    <span className="text-zinc-500 font-mono text-[9px]">(optional — dial *#06# to find)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={imei}
+                    onChange={e => setImei(e.target.value.replace(/\D/g, '').slice(0, 15))}
+                    placeholder="e.g. 352999061234567"
+                    maxLength={15}
+                    className="w-full p-3 rounded-sm border border-ice-border bg-canvas-white text-ink-navy text-sm focus:outline-none focus:border-cobalt/40 focus:ring-1 focus:ring-cobalt/20 transition-all font-light font-mono tracking-wide"
+                  />
+                  <p className="text-[10px] text-ink-muted mt-1 font-light">Helps our agent verify your device faster on arrival.</p>
                 </div>
               </div>
 
