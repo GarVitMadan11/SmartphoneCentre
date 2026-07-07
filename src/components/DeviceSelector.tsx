@@ -10,9 +10,17 @@ interface DeviceSelectorProps {
 export const DeviceSelector: React.FC<DeviceSelectorProps> = ({ onVariantSelected }) => {
   const [selectedBrandId, setSelectedBrandId] = useState<string>('brand-apple');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState<string>('');
   const [selectedModel, setSelectedModel] = useState<Model | null>(null);
   const [tempVariant, setTempVariant] = useState<Variant | null>(null);
   const variantSelectorRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   useEffect(() => {
     if (selectedModel && variantSelectorRef.current) {
@@ -25,14 +33,14 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({ onVariantSelecte
     }
   }, [selectedModel]);
 
-  // Filter models based on brand and search query
+  // Filter models based on brand and debounced search query
   const filteredModels = useMemo(() => {
     return MODELS.filter(model => {
       const matchesBrand = model.brandId === selectedBrandId;
-      const matchesSearch = model.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = model.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase());
       return matchesBrand && matchesSearch;
     });
-  }, [selectedBrandId, searchQuery]);
+  }, [selectedBrandId, debouncedSearchQuery]);
 
   // Generate variants for the selected model
   const modelVariants = useMemo(() => {
@@ -87,7 +95,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({ onVariantSelecte
   return (
     <div className="w-full">
       {/* Brand Tabs — horizontally scrollable on mobile */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none" style={{scrollbarWidth: 'none'}}>
+      <div className="flex gap-2.5 mb-6 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-none" style={{scrollbarWidth: 'none'}}>
         {BRANDS.map(brand => {
           const isActive = selectedBrandId === brand.id;
           return (
@@ -99,11 +107,12 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({ onVariantSelecte
                 setSelectedStorage(null);
                 setTempVariant(null);
               }}
-              className={`flex-shrink-0 px-4 sm:px-6 py-2.5 sm:py-3 rounded-sm font-medium text-xs sm:text-sm transition-all duration-300 flex items-center gap-1.5 sm:gap-2 border ${
+              className={`flex-shrink-0 px-5 sm:px-6 py-3 sm:py-3.5 rounded-sm font-semibold text-xs sm:text-sm transition-all duration-300 flex items-center gap-1.5 sm:gap-2 border ${
                 isActive
-                  ? 'bg-cobalt text-white border-cobalt scale-[1.01] opacity-100'
-                  : 'bg-canvas-pure text-ink-slate border-ice-border hover:border-cobalt/40 hover:bg-cobalt-light/10 opacity-60 hover:opacity-100'
+                  ? 'bg-cobalt text-white border-cobalt scale-[1.02] opacity-100 shadow-[0_0_15px_rgba(59,130,246,0.3)]'
+                  : 'bg-canvas-pure text-ink-slate border-ice-border hover:border-cobalt/40 hover:bg-cobalt-light/10 opacity-70 hover:opacity-100'
               }`}
+              style={{ minHeight: '48px' }}
             >
               <span className="text-base sm:text-lg font-bold">{brand.logo}</span>
               {brand.name}
@@ -117,18 +126,33 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({ onVariantSelecte
         <div className={`${selectedModel ? 'lg:col-span-7' : 'lg:col-span-12'} transition-all duration-500`}>
           {/* Search bar */}
           <div className="relative mb-4 sm:mb-6">
-            <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-ink-muted w-4 h-4 sm:w-5 sm:h-5" />
+            <Search className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 text-ink-muted w-4 h-4 sm:w-5 sm:h-5" />
             <input
               type="text"
               placeholder="Search model (e.g. iPhone 15 Pro, S24)..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="w-full pl-9 sm:pl-12 pr-4 py-3 sm:py-4 rounded-sm border border-ice-border bg-canvas-pure text-ink-navy text-sm placeholder:text-ink-muted focus:outline-none focus:border-cobalt focus:ring-1 focus:ring-cobalt/20 transition-all duration-300"
+              className="w-full pl-10 sm:pl-12 pr-4 py-3 sm:py-3.5 rounded-sm border border-ice-border bg-canvas-pure text-ink-navy text-sm placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all duration-300"
+              style={{ minHeight: '48px' }}
             />
           </div>
 
           {/* Models Grid: 1 col xs, 2 col sm, 3 col md */}
           <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+            {filteredModels.length === 0 && (
+              <div className="col-span-full py-12 px-4 text-center border border-dashed border-ice-border rounded-sm bg-canvas-pure">
+                <Smartphone className="w-10 h-10 text-ink-muted mx-auto mb-3" />
+                <h4 className="text-base font-semibold text-ink-navy">No models found</h4>
+                <p className="text-xs text-ink-muted mt-1 max-w-xs mx-auto">We couldn't find any results matching "{searchQuery}". Try searching for Apple or Samsung devices.</p>
+                <button 
+                  onClick={() => setSearchQuery('')}
+                  className="mt-4 px-4 py-2 bg-cobalt hover:bg-cobalt-hover text-white text-xs font-bold rounded-sm transition-all"
+                  style={{ minHeight: '36px' }}
+                >
+                  Clear Search
+                </button>
+              </div>
+            )}
             <AnimatePresence mode="popLayout">
               {filteredModels.map(model => {
                 const isSelected = selectedModel?.id === model.id;
@@ -140,10 +164,10 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({ onVariantSelecte
                     onClick={() => handleModelClick(model)}
                     className={`p-4 sm:p-5 rounded-sm border cursor-pointer transition-all duration-300 bg-canvas-pure relative card-shimmer ${
                       isSelected
-                        ? 'border-cobalt ring-1 ring-cobalt/20 scale-[1.01] opacity-100 z-10'
+                        ? 'border-cobalt ring-1 ring-cobalt/20 scale-[1.01] opacity-100 z-10 shadow-premium'
                         : hasSelection
                         ? 'border-ice-border opacity-40 hover:opacity-75 hover:scale-[1.005]'
-                        : 'border-ice-border hover:border-cobalt/40 hover:-translate-y-0.5'
+                        : 'border-ice-border hover:border-cobalt/40 hover:-translate-y-0.5 shadow-sm hover:shadow-premium'
                     }`}
                   >
                     {/* Canva style premium layout */}
@@ -171,7 +195,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({ onVariantSelecte
                       <div className="pt-4 border-t border-white/[0.04] flex items-center justify-between">
                         <div className="text-left">
                           <span className="text-[9px] text-zinc-500 block uppercase font-mono tracking-wider">Payout Up To</span>
-                          <span className="text-sm font-semibold text-cobalt">{formatPrice(model.basePrice128GB)}</span>
+                          <span className="text-sm font-bold text-cobalt font-outfit">{formatPrice(model.basePrice128GB)}</span>
                         </div>
                         <ChevronRight className={`w-4 h-4 transition-transform duration-300 ${isSelected ? 'translate-x-1 text-cobalt' : 'text-ink-muted'}`} />
                       </div>
@@ -215,13 +239,14 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({ onVariantSelecte
                       <button
                         key={storage}
                         onClick={() => handleStorageSelect(storage)}
-                        className={`py-3 rounded-sm border text-sm font-semibold transition-all duration-300 ${
+                        className={`py-3.5 rounded-sm border text-sm font-semibold transition-all duration-300 ${
                           isSelected
-                            ? 'bg-cobalt text-white border-cobalt scale-[1.01] opacity-100'
+                            ? 'bg-cobalt text-white border-cobalt scale-[1.01] opacity-100 shadow-[0_0_10px_rgba(59,130,246,0.2)]'
                             : hasSelection
                             ? 'bg-canvas-white text-ink-navy border-ice-border opacity-40 hover:opacity-75'
                             : 'bg-canvas-white text-ink-navy border-ice-border hover:border-cobalt/30 hover:scale-[1.005]'
                         }`}
+                        style={{ minHeight: '48px' }}
                       >
                         {storage >= 1024 ? '1 TB' : `${storage} GB`}
                       </button>
@@ -248,13 +273,14 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({ onVariantSelecte
                         <button
                           key={variant.id}
                           onClick={() => handleColorSelect(variant)}
-                          className={`p-3 rounded-sm border text-left text-xs transition-all duration-300 flex flex-col justify-between ${
+                          className={`p-4 rounded-sm border text-left text-xs transition-all duration-300 flex flex-col justify-between ${
                             isSelected
-                              ? 'bg-cobalt-light border-cobalt ring-1 ring-cobalt/20 scale-[1.01] opacity-100'
+                              ? 'bg-cobalt-light border-cobalt ring-1 ring-cobalt/20 scale-[1.01] opacity-100 shadow-[0_0_10px_rgba(59,130,246,0.15)]'
                               : hasSelection
                               ? 'bg-canvas-white text-ink-navy border-ice-border opacity-40 hover:opacity-75'
                               : 'bg-canvas-white text-ink-navy border-ice-border hover:border-cobalt/20 hover:scale-[1.005]'
                           }`}
+                          style={{ minHeight: '48px' }}
                         >
                           <span className="font-semibold text-ink-navy">{variant.color}</span>
                           <span className="text-[10px] text-ink-muted mt-1 font-mono uppercase">Unlocked</span>

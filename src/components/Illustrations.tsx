@@ -4,7 +4,7 @@ import React from 'react';
 export const PowersOnIllustration: React.FC = () => (
   <svg viewBox="0 0 64 64" className="w-12 h-12" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
-      <linearGradient id="powerOnGrad" x1="0" y1="0" x2="0" y2="1">
+      <linearGradient id="stc_ill_powerOnGrad" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0%" stopColor="#10B981" stopOpacity="0.4" />
         <stop offset="100%" stopColor="#10B981" stopOpacity="0.05" />
       </linearGradient>
@@ -12,7 +12,7 @@ export const PowersOnIllustration: React.FC = () => (
     {/* Phone chassis */}
     <rect x="19" y="6" width="26" height="52" rx="4" stroke="#A1A1AA" strokeWidth="2" />
     {/* Screen */}
-    <rect x="22" y="9" width="20" height="46" rx="2" fill="url(#powerOnGrad)" />
+    <rect x="22" y="9" width="20" height="46" rx="2" fill="url(#stc_ill_powerOnGrad)" />
     {/* Power bolt */}
     <path d="M34 16L25 29H32L30 46L39 33H32L34 16Z" fill="#34D399" stroke="#10B981" strokeWidth="1.5" strokeLinejoin="round" />
     {/* Speaker at top */}
@@ -42,7 +42,7 @@ export const DeadPowerIllustration: React.FC = () => (
 export const FlawlessDisplayIllustration: React.FC = () => (
   <svg viewBox="0 0 64 64" className="w-12 h-12" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
-      <linearGradient id="flawlessGrad" x1="0" y1="0" x2="1" y2="1">
+      <linearGradient id="stc_ill_flawlessGrad" x1="0" y1="0" x2="1" y2="1">
         <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.4" />
         <stop offset="100%" stopColor="#8B5CF6" stopOpacity="0.1" />
       </linearGradient>
@@ -50,7 +50,7 @@ export const FlawlessDisplayIllustration: React.FC = () => (
     {/* Phone chassis */}
     <rect x="19" y="6" width="26" height="52" rx="4" stroke="#F4F4F5" strokeWidth="2" />
     {/* Screen */}
-    <rect x="22" y="9" width="20" height="46" rx="2" fill="url(#flawlessGrad)" />
+    <rect x="22" y="9" width="20" height="46" rx="2" fill="url(#stc_ill_flawlessGrad)" />
     {/* Sparkle */}
     <path d="M36 14L38 16L40 14L38 12L36 14Z" fill="#FBBF24" />
     <path d="M25 38L26 39L27 38L26 37L25 38Z" fill="#FBBF24" />
@@ -102,14 +102,14 @@ export const ScreenBurnLinesIllustration: React.FC = () => (
 export const FlawlessFrameIllustration: React.FC = () => (
   <svg viewBox="0 0 64 64" className="w-12 h-12" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
-      <linearGradient id="metalGrad" x1="0" y1="0" x2="1" y2="1">
+      <linearGradient id="stc_ill_metalGrad" x1="0" y1="0" x2="1" y2="1">
         <stop offset="0%" stopColor="#E4E4E7" />
         <stop offset="50%" stopColor="#A1A1AA" />
         <stop offset="100%" stopColor="#E4E4E7" />
       </linearGradient>
     </defs>
     {/* Phone frame with shiny metal outline */}
-    <rect x="19" y="6" width="26" height="52" rx="4" stroke="url(#metalGrad)" strokeWidth="3" />
+    <rect x="19" y="6" width="26" height="52" rx="4" stroke="url(#stc_ill_metalGrad)" strokeWidth="3" />
     <rect x="22" y="9" width="20" height="46" rx="2" fill="#1C1C1F" />
     {/* Frame sparkles */}
     <path d="M14 16L16 18L18 16L16 14L14 16Z" fill="#FBBF24" />

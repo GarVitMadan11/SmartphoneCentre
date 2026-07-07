@@ -1,16 +1,21 @@
 import React, { useState, useMemo } from 'react';
 import { 
-  Calendar, Clock, User, MapPin, CreditCard, 
-  CheckCircle, ArrowLeft, ShieldAlert, Award, Star, Smartphone
+  Clock, User, MapPin, CreditCard, 
+  CheckCircle, ArrowLeft, ShieldAlert, Award, Star, Smartphone, Info, ShieldCheck, ChevronRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import emailjs from '@emailjs/browser';
+import { Model, Variant, DefectRule } from '../data/mockDatabase';
 
 interface PickupSchedulerProps {
   finalPrice: number;
   onBack: () => void;
   onSuccess: () => void;
+  selectedDefects: DefectRule[];
+  selectedModel: Model;
+  selectedVariant: Variant;
+  onEditDevice: () => void;
 }
 
 const AGENTS = [
@@ -19,11 +24,52 @@ const AGENTS = [
   { name: 'Priya Patel', rating: 5.0, reviews: 189, avatar: '👤', phone: '+91 98765 55678' }
 ];
 
+const getEngineeringLabel = (description: string) => {
+  const mapping: { [key: string]: string } = {
+    'Cracked Screen / Back Glass': 'Screen Restoration Fee',
+    'Light Screen Scratches': 'Glass Micro-Polishing Fee',
+    'Screen Burn-in / Lines': 'Display Panel Replacement Fee',
+    'Dented or Bent Frame': 'Chassis Structure Re-alignment',
+    'Scuffed Frame / Normal Wear': 'Frame Bead-Blasting & Refinishing',
+    'Faulty Lens / Blur': 'Optical Sensor Recalibration',
+    'Battery Health < 80%': 'Battery Module Replacement',
+    'Missing Original Box': 'OEM Retail Box De-allocation',
+    'Missing Original Charger / Cable': 'OEM Power Adapter De-allocation',
+    'Device Does Not Turn On': 'Board-Level Hardware Failure',
+    'Biometrics Faulty (FaceID/TouchID)': 'Biometric Sensor Security Fee'
+  };
+  return mapping[description] || description;
+};
+
+// Luhn Checksum Algorithm for 15-digit IMEI verification
+const validateLuhn = (imei: string): boolean => {
+  if (!imei) return true; // Optional field is valid when empty
+  if (imei.length !== 15) return false;
+  let sum = 0;
+  for (let i = 0; i < 15; i++) {
+    let digit = parseInt(imei[i], 10);
+    if (isNaN(digit)) return false;
+    if (i % 2 === 1) {
+      digit *= 2;
+      if (digit > 9) digit -= 9;
+    }
+    sum += digit;
+  }
+  return sum % 10 === 0;
+};
+
 export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
   finalPrice,
   onBack,
-  onSuccess
+  onSuccess,
+  selectedDefects,
+  selectedModel,
+  selectedVariant,
+  onEditDevice
 }) => {
+  // Wizard steps: 1: Contact, 2: Address & Slots, 3: Payment & Trust Confirmation
+  const [schedulerStep, setSchedulerStep] = useState<number>(1);
+
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -35,6 +81,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
   const [paymentDetails, setPaymentDetails] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
 
   // Generate next 5 dates in formatted string
   const dates = Array.from({ length: 5 }).map((_, i) => {
@@ -68,10 +115,29 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
     }).format(price);
   };
 
+  // Step 1 Validation
+  const isPhoneValid = useMemo(() => /^[6-9]\d{9}$/.test(phone), [phone]);
+  const isEmailValid = useMemo(() => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email), [email]);
+  const isImeiValid = useMemo(() => !imei || (imei.length === 15 && validateLuhn(imei)), [imei]);
+  const isStep1Valid = useMemo(() => {
+    return name.trim().length > 0 && isEmailValid && isPhoneValid && isImeiValid;
+  }, [name, isEmailValid, isPhoneValid, isImeiValid]);
+
+  // Step 2 Validation
+  const isStep2Valid = useMemo(() => {
+    return address.trim().length > 0 && selectedDate !== '' && selectedTimeSlot !== '';
+  }, [address, selectedDate, selectedTimeSlot]);
+
+  // Step 3 Validation
+  const isStep3Valid = useMemo(() => {
+    if (paymentMethod === 'cash') return true;
+    return paymentDetails.trim().length > 0;
+  }, [paymentMethod, paymentDetails]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !email || !phone || !address || !selectedDate || !selectedTimeSlot) {
-      alert('Please fill out all required fields.');
+    if (!isStep1Valid || !isStep2Valid || !isStep3Valid) {
+      alert('Please fill out all required details correctly.');
       return;
     }
 
@@ -102,7 +168,6 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
           !serviceId.includes('xxxxxxx') && !publicKey.includes('your_public')) {
         await emailjs.send(serviceId, templateId, templateParams, publicKey);
       }
-      // If credentials not configured, skip silently (demo mode)
     } catch (err) {
       console.warn('EmailJS not configured — booking confirmed locally only.', err);
     }
@@ -118,6 +183,24 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
     });
   };
 
+  const handleNextStep = () => {
+    if (schedulerStep === 1 && isStep1Valid) {
+      setSchedulerStep(2);
+    } else if (schedulerStep === 2 && isStep2Valid) {
+      setSchedulerStep(3);
+    }
+  };
+
+  const handlePrevStep = () => {
+    if (schedulerStep === 3) {
+      setSchedulerStep(2);
+    } else if (schedulerStep === 2) {
+      setSchedulerStep(1);
+    } else {
+      onBack();
+    }
+  };
+
   return (
     <div className="w-full">
       <AnimatePresence mode="wait">
@@ -129,310 +212,475 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
             exit={{ opacity: 0, y: -15 }}
             className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-8 text-left"
           >
-            {/* Left Column: Form Details */}
-            <form onSubmit={handleSubmit} className="lg:col-span-7 bg-canvas-pure rounded-sm border border-ice-border p-4 sm:p-6 space-y-5 sm:space-y-6">
-              <div className="flex items-center gap-3 border-b border-white/[0.04] pb-4">
+            {/* Left Column: Form Details & Progressive Steps */}
+            <div className="lg:col-span-7 bg-canvas-pure rounded-sm border border-ice-border p-4 sm:p-6 flex flex-col justify-between shadow-premium min-h-[500px]">
+              
+              {/* Header block */}
+              <div>
+                <div className="flex items-center gap-3 border-b border-white/[0.04] pb-4 mb-5">
+                  <button
+                    type="button"
+                    onClick={handlePrevStep}
+                    className="p-2 rounded-sm border border-ice-border hover:border-cobalt hover:bg-cobalt-light/10 text-ink-slate hover:text-cobalt transition-all"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                  </button>
+                  <div>
+                    <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-0.5">Scheduling agent</span>
+                    <h2 className="text-3xl font-light text-ink-navy tracking-tight">Doorstep Pickup</h2>
+                    <p className="text-xs text-ink-muted mt-1 font-light">Complete the steps below to secure your dynamic doorside valuation.</p>
+                  </div>
+                </div>
+
+                {/* Progress bar info */}
+                <div className="flex items-center justify-between mb-6 bg-canvas-white/40 p-2.5 rounded-sm border border-white/[0.04] text-[10px] font-mono tracking-wider text-zinc-400">
+                  <span className="uppercase">Step {schedulerStep} of 3: {
+                    schedulerStep === 1 ? 'Contact & Device Info' : 
+                    schedulerStep === 2 ? 'Pickup Details' : 
+                    'Payout Confirmation'
+                  }</span>
+                  <div className="flex gap-1">
+                    {[1, 2, 3].map(s => (
+                      <span key={s} className={`w-2 h-2 rounded-full ${s <= schedulerStep ? 'bg-cobalt' : 'bg-ice-border'}`} />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Step contents */}
+                <div>
+                  {/* STEP 1: Customer Contact & IMEI */}
+                  {schedulerStep === 1 && (
+                    <div className="space-y-5 animate-fadeIn">
+                      <h3 className="text-[11px] font-mono tracking-[0.25em] text-cobalt uppercase flex items-center gap-1.5 font-bold mb-3">
+                        <User className="w-3.5 h-3.5" /> 1. Contact details & IMEI Identification
+                      </h3>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-xs font-semibold text-ink-slate block mb-1">Full Name *</label>
+                          <input
+                            type="text"
+                            required
+                            value={name}
+                            onChange={e => setName(e.target.value)}
+                            placeholder="e.g. Vikramaditya Singh"
+                            className="w-full p-3 rounded-sm border border-ice-border bg-canvas-white text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all font-light"
+                            style={{ minHeight: '48px' }}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-semibold text-ink-slate block mb-1">Email Address *</label>
+                          <input
+                            type="email"
+                            required
+                            value={email}
+                            onChange={e => setEmail(e.target.value)}
+                            placeholder="e.g. assignment@tradein.com"
+                            className="w-full p-3 rounded-sm border border-ice-border bg-canvas-white text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all font-light"
+                            style={{ minHeight: '48px' }}
+                          />
+                          {email && !isEmailValid && (
+                            <span className="text-[10px] text-red-400 mt-1 block">Please enter a valid email address.</span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-semibold text-ink-slate block mb-1">WhatsApp / Contact Number *</label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-mono text-zinc-400 font-semibold">+91</span>
+                          <input
+                            type="tel"
+                            required
+                            pattern="[6-9][0-9]{9}"
+                            value={phone}
+                            onChange={e => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                            placeholder="9876543210"
+                            className="w-full pl-11 pr-3 py-3 rounded-sm border border-ice-border bg-canvas-white text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all font-light"
+                            style={{ minHeight: '48px' }}
+                          />
+                        </div>
+                        {phone && !isPhoneValid && (
+                          <span className="text-[10px] text-red-400 mt-1 block">Must start with 6-9 and contain exactly 10 digits.</span>
+                        )}
+                      </div>
+
+                      {/* IMEI Input with Luhn Checksum validation and dial instructions */}
+                      <div>
+                        <div className="flex items-center justify-between mb-1 relative">
+                          <label className="text-xs font-semibold text-ink-slate flex items-center gap-1.5">
+                            <Smartphone className="w-3.5 h-3.5 text-cobalt" />
+                            Device IMEI
+                            <span className="text-zinc-500 font-mono text-[9px] font-normal">(optional)</span>
+                          </label>
+                          
+                          {/* Info Tooltip */}
+                          <div className="relative">
+                            <button
+                              type="button"
+                              onClick={() => setShowTooltip(!showTooltip)}
+                              onMouseEnter={() => setShowTooltip(true)}
+                              onMouseLeave={() => setShowTooltip(false)}
+                              className="p-1 rounded-full text-zinc-500 hover:text-cobalt transition-colors"
+                              title="How to retrieve IMEI"
+                            >
+                              <Info className="w-3.5 h-3.5" />
+                            </button>
+                            <AnimatePresence>
+                              {showTooltip && (
+                                <motion.div 
+                                  initial={{ opacity: 0, y: 5 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  exit={{ opacity: 0, y: 5 }}
+                                  className="absolute right-0 bottom-6 z-20 w-52 p-3 bg-zinc-950 border border-white/[0.08] text-white text-[10px] rounded-sm shadow-premium leading-normal font-light"
+                                >
+                                  Dial <strong className="text-cobalt font-mono">*#06#</strong> on your phone's dial pad to display your 15-digit IMEI number instantly.
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </div>
+                        </div>
+
+                        <input
+                          type="text"
+                          value={imei}
+                          onChange={e => setImei(e.target.value.replace(/\D/g, '').slice(0, 15))}
+                          placeholder="e.g. 352999061234567"
+                          maxLength={15}
+                          className="w-full p-3 rounded-sm border border-ice-border bg-canvas-white text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all font-light font-mono tracking-wide"
+                          style={{ minHeight: '48px' }}
+                        />
+                        {imei && imei.length > 0 && !isImeiValid && (
+                          <span className="text-[10px] text-red-400 mt-1 block">Invalid 15-digit IMEI (Luhn verification failed).</span>
+                        )}
+                        {imei && isImeiValid && imei.length === 15 && (
+                          <span className="text-[10px] text-emerald-400 mt-1 block">✓ Valid 15-digit IMEI checked via Luhn checksum.</span>
+                        )}
+                        <p className="text-[10px] text-ink-muted mt-1 font-light">Dialing *#06# helps verify hardware specifications instantly doorside.</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* STEP 2: Address & Schedule Slot */}
+                  {schedulerStep === 2 && (
+                    <div className="space-y-5 animate-fadeIn">
+                      <h3 className="text-[11px] font-mono tracking-[0.25em] text-cobalt uppercase flex items-center gap-1.5 font-bold mb-3">
+                        <MapPin className="w-3.5 h-3.5" /> 2. Address & Time slots
+                      </h3>
+
+                      <div>
+                        <label className="text-xs font-semibold text-ink-slate block mb-1">Complete Address Details *</label>
+                        <textarea
+                          required
+                          rows={3}
+                          value={address}
+                          onChange={e => setAddress(e.target.value)}
+                          placeholder="Flat No, Building Name, Street Address, City, Pincode"
+                          className="w-full p-3 rounded-sm border border-ice-border bg-canvas-white text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all resize-none font-light"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-semibold text-ink-slate block mb-2">Available Pickup Dates *</label>
+                        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                          {dates.map(d => {
+                            const isSelected = selectedDate === d.raw;
+                            const isAnyDateSelected = selectedDate !== '';
+                            return (
+                              <button
+                                key={d.raw}
+                                type="button"
+                                onClick={() => setSelectedDate(d.raw)}
+                                className={`py-2 rounded-sm border text-center transition-all duration-300 flex flex-col justify-center items-center focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt ${
+                                  isSelected
+                                    ? 'bg-cobalt-light border-cobalt text-ink-navy scale-[1.02] opacity-100 z-10 shadow-sm'
+                                    : isAnyDateSelected
+                                    ? 'bg-canvas-white text-ink-slate border-ice-border opacity-40 hover:opacity-75 hover:scale-[1.005]'
+                                    : 'bg-canvas-white text-ink-navy border-ice-border hover:border-cobalt/30 hover:scale-[1.005]'
+                                }`}
+                                style={{ minHeight: '52px' }}
+                              >
+                                <span className="text-[8px] font-mono uppercase tracking-wider block">{d.dayName}</span>
+                                <span className="text-base font-semibold leading-none my-0.5">{d.dayNumber}</span>
+                                <span className="text-[8px] font-mono uppercase tracking-wider block">{d.month}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-semibold text-ink-slate block mb-2">Available Time Windows *</label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {timeSlots.map(slot => {
+                            const isSelected = selectedTimeSlot === slot;
+                            const isAnySlotSelected = selectedTimeSlot !== '';
+                            return (
+                              <button
+                                key={slot}
+                                type="button"
+                                onClick={() => setSelectedTimeSlot(slot)}
+                                className={`p-3.5 rounded-sm border text-xs text-left transition-all duration-300 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt ${
+                                  isSelected
+                                    ? 'bg-cobalt-light border-cobalt scale-[1.01] opacity-100 z-10 shadow-sm'
+                                    : isAnySlotSelected
+                                    ? 'bg-canvas-white text-ink-slate border-ice-border opacity-40 hover:opacity-75 hover:scale-[1.005]'
+                                    : 'bg-canvas-white text-ink-navy border-ice-border hover:border-cobalt/30 hover:scale-[1.005]'
+                                }`}
+                                style={{ minHeight: '48px' }}
+                              >
+                                <Clock className={`w-4 h-4 ${isSelected ? 'text-cobalt' : 'text-zinc-500'}`} />
+                                <span className="font-semibold text-ink-navy">{slot}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* STEP 3: Payment & Assigned Inspector & Trust badges */}
+                  {schedulerStep === 3 && (
+                    <div className="space-y-5 animate-fadeIn">
+                      <h3 className="text-[11px] font-mono tracking-[0.25em] text-cobalt uppercase flex items-center gap-1.5 font-bold mb-3">
+                        <CreditCard className="w-3.5 h-3.5" /> 3. Payout Method (Instant Dispatch)
+                      </h3>
+
+                      <div className="grid grid-cols-3 gap-2">
+                        {(['upi', 'bank', 'cash'] as const).map(mode => {
+                          const isSelected = paymentMethod === mode;
+                          return (
+                            <button
+                              key={mode}
+                              type="button"
+                              onClick={() => {
+                                setPaymentMethod(mode);
+                                setPaymentDetails('');
+                              }}
+                              className={`py-3.5 rounded-sm border text-[10px] font-mono tracking-wider uppercase transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt ${
+                                isSelected
+                                  ? 'bg-cobalt-light border-cobalt text-ink-navy scale-[1.01] opacity-100 z-10 shadow-sm'
+                                  : 'bg-canvas-white text-ink-slate border-ice-border opacity-40 hover:opacity-75 hover:scale-[1.005]'
+                              }`}
+                              style={{ minHeight: '48px' }}
+                            >
+                              {mode === 'upi' ? 'UPI ID' : mode === 'bank' ? 'Bank Transfer' : 'Cash Payout'}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      <div>
+                        {paymentMethod === 'upi' && (
+                          <div>
+                            <label className="text-xs font-semibold text-ink-slate block mb-1">Enter UPI ID *</label>
+                            <input
+                              type="text"
+                              required
+                              value={paymentDetails}
+                              onChange={e => setPaymentDetails(e.target.value)}
+                              placeholder="e.g. mobile@upi"
+                              className="w-full p-3 rounded-sm border border-ice-border bg-canvas-white text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all font-light"
+                              style={{ minHeight: '48px' }}
+                            />
+                          </div>
+                        )}
+
+                        {paymentMethod === 'bank' && (
+                          <div className="space-y-3">
+                            <label className="text-xs font-semibold text-ink-slate block mb-1">Account Number & IFSC Code *</label>
+                            <input
+                              type="text"
+                              required
+                              value={paymentDetails}
+                              onChange={e => setPaymentDetails(e.target.value)}
+                              placeholder="A/C: 987654321012, IFSC: HDFC0001234"
+                              className="w-full p-3 rounded-sm border border-ice-border bg-canvas-white text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all font-light"
+                              style={{ minHeight: '48px' }}
+                            />
+                          </div>
+                        )}
+
+                        {paymentMethod === 'cash' && (
+                          <div className="bg-red-500/10 text-red-400 p-3.5 rounded-sm border border-red-500/20 text-xs flex items-start gap-2.5">
+                            <ShieldAlert className="w-4 h-4 mt-0.5 text-red-400 flex-shrink-0" />
+                            <span className="font-light leading-normal">
+                              <strong>Security Notice:</strong> Cash handovers require verifying physical matching government ID proofs with the doorstep agent before handset handover.
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Trust Badges */}
+                      <div className="pt-4 border-t border-white/[0.04] grid grid-cols-3 gap-2 text-center">
+                        <div className="bg-canvas-white p-2 border border-ice-border rounded-sm flex flex-col items-center">
+                          <ShieldCheck className="w-5 h-5 text-cobalt mb-1" />
+                          <span className="text-[8px] font-mono text-zinc-400 uppercase leading-tight font-bold">100% Encrypted Transactions</span>
+                        </div>
+                        <div className="bg-canvas-white p-2 border border-ice-border rounded-sm flex flex-col items-center">
+                          <User className="w-5 h-5 text-cobalt mb-1" />
+                          <span className="text-[8px] font-mono text-zinc-400 uppercase leading-tight font-bold">Verified Agent Delivery</span>
+                        </div>
+                        <div className="bg-canvas-white p-2 border border-ice-border rounded-sm flex flex-col items-center">
+                          <Award className="w-5 h-5 text-cobalt mb-1" />
+                          <span className="text-[8px] font-mono text-zinc-400 uppercase leading-tight font-bold">Zero Value Deductions Guarantee</span>
+                        </div>
+                      </div>
+
+                      {/* Assigned Inspector Card */}
+                      <div className="bg-canvas-white border border-ice-border rounded-sm p-4 mt-4 shadow-sm">
+                        <span className="text-[9px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-2">Assigned Agent</span>
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-sm bg-cobalt-light border border-white/[0.06] flex items-center justify-center text-lg">
+                            {assignedAgent.avatar}
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-ink-navy text-xs">{assignedAgent.name}</h4>
+                            <div className="flex items-center gap-1 mt-0.5">
+                              <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+                              <span className="text-[10px] font-bold text-ink-navy">{assignedAgent.rating}</span>
+                              <span className="text-[9px] text-ink-muted">({assignedAgent.reviews} reviews)</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Navigation CTAs */}
+              <div className="flex gap-3 border-t border-white/[0.04] pt-4 mt-8">
                 <button
                   type="button"
-                  onClick={onBack}
-                  className="p-2 rounded-sm border border-ice-border hover:border-cobalt hover:bg-cobalt-light/10 text-ink-slate hover:text-cobalt transition-all"
+                  onClick={handlePrevStep}
+                  className="px-5 py-3 rounded-sm border border-ice-border hover:bg-ice-gray text-ink-slate font-semibold text-sm transition-all"
+                  style={{ minHeight: '48px' }}
                 >
-                  <ArrowLeft className="w-4 h-4" />
+                  {schedulerStep === 1 ? 'Back' : 'Previous'}
                 </button>
-                <div>
-                  <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-0.5">Scheduling agent</span>
-                  <h2 className="text-3xl font-light text-ink-navy tracking-tight">Doorstep Pickup</h2>
-                  <p className="text-xs text-ink-muted mt-1 font-light">Our certified agent will verify your device specs at your doorstep and transfer your money instantly.</p>
-                </div>
+
+                {schedulerStep < 3 ? (
+                  <button
+                    type="button"
+                    onClick={handleNextStep}
+                    disabled={schedulerStep === 1 ? !isStep1Valid : !isStep2Valid}
+                    className={`flex-1 bg-cobalt hover:bg-cobalt-hover text-white py-3 rounded-sm font-bold text-sm transition-all flex items-center justify-center gap-2 ${
+                      (schedulerStep === 1 ? !isStep1Valid : !isStep2Valid)
+                        ? 'opacity-40 cursor-not-allowed'
+                        : 'hover:scale-[1.01]'
+                    }`}
+                    style={{ minHeight: '48px' }}
+                  >
+                    Continue to Next Step
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleSubmit}
+                    disabled={isSubmitting || !isStep3Valid}
+                    className={`flex-1 bg-cobalt hover:bg-cobalt-hover text-white py-3 rounded-sm font-bold text-sm transition-all flex items-center justify-center gap-2 ${
+                      (isSubmitting || !isStep3Valid)
+                        ? 'opacity-40 cursor-not-allowed'
+                        : 'hover:scale-[1.01]'
+                    }`}
+                    style={{ minHeight: '48px' }}
+                  >
+                    {isSubmitting ? 'Securing Payout...' : 'Lock Quote & Book Pickup'}
+                  </button>
+                )}
               </div>
+            </div>
 
-              {/* Step 1: Customer Contact */}
-              <div className="space-y-4">
-                <h3 className="text-[10px] font-mono tracking-[0.2em] text-cobalt uppercase flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5" /> 1. Customer Information
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs font-light text-ink-slate block mb-1">Full Name *</label>
-                    <input
-                      type="text"
-                      required
-                      value={name}
-                      onChange={e => setName(e.target.value)}
-                      placeholder="e.g. Vikramaditya Singh"
-                      className="w-full p-3 rounded-sm border border-ice-border bg-canvas-white text-ink-navy text-sm focus:outline-none focus:border-cobalt/40 focus:ring-1 focus:ring-cobalt/20 transition-all font-light"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-light text-ink-slate block mb-1">Email Address *</label>
-                    <input
-                      type="email"
-                      required
-                      value={email}
-                      onChange={e => setEmail(e.target.value)}
-                      placeholder="e.g. vikram@example.com"
-                      className="w-full p-3 rounded-sm border border-ice-border bg-canvas-white text-ink-navy text-sm focus:outline-none focus:border-cobalt/40 focus:ring-1 focus:ring-cobalt/20 transition-all font-light"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-xs font-light text-ink-slate block mb-1">WhatsApp / Contact Number *</label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-mono text-ink-slate">+91</span>
-                    <input
-                      type="tel"
-                      required
-                      pattern="[6-9][0-9]{9}"
-                      value={phone}
-                      onChange={e => setPhone(e.target.value)}
-                      placeholder="9876543210"
-                      className="w-full pl-10 pr-3 py-3 rounded-sm border border-ice-border bg-canvas-white text-ink-navy text-sm focus:outline-none focus:border-cobalt/40 focus:ring-1 focus:ring-cobalt/20 transition-all font-light"
-                    />
-                  </div>
-                </div>
-
-                {/* IMEI Field */}
-                <div>
-                  <label className="text-xs font-light text-ink-slate mb-1 flex items-center gap-1.5">
-                    <Smartphone className="w-3 h-3" />
-                    Device IMEI
-                    <span className="text-zinc-500 font-mono text-[9px]">(optional — dial *#06# to find)</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={imei}
-                    onChange={e => setImei(e.target.value.replace(/\D/g, '').slice(0, 15))}
-                    placeholder="e.g. 352999061234567"
-                    maxLength={15}
-                    className="w-full p-3 rounded-sm border border-ice-border bg-canvas-white text-ink-navy text-sm focus:outline-none focus:border-cobalt/40 focus:ring-1 focus:ring-cobalt/20 transition-all font-light font-mono tracking-wide"
-                  />
-                  <p className="text-[10px] text-ink-muted mt-1 font-light">Helps our agent verify your device faster on arrival.</p>
-                </div>
-              </div>
-
-              {/* Step 2: Pickup Location */}
-              <div className="space-y-3">
-                <h3 className="text-[10px] font-mono tracking-[0.2em] text-cobalt uppercase flex items-center gap-1.5">
-                  <MapPin className="w-3.5 h-3.5" /> 2. Pickup Address
-                </h3>
-                <div>
-                  <label className="text-xs font-light text-ink-slate block mb-1">Complete Address Details *</label>
-                  <textarea
-                    required
-                    rows={3}
-                    value={address}
-                    onChange={e => setAddress(e.target.value)}
-                    placeholder="Flat No, Building Name, Street Address, City, Pincode"
-                    className="w-full p-3 rounded-sm border border-ice-border bg-canvas-white text-ink-navy text-sm focus:outline-none focus:border-cobalt/40 focus:ring-1 focus:ring-cobalt/20 transition-all resize-none font-light"
-                  />
-                </div>
-              </div>
-
-              {/* Step 3: Date & Time Picker */}
-              <div className="space-y-4">
-                <h3 className="text-[10px] font-mono tracking-[0.2em] text-cobalt uppercase flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5" /> 3. Schedule Time Slot
-                </h3>
-                <div>
-                  <label className="text-xs font-light text-ink-slate block mb-2">Available Pickup Dates *</label>
-                  <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-                    {dates.map(d => {
-                      const isSelected = selectedDate === d.raw;
-                      const isAnyDateSelected = selectedDate !== '';
-                      return (
-                        <button
-                          key={d.raw}
-                          type="button"
-                          onClick={() => setSelectedDate(d.raw)}
-                          className={`py-2 rounded-sm border text-center transition-all duration-300 flex flex-col justify-center items-center ${
-                            isSelected
-                              ? 'bg-cobalt-light border-cobalt text-ink-navy scale-[1.01] opacity-100 z-10'
-                              : isAnyDateSelected
-                              ? 'bg-canvas-white text-ink-slate border-ice-border opacity-40 hover:opacity-75 hover:scale-[1.005]'
-                              : 'bg-canvas-white text-ink-navy border-ice-border hover:border-cobalt/30 hover:scale-[1.005]'
-                          }`}
-                        >
-                          <span className="text-[8px] font-mono uppercase tracking-wider block">{d.dayName}</span>
-                          <span className="text-lg font-light leading-none my-0.5">{d.dayNumber}</span>
-                          <span className="text-[8px] font-mono uppercase tracking-wider block">{d.month}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-xs font-light text-ink-slate block mb-2">Available Time Windows *</label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {timeSlots.map(slot => {
-                      const isSelected = selectedTimeSlot === slot;
-                      const isAnySlotSelected = selectedTimeSlot !== '';
-                      return (
-                        <button
-                          key={slot}
-                          type="button"
-                          onClick={() => setSelectedTimeSlot(slot)}
-                          className={`p-3 rounded-sm border text-xs text-left transition-all duration-300 flex items-center gap-2 ${
-                            isSelected
-                              ? 'bg-cobalt-light border-cobalt scale-[1.01] opacity-100 z-10'
-                              : isAnySlotSelected
-                              ? 'bg-canvas-white text-ink-slate border-ice-border opacity-40 hover:opacity-75 hover:scale-[1.005]'
-                              : 'bg-canvas-white text-ink-navy border-ice-border hover:border-cobalt/30 hover:scale-[1.005]'
-                          }`}
-                        >
-                          <Clock className={`w-3.5 h-3.5 ${isSelected ? 'text-cobalt' : 'text-zinc-500'}`} />
-                          <span className="font-light">{slot}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-
-              {/* Step 4: Payment Details */}
-              <div className="space-y-4">
-                <h3 className="text-[10px] font-mono tracking-[0.2em] text-cobalt uppercase flex items-center gap-1.5">
-                  <CreditCard className="w-3.5 h-3.5" /> 4. Payout Mode (Instant Dispatch)
-                </h3>
-                <div className="grid grid-cols-3 gap-2">
-                  {(['upi', 'bank', 'cash'] as const).map(mode => {
-                    const isSelected = paymentMethod === mode;
-                    return (
-                      <button
-                        key={mode}
-                        type="button"
-                        onClick={() => {
-                          setPaymentMethod(mode);
-                          setPaymentDetails('');
-                        }}
-                        className={`py-3 rounded-sm border text-[10px] font-mono tracking-wider uppercase transition-all duration-300 ${
-                          isSelected
-                            ? 'bg-cobalt-light border-cobalt text-ink-navy scale-[1.01] opacity-100 z-10'
-                            : 'bg-canvas-white text-ink-slate border-ice-border opacity-40 hover:opacity-75 hover:scale-[1.005]'
-                        }`}
-                      >
-                        {mode === 'upi' ? 'UPI' : mode === 'bank' ? 'Bank Transfer' : 'Cash'}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <div>
-                  {paymentMethod === 'upi' && (
-                    <div>
-                      <label className="text-xs font-light text-ink-slate block mb-1">Enter UPI ID *</label>
-                      <input
-                        type="text"
-                        required
-                        value={paymentDetails}
-                        onChange={e => setPaymentDetails(e.target.value)}
-                        placeholder="e.g. mobile@upi"
-                        className="w-full p-3 rounded-sm border border-ice-border bg-canvas-white text-ink-navy text-sm focus:outline-none focus:border-cobalt/40 focus:ring-1 focus:ring-cobalt/20 transition-all font-light"
-                      />
-                    </div>
-                  )}
-
-                  {paymentMethod === 'bank' && (
-                    <div className="space-y-3">
-                      <label className="text-xs font-light text-ink-slate block mb-1">Account Number & IFSC Code *</label>
-                      <input
-                        type="text"
-                        required
-                        value={paymentDetails}
-                        onChange={e => setPaymentDetails(e.target.value)}
-                        placeholder="A/C: 987654321012, IFSC: HDFC0001234"
-                        className="w-full p-3 rounded-sm border border-ice-border bg-canvas-white text-ink-navy text-sm focus:outline-none focus:border-cobalt/40 focus:ring-1 focus:ring-cobalt/20 transition-all font-light"
-                      />
-                    </div>
-                  )}
-
-                  {paymentMethod === 'cash' && (
-                    <div className="bg-red-500/10 text-red-400 p-3 rounded-sm border border-red-500/20 text-xs flex items-start gap-2">
-                      <ShieldAlert className="w-4 h-4 mt-0.5 text-red-400 flex-shrink-0" />
-                      <span className="font-light"><strong>Security Notice:</strong> Cash handovers require verifying physical matching government ID proofs with the doorstep agent before handset handover.</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Submit CTA */}
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full bg-cobalt hover:bg-cobalt-hover disabled:bg-zinc-800 text-white py-4 rounded-sm font-bold text-sm transition-all flex items-center justify-center gap-2 hover:scale-[1.01]"
-              >
-                {isSubmitting ? 'Securing Booking...' : 'Book Pickup & Payout Ticket'}
-              </button>
-            </form>
-
-            {/* Right Column: Ticket Summary */}
+            {/* Right Column: Ticket Summary with Specific Deductions and Editing */}
             <div className="lg:col-span-5 space-y-4 sm:space-y-6">
               {/* Receipt Style Lock Summary */}
-              <div className="bg-canvas-pure rounded-sm border border-ice-border p-6 relative overflow-hidden">
-                <div className="absolute -left-12 -top-12 w-28 h-28 bg-cobalt-light rounded-sm -z-10 opacity-30" />
-                <div className="pb-3 border-b border-white/[0.04] mb-4 text-left">
-                  <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-1">Telemetry</span>
-                  <h3 className="text-xl font-light text-ink-navy">Quote Lock Summary</h3>
+              <div className="bg-canvas-pure rounded-sm border border-ice-border p-5 relative overflow-hidden shadow-premium">
+                <div className="pb-3 border-b border-white/[0.04] mb-4 flex items-center justify-between">
+                  <div className="text-left">
+                    <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-1">Audit Ledger</span>
+                    <h3 className="text-lg font-light text-ink-navy">Specification Ledger</h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={onEditDevice}
+                    className="text-[10px] font-mono text-cobalt hover:underline uppercase"
+                  >
+                    [Edit Spec]
+                  </button>
                 </div>
 
-                <div className="space-y-4 text-xs font-mono">
-                  <div className="flex justify-between items-center bg-zinc-950/40 p-3 rounded-sm border border-white/[0.06]">
+                <div className="space-y-3 text-xs font-mono text-left">
+                  {/* Detailed breakdown list */}
+                  <div className="flex justify-between items-center py-1 text-zinc-400">
+                    <span>Base Value ({selectedVariant.storageGb}GB)</span>
+                    <span className="text-cobalt">+{formatPrice(selectedVariant.basePrice)}</span>
+                  </div>
+
+                  {/* Deductions breakdown */}
+                  {selectedDefects.length > 0 ? (
+                    <div className="py-2 border-y border-white/[0.04] space-y-1.5">
+                      <div className="flex items-center justify-between text-[10px] text-zinc-500 uppercase font-bold tracking-wider mb-1">
+                        <span>Deductions Applied</span>
+                        <button
+                          type="button"
+                          onClick={onBack}
+                          className="text-cobalt hover:underline font-normal normal-case"
+                        >
+                          Edit Defects
+                        </button>
+                      </div>
+                      {selectedDefects.map((defect, idx) => {
+                        // Calculate specific deduction amount for this defect
+                        const base = selectedVariant.basePrice;
+                        const deduction = defect.deductionPercentage > 0 
+                          ? base * defect.deductionPercentage 
+                          : defect.deductionFixed;
+                        return (
+                          <div key={defect.id} className="flex justify-between items-start text-zinc-400">
+                            <span className="leading-tight">{(idx + 1).toString().padStart(2, '0')}. {getEngineeringLabel(defect.description)}</span>
+                            <span className="text-red-500 flex-shrink-0">-[{formatPrice(deduction)}]</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="py-3 border-y border-white/[0.04] border-dashed text-center text-[10px] text-emerald-400 italic">
+                      [No defects declared. Maximum value applies.]
+                    </div>
+                  )}
+
+                  <div className="flex justify-between items-center bg-zinc-950/40 p-3 rounded-sm border border-white/[0.06] mt-4">
                     <div>
-                      <span className="text-[8px] text-zinc-500 uppercase block font-mono">Locked Value Payout</span>
-                      <span className="text-xl font-light text-cobalt tracking-tight">{formatPrice(finalPrice)}</span>
+                      <span className="text-[8px] text-zinc-500 uppercase block font-mono">Total Estimated Payout</span>
+                      <span className="text-xl font-bold text-cobalt tracking-tight font-outfit">{formatPrice(finalPrice)}</span>
                     </div>
                     <span className="text-[9px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-sm border border-emerald-500/20 font-bold uppercase tracking-wider">Locked</span>
                   </div>
-
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-zinc-500">Valuation Type</span>
-                      <span className="text-zinc-300">User Self-Assessment</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-zinc-500">Quote Validity</span>
-                      <span className="text-zinc-300">7 Days (Rates Lock)</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-zinc-500">Verification</span>
-                      <span className="text-zinc-300">Safe physical verification</span>
-                    </div>
-                  </div>
                 </div>
               </div>
 
-              {/* Assigned Agent Card */}
-              <div className="bg-canvas-pure rounded-sm border border-ice-border p-5">
-                <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-3">Assigned Inspector</span>
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-sm bg-cobalt-light border border-white/[0.06] flex items-center justify-center text-xl">
-                    {assignedAgent.avatar}
+              {/* Side contact info summary */}
+              <div className="bg-canvas-pure rounded-sm border border-ice-border p-5 text-xs text-left shadow-premium space-y-2">
+                <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-1">Contact Summary</span>
+                {name && <div className="text-zinc-300 font-mono"><strong>Client:</strong> {name}</div>}
+                {phone && <div className="text-zinc-300 font-mono"><strong>WhatsApp:</strong> +91 {phone}</div>}
+                {selectedDate && (
+                  <div className="text-zinc-300 font-mono">
+                    <strong>Pickup:</strong> {selectedDate} @ {selectedTimeSlot ? selectedTimeSlot.split(' ')[0] + ' ' + selectedTimeSlot.split(' ')[1] : ''}
                   </div>
-                  <div>
-                    <h4 className="font-semibold text-ink-navy text-sm">{assignedAgent.name}</h4>
-                    <div className="flex items-center gap-1 mt-0.5">
-                      <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                      <span className="text-xs font-bold text-ink-navy">{assignedAgent.rating}</span>
-                      <span className="text-[10px] text-ink-muted">({assignedAgent.reviews} reviews)</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-zinc-950/40 rounded-sm p-3.5 mt-4 border border-white/[0.06] text-xs flex items-center justify-between text-zinc-400 font-mono">
-                  <span>Inspection Contact</span>
-                  <span className="text-ink-navy">{assignedAgent.phone}</span>
-                </div>
+                )}
               </div>
             </div>
           </motion.div>
         ) : (
-          /* Booking Success Screen */
+          /* Booking Success Screen with specific overview and defects summary */
           <motion.div
             key="success-card"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="max-w-xl mx-auto bg-canvas-pure border border-ice-border rounded-sm p-5 sm:p-8 text-center flex flex-col items-center justify-center relative overflow-hidden text-left"
+            className="max-w-xl mx-auto bg-canvas-pure border border-ice-border rounded-sm p-5 sm:p-8 text-center flex flex-col items-center justify-center relative overflow-hidden shadow-premium"
           >
             <div className="absolute -right-12 -top-12 w-32 h-32 bg-emerald-500/10 rounded-sm opacity-40 -z-10" />
 
@@ -441,52 +689,77 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
             </div>
 
             <h2 className="text-2xl font-light tracking-tight text-ink-navy">Trade-In Confirmed</h2>
-            <p className="text-xs text-ink-muted mt-2 max-w-sm font-light">
-              Your pickup is scheduled successfully. A WhatsApp confirmation has been dispatched to <strong className="text-ink-navy font-semibold">+91 {phone}</strong>.
+            <p className="text-xs text-ink-muted mt-2 max-w-sm font-light text-center">
+              Your doorside pickup has been locked successfully. A confirmation message was sent to <strong className="text-ink-navy font-semibold">+91 {phone}</strong>.
             </p>
 
-            {/* Receipt Details */}
-            <div className="w-full bg-zinc-950/40 border border-dashed border-white/[0.12] rounded-sm p-5 my-6 text-xs space-y-2 font-mono">
+            {/* Receipt Details with declared defects summary */}
+            <div className="w-full bg-zinc-950/40 border border-dashed border-white/[0.12] rounded-sm p-5 my-6 text-xs space-y-2.5 font-mono text-left">
               <div className="flex justify-between font-bold border-b border-white/[0.06] pb-2 mb-2 text-ink-navy">
                 <span>Confirmation ID</span>
                 <span className="text-cobalt">#STC-{Math.floor(Math.random() * 90000) + 10000}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-zinc-500">Pickup Client</span>
+                <span className="text-zinc-500">Device Model</span>
+                <span className="text-ink-navy font-semibold">{selectedModel.name} ({selectedVariant.storageGb}GB)</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-zinc-500">Client Inspector</span>
                 <span className="text-ink-navy">{name}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-zinc-500">Address</span>
+                <span className="text-zinc-500">Pickup Address</span>
                 <span className="text-ink-navy truncate max-w-[240px]">{address}</span>
               </div>
-              <div className="flex justify-between">
+              
+              {/* Date time booking overview */}
+              <div className="flex justify-between border-t border-white/[0.04] pt-2">
                 <span className="text-zinc-500">Scheduled Date</span>
-                <span className="text-ink-navy">{selectedDate}</span>
+                <span className="text-ink-navy font-semibold">{selectedDate}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-zinc-500">Time Window</span>
-                <span className="text-ink-navy">{selectedTimeSlot.split(' ')[0]} {selectedTimeSlot.split(' ')[1]}</span>
+                <span className="text-zinc-500">Time Slot Window</span>
+                <span className="text-ink-navy font-semibold">{selectedTimeSlot}</span>
               </div>
+
+              {/* Declared defects summary on ticket receipt */}
+              <div className="border-t border-white/[0.04] pt-2 space-y-1">
+                <span className="text-zinc-500 block">Declared Defects Summary:</span>
+                {selectedDefects.length > 0 ? (
+                  <div className="space-y-1 pl-2 text-[10px] text-zinc-400">
+                    {selectedDefects.map(d => (
+                      <div key={d.id} className="flex justify-between">
+                        <span>• {getEngineeringLabel(d.description)}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <span className="pl-2 text-[10px] text-emerald-400 italic">• No defects declared (Flawless Device)</span>
+                )}
+              </div>
+
               <div className="flex justify-between">
-                <span className="text-zinc-500">Payment Method</span>
+                <span className="text-zinc-500">Payout Method</span>
                 <span className="text-ink-navy uppercase">{paymentMethod}</span>
               </div>
-              <div className="flex justify-between font-bold border-t border-white/[0.06] pt-2 mt-2 text-sm text-ink-navy">
-                <span>Payout Value</span>
-                <span className="text-cobalt font-light tracking-tight text-base">{formatPrice(finalPrice)}</span>
+              
+              <div className="flex justify-between font-bold border-t border-white/[0.06] pt-2.5 mt-2 text-sm text-ink-navy">
+                <span>Final Locked Payout</span>
+                <span className="text-cobalt font-light tracking-tight text-base font-outfit">{formatPrice(finalPrice)}</span>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 p-3 bg-cobalt-light border border-white/[0.06] rounded-sm mb-6 text-xs text-zinc-300">
+            <div className="flex items-center gap-2 p-3 bg-cobalt-light border border-white/[0.06] rounded-sm mb-6 text-xs text-zinc-300 text-left">
               <Award className="w-4 h-4 text-cobalt flex-shrink-0" />
-              <span className="font-light">Please keep your device unlocked and charged to at least 50% for inspection.</span>
+              <span className="font-light">Our agent {assignedAgent.name} will call you before arrival. Please keep your device unlocked and clean.</span>
             </div>
 
             <button
               onClick={onSuccess}
-              className="w-full bg-cobalt hover:bg-cobalt-hover text-white py-3 rounded-sm font-bold transition-all"
+              className="w-full bg-cobalt hover:bg-cobalt-hover text-white py-3.5 rounded-sm font-bold transition-all text-sm"
+              style={{ minHeight: '48px' }}
             >
-              Return to Homepage
+              Return to Catalog Homepage
             </button>
           </motion.div>
         )}

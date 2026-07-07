@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Model, Variant, getDefectRulesForCategory, DefectRule } from '../data/mockDatabase';
 import { calculateValuation } from '../utils/valuation';
 import { 
@@ -25,27 +25,40 @@ const getEngineeringLabel = (description: string) => {
   return mapping[description] || description;
 };
 
+// Helper to load from localStorage
+const loadFromLocalStorage = <T,>(key: string, defaultValue: T): T => {
+  const saved = localStorage.getItem(key);
+  if (!saved) return defaultValue;
+  try {
+    return JSON.parse(saved) as T;
+  } catch (e) {
+    return defaultValue;
+  }
+};
+
 interface DiagnosticWizardProps {
   model: Model;
   variant: Variant;
   onBack: () => void;
   onComplete: (finalPrice: number, selectedDefects: DefectRule[]) => void;
+  selectedDefects: DefectRule[];
+  setSelectedDefects: React.Dispatch<React.SetStateAction<DefectRule[]>>;
+  step: number;
+  setStep: React.Dispatch<React.SetStateAction<number>>;
 }
 
 export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
   model,
   variant,
   onBack,
-  onComplete
+  onComplete,
+  selectedDefects,
+  setSelectedDefects,
+  step,
+  setStep
 }) => {
   // Obtain rules based on model category
   const rules = useMemo(() => getDefectRulesForCategory(model.category), [model.category]);
-
-  // Selected defect rules state
-  const [selectedDefects, setSelectedDefects] = useState<DefectRule[]>([]);
-
-  // Current wizard step index (0: Power, 1: Screen, 2: Body, 3: Functionality, 4: Accessories, 5: Live Summary)
-  const [step, setStep] = useState<number>(0);
 
   const stepsList = [
     { title: 'Power & Boot', icon: Zap, desc: 'Does the device turn on?' },
@@ -54,6 +67,49 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
     { title: 'Functionality & Security', icon: Activity, desc: 'Test cameras and biometrics' },
     { title: 'Box & OEM Charger', icon: Box, desc: 'Available accessories' },
   ];
+
+  // Confirmation state for each diagnostic step to prevent blank clickthroughs
+  const [screenConfirmed, setScreenConfirmed] = useState(() => loadFromLocalStorage('stc_screenConfirmed', false));
+  const [bodyConfirmed, setBodyConfirmed] = useState(() => loadFromLocalStorage('stc_bodyConfirmed', false));
+  const [funcConfirmed, setFuncConfirmed] = useState(() => loadFromLocalStorage('stc_funcConfirmed', false));
+  const [accConfirmed, setAccConfirmed] = useState(() => loadFromLocalStorage('stc_accConfirmed', false));
+
+  // Sync confirmations to localStorage
+  useEffect(() => {
+    localStorage.setItem('stc_screenConfirmed', JSON.stringify(screenConfirmed));
+  }, [screenConfirmed]);
+
+  useEffect(() => {
+    localStorage.setItem('stc_bodyConfirmed', JSON.stringify(bodyConfirmed));
+  }, [bodyConfirmed]);
+
+  useEffect(() => {
+    localStorage.setItem('stc_funcConfirmed', JSON.stringify(funcConfirmed));
+  }, [funcConfirmed]);
+
+  useEffect(() => {
+    localStorage.setItem('stc_accConfirmed', JSON.stringify(accConfirmed));
+  }, [accConfirmed]);
+
+  // Validation check for current step
+  const isStepValidated = useMemo(() => {
+    if (step === 0) return true; // Power step uses direct CTAs
+    if (step === 1) return screenConfirmed || selectedDefects.some(d => d.category === 'screen');
+    if (step === 2) return bodyConfirmed || selectedDefects.some(d => d.category === 'body');
+    if (step === 3) {
+      const funcDefectIds = rules
+        .filter(r => ['camera', 'battery'].includes(r.category) || r.id === 'defect-critical-security')
+        .map(r => r.id);
+      return funcConfirmed || selectedDefects.some(d => funcDefectIds.includes(d.id));
+    }
+    if (step === 4) {
+      const accDefectIds = rules
+        .filter(r => r.category === 'accessories' && !r.isCriticalFailure && r.id !== 'defect-critical-security')
+        .map(r => r.id);
+      return accConfirmed || selectedDefects.some(d => accDefectIds.includes(d.id));
+    }
+    return true;
+  }, [step, screenConfirmed, bodyConfirmed, funcConfirmed, accConfirmed, selectedDefects, rules]);
 
   // Calculate live valuation
   const valuation = useMemo(() => {
@@ -104,6 +160,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
   };
 
   const handleNextStep = () => {
+    if (!isStepValidated) return;
     if (step < 4) {
       setStep(prev => prev + 1);
     } else {
@@ -122,6 +179,14 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
     }
   };
 
+  // Keyboard navigation helper
+  const handleKeyDown = (e: React.KeyboardEvent, callback: () => void) => {
+    if (e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault();
+      callback();
+    }
+  };
+
   return (
     <div className="w-full">
       {/* Wizard Header */}
@@ -133,12 +198,21 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
+          
+          {/* Phone Vector Silhouette */}
+          <div className="hidden sm:flex w-10 h-10 rounded-sm bg-cobalt-light border border-white/[0.06] items-center justify-center text-cobalt flex-shrink-0 shadow-sm">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+              <rect x="5" y="2" width="14" height="20" rx="3" />
+              <line x1="12" y1="18" x2="12" y2="18.01" strokeLinecap="round" strokeWidth="2" />
+            </svg>
+          </div>
+
           <div className="min-w-0">
             <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-0.5">Diagnostic wizard</span>
             <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
               <span className="font-light text-ink-navy text-xl sm:text-2xl tracking-tight truncate">{model.name}</span>
               <span className="text-[9px] font-mono tracking-wider bg-cobalt-light text-cobalt px-2 py-0.5 rounded-sm border border-white/[0.06] flex-shrink-0 uppercase">
-                {variant.storageGb >= 1024 ? '1TB' : `${variant.storageGb}GB`} // {variant.color}
+                {variant.storageGb >= 1024 ? '1TB' : `${variant.storageGb}GB`}
               </span>
             </div>
           </div>
@@ -146,10 +220,10 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
         {/* Mobile: thin progress bar; md+: step dots */}
         <div className="flex flex-col gap-1.5 sm:gap-0">
-          {/* Mobile progress bar */}
+          {/* Mobile progress bar with step titles */}
           <div className="flex sm:hidden items-center gap-2">
-            <span className="text-[10px] text-zinc-500 font-mono tracking-wider uppercase flex-shrink-0">
-              STP {Math.min(step + 1, 5)}/5
+            <span className="text-[10px] text-zinc-400 font-mono tracking-wider uppercase flex-shrink-0">
+              Step {Math.min(step + 1, 5)}/5: {stepsList[Math.min(step, 4)]?.title}
             </span>
             <div className="flex-1 h-1.5 rounded-full bg-ice-gray overflow-hidden">
               <div
@@ -167,7 +241,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                     step > idx 
                       ? 'bg-cobalt border-cobalt text-white' 
                       : step === idx 
-                      ? 'bg-cobalt-light border-cobalt text-cobalt scale-110' 
+                      ? 'bg-cobalt-light border-cobalt text-cobalt scale-110 shadow-[0_0_10px_rgba(59,130,246,0.25)]' 
                       : 'bg-canvas-white border-ice-border text-ink-muted'
                   }`}
                 >
@@ -183,10 +257,10 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
       </div>
 
       {/* On mobile: valuation mini-bar pinned above content */}
-      <div className="lg:hidden bg-canvas-pure border border-ice-border rounded-sm p-3 mb-4 flex items-center justify-between text-left">
+      <div className="lg:hidden bg-canvas-pure border border-ice-border rounded-sm p-3 mb-4 flex items-center justify-between text-left shadow-sm">
         <div>
           <span className="text-[9px] font-mono tracking-[0.1em] text-zinc-500 uppercase block">Live Estimate</span>
-          <span className="text-lg font-black text-ink-navy">{formatPrice(valuation.finalPrice)}</span>
+          <span className="text-lg font-bold text-cobalt font-outfit">{formatPrice(valuation.finalPrice)}</span>
         </div>
         <div className="text-right">
           <span className="text-[9px] font-mono tracking-[0.1em] text-zinc-500 uppercase block">Base Value</span>
@@ -199,7 +273,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
         <motion.div 
           layout 
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          className="lg:col-span-7 bg-canvas-pure rounded-sm border border-ice-border p-4 sm:p-6 min-h-[360px] sm:min-h-[420px] flex flex-col justify-between overflow-hidden"
+          className="lg:col-span-7 bg-canvas-pure rounded-sm border border-ice-border p-4 sm:p-6 min-h-[360px] sm:min-h-[420px] flex flex-col justify-between overflow-hidden shadow-premium"
         >
           <AnimatePresence mode="wait">
             {/* STEP 0: Power Status */}
@@ -219,7 +293,8 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
                   <button
                     onClick={() => handlePowerCheck(true)}
-                    className="p-6 rounded-sm border border-ice-border hover:border-emerald-500/50 bg-canvas-white hover:bg-emerald-500/5 text-left transition-all duration-300 group"
+                    className="p-6 rounded-sm border border-ice-border hover:border-emerald-500/50 bg-canvas-white hover:bg-emerald-500/5 text-left transition-all duration-300 group focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt"
+                    style={{ minHeight: '120px' }}
                   >
                     <div className="w-16 h-16 rounded-sm bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform overflow-hidden">
                       {getIllustration('power-on')}
@@ -230,7 +305,8 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
                   <button
                     onClick={() => handlePowerCheck(false)}
-                    className="p-6 rounded-sm border border-ice-border hover:border-red-500/50 bg-canvas-white hover:bg-red-500/5 text-left transition-all duration-300 group"
+                    className="p-6 rounded-sm border border-ice-border hover:border-red-500/50 bg-canvas-white hover:bg-red-500/5 text-left transition-all duration-300 group focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt"
+                    style={{ minHeight: '120px' }}
                   >
                     <div className="w-16 h-16 rounded-sm bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform overflow-hidden">
                       {getIllustration('defect-critical-power')}
@@ -260,15 +336,28 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   {/* Flawless Option */}
                   {(() => {
                     const isAnyScreenSelected = selectedDefects.some(d => d.category === 'screen');
-                    const isSelected = !isAnyScreenSelected;
+                    const isSelected = !isAnyScreenSelected && screenConfirmed;
                     return (
                       <div
-                        onClick={() => setSelectedDefects(prev => prev.filter(d => d.category !== 'screen'))}
-                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-3 text-left ${
+                        role="checkbox"
+                        tabIndex={0}
+                        aria-checked={isSelected}
+                        onKeyDown={e => handleKeyDown(e, () => {
+                          setSelectedDefects(prev => prev.filter(d => d.category !== 'screen'));
+                          setScreenConfirmed(true);
+                        })}
+                        onClick={() => {
+                          setSelectedDefects(prev => prev.filter(d => d.category !== 'screen'));
+                          setScreenConfirmed(true);
+                        }}
+                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-3 text-left focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt ${
                           isSelected
-                            ? 'border-cobalt bg-cobalt-light scale-[1.01] opacity-100 z-10'
+                            ? 'border-cobalt bg-cobalt-light scale-[1.01] opacity-100 z-10 shadow-premium'
+                            : !screenConfirmed
+                            ? 'border-ice-border bg-canvas-white hover:border-cobalt/30 hover:scale-[1.005]'
                             : 'border-ice-border bg-canvas-white opacity-40 hover:opacity-75 hover:scale-[1.005]'
                         }`}
+                        style={{ minHeight: '72px' }}
                       >
                         <div className="w-14 h-14 flex-shrink-0 rounded-sm bg-ice-gray border border-ice-border flex items-center justify-center overflow-hidden">
                           {getIllustration('screen-flawless')}
@@ -288,26 +377,43 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
                   {/* Screen Defect Options */}
                   {rules.filter(r => r.category === 'screen').map(defect => {
-                    const isAnyScreenSelected = selectedDefects.some(d => d.category === 'screen');
                     const isSelected = selectedDefects.some(d => d.id === defect.id);
                     return (
                       <div
                         key={defect.id}
-                        onClick={() => handleToggleDefect(
-                          defect, 
-                          defect.id === 'defect-screen-cracked' 
-                            ? 'defect-screen-scratches' 
-                            : defect.id === 'defect-screen-scratches' 
-                            ? 'defect-screen-cracked' 
-                            : undefined
-                        )}
-                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-3 text-left ${
+                        role="checkbox"
+                        tabIndex={0}
+                        aria-checked={isSelected}
+                        onKeyDown={e => handleKeyDown(e, () => {
+                          handleToggleDefect(
+                            defect, 
+                            defect.id === 'defect-screen-cracked' 
+                              ? 'defect-screen-scratches' 
+                              : defect.id === 'defect-screen-scratches' 
+                              ? 'defect-screen-cracked' 
+                              : undefined
+                          );
+                          setScreenConfirmed(true);
+                        })}
+                        onClick={() => {
+                          handleToggleDefect(
+                            defect, 
+                            defect.id === 'defect-screen-cracked' 
+                              ? 'defect-screen-scratches' 
+                              : defect.id === 'defect-screen-scratches' 
+                              ? 'defect-screen-cracked' 
+                              : undefined
+                          );
+                          setScreenConfirmed(true);
+                        }}
+                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-3 text-left focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt ${
                           isSelected
-                            ? 'border-cobalt bg-cobalt-light scale-[1.01] opacity-100 z-10'
-                            : isAnyScreenSelected
-                            ? 'border-ice-border bg-canvas-white opacity-40 hover:opacity-75 hover:scale-[1.005]'
-                            : 'border-ice-border bg-canvas-white hover:border-cobalt/30 hover:scale-[1.005]'
+                            ? 'border-cobalt bg-cobalt-light scale-[1.01] opacity-100 z-10 shadow-premium'
+                            : !screenConfirmed
+                            ? 'border-ice-border bg-canvas-white hover:border-cobalt/30 hover:scale-[1.005]'
+                            : 'border-ice-border bg-canvas-white opacity-40 hover:opacity-75 hover:scale-[1.005]'
                         }`}
+                        style={{ minHeight: '72px' }}
                       >
                         <div className="w-14 h-14 flex-shrink-0 rounded-sm bg-ice-gray border border-ice-border flex items-center justify-center overflow-hidden">
                           {getIllustration(defect.id)}
@@ -351,15 +457,28 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   {/* Flawless Option */}
                   {(() => {
                     const isAnyBodySelected = selectedDefects.some(d => d.category === 'body');
-                    const isSelected = !isAnyBodySelected;
+                    const isSelected = !isAnyBodySelected && bodyConfirmed;
                     return (
                       <div
-                        onClick={() => setSelectedDefects(prev => prev.filter(d => d.category !== 'body'))}
-                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-3 text-left ${
+                        role="checkbox"
+                        tabIndex={0}
+                        aria-checked={isSelected}
+                        onKeyDown={e => handleKeyDown(e, () => {
+                          setSelectedDefects(prev => prev.filter(d => d.category !== 'body'));
+                          setBodyConfirmed(true);
+                        })}
+                        onClick={() => {
+                          setSelectedDefects(prev => prev.filter(d => d.category !== 'body'));
+                          setBodyConfirmed(true);
+                        }}
+                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-3 text-left focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt ${
                           isSelected
-                            ? 'border-cobalt bg-cobalt-light scale-[1.01] opacity-100 z-10'
+                            ? 'border-cobalt bg-cobalt-light scale-[1.01] opacity-100 z-10 shadow-premium'
+                            : !bodyConfirmed
+                            ? 'border-ice-border bg-canvas-white hover:border-cobalt/30 hover:scale-[1.005]'
                             : 'border-ice-border bg-canvas-white opacity-40 hover:opacity-75 hover:scale-[1.005]'
                         }`}
+                        style={{ minHeight: '72px' }}
                       >
                         <div className="w-14 h-14 flex-shrink-0 rounded-sm bg-ice-gray border border-ice-border flex items-center justify-center overflow-hidden">
                           {getIllustration('body-flawless')}
@@ -379,26 +498,43 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
                   {/* Body Rules */}
                   {rules.filter(r => r.category === 'body').map(defect => {
-                    const isAnyBodySelected = selectedDefects.some(d => d.category === 'body');
                     const isSelected = selectedDefects.some(d => d.id === defect.id);
                     return (
                       <div
                         key={defect.id}
-                        onClick={() => handleToggleDefect(
-                          defect, 
-                          defect.id === 'defect-body-dented' 
-                            ? 'defect-body-scuffs' 
-                            : defect.id === 'defect-body-scuffs' 
-                            ? 'defect-body-dented' 
-                            : undefined
-                        )}
-                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-3 text-left ${
+                        role="checkbox"
+                        tabIndex={0}
+                        aria-checked={isSelected}
+                        onKeyDown={e => handleKeyDown(e, () => {
+                          handleToggleDefect(
+                            defect, 
+                            defect.id === 'defect-body-dented' 
+                              ? 'defect-body-scuffs' 
+                              : defect.id === 'defect-body-scuffs' 
+                              ? 'defect-body-dented' 
+                              : undefined
+                          );
+                          setBodyConfirmed(true);
+                        })}
+                        onClick={() => {
+                          handleToggleDefect(
+                            defect, 
+                            defect.id === 'defect-body-dented' 
+                              ? 'defect-body-scuffs' 
+                              : defect.id === 'defect-body-scuffs' 
+                              ? 'defect-body-dented' 
+                              : undefined
+                          );
+                          setBodyConfirmed(true);
+                        }}
+                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-3 text-left focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt ${
                           isSelected
-                            ? 'border-cobalt bg-cobalt-light scale-[1.01] opacity-100 z-10'
-                            : isAnyBodySelected
-                            ? 'border-ice-border bg-canvas-white opacity-40 hover:opacity-75 hover:scale-[1.005]'
-                            : 'border-ice-border bg-canvas-white hover:border-cobalt/30 hover:scale-[1.005]'
+                            ? 'border-cobalt bg-cobalt-light scale-[1.01] opacity-100 z-10 shadow-premium'
+                            : !bodyConfirmed
+                            ? 'border-ice-border bg-canvas-white hover:border-cobalt/30 hover:scale-[1.005]'
+                            : 'border-ice-border bg-canvas-white opacity-40 hover:opacity-75 hover:scale-[1.005]'
                         }`}
+                        style={{ minHeight: '72px' }}
                       >
                         <div className="w-14 h-14 flex-shrink-0 rounded-sm bg-ice-gray border border-ice-border flex items-center justify-center overflow-hidden">
                           {getIllustration(defect.id)}
@@ -445,15 +581,28 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                       .filter(r => ['camera', 'battery'].includes(r.category) || r.id === 'defect-critical-security')
                       .map(r => r.id);
                     const isAnyFuncSelected = selectedDefects.some(d => funcDefectIds.includes(d.id));
-                    const isSelected = !isAnyFuncSelected;
+                    const isSelected = !isAnyFuncSelected && funcConfirmed;
                     return (
                       <div
-                        onClick={() => setSelectedDefects(prev => prev.filter(d => !funcDefectIds.includes(d.id)))}
-                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-3 text-left ${
+                        role="checkbox"
+                        tabIndex={0}
+                        aria-checked={isSelected}
+                        onKeyDown={e => handleKeyDown(e, () => {
+                          setSelectedDefects(prev => prev.filter(d => !funcDefectIds.includes(d.id)));
+                          setFuncConfirmed(true);
+                        })}
+                        onClick={() => {
+                          setSelectedDefects(prev => prev.filter(d => !funcDefectIds.includes(d.id)));
+                          setFuncConfirmed(true);
+                        }}
+                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-3 text-left focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt ${
                           isSelected
-                            ? 'border-cobalt bg-cobalt-light scale-[1.01] opacity-100 z-10'
+                            ? 'border-cobalt bg-cobalt-light scale-[1.01] opacity-100 z-10 shadow-premium'
+                            : !funcConfirmed
+                            ? 'border-ice-border bg-canvas-white hover:border-cobalt/30 hover:scale-[1.005]'
                             : 'border-ice-border bg-canvas-white opacity-40 hover:opacity-75 hover:scale-[1.005]'
                         }`}
+                        style={{ minHeight: '72px' }}
                       >
                         <div className="w-14 h-14 flex-shrink-0 rounded-sm bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
                           <ShieldCheck className="w-7 h-7 text-emerald-500" />
@@ -473,19 +622,29 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
                   {/* Hardware defect options */}
                   {rules.filter(r => ['camera', 'battery'].includes(r.category) || r.id === 'defect-critical-security').map(defect => {
-                    const isAnyFuncSelected = selectedDefects.some(d => ['camera', 'battery'].includes(d.category) || d.id === 'defect-critical-security');
                     const isSelected = selectedDefects.some(d => d.id === defect.id);
                     return (
                       <div
                         key={defect.id}
-                        onClick={() => handleToggleDefect(defect)}
-                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-3 text-left ${
+                        role="checkbox"
+                        tabIndex={0}
+                        aria-checked={isSelected}
+                        onKeyDown={e => handleKeyDown(e, () => {
+                          handleToggleDefect(defect);
+                          setFuncConfirmed(true);
+                        })}
+                        onClick={() => {
+                          handleToggleDefect(defect);
+                          setFuncConfirmed(true);
+                        }}
+                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-3 text-left focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt ${
                           isSelected
-                            ? 'border-cobalt bg-cobalt-light scale-[1.01] opacity-100 z-10'
-                            : isAnyFuncSelected
-                            ? 'border-ice-border bg-canvas-white opacity-40 hover:opacity-75 hover:scale-[1.005]'
-                            : 'border-ice-border bg-canvas-white hover:border-cobalt/30 hover:scale-[1.005]'
+                            ? 'border-cobalt bg-cobalt-light scale-[1.01] opacity-100 z-10 shadow-premium'
+                            : !funcConfirmed
+                            ? 'border-ice-border bg-canvas-white hover:border-cobalt/30 hover:scale-[1.005]'
+                            : 'border-ice-border bg-canvas-white opacity-40 hover:opacity-75 hover:scale-[1.005]'
                         }`}
+                        style={{ minHeight: '72px' }}
                       >
                         <div className="w-14 h-14 flex-shrink-0 rounded-sm bg-ice-gray border border-ice-border flex items-center justify-center overflow-hidden">
                           {getIllustration(defect.id)}
@@ -532,15 +691,28 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                       .filter(r => r.category === 'accessories' && !r.isCriticalFailure && r.id !== 'defect-critical-security')
                       .map(r => r.id);
                     const isAnyAccSelected = selectedDefects.some(d => accDefectIds.includes(d.id));
-                    const isSelected = !isAnyAccSelected;
+                    const isSelected = !isAnyAccSelected && accConfirmed;
                     return (
                       <div
-                        onClick={() => setSelectedDefects(prev => prev.filter(d => !accDefectIds.includes(d.id)))}
-                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-3 text-left ${
+                        role="checkbox"
+                        tabIndex={0}
+                        aria-checked={isSelected}
+                        onKeyDown={e => handleKeyDown(e, () => {
+                          setSelectedDefects(prev => prev.filter(d => !accDefectIds.includes(d.id)));
+                          setAccConfirmed(true);
+                        })}
+                        onClick={() => {
+                          setSelectedDefects(prev => prev.filter(d => !accDefectIds.includes(d.id)));
+                          setAccConfirmed(true);
+                        }}
+                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-3 text-left focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt ${
                           isSelected
-                            ? 'border-cobalt bg-cobalt-light scale-[1.01] opacity-100 z-10'
+                            ? 'border-cobalt bg-cobalt-light scale-[1.01] opacity-100 z-10 shadow-premium'
+                            : !accConfirmed
+                            ? 'border-ice-border bg-canvas-white hover:border-cobalt/30 hover:scale-[1.005]'
                             : 'border-ice-border bg-canvas-white opacity-40 hover:opacity-75 hover:scale-[1.005]'
                         }`}
+                        style={{ minHeight: '72px' }}
                       >
                         <div className="w-14 h-14 flex-shrink-0 rounded-sm bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
                           <Box className="w-7 h-7 text-emerald-500" />
@@ -560,19 +732,29 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
                   {/* Accessories defect options */}
                   {rules.filter(r => r.category === 'accessories' && !r.isCriticalFailure && r.id !== 'defect-critical-security').map(defect => {
-                    const isAnyAccSelected = selectedDefects.some(d => d.category === 'accessories' && !d.isCriticalFailure && d.id !== 'defect-critical-security');
                     const isSelected = selectedDefects.some(d => d.id === defect.id);
                     return (
                       <div
                         key={defect.id}
-                        onClick={() => handleToggleDefect(defect)}
-                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-3 text-left ${
+                        role="checkbox"
+                        tabIndex={0}
+                        aria-checked={isSelected}
+                        onKeyDown={e => handleKeyDown(e, () => {
+                          handleToggleDefect(defect);
+                          setAccConfirmed(true);
+                        })}
+                        onClick={() => {
+                          handleToggleDefect(defect);
+                          setAccConfirmed(true);
+                        }}
+                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-3 text-left focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt ${
                           isSelected
-                            ? 'border-red-500/40 bg-red-500/10 scale-[1.01] opacity-100 z-10'
-                            : isAnyAccSelected
-                            ? 'border-ice-border bg-canvas-white opacity-40 hover:opacity-75 hover:scale-[1.005]'
-                            : 'border-ice-border bg-canvas-white hover:border-cobalt/30 hover:scale-[1.005]'
+                            ? 'border-cobalt bg-cobalt-light scale-[1.01] opacity-100 z-10 shadow-premium'
+                            : !accConfirmed
+                            ? 'border-ice-border bg-canvas-white hover:border-cobalt/30 hover:scale-[1.005]'
+                            : 'border-ice-border bg-canvas-white opacity-40 hover:opacity-75 hover:scale-[1.005]'
                         }`}
+                        style={{ minHeight: '72px' }}
                       >
                         <div className="w-14 h-14 flex-shrink-0 rounded-sm bg-ice-gray border border-ice-border flex items-center justify-center overflow-hidden">
                           {getIllustration(defect.id)}
@@ -587,7 +769,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           <p className="text-xs text-ink-muted mt-0.5 font-light">{defect.subText}</p>
                         </div>
                         <div className={`w-5 h-5 rounded-sm border flex items-center justify-center flex-shrink-0 ${
-                          isSelected ? 'bg-red-500 border-red-500 text-white' : 'border-ice-border'
+                          isSelected ? 'bg-cobalt border-cobalt text-white' : 'border-ice-border'
                         }`}>
                           {isSelected && <Check className="w-3 h-3" />}
                         </div>
@@ -614,7 +796,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   </div>
 
                   {/* Animated Engineering Receipt */}
-                  <div className="border border-dashed border-white/[0.12] bg-zinc-950/40 rounded-sm p-5 mb-6 text-sm relative overflow-hidden text-left">
+                  <div className="border border-dashed border-white/[0.12] bg-zinc-950/40 rounded-sm p-5 mb-6 text-sm relative overflow-hidden text-left shadow-inner">
                     {/* Watermark/stamp — circular badge */}
                     <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full border-2 border-emerald-500/25 flex items-center justify-center rotate-12 select-none pointer-events-none">
                       <span className="text-[8px] font-mono text-emerald-500/40 uppercase tracking-widest">VERIFIED</span>
@@ -627,14 +809,14 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                       </div>
                       <div className="text-right">
                         <span className="text-[9px] text-zinc-500 uppercase block font-mono tracking-wider">REF CODE</span>
-                      <span className="text-[10px] text-zinc-400">#SCH-{receiptRef}</span>
+                        <span className="text-[10px] text-zinc-400">#SCH-{receiptRef}</span>
                       </div>
                     </div>
 
                     <div className="space-y-2 text-xs font-mono">
                       <div className="flex justify-between items-center py-2 text-zinc-300 border-b border-white/[0.04]">
                         <span>00. Base Configuration Value ({variant.storageGb}GB)</span>
-                        <span className="text-cobalt font-semibold">+{formatPrice(variant.basePrice)}</span>
+                        <span className="text-cobalt font-semibold font-outfit">+{formatPrice(variant.basePrice)}</span>
                       </div>
 
                       {valuation.deductions.length === 0 ? (
@@ -652,7 +834,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                               className="flex justify-between items-center text-zinc-400 border-b border-white/[0.04] py-1.5"
                             >
                               <span>{(i + 1).toString().padStart(2, '0')}. {getEngineeringLabel(d.description)}</span>
-                              <span className="text-red-500">-[{formatPrice(d.totalDeducted)}]</span>
+                              <span className="text-red-500 font-outfit">-[{formatPrice(d.totalDeducted)}]</span>
                             </motion.div>
                           ))}
                         </div>
@@ -664,7 +846,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         <span className="text-zinc-500 uppercase block text-[9px] font-mono">TOTAL ESTIMATED PAYOUT</span>
                         <span className="text-[9px] text-emerald-500 uppercase tracking-widest block font-mono font-bold">✓ Payout Rate Locked</span>
                       </div>
-                      <span className="text-3xl font-light text-cobalt tracking-tight font-mono">{formatPrice(valuation.finalPrice)}</span>
+                      <span className="text-3xl font-light text-cobalt tracking-tight font-mono font-outfit">{formatPrice(valuation.finalPrice)}</span>
                     </div>
                   </div>
                 </div>
@@ -674,6 +856,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                     onClick={() => window.print()}
                     className="flex-shrink-0 px-4 py-4 rounded-sm border border-ice-border text-ink-slate hover:border-cobalt hover:text-cobalt transition-all flex items-center gap-2 text-sm font-semibold"
                     title="Print / Save as PDF"
+                    style={{ minHeight: '48px' }}
                   >
                     <Printer className="w-4 h-4" />
                     <span className="hidden sm:inline">Print Quote</span>
@@ -681,6 +864,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   <button
                     onClick={() => onComplete(valuation.finalPrice, selectedDefects)}
                     className="flex-1 bg-cobalt hover:bg-cobalt-hover text-white py-4 rounded-sm font-bold text-center transition-all flex items-center justify-center gap-2 group hover:scale-[1.01]"
+                    style={{ minHeight: '48px' }}
                   >
                     Book Instant Doorstep Payout
                     <ChevronRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
@@ -696,13 +880,18 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
               <button
                 onClick={handlePrevStep}
                 className="order-2 sm:order-1 px-5 py-2.5 rounded-sm border border-ice-border hover:bg-ice-gray text-ink-slate font-semibold text-sm transition-all"
+                style={{ minHeight: '48px' }}
               >
                 Back
               </button>
 
               <button
                 onClick={handleNextStep}
-                className="order-1 sm:order-2 px-6 py-3 sm:py-2.5 bg-cobalt hover:bg-cobalt-hover text-white font-bold rounded-sm text-sm transition-all flex items-center justify-center gap-1.5"
+                disabled={!isStepValidated}
+                className={`order-1 sm:order-2 px-6 py-3 sm:py-2.5 bg-cobalt hover:bg-cobalt-hover text-white font-bold rounded-sm text-sm transition-all flex items-center justify-center gap-1.5 ${
+                  !isStepValidated ? 'opacity-40 cursor-not-allowed' : 'hover:scale-[1.01]'
+                }`}
+                style={{ minHeight: '48px' }}
               >
                 {step === 4 ? 'Generate Report' : 'Next Step'}
                 <ChevronRight className="w-4 h-4" />
@@ -712,7 +901,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
         </motion.div>
 
         {/* Right column: Live price estimator — hidden on mobile (replaced by mini bar) */}
-        <div className="hidden lg:flex lg:col-span-5 bg-canvas-pure rounded-sm border border-ice-border p-6 flex-col justify-between min-h-[300px]">
+        <div className="hidden lg:flex lg:col-span-5 bg-canvas-pure rounded-sm border border-ice-border p-6 flex-col justify-between min-h-[300px] shadow-premium">
           <div>
             <div className="pb-4 border-b border-white/[0.04] mb-4 text-left">
               <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-1">Live Valuation</span>
@@ -755,7 +944,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                 </svg>
                 <div className="text-center z-10 px-2">
                   <span className="text-[9px] font-mono tracking-[0.1em] text-zinc-500 uppercase block">Live Estimate</span>
-                  <span className="text-2xl font-black text-ink-navy">{formatPrice(valuation.finalPrice)}</span>
+                  <span className="text-2xl font-black text-ink-navy font-outfit">{formatPrice(valuation.finalPrice)}</span>
                 </div>
               </div>
               <span className="text-xs text-ink-slate font-light mt-3">
