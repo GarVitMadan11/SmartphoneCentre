@@ -44,6 +44,16 @@ export const BRANDS: Brand[] = [
 // 2. Models List (Comprehensive)
 export const MODELS: Model[] = [
   // --- APPLE --- C2B offer ~70% of refurb mid-price (Jun 2026). iPhones retain value best.
+  { id: 'apple-17pm',   brandId: 'brand-apple', name: 'iPhone 17 Pro Max',   category: 'flagship', releaseYear: 2025, basePrice128GB: 77000 },
+  { id: 'apple-17p',    brandId: 'brand-apple', name: 'iPhone 17 Pro',       category: 'flagship', releaseYear: 2025, basePrice128GB: 67000 },
+  { id: 'apple-17air',  brandId: 'brand-apple', name: 'iPhone Air',          category: 'premium',  releaseYear: 2025, basePrice128GB: 55000 },
+  { id: 'apple-17',     brandId: 'brand-apple', name: 'iPhone 17',           category: 'premium',  releaseYear: 2025, basePrice128GB: 50000 },
+  { id: 'apple-17e',    brandId: 'brand-apple', name: 'iPhone 17e',          category: 'midrange', releaseYear: 2025, basePrice128GB: 38000 },
+  { id: 'apple-16pm',   brandId: 'brand-apple', name: 'iPhone 16 Pro Max',   category: 'flagship', releaseYear: 2024, basePrice128GB: 67000 },
+  { id: 'apple-16p',    brandId: 'brand-apple', name: 'iPhone 16 Pro',       category: 'flagship', releaseYear: 2024, basePrice128GB: 57000 },
+  { id: 'apple-16plus', brandId: 'brand-apple', name: 'iPhone 16 Plus',      category: 'premium',  releaseYear: 2024, basePrice128GB: 45000 },
+  { id: 'apple-16',     brandId: 'brand-apple', name: 'iPhone 16',           category: 'premium',  releaseYear: 2024, basePrice128GB: 40000 },
+  { id: 'apple-16e',    brandId: 'brand-apple', name: 'iPhone 16e',          category: 'midrange', releaseYear: 2024, basePrice128GB: 32000 },
   { id: 'apple-15pm',   brandId: 'brand-apple', name: 'iPhone 15 Pro Max',   category: 'flagship', releaseYear: 2023, basePrice128GB: 57000 },
   { id: 'apple-15p',    brandId: 'brand-apple', name: 'iPhone 15 Pro',       category: 'flagship', releaseYear: 2023, basePrice128GB: 47000 },
   { id: 'apple-15plus', brandId: 'brand-apple', name: 'iPhone 15 Plus',      category: 'premium',  releaseYear: 2023, basePrice128GB: 37000 },
@@ -63,7 +73,12 @@ export const MODELS: Model[] = [
   { id: 'apple-11pm',   brandId: 'brand-apple', name: 'iPhone 11 Pro Max',   category: 'premium',  releaseYear: 2019, basePrice128GB: 11000 },
   { id: 'apple-11p',    brandId: 'brand-apple', name: 'iPhone 11 Pro',       category: 'premium',  releaseYear: 2019, basePrice128GB:  9500 },
   { id: 'apple-11',     brandId: 'brand-apple', name: 'iPhone 11',           category: 'midrange', releaseYear: 2019, basePrice128GB:  7500 },
+  { id: 'apple-xsmax',  brandId: 'brand-apple', name: 'iPhone XS Max',       category: 'budget',   releaseYear: 2018, basePrice128GB:  8000 },
+  { id: 'apple-xs',     brandId: 'brand-apple', name: 'iPhone XS',           category: 'budget',   releaseYear: 2018, basePrice128GB:  6500 },
+  { id: 'apple-xr',     brandId: 'brand-apple', name: 'iPhone XR',           category: 'budget',   releaseYear: 2018, basePrice128GB:  5500 },
+  { id: 'apple-x',      brandId: 'brand-apple', name: 'iPhone X',            category: 'budget',   releaseYear: 2017, basePrice128GB:  5000 },
   { id: 'apple-se3',    brandId: 'brand-apple', name: 'iPhone SE (3rd Gen)', category: 'budget',   releaseYear: 2022, basePrice128GB:  8500 },
+  { id: 'apple-se2',    brandId: 'brand-apple', name: 'iPhone SE (2nd Gen)', category: 'budget',   releaseYear: 2020, basePrice128GB:  6000 },
 
   // --- SAMSUNG --- C2B offer ~65% of refurb mid-price. Samsung depreciates faster than Apple.
   { id: 'sam-s24u',    brandId: 'brand-samsung', name: 'Galaxy S24 Ultra', category: 'flagship', releaseYear: 2024, basePrice128GB: 42000 },
