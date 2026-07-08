@@ -10,17 +10,30 @@ import { getIllustration } from './Illustrations';
 
 const getEngineeringLabel = (description: string) => {
   const mapping: { [key: string]: string } = {
-    'Cracked Screen / Back Glass': 'Screen Restoration Fee',
-    'Light Screen Scratches': 'Glass Micro-Polishing Fee',
-    'Screen Burn-in / Lines': 'Display Panel Replacement Fee',
-    'Dented or Bent Frame': 'Chassis Structure Re-alignment',
-    'Scuffed Frame / Normal Wear': 'Frame Bead-Blasting & Refinishing',
-    'Faulty Lens / Blur': 'Optical Sensor Recalibration',
-    'Battery Health < 80%': 'Battery Module Replacement',
-    'Missing Original Box': 'OEM Retail Box De-allocation',
-    'Missing Original Charger / Cable': 'OEM Power Adapter De-allocation',
-    'Device Does Not Turn On': 'Board-Level Hardware Failure',
-    'Biometrics Faulty (FaceID/TouchID)': 'Biometric Sensor Security Fee'
+    'Cracked Screen / Back Glass':       'Screen Restoration Fee',
+    'Front Glass Scratches / Bubbles':   'Glass Micro-Polishing Fee',
+    'Screen Burn-in / Lines':            'Display Panel Replacement Fee',
+    'Touch / Swipe Unresponsive':        'Digitizer / Touch Layer Repair',
+    'True Tone Not Working':             'Original Display Certification Fee',
+    'Dented or Bent Frame':              'Chassis Structure Re-alignment',
+    'Scuffed Frame / Normal Wear':       'Frame Bead-Blasting & Refinishing',
+    'Air Pass / Waterproof Seal Fail':   'IP Seal & Gasket Replacement',
+    'Side Buttons Faulty':               'Button Flex Cable Repair Fee',
+    'Screws Stripped / Missing':         'Pentalobe Hardware Replacement',
+    'Camera Faulty / Lens Blur':         'Optical Sensor Recalibration',
+    'Battery Health < 80%':              'Battery Module Replacement',
+    'Non-Genuine Battery Warning':       'OEM Battery Compliance Levy',
+    'Network, Calling & SIM Issues':     'Cellular Modem / SIM Tray Repair',
+    'Wi-Fi & Bluetooth Issues':          'Antenna & Wireless Module Repair',
+    '3uTools Serial Mismatch':           'Counterfeit Parts Detection Levy',
+    'Speakers / Microphone Faulty':      'Audio Assembly Replacement Fee',
+    'Auto-Restart / Unstable Device':    'PMIC / Board-Level Stabilisation',
+    'Missing Original Box':              'OEM Retail Box De-allocation',
+    'Missing Original Charger / Cable':  'OEM Power Adapter De-allocation',
+    'Missing Bill / Customer Photo ID':  'Legal Compliance Documentation Fee',
+    'Device Does Not Turn On':           'Board-Level Hardware Failure',
+    'iCloud / Apple ID Locked':          'Activation Lock — Zero Resale Value',
+    'Biometrics Faulty (Face ID)':       'Biometric Sensor Security Fee'
   };
   return mapping[description] || description;
 };
@@ -61,11 +74,11 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
   const rules = useMemo(() => getDefectRulesForCategory(model.category), [model.category]);
 
   const stepsList = [
-    { title: 'Power & Boot', icon: Zap, desc: 'Does the device turn on?' },
-    { title: 'Screen Condition', icon: Smartphone, desc: 'Assess screen scratches/cracks' },
-    { title: 'Body Frame', icon: ShieldCheck, desc: 'Check frame dents and scuffs' },
-    { title: 'Functionality & Security', icon: Activity, desc: 'Test cameras and biometrics' },
-    { title: 'Box & OEM Charger', icon: Box, desc: 'Available accessories' },
+    { title: 'Power & Boot',           icon: Zap,        desc: 'Does the device power on?' },
+    { title: 'Screen & Display',       icon: Smartphone, desc: 'Touch, True Tone & glass condition' },
+    { title: 'Body & Hardware',        icon: ShieldCheck, desc: 'Frame, buttons, screws & seal' },
+    { title: 'Functionality',          icon: Activity,   desc: 'Network, audio, wireless & stability' },
+    { title: 'Accessories & Docs',     icon: Box,        desc: 'Box, charger, bill & iCloud status' },
   ];
 
   // Confirmation state for each diagnostic step to prevent blank clickthroughs
@@ -98,13 +111,13 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
     if (step === 2) return bodyConfirmed || selectedDefects.some(d => d.category === 'body');
     if (step === 3) {
       const funcDefectIds = rules
-        .filter(r => ['camera', 'battery'].includes(r.category) || r.id === 'defect-critical-security')
+        .filter(r => ['camera', 'battery', 'functionality'].includes(r.category) || r.id === 'defect-critical-security')
         .map(r => r.id);
       return funcConfirmed || selectedDefects.some(d => funcDefectIds.includes(d.id));
     }
     if (step === 4) {
       const accDefectIds = rules
-        .filter(r => r.category === 'accessories' && !r.isCriticalFailure && r.id !== 'defect-critical-security')
+        .filter(r => r.category === 'accessories' && !r.isCriticalFailure)
         .map(r => r.id);
       return accConfirmed || selectedDefects.some(d => accDefectIds.includes(d.id));
     }
@@ -448,9 +461,9 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                 exit={{ opacity: 1, x: 10 }}
               >
                 <div className="mb-6 text-left">
-                  <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-1">Step 3 of 5 // Outer Enclosure</span>
-                  <h3 className="text-3xl font-light text-ink-navy tracking-tight">Body Frame & Chassis</h3>
-                  <p className="text-xs text-ink-muted mt-2 font-light">Examine the aluminum/titanium frame side edges and corners.</p>
+                  <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-1">Step 3 of 5 // Outer Enclosure & Hardware</span>
+                  <h3 className="text-3xl font-light text-ink-navy tracking-tight">Body, Buttons & Frame</h3>
+                  <p className="text-xs text-ink-muted mt-2 font-light">Check the frame, side buttons, bottom screws, and waterproof seal integrity.</p>
                 </div>
 
                 <div className="space-y-3 mt-6 text-left">
@@ -569,16 +582,16 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                 exit={{ opacity: 1, x: 10 }}
               >
                 <div className="mb-6 text-left">
-                  <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-1">Step 4 of 5 // Hardware Verification</span>
-                  <h3 className="text-3xl font-light text-ink-navy tracking-tight">Hardware Functionality</h3>
-                  <p className="text-xs text-ink-muted mt-2 font-light">Select any specific hardware component failures that apply.</p>
+                  <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-1">Step 4 of 5 // Hardware & Connectivity</span>
+                  <h3 className="text-3xl font-light text-ink-navy tracking-tight">Functionality Check</h3>
+                  <p className="text-xs text-ink-muted mt-2 font-light">Select any failing hardware, connectivity, or stability issues that apply.</p>
                 </div>
 
                 <div className="space-y-3 mt-6 text-left">
                   {/* Affirmative: Everything Works Fine */}
                   {(() => {
                     const funcDefectIds = rules
-                      .filter(r => ['camera', 'battery'].includes(r.category) || r.id === 'defect-critical-security')
+                      .filter(r => ['camera', 'battery', 'functionality'].includes(r.category) || r.id === 'defect-critical-security')
                       .map(r => r.id);
                     const isAnyFuncSelected = selectedDefects.some(d => funcDefectIds.includes(d.id));
                     const isSelected = !isAnyFuncSelected && funcConfirmed;
@@ -609,7 +622,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         </div>
                         <div className="flex-1 min-w-0">
                           <h4 className="font-semibold text-sm text-ink-navy">Everything Works Fine</h4>
-                          <p className="text-xs text-ink-muted mt-0.5 font-light">Camera, battery, and biometrics are all fully functional.</p>
+                          <p className="text-xs text-ink-muted mt-0.5 font-light">Camera, battery, network, audio, and all other functions work correctly.</p>
                         </div>
                         <div className={`w-5 h-5 rounded-sm border flex items-center justify-center flex-shrink-0 ${
                           isSelected ? 'bg-cobalt border-cobalt text-white' : 'border-ice-border'
@@ -620,8 +633,8 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                     );
                   })()}
 
-                  {/* Hardware defect options */}
-                  {rules.filter(r => ['camera', 'battery'].includes(r.category) || r.id === 'defect-critical-security').map(defect => {
+                  {/* Functionality defect options */}
+                  {rules.filter(r => ['camera', 'battery', 'functionality'].includes(r.category) || r.id === 'defect-critical-security').map(defect => {
                     const isSelected = selectedDefects.some(d => d.id === defect.id);
                     return (
                       <div
@@ -679,16 +692,16 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                 exit={{ opacity: 1, x: 10 }}
               >
                 <div className="mb-6 text-left">
-                  <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-1">Step 5 of 5 // Packaging & OEM Extras</span>
-                  <h3 className="text-3xl font-light text-ink-navy tracking-tight">Original Accessories</h3>
-                  <p className="text-xs text-ink-muted mt-2 font-light">Do you have the original retail box and OEM charging cable?</p>
+                  <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-1">Step 5 of 5 // Packaging, Docs & Security</span>
+                  <h3 className="text-3xl font-light text-ink-navy tracking-tight">Accessories & Documentation</h3>
+                  <p className="text-xs text-ink-muted mt-2 font-light">Original box, charger, bill, photo ID, and iCloud / Apple ID status.</p>
                 </div>
 
                 <div className="space-y-3 mt-6 text-left">
-                  {/* Affirmative: Box & Charger Included */}
+                  {/* Affirmative: Everything Included & iCloud Clear */}
                   {(() => {
                     const accDefectIds = rules
-                      .filter(r => r.category === 'accessories' && !r.isCriticalFailure && r.id !== 'defect-critical-security')
+                      .filter(r => r.category === 'accessories' && !r.isCriticalFailure)
                       .map(r => r.id);
                     const isAnyAccSelected = selectedDefects.some(d => accDefectIds.includes(d.id));
                     const isSelected = !isAnyAccSelected && accConfirmed;
@@ -718,8 +731,8 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           <Box className="w-7 h-7 text-emerald-500" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-sm text-ink-navy">Box & Charger Included</h4>
-                          <p className="text-xs text-ink-muted mt-0.5 font-light">Original retail box and OEM charging cable are available.</p>
+                          <h4 className="font-semibold text-sm text-ink-navy">All Clear — Box, Charger & Docs Present</h4>
+                          <p className="text-xs text-ink-muted mt-0.5 font-light">Original box, OEM charger, bill, photo ID, and iCloud signed out.</p>
                         </div>
                         <div className={`w-5 h-5 rounded-sm border flex items-center justify-center flex-shrink-0 ${
                           isSelected ? 'bg-cobalt border-cobalt text-white' : 'border-ice-border'
@@ -730,8 +743,49 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                     );
                   })()}
 
-                  {/* Accessories defect options */}
-                  {rules.filter(r => r.category === 'accessories' && !r.isCriticalFailure && r.id !== 'defect-critical-security').map(defect => {
+                  {/* iCloud / Apple ID Lock — Critical Warning Card (shown separately at top) */}
+                  {(() => {
+                    const icloudRule = rules.find(r => r.id === 'defect-critical-icloud');
+                    if (!icloudRule) return null;
+                    const isSelected = selectedDefects.some(d => d.id === 'defect-critical-icloud');
+                    return (
+                      <div
+                        key="defect-critical-icloud"
+                        role="checkbox"
+                        tabIndex={0}
+                        aria-checked={isSelected}
+                        onKeyDown={e => handleKeyDown(e, () => { handleToggleDefect(icloudRule); setAccConfirmed(true); })}
+                        onClick={() => { handleToggleDefect(icloudRule); setAccConfirmed(true); }}
+                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-3 text-left focus:outline-none focus:ring-2 focus:ring-red-500 ${
+                          isSelected
+                            ? 'border-red-500 bg-red-500/10 scale-[1.01] z-10'
+                            : !accConfirmed
+                            ? 'border-red-500/40 bg-red-500/5 hover:border-red-500/70 hover:scale-[1.005]'
+                            : 'border-red-500/20 bg-canvas-white opacity-60 hover:opacity-90'
+                        }`}
+                        style={{ minHeight: '72px' }}
+                      >
+                        <div className="w-14 h-14 flex-shrink-0 rounded-sm bg-red-500/10 border border-red-500/30 flex items-center justify-center">
+                          <ShieldCheck className="w-7 h-7 text-red-400" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-semibold text-sm text-red-400">iCloud / Apple ID Locked</h4>
+                            <span className="text-[9px] font-mono bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded-sm border border-red-500/30">CRITICAL</span>
+                          </div>
+                          <p className="text-xs text-ink-muted mt-0.5 font-light">{icloudRule.subText}</p>
+                        </div>
+                        <div className={`w-5 h-5 rounded-sm border flex items-center justify-center flex-shrink-0 ${
+                          isSelected ? 'bg-red-500 border-red-500 text-white' : 'border-red-500/40'
+                        }`}>
+                          {isSelected && <Check className="w-3 h-3" />}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Accessories defect options (non-critical only) */}
+                  {rules.filter(r => r.category === 'accessories' && !r.isCriticalFailure).map(defect => {
                     const isSelected = selectedDefects.some(d => d.id === defect.id);
                     return (
                       <div
