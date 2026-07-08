@@ -14,12 +14,12 @@ export interface ValuationBreakdown {
 
 // Max deduction allowed per category, as a fraction of base price
 const CATEGORY_CAPS: Record<string, number> = {
-  screen:        0.40, // Max 40% for all screen issues combined
-  body:          0.20, // Max 20% for frame/chassis issues
-  camera:        0.18, // Max 18% for camera/lens defects
-  battery:       0.10, // Max 10% for battery defects
-  functionality: 0.30, // Max 30% for network/wireless/hardware issues
-  accessories:   0.12, // Max 12% for missing box/charger/docs
+  screen:        0.40,
+  body:          0.20,
+  camera:        0.18,
+  functionality: 0.25,  // hardware: face ID, speakers, restart
+  connectivity:  0.28,  // battery, network, wifi, 3utools
+  accessories:   0.12,
 };
 
 /**

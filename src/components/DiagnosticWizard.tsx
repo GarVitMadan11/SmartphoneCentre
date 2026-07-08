@@ -74,55 +74,50 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
   const rules = useMemo(() => getDefectRulesForCategory(model.category), [model.category]);
 
   const stepsList = [
-    { title: 'Power & Boot',           icon: Zap,        desc: 'Does the device power on?' },
-    { title: 'Screen & Display',       icon: Smartphone, desc: 'Touch, True Tone & glass condition' },
-    { title: 'Body & Hardware',        icon: ShieldCheck, desc: 'Frame, buttons, screws & seal' },
-    { title: 'Functionality',          icon: Activity,   desc: 'Network, audio, wireless & stability' },
-    { title: 'Accessories & Docs',     icon: Box,        desc: 'Box, charger, bill & iCloud status' },
+    { title: 'Boot & iCloud',          icon: Zap,        desc: 'Power on & Apple ID status' },
+    { title: 'Screen & Display',       icon: Smartphone, desc: 'Touch, True Tone & glass' },
+    { title: 'Body & Frame',           icon: ShieldCheck, desc: 'Frame, buttons, screws & seal' },
+    { title: 'Hardware',               icon: Activity,   desc: 'Camera, Face ID, audio & restart' },
+    { title: 'Connectivity',           icon: Zap,        desc: 'Battery, network, Wi-Fi & parts' },
+    { title: 'Accessories & Docs',     icon: Box,        desc: 'Box, charger & bill' },
   ];
 
   // Confirmation state for each diagnostic step to prevent blank clickthroughs
   const [screenConfirmed, setScreenConfirmed] = useState(() => loadFromLocalStorage('stc_screenConfirmed', false));
   const [bodyConfirmed, setBodyConfirmed] = useState(() => loadFromLocalStorage('stc_bodyConfirmed', false));
   const [funcConfirmed, setFuncConfirmed] = useState(() => loadFromLocalStorage('stc_funcConfirmed', false));
+  const [connectConfirmed, setConnectConfirmed] = useState(() => loadFromLocalStorage('stc_connectConfirmed', false));
   const [accConfirmed, setAccConfirmed] = useState(() => loadFromLocalStorage('stc_accConfirmed', false));
+  const [icloudChecked, setIcloudChecked] = useState<'clear' | 'locked' | null>(() => loadFromLocalStorage('stc_icloudChecked', null));
 
   // Sync confirmations to localStorage
-  useEffect(() => {
-    localStorage.setItem('stc_screenConfirmed', JSON.stringify(screenConfirmed));
-  }, [screenConfirmed]);
-
-  useEffect(() => {
-    localStorage.setItem('stc_bodyConfirmed', JSON.stringify(bodyConfirmed));
-  }, [bodyConfirmed]);
-
-  useEffect(() => {
-    localStorage.setItem('stc_funcConfirmed', JSON.stringify(funcConfirmed));
-  }, [funcConfirmed]);
-
-  useEffect(() => {
-    localStorage.setItem('stc_accConfirmed', JSON.stringify(accConfirmed));
-  }, [accConfirmed]);
+  useEffect(() => { localStorage.setItem('stc_screenConfirmed', JSON.stringify(screenConfirmed)); }, [screenConfirmed]);
+  useEffect(() => { localStorage.setItem('stc_bodyConfirmed', JSON.stringify(bodyConfirmed)); }, [bodyConfirmed]);
+  useEffect(() => { localStorage.setItem('stc_funcConfirmed', JSON.stringify(funcConfirmed)); }, [funcConfirmed]);
+  useEffect(() => { localStorage.setItem('stc_connectConfirmed', JSON.stringify(connectConfirmed)); }, [connectConfirmed]);
+  useEffect(() => { localStorage.setItem('stc_accConfirmed', JSON.stringify(accConfirmed)); }, [accConfirmed]);
+  useEffect(() => { localStorage.setItem('stc_icloudChecked', JSON.stringify(icloudChecked)); }, [icloudChecked]);
 
   // Validation check for current step
   const isStepValidated = useMemo(() => {
-    if (step === 0) return true; // Power step uses direct CTAs
+    // Step 0: need icloud status chosen + will use CTA for power
+    if (step === 0) return icloudChecked !== null;
     if (step === 1) return screenConfirmed || selectedDefects.some(d => d.category === 'screen');
     if (step === 2) return bodyConfirmed || selectedDefects.some(d => d.category === 'body');
     if (step === 3) {
-      const funcDefectIds = rules
-        .filter(r => ['camera', 'battery', 'functionality'].includes(r.category) || r.id === 'defect-critical-security')
-        .map(r => r.id);
-      return funcConfirmed || selectedDefects.some(d => funcDefectIds.includes(d.id));
+      const ids = rules.filter(r => ['camera', 'functionality'].includes(r.category)).map(r => r.id);
+      return funcConfirmed || selectedDefects.some(d => ids.includes(d.id));
     }
     if (step === 4) {
-      const accDefectIds = rules
-        .filter(r => r.category === 'accessories' && !r.isCriticalFailure)
-        .map(r => r.id);
-      return accConfirmed || selectedDefects.some(d => accDefectIds.includes(d.id));
+      const ids = rules.filter(r => r.category === 'connectivity').map(r => r.id);
+      return connectConfirmed || selectedDefects.some(d => ids.includes(d.id));
+    }
+    if (step === 5) {
+      const ids = rules.filter(r => r.category === 'accessories' && !r.isCriticalFailure).map(r => r.id);
+      return accConfirmed || selectedDefects.some(d => ids.includes(d.id));
     }
     return true;
-  }, [step, screenConfirmed, bodyConfirmed, funcConfirmed, accConfirmed, selectedDefects, rules]);
+  }, [step, icloudChecked, screenConfirmed, bodyConfirmed, funcConfirmed, connectConfirmed, accConfirmed, selectedDefects, rules]);
 
   // Calculate live valuation
   const valuation = useMemo(() => {
@@ -153,14 +148,23 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
   const handlePowerCheck = (turnsOn: boolean) => {
     const powerDefect = rules.find(r => r.id === 'defect-critical-power')!;
+    const icloudDefect = rules.find(r => r.id === 'defect-critical-icloud');
     if (!turnsOn) {
-      // If it doesn't turn on, mark critical power defect and skip to end
-      setSelectedDefects([powerDefect]);
-      setStep(5); // Jump to valuation screen directly
+      const defects: DefectRule[] = [powerDefect];
+      if (icloudChecked === 'locked' && icloudDefect) defects.push(icloudDefect);
+      setSelectedDefects(defects);
+      setStep(6); // Jump to summary
     } else {
-      // Remove power defect if it was added
-      setSelectedDefects(prev => prev.filter(d => d.id !== 'defect-critical-power'));
-      setStep(1); // Proceed
+      // Powers on — handle icloud status
+      let next = selectedDefects.filter(d => d.id !== 'defect-critical-power');
+      if (icloudChecked === 'locked' && icloudDefect) {
+        next = [...next.filter(d => d.id !== 'defect-critical-icloud'), icloudDefect];
+        setSelectedDefects(next);
+        setStep(6); // iCloud locked = zero value, skip to summary
+      } else {
+        setSelectedDefects(next.filter(d => d.id !== 'defect-critical-icloud'));
+        setStep(1);
+      }
     }
   };
 
@@ -174,16 +178,15 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
   const handleNextStep = () => {
     if (!isStepValidated) return;
-    if (step < 4) {
+    if (step < 5) {
       setStep(prev => prev + 1);
     } else {
-      setStep(5); // Summary screen
+      setStep(6); // Summary screen
     }
   };
 
   const handlePrevStep = () => {
-    if (step === 5 && selectedDefects.some(d => d.id === 'defect-critical-power')) {
-      // If dead phone, go back to step 0
+    if (step === 6 && selectedDefects.some(d => d.isCriticalFailure)) {
       setStep(0);
     } else if (step > 0) {
       setStep(prev => prev - 1);
@@ -236,12 +239,12 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
           {/* Mobile progress bar with step titles */}
           <div className="flex sm:hidden items-center gap-2">
             <span className="text-[10px] text-zinc-400 font-mono tracking-wider uppercase flex-shrink-0">
-              Step {Math.min(step + 1, 5)}/5: {stepsList[Math.min(step, 4)]?.title}
+              Step {Math.min(step + 1, 6)}/6: {stepsList[Math.min(step, 5)]?.title}
             </span>
             <div className="flex-1 h-1.5 rounded-full bg-ice-gray overflow-hidden">
               <div
                 className="h-full bg-cobalt transition-all duration-500"
-                style={{width: `${Math.min((step / 4) * 100, 100)}%`}}
+                style={{width: `${Math.min((step / 5) * 100, 100)}%`}}
               />
             </div>
           </div>
@@ -260,7 +263,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                 >
                   {step > idx ? <Check className="w-3.5 h-3.5" /> : idx + 1}
                 </div>
-                {idx < 4 && (
+                {idx < 5 && (
                   <div className={`w-4 sm:w-6 h-0.5 transition-all ${step > idx ? 'bg-cobalt' : 'bg-ice-border'}`} />
                 )}
               </div>
@@ -289,7 +292,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
           className="lg:col-span-7 bg-canvas-pure rounded-sm border border-ice-border p-4 sm:p-6 min-h-[360px] sm:min-h-[420px] flex flex-col justify-between overflow-hidden shadow-premium"
         >
           <AnimatePresence mode="wait">
-            {/* STEP 0: Power Status */}
+            {/* STEP 0: Boot & iCloud Check */}
             {step === 0 && (
               <motion.div
                 key="step-0"
@@ -298,35 +301,83 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                 exit={{ opacity: 1, x: 10 }}
               >
                 <div className="mb-6 text-left">
-                  <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-1">Step 1 of 5 // Power Status</span>
-                  <h3 className="text-3xl font-light text-ink-navy tracking-tight">Power & Boot Diagnostics</h3>
-                  <p className="text-xs text-ink-muted mt-2 font-light">First, let's verify if the device starts up and functions normally.</p>
+                  <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-1">Step 1 of 6 // Critical Gates</span>
+                  <h3 className="text-3xl font-light text-ink-navy tracking-tight">Boot & iCloud Status</h3>
+                  <p className="text-xs text-ink-muted mt-2 font-light">Check Apple ID status first — a locked iCloud renders the device unsellable regardless of condition.</p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
-                  <button
-                    onClick={() => handlePowerCheck(true)}
-                    className="p-6 rounded-sm border border-ice-border hover:border-emerald-500/50 bg-canvas-white hover:bg-emerald-500/5 text-left transition-all duration-300 group focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt"
-                    style={{ minHeight: '120px' }}
-                  >
-                    <div className="w-16 h-16 rounded-sm bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform overflow-hidden">
-                      {getIllustration('power-on')}
+                {/* iCloud check — must answer first */}
+                <div className="mb-5 text-left">
+                  <span className="text-[9px] font-mono tracking-[0.15em] text-amber-400 uppercase block mb-2">① Check First: Settings → [Your Name] → iCloud</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => setIcloudChecked('clear')}
+                      onKeyDown={e => handleKeyDown(e, () => setIcloudChecked('clear'))}
+                      className={`p-4 rounded-sm border cursor-pointer transition-all duration-200 text-left focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
+                        icloudChecked === 'clear'
+                          ? 'border-emerald-500 bg-emerald-500/10'
+                          : 'border-ice-border bg-canvas-white hover:border-emerald-500/50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                        <span className="font-semibold text-sm text-ink-navy">Apple ID Signed Out</span>
+                        {icloudChecked === 'clear' && <Check className="w-3.5 h-3.5 text-emerald-500 ml-auto" />}
+                      </div>
+                      <p className="text-xs text-ink-muted font-light">Find My is OFF. Device can be erased and resold.</p>
                     </div>
-                    <h4 className="font-semibold text-lg text-ink-navy">Powers On</h4>
-                    <p className="text-xs text-ink-muted mt-1 font-light">The device boots up to the lock screen and the screen functions fully.</p>
-                  </button>
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => setIcloudChecked('locked')}
+                      onKeyDown={e => handleKeyDown(e, () => setIcloudChecked('locked'))}
+                      className={`p-4 rounded-sm border cursor-pointer transition-all duration-200 text-left focus:outline-none focus:ring-2 focus:ring-red-500 ${
+                        icloudChecked === 'locked'
+                          ? 'border-red-500 bg-red-500/10'
+                          : 'border-red-500/30 bg-red-500/5 hover:border-red-500/60'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-red-400 font-bold text-sm">🔒</span>
+                        <span className="font-semibold text-sm text-red-400">iCloud LOCKED</span>
+                        {icloudChecked === 'locked' && <Check className="w-3.5 h-3.5 text-red-400 ml-auto" />}
+                      </div>
+                      <p className="text-xs text-ink-muted font-light">Find My is ON. Apple ID cannot be removed. Zero resale value.</p>
+                    </div>
+                  </div>
+                </div>
 
-                  <button
-                    onClick={() => handlePowerCheck(false)}
-                    className="p-6 rounded-sm border border-ice-border hover:border-red-500/50 bg-canvas-white hover:bg-red-500/5 text-left transition-all duration-300 group focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt"
-                    style={{ minHeight: '120px' }}
-                  >
-                    <div className="w-16 h-16 rounded-sm bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform overflow-hidden">
-                      {getIllustration('defect-critical-power')}
-                    </div>
-                    <h4 className="font-semibold text-lg text-ink-navy">Dead / Fails to Boot</h4>
-                    <p className="text-xs text-ink-muted mt-1 font-light">Device does not turn on, has heavy water damage, or is stuck on boot loop.</p>
-                  </button>
+                {/* Power check — enabled only after icloud status selected */}
+                <div className={`transition-opacity duration-300 ${icloudChecked ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
+                  <span className="text-[9px] font-mono tracking-[0.15em] text-zinc-500 uppercase block mb-2">② Then: Power Check</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <button
+                      onClick={() => handlePowerCheck(true)}
+                      disabled={!icloudChecked}
+                      className="p-5 rounded-sm border border-ice-border hover:border-emerald-500/50 bg-canvas-white hover:bg-emerald-500/5 text-left transition-all duration-300 group focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt disabled:cursor-not-allowed"
+                      style={{ minHeight: '100px' }}
+                    >
+                      <div className="w-12 h-12 rounded-sm bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform overflow-hidden">
+                        {getIllustration('power-on')}
+                      </div>
+                      <h4 className="font-semibold text-sm text-ink-navy">Powers On</h4>
+                      <p className="text-xs text-ink-muted mt-0.5 font-light">Boots to lock screen and functions normally.</p>
+                    </button>
+                    <button
+                      onClick={() => handlePowerCheck(false)}
+                      disabled={!icloudChecked}
+                      className="p-5 rounded-sm border border-red-500/30 hover:border-red-500/60 bg-red-500/5 hover:bg-red-500/10 text-left transition-all duration-300 group focus:outline-none focus:ring-2 focus:ring-red-500 disabled:cursor-not-allowed"
+                      style={{ minHeight: '100px' }}
+                    >
+                      <div className="w-12 h-12 rounded-sm bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform overflow-hidden">
+                        {getIllustration('defect-critical-power')}
+                      </div>
+                      <h4 className="font-semibold text-sm text-red-400">Dead / Fails to Boot</h4>
+                      <p className="text-xs text-ink-muted mt-0.5 font-light">Does not turn on, water damaged, or stuck on boot loop.</p>
+                    </button>
+                  </div>
                 </div>
               </motion.div>
             )}
@@ -340,7 +391,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                 exit={{ opacity: 1, x: 10 }}
               >
                 <div className="mb-6 text-left">
-                  <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-1">Step 2 of 5 // Front & Back Glass</span>
+                  <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-1">Step 2 of 6 // Front & Back Glass</span>
                   <h3 className="text-3xl font-light text-ink-navy tracking-tight">Screen & Display Panel</h3>
                   <p className="text-xs text-ink-muted mt-2 font-light">Examine the front screen glass and the back panel glass carefully.</p>
                 </div>
@@ -461,7 +512,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                 exit={{ opacity: 1, x: 10 }}
               >
                 <div className="mb-6 text-left">
-                  <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-1">Step 3 of 5 // Outer Enclosure & Hardware</span>
+                  <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-1">Step 3 of 6 // Outer Enclosure & Hardware</span>
                   <h3 className="text-3xl font-light text-ink-navy tracking-tight">Body, Buttons & Frame</h3>
                   <p className="text-xs text-ink-muted mt-2 font-light">Check the frame, side buttons, bottom screws, and waterproof seal integrity.</p>
                 </div>
@@ -573,7 +624,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
               </motion.div>
             )}
 
-            {/* STEP 3: Functionality & Security */}
+            {/* STEP 3: Hardware Diagnostics */}
             {step === 3 && (
               <motion.div
                 key="step-3"
@@ -582,30 +633,28 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                 exit={{ opacity: 1, x: 10 }}
               >
                 <div className="mb-6 text-left">
-                  <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-1">Step 4 of 5 // Hardware & Connectivity</span>
-                  <h3 className="text-3xl font-light text-ink-navy tracking-tight">Functionality Check</h3>
-                  <p className="text-xs text-ink-muted mt-2 font-light">Select any failing hardware, connectivity, or stability issues that apply.</p>
+                  <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-1">Step 4 of 6 // Hardware Diagnostics</span>
+                  <h3 className="text-3xl font-light text-ink-navy tracking-tight">Camera & Hardware</h3>
+                  <p className="text-xs text-ink-muted mt-2 font-light">Select any failing camera, biometric, audio, or system stability issues that apply.</p>
                 </div>
 
                 <div className="space-y-3 mt-6 text-left">
-                  {/* Affirmative: Everything Works Fine */}
+                  {/* Affirmative option */}
                   {(() => {
-                    const funcDefectIds = rules
-                      .filter(r => ['camera', 'battery', 'functionality'].includes(r.category) || r.id === 'defect-critical-security')
-                      .map(r => r.id);
-                    const isAnyFuncSelected = selectedDefects.some(d => funcDefectIds.includes(d.id));
-                    const isSelected = !isAnyFuncSelected && funcConfirmed;
+                    const ids = rules.filter(r => ['camera', 'functionality'].includes(r.category)).map(r => r.id);
+                    const isAnySelected = selectedDefects.some(d => ids.includes(d.id));
+                    const isSelected = !isAnySelected && funcConfirmed;
                     return (
                       <div
                         role="checkbox"
                         tabIndex={0}
                         aria-checked={isSelected}
                         onKeyDown={e => handleKeyDown(e, () => {
-                          setSelectedDefects(prev => prev.filter(d => !funcDefectIds.includes(d.id)));
+                          setSelectedDefects(prev => prev.filter(d => !ids.includes(d.id)));
                           setFuncConfirmed(true);
                         })}
                         onClick={() => {
-                          setSelectedDefects(prev => prev.filter(d => !funcDefectIds.includes(d.id)));
+                          setSelectedDefects(prev => prev.filter(d => !ids.includes(d.id)));
                           setFuncConfirmed(true);
                         }}
                         className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-3 text-left focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt ${
@@ -621,8 +670,8 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           <ShieldCheck className="w-7 h-7 text-emerald-500" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-sm text-ink-navy">Everything Works Fine</h4>
-                          <p className="text-xs text-ink-muted mt-0.5 font-light">Camera, battery, network, audio, and all other functions work correctly.</p>
+                          <h4 className="font-semibold text-sm text-ink-navy">Hardware Works Perfectly</h4>
+                          <p className="text-xs text-ink-muted mt-0.5 font-light">Front/rear cameras, Face ID, speaker/mic, and system stability are flawless.</p>
                         </div>
                         <div className={`w-5 h-5 rounded-sm border flex items-center justify-center flex-shrink-0 ${
                           isSelected ? 'bg-cobalt border-cobalt text-white' : 'border-ice-border'
@@ -633,8 +682,8 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                     );
                   })()}
 
-                  {/* Functionality defect options */}
-                  {rules.filter(r => ['camera', 'battery', 'functionality'].includes(r.category) || r.id === 'defect-critical-security').map(defect => {
+                  {/* Hardware / functionality rules */}
+                  {rules.filter(r => ['camera', 'functionality'].includes(r.category)).map(defect => {
                     const isSelected = selectedDefects.some(d => d.id === defect.id);
                     return (
                       <div
@@ -683,7 +732,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
               </motion.div>
             )}
 
-            {/* STEP 4: Accessories */}
+            {/* STEP 4: Connectivity & Verification */}
             {step === 4 && (
               <motion.div
                 key="step-4"
@@ -692,30 +741,136 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                 exit={{ opacity: 1, x: 10 }}
               >
                 <div className="mb-6 text-left">
-                  <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-1">Step 5 of 5 // Packaging, Docs & Security</span>
-                  <h3 className="text-3xl font-light text-ink-navy tracking-tight">Accessories & Documentation</h3>
-                  <p className="text-xs text-ink-muted mt-2 font-light">Original box, charger, bill, photo ID, and iCloud / Apple ID status.</p>
+                  <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-1">Step 5 of 6 // Wireless, Power & Authenticity</span>
+                  <h3 className="text-3xl font-light text-ink-navy tracking-tight">Connectivity & Verification</h3>
+                  <p className="text-xs text-ink-muted mt-2 font-light">Verify battery condition, cellular/Wi-Fi antennas, and motherboard serial mappings.</p>
                 </div>
 
                 <div className="space-y-3 mt-6 text-left">
-                  {/* Affirmative: Everything Included & iCloud Clear */}
+                  {/* Affirmative option */}
                   {(() => {
-                    const accDefectIds = rules
-                      .filter(r => r.category === 'accessories' && !r.isCriticalFailure)
-                      .map(r => r.id);
-                    const isAnyAccSelected = selectedDefects.some(d => accDefectIds.includes(d.id));
-                    const isSelected = !isAnyAccSelected && accConfirmed;
+                    const ids = rules.filter(r => r.category === 'connectivity').map(r => r.id);
+                    const isAnySelected = selectedDefects.some(d => ids.includes(d.id));
+                    const isSelected = !isAnySelected && connectConfirmed;
                     return (
                       <div
                         role="checkbox"
                         tabIndex={0}
                         aria-checked={isSelected}
                         onKeyDown={e => handleKeyDown(e, () => {
-                          setSelectedDefects(prev => prev.filter(d => !accDefectIds.includes(d.id)));
+                          setSelectedDefects(prev => prev.filter(d => !ids.includes(d.id)));
+                          setConnectConfirmed(true);
+                        })}
+                        onClick={() => {
+                          setSelectedDefects(prev => prev.filter(d => !ids.includes(d.id)));
+                          setConnectConfirmed(true);
+                        }}
+                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-3 text-left focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt ${
+                          isSelected
+                            ? 'border-cobalt bg-cobalt-light scale-[1.01] opacity-100 z-10 shadow-premium'
+                            : !connectConfirmed
+                            ? 'border-ice-border bg-canvas-white hover:border-cobalt/30 hover:scale-[1.005]'
+                            : 'border-ice-border bg-canvas-white opacity-40 hover:opacity-75 hover:scale-[1.005]'
+                        }`}
+                        style={{ minHeight: '72px' }}
+                      >
+                        <div className="w-14 h-14 flex-shrink-0 rounded-sm bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                          <ShieldCheck className="w-7 h-7 text-emerald-500" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-sm text-ink-navy">Connectivity & Battery Healthy</h4>
+                          <p className="text-xs text-ink-muted mt-0.5 font-light">Battery is original/above 80%, cellular/Wi-Fi antennas are strong, and 3uTools checks pass.</p>
+                        </div>
+                        <div className={`w-5 h-5 rounded-sm border flex items-center justify-center flex-shrink-0 ${
+                          isSelected ? 'bg-cobalt border-cobalt text-white' : 'border-ice-border'
+                        }`}>
+                          {isSelected && <Check className="w-3 h-3" />}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Connectivity & verification rules */}
+                  {rules.filter(r => r.category === 'connectivity').map(defect => {
+                    const isSelected = selectedDefects.some(d => d.id === defect.id);
+                    return (
+                      <div
+                        key={defect.id}
+                        role="checkbox"
+                        tabIndex={0}
+                        aria-checked={isSelected}
+                        onKeyDown={e => handleKeyDown(e, () => {
+                          handleToggleDefect(defect);
+                          setConnectConfirmed(true);
+                        })}
+                        onClick={() => {
+                          handleToggleDefect(defect);
+                          setConnectConfirmed(true);
+                        }}
+                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-3 text-left focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt ${
+                          isSelected
+                            ? 'border-cobalt bg-cobalt-light scale-[1.01] opacity-100 z-10 shadow-premium'
+                            : !connectConfirmed
+                            ? 'border-ice-border bg-canvas-white hover:border-cobalt/30 hover:scale-[1.005]'
+                            : 'border-ice-border bg-canvas-white opacity-40 hover:opacity-75 hover:scale-[1.005]'
+                        }`}
+                        style={{ minHeight: '72px' }}
+                      >
+                        <div className="w-14 h-14 flex-shrink-0 rounded-sm bg-ice-gray border border-ice-border flex items-center justify-center overflow-hidden">
+                          {getIllustration(defect.id)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-semibold text-sm text-ink-navy">{defect.description}</h4>
+                            <span className="text-[9px] font-mono bg-red-500/10 text-red-400 px-1.5 py-0.5 rounded-sm border border-red-500/20">
+                              {defect.deductionPercentage > 0 ? `-${parseFloat((defect.deductionPercentage * 100).toFixed(1))}%` : `-${formatPrice(defect.deductionFixed)}`}
+                            </span>
+                          </div>
+                          <p className="text-xs text-ink-muted mt-0.5 font-light">{defect.subText}</p>
+                        </div>
+                        <div className={`w-5 h-5 rounded-sm border flex items-center justify-center flex-shrink-0 ${
+                          isSelected ? 'bg-cobalt border-cobalt text-white' : 'border-ice-border'
+                        }`}>
+                          {isSelected && <Check className="w-3 h-3" />}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+
+            {/* STEP 5: Accessories & Documentation */}
+            {step === 5 && (
+              <motion.div
+                key="step-5"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 1, x: 10 }}
+              >
+                <div className="mb-6 text-left">
+                  <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-1">Step 6 of 6 // Packaging & Verification Docs</span>
+                  <h3 className="text-3xl font-light text-ink-navy tracking-tight">Accessories & Documentation</h3>
+                  <p className="text-xs text-ink-muted mt-2 font-light">Confirm if the original retail box, OEM charging accessories, and invoice are present.</p>
+                </div>
+
+                <div className="space-y-3 mt-6 text-left">
+                  {/* Affirmative option */}
+                  {(() => {
+                    const ids = rules.filter(r => r.category === 'accessories' && !r.isCriticalFailure).map(r => r.id);
+                    const isAnySelected = selectedDefects.some(d => ids.includes(d.id));
+                    const isSelected = !isAnySelected && accConfirmed;
+                    return (
+                      <div
+                        role="checkbox"
+                        tabIndex={0}
+                        aria-checked={isSelected}
+                        onKeyDown={e => handleKeyDown(e, () => {
+                          setSelectedDefects(prev => prev.filter(d => !ids.includes(d.id)));
                           setAccConfirmed(true);
                         })}
                         onClick={() => {
-                          setSelectedDefects(prev => prev.filter(d => !accDefectIds.includes(d.id)));
+                          setSelectedDefects(prev => prev.filter(d => !ids.includes(d.id)));
                           setAccConfirmed(true);
                         }}
                         className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-3 text-left focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt ${
@@ -731,8 +886,8 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           <Box className="w-7 h-7 text-emerald-500" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-sm text-ink-navy">All Clear — Box, Charger & Docs Present</h4>
-                          <p className="text-xs text-ink-muted mt-0.5 font-light">Original box, OEM charger, bill, photo ID, and iCloud signed out.</p>
+                          <h4 className="font-semibold text-sm text-ink-navy">All Accessories Included</h4>
+                          <p className="text-xs text-ink-muted mt-0.5 font-light">Original box with matching IMEI, OEM charger/cable, and purchasing receipt are present.</p>
                         </div>
                         <div className={`w-5 h-5 rounded-sm border flex items-center justify-center flex-shrink-0 ${
                           isSelected ? 'bg-cobalt border-cobalt text-white' : 'border-ice-border'
@@ -743,48 +898,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                     );
                   })()}
 
-                  {/* iCloud / Apple ID Lock — Critical Warning Card (shown separately at top) */}
-                  {(() => {
-                    const icloudRule = rules.find(r => r.id === 'defect-critical-icloud');
-                    if (!icloudRule) return null;
-                    const isSelected = selectedDefects.some(d => d.id === 'defect-critical-icloud');
-                    return (
-                      <div
-                        key="defect-critical-icloud"
-                        role="checkbox"
-                        tabIndex={0}
-                        aria-checked={isSelected}
-                        onKeyDown={e => handleKeyDown(e, () => { handleToggleDefect(icloudRule); setAccConfirmed(true); })}
-                        onClick={() => { handleToggleDefect(icloudRule); setAccConfirmed(true); }}
-                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-3 text-left focus:outline-none focus:ring-2 focus:ring-red-500 ${
-                          isSelected
-                            ? 'border-red-500 bg-red-500/10 scale-[1.01] z-10'
-                            : !accConfirmed
-                            ? 'border-red-500/40 bg-red-500/5 hover:border-red-500/70 hover:scale-[1.005]'
-                            : 'border-red-500/20 bg-canvas-white opacity-60 hover:opacity-90'
-                        }`}
-                        style={{ minHeight: '72px' }}
-                      >
-                        <div className="w-14 h-14 flex-shrink-0 rounded-sm bg-red-500/10 border border-red-500/30 flex items-center justify-center">
-                          <ShieldCheck className="w-7 h-7 text-red-400" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <h4 className="font-semibold text-sm text-red-400">iCloud / Apple ID Locked</h4>
-                            <span className="text-[9px] font-mono bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded-sm border border-red-500/30">CRITICAL</span>
-                          </div>
-                          <p className="text-xs text-ink-muted mt-0.5 font-light">{icloudRule.subText}</p>
-                        </div>
-                        <div className={`w-5 h-5 rounded-sm border flex items-center justify-center flex-shrink-0 ${
-                          isSelected ? 'bg-red-500 border-red-500 text-white' : 'border-red-500/40'
-                        }`}>
-                          {isSelected && <Check className="w-3 h-3" />}
-                        </div>
-                      </div>
-                    );
-                  })()}
-
-                  {/* Accessories defect options (non-critical only) */}
+                  {/* Accessories options */}
                   {rules.filter(r => r.category === 'accessories' && !r.isCriticalFailure).map(defect => {
                     const isSelected = selectedDefects.some(d => d.id === defect.id);
                     return (
@@ -834,10 +948,10 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
               </motion.div>
             )}
 
-            {/* STEP 5: Live Summary (Finalized Quote breakdown) */}
-            {step === 5 && (
+            {/* STEP 6: Live Summary (Finalized Quote breakdown) */}
+            {step === 6 && (
               <motion.div
-                key="step-5"
+                key="step-6"
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
                 className="flex flex-col h-full justify-between animate-morph"
@@ -929,7 +1043,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
           </AnimatePresence>
 
           {/* Navigation panel */}
-          {step < 5 && (
+          {step < 6 && (
             <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 border-t border-white/[0.04] pt-4 sm:pt-6 mt-4 sm:mt-6">
               <button
                 onClick={handlePrevStep}
@@ -947,7 +1061,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                 }`}
                 style={{ minHeight: '48px' }}
               >
-                {step === 4 ? 'Generate Report' : 'Next Step'}
+                {step === 5 ? 'Generate Report' : 'Next Step'}
                 <ChevronRight className="w-4 h-4" />
               </button>
             </div>

@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Device Condition Assessment - Reliable Exchange</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .step-transition {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-shadow {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-error": "#ffffff",
+                        "primary-fixed": "#d6e3ff",
+                        "tertiary-fixed": "#e0e3e5",
+                        "surface-container-high": "#dce9ff",
+                        "on-primary-fixed": "#001b3c",
+                        "on-secondary-fixed-variant": "#005321",
+                        "inverse-on-surface": "#eaf1ff",
+                        "on-tertiary-container": "#9c9fa1",
+                        "tertiary": "#1d2123",
+                        "surface-container-highest": "#d3e4fe",
+                        "primary-container": "#1a365d",
+                        "secondary": "#006e2f",
+                        "on-primary-fixed-variant": "#2d476f",
+                        "primary": "#002045",
+                        "surface-container-low": "#eff4ff",
+                        "on-secondary-container": "#007432",
+                        "tertiary-container": "#333638",
+                        "inverse-surface": "#213145",
+                        "on-secondary": "#ffffff",
+                        "on-background": "#0b1c30",
+                        "secondary-fixed-dim": "#4ae176",
+                        "primary-fixed-dim": "#adc7f7",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-container": "#86a0cd",
+                        "secondary-fixed": "#6bff8f",
+                        "secondary-container": "#6bff8f",
+                        "tertiary-fixed-dim": "#c4c7c9",
+                        "error-container": "#ffdad6",
+                        "on-tertiary-fixed": "#191c1e",
+                        "inverse-primary": "#adc7f7",
+                        "outline-variant": "#c4c6cf",
+                        "on-surface": "#0b1c30",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-fixed-variant": "#444749",
+                        "on-tertiary": "#ffffff",
+                        "surface-container": "#e5eeff",
+                        "surface": "#f8f9ff",
+                        "error": "#ba1a1a",
+                        "surface-bright": "#f8f9ff",
+                        "outline": "#74777f",
+                        "background": "#f8f9ff",
+                        "on-primary": "#ffffff",
+                        "surface-tint": "#455f88",
+                        "surface-dim": "#cbdbf5",
+                        "on-secondary-fixed": "#002109",
+                        "on-surface-variant": "#43474e",
+                        "surface-variant": "#d3e4fe"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "sm": "8px",
+                        "lg": "24px",
+                        "xs": "4px",
+                        "container-max": "1200px",
+                        "xl": "40px",
+                        "gutter": "20px",
+                        "md": "16px",
+                        "base": "4px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "price-display": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "price-display": ["28px", {"lineHeight": "1", "fontWeight": "700"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                        "label-caps": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "body-lg": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "headline-md": ["20px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                        "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface min-h-screen flex flex-col font-body-lg text-body-lg">
+<!-- TopNavBar (Shared Component) -->
+<nav class="w-full top-0 sticky z-50 bg-surface shadow-sm">
+<div class="max-w-container-max mx-auto px-lg flex items-center justify-between h-16">
+<div class="flex items-center gap-md">
+<button class="md:hidden text-primary transition-transform active:scale-95" onclick="window.history.back()">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<span class="font-headline-md text-headline-md font-bold text-primary">Reliable Exchange</span>
+</div>
+<div class="hidden md:flex items-center gap-lg">
+<a class="text-on-surface-variant hover:bg-surface-container-low transition-colors px-md py-sm rounded-lg font-body-lg text-body-lg" href="#">How it Works</a>
+<a class="text-on-surface-variant hover:bg-surface-container-low transition-colors px-md py-sm rounded-lg font-body-lg text-body-lg" href="#">Track Order</a>
+<div class="h-6 w-px bg-outline-variant"></div>
+<span class="material-symbols-outlined text-primary">person</span>
+</div>
+<div class="flex md:hidden items-center gap-sm">
+<span class="material-symbols-outlined text-primary">person</span>
+</div>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-grow max-w-4xl mx-auto w-full px-md py-lg md:py-xl">
+<!-- Header & Summary Card -->
+<div class="mb-xl">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-md mb-lg">
+<div>
+<span class="text-primary-container font-label-caps text-label-caps uppercase tracking-widest mb-xs block">Assessment Phase</span>
+<h1 class="font-headline-lg text-headline-lg md:text-headline-lg text-primary">iPhone 13 Condition</h1>
+</div>
+<div class="flex items-center gap-sm bg-surface-container-high px-md py-sm rounded-xl">
+<span class="text-on-surface-variant font-body-sm text-body-sm">Estimated Value:</span>
+<span class="text-secondary font-price-display text-price-display">$420 - $510</span>
+</div>
+</div>
+<!-- Progress Indicator -->
+<div class="relative pt-1">
+<div class="flex mb-4 items-center justify-between">
+<div class="flex gap-2">
+<span class="px-2 py-1 font-label-caps text-label-caps rounded-full bg-primary text-on-primary" id="step-badge">Step 1 of 4</span>
+<span class="text-on-surface-variant font-body-sm text-body-sm" id="step-desc">Power &amp; Functionality</span>
+</div>
+<div class="text-right">
+<span class="text-primary font-bold font-body-sm text-body-sm" id="progress-pct">25%</span>
+</div>
+</div>
+<div class="overflow-hidden h-2 mb-4 text-xs flex rounded-full bg-surface-container-highest">
+<div class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-primary transition-all duration-500" id="progress-bar" style="width:25%"></div>
+</div>
+</div>
+</div>
+<!-- Multi-Step Form Container -->
+<div class="space-y-xl" id="assessment-steps">
+<!-- Step 1: Power -->
+<section class="step-transition opacity-100 block" id="step-1">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-lg">
+<div class="flex flex-col justify-center">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-md">Does the phone switch on and function normally?</h2>
+<p class="text-on-surface-variant font-body-lg text-body-lg mb-lg">Verify that the device powers up, can reach the home screen, and the charging port works.</p>
+<div class="flex flex-col gap-md">
+<button class="flex items-center justify-between p-lg rounded-xl border-2 border-outline-variant hover:border-primary hover:bg-surface-container-low group transition-all duration-200 bg-surface-container-lowest" onclick="nextStep(1, 2)">
+<div class="flex items-center gap-md">
+<div class="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="text-left">
+<span class="block font-bold text-primary">Yes, fully functional</span>
+<span class="text-body-sm text-on-surface-variant">Powers on to home screen</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:text-primary">arrow_forward</span>
+</button>
+<button class="flex items-center justify-between p-lg rounded-xl border-2 border-outline-variant hover:border-error hover:bg-error-container group transition-all duration-200 bg-surface-container-lowest" onclick="nextStep(1, 2)">
+<div class="flex items-center gap-md">
+<div class="w-12 h-12 rounded-full bg-error-container flex items-center justify-center text-on-error-container">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">cancel</span>
+</div>
+<div class="text-left">
+<span class="block font-bold text-primary">No, it has issues</span>
+<span class="text-body-sm text-on-surface-variant">Stuck on logo or dead battery</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:text-error">arrow_forward</span>
+</button>
+</div>
+</div>
+<div class="hidden md:block">
+<div class="rounded-2xl overflow-hidden h-full aspect-square bg-surface-container-low flex items-center justify-center relative">
+<img class="object-contain w-4/5" data-alt="A professional studio product shot of a black iPhone 13 standing upright on a minimalist light gray pedestal. The screen is illuminated with a vibrant colorful wallpaper, symbolizing power and functionality. The lighting is soft and high-key, aligning with a reliable corporate modernism aesthetic. Subtle reflections on the glass highlight the pristine condition of the hardware." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJDHSqOqP__JOn1oqAJcodHn7c_Ag1MYbWvqskMIeABHQbeAC6Rt4aH6UFoHlkbq5Wf44zP0rrvM5JhwIykrxghLGIE_FzQGHZMDMT72mhZNHCowoSu2wqwl8hgjig1veJrUMn9qBx67i3dz3wXWPPcdUBVZtWQGjPqeuMt-BqWNJ8qYp3yqlaxU4ZxlprlKG3KnlD8UNR-NvWXIJCKXm5HIbl3iPaUF0zrw_aW9TjViR34V3FSBRCM8pZtGCViqee5UC4jp_WLMJg"/>
+<div class="absolute bottom-4 left-4 bg-white/80 backdrop-blur-md px-3 py-2 rounded-lg border border-outline-variant">
+<span class="text-primary font-bold text-body-sm block">Device Verification</span>
+<span class="text-on-surface-variant text-xs">Verify charging &amp; display</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Step 2: Screen Cracks -->
+<section class="step-transition opacity-0 hidden" id="step-2">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-lg">
+<div class="flex flex-col justify-center">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-md">Are there any cracks or dead pixels on the screen?</h2>
+<p class="text-on-surface-variant font-body-lg text-body-lg mb-lg">Check the front glass and the OLED panel for any physical damage or display artifacts.</p>
+<div class="grid grid-cols-1 gap-md">
+<button class="flex items-center gap-md p-lg rounded-xl border-2 border-outline-variant hover:border-primary hover:bg-surface-container-low transition-all bg-surface-container-lowest" onclick="nextStep(2, 3)">
+<div class="w-12 h-12 rounded-full bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">verified_user</span>
+</div>
+<div class="text-left">
+<span class="block font-bold text-primary">Flawless Screen</span>
+<span class="text-body-sm text-on-surface-variant">No visible cracks or display issues</span>
+</div>
+</button>
+<button class="flex items-center gap-md p-lg rounded-xl border-2 border-outline-variant hover:border-primary hover:bg-surface-container-low transition-all bg-surface-container-lowest" onclick="nextStep(2, 3)">
+<div class="w-12 h-12 rounded-full bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">texture</span>
+</div>
+<div class="text-left">
+<span class="block font-bold text-primary">Minor Scratches</span>
+<span class="text-body-sm text-on-surface-variant">Small surface marks, no cracks</span>
+</div>
+</button>
+<button class="flex items-center gap-md p-lg rounded-xl border-2 border-outline-variant hover:border-error hover:bg-error-container transition-all bg-surface-container-lowest" onclick="nextStep(2, 3)">
+<div class="w-12 h-12 rounded-full bg-error-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-error-container">heart_broken</span>
+</div>
+<div class="text-left">
+<span class="block font-bold text-primary">Cracked / Damaged</span>
+<span class="text-body-sm text-on-surface-variant">Fractures, lines, or dead pixels</span>
+</div>
+</button>
+</div>
+</div>
+<div class="rounded-2xl overflow-hidden bg-surface-container-low flex items-center justify-center">
+<img class="object-contain w-3/4" data-alt="A close-up Macro shot of a smartphone screen under bright studio lighting. The focus is on a perfectly smooth, unblemished glass surface with no cracks or scratches. The lighting is crisp and clear, creating sharp highlights on the edges. The aesthetic is clean, professional, and transparent, emphasizing quality assessment in a high-tech marketplace environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDuzJVE3JH5Pu87LZpnIp9x6uAUevcageGrtsb0ynymheMZRs5OY4IrEnipmgIEfIhg6ytlscMBMsUfJJ2WjCLhRIOitobUGxAYWEQJii3BP4jnQ1r0Ba-WxEroA_GilM97gxvGD6JqGk29G7AIwVqBQcb9RvyrPRq_Wi9FE2z5-BXLGZeywRNwTdmKP62-Ou5S7V-iz_mRZeBrBpRUdgKCiGwNwXpZe27GoOqEPAzvsmWWQyythbQIfEDkMjXKCXTnkxQjyXLVXG1s"/>
+</div>
+</div>
+</section>
+<!-- Step 3: Buttons -->
+<section class="step-transition opacity-0 hidden" id="step-3">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-lg text-center">Are all physical buttons working?</h2>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-md">
+<div class="p-lg rounded-xl border-2 border-outline-variant bg-surface-container-lowest flex flex-col items-center gap-md text-center">
+<span class="material-symbols-outlined text-primary text-4xl">power_settings_new</span>
+<span class="font-bold text-primary">Power Button</span>
+<input checked="" class="w-6 h-6 rounded border-outline-variant text-primary focus:ring-primary" type="checkbox"/>
+</div>
+<div class="p-lg rounded-xl border-2 border-outline-variant bg-surface-container-lowest flex flex-col items-center gap-md text-center">
+<span class="material-symbols-outlined text-primary text-4xl">volume_up</span>
+<span class="font-bold text-primary">Volume Up</span>
+<input checked="" class="w-6 h-6 rounded border-outline-variant text-primary focus:ring-primary" type="checkbox"/>
+</div>
+<div class="p-lg rounded-xl border-2 border-outline-variant bg-surface-container-lowest flex flex-col items-center gap-md text-center">
+<span class="material-symbols-outlined text-primary text-4xl">volume_down</span>
+<span class="font-bold text-primary">Volume Down</span>
+<input checked="" class="w-6 h-6 rounded border-outline-variant text-primary focus:ring-primary" type="checkbox"/>
+</div>
+<div class="p-lg rounded-xl border-2 border-outline-variant bg-surface-container-lowest flex flex-col items-center gap-md text-center">
+<span class="material-symbols-outlined text-primary text-4xl">notifications_active</span>
+<span class="font-bold text-primary">Mute Switch</span>
+<input checked="" class="w-6 h-6 rounded border-outline-variant text-primary focus:ring-primary" type="checkbox"/>
+</div>
+</div>
+<div class="mt-xl flex justify-center">
+<button class="bg-primary text-on-primary px-xl py-md rounded-full font-bold hover:scale-105 active:scale-95 transition-transform" onclick="nextStep(3, 4)">
+                        Confirm Buttons Work
+                    </button>
+</div>
+</section>
+<!-- Step 4: Body Condition -->
+<section class="step-transition opacity-0 hidden" id="step-4">
+<div class="max-w-2xl mx-auto">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-md text-center">Any scratches or dents on the body?</h2>
+<p class="text-on-surface-variant text-center mb-xl">Examine the aluminum frame and the back glass of the iPhone.</p>
+<div class="space-y-md">
+<div class="cursor-pointer group flex items-center justify-between p-lg rounded-2xl border-2 border-outline-variant hover:border-secondary hover:bg-surface-container-low transition-all bg-surface-container-lowest" onclick="finalize()">
+<div class="flex items-center gap-md">
+<div class="w-14 h-14 bg-secondary/10 rounded-xl flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-3xl">spark</span>
+</div>
+<div>
+<span class="block font-bold text-primary group-hover:text-secondary transition-colors">Like New</span>
+<span class="text-body-sm text-on-surface-variant">Absolutely no signs of wear</span>
+</div>
+</div>
+<div class="bg-secondary/10 text-secondary font-bold px-3 py-1 rounded-full text-xs">+$45 Bonus</div>
+</div>
+<div class="cursor-pointer group flex items-center justify-between p-lg rounded-2xl border-2 border-outline-variant hover:border-primary hover:bg-surface-container-low transition-all bg-surface-container-lowest" onclick="finalize()">
+<div class="flex items-center gap-md">
+<div class="w-14 h-14 bg-primary/5 rounded-xl flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-3xl">check</span>
+</div>
+<div>
+<span class="block font-bold text-primary">Light Wear</span>
+<span class="text-body-sm text-on-surface-variant">Few faint marks, barely visible</span>
+</div>
+</div>
+</div>
+<div class="cursor-pointer group flex items-center justify-between p-lg rounded-2xl border-2 border-outline-variant hover:border-primary hover:bg-surface-container-low transition-all bg-surface-container-lowest" onclick="finalize()">
+<div class="flex items-center gap-md">
+<div class="w-14 h-14 bg-primary/5 rounded-xl flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-3xl">build</span>
+</div>
+<div>
+<span class="block font-bold text-primary">Heavy Wear</span>
+<span class="text-body-sm text-on-surface-variant">Significant deep scratches or dents</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Help Section -->
+<div class="mt-xl pt-lg border-t border-outline-variant flex flex-col md:flex-row items-center justify-between gap-md">
+<div class="flex items-center gap-sm">
+<div class="flex -space-x-2">
+<img class="w-8 h-8 rounded-full border-2 border-white object-cover" data-alt="A portrait of a friendly customer service representative in professional attire, smiling and looking directly at the camera. The background is a clean, modern office with soft-focus lighting. The image conveys trust, reliability, and helpfulness, matching the brand's efficient consumer service persona." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCIxeHusP8ZgeaLe_JJAZewlcqXXrXRpgrBSX6Nzr1HHViHoadXNRsKOUz4zjQnuLYZqiUpvpUixbgYZspVB1pBfF4H4mPVMjqzmAA4-ZStQ3v3LJcdo1xFA23ZugKSPjs7ubJcP9wAL-hptWPqBssr8vu8jPY03lzvRAzv6sOxfvopeUrCsDWVPZAfGHjr_-XtzICwlCUhpqvI4W987asoaW4m9FA-JYUy8jfjWr5nuAX00-PcwD-llAtzmXjCt4ZT2BKMvMiN53QF"/>
+<img class="w-8 h-8 rounded-full border-2 border-white object-cover" data-alt="A portrait of a male tech specialist wearing a branded polo shirt, smiling confidently. The lighting is bright and professional, suggesting expertise and transparency. This person represents the assessment team, reinforcing the brand's reliability and precision in hardware valuation." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDMGt4Ui7kURhh6c6o8rsVdH8at8Me0ga4YITAg8ppADWkjGHG2lXMD0BvhOFHYCmBg7eC1VgiGy5Df6uzdUCgdeVhlBwifaWcb_TdqyxREkW8Gv7DQ_Lh-L1DTRxk7dr9xb2qLqlbtUIBIC8uor4_a0HfZjtYGhctZFtYr5jt4jPVU0dbRaY7fQu219gw81hgoiRRInyJPDbZFOEiGn-pXbGsUgPcZ16yD9MB0YnZlw7C5nTL5CS-OrDohR6CQbf5R8yXv9IELwWzS"/>
+</div>
+<span class="text-body-sm text-on-surface-variant">Need help? <strong>Chat with an expert</strong></span>
+</div>
+<div class="flex gap-md">
+<span class="bg-secondary/10 text-secondary px-3 py-1 rounded-full font-label-caps text-label-caps">INSTANT CASH</span>
+<span class="bg-secondary/10 text-secondary px-3 py-1 rounded-full font-label-caps text-label-caps">FREE PICKUP</span>
+</div>
+</div>
+</main>
+<!-- Footer (Shared Component) -->
+<footer class="w-full mt-xl bg-surface-container border-t border-outline-variant">
+<div class="max-w-container-max mx-auto px-lg py-xl flex flex-col md:flex-row justify-between items-center gap-md">
+<div class="flex flex-col gap-xs items-center md:items-start">
+<span class="font-headline-md text-headline-md font-bold text-primary">Reliable Exchange</span>
+<p class="text-on-surface-variant font-body-sm text-body-sm">© 2024 Reliable Exchange. Secure Hardware Liquidation.</p>
+</div>
+<div class="flex flex-wrap justify-center gap-md">
+<a class="text-on-surface-variant hover:text-primary underline font-body-sm text-body-sm transition-all duration-200" href="#">How it Works</a>
+<a class="text-on-surface-variant hover:text-primary underline font-body-sm text-body-sm transition-all duration-200" href="#">Privacy Policy</a>
+<a class="text-on-surface-variant hover:text-primary underline font-body-sm text-body-sm transition-all duration-200" href="#">Terms of Service</a>
+<a class="text-on-surface-variant hover:text-primary underline font-body-sm text-body-sm transition-all duration-200" href="#">Contact Support</a>
+</div>
+</div>
+</footer>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-2 md:hidden bg-surface border-t border-outline-variant shadow-lg rounded-t-xl">
+<a class="flex flex-col items-center justify-center text-on-surface-variant" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-label-caps text-label-caps mt-1">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1" href="#">
+<span class="material-symbols-outlined">sell</span>
+<span class="font-label-caps text-label-caps mt-1">My Sales</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant" href="#">
+<span class="material-symbols-outlined">search</span>
+<span class="font-label-caps text-label-caps mt-1">Search</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label-caps text-label-caps mt-1">Profile</span>
+</a>
+</nav>
+<script>
+        function nextStep(current, next) {
+            const currentEl = document.getElementById(`step-${current}`);
+            const nextEl = document.getElementById(`step-${next}`);
+            
+            // UI Updates
+            const bar = document.getElementById('progress-bar');
+            const pct = document.getElementById('progress-pct');
+            const badge = document.getElementById('step-badge');
+            const desc = document.getElementById('step-desc');
+            
+            const progressSteps = {
+                1: { pct: '25%', label: 'Step 1 of 4', desc: 'Power & Functionality' },
+                2: { pct: '50%', label: 'Step 2 of 4', desc: 'Display Quality' },
+                3: { pct: '75%', label: 'Step 3 of 4', desc: 'Hardware Controls' },
+                4: { pct: '100%', label: 'Step 4 of 4', desc: 'Physical Condition' }
+            };
+
+            // Transition logic
+            currentEl.classList.add('opacity-0');
+            setTimeout(() => {
+                currentEl.classList.add('hidden');
+                nextEl.classList.remove('hidden');
+                setTimeout(() => {
+                    nextEl.classList.remove('opacity-0');
+                    nextEl.classList.add('opacity-100');
+                }, 50);
+            }, 400);
+
+            // Update progress
+            bar.style.width = progressSteps[next].pct;
+            pct.innerText = progressSteps[next].pct;
+            badge.innerText = progressSteps[next].label;
+            desc.innerText = progressSteps[next].desc;
+        }
+
+        function finalize() {
+            const container = document.getElementById('assessment-steps');
+            container.innerHTML = `
+                <div class="text-center py-xl bg-surface-container-lowest rounded-3xl border-2 border-secondary shadow-xl animate-in fade-in zoom-in duration-500">
+                    <div class="w-20 h-20 bg-secondary rounded-full flex items-center justify-center mx-auto mb-lg">
+                        <span class="material-symbols-outlined text-on-secondary text-5xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                    </div>
+                    <h2 class="font-headline-lg text-headline-lg text-primary mb-sm">Assessment Complete!</h2>
+                    <p class="text-on-surface-variant mb-xl px-md">Your iPhone 13 is valued at <strong class="text-secondary">$495.00</strong> based on your answers.</p>
+                    <div class="flex flex-col sm:flex-row justify-center gap-md px-md">
+                        <button class="bg-secondary text-on-secondary px-xl py-md rounded-full font-bold hover:brightness-110 active:scale-95 transition-all">Accept & Get Paid</button>
+                        <button class="bg-surface-container-high text-primary px-xl py-md rounded-full font-bold hover:bg-surface-dim active:scale-95 transition-all">View Quote Breakdown</button>
+                    </div>
+                    <p class="mt-lg text-body-sm text-on-surface-variant italic">Next step: Professional verification during pickup</p>
+                </div>
+            `;
+            // Final progress update
+            document.getElementById('progress-bar').classList.replace('bg-primary', 'bg-secondary');
+        }
+    </script>
+</body></html>

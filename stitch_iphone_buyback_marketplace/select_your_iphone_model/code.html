@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Select iPhone Model | Reliable Exchange</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .step-active {
+            box-shadow: 0 0 0 4px rgba(26, 54, 93, 0.1);
+        }
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 24px;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-error": "#ffffff",
+                      "primary-fixed": "#d6e3ff",
+                      "tertiary-fixed": "#e0e3e5",
+                      "surface-container-high": "#dce9ff",
+                      "on-primary-fixed": "#001b3c",
+                      "on-secondary-fixed-variant": "#005321",
+                      "inverse-on-surface": "#eaf1ff",
+                      "on-tertiary-container": "#9c9fa1",
+                      "tertiary": "#1d2123",
+                      "surface-container-highest": "#d3e4fe",
+                      "primary-container": "#1a365d",
+                      "secondary": "#006e2f",
+                      "on-primary-fixed-variant": "#2d476f",
+                      "primary": "#002045",
+                      "surface-container-low": "#eff4ff",
+                      "on-secondary-container": "#007432",
+                      "tertiary-container": "#333638",
+                      "inverse-surface": "#213145",
+                      "on-secondary": "#ffffff",
+                      "on-background": "#0b1c30",
+                      "secondary-fixed-dim": "#4ae176",
+                      "primary-fixed-dim": "#adc7f7",
+                      "surface-container-lowest": "#ffffff",
+                      "on-primary-container": "#86a0cd",
+                      "secondary-fixed": "#6bff8f",
+                      "secondary-container": "#6bff8f",
+                      "tertiary-fixed-dim": "#c4c7c9",
+                      "error-container": "#ffdad6",
+                      "on-tertiary-fixed": "#191c1e",
+                      "inverse-primary": "#adc7f7",
+                      "outline-variant": "#c4c6cf",
+                      "on-surface": "#0b1c30",
+                      "on-error-container": "#93000a",
+                      "on-tertiary-fixed-variant": "#444749",
+                      "on-tertiary": "#ffffff",
+                      "surface-container": "#e5eeff",
+                      "surface": "#f8f9ff",
+                      "error": "#ba1a1a",
+                      "surface-bright": "#f8f9ff",
+                      "outline": "#74777f",
+                      "background": "#f8f9ff",
+                      "on-primary": "#ffffff",
+                      "surface-tint": "#455f88",
+                      "surface-dim": "#cbdbf5",
+                      "on-secondary-fixed": "#002109",
+                      "on-surface-variant": "#43474e",
+                      "surface-variant": "#d3e4fe"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "sm": "8px",
+                      "lg": "24px",
+                      "xs": "4px",
+                      "container-max": "1200px",
+                      "xl": "40px",
+                      "gutter": "20px",
+                      "md": "16px",
+                      "base": "4px"
+              },
+              "fontFamily": {
+                      "headline-lg": ["Inter"],
+                      "price-display": ["Inter"],
+                      "headline-lg-mobile": ["Inter"],
+                      "label-caps": ["Inter"],
+                      "body-lg": ["Inter"],
+                      "headline-md": ["Inter"],
+                      "body-sm": ["Inter"]
+              },
+              "fontSize": {
+                      "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "price-display": ["28px", {"lineHeight": "1", "fontWeight": "700"}],
+                      "headline-lg-mobile": ["24px", {"lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                      "label-caps": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "body-lg": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                      "headline-md": ["20px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                      "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}]
+              }
+            },
+          },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background font-body-lg">
+<!-- TopNavBar -->
+<header class="w-full top-0 sticky z-50 bg-surface dark:bg-background shadow-sm h-16">
+<div class="max-w-container-max mx-auto px-lg flex items-center justify-between h-full">
+<div class="flex items-center gap-md">
+<span class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed">Reliable Exchange</span>
+</div>
+<nav class="hidden md:flex items-center gap-lg">
+<a class="text-primary dark:text-primary-fixed border-b-2 border-primary font-body-lg px-2 py-1 transition-colors" href="#">Sell</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-colors px-2 py-1 rounded" href="#">Buy</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-colors px-2 py-1 rounded" href="#">Business</a>
+</nav>
+<div class="flex items-center gap-md">
+<div class="relative hidden sm:block">
+<input class="bg-surface-container-low border-none rounded-full px-lg py-2 text-body-sm focus:ring-2 focus:ring-primary w-64 transition-all" placeholder="Search models..." type="text"/>
+<span class="material-symbols-outlined absolute right-4 top-2 text-on-surface-variant">search</span>
+</div>
+<button class="flex items-center justify-center p-2 rounded-full hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-primary" data-icon="location_on">location_on</span>
+</button>
+<button class="flex items-center justify-center p-2 rounded-full hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="person">person</span>
+</button>
+</div>
+</div>
+</header>
+<main class="max-w-container-max mx-auto px-lg py-lg">
+<!-- Breadcrumbs & Step Indicator -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-md mb-xl">
+<nav class="flex items-center space-x-2 text-body-sm text-on-surface-variant">
+<a class="hover:text-primary transition-colors" href="#">Home</a>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+<a class="hover:text-primary transition-colors" href="#">Sell Phone</a>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+<span class="text-primary font-semibold">Apple</span>
+</nav>
+<div class="flex items-center gap-sm">
+<div class="flex items-center gap-xs">
+<div class="w-8 h-8 rounded-full bg-secondary text-on-secondary flex items-center justify-center font-bold text-xs">
+<span class="material-symbols-outlined text-[16px]">check</span>
+</div>
+<span class="text-xs font-semibold text-secondary">Brand</span>
+</div>
+<div class="w-8 h-[2px] bg-secondary-container"></div>
+<div class="flex items-center gap-xs">
+<div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-xs step-active animate-pulse">2</div>
+<span class="text-xs font-semibold text-primary">Model</span>
+</div>
+<div class="w-8 h-[2px] bg-outline-variant"></div>
+<div class="flex items-center gap-xs">
+<div class="w-8 h-8 rounded-full border-2 border-outline-variant text-on-surface-variant flex items-center justify-center font-bold text-xs">3</div>
+<span class="text-xs font-semibold text-on-surface-variant">Condition</span>
+</div>
+</div>
+</div>
+<div class="flex flex-col lg:flex-row gap-xl">
+<!-- Side Filters -->
+<aside class="w-full lg:w-64 flex-shrink-0 space-y-lg">
+<div class="bg-surface-container-lowest p-lg rounded-xl border border-outline-variant">
+<div class="flex items-center justify-between mb-md">
+<h3 class="font-headline-md text-headline-md">Filters</h3>
+<button class="text-body-sm text-primary underline">Reset</button>
+</div>
+<!-- Series Filter -->
+<div class="mb-lg">
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-sm">SERIES</p>
+<div class="space-y-sm">
+<label class="flex items-center gap-sm cursor-pointer group">
+<input checked="" class="rounded text-primary focus:ring-primary" type="checkbox"/>
+<span class="text-body-sm group-hover:text-primary transition-colors">iPhone 15 Series</span>
+</label>
+<label class="flex items-center gap-sm cursor-pointer group">
+<input checked="" class="rounded text-primary focus:ring-primary" type="checkbox"/>
+<span class="text-body-sm group-hover:text-primary transition-colors">iPhone 14 Series</span>
+</label>
+<label class="flex items-center gap-sm cursor-pointer group">
+<input class="rounded text-primary focus:ring-primary" type="checkbox"/>
+<span class="text-body-sm group-hover:text-primary transition-colors">iPhone 13 Series</span>
+</label>
+<label class="flex items-center gap-sm cursor-pointer group">
+<input class="rounded text-primary focus:ring-primary" type="checkbox"/>
+<span class="text-body-sm group-hover:text-primary transition-colors">iPhone 12 Series</span>
+</label>
+<label class="flex items-center gap-sm cursor-pointer group">
+<input class="rounded text-primary focus:ring-primary" type="checkbox"/>
+<span class="text-body-sm group-hover:text-primary transition-colors">iPhone 11 Series</span>
+</label>
+</div>
+</div>
+<!-- Storage Filter -->
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-sm">STORAGE</p>
+<div class="grid grid-cols-2 gap-sm">
+<button class="px-sm py-2 text-xs border border-outline-variant rounded-lg hover:border-primary hover:text-primary transition-all">64 GB</button>
+<button class="px-sm py-2 text-xs border border-primary bg-primary-container text-on-primary-container rounded-lg font-semibold">128 GB</button>
+<button class="px-sm py-2 text-xs border border-outline-variant rounded-lg hover:border-primary hover:text-primary transition-all">256 GB</button>
+<button class="px-sm py-2 text-xs border border-outline-variant rounded-lg hover:border-primary hover:text-primary transition-all">512 GB</button>
+<button class="px-sm py-2 text-xs border border-outline-variant rounded-lg hover:border-primary hover:text-primary transition-all">1 TB</button>
+</div>
+</div>
+</div>
+<div class="bg-primary-container p-lg rounded-xl text-on-primary-container">
+<span class="material-symbols-outlined text-secondary-fixed mb-sm">verified_user</span>
+<h4 class="font-headline-md text-headline-md mb-xs">Safe & Secure</h4>
+<p class="text-body-sm opacity-80">Instant data wipe and fair market valuation guaranteed on all Apple devices.</p>
+</div>
+</aside>
+<!-- Main Grid Canvas -->
+<div class="flex-1">
+<div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-lg gap-md">
+<div>
+<h1 class="font-headline-lg text-headline-lg mb-xs">Select your iPhone model</h1>
+<p class="text-body-lg text-on-surface-variant">We accept all conditions, from brand new to broken screens.</p>
+</div>
+<div class="flex items-center gap-sm bg-surface-container-low p-1 rounded-full border border-outline-variant">
+<button class="px-lg py-1 bg-surface-container-lowest rounded-full shadow-sm text-body-sm font-semibold">Grid</button>
+<button class="px-lg py-1 text-body-sm text-on-surface-variant">List</button>
+</div>
+</div>
+<!-- Device Grid -->
+<div class="bento-grid">
+<!-- iPhone 15 Pro -->
+<div class="group bg-surface-container-lowest p-lg rounded-xl border border-outline-variant hover:border-primary transition-all cursor-pointer shadow-sm hover:shadow-lg flex flex-col items-center">
+<div class="w-full aspect-[4/5] bg-surface-container-low rounded-lg flex items-center justify-center mb-md relative overflow-hidden">
+<img class="w-40 h-40 object-contain group-hover:scale-110 transition-transform duration-500" data-alt="A professional studio product shot of a Titanium iPhone 15 Pro on a clean, light gray surface. Soft cinematic lighting highlights the brushed metallic texture of the frame and the three large camera lenses. The aesthetic is ultra-modern and minimalist, emphasizing the device's premium build quality with a high-trust corporate technology vibe." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB1MRbhpII_eJ5n_aeaeIN7VWgoDnT3q-spt0t6uRH7uICGBF2P0GJKzMlcG-qzeXOLLhTZNFg9X_7sfZswwjrvpLrjVyP9MB6nRfmQfmVLvXKxf3NvVYFJNWFXfl1mrdW6dNGYsD_FlW3vEtCC6DfwII9acAd3YG5dEiDEUxn1ybv1IM3JRMIhLlWYx2pYd_SZv00YCP_pcKf_whTSAFTTEzfwDS3YlyyxMwBaErA1CuQcaRJtVd-gifaAh13izTCTr4F7GovkiJgL"/>
+<div class="absolute top-2 right-2 bg-secondary text-on-secondary px-2 py-1 rounded-full text-[10px] font-bold uppercase">Trending</div>
+</div>
+<h3 class="font-headline-md text-headline-md text-center mb-xs">iPhone 15 Pro</h3>
+<div class="bg-secondary-container/30 px-3 py-1 rounded-full">
+<span class="text-body-sm font-semibold text-secondary">Up to $850</span>
+</div>
+</div>
+<!-- iPhone 15 -->
+<div class="group bg-surface-container-lowest p-lg rounded-xl border border-outline-variant hover:border-primary transition-all cursor-pointer shadow-sm hover:shadow-lg flex flex-col items-center">
+<div class="w-full aspect-[4/5] bg-surface-container-low rounded-lg flex items-center justify-center mb-md overflow-hidden">
+<img class="w-40 h-40 object-contain group-hover:scale-110 transition-transform duration-500" data-alt="A high-quality product photo of a pink iPhone 15, showcasing its sleek matte glass back and rounded edges. The lighting is bright and airy, reflecting a modern light-mode design system. The shot is centered and focused on the dual-camera module, emphasizing clarity and reliability in a professional marketplace setting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA8HcsM3X9WmKxbXvsGiv0DArGdAfrAiAeQzbsDd01VXoRQ8Lbrmf6QfLBzDOk7vx4TvY2xLO5_xMEGgfi8195ari7W2s9eQC6UVuezEFXNvsR3z6Sf0qo8odRvtPpMcDxzXzJJKSL6VEQd9sh7BaQY_M0vAy7s0e12RIGOLiX0OFVJKGjn4ZqhwxCaMBWnhMazibhATdeyr7ToDEiGMk_19D-JYVOL6T-wRBA_4hZPrP5-ohpbPflUiYX0fXNhcM5jtVWGIP1QIepj"/>
+</div>
+<h3 class="font-headline-md text-headline-md text-center mb-xs">iPhone 15</h3>
+<div class="bg-secondary-container/30 px-3 py-1 rounded-full">
+<span class="text-body-sm font-semibold text-secondary">Up to $720</span>
+</div>
+</div>
+<!-- iPhone 14 Pro -->
+<div class="group bg-surface-container-lowest p-lg rounded-xl border border-outline-variant hover:border-primary transition-all cursor-pointer shadow-sm hover:shadow-lg flex flex-col items-center">
+<div class="w-full aspect-[4/5] bg-surface-container-low rounded-lg flex items-center justify-center mb-md overflow-hidden">
+<img class="w-40 h-40 object-contain group-hover:scale-110 transition-transform duration-500" data-alt="A Deep Purple iPhone 14 Pro Max captured with high-end advertising photography techniques. The image emphasizes the glossy steel frame and the sophisticated glass back. The lighting is crisp, accentuating the deep tones and the premium feel of the device against a neutral, high-key background typical of modern tech interfaces." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCdLCkJLqtihbnlFpwLVElnuD7sK8Ixf9MEnvVjXrcC4YBc0pLvR4G5YV8qwJ6lcQ7eTI_uIQl39yaMOPqUusEBWgEX1fHgqjXuRlSpPKrcWVK69VPfu_sNzIoA8qaLRrEvHrPqKYyAiMFVyYxDO2USXs6f1X0mAf8GMUT-W-QWnxnvi3wR4BJSWWuoOdyM8gy98IkI9h0BpA0DEfQ0Hjc1J0JYT7f5aZPz25Ei_rpxwdrB0t5af1pV87XkD9w6ct_htZC22nfj1qTu"/>
+</div>
+<h3 class="font-headline-md text-headline-md text-center mb-xs">iPhone 14 Pro</h3>
+<div class="bg-secondary-container/30 px-3 py-1 rounded-full">
+<span class="text-body-sm font-semibold text-secondary">Up to $640</span>
+</div>
+</div>
+<!-- iPhone 13 -->
+<div class="group bg-surface-container-lowest p-lg rounded-xl border border-outline-variant hover:border-primary transition-all cursor-pointer shadow-sm hover:shadow-lg flex flex-col items-center">
+<div class="w-full aspect-[4/5] bg-surface-container-low rounded-lg flex items-center justify-center mb-md overflow-hidden">
+<img class="w-40 h-40 object-contain group-hover:scale-110 transition-transform duration-500" data-alt="A Midnight Blue iPhone 13 in a clean, minimalist setting. The shot highlights the diagonal camera arrangement and the slim profile of the device. The visual style is clear and functional, using soft shadows and bright lighting to ensure every detail of the hardware is visible and appealing to a potential seller." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDT0AzW6WqODcLDh0yZISrY2somSPl7RHdwyuGMuCMXgH12tffijyArGFW-DB_lJ_adF6fyDvA71nV4yi7ef1z1bcSJPo6v4mQICVe7bl3VWNfq7EuyGfzWKPf1v_h9D0mMfTGPhVdq8bFbxJkXrbWdFFBJ_7K-ZhHb97w0wwlRmh5AtekJuN0BnTs5q3EEA_2ZOFTnuVRCumwYiK0OajsXW7Uc3-orbjNrP7rjYBIrFckW6SM7K90DpFZlrJ0n2IE2Z6MkFKvQ_QL1"/>
+</div>
+<h3 class="font-headline-md text-headline-md text-center mb-xs">iPhone 13</h3>
+<div class="bg-secondary-container/30 px-3 py-1 rounded-full">
+<span class="text-body-sm font-semibold text-secondary">Up to $410</span>
+</div>
+</div>
+<!-- iPhone 12 Pro -->
+<div class="group bg-surface-container-lowest p-lg rounded-xl border border-outline-variant hover:border-primary transition-all cursor-pointer shadow-sm hover:shadow-lg flex flex-col items-center">
+<div class="w-full aspect-[4/5] bg-surface-container-low rounded-lg flex items-center justify-center mb-md overflow-hidden">
+<img class="w-40 h-40 object-contain group-hover:scale-110 transition-transform duration-500" data-alt="A Pacific Blue iPhone 12 Pro shown from a dynamic three-quarter angle. The flat surgical-grade stainless steel edges catch the light, creating a sense of precision and technological sophistication. The image is presented on a clean, light surface to maintain the corporate modernism aesthetic of the marketplace." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBiBkK10Yd1ocoZHgX3AcWRzNmJZamzg7ZXLfljiPqUHwL2NvEk0Q9eoqN1fd-6LPgzqYAlCT7gvRWO-u79CVsWKXjZAxcynPIdenniR6NGvE1uIKLWfREpCujFTT1MVBiU53mFoa_Sb0Y6wn8P5Mgaal2qypwH2oZ9-0ammSza4nJI9LW_Vp-20vdNjr91mK3judw8oYnJwoXvRF9b-vfqFHXQyWTqiQmgqNV55zXu_ysMAGK2efhMviv4hT1qy4-Rf7S5J_9WkKL3"/>
+</div>
+<h3 class="font-headline-md text-headline-md text-center mb-xs">iPhone 12 Pro</h3>
+<div class="bg-secondary-container/30 px-3 py-1 rounded-full">
+<span class="text-body-sm font-semibold text-secondary">Up to $320</span>
+</div>
+</div>
+<!-- iPhone 11 -->
+<div class="group bg-surface-container-lowest p-lg rounded-xl border border-outline-variant hover:border-primary transition-all cursor-pointer shadow-sm hover:shadow-lg flex flex-col items-center">
+<div class="w-full aspect-[4/5] bg-surface-container-low rounded-lg flex items-center justify-center mb-md overflow-hidden">
+<img class="w-40 h-40 object-contain group-hover:scale-110 transition-transform duration-500" data-alt="A classic White iPhone 11 depicted with bright, commercial lighting. The focus is on the glass back and the dual-camera housing. The image style is transparent and straightforward, emphasizing the functional value of the device in a no-nonsense reselling environment. The background is a soft, neutral gray." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBM8XXy6P4WeSg11uToFHKTN-Ei9CeuiIhrQh4FLp6z1TPO_8NwcnWgbHrs-iRZxTbFr8xOyat6uIjfmcTYXlddba-pat_PW4UthI5zu6n1s3qHYHYv0jAvpS5iD9oJNpL-hErawzg-2AOyqIhrToCYwWc61hR3mpD9soU1d5OWG9ED5bT4POfigT4Iva5RVnS6ZerMNK4k_2jc2zkNhB3VNeAY4P2k7M9ki86y-QxdY69kq7ZWKC-YHFuEFVLSqP4n34kqz8-Boguj"/>
+</div>
+<h3 class="font-headline-md text-headline-md text-center mb-xs">iPhone 11</h3>
+<div class="bg-secondary-container/30 px-3 py-1 rounded-full">
+<span class="text-body-sm font-semibold text-secondary">Up to $180</span>
+</div>
+</div>
+<!-- More model placeholders can go here -->
+</div>
+<!-- Pagination -->
+<div class="mt-xl flex justify-center items-center gap-sm">
+<button class="w-10 h-10 flex items-center justify-center rounded-lg border border-outline-variant hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg bg-primary text-on-primary font-semibold">1</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg border border-outline-variant hover:bg-surface-container-low transition-colors">2</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg border border-outline-variant hover:bg-surface-container-low transition-colors">3</button>
+<span class="px-2">...</span>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg border border-outline-variant hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="w-full mt-xl bg-surface-container dark:bg-surface-container-lowest border-t border-outline-variant">
+<div class="max-w-container-max mx-auto px-lg py-xl flex flex-col md:flex-row justify-between items-start gap-xl">
+<div class="max-w-xs">
+<span class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed block mb-md">Reliable Exchange</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-lg">The world's most trusted marketplace for hardware liquidation. Fast, secure, and transparent.</p>
+<div class="flex gap-md">
+<div class="w-8 h-8 rounded-full bg-surface flex items-center justify-center border border-outline-variant">
+<span class="material-symbols-outlined text-sm">face_nod</span>
+</div>
+<div class="w-8 h-8 rounded-full bg-surface flex items-center justify-center border border-outline-variant">
+<span class="material-symbols-outlined text-sm">share</span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-3 gap-xl">
+<div class="space-y-sm">
+<p class="font-label-caps text-label-caps text-on-surface-variant">PLATFORM</p>
+<a class="block font-body-sm text-body-sm text-on-tertiary-container hover:text-primary underline transition-colors" href="#">How it Works</a>
+<a class="block font-body-sm text-body-sm text-on-tertiary-container hover:text-primary underline transition-colors" href="#">Trust Badges</a>
+</div>
+<div class="space-y-sm">
+<p class="font-label-caps text-label-caps text-on-surface-variant">LEGAL</p>
+<a class="block font-body-sm text-body-sm text-on-tertiary-container hover:text-primary underline transition-colors" href="#">Privacy Policy</a>
+<a class="block font-body-sm text-body-sm text-on-tertiary-container hover:text-primary underline transition-colors" href="#">Terms of Service</a>
+</div>
+<div class="space-y-sm">
+<p class="font-label-caps text-label-caps text-on-surface-variant">SUPPORT</p>
+<a class="block font-body-sm text-body-sm text-on-tertiary-container hover:text-primary underline transition-colors" href="#">Contact Support</a>
+</div>
+</div>
+</div>
+<div class="max-w-container-max mx-auto px-lg py-md border-t border-outline-variant/30 flex justify-center md:justify-start">
+<p class="font-body-sm text-body-sm text-on-tertiary-container">© 2024 Reliable Exchange. Secure Hardware Liquidation.</p>
+</div>
+</footer>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-2 md:hidden bg-surface dark:bg-background border-t border-outline-variant shadow-lg rounded-t-xl">
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-tertiary-container" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-label-caps text-label-caps mt-1">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-primary-container dark:bg-primary text-on-primary-container dark:text-on-primary rounded-full px-4 py-1" href="#">
+<span class="material-symbols-outlined" data-icon="sell" style="font-variation-settings: 'FILL' 1;">sell</span>
+<span class="font-label-caps text-label-caps mt-1">My Sales</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-tertiary-container" href="#">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+<span class="font-label-caps text-label-caps mt-1">Search</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-tertiary-container" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-label-caps text-label-caps mt-1">Profile</span>
+</a>
+</nav>
+<script>
+        // Micro-interaction for cards
+        document.querySelectorAll('.bento-grid > div').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.transform = 'translateY(-4px)';
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'translateY(0)';
+            });
+        });
+
+        // Filter interactivity mock
+        const storageButtons = document.querySelectorAll('aside button');
+        storageButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (btn.classList.contains('px-sm')) { // only target storage buttons
+                    storageButtons.forEach(b => {
+                        b.classList.remove('border-primary', 'bg-primary-container', 'text-on-primary-container', 'font-semibold');
+                        b.classList.add('border-outline-variant');
+                    });
+                    btn.classList.remove('border-outline-variant');
+                    btn.classList.add('border-primary', 'bg-primary-container', 'text-on-primary-container', 'font-semibold');
+                }
+            });
+        });
+    </script>
+</body></html>

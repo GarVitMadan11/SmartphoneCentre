@@ -25,12 +25,229 @@ export interface Variant {
 
 export interface DefectRule {
   id: string;
-  category: 'screen' | 'body' | 'camera' | 'battery' | 'accessories' | 'functionality';
+  category: 'screen' | 'body' | 'camera' | 'functionality' | 'connectivity' | 'accessories';
   description: string;
   subText: string;
   deductionFixed: number;       // Fixed INR penalty
   deductionPercentage: number;  // Percentage deduction (0 to 1)
   isCriticalFailure?: boolean;  // If true, device has zero value
+}
+
+// 3. Dynamic Defect Rules tailored by model category
+export function getDefectRulesForCategory(category: DeviceCategory): DefectRule[] {
+  const screenPct   = category === 'flagship' ? 0.28 : category === 'premium' ? 0.22 : 0.18;
+  const bodyDentPct = category === 'flagship' ? 0.08 : category === 'premium' ? 0.07 : 0.06;
+  const cameraPct   = category === 'flagship' ? 0.15 : category === 'premium' ? 0.12 : 0.08;
+
+  return [
+    // ── SCREEN ───────────────────────────────────────────────────────────
+    {
+      id: 'defect-screen-cracked',
+      category: 'screen',
+      description: 'Cracked Screen / Back Glass',
+      subText: 'Visible cracks, deep chips, or shattered glass panels.',
+      deductionFixed: 0,
+      deductionPercentage: screenPct
+    },
+    {
+      id: 'defect-screen-scratches',
+      category: 'screen',
+      description: 'Front Glass Scratches / Bubbles',
+      subText: 'Scratches or air bubbles visible under the screen protector / direct light.',
+      deductionFixed: 1000,
+      deductionPercentage: 0.03
+    },
+    {
+      id: 'defect-screen-burn',
+      category: 'screen',
+      description: 'Screen Burn-in / Lines',
+      subText: 'Discoloration, pixel bleeding, or permanent glowing lines on display.',
+      deductionFixed: 0,
+      deductionPercentage: screenPct  // same cost as crack replacement — was incorrectly +5%
+    },
+    {
+      id: 'defect-screen-touch',
+      category: 'screen',
+      description: 'Touch / Swipe Unresponsive',
+      subText: 'Dead zones, ghost touches, or unresponsive areas when swiping across the screen.',
+      deductionFixed: 0,
+      deductionPercentage: 0.15  // raised from 10% — touch failure = device barely usable
+    },
+    {
+      id: 'defect-screen-truetone',
+      category: 'screen',
+      description: 'True Tone Not Working',
+      subText: 'True Tone toggle missing in Display settings — indicates non-original screen replacement.',
+      deductionFixed: category === 'flagship' ? 2500 : 1500,
+      deductionPercentage: 0
+    },
+
+    // ── BODY ─────────────────────────────────────────────────────────────
+    {
+      id: 'defect-body-dented',
+      category: 'body',
+      description: 'Dented or Bent Frame',
+      subText: 'Deep frame dents, heavy paint chipping, or structural bending.',
+      deductionFixed: 1000,           // reduced from ₹1,500
+      deductionPercentage: bodyDentPct // now 8% flagship vs old 12%
+    },
+    {
+      id: 'defect-body-scuffs',
+      category: 'body',
+      description: 'Scuffed Frame / Normal Wear',
+      subText: 'Minor surface scuffs and normal paint wear from case usage.',
+      deductionFixed: 800,
+      deductionPercentage: 0.02
+    },
+    {
+      id: 'defect-body-airpass',
+      category: 'body',
+      description: 'Air Pass / Waterproof Seal Fail',
+      subText: 'Barometer/air pressure test fails — seal compromised from drops or prior repair.',
+      deductionFixed: category === 'flagship' ? 1500 : 800,
+      deductionPercentage: 0
+    },
+    {
+      id: 'defect-body-buttons',
+      category: 'body',
+      description: 'Side Buttons Faulty',
+      subText: 'Volume up/down, Power, or Mute/Action button is stuck, loose, or unresponsive.',
+      deductionFixed: 1200,
+      deductionPercentage: 0
+    },
+    {
+      id: 'defect-body-screws',
+      category: 'body',
+      description: 'Screws Stripped / Missing',
+      subText: 'Bottom pentalobe screws are stripped, damaged, or replaced with non-OEM screws.',
+      deductionFixed: 700,  // raised from ₹400 — stripped screws = tamper flag
+      deductionPercentage: 0
+    },
+
+    // ── CAMERA ───────────────────────────────────────────────────────────
+    {
+      id: 'defect-camera-faulty',
+      category: 'camera',
+      description: 'Camera Faulty / Lens Blur',
+      subText: 'Front/rear camera scratched, autofocus failing, portrait or cinematic modes not working.',
+      deductionFixed: 1000,
+      deductionPercentage: cameraPct
+    },
+
+    // ── HARDWARE FUNCTIONALITY (Step 3) ──────────────────────────────────
+    {
+      id: 'defect-critical-security',
+      category: 'functionality',
+      description: 'Biometrics Faulty (Face ID)',
+      subText: 'Face ID does not recognise face, fails to set up, or sensor has hardware failure.',
+      deductionFixed: 0,
+      deductionPercentage: 0.20  // reduced from 25% — device still usable with passcode
+    },
+    {
+      id: 'defect-func-audio',
+      category: 'functionality',
+      description: 'Speakers / Microphone Faulty',
+      subText: 'Stereo speakers sound distorted/low, or Voice Memos mic test reveals microphone failure.',
+      deductionFixed: 2800,  // raised from ₹1,800 — speaker+mic repair cost in India
+      deductionPercentage: 0
+    },
+    {
+      id: 'defect-func-restart',
+      category: 'functionality',
+      description: 'Auto-Restart / Unstable Device',
+      subText: 'Device randomly reboots within 3 minutes of idle use — indicates PMIC/board-level issue.',
+      deductionFixed: 0,
+      deductionPercentage: 0.15  // reduced from 18%
+    },
+
+    // ── CONNECTIVITY & VERIFICATION (Step 4) ─────────────────────────────
+    {
+      id: 'defect-battery-low',
+      category: 'connectivity',
+      description: 'Battery Health < 80%',
+      subText: 'Device drains quickly, shows service warning, or battery health is below 80%.',
+      deductionFixed: 2500,         // raised from ₹2,000
+      deductionPercentage: 0.05     // raised from 4%
+    },
+    {
+      id: 'defect-battery-warning',
+      category: 'connectivity',
+      description: 'Non-Genuine Battery Warning',
+      subText: '"Important Battery Message" alert visible in Settings → Battery — battery is non-OEM.',
+      deductionFixed: 2000,
+      deductionPercentage: 0.015   // added % component — ongoing risk
+    },
+    {
+      id: 'defect-func-network',
+      category: 'connectivity',
+      description: 'Network, Calling & SIM Issues',
+      subText: 'No cellular signal, call audio breaks, or SIM restriction shows carrier lock (not "No SIM Restrictions").',
+      deductionFixed: 0,
+      deductionPercentage: 0.10
+    },
+    {
+      id: 'defect-func-wireless',
+      category: 'connectivity',
+      description: 'Wi-Fi & Bluetooth Issues',
+      subText: 'Wi-Fi drops connection, fails to detect networks, or Bluetooth cannot pair/connect.',
+      deductionFixed: 0,
+      deductionPercentage: 0.07
+    },
+    {
+      id: 'defect-func-partmatch',
+      category: 'connectivity',
+      description: '3uTools Serial Mismatch',
+      subText: 'PC diagnostic shows motherboard serial does not match screen/battery/camera — parts replaced.',
+      deductionFixed: 0,
+      deductionPercentage: 0.12
+    },
+
+    // ── ACCESSORIES & DOCUMENTATION (Step 5) ─────────────────────────────
+    {
+      id: 'defect-box-missing',
+      category: 'accessories',
+      description: 'Missing Original Box',
+      subText: 'Original retail box with matching serial/IMEI is not available.',
+      deductionFixed: category === 'flagship' ? 2500 : 1200,
+      deductionPercentage: 0
+    },
+    {
+      id: 'defect-charger-missing',
+      category: 'accessories',
+      description: 'Missing Original Charger / Cable',
+      subText: 'OEM charging brick or cable is not included.',
+      deductionFixed: 1500,
+      deductionPercentage: 0
+    },
+    {
+      id: 'defect-acc-nodocs',
+      category: 'accessories',
+      description: 'Missing Bill / Customer Photo ID',
+      subText: 'Purchase bill/invoice or seller photo ID not available — affects legal resale compliance.',
+      deductionFixed: 1500,  // raised from ₹800
+      deductionPercentage: 0
+    },
+
+    // ── CRITICAL FAILURES (Zero Value) ───────────────────────────────────
+    {
+      id: 'defect-critical-power',
+      category: 'accessories',
+      description: 'Device Does Not Turn On',
+      subText: 'Completely dead, liquid damaged, boot-looped, or fails to charge.',
+      deductionFixed: 0,
+      deductionPercentage: 1.0,
+      isCriticalFailure: true
+    },
+    {
+      id: 'defect-critical-icloud',
+      category: 'accessories',
+      description: 'iCloud / Apple ID Locked',
+      subText: 'Find My iPhone is ON and Apple ID cannot be signed out — device is activation locked.',
+      deductionFixed: 0,
+      deductionPercentage: 1.0,
+      isCriticalFailure: true
+    }
+  ];
 }
 
 // 1. Brands List
@@ -160,223 +377,4 @@ export function generateVariantsForModel(model: Model): Variant[] {
   });
 
   return variants;
-}
-
-// 3. Dynamic Defect Rules tailored by model category
-export function getDefectRulesForCategory(category: DeviceCategory): DefectRule[] {
-  // Flagships have higher cost percentages for screens, midrange/budget are more fixed-heavy.
-  const screenPct = category === 'flagship' ? 0.28 : category === 'premium' ? 0.22 : 0.18;
-  const bodyPct = category === 'flagship' ? 0.12 : category === 'premium' ? 0.10 : 0.08;
-  const cameraPct = category === 'flagship' ? 0.15 : category === 'premium' ? 0.12 : 0.08;
-
-  return [
-    // ── SCREEN DEFECTS ──────────────────────────────────────────────────
-    {
-      id: 'defect-screen-cracked',
-      category: 'screen',
-      description: 'Cracked Screen / Back Glass',
-      subText: 'Visible cracks, deep chips, or shattered glass panels.',
-      deductionFixed: 0,
-      deductionPercentage: screenPct
-    },
-    {
-      id: 'defect-screen-scratches',
-      category: 'screen',
-      description: 'Front Glass Scratches / Bubbles',
-      subText: 'Scratches or air bubbles visible under the screen protector / direct light.',
-      deductionFixed: 1000,
-      deductionPercentage: 0.03
-    },
-    {
-      id: 'defect-screen-burn',
-      category: 'screen',
-      description: 'Screen Burn-in / Lines',
-      subText: 'Discoloration, pixel bleeding, or permanent glowing lines on display.',
-      deductionFixed: 0,
-      deductionPercentage: screenPct + 0.05
-    },
-    {
-      id: 'defect-screen-touch',
-      category: 'screen',
-      description: 'Touch / Swipe Unresponsive',
-      subText: 'Dead zones, ghost touches, or unresponsive areas when swiping across the screen.',
-      deductionFixed: 0,
-      deductionPercentage: 0.10
-    },
-    {
-      id: 'defect-screen-truetone',
-      category: 'screen',
-      description: 'True Tone Not Working',
-      subText: 'True Tone toggle missing in Display settings — indicates non-original screen replacement.',
-      deductionFixed: category === 'flagship' ? 2500 : 1500,
-      deductionPercentage: 0
-    },
-
-    // ── BODY DEFECTS ─────────────────────────────────────────────────────
-    {
-      id: 'defect-body-dented',
-      category: 'body',
-      description: 'Dented or Bent Frame',
-      subText: 'Deep frame dents, heavy paint chipping, or structural bending.',
-      deductionFixed: 1500,
-      deductionPercentage: bodyPct
-    },
-    {
-      id: 'defect-body-scuffs',
-      category: 'body',
-      description: 'Scuffed Frame / Normal Wear',
-      subText: 'Minor surface scuffs and normal paint wear from case usage.',
-      deductionFixed: 800,
-      deductionPercentage: 0.02
-    },
-    {
-      id: 'defect-body-airpass',
-      category: 'body',
-      description: 'Air Pass / Waterproof Seal Fail',
-      subText: 'Barometer/air pressure test fails — seal compromised from drops or prior repair.',
-      deductionFixed: category === 'flagship' ? 1500 : 800,
-      deductionPercentage: 0
-    },
-    {
-      id: 'defect-body-buttons',
-      category: 'body',
-      description: 'Side Buttons Faulty',
-      subText: 'Volume up/down, Power, or Mute/Action button is stuck, loose, or unresponsive.',
-      deductionFixed: 1200,
-      deductionPercentage: 0
-    },
-    {
-      id: 'defect-body-screws',
-      category: 'body',
-      description: 'Screws Stripped / Missing',
-      subText: 'Bottom pentalobe screws are stripped, damaged, or replaced with non-OEM screws.',
-      deductionFixed: 400,
-      deductionPercentage: 0
-    },
-
-    // ── CAMERA DEFECTS ───────────────────────────────────────────────────
-    {
-      id: 'defect-camera-faulty',
-      category: 'camera',
-      description: 'Camera Faulty / Lens Blur',
-      subText: 'Front/rear camera scratched, autofocus failing, portrait or cinematic modes not working.',
-      deductionFixed: 1000,
-      deductionPercentage: cameraPct
-    },
-
-    // ── BATTERY DEFECTS ──────────────────────────────────────────────────
-    {
-      id: 'defect-battery-low',
-      category: 'battery',
-      description: 'Battery Health < 80%',
-      subText: 'Device drains quickly, shows service warning, or battery health is below 80%.',
-      deductionFixed: 2000,
-      deductionPercentage: 0.04
-    },
-    {
-      id: 'defect-battery-warning',
-      category: 'battery',
-      description: 'Non-Genuine Battery Warning',
-      subText: '"Important Battery Message" alert visible in Settings → Battery — battery is non-OEM.',
-      deductionFixed: category === 'flagship' ? 3000 : 1800,
-      deductionPercentage: 0
-    },
-
-    // ── FUNCTIONALITY DEFECTS ────────────────────────────────────────────
-    {
-      id: 'defect-func-network',
-      category: 'functionality',
-      description: 'Network, Calling & SIM Issues',
-      subText: 'No cellular signal, call audio breaks, or SIM restriction shows carrier lock (not "No SIM Restrictions").',
-      deductionFixed: 0,
-      deductionPercentage: 0.10
-    },
-    {
-      id: 'defect-func-wireless',
-      category: 'functionality',
-      description: 'Wi-Fi & Bluetooth Issues',
-      subText: 'Wi-Fi drops connection, fails to detect networks, or Bluetooth cannot pair/connect.',
-      deductionFixed: 0,
-      deductionPercentage: 0.07
-    },
-    {
-      id: 'defect-func-partmatch',
-      category: 'functionality',
-      description: '3uTools Serial Mismatch',
-      subText: 'PC diagnostic shows motherboard serial does not match screen/battery/camera — parts replaced.',
-      deductionFixed: 0,
-      deductionPercentage: 0.12
-    },
-    {
-      id: 'defect-func-audio',
-      category: 'functionality',
-      description: 'Speakers / Microphone Faulty',
-      subText: 'Stereo speakers sound distorted/low, or Voice Memos mic test reveals microphone failure.',
-      deductionFixed: 1800,
-      deductionPercentage: 0
-    },
-    {
-      id: 'defect-func-restart',
-      category: 'functionality',
-      description: 'Auto-Restart / Unstable Device',
-      subText: 'Device randomly reboots within 3 minutes of idle use — indicates PMIC/board-level issue.',
-      deductionFixed: 0,
-      deductionPercentage: 0.18,
-      isCriticalFailure: false
-    },
-
-    // ── ACCESSORIES & DOCUMENTATION ──────────────────────────────────────
-    {
-      id: 'defect-box-missing',
-      category: 'accessories',
-      description: 'Missing Original Box',
-      subText: 'Original retail box with matching serial/IMEI is not available.',
-      deductionFixed: category === 'flagship' ? 2500 : 1200,
-      deductionPercentage: 0
-    },
-    {
-      id: 'defect-charger-missing',
-      category: 'accessories',
-      description: 'Missing Original Charger / Cable',
-      subText: 'OEM charging brick or cable is not included.',
-      deductionFixed: 1500,
-      deductionPercentage: 0
-    },
-    {
-      id: 'defect-acc-nodocs',
-      category: 'accessories',
-      description: 'Missing Bill / Customer Photo ID',
-      subText: 'Purchase bill/invoice or seller photo ID not available — affects legal resale compliance.',
-      deductionFixed: 800,
-      deductionPercentage: 0
-    },
-
-    // ── CRITICAL FAILURES (ZERO VALUE) ───────────────────────────────────
-    {
-      id: 'defect-critical-power',
-      category: 'accessories',
-      description: 'Device Does Not Turn On',
-      subText: 'Completely dead, liquid damaged, boot-looped, or fails to charge.',
-      deductionFixed: 0,
-      deductionPercentage: 1.0,
-      isCriticalFailure: true
-    },
-    {
-      id: 'defect-critical-icloud',
-      category: 'accessories',
-      description: 'iCloud / Apple ID Locked',
-      subText: 'Find My iPhone is ON and Apple ID cannot be signed out — device is activation locked.',
-      deductionFixed: 0,
-      deductionPercentage: 1.0,
-      isCriticalFailure: true
-    },
-    {
-      id: 'defect-critical-security',
-      category: 'accessories',
-      description: 'Biometrics Faulty (Face ID)',
-      subText: 'Face ID does not recognise face, fails to set up, or sensor has hardware failure.',
-      deductionFixed: 0,
-      deductionPercentage: 0.25
-    }
-  ];
 }
