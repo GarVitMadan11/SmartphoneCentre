@@ -67,7 +67,6 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
   selectedVariant,
   onEditDevice
 }) => {
-  // Wizard steps: 1: Contact, 2: Address & Slots, 3: Payment & Trust Confirmation
   const [schedulerStep, setSchedulerStep] = useState<number>(1);
 
   const [name, setName] = useState('');
@@ -82,6 +81,51 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
+  // DPDP consent — must be checked before form can proceed
+  const [hasConsented, setHasConsented] = useState(false);
+
+  // ── Rate limiter ───────────────────────────────────────────────
+  // Track submission attempts in sessionStorage (persists across re-renders, cleared on tab close)
+  const RATE_LIMIT_KEY = 'stc_submit_attempts';
+  const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
+  const RATE_LIMIT_MAX = 3;
+
+  const getRateLimitData = () => {
+    try {
+      const raw = sessionStorage.getItem(RATE_LIMIT_KEY);
+      if (!raw) return { count: 0, windowStart: Date.now() };
+      return JSON.parse(raw) as { count: number; windowStart: number };
+    } catch {
+      return { count: 0, windowStart: Date.now() };
+    }
+  };
+
+  const isRateLimited = (): boolean => {
+    const data = getRateLimitData();
+    if (Date.now() - data.windowStart > RATE_LIMIT_WINDOW_MS) return false;
+    return data.count >= RATE_LIMIT_MAX;
+  };
+
+  const recordSubmitAttempt = () => {
+    const data = getRateLimitData();
+    const now = Date.now();
+    if (now - data.windowStart > RATE_LIMIT_WINDOW_MS) {
+      sessionStorage.setItem(RATE_LIMIT_KEY, JSON.stringify({ count: 1, windowStart: now }));
+    } else {
+      sessionStorage.setItem(RATE_LIMIT_KEY, JSON.stringify({ count: data.count + 1, windowStart: data.windowStart }));
+    }
+  };
+  // ────────────────────────────────────────────────────────
+
+  /** Generate a cryptographically random confirmation ID (not Math.random) */
+  const generateConfirmationId = (): string => {
+    const arr = new Uint32Array(1);
+    crypto.getRandomValues(arr);
+    return `STC-${arr[0].toString(16).toUpperCase().padStart(8, '0').slice(0, 8)}`;
+  };
+
+  // Stable confirmation ID for the success screen
+  const [confirmationId] = useState(() => generateConfirmationId());
 
   // Generate next 5 dates in formatted string
   const dates = Array.from({ length: 5 }).map((_, i) => {
@@ -119,19 +163,31 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
   const isPhoneValid = useMemo(() => /^[6-9]\d{9}$/.test(phone), [phone]);
   const isEmailValid = useMemo(() => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email), [email]);
   const isImeiValid = useMemo(() => !imei || (imei.length === 15 && validateLuhn(imei)), [imei]);
+  const isNameValid = useMemo(() => name.trim().length >= 2 && name.trim().length <= 80, [name]);
   const isStep1Valid = useMemo(() => {
-    return name.trim().length > 0 && isEmailValid && isPhoneValid && isImeiValid;
-  }, [name, isEmailValid, isPhoneValid, isImeiValid]);
+    return isNameValid && isEmailValid && isPhoneValid && isImeiValid && hasConsented;
+  }, [isNameValid, isEmailValid, isPhoneValid, isImeiValid, hasConsented]);
 
-  // Step 2 Validation
+  // Step 2 Validation — also verify date is within the valid 7-day window
+  const isDateInRange = useMemo(() => {
+    if (!selectedDate) return false;
+    const chosen = new Date(selectedDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const maxDate = new Date(today);
+    maxDate.setDate(today.getDate() + 7);
+    return chosen >= today && chosen <= maxDate;
+  }, [selectedDate]);
   const isStep2Valid = useMemo(() => {
-    return address.trim().length > 0 && selectedDate !== '' && selectedTimeSlot !== '';
-  }, [address, selectedDate, selectedTimeSlot]);
+    return address.trim().length >= 10 && address.trim().length <= 500 &&
+      isDateInRange && selectedTimeSlot !== '';
+  }, [address, isDateInRange, selectedTimeSlot]);
 
   // Step 3 Validation
   const isStep3Valid = useMemo(() => {
     if (paymentMethod === 'cash') return true;
-    return paymentDetails.trim().length > 0;
+    const details = paymentDetails.trim();
+    return details.length > 0 && details.length <= 200;
   }, [paymentMethod, paymentDetails]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -140,23 +196,30 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
       alert('Please fill out all required details correctly.');
       return;
     }
+    // Rate-limit check
+    if (isRateLimited()) {
+      alert('Too many submission attempts. Please wait 10 minutes before trying again.');
+      return;
+    }
 
     setIsSubmitting(true);
+    recordSubmitAttempt();
 
     // Build template parameters for EmailJS
     const templateParams = {
-      to_name: name,
-      to_email: email,
+      to_name: name.trim().slice(0, 80),
+      to_email: email.trim(),
       phone: `+91 ${phone}`,
       imei: imei || 'Not provided',
-      address,
+      address: address.trim().slice(0, 500),
       pickup_date: selectedDate,
       time_slot: selectedTimeSlot,
       payment_method: paymentMethod.toUpperCase(),
-      payment_details: paymentDetails || 'N/A',
+      // Note: paymentDetails sent over EmailJS — migrate to serverless relay for production
+      payment_details: paymentDetails.trim().slice(0, 200) || 'N/A',
       payout_amount: new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(finalPrice),
       agent_name: assignedAgent.name,
-      agent_phone: assignedAgent.phone,
+      confirmation_id: confirmationId,
     };
 
     try {
@@ -254,28 +317,54 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                       <h3 className="text-[11px] font-mono tracking-[0.25em] text-cobalt uppercase flex items-center gap-1.5 font-bold mb-3">
                         <User className="w-3.5 h-3.5" /> 1. Contact details & IMEI Identification
                       </h3>
-                      
+
+                      {/* DPDP / Privacy Consent */}
+                      <div
+                        onClick={() => setHasConsented(v => !v)}
+                        className={`flex items-start gap-3 p-3 rounded-sm border cursor-pointer transition-all ${
+                          hasConsented
+                            ? 'bg-cobalt-light border-cobalt'
+                            : 'bg-canvas-white border-ice-border hover:border-cobalt/40'
+                        }`}
+                      >
+                        <div className={`mt-0.5 w-4 h-4 rounded-sm border flex-shrink-0 flex items-center justify-center transition-all ${
+                          hasConsented ? 'bg-cobalt border-cobalt text-white' : 'border-ice-border'
+                        }`}>
+                          {hasConsented && <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
+                        </div>
+                        <p className="text-[10px] text-ink-slate font-light leading-relaxed">
+                          <strong className="text-ink-navy">Data Collection Consent (Required)</strong> — I consent to SmartphoneCentre collecting and processing my contact details and device information solely to facilitate this trade-in booking. Data will not be shared with third parties except for pickup coordination.
+                        </p>
+                      </div>
+
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <label className="text-xs font-semibold text-ink-slate block mb-1">Full Name *</label>
                           <input
                             type="text"
                             required
+                            maxLength={80}
+                            autoComplete="name"
                             value={name}
                             onChange={e => setName(e.target.value)}
                             placeholder="e.g. Vikramaditya Singh"
                             className="w-full p-3 rounded-sm border border-ice-border bg-canvas-white text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all font-light"
                             style={{ minHeight: '48px' }}
                           />
+                          {name && !isNameValid && (
+                            <span className="text-[10px] text-red-400 mt-1 block">Name must be 2–80 characters.</span>
+                          )}
                         </div>
                         <div>
                           <label className="text-xs font-semibold text-ink-slate block mb-1">Email Address *</label>
                           <input
                             type="email"
                             required
+                            maxLength={254}
+                            autoComplete="email"
                             value={email}
                             onChange={e => setEmail(e.target.value)}
-                            placeholder="e.g. assignment@tradein.com"
+                            placeholder="e.g. you@example.com"
                             className="w-full p-3 rounded-sm border border-ice-border bg-canvas-white text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all font-light"
                             style={{ minHeight: '48px' }}
                           />
@@ -292,7 +381,9 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                           <input
                             type="tel"
                             required
+                            autoComplete="tel"
                             pattern="[6-9][0-9]{9}"
+                            maxLength={10}
                             value={phone}
                             onChange={e => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
                             placeholder="9876543210"
@@ -343,6 +434,8 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
 
                         <input
                           type="text"
+                          autoComplete="off"
+                          inputMode="numeric"
                           value={imei}
                           onChange={e => setImei(e.target.value.replace(/\D/g, '').slice(0, 15))}
                           placeholder="e.g. 352999061234567"
@@ -373,11 +466,16 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                         <textarea
                           required
                           rows={3}
+                          maxLength={500}
+                          autoComplete="street-address"
                           value={address}
                           onChange={e => setAddress(e.target.value)}
                           placeholder="Flat No, Building Name, Street Address, City, Pincode"
                           className="w-full p-3 rounded-sm border border-ice-border bg-canvas-white text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all resize-none font-light"
                         />
+                        {address && address.trim().length < 10 && (
+                          <span className="text-[10px] text-red-400 mt-1 block">Please enter a complete address (at least 10 characters).</span>
+                        )}
                       </div>
 
                       <div>
@@ -477,6 +575,8 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                             <input
                               type="text"
                               required
+                              maxLength={100}
+                              autoComplete="off"
                               value={paymentDetails}
                               onChange={e => setPaymentDetails(e.target.value)}
                               placeholder="e.g. mobile@upi"
@@ -697,7 +797,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
             <div className="w-full bg-zinc-950/40 border border-dashed border-white/[0.12] rounded-sm p-5 my-6 text-xs space-y-2.5 font-mono text-left">
               <div className="flex justify-between font-bold border-b border-white/[0.06] pb-2 mb-2 text-ink-navy">
                 <span>Confirmation ID</span>
-                <span className="text-cobalt">#STC-{Math.floor(Math.random() * 90000) + 10000}</span>
+                <span className="text-cobalt">#{confirmationId}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-zinc-500">Device Model</span>

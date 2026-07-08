@@ -4,11 +4,37 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📱</text></svg>" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SmartphoneCentre | Premium Device Trade-In & Resale</title>
+    <title>SmartphoneCentre | Premium Device Trade-In &amp; Resale</title>
+
+    <!-- ── Security Headers (meta-equivalent) ────────────────────── -->
+    <!-- Content Security Policy: restrict script/style/font origins -->
+    <meta http-equiv="Content-Security-Policy" content="
+      default-src 'self';
+      script-src  'self' 'unsafe-inline' https://api.emailjs.com;
+      style-src   'self' 'unsafe-inline' https://fonts.googleapis.com;
+      font-src    'self' https://fonts.gstatic.com;
+      img-src     'self' data: blob:;
+      connect-src 'self' https://api.emailjs.com;
+      frame-ancestors 'none';
+      base-uri    'self';
+      form-action 'self';
+    ">
+    <!-- Prevent MIME-type sniffing -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <!-- Prevent clickjacking -->
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <!-- Strict referrer policy -->
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <!-- Disable browser features not needed by this app -->
+    <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=()">
+
     <!-- Google Fonts: Outfit & Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- SEO Meta -->
+    <meta name="description" content="SmartphoneCentre — Get an instant, honest trade-in valuation for your smartphone. Free doorstep pickup and secure digital payment.">
   </head>
   <body class="bg-canvas-white text-ink-navy min-h-screen font-sans selection:bg-cobalt selection:text-white">
     <div id="root"></div>

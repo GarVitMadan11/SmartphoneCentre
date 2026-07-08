@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Model, Variant, DefectRule } from './data/mockDatabase';
 import { DeviceSelector } from './components/DeviceSelector';
 import { DiagnosticWizard } from './components/DiagnosticWizard';
@@ -9,16 +9,54 @@ import {
   Code, Database, Info, GitBranch
 } from 'lucide-react';
 
-// Helper to load/save from localStorage
-const loadFromLocalStorage = <T,>(key: string, defaultValue: T): T => {
-  const saved = localStorage.getItem(key);
-  if (!saved) return defaultValue;
+// ── Secure localStorage helpers ──────────────────────────────────────────────
+// Only non-sensitive navigation state is persisted (activeStage, wizardStep).
+// PII and financial data (model, variant, price, defects) live in React state only.
+
+const SESSION_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+interface StoredNavState {
+  activeStage: 'select' | 'diagnose' | 'schedule';
+  wizardStep: number;
+  timestamp: number;
+}
+
+function loadNavState(): StoredNavState | null {
   try {
-    return JSON.parse(saved) as T;
-  } catch (e) {
-    return defaultValue;
+    const raw = localStorage.getItem('stc_nav');
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as StoredNavState;
+    // Validate shape and TTL
+    if (
+      typeof parsed !== 'object' || parsed === null ||
+      !['select', 'diagnose', 'schedule'].includes(parsed.activeStage) ||
+      typeof parsed.wizardStep !== 'number' ||
+      typeof parsed.timestamp !== 'number' ||
+      Date.now() - parsed.timestamp > SESSION_TTL_MS
+    ) {
+      localStorage.removeItem('stc_nav');
+      return null;
+    }
+    return parsed;
+  } catch {
+    localStorage.removeItem('stc_nav');
+    return null;
   }
-};
+}
+
+function saveNavState(state: Omit<StoredNavState, 'timestamp'>) {
+  try {
+    localStorage.setItem('stc_nav', JSON.stringify({ ...state, timestamp: Date.now() }));
+  } catch {
+    // Silently fail if storage is full
+  }
+}
+
+function clearNavState() {
+  localStorage.removeItem('stc_nav');
+}
+
+// ────────────────────────────────────────────────────────────────────────────
 
 interface SpecsModalProps {
   isOpen: boolean;
@@ -50,7 +88,7 @@ function SpecsModal({ isOpen, onClose }: SpecsModalProps) {
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-ink-navy font-outfit font-light text-lg border-b border-white/[0.04] pb-1">
               <Info className="w-5 h-5 text-cobalt" />
-              1. Business Architecture & Pillars
+              1. Business Architecture &amp; Pillars
             </div>
             <p className="font-light">SmartphoneCentre bridges the gap between high-volume commercial supply and consumer convenience, structured across three key pillars:</p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
@@ -93,7 +131,7 @@ function SpecsModal({ isOpen, onClose }: SpecsModalProps) {
                 <tr className="border-b border-white/[0.04]">
                   <td className="py-2 text-zinc-300">Card Pure</td>
                   <td className="py-2 text-zinc-400">#121214</td>
-                  <td className="py-2">Elevated surfaces & interactive panels</td>
+                  <td className="py-2">Elevated surfaces &amp; interactive panels</td>
                 </tr>
                 <tr className="border-b border-white/[0.04]">
                   <td className="py-2 text-zinc-300">Industrial Cobalt</td>
@@ -135,11 +173,7 @@ function SpecsModal({ isOpen, onClose }: SpecsModalProps) {
             </div>
             <p className="font-light text-xs">A relational model binds brands, models, specific variants, defect rules, and customer bookings together:</p>
             <div className="bg-zinc-950 p-4 rounded-sm border border-ice-border text-xs font-mono overflow-x-auto text-zinc-300">
-              {`BRANDS (id, name, logo)
-└── MODELS (id, brand_id, name, category, release_year)
-    ├── DEVICE_VARIANTS (id, model_id, storage_gb, color, base_price)
-    └── DEFECT_RULES (id, category, description, fixed, percentage, is_critical)
-        └── TRADE_IN_BOOKINGS (id, variant_id, customer_name, customer_phone, final_quote, address)`}
+              {`BRANDS (id, name, logo)\n└── MODELS (id, brand_id, name, category, release_year)\n    ├── DEVICE_VARIANTS (id, model_id, storage_gb, color, base_price)\n    └── DEFECT_RULES (id, category, description, fixed, percentage, is_critical)\n        └── TRADE_IN_BOOKINGS (id, variant_id, customer_name, customer_phone, final_quote, address)`}
             </div>
           </div>
         </div>
@@ -159,40 +193,31 @@ function SpecsModal({ isOpen, onClose }: SpecsModalProps) {
 }
 
 export default function App() {
-  const [activeStage, setActiveStage] = useState<'select' | 'diagnose' | 'schedule'>(() => loadFromLocalStorage('stc_activeStage', 'select'));
-  const [selectedModel, setSelectedModel] = useState<Model | null>(() => loadFromLocalStorage('stc_selectedModel', null));
-  const [selectedVariant, setSelectedVariant] = useState<Variant | null>(() => loadFromLocalStorage('stc_selectedVariant', null));
-  const [finalPrice, setFinalPrice] = useState<number>(() => loadFromLocalStorage('stc_finalPrice', 0));
-  const [selectedDefects, setSelectedDefects] = useState<DefectRule[]>(() => loadFromLocalStorage('stc_selectedDefects', []));
-  const [wizardStep, setWizardStep] = useState<number>(() => loadFromLocalStorage('stc_wizardStep', 0));
-  
+  // ── Navigation state — persisted in localStorage with TTL (non-sensitive) ──
+  const savedNav = useRef(loadNavState());
+  const [activeStage, setActiveStage] = useState<'select' | 'diagnose' | 'schedule'>(
+    savedNav.current?.activeStage ?? 'select'
+  );
+  const [wizardStep, setWizardStep] = useState<number>(savedNav.current?.wizardStep ?? 0);
+
+  // ── Sensitive state — React memory only, never persisted to storage ────────
+  const [selectedModel, setSelectedModel] = useState<Model | null>(null);
+  const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
+  const [finalPrice, setFinalPrice] = useState<number>(0);
+  const [selectedDefects, setSelectedDefects] = useState<DefectRule[]>([]);
+
   const [isSpecModalOpen, setIsSpecModalOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Sync to local storage
+  // Persist only non-sensitive navigation hints
   useEffect(() => {
-    localStorage.setItem('stc_activeStage', JSON.stringify(activeStage));
-  }, [activeStage]);
-
-  useEffect(() => {
-    localStorage.setItem('stc_selectedModel', JSON.stringify(selectedModel));
-  }, [selectedModel]);
-
-  useEffect(() => {
-    localStorage.setItem('stc_selectedVariant', JSON.stringify(selectedVariant));
-  }, [selectedVariant]);
-
-  useEffect(() => {
-    localStorage.setItem('stc_finalPrice', JSON.stringify(finalPrice));
-  }, [finalPrice]);
-
-  useEffect(() => {
-    localStorage.setItem('stc_selectedDefects', JSON.stringify(selectedDefects));
-  }, [selectedDefects]);
-
-  useEffect(() => {
-    localStorage.setItem('stc_wizardStep', JSON.stringify(wizardStep));
-  }, [wizardStep]);
+    // If user is at 'select' stage with default step, don't clutter storage
+    if (activeStage === 'select' && wizardStep === 0) {
+      clearNavState();
+    } else {
+      saveNavState({ activeStage, wizardStep });
+    }
+  }, [activeStage, wizardStep]);
 
   const handleVariantSelected = (model: Model, variant: Variant) => {
     setSelectedModel(model);
@@ -217,16 +242,7 @@ export default function App() {
     setWizardStep(0);
     setActiveStage('select');
     setMobileMenuOpen(false);
-    localStorage.removeItem('stc_activeStage');
-    localStorage.removeItem('stc_selectedModel');
-    localStorage.removeItem('stc_selectedVariant');
-    localStorage.removeItem('stc_selectedDefects');
-    localStorage.removeItem('stc_finalPrice');
-    localStorage.removeItem('stc_wizardStep');
-    localStorage.removeItem('stc_screenConfirmed');
-    localStorage.removeItem('stc_bodyConfirmed');
-    localStorage.removeItem('stc_funcConfirmed');
-    localStorage.removeItem('stc_accConfirmed');
+    clearNavState();
   };
 
   return (
@@ -335,7 +351,7 @@ export default function App() {
                     Catalog / Hardware Selector
                   </span>
                   <h3 className="text-3xl font-light text-ink-navy tracking-tight">
-                    Select Brand & Model
+                    Select Brand &amp; Model
                   </h3>
                 </div>
                 <DeviceSelector onVariantSelected={handleVariantSelected} />
@@ -369,7 +385,7 @@ export default function App() {
           )}
         </section>
 
-        {/* Right: Sidebar — collapses to a 3-card row on mobile */}
+        {/* Right: Sidebar */}
         <aside className="w-full xl:col-span-3 grid grid-cols-1 sm:grid-cols-3 xl:grid-cols-1 gap-4 xl:gap-6 no-print">
 
             {/* Live Operations */}
@@ -456,11 +472,11 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between text-[10px] sm:text-xs text-ink-muted gap-3 sm:gap-4 text-center sm:text-left">
           <span>© {new Date().getFullYear()} SmartphoneCentre Inc. All rights reserved.</span>
           <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
-            <span className="hover:underline cursor-pointer">Terms & Conditions</span>
+            <a href="/terms" rel="noopener noreferrer" className="hover:underline cursor-pointer">Terms &amp; Conditions</a>
             <span className="hidden sm:inline">•</span>
-            <span className="hover:underline cursor-pointer">Privacy Charter</span>
+            <a href="/privacy" rel="noopener noreferrer" className="hover:underline cursor-pointer">Privacy Charter</a>
             <span className="hidden sm:inline">•</span>
-            <span className="hover:underline cursor-pointer">Valuation API License</span>
+            <a href="/valuation-license" rel="noopener noreferrer" className="hover:underline cursor-pointer">Valuation API License</a>
           </div>
         </div>
       </footer>

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Model, Variant, getDefectRulesForCategory, DefectRule } from '../data/mockDatabase';
 import { calculateValuation } from '../utils/valuation';
 import { 
@@ -38,16 +38,7 @@ const getEngineeringLabel = (description: string) => {
   return mapping[description] || description;
 };
 
-// Helper to load from localStorage
-const loadFromLocalStorage = <T,>(key: string, defaultValue: T): T => {
-  const saved = localStorage.getItem(key);
-  if (!saved) return defaultValue;
-  try {
-    return JSON.parse(saved) as T;
-  } catch (e) {
-    return defaultValue;
-  }
-};
+// Wizard flags are session-only — not persisted to localStorage
 
 interface DiagnosticWizardProps {
   model: Model;
@@ -82,21 +73,13 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
     { title: 'Accessories & Docs',     icon: Box,        desc: 'Box, charger & bill' },
   ];
 
-  // Confirmation state for each diagnostic step to prevent blank clickthroughs
-  const [screenConfirmed, setScreenConfirmed] = useState(() => loadFromLocalStorage('stc_screenConfirmed', false));
-  const [bodyConfirmed, setBodyConfirmed] = useState(() => loadFromLocalStorage('stc_bodyConfirmed', false));
-  const [funcConfirmed, setFuncConfirmed] = useState(() => loadFromLocalStorage('stc_funcConfirmed', false));
-  const [connectConfirmed, setConnectConfirmed] = useState(() => loadFromLocalStorage('stc_connectConfirmed', false));
-  const [accConfirmed, setAccConfirmed] = useState(() => loadFromLocalStorage('stc_accConfirmed', false));
-  const [icloudChecked, setIcloudChecked] = useState<'clear' | 'locked' | null>(() => loadFromLocalStorage('stc_icloudChecked', null));
-
-  // Sync confirmations to localStorage
-  useEffect(() => { localStorage.setItem('stc_screenConfirmed', JSON.stringify(screenConfirmed)); }, [screenConfirmed]);
-  useEffect(() => { localStorage.setItem('stc_bodyConfirmed', JSON.stringify(bodyConfirmed)); }, [bodyConfirmed]);
-  useEffect(() => { localStorage.setItem('stc_funcConfirmed', JSON.stringify(funcConfirmed)); }, [funcConfirmed]);
-  useEffect(() => { localStorage.setItem('stc_connectConfirmed', JSON.stringify(connectConfirmed)); }, [connectConfirmed]);
-  useEffect(() => { localStorage.setItem('stc_accConfirmed', JSON.stringify(accConfirmed)); }, [accConfirmed]);
-  useEffect(() => { localStorage.setItem('stc_icloudChecked', JSON.stringify(icloudChecked)); }, [icloudChecked]);
+  // Confirmation state — session only, never persisted to localStorage
+  const [screenConfirmed, setScreenConfirmed] = useState(false);
+  const [bodyConfirmed, setBodyConfirmed] = useState(false);
+  const [funcConfirmed, setFuncConfirmed] = useState(false);
+  const [connectConfirmed, setConnectConfirmed] = useState(false);
+  const [accConfirmed, setAccConfirmed] = useState(false);
+  const [icloudChecked, setIcloudChecked] = useState<'clear' | 'locked' | null>(null);
 
   // Validation check for current step
   const isStepValidated = useMemo(() => {
