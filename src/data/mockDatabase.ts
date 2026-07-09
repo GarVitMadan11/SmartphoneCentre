@@ -252,10 +252,12 @@ export function getDefectRulesForCategory(category: DeviceCategory): DefectRule[
 
 // 1. Brands List
 export const BRANDS: Brand[] = [
-  { id: 'brand-apple', name: 'Apple', logo: '' },
-  { id: 'brand-samsung', name: 'Samsung', logo: 'S' },
-  { id: 'brand-oneplus', name: 'OnePlus', logo: '1+' },
-  { id: 'brand-google', name: 'Google', logo: 'G' },
+  { id: 'brand-apple', name: 'Apple', logo: 'apple' },
+  { id: 'brand-xiaomi', name: 'Xiaomi', logo: 'xiaomi' },
+  { id: 'brand-samsung', name: 'Samsung', logo: 'samsung' },
+  { id: 'brand-vivo', name: 'vivo', logo: 'vivo' },
+  { id: 'brand-oneplus', name: 'OnePlus', logo: 'oneplus' },
+  { id: 'brand-google', name: 'Google', logo: 'google' },
 ];
 
 // 2. Models List (Comprehensive)
@@ -314,6 +316,34 @@ export const MODELS: Model[] = [
   { id: 'sam-zflip4',  brandId: 'brand-samsung', name: 'Galaxy Z Flip 4',  category: 'premium',  releaseYear: 2022, basePrice128GB: 18000 },
   { id: 'sam-a55',     brandId: 'brand-samsung', name: 'Galaxy A55',       category: 'midrange', releaseYear: 2024, basePrice128GB: 14000 },
   { id: 'sam-a54',     brandId: 'brand-samsung', name: 'Galaxy A54',       category: 'midrange', releaseYear: 2023, basePrice128GB: 10000 },
+
+  // --- XIAOMI --- C2B offer ~58% of refurb mid-price (fast depreciation, high volume)
+  { id: 'xi-14u',     brandId: 'brand-xiaomi', name: 'Xiaomi 14 Ultra',    category: 'flagship', releaseYear: 2024, basePrice128GB: 28000 },
+  { id: 'xi-14',      brandId: 'brand-xiaomi', name: 'Xiaomi 14',          category: 'flagship', releaseYear: 2024, basePrice128GB: 20000 },
+  { id: 'xi-13p',     brandId: 'brand-xiaomi', name: 'Xiaomi 13 Pro',      category: 'flagship', releaseYear: 2023, basePrice128GB: 18000 },
+  { id: 'xi-13',      brandId: 'brand-xiaomi', name: 'Xiaomi 13',          category: 'premium',  releaseYear: 2023, basePrice128GB: 13000 },
+  { id: 'xi-12p',     brandId: 'brand-xiaomi', name: 'Xiaomi 12 Pro',      category: 'premium',  releaseYear: 2022, basePrice128GB: 11000 },
+  { id: 'xi-12',      brandId: 'brand-xiaomi', name: 'Xiaomi 12',          category: 'midrange', releaseYear: 2022, basePrice128GB:  8000 },
+  { id: 'xi-n14p',    brandId: 'brand-xiaomi', name: 'Redmi Note 14 Pro+', category: 'midrange', releaseYear: 2024, basePrice128GB: 12000 },
+  { id: 'xi-n14',     brandId: 'brand-xiaomi', name: 'Redmi Note 14',      category: 'midrange', releaseYear: 2024, basePrice128GB:  9000 },
+  { id: 'xi-n13p',    brandId: 'brand-xiaomi', name: 'Redmi Note 13 Pro+', category: 'midrange', releaseYear: 2023, basePrice128GB: 10000 },
+  { id: 'xi-n13',     brandId: 'brand-xiaomi', name: 'Redmi Note 13',      category: 'budget',   releaseYear: 2023, basePrice128GB:  6500 },
+  { id: 'xi-poc6p',   brandId: 'brand-xiaomi', name: 'POCO F6 Pro',        category: 'premium',  releaseYear: 2024, basePrice128GB: 16000 },
+  { id: 'xi-poc6',    brandId: 'brand-xiaomi', name: 'POCO F6',            category: 'midrange', releaseYear: 2024, basePrice128GB: 11000 },
+  { id: 'xi-poc5p',   brandId: 'brand-xiaomi', name: 'POCO F5 Pro',        category: 'midrange', releaseYear: 2023, basePrice128GB: 10000 },
+
+  // --- VIVO --- C2B offer ~56% of refurb mid-price
+  { id: 'vi-x100p',   brandId: 'brand-vivo', name: 'vivo X100 Pro',       category: 'flagship', releaseYear: 2024, basePrice128GB: 27000 },
+  { id: 'vi-x100',    brandId: 'brand-vivo', name: 'vivo X100',           category: 'flagship', releaseYear: 2024, basePrice128GB: 20000 },
+  { id: 'vi-x90p',    brandId: 'brand-vivo', name: 'vivo X90 Pro',        category: 'flagship', releaseYear: 2023, basePrice128GB: 16000 },
+  { id: 'vi-x90',     brandId: 'brand-vivo', name: 'vivo X90',            category: 'premium',  releaseYear: 2023, basePrice128GB: 12000 },
+  { id: 'vi-v29p',    brandId: 'brand-vivo', name: 'vivo V29 Pro',        category: 'premium',  releaseYear: 2023, basePrice128GB: 11000 },
+  { id: 'vi-v29',     brandId: 'brand-vivo', name: 'vivo V29',            category: 'midrange', releaseYear: 2023, basePrice128GB:  8500 },
+  { id: 'vi-v30p',    brandId: 'brand-vivo', name: 'vivo V30 Pro',        category: 'premium',  releaseYear: 2024, basePrice128GB: 13000 },
+  { id: 'vi-v30',     brandId: 'brand-vivo', name: 'vivo V30',            category: 'midrange', releaseYear: 2024, basePrice128GB:  9500 },
+  { id: 'vi-t3p',     brandId: 'brand-vivo', name: 'vivo T3 Pro',         category: 'midrange', releaseYear: 2024, basePrice128GB:  8000 },
+  { id: 'vi-t3',      brandId: 'brand-vivo', name: 'vivo T3',             category: 'budget',   releaseYear: 2024, basePrice128GB:  6000 },
+  { id: 'vi-y200',    brandId: 'brand-vivo', name: 'vivo Y200',           category: 'budget',   releaseYear: 2023, basePrice128GB:  5500 },
 
   // --- ONEPLUS --- C2B offer ~62% of refurb mid-price (aggressive depreciation curve)
   { id: 'op-12',      brandId: 'brand-oneplus', name: 'OnePlus 12',        category: 'flagship', releaseYear: 2024, basePrice128GB: 24000 },

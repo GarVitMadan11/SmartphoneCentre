@@ -2,6 +2,42 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { BRANDS, MODELS, Model, Variant, generateVariantsForModel } from '../data/mockDatabase';
 import { Search, ChevronRight, Smartphone, Calendar, Layers, ShieldCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import {
+  siApple, siSamsung, siXiaomi, siVivo, siOneplus, siGoogle,
+} from 'simple-icons';
+
+// ── Brand Logo using official Simple Icons SVG paths ─────────────────────────
+const BRAND_ICON_MAP: Record<string, { icon: { path: string; viewBox?: string }; size: number; brandColor?: string }> = {
+  apple:   { icon: siApple,   size: 18 },
+  samsung: { icon: siSamsung, size: 22 },
+  xiaomi:  { icon: siXiaomi,  size: 20 },
+  vivo:    { icon: siVivo,    size: 20 },
+  oneplus: { icon: siOneplus, size: 20 },
+  google:  { icon: siGoogle,  size: 20, brandColor: '#4285F4' },
+};
+
+function BrandLogo({ logo, isActive }: { logo: string; isActive: boolean }) {
+  const entry = BRAND_ICON_MAP[logo];
+  if (!entry) return <span className="text-sm font-bold">{logo}</span>;
+
+  const { icon, size, brandColor } = entry;
+  // When inactive, use the brand's own colour for recognition; active → white
+  const fillColor = isActive ? '#ffffff' : (brandColor ?? `#${icon.hex ?? '6b7280'}`);
+
+  return (
+    <svg
+      role="img"
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      fill={fillColor}
+      aria-label={logo}
+      style={{ flexShrink: 0 }}
+    >
+      <path d={icon.path} />
+    </svg>
+  );
+}
 
 interface DeviceSelectorProps {
   onVariantSelected: (model: Model, variant: Variant) => void;
@@ -107,15 +143,15 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({ onVariantSelecte
                 setSelectedStorage(null);
                 setTempVariant(null);
               }}
-              className={`flex-shrink-0 px-5 sm:px-6 py-3 sm:py-3.5 rounded-sm font-semibold text-xs sm:text-sm transition-all duration-300 flex items-center gap-1.5 sm:gap-2 border ${
+              className={`flex-shrink-0 px-4 sm:px-5 py-2.5 sm:py-3 rounded-sm font-semibold text-xs sm:text-sm transition-all duration-300 flex flex-col items-center justify-center gap-1.5 border ${
                 isActive
                   ? 'bg-cobalt text-white border-cobalt scale-[1.02] opacity-100 shadow-[0_0_15px_rgba(59,130,246,0.3)]'
-                  : 'bg-canvas-pure text-ink-slate border-ice-border hover:border-cobalt/40 hover:bg-cobalt-light/10 opacity-70 hover:opacity-100'
+                  : 'bg-canvas-pure text-ink-slate border-ice-border hover:border-cobalt/40 hover:bg-cobalt-light/10 opacity-80 hover:opacity-100'
               }`}
-              style={{ minHeight: '48px' }}
+              style={{ minHeight: '64px', minWidth: '72px' }}
             >
-              <span className="text-base sm:text-lg font-bold">{brand.logo}</span>
-              {brand.name}
+              <BrandLogo logo={brand.logo} isActive={isActive} />
+              <span className={`text-[10px] font-semibold tracking-wide ${isActive ? 'text-white' : 'text-ink-slate'}`}>{brand.name}</span>
             </button>
           );
         })}
