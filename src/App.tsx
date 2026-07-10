@@ -3,6 +3,7 @@ import { Model, Variant, DefectRule, MODELS, generateVariantsForModel } from './
 import { DeviceSelector } from './components/DeviceSelector';
 import { DiagnosticWizard } from './components/DiagnosticWizard';
 import { PickupScheduler } from './components/PickupScheduler';
+import { SmartphoneMockup } from './components/SmartphoneMockup';
 import { 
   Award, ShieldCheck, Zap, 
   RefreshCw, TrendingUp, FileText, Menu, X,
@@ -406,50 +407,7 @@ export default function App() {
 
                 {/* Hero Interactive Phone Panel Graphic */}
                 <div className="lg:col-span-5 flex justify-center">
-                  <div className="relative w-72 sm:w-80 h-[520px] bg-slate-900 rounded-[48px] p-3 shadow-2xl border-4 border-slate-800">
-                    {/* Camera Island */}
-                    <div className="absolute top-5 left-1/2 -translate-x-1/2 w-28 h-7 bg-black rounded-full z-20 flex items-center justify-between px-3">
-                      <div className="w-2 h-2 bg-neutral-900 rounded-full border border-neutral-800"></div>
-                      <div className="w-3.5 h-1.5 bg-neutral-900 rounded-full"></div>
-                    </div>
-                    {/* Screen Interface Mock */}
-                    <div className="w-full h-full bg-gradient-to-tr from-primary to-slate-900 rounded-[38px] overflow-hidden relative flex flex-col justify-between p-6 text-white text-left">
-                      <div className="mt-8 flex justify-between items-start">
-                        <div>
-                          <p className="text-[10px] text-slate-300 font-mono tracking-widest uppercase">Reliable Exchange</p>
-                          <h3 className="text-xl font-bold mt-1 leading-tight">Get up to<br /><span className="text-2xl font-black text-green-400">₹85,000</span></h3>
-                        </div>
-                        <span className="px-2 py-0.5 bg-green-500/20 text-green-400 rounded-full text-[9px] font-bold border border-green-500/30">Live Offer</span>
-                      </div>
-
-                      {/* Mock Chart Graphic */}
-                      <div className="my-4 h-24 flex items-end gap-1.5 px-2">
-                        <div className="w-full bg-white/10 h-10 rounded-t-sm"></div>
-                        <div className="w-full bg-white/10 h-14 rounded-t-sm"></div>
-                        <div className="w-full bg-white/20 h-20 rounded-t-sm"></div>
-                        <div className="w-full bg-green-500 h-24 rounded-t-sm shadow-[0_0_15px_rgba(34,197,94,0.5)]"></div>
-                      </div>
-
-                      <div className="mb-4">
-                        <div className="p-3 bg-white/5 rounded-xl border border-white/10 backdrop-blur-sm">
-                          <div className="flex justify-between text-xs mb-1 text-slate-300">
-                            <span>iPhone 15 Pro Max</span>
-                            <span className="text-white font-semibold">Flawless</span>
-                          </div>
-                          <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
-                            <div className="bg-green-400 h-full w-[94%]"></div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <button 
-                        onClick={() => document.getElementById('device-selector-section')?.scrollIntoView({ behavior: 'smooth' })}
-                        className="w-full py-3 bg-green-500 hover:bg-green-600 text-slate-900 font-bold rounded-xl text-sm transition-all shadow-lg shadow-green-500/20"
-                      >
-                        Check Value Now
-                      </button>
-                    </div>
-                  </div>
+                  <SmartphoneMockup />
                 </div>
               </div>
 
