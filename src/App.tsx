@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Model, Variant, DefectRule } from './data/mockDatabase';
+import { Model, Variant, DefectRule, MODELS, generateVariantsForModel } from './data/mockDatabase';
 import { DeviceSelector } from './components/DeviceSelector';
 import { DiagnosticWizard } from './components/DiagnosticWizard';
 import { PickupScheduler } from './components/PickupScheduler';
@@ -228,6 +228,16 @@ export default function App() {
     setActiveStage('diagnose');
   };
 
+  const handleDirectSelectModel = (modelId: string) => {
+    const model = MODELS.find(m => m.id === modelId);
+    if (model) {
+      const variants = generateVariantsForModel(model);
+      if (variants && variants.length > 0) {
+        handleVariantSelected(model, variants[0]);
+      }
+    }
+  };
+
   const handleDiagnosticsComplete = (price: number, defects: DefectRule[]) => {
     setFinalPrice(price);
     setSelectedDefects(defects);
@@ -246,36 +256,44 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-canvas-white text-ink-navy flex flex-col font-sans">
+    <div className="min-h-screen bg-canvas-white text-ink-navy flex flex-col font-sans selection:bg-cobalt selection:text-white">
 
       {/* ── Header ────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-40 bg-canvas-pure/90 backdrop-blur-md border-b border-ice-border">
+      <header className="sticky top-0 z-40 bg-white/85 backdrop-blur-md border-b border-ice-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4 flex items-center justify-between">
 
           {/* Logo */}
-          <div className="flex items-center gap-2.5 cursor-pointer flex-shrink-0" onClick={handleReset}>
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-sm bg-cobalt flex items-center justify-center text-white font-black text-base sm:text-lg">
-              S
+          <div className="flex items-center gap-2 cursor-pointer flex-shrink-0" onClick={handleReset}>
+            <div className="w-8 h-8 rounded-lg bg-cobalt flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+              </svg>
             </div>
-            <div className="text-left">
-              <h1 className="font-light text-base sm:text-lg tracking-tight text-ink-navy leading-none">SmartphoneCentre</h1>
-              <span className="text-[8px] sm:text-[9px] font-mono tracking-[0.15em] text-zinc-500 uppercase block mt-0.5">Disruptive Trade-In</span>
-            </div>
+            <span className="text-xl font-extrabold text-ink-navy tracking-tight">Reliable<span className="text-secondary">Exchange</span></span>
           </div>
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-4 lg:gap-6 text-sm font-semibold text-ink-slate">
-            <span className="hover:text-cobalt cursor-pointer transition-colors flex items-center gap-1 font-light">
-              <ShieldCheck className="w-4 h-4 text-cobalt" />
-              <span className="hidden lg:inline">Quality Stamp</span>
+            <span onClick={handleReset} className="hover:text-cobalt cursor-pointer transition-colors flex items-center gap-1 font-light">
+              <ShieldCheck className="w-4 h-4 text-secondary" />
+              <span className="hidden lg:inline">Trusted Partner</span>
             </span>
-            <span className="hover:text-cobalt cursor-pointer transition-colors flex items-center gap-1 font-light">
-              <RefreshCw className="w-4 h-4 text-cobalt" />
-              <span className="hidden lg:inline">How it Works</span>
+            <span onClick={() => {
+              if (activeStage === 'select') {
+                document.getElementById('how-it-works-section')?.scrollIntoView({ behavior: 'smooth' });
+              } else {
+                handleReset();
+                setTimeout(() => {
+                  document.getElementById('how-it-works-section')?.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+              }
+            }} className="hover:text-cobalt cursor-pointer transition-colors flex items-center gap-1 font-light">
+              <RefreshCw className="w-4 h-4 text-secondary" />
+              <span>How it Works</span>
             </span>
             <button 
               onClick={() => setIsSpecModalOpen(true)}
-              className="px-3 py-2 rounded-sm bg-cobalt-light text-cobalt border border-white/[0.06] hover:bg-cobalt hover:text-white transition-all flex items-center gap-1 text-xs font-mono"
+              className="px-3 py-2 rounded-sm bg-cobalt-light text-cobalt border border-ice-border hover:bg-cobalt hover:text-white transition-all flex items-center gap-1 text-xs font-mono"
             >
               <FileText className="w-3.5 h-3.5" />
               <span className="hidden lg:inline">System Spec</span>
@@ -294,18 +312,31 @@ export default function App() {
         {/* Mobile drop-down menu */}
         {mobileMenuOpen && (
           <div className="md:hidden border-t border-ice-border bg-canvas-pure px-4 py-3 space-y-2 text-left">
-            <button className="w-full flex items-center gap-2 text-sm font-semibold text-ink-slate py-2 px-3 rounded-sm hover:bg-ice-gray transition-colors">
-              <ShieldCheck className="w-4 h-4 text-cobalt" /> Quality Stamp
+            <button onClick={handleReset} className="w-full flex items-center gap-2 text-sm font-semibold text-ink-slate py-2 px-3 rounded-sm hover:bg-ice-gray transition-colors">
+              <ShieldCheck className="w-4 h-4 text-secondary" /> Trusted Partner
             </button>
-            <button className="w-full flex items-center gap-2 text-sm font-semibold text-ink-slate py-2 px-3 rounded-sm hover:bg-ice-gray transition-colors">
-              <RefreshCw className="w-4 h-4 text-cobalt" /> How it Works
+            <button 
+              onClick={() => {
+                setMobileMenuOpen(false);
+                if (activeStage === 'select') {
+                  document.getElementById('how-it-works-section')?.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                  handleReset();
+                  setTimeout(() => {
+                    document.getElementById('how-it-works-section')?.scrollIntoView({ behavior: 'smooth' });
+                  }, 100);
+                }
+              }} 
+              className="w-full flex items-center gap-2 text-sm font-semibold text-ink-slate py-2 px-3 rounded-sm hover:bg-ice-gray transition-colors"
+            >
+              <RefreshCw className="w-4 h-4 text-secondary" /> How it Works
             </button>
             <button
               onClick={() => {
                 setIsSpecModalOpen(true);
                 setMobileMenuOpen(false);
               }}
-              className="w-full flex items-center gap-2 text-sm font-semibold text-cobalt py-2 px-3 rounded-sm bg-cobalt-light border border-white/[0.06] text-left"
+              className="w-full flex items-center gap-2 text-sm font-semibold text-cobalt py-2 px-3 rounded-sm bg-cobalt-light border border-ice-border text-left"
             >
               <FileText className="w-4 h-4" /> View System Spec
             </button>
@@ -313,41 +344,119 @@ export default function App() {
         )}
       </header>
 
-      {/* ── Main ──────────────────────────────────────────────────── */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 flex flex-col xl:grid xl:grid-cols-12 gap-6 xl:gap-8 items-start">
+      {/* ── Main Layout ── */}
+      <main className={`flex-1 w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 ${activeStage === 'select' ? 'max-w-7xl flex flex-col' : 'max-w-7xl flex flex-col xl:grid xl:grid-cols-12 gap-6 xl:gap-8 items-start'}`}>
 
-        {/* Left: Active Flow */}
-        <section className="w-full xl:col-span-9 space-y-4 sm:space-y-6 min-w-0">
+        {/* Active Stage Content Area */}
+        <section className={activeStage === 'select' ? 'w-full space-y-16' : 'w-full xl:col-span-9 space-y-4 sm:space-y-6 min-w-0'}>
 
           {activeStage === 'select' && (
-            <div>
-              {/* Hero Banner */}
-              <div className="relative rounded-sm overflow-hidden mb-4 sm:mb-8 border border-white/[0.06] hero-gradient p-6 sm:p-10 flex flex-col items-start gap-4 justify-between shadow-premium">
-                <div className="space-y-3 sm:space-y-4 max-w-2xl z-10 text-left">
-                  <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-1">
-                    Live Pricing Engine Active
+            <div className="space-y-16 py-4">
+              {/* 1. Hero Section */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                {/* Hero Call to Action */}
+                <div className="lg:col-span-7 flex flex-col items-start text-left">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold bg-secondary/10 text-secondary mb-6 tracking-wide uppercase">
+                    ★ #1 Trusted Resale Partner
                   </span>
-                  <h2 className="text-3xl sm:text-4xl md:text-5xl font-light text-ink-navy leading-tight tracking-tight">
-                    Evaluate Honestly. <br />
-                    <span className="text-cobalt font-semibold">Get Paid Instantly.</span>
-                  </h2>
-                  <p className="text-xs sm:text-sm text-ink-slate leading-relaxed max-w-lg font-light">
-                    Sell your device in 3 simple steps. Get an instant valuation, enjoy free doorstep pick-up, and receive on-the-spot digital payment.
+                  <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-ink-navy tracking-tight leading-none mb-6">
+                    Sell Your Smartphone <br className="hidden sm:inline" />for the <span className="text-secondary">Best Price</span>
+                  </h1>
+                  <p className="text-base sm:text-lg text-ink-slate mb-8 max-w-xl font-light leading-relaxed">
+                    Get an instant valuation, free doorstep pickup, and instant cash payment. No hidden deductions, guaranteed.
                   </p>
-                  <div className="flex flex-wrap items-center gap-4 pt-2 border-t border-white/[0.04] w-full">
-                    {['No Hidden Deductions', '7-Day Quote Lock', 'Free Pickup'].map(t => (
-                      <div key={t} className="flex items-center gap-1.5 text-[9px] font-mono tracking-[0.1em] text-zinc-400 uppercase">
-                        <span className="text-emerald-500">✓</span> {t}
+
+                  {/* Search Bar Suggestion */}
+                  <div className="w-full max-w-lg bg-canvas-pure p-2 rounded-lg border border-ice-border flex items-center gap-2 mb-8 shadow-sm">
+                    <div className="flex-1 relative">
+                      <svg className="w-5 h-5 text-ink-muted absolute left-3 top-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                      <input 
+                        type="text" 
+                        placeholder="Search model (e.g. iPhone 15 Pro, Galaxy S24)..." 
+                        onClick={() => document.getElementById('device-selector-section')?.scrollIntoView({ behavior: 'smooth' })}
+                        className="w-full pl-10 pr-4 py-3 text-sm bg-transparent text-ink-navy placeholder:text-ink-muted focus:outline-none" 
+                      />
+                    </div>
+                    <button 
+                      onClick={() => document.getElementById('device-selector-section')?.scrollIntoView({ behavior: 'smooth' })}
+                      className="bg-cobalt hover:bg-cobalt-hover text-white px-5 py-3 rounded-sm text-sm font-semibold transition-all shadow-sm"
+                    >
+                      Find My Device
+                    </button>
+                  </div>
+
+                  {/* Trust Badge Indicators */}
+                  <div className="flex flex-wrap items-center gap-6 text-xs sm:text-sm font-semibold text-ink-slate">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-5 h-5 rounded-full bg-secondary/10 flex items-center justify-center text-secondary text-xs">✓</div>
+                      <span>Secure &amp; Encrypted</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-5 h-5 rounded-full bg-secondary/10 flex items-center justify-center text-secondary text-xs">✓</div>
+                      <span>Instant Payout</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-5 h-5 rounded-full bg-secondary/10 flex items-center justify-center text-secondary text-xs">✓</div>
+                      <span>Free Doorstep Pickup</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Hero Interactive Phone Panel Graphic */}
+                <div className="lg:col-span-5 flex justify-center">
+                  <div className="relative w-72 sm:w-80 h-[520px] bg-slate-900 rounded-[48px] p-3 shadow-2xl border-4 border-slate-800">
+                    {/* Camera Island */}
+                    <div className="absolute top-5 left-1/2 -translate-x-1/2 w-28 h-7 bg-black rounded-full z-20 flex items-center justify-between px-3">
+                      <div className="w-2 h-2 bg-neutral-900 rounded-full border border-neutral-800"></div>
+                      <div className="w-3.5 h-1.5 bg-neutral-900 rounded-full"></div>
+                    </div>
+                    {/* Screen Interface Mock */}
+                    <div className="w-full h-full bg-gradient-to-tr from-primary to-slate-900 rounded-[38px] overflow-hidden relative flex flex-col justify-between p-6 text-white text-left">
+                      <div className="mt-8 flex justify-between items-start">
+                        <div>
+                          <p className="text-[10px] text-slate-300 font-mono tracking-widest uppercase">Reliable Exchange</p>
+                          <h3 className="text-xl font-bold mt-1 leading-tight">Get up to<br /><span className="text-2xl font-black text-green-400">₹85,000</span></h3>
+                        </div>
+                        <span className="px-2 py-0.5 bg-green-500/20 text-green-400 rounded-full text-[9px] font-bold border border-green-500/30">Live Offer</span>
                       </div>
-                    ))}
+
+                      {/* Mock Chart Graphic */}
+                      <div className="my-4 h-24 flex items-end gap-1.5 px-2">
+                        <div className="w-full bg-white/10 h-10 rounded-t-sm"></div>
+                        <div className="w-full bg-white/10 h-14 rounded-t-sm"></div>
+                        <div className="w-full bg-white/20 h-20 rounded-t-sm"></div>
+                        <div className="w-full bg-green-500 h-24 rounded-t-sm shadow-[0_0_15px_rgba(34,197,94,0.5)]"></div>
+                      </div>
+
+                      <div className="mb-4">
+                        <div className="p-3 bg-white/5 rounded-xl border border-white/10 backdrop-blur-sm">
+                          <div className="flex justify-between text-xs mb-1 text-slate-300">
+                            <span>iPhone 15 Pro Max</span>
+                            <span className="text-white font-semibold">Flawless</span>
+                          </div>
+                          <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
+                            <div className="bg-green-400 h-full w-[94%]"></div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <button 
+                        onClick={() => document.getElementById('device-selector-section')?.scrollIntoView({ behavior: 'smooth' })}
+                        className="w-full py-3 bg-green-500 hover:bg-green-600 text-slate-900 font-bold rounded-xl text-sm transition-all shadow-lg shadow-green-500/20"
+                      >
+                        Check Value Now
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Device Selector Card */}
-              <div className="bg-canvas-pure border border-ice-border rounded-sm p-4 sm:p-6 shadow-premium">
-                <div className="mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-white/[0.04] text-left">
-                  <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-1">
+              {/* 2. Popular Brands & Catalog Selector section */}
+              <div id="device-selector-section" className="bg-canvas-pure border border-ice-border rounded-sm p-4 sm:p-6 shadow-premium scroll-mt-20">
+                <div className="mb-6 pb-4 border-b border-ice-border/40 text-left">
+                  <span className="text-[10px] font-mono tracking-[0.2em] text-ink-muted uppercase block mb-1">
                     Catalog / Hardware Selector
                   </span>
                   <h3 className="text-3xl font-light text-ink-navy tracking-tight">
@@ -355,6 +464,142 @@ export default function App() {
                   </h3>
                 </div>
                 <DeviceSelector onVariantSelected={handleVariantSelected} />
+              </div>
+
+              {/* 3. How It Works Section */}
+              <div id="how-it-works-section" className="py-8 border-t border-b border-ice-border/40">
+                <div className="text-center max-w-3xl mx-auto mb-12">
+                  <h2 className="text-3xl font-extrabold text-ink-navy tracking-tight">How it Works</h2>
+                  <p className="text-ink-slate mt-2 text-sm">Our transparent process ensures you get the highest value with zero hassle.</p>
+                </div>
+
+                <div className="relative">
+                  {/* Connecting Line */}
+                  <div className="absolute top-16 left-4 right-4 h-0.5 bg-ice-gray hidden md:block z-0"></div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative z-10">
+                    {/* Step 1 */}
+                    <div className="flex flex-col items-center text-center">
+                      <div className="w-16 h-16 rounded-full bg-cobalt text-white flex items-center justify-center text-xl font-bold shadow-lg shadow-cobalt/20 mb-6">
+                        1
+                      </div>
+                      <h3 className="text-lg font-bold text-ink-navy mb-2">Check Price</h3>
+                      <p className="text-sm text-ink-slate max-w-xs font-light">
+                        Select your smartphone model and answer a few questions about its condition. Get a quote instantly.
+                      </p>
+                    </div>
+
+                    {/* Step 2 */}
+                    <div className="flex flex-col items-center text-center">
+                      <div className="w-16 h-16 rounded-full bg-cobalt text-white flex items-center justify-center text-xl font-bold shadow-lg shadow-cobalt/20 mb-6">
+                        2
+                      </div>
+                      <h3 className="text-lg font-bold text-ink-navy mb-2">Schedule Pickup</h3>
+                      <p className="text-sm text-ink-slate max-w-xs font-light">
+                        Choose a convenient date and time slot. Our executive will visit your home or office for verification.
+                      </p>
+                    </div>
+
+                    {/* Step 3 */}
+                    <div className="flex flex-col items-center text-center">
+                      <div className="w-16 h-16 rounded-full bg-secondary text-white flex items-center justify-center text-xl font-bold shadow-lg shadow-secondary/20 mb-6">
+                        3
+                      </div>
+                      <h3 className="text-lg font-bold text-ink-navy mb-2">Get Paid</h3>
+                      <p className="text-sm text-ink-slate max-w-xs font-light">
+                        Once condition is verified at your doorstep, get paid instantly via digital bank transfer or UPI.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 4. Featured Deals Bento Grid */}
+              <div className="space-y-8">
+                <div className="text-center max-w-3xl mx-auto">
+                  <h2 className="text-3xl font-extrabold text-ink-navy tracking-tight">Featured Deals</h2>
+                  <p className="text-ink-slate mt-2 text-sm">Get top value for popular premium devices today</p>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  {/* Large Card: iPhone 15 Pro Max */}
+                  <div className="lg:col-span-2 bg-gradient-to-br from-primary to-slate-900 rounded-3xl p-8 text-white relative overflow-hidden flex flex-col justify-between min-h-[360px] shadow-xl group text-left">
+                    <div className="absolute right-0 bottom-0 opacity-10 group-hover:opacity-15 transition-opacity pointer-events-none">
+                      <svg className="w-96 h-96 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 4.17c.66-.81 1.11-1.93.99-3.06-1 .04-2.22.67-2.94 1.5-.64.74-1.2 1.88-1.05 2.99 1.12.09 2.26-.57 3-1.43z"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <span className="px-3 py-1 bg-white/10 text-white rounded-full text-xs font-semibold uppercase tracking-wider border border-white/10">Top Offer Today</span>
+                      <h3 className="text-3xl font-extrabold mt-6 max-w-md">Sell your iPhone 15 Pro Max</h3>
+                      <p className="text-slate-300 mt-2 max-w-sm font-light">Get maximum trade-in value before the next generation release.</p>
+                    </div>
+                    <div className="mt-8 flex items-baseline justify-between gap-4 z-10">
+                      <div>
+                        <p className="text-[10px] text-slate-400 uppercase tracking-widest font-mono">Valuations Up To</p>
+                        <p className="text-3xl sm:text-4xl font-black text-green-400 mt-1">₹57,000</p>
+                      </div>
+                      <button 
+                        onClick={() => handleDirectSelectModel('apple-15pm')}
+                        className="bg-green-500 hover:bg-green-600 text-slate-900 px-6 py-3 rounded-lg font-bold text-sm shadow-lg shadow-green-500/20 transition-all"
+                      >
+                        Get Valuation
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Right stack (Samsung + OnePlus/Google) */}
+                  <div className="flex flex-col gap-8 justify-between">
+                    {/* Samsung Galaxy S24 Ultra */}
+                    <div className="bg-canvas-pure border border-ice-border rounded-3xl p-6 flex flex-col justify-between min-h-[166px] shadow-sm text-left">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4 className="text-lg font-bold text-ink-navy">Galaxy S24 Ultra</h4>
+                          <p className="text-xs text-ink-slate mt-1">Valuations up to ₹42,000</p>
+                        </div>
+                        <span className="w-8 h-8 rounded-full bg-ice-gray flex items-center justify-center text-slate-500 text-xs">📱</span>
+                      </div>
+                      <span 
+                        onClick={() => handleDirectSelectModel('sam-s24u')}
+                        className="text-xs font-bold text-secondary flex items-center gap-1 hover:underline cursor-pointer"
+                      >
+                        Get Valuation →
+                      </span>
+                    </div>
+
+                    {/* OnePlus 12 */}
+                    <div className="bg-canvas-pure border border-ice-border rounded-3xl p-6 flex flex-col justify-between min-h-[166px] shadow-sm text-left">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4 className="text-lg font-bold text-ink-navy">OnePlus 12</h4>
+                          <p className="text-xs text-ink-slate mt-1">Valuations up to ₹24,000</p>
+                        </div>
+                        <span className="w-8 h-8 rounded-full bg-ice-gray flex items-center justify-center text-slate-500 text-xs">📱</span>
+                      </div>
+                      <span 
+                        onClick={() => handleDirectSelectModel('op-12')}
+                        className="text-xs font-bold text-secondary flex items-center gap-1 hover:underline cursor-pointer"
+                      >
+                        Get Valuation →
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Bulk Liquidation Banner */}
+                  <div className="lg:col-span-3 bg-primary rounded-3xl p-8 text-white relative overflow-hidden flex flex-col md:flex-row md:items-center md:justify-between shadow-xl text-left">
+                    <div className="z-10">
+                      <span className="px-2.5 py-1 bg-white/10 text-green-400 rounded-full text-xs font-bold uppercase tracking-wider border border-white/5">Corporate Services</span>
+                      <h3 className="text-2xl font-extrabold mt-4">Enterprise Device Liquidation</h3>
+                      <p className="text-slate-300 mt-2 max-w-2xl text-sm font-light leading-relaxed">
+                        Selling company devices? Get customized bulk quotes, certified hardware wiping, and direct corporate logistics.
+                      </p>
+                    </div>
+                    <button className="mt-6 md:mt-0 bg-white hover:bg-slate-100 text-primary px-6 py-3 rounded-lg font-bold text-sm shadow-md transition-all whitespace-nowrap z-10">
+                      Contact B2B Team
+                    </button>
+                    <div className="absolute -right-12 -bottom-12 w-64 h-64 rounded-full bg-secondary/20 blur-3xl"></div>
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -385,13 +630,14 @@ export default function App() {
           )}
         </section>
 
-        {/* Right: Sidebar */}
-        <aside className="w-full xl:col-span-3 grid grid-cols-1 sm:grid-cols-3 xl:grid-cols-1 gap-4 xl:gap-6 no-print">
+        {/* Right Sidebar (Only during diagnose and schedule workflow) */}
+        {activeStage !== 'select' && (
+          <aside className="w-full xl:col-span-3 grid grid-cols-1 sm:grid-cols-3 xl:grid-cols-1 gap-4 xl:gap-6 no-print">
 
             {/* Live Operations */}
             <div className="bg-canvas-pure border border-ice-border rounded-sm p-4 sm:p-5 shadow-premium">
-              <div className="border-b border-white/[0.04] pb-2 mb-3 text-left">
-                <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-1">Telemetry Feed</span>
+              <div className="border-b border-ice-border/40 pb-2 mb-3 text-left">
+                <span className="text-[10px] font-mono tracking-[0.2em] text-ink-muted uppercase block mb-1">Telemetry Feed</span>
                 <h4 className="font-light text-xl text-ink-navy">Live Operations</h4>
               </div>
               <div className="space-y-3 sm:space-y-4">
@@ -405,13 +651,13 @@ export default function App() {
                       {s.icon}
                     </div>
                     <div>
-                      <span className="text-[9px] sm:text-[10px] text-zinc-500 font-mono tracking-wider uppercase block">{s.label}</span>
+                      <span className="text-[9px] sm:text-[10px] text-ink-muted font-mono tracking-wider uppercase block">{s.label}</span>
                       <span className="text-xs sm:text-sm font-bold text-ink-navy number-pop" style={{animationDelay: s.delay}}>{s.value}</span>
                     </div>
                   </div>
                 ))}
-                <div className="pt-2 border-t border-white/[0.04] text-left">
-                  <div className="flex justify-between text-[9px] text-zinc-500 font-mono tracking-wider mb-1.5 uppercase">
+                <div className="pt-2 border-t border-ice-border/40 text-left">
+                  <div className="flex justify-between text-[9px] text-ink-muted font-mono tracking-wider mb-1.5 uppercase">
                     <span>Today's Pickups</span>
                     <span className="font-bold text-cobalt">74%</span>
                   </div>
@@ -424,7 +670,7 @@ export default function App() {
 
             {/* Trade-In Guarantee Card */}
             <div className="bg-canvas-pure border border-ice-border rounded-sm p-4 sm:p-5 text-xs space-y-2 sm:space-y-3 text-left shadow-premium">
-              <div className="border-b border-white/[0.04] pb-2 mb-2">
+              <div className="border-b border-ice-border/40 pb-2 mb-2">
                 <span className="text-[10px] font-mono tracking-[0.2em] text-cobalt uppercase block mb-1">Our Promise</span>
                 <h4 className="font-light text-xl text-ink-navy">Trade-In Guarantee</h4>
               </div>
@@ -456,7 +702,7 @@ export default function App() {
             {/* Help */}
             <div className="bg-canvas-pure border border-ice-border rounded-sm p-4 sm:p-5 text-xs flex flex-col justify-between gap-3 text-left shadow-premium">
               <div>
-                <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-1">Support desk</span>
+                <span className="text-[10px] font-mono tracking-[0.2em] text-ink-muted uppercase block mb-1">Support desk</span>
                 <h4 className="font-light text-xl text-ink-navy">Need Help?</h4>
                 <p className="mt-1 text-ink-muted text-[10px] sm:text-xs leading-relaxed font-light">Corporate trade-in, bulk logistics, or carrier lock valuations?</p>
               </div>
@@ -465,18 +711,44 @@ export default function App() {
               </button>
             </div>
           </aside>
+        )}
       </main>
 
       {/* ── Footer ────────────────────────────────────────────────── */}
-      <footer className="bg-canvas-pure border-t border-ice-border mt-8 sm:mt-16 py-6 sm:py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between text-[10px] sm:text-xs text-ink-muted gap-3 sm:gap-4 text-center sm:text-left">
-          <span>© {new Date().getFullYear()} SmartphoneCentre Inc. All rights reserved.</span>
-          <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
-            <a href="/terms" rel="noopener noreferrer" className="hover:underline cursor-pointer">Terms &amp; Conditions</a>
-            <span className="hidden sm:inline">•</span>
-            <a href="/privacy" rel="noopener noreferrer" className="hover:underline cursor-pointer">Privacy Charter</a>
-            <span className="hidden sm:inline">•</span>
-            <a href="/valuation-license" rel="noopener noreferrer" className="hover:underline cursor-pointer">Valuation API License</a>
+      <footer className="bg-canvas-pure border-t border-ice-border mt-8 sm:mt-16 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6 pb-8 border-b border-ice-border/40">
+            {/* Logo */}
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-cobalt/10 flex items-center justify-center">
+                <svg className="w-5 h-5 text-cobalt" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                </svg>
+              </div>
+              <span className="text-xl font-extrabold text-ink-navy tracking-tight">Reliable<span className="text-secondary">Exchange</span></span>
+            </div>
+
+            {/* Links */}
+            <div className="flex flex-wrap justify-center gap-6 md:gap-8 text-xs font-semibold text-ink-slate">
+              <span onClick={handleReset} className="hover:text-cobalt cursor-pointer transition-colors">Home</span>
+              <span className="hover:text-cobalt cursor-pointer transition-colors">My Sales</span>
+              <span onClick={() => {
+                if (activeStage === 'select') {
+                  document.getElementById('how-it-works-section')?.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                  handleReset();
+                  setTimeout(() => {
+                    document.getElementById('how-it-works-section')?.scrollIntoView({ behavior: 'smooth' });
+                  }, 100);
+                }
+              }} className="hover:text-cobalt cursor-pointer transition-colors">How it Works</span>
+              <span onClick={() => setIsSpecModalOpen(true)} className="hover:text-cobalt cursor-pointer transition-colors">System Spec</span>
+            </div>
+          </div>
+
+          <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-[10px] sm:text-xs text-ink-muted gap-4">
+            <p>&copy; {new Date().getFullYear()} Reliable Exchange. All rights reserved.</p>
+            <p>Built with ❤️ for secure, sustainable device recycling.</p>
           </div>
         </div>
       </footer>

@@ -11,27 +11,29 @@ export default {
       },
       colors: {
         canvas: {
-          white: '#09090B', // Obsidian base
-          pure: '#121214',  // Card background
+          white: '#f8f9ff', // Ice blue/white background
+          pure: '#ffffff',  // Pure white card background
         },
         ink: {
-          navy: '#F4F4F5',  // Zinc 100
-          slate: '#A1A1AA', // Zinc 400
-          muted: '#71717A', // Zinc 500
+          navy: '#002045',  // Deep Navy for primary text and headings
+          slate: '#43474e', // Slate for readable body/secondary text
+          muted: '#74777f', // Muted/neutral slate text
         },
         cobalt: {
-          DEFAULT: '#3B82F6', // Vivid blue accent
-          hover: '#60A5FA',
-          light: 'rgba(59, 130, 246, 0.12)',
-          border: 'rgba(59, 130, 246, 0.3)',
+          DEFAULT: '#002045', // Deep Navy primary interactive
+          hover: '#001b3c',
+          light: 'rgba(0, 32, 69, 0.06)',
+          border: 'rgba(0, 32, 69, 0.15)',
         },
         ice: {
-          gray: '#1C1C1F',   // Zinc 800-like background
-          border: 'rgba(255, 255, 255, 0.06)', // Low-opacity white line
+          gray: '#eff4ff',   // Soft blue-gray background for list items/telemetry
+          border: '#c4c6cf', // Outline variant border color
         },
-        zinc: {
-          500: '#94A3B8', // Higher contrast zinc-500 fallback for dark backgrounds
-          400: '#CBD5E1', // Higher contrast zinc-400 fallback
+        secondary: {
+          DEFAULT: '#006e2f', // Vibrant Green secondary color for success/CTAs
+          hover: '#005321',
+          container: '#6bff8f',
+          onContainer: '#007432',
         }
       },
       fontFamily: {

@@ -10,37 +10,37 @@
 
 @layer utilities {
   .glass-panel {
-    background: rgba(18, 18, 20, 0.7);
+    background: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
   }
   
   .glass-panel-cobalt {
-    background: rgba(59, 130, 246, 0.08);
+    background: rgba(0, 32, 69, 0.04);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
   }
 
   .micro-border {
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(0, 32, 69, 0.08);
   }
 
   .micro-border-cobalt {
-    border: 1px solid rgba(59, 130, 246, 0.2);
+    border: 1px solid rgba(0, 32, 69, 0.15);
   }
 }
 
 /* ─── Scrollbar ──────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #27272A; border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: #3F3F46; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
 /* ─── Shadows ────────────────────────────────────────────── */
-.canva-shadow        { border: 1px solid rgba(255, 255, 255, 0.06); box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4), 0 2px 8px -1px rgba(0, 0, 0, 0.3); }
-.canva-shadow-active { border: 1px solid rgba(59, 130, 246, 0.35); box-shadow: 0 0 20px rgba(59, 130, 246, 0.08), 0 4px 20px -2px rgba(0, 0, 0, 0.4); }
+.canva-shadow        { border: 1px solid rgba(0, 32, 69, 0.08); box-shadow: 0 4px 20px -2px rgba(0, 32, 69, 0.06), 0 2px 8px -1px rgba(0, 32, 69, 0.04); }
+.canva-shadow-active { border: 1px solid rgba(0, 32, 69, 0.25); box-shadow: 0 0 20px rgba(0, 32, 69, 0.05), 0 4px 20px -2px rgba(0, 32, 69, 0.1); }
 .glow-cobalt         { transition: border-color 0.3s ease; }
-.glow-cobalt:hover   { border-color: rgba(59, 130, 246, 0.4); }
+.glow-cobalt:hover   { border-color: rgba(0, 32, 69, 0.2); }
 
 /* ─── Animated Hero Gradient ─────────────────────────────── */
 @keyframes gradient-drift {
@@ -50,7 +50,7 @@
 }
 
 .hero-gradient {
-  background: linear-gradient(135deg, #09090B 0%, #121214 30%, #171725 65%, #09090B 100%);
+  background: linear-gradient(135deg, #f8f9ff 0%, #eff4ff 40%, #e0e8ff 100%);
   background-size: 300% 300%;
   animation: gradient-drift 12s ease infinite;
 }

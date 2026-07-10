@@ -7,7 +7,7 @@ import {
 } from 'simple-icons';
 
 // ── Brand Logo using official Simple Icons SVG paths ─────────────────────────
-const BRAND_ICON_MAP: Record<string, { icon: { path: string; viewBox?: string }; size: number; brandColor?: string }> = {
+const BRAND_ICON_MAP: Record<string, { icon: { path: string; viewBox?: string; hex?: string }; size: number; brandColor?: string }> = {
   apple:   { icon: siApple,   size: 18 },
   samsung: { icon: siSamsung, size: 22 },
   xiaomi:  { icon: siXiaomi,  size: 20 },
@@ -45,6 +45,7 @@ interface DeviceSelectorProps {
 
 export const DeviceSelector: React.FC<DeviceSelectorProps> = ({ onVariantSelected }) => {
   const [selectedBrandId, setSelectedBrandId] = useState<string>('brand-apple');
+  const [selectedSeries, setSelectedSeries] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState<string>('');
   const [selectedModel, setSelectedModel] = useState<Model | null>(null);
@@ -69,14 +70,28 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({ onVariantSelecte
     }
   }, [selectedModel]);
 
-  // Filter models based on brand and debounced search query
+  // Get available series for the selected brand
+  const availableSeries = useMemo(() => {
+    const brandModels = MODELS.filter(m => m.brandId === selectedBrandId);
+    const seriesSet = new Set<string>();
+    brandModels.forEach(m => {
+      if (m.series) {
+        seriesSet.add(m.series);
+      }
+    });
+    const seriesList = Array.from(seriesSet).sort();
+    return seriesList.length > 0 ? ['All', ...seriesList] : [];
+  }, [selectedBrandId]);
+
+  // Filter models based on brand, series, and debounced search query
   const filteredModels = useMemo(() => {
     return MODELS.filter(model => {
       const matchesBrand = model.brandId === selectedBrandId;
+      const matchesSeries = selectedSeries === 'All' || model.series === selectedSeries;
       const matchesSearch = model.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase());
-      return matchesBrand && matchesSearch;
+      return matchesBrand && matchesSeries && matchesSearch;
     });
-  }, [selectedBrandId, debouncedSearchQuery]);
+  }, [selectedBrandId, selectedSeries, debouncedSearchQuery]);
 
   // Generate variants for the selected model
   const modelVariants = useMemo(() => {
@@ -139,6 +154,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({ onVariantSelecte
               key={brand.id}
               onClick={() => {
                 setSelectedBrandId(brand.id);
+                setSelectedSeries('All');
                 setSelectedModel(null);
                 setSelectedStorage(null);
                 setTempVariant(null);
@@ -156,6 +172,34 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({ onVariantSelecte
           );
         })}
       </div>
+
+      {/* Series Selector Pills */}
+      {availableSeries.length > 1 && (
+        <div className="flex gap-2 mb-6 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none" style={{ scrollbarWidth: 'none' }}>
+          {availableSeries.map(series => {
+            const isActive = selectedSeries === series;
+            return (
+              <button
+                key={series}
+                onClick={() => {
+                  setSelectedSeries(series);
+                  setSelectedModel(null);
+                  setSelectedStorage(null);
+                  setTempVariant(null);
+                }}
+                className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold tracking-wide border transition-all duration-300 ${
+                  isActive
+                    ? 'bg-cobalt text-white border-cobalt shadow-[0_0_10px_rgba(59,130,246,0.25)]'
+                    : 'bg-canvas-pure text-ink-slate border-ice-border hover:border-cobalt/40 hover:bg-cobalt-light/10 opacity-85 hover:opacity-100'
+                }`}
+                style={{ minHeight: '34px' }}
+              >
+                {series}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-8 items-start">
         {/* Left Side: Search and Models list */}
