@@ -215,6 +215,21 @@ export default function App() {
   const [isSpecModalOpen, setIsSpecModalOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Admin access authorization state
+  const [isAdminAuthorized, setIsAdminAuthorized] = useState(false);
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
+
+  const handleAdminClick = () => {
+    setMobileMenuOpen(false);
+    if (activeStage === 'admin') {
+      setActiveStage('select');
+    } else if (isAdminAuthorized) {
+      setActiveStage('admin');
+    } else {
+      setShowAdminLogin(true);
+    }
+  };
+
   // Persist only non-sensitive navigation hints
   useEffect(() => {
     // If user is at 'select' stage with default step, don't clutter storage
@@ -305,7 +320,7 @@ export default function App() {
               <span className="hidden lg:inline">System Spec</span>
             </button>
             <button 
-              onClick={() => setActiveStage(activeStage === 'admin' ? 'select' : 'admin')}
+              onClick={handleAdminClick}
               className={`px-3 py-2 rounded-sm border transition-all flex items-center gap-1 text-xs font-mono ${
                 activeStage === 'admin' 
                   ? 'bg-cobalt text-white border-cobalt shadow-sm' 
@@ -358,10 +373,7 @@ export default function App() {
               <FileText className="w-4 h-4" /> View System Spec
             </button>
             <button
-              onClick={() => {
-                setActiveStage(activeStage === 'admin' ? 'select' : 'admin');
-                setMobileMenuOpen(false);
-              }}
+              onClick={handleAdminClick}
               className={`w-full flex items-center gap-2 text-sm font-semibold py-2 px-3 rounded-sm text-left border ${
                 activeStage === 'admin' 
                   ? 'bg-cobalt text-white border-cobalt' 
@@ -735,7 +747,7 @@ export default function App() {
             {/* Links */}
             <div className="flex flex-wrap justify-center gap-6 md:gap-8 text-xs font-semibold text-ink-slate">
               <span onClick={handleReset} className="hover:text-cobalt cursor-pointer transition-colors">Home</span>
-              <span onClick={() => setActiveStage('admin')} className="hover:text-cobalt cursor-pointer transition-colors">Admin Panel</span>
+              <span onClick={handleAdminClick} className="hover:text-cobalt cursor-pointer transition-colors">Admin Panel</span>
               <span onClick={() => {
                 if (activeStage === 'select') {
                   document.getElementById('how-it-works-section')?.scrollIntoView({ behavior: 'smooth' });
@@ -759,6 +771,102 @@ export default function App() {
 
       {/* Specs Modal */}
       <SpecsModal isOpen={isSpecModalOpen} onClose={() => setIsSpecModalOpen(false)} />
+
+      {/* Admin Authorization Modal */}
+      <AdminAuthModal 
+        isOpen={showAdminLogin} 
+        onClose={() => setShowAdminLogin(false)} 
+        onSuccess={() => {
+          setIsAdminAuthorized(true);
+          setActiveStage('admin');
+          setShowAdminLogin(false);
+        }} 
+      />
+    </div>
+  );
+}
+
+// ── Admin Security PIN Authorization Modal ─────────────────────────────────────
+
+interface AdminAuthModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
+}
+
+function AdminAuthModal({ isOpen, onClose, onSuccess }: AdminAuthModalProps) {
+  const [pin, setPin] = useState('');
+  const [error, setError] = useState('');
+
+  if (!isOpen) return null;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (pin === '9999' || pin === 'admin123') {
+      setError('');
+      setPin('');
+      onSuccess();
+    } else {
+      setError('Invalid passcode. Access Denied.');
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+      <div className="bg-canvas-pure border border-ice-border rounded-lg max-w-sm w-full p-6 shadow-premium relative animate-fadeIn">
+        <div className="text-center space-y-4">
+          <div className="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto">
+            <ShieldAlert className="w-6 h-6 text-red-500 animate-pulse" />
+          </div>
+          <div className="space-y-1">
+            <h3 className="font-outfit font-light text-lg text-ink-navy">Admin Access Gate</h3>
+            <p className="text-xs text-ink-muted">Authorized staff only. Enter security PIN to proceed.</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+            <div className="relative">
+              <input
+                type="password"
+                placeholder="Enter PIN"
+                value={pin}
+                onChange={(e) => {
+                  setError('');
+                  setPin(e.target.value);
+                }}
+                className="w-full px-4 py-3 bg-canvas-white border border-ice-border rounded-sm text-center text-lg font-mono tracking-[0.3em] focus:border-cobalt focus:ring-0 text-ink-navy dark:text-zinc-200"
+                autoFocus
+              />
+            </div>
+
+            {error && (
+              <p className="text-xs font-mono font-bold text-red-550">
+                {error}
+              </p>
+            )}
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 py-2.5 px-4 rounded-sm border border-ice-border text-xs font-mono text-ink-slate hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="flex-1 py-2.5 px-4 rounded-sm bg-cobalt hover:bg-cobalt-hover text-white text-xs font-mono font-bold transition-all shadow-sm shadow-cobalt/20"
+              >
+                Unlock
+              </button>
+            </div>
+          </form>
+          <div className="pt-3 border-t border-dashed border-ice-border/40">
+            <span className="text-[10px] font-mono text-zinc-550 dark:text-zinc-400 uppercase tracking-widest block">
+              Default Demo PIN: 9999
+            </span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
