@@ -7,6 +7,8 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getIllustration } from './Illustrations';
+import { getColorTheme, PhoneBackPreview } from './DeviceSelector';
+
 
 const getEngineeringLabel = (description: string) => {
   const mapping: { [key: string]: string } = {
@@ -282,8 +284,15 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
             <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-0.5">Diagnostic wizard</span>
             <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
               <span className="font-light text-ink-navy text-xl sm:text-2xl tracking-tight truncate">{model.name}</span>
+              <span className="text-[10px] font-mono font-medium text-slate-500 bg-slate-100 dark:bg-zinc-800 dark:text-zinc-400 px-1.5 py-0.5 rounded border border-slate-200 dark:border-zinc-700/60 flex-shrink-0">
+                {model.modelNumber}
+              </span>
               <span className="text-[9px] font-mono tracking-wider bg-cobalt-light text-cobalt px-2 py-0.5 rounded-sm border border-white/[0.06] flex-shrink-0 uppercase">
                 {variant.storageGb >= 1024 ? '1TB' : `${variant.storageGb}GB`}
+              </span>
+              <span className="inline-flex items-center gap-1.5 text-[9px] font-mono tracking-wider bg-canvas-white text-ink-navy px-2 py-0.5 rounded-sm border border-ice-border/40 flex-shrink-0 uppercase">
+                <span className="w-2 h-2 rounded-full border border-black/10 flex-shrink-0" style={{ background: getColorTheme(variant.color).gradient }} />
+                <span>{variant.color}</span>
               </span>
             </div>
           </div>
@@ -1018,58 +1027,73 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                     <p className="text-xs text-ink-muted mt-2 font-light">Review the final computed trade-in receipt. Values are subject to doorside verification.</p>
                   </div>
 
-                  {/* Animated Engineering Receipt */}
-                  <div className="border border-dashed border-white/[0.12] bg-zinc-950/40 rounded-sm p-5 mb-6 text-sm relative overflow-hidden text-left shadow-inner">
-                    {/* Watermark/stamp — circular badge */}
-                    <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full border-2 border-emerald-500/25 flex items-center justify-center rotate-12 select-none pointer-events-none">
-                      <span className="text-[8px] font-mono text-emerald-500/40 uppercase tracking-widest">VERIFIED</span>
-                    </div>
-
-                    <div className="flex justify-between items-center mb-6 pb-6 border-b border-white/[0.06] font-mono">
-                      <div>
-                        <span className="text-[9px] text-zinc-500 uppercase block font-mono tracking-wider">SPECIFICATION AUDIT RECEIPT</span>
-                        <span className="font-semibold text-ink-navy text-base">{model.name}</span>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-[9px] text-zinc-500 uppercase block font-mono tracking-wider">REF CODE</span>
-                        <span className="text-[10px] text-zinc-400">#SCH-{receiptRef}</span>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2 text-xs font-mono">
-                      <div className="flex justify-between items-center py-2 text-zinc-300 border-b border-white/[0.04]">
-                        <span>00. Base Configuration Value ({variant.storageGb}GB)</span>
-                        <span className="text-cobalt font-semibold font-outfit">+{formatPrice(variant.basePrice)}</span>
+                  {/* Animated Engineering Receipt with Side-by-Side Phone Preview */}
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start mb-6">
+                    <div className="md:col-span-8 border border-dashed border-white/[0.12] bg-zinc-950/40 rounded-sm p-5 text-sm relative overflow-hidden text-left shadow-inner">
+                      {/* Watermark/stamp — circular badge */}
+                      <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full border-2 border-emerald-500/25 flex items-center justify-center rotate-12 select-none pointer-events-none">
+                        <span className="text-[8px] font-mono text-emerald-500/40 uppercase tracking-widest">VERIFIED</span>
                       </div>
 
-                      {valuation.deductions.length === 0 ? (
-                        <div className="text-emerald-500 italic py-3 flex items-center gap-1.5 font-mono text-xs">
-                          <Sparkles className="w-3.5 h-3.5 fill-emerald-500/10 text-emerald-400" /> [No defects declared. Maximum payout rate applies.]
+                      <div className="flex justify-between items-center mb-6 pb-6 border-b border-white/[0.06] font-mono">
+                        <div>
+                          <span className="text-[9px] text-zinc-500 uppercase block font-mono tracking-wider">SPECIFICATION AUDIT RECEIPT</span>
+                          <span className="font-semibold text-ink-navy text-base">{model.name}</span>
+                          {model.modelNumber && (
+                            <span className="block text-[10px] text-zinc-500 font-mono mt-0.5">Model Ref: {model.modelNumber}</span>
+                          )}
                         </div>
-                      ) : (
-                        <div className="py-2 space-y-2">
-                          {valuation.deductions.map((d, i) => (
-                            <motion.div 
-                              key={i} 
-                              initial={{ opacity: 0, x: -8 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: i * 0.15 + 0.1 }}
-                              className="flex justify-between items-center text-zinc-400 border-b border-white/[0.04] py-1.5"
-                            >
-                              <span>{(i + 1).toString().padStart(2, '0')}. {getEngineeringLabel(d.description)}</span>
-                              <span className="text-red-500 font-outfit">-[{formatPrice(d.totalDeducted)}]</span>
-                            </motion.div>
-                          ))}
+                        <div className="text-right">
+                          <span className="text-[9px] text-zinc-500 uppercase block font-mono tracking-wider">REF CODE</span>
+                          <span className="text-[10px] text-zinc-400">#SCH-{receiptRef}</span>
                         </div>
-                      )}
+                      </div>
+
+                      <div className="space-y-2 text-xs font-mono">
+                        <div className="flex justify-between items-center py-2 text-zinc-300 border-b border-white/[0.04]">
+                          <span>00. Base Configuration Value ({variant.storageGb}GB)</span>
+                          <span className="text-cobalt font-semibold font-outfit">+{formatPrice(variant.basePrice)}</span>
+                        </div>
+
+                        {valuation.deductions.length === 0 ? (
+                          <div className="text-emerald-500 italic py-3 flex items-center gap-1.5 font-mono text-xs">
+                            <Sparkles className="w-3.5 h-3.5 fill-emerald-500/10 text-emerald-400" /> [No defects declared. Maximum payout rate applies.]
+                          </div>
+                        ) : (
+                          <div className="py-2 space-y-2">
+                            {valuation.deductions.map((d, i) => (
+                              <motion.div 
+                                key={i} 
+                                initial={{ opacity: 0, x: -8 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: i * 0.15 + 0.1 }}
+                                className="flex justify-between items-center text-zinc-400 border-b border-white/[0.04] py-1.5"
+                              >
+                                <span>{(i + 1).toString().padStart(2, '0')}. {getEngineeringLabel(d.description)}</span>
+                                <span className="text-red-500 font-outfit">-[{formatPrice(d.totalDeducted)}]</span>
+                              </motion.div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex justify-between items-center border-t border-dashed border-white/[0.12] pt-5 mt-5">
+                        <div>
+                          <span className="text-zinc-500 uppercase block text-[9px] font-mono">TOTAL ESTIMATED PAYOUT</span>
+                          <span className="text-[9px] text-emerald-500 uppercase tracking-widest block font-mono font-bold">✓ Payout Rate Locked</span>
+                        </div>
+                        <span className="text-3xl font-light text-cobalt tracking-tight font-mono font-outfit">{formatPrice(valuation.finalPrice)}</span>
+                      </div>
                     </div>
 
-                    <div className="flex justify-between items-center border-t border-dashed border-white/[0.12] pt-5 mt-5">
-                      <div>
-                        <span className="text-zinc-500 uppercase block text-[9px] font-mono">TOTAL ESTIMATED PAYOUT</span>
-                        <span className="text-[9px] text-emerald-500 uppercase tracking-widest block font-mono font-bold">✓ Payout Rate Locked</span>
-                      </div>
-                      <span className="text-3xl font-light text-cobalt tracking-tight font-mono font-outfit">{formatPrice(valuation.finalPrice)}</span>
+                    <div className="md:col-span-4 flex flex-col items-center bg-white dark:bg-zinc-950 p-4 rounded-sm border border-ice-border shadow-sm">
+                      <span className="text-xs font-mono font-bold tracking-wider text-ink-slate uppercase mb-3 block text-center">Configured Color</span>
+                      <PhoneBackPreview 
+                        brandId={model.brandId} 
+                        modelName={model.name} 
+                        colorName={variant.color} 
+                        modelId={model.id}
+                      />
                     </div>
                   </div>
                 </div>

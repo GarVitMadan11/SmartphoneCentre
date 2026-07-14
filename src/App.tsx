@@ -1,13 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
-import { Model, Variant, DefectRule, MODELS, generateVariantsForModel } from './data/mockDatabase';
+import { Model, Variant, DefectRule, MODELS, generateVariantsForModel, INITIAL_BOOKINGS } from './data/mockDatabase';
 import { DeviceSelector } from './components/DeviceSelector';
 import { DiagnosticWizard } from './components/DiagnosticWizard';
 import { PickupScheduler } from './components/PickupScheduler';
 import { SmartphoneMockup } from './components/SmartphoneMockup';
+import { AdminPanel } from './components/AdminPanel';
 import { 
   Award, ShieldCheck, Zap, 
   RefreshCw, TrendingUp, FileText, Menu, X,
-  Code, Database, Info, GitBranch
+  Code, Database, Info, GitBranch, ShieldAlert
 } from 'lucide-react';
 
 import applePhoneImg from './assets/apple_phone.png';
@@ -21,7 +22,7 @@ import oneplusPhoneImg from './assets/oneplus_phone.png';
 const SESSION_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 interface StoredNavState {
-  activeStage: 'select' | 'diagnose' | 'schedule';
+  activeStage: 'select' | 'diagnose' | 'schedule' | 'admin';
   wizardStep: number;
   timestamp: number;
 }
@@ -34,7 +35,7 @@ function loadNavState(): StoredNavState | null {
     // Validate shape and TTL
     if (
       typeof parsed !== 'object' || parsed === null ||
-      !['select', 'diagnose', 'schedule'].includes(parsed.activeStage) ||
+      !['select', 'diagnose', 'schedule', 'admin'].includes(parsed.activeStage) ||
       typeof parsed.wizardStep !== 'number' ||
       typeof parsed.timestamp !== 'number' ||
       Date.now() - parsed.timestamp > SESSION_TTL_MS
@@ -200,7 +201,7 @@ function SpecsModal({ isOpen, onClose }: SpecsModalProps) {
 export default function App() {
   // ── Navigation state — persisted in localStorage with TTL (non-sensitive) ──
   const savedNav = useRef(loadNavState());
-  const [activeStage, setActiveStage] = useState<'select' | 'diagnose' | 'schedule'>(
+  const [activeStage, setActiveStage] = useState<'select' | 'diagnose' | 'schedule' | 'admin'>(
     savedNav.current?.activeStage ?? 'select'
   );
   const [wizardStep, setWizardStep] = useState<number>(savedNav.current?.wizardStep ?? 0);
@@ -217,7 +218,7 @@ export default function App() {
   // Persist only non-sensitive navigation hints
   useEffect(() => {
     // If user is at 'select' stage with default step, don't clutter storage
-    if (activeStage === 'select' && wizardStep === 0) {
+    if ((activeStage === 'select' || activeStage === 'admin') && wizardStep === 0) {
       clearNavState();
     } else {
       saveNavState({ activeStage, wizardStep });
@@ -303,6 +304,17 @@ export default function App() {
               <FileText className="w-3.5 h-3.5" />
               <span className="hidden lg:inline">System Spec</span>
             </button>
+            <button 
+              onClick={() => setActiveStage(activeStage === 'admin' ? 'select' : 'admin')}
+              className={`px-3 py-2 rounded-sm border transition-all flex items-center gap-1 text-xs font-mono ${
+                activeStage === 'admin' 
+                  ? 'bg-cobalt text-white border-cobalt shadow-sm' 
+                  : 'bg-white hover:bg-zinc-100 text-ink-navy border-ice-border hover:border-cobalt/40'
+              }`}
+            >
+              <ShieldAlert className="w-3.5 h-3.5" />
+              <span>Admin Panel</span>
+            </button>
           </div>
 
           {/* Mobile hamburger */}
@@ -345,15 +357,28 @@ export default function App() {
             >
               <FileText className="w-4 h-4" /> View System Spec
             </button>
+            <button
+              onClick={() => {
+                setActiveStage(activeStage === 'admin' ? 'select' : 'admin');
+                setMobileMenuOpen(false);
+              }}
+              className={`w-full flex items-center gap-2 text-sm font-semibold py-2 px-3 rounded-sm text-left border ${
+                activeStage === 'admin' 
+                  ? 'bg-cobalt text-white border-cobalt' 
+                  : 'bg-canvas-white hover:bg-ice-gray text-ink-slate border-ice-border'
+              }`}
+            >
+              <ShieldAlert className="w-4 h-4" /> Admin Panel
+            </button>
           </div>
         )}
       </header>
 
       {/* ── Main Layout ── */}
-      <main className={`flex-1 w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 ${activeStage === 'select' ? 'max-w-7xl flex flex-col' : 'max-w-7xl flex flex-col xl:grid xl:grid-cols-12 gap-6 xl:gap-8 items-start'}`}>
+      <main className={`flex-1 w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 ${(activeStage === 'select' || activeStage === 'admin') ? 'max-w-7xl flex flex-col' : 'max-w-7xl flex flex-col xl:grid xl:grid-cols-12 gap-6 xl:gap-8 items-start'}`}>
 
         {/* Active Stage Content Area */}
-        <section className={activeStage === 'select' ? 'w-full space-y-16' : 'w-full xl:col-span-9 space-y-4 sm:space-y-6 min-w-0'}>
+        <section className={(activeStage === 'select' || activeStage === 'admin') ? 'w-full space-y-16' : 'w-full xl:col-span-9 space-y-4 sm:space-y-6 min-w-0'}>
 
           {activeStage === 'select' && (
             <div className="space-y-16 py-4">
@@ -600,10 +625,17 @@ export default function App() {
               onEditDevice={() => setActiveStage('select')}
             />
           )}
+
+          {activeStage === 'admin' && (
+            <AdminPanel
+              onBack={handleReset}
+              initialBookings={INITIAL_BOOKINGS}
+            />
+          )}
         </section>
 
         {/* Right Sidebar (Only during diagnose and schedule workflow) */}
-        {activeStage !== 'select' && (
+        {activeStage !== 'select' && activeStage !== 'admin' && (
           <aside className="w-full xl:col-span-3 grid grid-cols-1 sm:grid-cols-3 xl:grid-cols-1 gap-4 xl:gap-6 no-print">
 
             {/* Live Operations */}
@@ -703,7 +735,7 @@ export default function App() {
             {/* Links */}
             <div className="flex flex-wrap justify-center gap-6 md:gap-8 text-xs font-semibold text-ink-slate">
               <span onClick={handleReset} className="hover:text-cobalt cursor-pointer transition-colors">Home</span>
-              <span className="hover:text-cobalt cursor-pointer transition-colors">My Sales</span>
+              <span onClick={() => setActiveStage('admin')} className="hover:text-cobalt cursor-pointer transition-colors">Admin Panel</span>
               <span onClick={() => {
                 if (activeStage === 'select') {
                   document.getElementById('how-it-works-section')?.scrollIntoView({ behavior: 'smooth' });
