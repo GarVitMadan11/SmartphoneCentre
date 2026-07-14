@@ -1,3 +1,11 @@
+import applePhoneImg from '../assets/apple_phone.png';
+import samsungPhoneImg from '../assets/samsung_phone.png';
+import oneplusPhoneImg from '../assets/oneplus_phone.png';
+import googlePhoneImg from '../assets/google_phone.png';
+import xiaomiPhoneImg from '../assets/xiaomi_phone.png';
+import vivoPhoneImg from '../assets/vivo_phone.png';
+import phoneImages from './phoneImages.json';
+
 export interface Brand {
   id: string;
   name: string;
@@ -575,4 +583,35 @@ export function generateVariantsForModel(model: Model): Variant[] {
   });
 
   return variants;
+}
+
+export function getPhoneImageForBrand(brandId: string): string {
+  switch (brandId) {
+    case 'brand-apple':
+      return applePhoneImg;
+    case 'brand-samsung':
+      return samsungPhoneImg;
+    case 'brand-oneplus':
+      return oneplusPhoneImg;
+    case 'brand-google':
+      return googlePhoneImg;
+    case 'brand-xiaomi':
+      return xiaomiPhoneImg;
+    case 'brand-vivo':
+      return vivoPhoneImg;
+    default:
+      return '';
+  }
+}
+
+export function getDeviceImage(modelId: string, brandId: string): string {
+  const imageName = (phoneImages as Record<string, string>)[modelId];
+  if (imageName) {
+    try {
+      return new URL(`../assets/phones/${imageName}`, import.meta.url).href;
+    } catch (e) {
+      // Fallback
+    }
+  }
+  return getPhoneImageForBrand(brandId);
 }
