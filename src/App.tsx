@@ -219,6 +219,23 @@ export default function App() {
   const [isAdminAuthorized, setIsAdminAuthorized] = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
 
+  // Hidden admin mode triggered by ?admin=true or ?admin=1 query parameter
+  const [isAdminModeEnabled, setIsAdminModeEnabled] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return (
+      params.get('admin') === 'true' || 
+      params.get('admin') === '1' || 
+      (savedNav.current?.activeStage === 'admin')
+    );
+  });
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('admin') === 'true' || params.get('admin') === '1') {
+      setIsAdminModeEnabled(true);
+    }
+  }, []);
+
   const handleAdminClick = () => {
     setMobileMenuOpen(false);
     if (activeStage === 'admin') {
@@ -319,17 +336,19 @@ export default function App() {
               <FileText className="w-3.5 h-3.5" />
               <span className="hidden lg:inline">System Spec</span>
             </button>
-            <button 
-              onClick={handleAdminClick}
-              className={`px-3 py-2 rounded-sm border transition-all flex items-center gap-1 text-xs font-mono ${
-                activeStage === 'admin' 
-                  ? 'bg-cobalt text-white border-cobalt shadow-sm' 
-                  : 'bg-white hover:bg-zinc-100 text-ink-navy border-ice-border hover:border-cobalt/40'
-              }`}
-            >
-              <ShieldAlert className="w-3.5 h-3.5" />
-              <span>Admin Panel</span>
-            </button>
+            {isAdminModeEnabled && (
+              <button 
+                onClick={handleAdminClick}
+                className={`px-3 py-2 rounded-sm border transition-all flex items-center gap-1 text-xs font-mono ${
+                  activeStage === 'admin' 
+                    ? 'bg-cobalt text-white border-cobalt shadow-sm' 
+                    : 'bg-white hover:bg-zinc-100 text-ink-navy border-ice-border hover:border-cobalt/40'
+                }`}
+              >
+                <ShieldAlert className="w-3.5 h-3.5" />
+                <span>Admin Panel</span>
+              </button>
+            )}
           </div>
 
           {/* Mobile hamburger */}
@@ -372,16 +391,18 @@ export default function App() {
             >
               <FileText className="w-4 h-4" /> View System Spec
             </button>
-            <button
-              onClick={handleAdminClick}
-              className={`w-full flex items-center gap-2 text-sm font-semibold py-2 px-3 rounded-sm text-left border ${
-                activeStage === 'admin' 
-                  ? 'bg-cobalt text-white border-cobalt' 
-                  : 'bg-canvas-white hover:bg-ice-gray text-ink-slate border-ice-border'
-              }`}
-            >
-              <ShieldAlert className="w-4 h-4" /> Admin Panel
-            </button>
+            {isAdminModeEnabled && (
+              <button
+                onClick={handleAdminClick}
+                className={`w-full flex items-center gap-2 text-sm font-semibold py-2 px-3 rounded-sm text-left border ${
+                  activeStage === 'admin' 
+                    ? 'bg-cobalt text-white border-cobalt' 
+                    : 'bg-canvas-white hover:bg-ice-gray text-ink-slate border-ice-border'
+                }`}
+              >
+                <ShieldAlert className="w-4 h-4" /> Admin Panel
+              </button>
+            )}
           </div>
         )}
       </header>
@@ -747,7 +768,9 @@ export default function App() {
             {/* Links */}
             <div className="flex flex-wrap justify-center gap-6 md:gap-8 text-xs font-semibold text-ink-slate">
               <span onClick={handleReset} className="hover:text-cobalt cursor-pointer transition-colors">Home</span>
-              <span onClick={handleAdminClick} className="hover:text-cobalt cursor-pointer transition-colors">Admin Panel</span>
+              {isAdminModeEnabled && (
+                <span onClick={handleAdminClick} className="hover:text-cobalt cursor-pointer transition-colors">Admin Panel</span>
+              )}
               <span onClick={() => {
                 if (activeStage === 'select') {
                   document.getElementById('how-it-works-section')?.scrollIntoView({ behavior: 'smooth' });
