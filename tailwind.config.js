@@ -10,6 +10,7 @@ export default {
         'xs': '475px',
       },
       colors: {
+        primary: '#002045',
         canvas: {
           white: '#f8f9ff', // Ice blue/white background
           pure: '#ffffff',  // Pure white card background
