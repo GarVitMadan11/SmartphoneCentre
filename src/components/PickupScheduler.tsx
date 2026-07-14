@@ -127,12 +127,20 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
   // Stable confirmation ID for the success screen
   const [confirmationId] = useState(() => generateConfirmationId());
 
-  // Generate next 5 dates in formatted string
+  // --- Timezone-safe local date helpers ---
+  const getLocalDateString = (d: Date): string => {
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  // Generate next 5 dates using LOCAL date components (not UTC)
   const dates = Array.from({ length: 5 }).map((_, i) => {
     const d = new Date();
     d.setDate(d.getDate() + i);
     return {
-      raw: d.toISOString().split('T')[0],
+      raw: getLocalDateString(d),
       dayName: d.toLocaleDateString('en-IN', { weekday: 'short' }),
       dayNumber: d.getDate(),
       month: d.toLocaleDateString('en-IN', { month: 'short' })
@@ -168,20 +176,20 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
     return isNameValid && isEmailValid && isPhoneValid && isImeiValid && hasConsented;
   }, [isNameValid, isEmailValid, isPhoneValid, isImeiValid, hasConsented]);
 
-  // Step 2 Validation — also verify date is within the valid 7-day window
+  // Step 2 Validation — compare dates as local strings (not UTC-parsed Date objects)
   const isDateInRange = useMemo(() => {
     if (!selectedDate) return false;
-    const chosen = new Date(selectedDate);
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const maxDate = new Date(today);
-    maxDate.setDate(today.getDate() + 7);
-    return chosen >= today && chosen <= maxDate;
+    const todayStr = getLocalDateString(today);
+    const maxDate = new Date();
+    maxDate.setDate(maxDate.getDate() + 7);
+    const maxStr = getLocalDateString(maxDate);
+    return selectedDate >= todayStr && selectedDate <= maxStr;
   }, [selectedDate]);
+  const isAddressValid = useMemo(() => address.trim().length >= 10 && address.trim().length <= 500, [address]);
   const isStep2Valid = useMemo(() => {
-    return address.trim().length >= 10 && address.trim().length <= 500 &&
-      isDateInRange && selectedTimeSlot !== '';
-  }, [address, isDateInRange, selectedTimeSlot]);
+    return isAddressValid && isDateInRange && selectedTimeSlot !== '';
+  }, [isAddressValid, isDateInRange, selectedTimeSlot]);
 
   // Step 3 Validation
   const isStep3Valid = useMemo(() => {
@@ -340,34 +348,56 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <label className="text-xs font-semibold text-ink-slate block mb-1">Full Name *</label>
-                          <input
-                            type="text"
-                            required
-                            maxLength={80}
-                            autoComplete="name"
-                            value={name}
-                            onChange={e => setName(e.target.value)}
-                            placeholder="e.g. Vikramaditya Singh"
-                            className="w-full p-3 rounded-sm border border-ice-border bg-canvas-white text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all font-light"
-                            style={{ minHeight: '48px' }}
-                          />
+                          <div className="relative">
+                            <input
+                              type="text"
+                              required
+                              maxLength={80}
+                              autoComplete="name"
+                              value={name}
+                              onChange={e => setName(e.target.value)}
+                              placeholder="e.g. Vikramaditya Singh"
+                              className={`w-full p-3 pr-9 rounded-sm border bg-canvas-white text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all font-light ${
+                                name && isNameValid ? 'border-emerald-400' : name && !isNameValid ? 'border-red-400' : 'border-ice-border'
+                              }`}
+                              style={{ minHeight: '48px' }}
+                            />
+                            {name && (
+                              <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-sm ${
+                                isNameValid ? 'text-emerald-400' : 'text-red-400'
+                              }`}>
+                                {isNameValid ? '✓' : '✗'}
+                              </span>
+                            )}
+                          </div>
                           {name && !isNameValid && (
                             <span className="text-[10px] text-red-400 mt-1 block">Name must be 2–80 characters.</span>
                           )}
                         </div>
                         <div>
                           <label className="text-xs font-semibold text-ink-slate block mb-1">Email Address *</label>
-                          <input
-                            type="email"
-                            required
-                            maxLength={254}
-                            autoComplete="email"
-                            value={email}
-                            onChange={e => setEmail(e.target.value)}
-                            placeholder="e.g. you@example.com"
-                            className="w-full p-3 rounded-sm border border-ice-border bg-canvas-white text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all font-light"
-                            style={{ minHeight: '48px' }}
-                          />
+                          <div className="relative">
+                            <input
+                              type="email"
+                              required
+                              maxLength={254}
+                              autoComplete="email"
+                              value={email}
+                              onChange={e => setEmail(e.target.value)}
+                              placeholder="e.g. you@example.com"
+                              className={`w-full p-3 pr-9 rounded-sm border bg-canvas-white text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all font-light ${
+                                email && isEmailValid ? 'border-emerald-400' : email && !isEmailValid ? 'border-red-400' : 'border-ice-border'
+                              }`}
+                              style={{ minHeight: '48px' }}
+                            />
+                            {email && (
+                              <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-sm ${
+                                isEmailValid ? 'text-emerald-400' : 'text-red-400'
+                              }`}>
+                                {isEmailValid ? '✓' : '✗'}
+                              </span>
+                            )}
+                          </div>
                           {email && !isEmailValid && (
                             <span className="text-[10px] text-red-400 mt-1 block">Please enter a valid email address.</span>
                           )}
@@ -387,12 +417,24 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                             value={phone}
                             onChange={e => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
                             placeholder="9876543210"
-                            className="w-full pl-11 pr-3 py-3 rounded-sm border border-ice-border bg-canvas-white text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all font-light"
+                            className={`w-full pl-11 pr-9 py-3 rounded-sm border bg-canvas-white text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all font-light ${
+                              phone && isPhoneValid ? 'border-emerald-400' : phone && !isPhoneValid ? 'border-red-400' : 'border-ice-border'
+                            }`}
                             style={{ minHeight: '48px' }}
                           />
+                          {phone && (
+                            <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-sm ${
+                              isPhoneValid ? 'text-emerald-400' : 'text-red-400'
+                            }`}>
+                              {isPhoneValid ? '✓' : '✗'}
+                            </span>
+                          )}
                         </div>
                         {phone && !isPhoneValid && (
                           <span className="text-[10px] text-red-400 mt-1 block">Must start with 6-9 and contain exactly 10 digits.</span>
+                        )}
+                        {phone && isPhoneValid && (
+                          <span className="text-[10px] text-emerald-400 mt-1 block">✓ Valid Indian mobile number.</span>
                         )}
                       </div>
 
@@ -463,18 +505,25 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
 
                       <div>
                         <label className="text-xs font-semibold text-ink-slate block mb-1">Complete Address Details *</label>
-                        <textarea
-                          required
-                          rows={3}
-                          maxLength={500}
-                          autoComplete="street-address"
-                          value={address}
-                          onChange={e => setAddress(e.target.value)}
-                          placeholder="Flat No, Building Name, Street Address, City, Pincode"
-                          className="w-full p-3 rounded-sm border border-ice-border bg-canvas-white text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all resize-none font-light"
-                        />
-                        {address && address.trim().length < 10 && (
+                        <div className="relative">
+                          <textarea
+                            required
+                            rows={3}
+                            maxLength={500}
+                            autoComplete="street-address"
+                            value={address}
+                            onChange={e => setAddress(e.target.value)}
+                            placeholder="Flat No, Building Name, Street Address, City, Pincode"
+                            className={`w-full p-3 rounded-sm border bg-canvas-white text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all resize-none font-light ${
+                              address && isAddressValid ? 'border-emerald-400' : address && !isAddressValid ? 'border-red-400' : 'border-ice-border'
+                            }`}
+                          />
+                        </div>
+                        {address && !isAddressValid && (
                           <span className="text-[10px] text-red-400 mt-1 block">Please enter a complete address (at least 10 characters).</span>
+                        )}
+                        {address && isAddressValid && (
+                          <span className="text-[10px] text-emerald-400 mt-1 block">✓ Address looks good.</span>
                         )}
                       </div>
 

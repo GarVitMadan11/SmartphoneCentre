@@ -81,6 +81,30 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
   const [accConfirmed, setAccConfirmed] = useState(false);
   const [icloudChecked, setIcloudChecked] = useState<'clear' | 'locked' | null>(null);
 
+  // Critical-failure confirmation modal
+  const [criticalModal, setCriticalModal] = useState<{
+    visible: boolean;
+    type: 'icloud' | 'power' | null;
+  }>({ visible: false, type: null });
+
+  const showCriticalModal = (type: 'icloud' | 'power') => {
+    setCriticalModal({ visible: true, type });
+  };
+
+  const dismissCriticalModal = () => {
+    setCriticalModal({ visible: false, type: null });
+  };
+
+  const confirmCriticalModal = () => {
+    const { type } = criticalModal;
+    setCriticalModal({ visible: false, type: null });
+    if (type === 'icloud') {
+      setIcloudChecked('locked');
+    } else if (type === 'power') {
+      handlePowerCheck(false);
+    }
+  };
+
   // Validation check for current step
   const isStepValidated = useMemo(() => {
     // Step 0: need icloud status chosen + will use CTA for power
@@ -188,6 +212,54 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
   return (
     <div className="w-full">
+      {/* Critical Failure Confirmation Modal */}
+      <AnimatePresence>
+        {criticalModal.visible && (
+          <motion.div
+            key="critical-modal-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          >
+            <motion.div
+              key="critical-modal-card"
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+              className="bg-canvas-pure border border-red-500/30 rounded-sm p-6 max-w-sm w-full shadow-2xl text-center"
+            >
+              <div className="w-14 h-14 mx-auto mb-4 rounded-sm bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+                <span className="text-2xl">&#128274;</span>
+              </div>
+              <h3 className="text-lg font-semibold text-ink-navy mb-2">
+                {criticalModal.type === 'icloud' ? 'iCloud Lock Detected' : 'Device Dead — Cannot Power On'}
+              </h3>
+              <p className="text-xs text-ink-muted font-light mb-5 leading-relaxed">
+                {criticalModal.type === 'icloud'
+                  ? 'Devices with Find My / iCloud lock active have zero resale value and cannot be traded in. Are you sure you want to proceed?'
+                  : 'Devices that cannot power on, are boot-looped, or are liquid-damaged have zero resale value. Selecting this will end the diagnostic and show a \u20B90 payout.'}
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={dismissCriticalModal}
+                  className="py-2.5 rounded-sm border border-ice-border text-ink-slate hover:bg-ice-gray text-sm font-semibold transition-all"
+                >
+                  Go Back
+                </button>
+                <button
+                  onClick={confirmCriticalModal}
+                  className="py-2.5 rounded-sm bg-red-500 hover:bg-red-600 text-white text-sm font-bold transition-all"
+                >
+                  Confirm — Zero Value
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Wizard Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-ice-border pb-4 sm:pb-5 mb-4 sm:mb-8 bg-canvas-pure p-4 sm:p-5 rounded-sm gap-4 text-left">
         <div className="flex items-center gap-3">
@@ -314,8 +386,8 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                     <div
                       role="button"
                       tabIndex={0}
-                      onClick={() => setIcloudChecked('locked')}
-                      onKeyDown={e => handleKeyDown(e, () => setIcloudChecked('locked'))}
+                      onClick={() => showCriticalModal('icloud')}
+                      onKeyDown={e => handleKeyDown(e, () => showCriticalModal('icloud'))}
                       className={`p-4 rounded-sm border cursor-pointer transition-all duration-200 text-left focus:outline-none focus:ring-2 focus:ring-red-500 ${
                         icloudChecked === 'locked'
                           ? 'border-red-500 bg-red-500/10'
@@ -323,7 +395,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                       }`}
                     >
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-red-400 font-bold text-sm">🔒</span>
+                        <span className="text-red-400 font-bold text-sm">&#128274;</span>
                         <span className="font-semibold text-sm text-red-400">iCloud LOCKED</span>
                         {icloudChecked === 'locked' && <Check className="w-3.5 h-3.5 text-red-400 ml-auto" />}
                       </div>
@@ -349,7 +421,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                       <p className="text-xs text-ink-muted mt-0.5 font-light">Boots to lock screen and functions normally.</p>
                     </button>
                     <button
-                      onClick={() => handlePowerCheck(false)}
+                      onClick={() => showCriticalModal('power')}
                       disabled={!icloudChecked}
                       className="p-5 rounded-sm border border-red-500/30 hover:border-red-500/60 bg-red-500/5 hover:bg-red-500/10 text-left transition-all duration-300 group focus:outline-none focus:ring-2 focus:ring-red-500 disabled:cursor-not-allowed"
                       style={{ minHeight: '100px' }}

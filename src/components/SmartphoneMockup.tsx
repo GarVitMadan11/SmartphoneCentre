@@ -28,31 +28,34 @@ export const SmartphoneMockup: React.FC = () => {
   // Preview data based on active model
   const previewData = {
     apple: {
-      gradient: 'from-slate-950 via-slate-900 to-zinc-900',
+      gradient: 'from-[#fdfdfd] via-[#f5f5f7] to-[#e8e8ed]',
       title: 'iPhone 17 Pro Max',
       maxPrice: '₹85,000',
-      accentColor: 'text-emerald-400',
-      barColor: 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)]',
+      accentClass: 'text-gradient-green',
+      barGradient: 'from-emerald-600 to-emerald-400 shadow-[0_4px_12px_rgba(16,185,129,0.3)]',
       progressWidth: 'w-[94%]',
-      chartHeights: ['h-10', 'h-14', 'h-20', 'h-24'],
+      progressGradient: 'from-emerald-600 to-emerald-400',
+      chartHeights: ['h-6', 'h-8', 'h-10', 'h-14'],
     },
     samsung: {
-      gradient: 'from-slate-950 via-indigo-950/70 to-neutral-900',
+      gradient: 'from-[#fafaff] via-[#f0f4ff] to-[#e6eeff]',
       title: 'Galaxy S26 Ultra',
       maxPrice: '₹50,000',
-      accentColor: 'text-indigo-400',
-      barColor: 'bg-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.5)]',
+      accentClass: 'text-gradient-cobalt',
+      barGradient: 'from-blue-600 to-blue-400 shadow-[0_4px_12px_rgba(59,130,246,0.3)]',
       progressWidth: 'w-[88%]',
-      chartHeights: ['h-8', 'h-12', 'h-16', 'h-22'],
+      progressGradient: 'from-blue-600 to-blue-400',
+      chartHeights: ['h-4', 'h-6', 'h-8', 'h-12'],
     },
     google: {
-      gradient: 'from-slate-950 via-teal-950/70 to-stone-900',
+      gradient: 'from-[#fbfbfb] via-[#f7f7f8] to-[#edf0f5]',
       title: 'Pixel 8 Pro',
       maxPrice: '₹27,000',
-      accentColor: 'text-teal-400',
-      barColor: 'bg-teal-500 shadow-[0_0_15px_rgba(20,184,166,0.5)]',
+      accentClass: 'text-gradient-green',
+      barGradient: 'from-emerald-600 to-emerald-400 shadow-[0_4px_12px_rgba(16,185,129,0.3)]',
       progressWidth: 'w-[78%]',
-      chartHeights: ['h-6', 'h-10', 'h-14', 'h-18'],
+      progressGradient: 'from-emerald-600 to-emerald-400',
+      chartHeights: ['h-3', 'h-5', 'h-7', 'h-10'],
     },
   }[activePreviewModel];
 
@@ -62,23 +65,23 @@ export const SmartphoneMockup: React.FC = () => {
   };
 
   return (
-    <div className="relative flex justify-center py-4 select-none">
+    <div className="relative flex justify-center py-2 select-none">
       {/* Physical Hardware Buttons on Left Side (Mute switch + Volume buttons) */}
-      <div className="absolute left-[-4px] top-[120px] w-[5px] h-[20px] bg-gradient-to-r from-slate-600 to-slate-400 rounded-l-[2px] shadow-md z-0 border border-slate-700" />
-      <div className="absolute left-[-4px] top-[160px] w-[5px] h-[48px] bg-gradient-to-r from-slate-600 to-slate-400 rounded-l-[2px] shadow-md z-0 border border-slate-700" />
-      <div className="absolute left-[-4px] top-[220px] w-[5px] h-[48px] bg-gradient-to-r from-slate-600 to-slate-400 rounded-l-[2px] shadow-md z-0 border border-slate-700" />
+      <div className="absolute left-[-4px] top-[106px] w-[5px] h-[18px] bg-gradient-to-b from-[#47484c] via-[#2d2e31] to-[#121315] border-y border-l border-neutral-700/60 rounded-l-[3px] shadow-[inset_1px_1px_1px_rgba(255,255,255,0.15),-1px_2px_4px_rgba(0,0,0,0.3)] z-0" />
+      <div className="absolute left-[-4px] top-[142px] w-[5px] h-[42px] bg-gradient-to-b from-[#47484c] via-[#2d2e31] to-[#121315] border-y border-l border-neutral-700/60 rounded-l-[3px] shadow-[inset_1px_1px_1px_rgba(255,255,255,0.15),-1px_2px_4px_rgba(0,0,0,0.3)] z-0" />
+      <div className="absolute left-[-4px] top-[196px] w-[5px] h-[42px] bg-gradient-to-b from-[#47484c] via-[#2d2e31] to-[#121315] border-y border-l border-neutral-700/60 rounded-l-[3px] shadow-[inset_1px_1px_1px_rgba(255,255,255,0.15),-1px_2px_4px_rgba(0,0,0,0.3)] z-0" />
 
       {/* Physical Hardware Buttons on Right Side (Power Button) */}
-      <div className="absolute right-[-4px] top-[190px] w-[5px] h-[72px] bg-gradient-to-l from-slate-600 to-slate-400 rounded-r-[2px] shadow-md z-0 border border-slate-700" />
+      <div className="absolute right-[-4px] top-[168px] w-[5px] h-[64px] bg-gradient-to-b from-[#47484c] via-[#2d2e31] to-[#121315] border-y border-r border-neutral-700/60 rounded-r-[3px] shadow-[inset_-1px_1px_1px_rgba(255,255,255,0.15),1px_2px_4px_rgba(0,0,0,0.3)] z-0" />
 
       {/* Outer Metallic Frame (Chassis) */}
-      <div className="relative w-[292px] sm:w-[324px] h-[524px] sm:h-[564px] bg-gradient-to-b from-slate-600 via-slate-800 to-slate-950 rounded-[50px] p-[6px] shadow-2xl border border-slate-500/20 z-10">
+      <div className="relative w-[260px] sm:w-[288px] h-[460px] sm:h-[496px] bg-gradient-to-b from-[#2e2f33] via-[#48494f] to-[#131416] p-[6px] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5),0_0_40px_rgba(0,32,69,0.1),inset_0_1px_2px_rgba(255,255,255,0.2)] rounded-[42px] border border-white/10 z-10">
         
         {/* Inner Black Bezel Rim */}
-        <div className="w-full h-full bg-black rounded-[44px] p-[6px] shadow-inner relative flex flex-col justify-between overflow-hidden">
+        <div className="w-full h-full bg-black rounded-[36px] p-[5.5px] shadow-inner relative flex flex-col justify-between overflow-hidden">
           
           {/* Glass Screen Reflection Overlay */}
-          <div className="absolute inset-0 pointer-events-none bg-gradient-to-tr from-transparent via-white/[0.04] to-white/[0.12] z-20 mix-blend-overlay rotate-[15deg] scale-[1.6]" />
+          <div className="absolute inset-0 pointer-events-none bg-gradient-to-tr from-transparent via-white/[0.04] to-white/[0.14] z-20 mix-blend-overlay rotate-[15deg] scale-[1.6]" />
 
           {/* Notch / Camera Cutout Area */}
           {activePreviewModel === 'apple' ? (
@@ -87,64 +90,80 @@ export const SmartphoneMockup: React.FC = () => {
               onMouseEnter={() => setIslandExpanded(true)}
               onMouseLeave={() => setIslandExpanded(false)}
               onClick={() => setIslandExpanded(!islandExpanded)}
-              className={`absolute top-2.5 left-1/2 -translate-x-1/2 bg-black rounded-full z-30 flex items-center justify-center transition-all duration-300 cursor-pointer overflow-hidden border border-white/5 shadow-md ${
+              className={`absolute top-2 left-1/2 -translate-x-1/2 bg-black rounded-full z-30 flex items-center justify-center transition-all duration-300 cursor-pointer overflow-hidden border border-white/10 shadow-md ${
                 islandExpanded 
-                  ? 'w-[210px] sm:w-[230px] h-[32px] px-3' 
-                  : 'w-[90px] sm:w-[100px] h-[22px] px-2'
+                  ? 'w-[180px] sm:w-[200px] h-[28px] px-2.5' 
+                  : 'w-[80px] sm:w-[90px] h-[20px] px-2'
               }`}
             >
               {islandExpanded ? (
-                <div className="w-full flex items-center justify-between text-[9px] text-emerald-400 font-sans tracking-wide animate-fade-in whitespace-nowrap">
+                <div className="w-full flex items-center justify-between text-[8px] sm:text-[9px] text-emerald-400 font-sans tracking-wide animate-fade-in whitespace-nowrap">
                   <div className="flex items-center gap-1.5">
-                    <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-ping" />
+                    <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full live-pulse" />
                     <span className="font-semibold text-white/90">Data Wipe: SECURE</span>
                   </div>
-                  <span className="text-[8px] bg-emerald-500/20 px-1.5 py-0.5 rounded-full border border-emerald-500/20 text-emerald-300 font-bold">100% Wiped</span>
+                  <span className="text-[7.5px] sm:text-[8.5px] bg-emerald-500/20 px-1.5 py-0.2 rounded-full border border-emerald-500/20 text-emerald-300 font-bold">100% Wiped</span>
                 </div>
               ) : (
-                <div className="flex justify-between items-center w-full px-1">
-                  <div className="w-2.5 h-2.5 bg-neutral-900 rounded-full border border-neutral-800 shadow-inner flex-shrink-0"></div>
-                  <div className="w-1.5 h-1 bg-neutral-900 rounded-full flex-shrink-0"></div>
+                <div className="flex justify-between items-center w-full px-1.5">
+                  {/* TrueDepth Camera Lens with realistic reflections */}
+                  <div className="w-2 h-2 rounded-full bg-[#0c0d12] border border-[#1a1c24] flex items-center justify-center relative shadow-inner overflow-hidden flex-shrink-0">
+                    <div className="absolute w-[3px] h-[3px] rounded-full bg-cyan-500/40 blur-[0.5px] top-[1px] left-[1px]" />
+                    <div className="absolute w-[1px] h-[1px] rounded-full bg-white/70 top-[1.5px] left-[1.5px]" />
+                  </div>
+                  {/* Infrared sensor dot */}
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#0a050f] border border-[#160d21] flex items-center justify-center relative shadow-inner overflow-hidden flex-shrink-0">
+                    <div className="absolute w-[2px] h-[2px] rounded-full bg-purple-500/30 blur-[0.5px] top-[1.5px] left-[1.5px]" />
+                  </div>
                 </div>
               )}
             </div>
           ) : (
-            /* Samsung / Google Center Pinhole Camera */
-            <div className="absolute top-3 left-1/2 -translate-x-1/2 w-3.5 h-3.5 bg-neutral-950 rounded-full z-30 border border-neutral-900 shadow-inner flex items-center justify-center">
-              <div className="w-1 h-1 bg-blue-900/60 rounded-full"></div>
+            /* Samsung / Google Center Pinhole Camera with realistic lens */
+            <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-3.5 h-3.5 bg-black rounded-full z-30 border border-white/5 shadow-inner flex items-center justify-center">
+              <div className="w-1.5 h-1.5 rounded-full bg-[#080d1a] border border-[#121c33] relative flex items-center justify-center overflow-hidden">
+                <div className="absolute w-1 h-1 rounded-full bg-cyan-400/50 blur-[0.2px] top-0 left-0" />
+                <div className="absolute w-0.5 h-0.5 rounded-full bg-white/80 top-[1px] left-[1px]" />
+              </div>
             </div>
           )}
 
           {/* Screen Content Wrapper */}
-          <div className={`w-full h-full bg-gradient-to-tr ${previewData.gradient} rounded-[38px] overflow-hidden relative flex flex-col justify-between p-4 sm:p-5 text-white text-left`}>
+          <div className={`w-full h-full bg-gradient-to-tr ${previewData.gradient} rounded-[30px] overflow-hidden relative flex flex-col justify-between pt-1.5 px-3.5 pb-3.5 sm:pt-2 sm:px-4 sm:pb-4 text-ink-navy text-left`}>
             
             {/* Status Bar */}
-            <div className="w-full flex justify-between items-center px-2 pt-1.5 text-[10px] font-bold font-sans tracking-tight z-25 text-white/90">
-              <span className="ml-1">{time}</span>
-              <div className="flex items-center gap-1.5 mr-1">
+            <div className="w-full h-5 flex justify-between items-center px-0.5 text-[8.5px] sm:text-[9.5px] font-bold font-sans tracking-tight z-25 text-ink-navy/80 leading-none">
+              <span className="flex items-center h-full ml-0.5">{time.replace(/\s*[AP]M\s*/gi, '')}</span>
+              <div className="flex items-center gap-1.5 h-full mr-0.5">
                 {/* Network Signal Bars */}
-                <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24">
-                  <path d="M2 22h20V2z" className="opacity-30" />
-                  <path d="M2 22h14V8z" />
-                </svg>
-                {/* 5G Label */}
-                <span className="text-[9px] font-extrabold tracking-tighter">5G</span>
+                <div className="flex items-end gap-[1.2px] h-2.5 mb-[0.5px]">
+                  <div className="w-[1.2px] h-[3px] bg-ink-navy rounded-[0.5px]"></div>
+                  <div className="w-[1.2px] h-[5px] bg-ink-navy rounded-[0.5px]"></div>
+                  <div className="w-[1.2px] h-[7px] bg-ink-navy rounded-[0.5px]"></div>
+                  <div className="w-[1.2px] h-[9px] bg-ink-navy rounded-[0.5px]"></div>
+                </div>
+                {/* 5G Label (Android models only to prevent notch overlap on iPhone) */}
+                {activePreviewModel !== 'apple' && (
+                  <span className="text-[7px] font-extrabold tracking-tighter px-0.5 py-[0.5px] bg-ink-navy/10 rounded-sm leading-none border border-ink-navy/10 scale-95 flex items-center">5G</span>
+                )}
                 {/* Wi-Fi Icon */}
-                <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24">
+                <svg className="w-2.5 h-2.5 fill-current opacity-90" viewBox="0 0 24 24">
                   <path d="M12 21l-12-12c6.627-6.627 17.373-6.627 24 0l-12 12z" />
                 </svg>
-                {/* Battery percentage & icon */}
-                <div className="flex items-center gap-0.5 bg-white/10 rounded-full px-1.5 py-0.5 border border-white/5 scale-[0.95]">
-                  <span className="text-[8px] font-normal opacity-90">98%</span>
-                  <svg className="w-3 h-3 fill-current text-emerald-400" viewBox="0 0 24 24">
-                    <path d="M17 5H3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm3 3h1.5a1.5 1.5 0 0 1 1.5 1.5v5a1.5 1.5 0 0 1-1.5 1.5H20V8z" />
-                  </svg>
+                {/* Battery percentage (Android models only to prevent notch overlap on iPhone) */}
+                {activePreviewModel !== 'apple' && (
+                  <span className="text-[7.5px] font-bold opacity-80 mr-0.5">98%</span>
+                )}
+                {/* Battery capsule */}
+                <div className="w-4 h-2.5 border border-ink-navy/70 rounded-[3px] p-[0.5px] flex items-center relative">
+                  <div className="h-full bg-emerald-600 rounded-[1.5px]" style={{ width: '92%' }}></div>
+                  <div className="w-[1.2px] h-1 bg-ink-navy/70 absolute -right-[2px] top-1/2 -translate-y-1/2 rounded-r-[0.5px]"></div>
                 </div>
               </div>
             </div>
 
             {/* Interactive Model Switcher Tabs */}
-            <div className="mt-8 flex bg-white/5 p-1 rounded-full border border-white/5 backdrop-blur-md z-10 mx-1">
+            <div className="mt-5 flex p-1 rounded-full glass-pill z-10 mx-0.5">
               {(['apple', 'samsung', 'google'] as const).map(brand => (
                 <button
                   key={brand}
@@ -152,10 +171,10 @@ export const SmartphoneMockup: React.FC = () => {
                     setActivePreviewModel(brand);
                     setIslandExpanded(false);
                   }}
-                  className={`flex-1 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all duration-300 ${
+                  className={`flex-1 py-1 rounded-full text-[8.5px] sm:text-[9.5px] font-extrabold uppercase tracking-wider transition-all duration-300 ${
                     activePreviewModel === brand
-                      ? 'bg-white text-slate-950 shadow-md scale-[1.03]'
-                      : 'text-slate-300 hover:text-white hover:bg-white/5'
+                      ? 'bg-white text-ink-navy shadow-[0_3px_10px_rgba(0,32,69,0.12)] scale-[1.03]'
+                      : 'text-ink-slate hover:text-ink-navy hover:bg-white/20'
                   }`}
                 >
                   {brand === 'apple' ? 'iPhone' : brand === 'samsung' ? 'Galaxy' : 'Pixel'}
@@ -164,38 +183,39 @@ export const SmartphoneMockup: React.FC = () => {
             </div>
 
             {/* Price Offer Callout */}
-            <div className="mt-4 flex justify-between items-start px-1 z-10">
+            <div className="mt-2.5 flex justify-between items-start px-0.5 z-10">
               <div>
-                <p className="text-[9px] text-slate-400 font-mono tracking-widest uppercase">Reliable Exchange</p>
-                <h3 className="text-lg font-bold mt-0.5 leading-tight">
+                <p className="text-[8px] text-ink-muted font-mono tracking-widest uppercase">Reliable Exchange</p>
+                <h3 className="text-xs sm:text-sm font-bold mt-0.5 leading-tight text-ink-navy">
                   Get up to<br />
-                  <span className={`text-2xl font-black ${previewData.accentColor} transition-colors duration-300`}>
+                  <span className={`text-xl sm:text-2xl font-black ${previewData.accentClass} transition-colors duration-300 block mt-0.5`}>
                     {previewData.maxPrice}
                   </span>
                 </h3>
               </div>
-              <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded-full text-[8px] font-bold border border-emerald-500/30 whitespace-nowrap">
+              <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-700 rounded-full text-[7.5px] font-bold border border-emerald-500/20 whitespace-nowrap flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 live-pulse"></span>
                 Live Offer
               </span>
             </div>
 
             {/* Bar Chart Graphic */}
-            <div className="my-3 h-20 flex items-end gap-1.5 px-3 z-10">
-              <div className={`w-full bg-white/10 ${previewData.chartHeights[0]} rounded-t-sm transition-all duration-500`} />
-              <div className={`w-full bg-white/10 ${previewData.chartHeights[1]} rounded-t-sm transition-all duration-500`} />
-              <div className={`w-full bg-white/10 ${previewData.chartHeights[2]} rounded-t-sm transition-all duration-500`} />
-              <div className={`w-full ${previewData.barColor} ${previewData.chartHeights[3]} rounded-t-sm transition-all duration-500`} />
+            <div className="my-2 h-14 flex items-end gap-1.5 px-2 z-10">
+              <div className={`w-full bg-gradient-to-t from-slate-200/50 to-slate-100/60 border-t border-x border-slate-300/25 ${previewData.chartHeights[0]} rounded-t-sm transition-all duration-500`} />
+              <div className={`w-full bg-gradient-to-t from-slate-200/50 to-slate-100/60 border-t border-x border-slate-300/25 ${previewData.chartHeights[1]} rounded-t-sm transition-all duration-500`} />
+              <div className={`w-full bg-gradient-to-t from-slate-200/50 to-slate-100/60 border-t border-x border-slate-300/25 ${previewData.chartHeights[2]} rounded-t-sm transition-all duration-500`} />
+              <div className={`w-full bg-gradient-to-t ${previewData.barGradient} ${previewData.chartHeights[3]} rounded-t-sm transition-all duration-500`} />
             </div>
 
             {/* Selected Device Grading Spec */}
-            <div className="mb-3 z-10">
-              <div className="p-2.5 bg-white/5 rounded-xl border border-white/10 backdrop-blur-sm">
-                <div className="flex justify-between text-[11px] mb-1.5 text-slate-300">
-                  <span className="font-semibold text-white/95 truncate pr-2">{previewData.title}</span>
-                  <span className="text-white font-bold">Flawless</span>
+            <div className="mb-2 z-10">
+              <div className="p-2.5 rounded-lg card-glass">
+                <div className="flex justify-between text-[10px] mb-1.5 text-ink-slate items-center">
+                  <span className="font-extrabold text-ink-navy truncate pr-2 tracking-tight">{previewData.title}</span>
+                  <span className="font-extrabold text-[8.5px] uppercase tracking-wider px-1.5 py-[2px] rounded-[3px] bg-emerald-500/10 text-emerald-600 border border-emerald-500/10">Flawless</span>
                 </div>
-                <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
-                  <div className={`h-full ${previewData.barColor} ${previewData.progressWidth} transition-all duration-500`} />
+                <div className="w-full bg-slate-200/50 h-1.5 rounded-full overflow-hidden p-[0.5px]">
+                  <div className={`h-full bg-gradient-to-r ${previewData.progressGradient} ${previewData.progressWidth} rounded-full transition-all duration-700 ease-out shadow-[0_0_8px_rgba(16,185,129,0.4)]`} />
                 </div>
               </div>
             </div>
@@ -203,13 +223,16 @@ export const SmartphoneMockup: React.FC = () => {
             {/* Main Interactive Button inside mockup */}
             <button 
               onClick={handleScrollToSearch}
-              className={`w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-xl text-xs transition-all shadow-lg shadow-emerald-500/10 active:scale-[0.98] z-10 mb-2`}
+              className="w-full py-2 bg-gradient-to-r from-[#002045] to-[#003c7a] hover:from-[#001733] hover:to-[#002e5c] text-white font-extrabold rounded-lg text-[10.5px] sm:text-[11.5px] uppercase tracking-wider transition-all duration-300 shadow-[0_4px_12px_rgba(0,32,69,0.2)] hover:shadow-[0_6px_16px_rgba(0,32,69,0.3)] hover:-translate-y-[1px] active:translate-y-0 active:scale-[0.98] z-10 mb-1 flex items-center justify-center gap-1.5"
             >
-              Check Value Now
+              <span>Check Value Now</span>
+              <svg className="w-3.5 h-3.5 fill-none stroke-current stroke-[2.5]" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+              </svg>
             </button>
 
             {/* Home Indicator Bar */}
-            <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-24 h-1 bg-white/30 rounded-full z-20 pointer-events-none" />
+            <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-20 h-0.5 bg-[#002045]/20 rounded-full z-20 pointer-events-none" />
 
           </div>
         </div>

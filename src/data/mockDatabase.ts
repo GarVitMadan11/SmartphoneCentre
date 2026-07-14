@@ -301,7 +301,7 @@ export const MODELS: Model[] = [
   { id: 'apple-x',      brandId: 'brand-apple', name: 'iPhone X',            category: 'budget',   releaseYear: 2017, basePrice128GB:  5000, series: 'iPhone SE & Legacy' },
 
   // --- SAMSUNG ---
-  { id: 'sam-s20u',     brandId: 'brand-samsung', name: 'Galaxy Z S20 Ultra', category: 'premium',  releaseYear: 2020, basePrice128GB: 12000, series: 'S Series' },
+  { id: 'sam-s20u',     brandId: 'brand-samsung', name: 'Galaxy S20 Ultra', category: 'premium',  releaseYear: 2020, basePrice128GB: 12000, series: 'S Series' },
   { id: 'sam-s21u',     brandId: 'brand-samsung', name: 'Galaxy S21 Ultra',   category: 'premium',  releaseYear: 2021, basePrice128GB: 16000, series: 'S Series' },
   { id: 'sam-s22u',     brandId: 'brand-samsung', name: 'Galaxy S22 Ultra',   category: 'premium',  releaseYear: 2022, basePrice128GB: 21000, series: 'S Series' },
   { id: 'sam-s23u',     brandId: 'brand-samsung', name: 'Galaxy S23 Ultra',   category: 'flagship', releaseYear: 2023, basePrice128GB: 30000, series: 'S Series' },
@@ -487,6 +487,58 @@ export const MODELS: Model[] = [
   { id: 'goog-6a',  brandId: 'brand-google', name: 'Pixel 6a',     category: 'budget',   releaseYear: 2022, basePrice128GB:  6500, series: 'Pixel 6 Series' },
 ];
 
+// Helper to get historically accurate colors for a model
+function getColorsForModel(model: Model): string[] {
+  if (model.brandId === 'brand-apple') {
+    const name = model.name;
+    const year = model.releaseYear;
+    // iPhone 15 Pro / 17 Pro series → Titanium palette
+    if ((name.includes('Pro') || name.includes('Air')) && year >= 2023) {
+      return ['Natural Titanium', 'Black Titanium', 'White Titanium', 'Desert Titanium'];
+    }
+    // iPhone 15 / 16 / 17 non-Pro → pastel palette
+    if (year >= 2023 && !name.includes('Pro')) {
+      return ['Black', 'Blue', 'Green', 'Yellow', 'Pink'];
+    }
+    // iPhone 12–14 series
+    if (year >= 2020 && year <= 2022) {
+      return ['Midnight', 'Starlight', 'Blue', 'Purple', 'Product RED'];
+    }
+    // iPhone 11 and older
+    if (year <= 2019) {
+      return ['Space Gray', 'Silver', 'Gold', 'Midnight Green'];
+    }
+    // iPhone SE models
+    if (name.includes('SE')) {
+      return ['Midnight', 'Starlight', 'Product RED'];
+    }
+    return ['Space Gray', 'Silver', 'Gold', 'Blue'];
+  }
+
+  if (model.brandId === 'brand-samsung') {
+    // Z Fold & Flip series
+    if (model.series === 'Z Fold & Z Flip') {
+      return ['Phantom Black', 'Phantom Silver', 'Bespoke Edition'];
+    }
+    // S series flagships
+    if (model.series === 'S Series' && model.releaseYear >= 2023) {
+      return ['Phantom Black', 'Cream', 'Lavender', 'Green'];
+    }
+    if (model.series === 'S Series') {
+      return ['Phantom Black', 'Phantom Silver', 'Phantom Gray', 'Phantom Violet'];
+    }
+    // A series
+    return ['Awesome Black', 'Awesome White', 'Awesome Blue', 'Awesome Violet'];
+  }
+
+  if (model.brandId === 'brand-google') {
+    return ['Obsidian', 'Porcelain', 'Hazel', 'Coral'];
+  }
+
+  // Default for Xiaomi, vivo, OnePlus
+  return ['Obsidian Black', 'Marble Gray', 'Cobalt Violet', 'Titanium Yellow'];
+}
+
 // Helper to programmatically generate variants for a model
 export function generateVariantsForModel(model: Model): Variant[] {
   const storages = [
@@ -507,9 +559,7 @@ export function generateVariantsForModel(model: Model): Variant[] {
     modelStorages = storages.filter(s => s.gb >= 128);
   }
 
-  const colors = model.brandId === 'brand-apple' 
-    ? ['Natural Titanium', 'Space Black', 'Silver', 'Blue Titanium']
-    : ['Obsidian Black', 'Marble Gray', 'Cobalt Violet', 'Titanium Yellow'];
+  const colors = getColorsForModel(model);
 
   const variants: Variant[] = [];
   modelStorages.forEach(s => {
