@@ -206,41 +206,302 @@ export const PhoneBackPreview: React.FC<{
   modelId?: string;
 }> = ({ brandId, modelName, colorName, modelId }) => {
   const theme = useMemo(() => getColorTheme(colorName), [colorName]);
+
+  const id = (modelId || '').toLowerCase();
+  const name = modelName.toLowerCase();
+
+  // 1. Determine Phone shape, aspect ratio and roundedness
+  let chassisClass = "w-32 h-56 rounded-[22px]"; 
   
-  const imgUrl = useMemo(() => {
-    if (modelId) {
-      return getDeviceImage(modelId, brandId);
-    }
-    return getDeviceImage('', brandId);
-  }, [modelId, brandId]);
+  const isFold = id.includes('fold');
+  const isFlip = id.includes('flip');
+  const isUltra = name.includes('ultra') || id.includes('u');
+  const isAir = name.includes('air') || name.includes('slim');
+
+  if (isFold) {
+    chassisClass = "w-24 h-56 rounded-[14px]";
+  } else if (isFlip) {
+    chassisClass = "w-32 h-36 rounded-[18px]";
+  } else if (isUltra) {
+    chassisClass = "w-32 h-56 rounded-[6px]";
+  } else if (isAir) {
+    chassisClass = "w-28 h-56 rounded-[24px]";
+  }
+
+  // 2. Determine camera style
+  const isApple = brandId === 'brand-apple';
+  const isSamsung = brandId === 'brand-samsung';
+  const isGoogle = brandId === 'brand-google';
+  const isOnePlus = brandId === 'brand-oneplus';
+  const isXiaomi = brandId === 'brand-xiaomi';
+  const isVivo = brandId === 'brand-vivo';
+
+  const isProApple = isApple && (name.includes('pro') || name.includes('max') || name.includes('air'));
+  const isSingleCameraApple = isApple && (name.includes('se') || name.includes('xr') || id === 'apple-x' || id === 'apple-8' || id === 'apple-7' || id === 'apple-6');
 
   return (
     <div className="flex flex-col items-center justify-center p-6 bg-slate-50 dark:bg-zinc-900/30 rounded-lg border border-ice-border/40 mt-2 mb-4 animate-fadeIn w-full">
-      {/* Container for the phone photo with soft pedestal shadow */}
-      <div className="relative w-40 h-60 flex items-center justify-center p-2 overflow-visible transition-all duration-300">
+      {/* 3D phone presentation pedestal */}
+      <div className="relative w-44 h-64 flex items-center justify-center p-2 overflow-visible transition-all duration-300">
         
-        {/* Soft realistic drop shadow under the phone */}
+        {/* Soft drop shadow beneath phone */}
         <div 
-          className="absolute bottom-1 left-1/2 -translate-x-1/2 w-[85%] h-4 bg-black/20 rounded-full blur-md filter pointer-events-none"
+          className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[85%] h-4 bg-black/20 rounded-full blur-md filter pointer-events-none"
           style={{
             transform: 'translateX(-50%) scaleY(0.4)',
           }}
         />
 
-        {/* Dynamic color-shifting phone image */}
-        <img 
-          src={imgUrl} 
-          alt={modelName} 
-          className="max-h-full max-w-full object-contain transition-all duration-500 hover:scale-[1.03] pointer-events-none drop-shadow-[0_10px_15px_rgba(0,0,0,0.12)]"
+        {/* Dynamic CSS Phone Back */}
+        <div 
+          className={`relative ${chassisClass} border-[3px] flex flex-col justify-between p-3 overflow-hidden transition-all duration-300 shadow-[0_12px_24px_rgba(0,0,0,0.18)]`}
           style={{
-            filter: theme.filter
+            backgroundImage: theme.gradient,
+            borderColor: theme.borderColor,
+            boxShadow: 'inset 0 1px 1.5px rgba(255,255,255,0.25), 0 8px 16px rgba(0,0,0,0.15)'
           }}
-        />
+        >
+          {/* Antennas / Band lines for premium look */}
+          {!isFold && !isFlip && (
+            <>
+              <div className="absolute top-4 left-0 right-0 h-[1px] bg-white/10" />
+              <div className="absolute bottom-4 left-0 right-0 h-[1px] bg-white/10" />
+            </>
+          )}
+
+          {/* Diagonal glare overlay */}
+          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.08] to-white/[0.18] pointer-events-none skew-x-12 origin-top-left scale-150" />
+
+          {/* Camera Modules based on specific model design */}
+          {isApple && (
+            <div className="absolute top-2 left-2">
+              {isSingleCameraApple ? (
+                // Single Camera (SE / XR style)
+                <div 
+                  className="w-5 h-5 rounded-full flex items-center justify-center border border-black/40 shadow-inner"
+                  style={{ backgroundColor: theme.accentColor }}
+                >
+                  <div className="w-3.5 h-3.5 rounded-full bg-neutral-950 flex items-center justify-center relative border border-white/5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-900/50 blur-[0.2px]" />
+                    <div className="absolute w-[1.5px] h-[1.5px] bg-white/70 rounded-full top-[1px] left-[1px]" />
+                  </div>
+                </div>
+              ) : isAir ? (
+                // iPhone Air: Central pill single camera at top center
+                <div className="absolute left-[36px] top-1 w-10 h-5 rounded-full flex items-center justify-center border border-white/10 bg-black/10 backdrop-blur-md">
+                  <div className="w-3 h-3 rounded-full bg-black flex items-center justify-center border border-neutral-700 relative">
+                    <div className="w-1.5 h-1.5 bg-indigo-900/80 rounded-full" />
+                    <div className="absolute w-[1px] h-[1px] bg-white/80 rounded-full top-[0.5px] left-[0.5px]" />
+                  </div>
+                </div>
+              ) : isProApple ? (
+                // Apple Pro 3-Camera Module
+                <div 
+                  className="w-11 h-11 sm:w-12 sm:h-12 rounded-[11px] p-1 grid grid-cols-2 gap-1 items-center justify-items-center border border-white/10 shadow-sm relative overflow-hidden"
+                  style={{ 
+                    backgroundColor: 'rgba(255,255,255,0.06)', 
+                    backdropFilter: 'blur(10px)',
+                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1)'
+                  }}
+                >
+                  <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-black/85 flex items-center justify-center border border-neutral-700/60 relative">
+                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-955/70 border border-indigo-400/20" />
+                    <div className="absolute w-0.5 h-0.5 bg-white/80 rounded-full top-[1px] left-[1px]" />
+                  </div>
+                  <div className="w-1.5 h-1.5 rounded-full bg-amber-100 border border-neutral-600/50 flex items-center justify-center relative">
+                    <div className="w-[3px] h-[3px] bg-amber-400 rounded-full" />
+                  </div>
+                  <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-black/85 flex items-center justify-center border border-neutral-700/60 relative">
+                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-955/70 border border-indigo-400/20" />
+                    <div className="absolute w-0.5 h-0.5 bg-white/80 rounded-full top-[1px] left-[1px]" />
+                  </div>
+                  <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-black/85 flex items-center justify-center border border-neutral-700/60 relative -translate-x-[50%]">
+                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-955/70 border border-indigo-400/20" />
+                    <div className="absolute w-0.5 h-0.5 bg-white/80 rounded-full top-[1px] left-[1px]" />
+                  </div>
+                  <div className="absolute bottom-2 right-2 w-1.5 h-1.5 rounded-full bg-zinc-800 border border-neutral-800" />
+                </div>
+              ) : (
+                // Apple Dual Camera (iPhone 13, 14, 15, 16, 17 style - vertical pill)
+                <div 
+                  className="w-6 h-11 sm:w-7 sm:h-12 rounded-[10px] p-1 flex flex-col items-center justify-between border border-white/10 shadow-sm"
+                  style={{ 
+                    backgroundColor: 'rgba(255,255,255,0.06)', 
+                    backdropFilter: 'blur(10px)'
+                  }}
+                >
+                  <div className="w-3.5 h-3.5 rounded-full bg-black/80 flex items-center justify-center border border-neutral-700/60 relative">
+                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-950/70" />
+                    <div className="absolute w-0.5 h-0.5 bg-white/80 rounded-full top-[1px] left-[1px]" />
+                  </div>
+                  <div className="w-3.5 h-3.5 rounded-full bg-black/80 flex items-center justify-center border border-neutral-700/60 relative">
+                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-950/70" />
+                    <div className="absolute w-0.5 h-0.5 bg-white/80 rounded-full top-[1px] left-[1px]" />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {isSamsung && (
+            <>
+              {isFlip ? (
+                // Z Flip clamshell cover screen + dual camera
+                <div className="absolute top-1.5 left-1.5 right-1.5 h-16 rounded-[10px] bg-black border border-white/5 p-1 flex items-center justify-between">
+                  <div className="flex-1 h-full rounded-[6px] bg-zinc-900 border border-white/5 flex items-center justify-center">
+                    <span className="text-[6px] font-mono text-zinc-550 tracking-tighter">09:41 AM</span>
+                  </div>
+                  <div className="flex flex-col justify-around h-full pl-2 pr-1">
+                    <div className="w-2.5 h-2.5 rounded-full bg-black border border-neutral-600 relative flex items-center justify-center">
+                      <div className="w-1 h-1 bg-indigo-900 rounded-full" />
+                      <div className="absolute w-0.5 h-0.5 bg-white rounded-full top-0.5 left-0.5" />
+                    </div>
+                    <div className="w-2.5 h-2.5 rounded-full bg-black border border-neutral-600 relative flex items-center justify-center">
+                      <div className="w-1 h-1 bg-indigo-900 rounded-full" />
+                      <div className="absolute w-0.5 h-0.5 bg-white rounded-full top-0.5 left-0.5" />
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                // S Series, A Series vertical line camera style
+                <div className="absolute top-3 left-3 flex flex-col gap-1.5">
+                  {isUltra ? (
+                    // Samsung S Ultra (S23U, S24U, S25U, S26U) 5-lens arrangement
+                    <div className="flex gap-1">
+                      <div className="flex flex-col gap-1">
+                        <div className="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-black/85 border-[1px] border-neutral-600 shadow-sm relative flex items-center justify-center">
+                          <div className="w-1 h-1 rounded-full bg-indigo-950/80" />
+                          <div className="absolute w-0.5 h-0.5 bg-white/80 rounded-full top-[0.5px] left-[0.5px]" />
+                        </div>
+                        <div className="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-black/85 border-[1px] border-neutral-600 shadow-sm relative flex items-center justify-center">
+                          <div className="w-1 h-1 rounded-full bg-indigo-950/80" />
+                          <div className="absolute w-0.5 h-0.5 bg-white/80 rounded-full top-[0.5px] left-[0.5px]" />
+                        </div>
+                        <div className="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-black/85 border-[1px] border-neutral-600 shadow-sm relative flex items-center justify-center">
+                          <div className="w-1 h-1 rounded-full bg-indigo-950/80" />
+                          <div className="absolute w-0.5 h-0.5 bg-white/80 rounded-full top-[0.5px] left-[0.5px]" />
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-1 pt-1.5">
+                        <div className="w-1.5 h-1.5 rounded-full bg-zinc-800 border border-neutral-700" />
+                        <div className="w-1.5 h-1.5 rounded-full bg-neutral-900 border border-neutral-700/60 relative flex items-center justify-center">
+                          <div className="w-0.5 h-0.5 bg-red-600 rounded-full" />
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    // Regular vertical 3 cameras
+                    <>
+                      <div className="w-3 h-3 rounded-full bg-black/85 border-[1px] border-neutral-600 shadow-sm relative flex items-center justify-center">
+                        <div className="w-1 h-1 rounded-full bg-indigo-955/80" />
+                        <div className="absolute w-0.5 h-0.5 bg-white/80 rounded-full top-[0.5px] left-[0.5px]" />
+                      </div>
+                      <div className="w-3 h-3 rounded-full bg-black/85 border-[1px] border-neutral-600 shadow-sm relative flex items-center justify-center">
+                        <div className="w-1 h-1 rounded-full bg-indigo-955/80" />
+                        <div className="absolute w-0.5 h-0.5 bg-white/80 rounded-full top-[0.5px] left-[0.5px]" />
+                      </div>
+                      <div className="w-3 h-3 rounded-full bg-black/85 border-[1px] border-neutral-600 shadow-sm relative flex items-center justify-center">
+                        <div className="w-1 h-1 rounded-full bg-indigo-955/80" />
+                        <div className="absolute w-0.5 h-0.5 bg-white/80 rounded-full top-[0.5px] left-[0.5px]" />
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+
+          {isGoogle && (
+            // Google Pixel Visor Bar (Pixel 6, 7, 8, 9)
+            <div 
+              className="absolute top-4 left-0 right-0 h-4 border-y border-black/30 shadow-md flex items-center justify-between px-3 relative"
+              style={{ 
+                backgroundColor: theme.accentColor === '#0E0E0F' ? '#222' : '#333',
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1)'
+              }}
+            >
+              <div className="w-10 h-2.5 bg-black rounded-full px-1 flex items-center justify-around border border-white/5">
+                <div className="w-1.5 h-1.5 rounded-full bg-indigo-950 relative flex items-center justify-center">
+                  <div className="absolute w-0.5 h-0.5 bg-white/80 rounded-full top-[0.2px] left-[0.2px]" />
+                </div>
+                <div className="w-1.5 h-1.5 rounded-full bg-indigo-950 relative flex items-center justify-center">
+                  <div className="absolute w-0.5 h-0.5 bg-white/80 rounded-full top-[0.2px] left-[0.2px]" />
+                </div>
+              </div>
+              <div className="w-1.5 h-1.5 rounded-full bg-amber-100 flex items-center justify-center border border-white/10">
+                <div className="w-[3px] h-[3px] bg-amber-400 rounded-full" />
+              </div>
+            </div>
+          )}
+
+          {!isApple && !isSamsung && !isGoogle && (
+            // OnePlus / Xiaomi circular or rounded square center camera module
+            <div className="absolute top-2 left-1/2 -translate-x-1/2">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-black/80 border border-neutral-700 shadow-md p-1 grid grid-cols-2 gap-1 items-center justify-items-center relative">
+                <div className="absolute inset-0.5 rounded-full border border-neutral-600/30 pointer-events-none" />
+                <div className="w-2 h-2 rounded-full bg-indigo-950 relative flex items-center justify-center">
+                  <div className="absolute w-0.5 h-0.5 bg-white/80 rounded-full top-[0.2px] left-[0.2px]" />
+                </div>
+                <div className="w-2 h-2 rounded-full bg-indigo-950 relative flex items-center justify-center">
+                  <div className="absolute w-0.5 h-0.5 bg-white/80 rounded-full top-[0.2px] left-[0.2px]" />
+                </div>
+                <div className="w-2 h-2 rounded-full bg-indigo-950 relative flex items-center justify-center">
+                  <div className="absolute w-0.5 h-0.5 bg-white/80 rounded-full top-[0.2px] left-[0.2px]" />
+                </div>
+                <div className="w-1.5 h-1.5 rounded-full bg-amber-100 flex items-center justify-center">
+                  <div className="w-[3px] h-[3px] bg-amber-400 rounded-full" />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Brand Logos center/bottom */}
+          <div className="flex-1 flex items-center justify-center">
+            {isApple && (
+              <div style={{ color: theme.logoColor }} className="transition-all duration-300 mt-6">
+                <svg viewBox="0 0 24 24" className="w-5 h-5 sm:w-6 sm:h-6" fill="currentColor">
+                  <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 4.17c.66-.81 1.11-1.93.99-3.06-1 .04-2.2.67-2.92 1.49-.62.71-1.16 1.85-1.01 2.96 1.12.09 2.27-.58 2.94-1.39z"/>
+                </svg>
+              </div>
+            )}
+            {isGoogle && (
+              <div style={{ color: theme.logoColor }} className="transition-all duration-300">
+                <svg viewBox="0 0 24 24" className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor">
+                  <path d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.114-5.136 4.114-3.513 0-6.36-2.847-6.36-6.36s2.847-6.36 6.36-6.36c1.63 0 3.117.618 4.252 1.628l3.05-3.05C19.342 2.76 16.035 1.5 12.24 1.5 6.42 1.5 1.7 6.22 1.7 12s4.72 10.5 10.54 10.5c5.96 0 10.37-4.19 10.37-10.5 0-.685-.082-1.354-.22-1.715H12.24z"/>
+                </svg>
+              </div>
+            )}
+          </div>
+
+          {/* Lower Logo for Samsung / OnePlus / Xiaomi / Vivo */}
+          <div className="w-full flex items-center justify-center pb-1">
+            {isSamsung && (
+              <span className="text-[6px] tracking-[0.25em] font-extrabold uppercase" style={{ color: theme.logoColor }}>
+                SAMSUNG
+              </span>
+            )}
+            {isOnePlus && (
+              <span className="text-[7px] tracking-[0.2em] font-black uppercase" style={{ color: theme.logoColor }}>
+                1+
+              </span>
+            )}
+            {isXiaomi && (
+              <span className="text-[7.5px] tracking-[0.1em] font-medium uppercase" style={{ color: theme.logoColor }}>
+                mi
+              </span>
+            )}
+            {isVivo && (
+              <span className="text-[7px] tracking-[0.2em] font-light uppercase" style={{ color: theme.logoColor }}>
+                vivo
+              </span>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Styled color name under phone */}
       <div className="mt-4 text-center">
-        <span className="text-[10px] uppercase tracking-widest font-mono text-zinc-500 dark:text-zinc-400 block mb-1">Color Option</span>
+        <span className="text-[10px] uppercase tracking-widest font-mono text-zinc-550 dark:text-zinc-400 block mb-1">Color Option</span>
         <span className="text-base font-bold text-ink-navy dark:text-zinc-200 font-outfit tracking-tight">{colorName}</span>
       </div>
     </div>
