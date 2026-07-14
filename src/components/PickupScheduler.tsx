@@ -1,12 +1,16 @@
 import React, { useState, useMemo } from 'react';
 import { 
   Clock, User, MapPin, CreditCard, 
-  CheckCircle, ArrowLeft, ShieldAlert, Award, Star, Smartphone, Info, ShieldCheck, ChevronRight
+  CheckCircle, ArrowLeft, ShieldAlert, Award, Smartphone, Info, ShieldCheck, ChevronRight, Shield,
+  Landmark, ShoppingBag, ShoppingCart, Tag, Play, Gamepad2, Utensils, ChefHat, Gift
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import emailjs from '@emailjs/browser';
-import { Model, Variant, DefectRule } from '../data/mockDatabase';
+import { Model, Variant, DefectRule, Booking, getSavedBookings, saveBookings } from '../data/mockDatabase';
+import { DigiLockerModal } from './DigiLockerModal';
+import { PhoneBackPreview } from './DeviceSelector';
+
 
 interface PickupSchedulerProps {
   finalPrice: number;
@@ -23,6 +27,43 @@ const AGENTS = [
   { name: 'Rahul Verma', rating: 4.8, reviews: 245, avatar: '👤', phone: '+91 98765 11223' },
   { name: 'Priya Patel', rating: 5.0, reviews: 189, avatar: '👤', phone: '+91 98765 55678' }
 ];
+
+export interface PayoutMethod {
+  id: string;
+  name: string;
+  type: 'cash' | 'giftcard';
+  bonus: number;
+  iconName: string;
+}
+
+export const PAYOUT_METHODS: PayoutMethod[] = [
+  { id: 'bank', name: 'Bank Transfer', type: 'cash', bonus: 0, iconName: 'landmark' },
+  { id: 'upi', name: 'UPI Transfer', type: 'cash', bonus: 0, iconName: 'smartphone' },
+  { id: 'amazon', name: 'Amazon Gift Card', type: 'giftcard', bonus: 0.03, iconName: 'shopping-bag' },
+  { id: 'flipkart', name: 'Flipkart Gift Card', type: 'giftcard', bonus: 0.025, iconName: 'shopping-cart' },
+  { id: 'myntra', name: 'Myntra Gift Card', type: 'giftcard', bonus: 0.02, iconName: 'tag' },
+  { id: 'googleplay', name: 'Google Play Gift Card', type: 'giftcard', bonus: 0.015, iconName: 'play' },
+  { id: 'apple', name: 'Apple Gift Card', type: 'giftcard', bonus: 0.025, iconName: 'apple' },
+  { id: 'steam', name: 'Steam Gift Card', type: 'giftcard', bonus: 0.02, iconName: 'gamepad-2' },
+  { id: 'swiggy', name: 'Swiggy Gift Card', type: 'giftcard', bonus: 0.015, iconName: 'utensils' },
+  { id: 'zomato', name: 'Zomato Gift Card', type: 'giftcard', bonus: 0.015, iconName: 'chef-hat' }
+];
+
+const renderPayoutIcon = (iconName: string) => {
+  switch (iconName) {
+    case 'landmark': return <Landmark className="w-4 h-4 text-cobalt" />;
+    case 'smartphone': return <Smartphone className="w-4 h-4 text-cobalt" />;
+    case 'shopping-bag': return <ShoppingBag className="w-4 h-4 text-cobalt" />;
+    case 'shopping-cart': return <ShoppingCart className="w-4 h-4 text-cobalt" />;
+    case 'tag': return <Tag className="w-4 h-4 text-cobalt" />;
+    case 'play': return <Play className="w-4 h-4 text-cobalt" />;
+    case 'apple': return <svg className="w-4 h-4 text-cobalt" fill="currentColor" viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 4.17c.66-.81 1.11-1.93.99-3.06-1 .04-2.22.67-2.94 1.5-.64.74-1.2 1.88-1.05 2.99 1.12.09 2.26-.57 3-1.43z"/></svg>;
+    case 'gamepad-2': return <Gamepad2 className="w-4 h-4 text-cobalt" />;
+    case 'utensils': return <Utensils className="w-4 h-4 text-cobalt" />;
+    case 'chef-hat': return <ChefHat className="w-4 h-4 text-cobalt" />;
+    default: return <Gift className="w-4 h-4 text-cobalt" />;
+  }
+};
 
 const getEngineeringLabel = (description: string) => {
   const mapping: { [key: string]: string } = {
@@ -76,8 +117,22 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
   const [address, setAddress] = useState('');
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>('');
-  const [paymentMethod, setPaymentMethod] = useState<'upi' | 'bank' | 'cash'>('upi');
-  const [paymentDetails, setPaymentDetails] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<string>('upi');
+  
+  // Verification states
+  const [verificationStatus, setVerificationStatus] = useState<'pending' | 'verified' | 'failed'>('pending');
+  const [verifiedName, setVerifiedName] = useState('');
+  const [maskedAadhaar, setMaskedAadhaar] = useState('');
+  const [verificationDate, setVerificationDate] = useState('');
+  const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
+  const [verificationError, setVerificationError] = useState('');
+
+  // Payout states
+  const [upiId, setUpiId] = useState('');
+  const [accountHolderName, setAccountHolderName] = useState('');
+  const [accountNumber, setAccountNumber] = useState('');
+  const [ifscCode, setIfscCode] = useState('');
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
@@ -192,11 +247,37 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
   }, [isAddressValid, isDateInRange, selectedTimeSlot]);
 
   // Step 3 Validation
+  const isUpiValid = useMemo(() => {
+    const trimmed = upiId.trim();
+    return trimmed.length >= 3 && trimmed.includes('@');
+  }, [upiId]);
+
+  const isBankValid = useMemo(() => {
+    const nameValid = accountHolderName.trim().length >= 2;
+    const accValid = /^\d{9,18}$/.test(accountNumber.trim());
+    const ifscValid = /^[A-Z]{4}0[A-Z0-9]{6}$/i.test(ifscCode.trim());
+    return nameValid && accValid && ifscValid;
+  }, [accountHolderName, accountNumber, ifscCode]);
+
   const isStep3Valid = useMemo(() => {
-    if (paymentMethod === 'cash') return true;
-    const details = paymentDetails.trim();
-    return details.length > 0 && details.length <= 200;
-  }, [paymentMethod, paymentDetails]);
+    const isKYC = verificationStatus === 'verified';
+    if (!isKYC) return false;
+    if (paymentMethod === 'upi') return isUpiValid;
+    if (paymentMethod === 'bank') return isBankValid;
+    return true; // Gift cards are auto-valid
+  }, [verificationStatus, paymentMethod, isUpiValid, isBankValid]);
+
+  const selectedPayoutMethodObj = useMemo(() => {
+    return PAYOUT_METHODS.find(m => m.id === paymentMethod) || PAYOUT_METHODS[1];
+  }, [paymentMethod]);
+
+  const payoutBonusAmt = useMemo(() => {
+    return Math.round(finalPrice * selectedPayoutMethodObj.bonus);
+  }, [finalPrice, selectedPayoutMethodObj]);
+
+  const totalPayoutVal = useMemo(() => {
+    return finalPrice + payoutBonusAmt;
+  }, [finalPrice, payoutBonusAmt]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -213,6 +294,19 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
     setIsSubmitting(true);
     recordSubmitAttempt();
 
+    const selectedMethodObj = PAYOUT_METHODS.find(m => m.id === paymentMethod) || PAYOUT_METHODS[1];
+    const bonusAmt = Math.round(finalPrice * selectedMethodObj.bonus);
+    const finalPayoutAmt = finalPrice + bonusAmt;
+
+    let payoutInfoStr = '';
+    if (paymentMethod === 'upi') {
+      payoutInfoStr = `UPI ID: ${upiId.trim()}`;
+    } else if (paymentMethod === 'bank') {
+      payoutInfoStr = `Holder: ${accountHolderName.trim()}, A/C: ${accountNumber.trim()}, IFSC: ${ifscCode.trim()}`;
+    } else {
+      payoutInfoStr = `Store Voucher sent to: Email ${email.trim()} / SMS +91 ${phone.trim()}`;
+    }
+
     // Build template parameters for EmailJS
     const templateParams = {
       to_name: name.trim().slice(0, 80),
@@ -222,13 +316,52 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
       address: address.trim().slice(0, 500),
       pickup_date: selectedDate,
       time_slot: selectedTimeSlot,
-      payment_method: paymentMethod.toUpperCase(),
-      // Note: paymentDetails sent over EmailJS — migrate to serverless relay for production
-      payment_details: paymentDetails.trim().slice(0, 200) || 'N/A',
-      payout_amount: new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(finalPrice),
+      payment_method: selectedMethodObj.name.toUpperCase(),
+      payment_details: payoutInfoStr,
+      payout_amount: new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(finalPayoutAmt),
       agent_name: assignedAgent.name,
       confirmation_id: confirmationId,
     };
+
+    // Save booking to mock DB
+    const newBooking: Booking = {
+      id: confirmationId,
+      modelId: selectedModel.id,
+      modelName: selectedModel.name,
+      modelNumber: selectedModel.modelNumber,
+      storageGb: selectedVariant.storageGb,
+      color: selectedVariant.color,
+      customerName: name.trim(),
+      customerPhone: phone.trim(),
+      customerEmail: email.trim(),
+      address: address.trim(),
+      pickupDate: selectedDate,
+      pickupTimeSlot: selectedTimeSlot,
+      finalPrice: finalPrice,
+      verificationStatus: verificationStatus,
+      verifiedName: verifiedName,
+      maskedAadhaar: maskedAadhaar,
+      verificationDate: verificationDate,
+      payoutMethod: paymentMethod,
+      payoutMethodName: selectedMethodObj.name,
+      bonusPercentage: selectedMethodObj.bonus,
+      bonusAmount: bonusAmt,
+      finalPayoutAmount: finalPayoutAmt,
+      payoutDetails: (paymentMethod === 'upi' || paymentMethod === 'bank')
+        ? { 
+            upiId: upiId.trim(),
+            accountHolderName: accountHolderName.trim(), 
+            accountNumber: accountNumber.trim(), 
+            ifscCode: ifscCode.trim() 
+          }
+        : {},
+      inspectionStatus: 'pending',
+      payoutStatus: 'pending',
+      dateCreated: new Date().toISOString()
+    };
+
+    const currentBookings = getSavedBookings();
+    saveBookings([newBooking, ...currentBookings]);
 
     try {
       const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
@@ -259,11 +392,15 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
       setSchedulerStep(2);
     } else if (schedulerStep === 2 && isStep2Valid) {
       setSchedulerStep(3);
+    } else if (schedulerStep === 3 && isStep3Valid) {
+      setSchedulerStep(4);
     }
   };
 
   const handlePrevStep = () => {
-    if (schedulerStep === 3) {
+    if (schedulerStep === 4) {
+      setSchedulerStep(3);
+    } else if (schedulerStep === 3) {
       setSchedulerStep(2);
     } else if (schedulerStep === 2) {
       setSchedulerStep(1);
@@ -305,13 +442,14 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
 
                 {/* Progress bar info */}
                 <div className="flex items-center justify-between mb-6 bg-canvas-white/40 p-2.5 rounded-sm border border-white/[0.04] text-[10px] font-mono tracking-wider text-zinc-400">
-                  <span className="uppercase">Step {schedulerStep} of 3: {
+                  <span className="uppercase">Step {schedulerStep} of 4: {
                     schedulerStep === 1 ? 'Contact & Device Info' : 
                     schedulerStep === 2 ? 'Pickup Details' : 
-                    'Payout Confirmation'
+                    schedulerStep === 3 ? 'Choose Your Payout' :
+                    'Final Confirmation'
                   }</span>
                   <div className="flex gap-1">
-                    {[1, 2, 3].map(s => (
+                    {[1, 2, 3, 4].map(s => (
                       <span key={s} className={`w-2 h-2 rounded-full ${s <= schedulerStep ? 'bg-cobalt' : 'bg-ice-border'}`} />
                     ))}
                   </div>
@@ -586,111 +724,339 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                     </div>
                   )}
 
-                  {/* STEP 3: Payment & Assigned Inspector & Trust badges */}
+                  {/* STEP 3: Choose Your Payout Page (Payout selector + Identity Verification) */}
                   {schedulerStep === 3 && (
                     <div className="space-y-5 animate-fadeIn">
-                      <h3 className="text-[11px] font-mono tracking-[0.25em] text-cobalt uppercase flex items-center gap-1.5 font-bold mb-3">
-                        <CreditCard className="w-3.5 h-3.5" /> 3. Payout Method (Instant Dispatch)
-                      </h3>
+                      {/* Choose Your Payout Section */}
+                      <div className="space-y-4 animate-fadeIn">
+                        <div>
+                          <h3 className="text-[11px] font-mono tracking-[0.25em] text-cobalt uppercase flex items-center gap-1.5 font-bold mb-1">
+                            <CreditCard className="w-3.5 h-3.5" /> 3.1 Choose Your Payout Method
+                          </h3>
+                          <p className="text-[11px] text-ink-muted leading-normal font-light mb-4">
+                            Select how you want to be paid. Gift card payouts include extra store bonuses!
+                          </p>
+                        </div>
 
-                      <div className="grid grid-cols-3 gap-2">
-                        {(['upi', 'bank', 'cash'] as const).map(mode => {
-                          const isSelected = paymentMethod === mode;
-                          return (
-                            <button
-                              key={mode}
-                              type="button"
-                              onClick={() => {
-                                setPaymentMethod(mode);
-                                setPaymentDetails('');
-                              }}
-                              className={`py-3.5 rounded-sm border text-[10px] font-mono tracking-wider uppercase transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt ${
-                                isSelected
-                                  ? 'bg-cobalt-light border-cobalt text-ink-navy scale-[1.01] opacity-100 z-10 shadow-sm'
-                                  : 'bg-canvas-white text-ink-slate border-ice-border opacity-40 hover:opacity-75 hover:scale-[1.005]'
-                              }`}
-                              style={{ minHeight: '48px' }}
-                            >
-                              {mode === 'upi' ? 'UPI ID' : mode === 'bank' ? 'Bank Transfer' : 'Cash Payout'}
-                            </button>
-                          );
-                        })}
+                        {/* Payout Grid cards */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {PAYOUT_METHODS.map(mode => {
+                            const isSelected = paymentMethod === mode.id;
+                            const valueWithBonus = finalPrice + Math.round(finalPrice * mode.bonus);
+                            return (
+                              <button
+                                key={mode.id}
+                                type="button"
+                                onClick={() => {
+                                  setPaymentMethod(mode.id);
+                                }}
+                                className={`p-4 rounded-sm border text-left flex flex-col justify-between items-start transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt relative overflow-hidden group min-h-[110px] ${
+                                  isSelected
+                                    ? 'bg-cobalt-light/45 border-cobalt text-ink-navy scale-[1.01] shadow-sm z-10'
+                                    : 'bg-canvas-white text-ink-slate border-ice-border hover:border-cobalt/40 hover:scale-[1.005]'
+                                }`}
+                              >
+                                {/* Badge indicator */}
+                                {mode.bonus > 0 ? (
+                                  <span className="absolute top-2 right-2 px-1.5 py-0.5 rounded-sm bg-emerald-500/10 text-emerald-400 text-[8px] font-bold uppercase border border-emerald-500/20 tracking-wider">
+                                    Best Value
+                                  </span>
+                                ) : (
+                                  <span className="absolute top-2 right-2 px-1.5 py-0.5 rounded-sm bg-zinc-500/10 text-zinc-500 text-[8px] font-bold uppercase border border-ice-border/40 tracking-wider">
+                                    Cash
+                                  </span>
+                                )}
+
+                                <div className="flex items-center gap-2 mb-2">
+                                  <div className={`p-1.5 rounded-sm flex items-center justify-center ${isSelected ? 'bg-cobalt/10 text-cobalt' : 'bg-ice-gray text-zinc-400'}`}>
+                                    {renderPayoutIcon(mode.iconName)}
+                                  </div>
+                                  <span className="font-semibold text-xs tracking-tight text-ink-navy leading-none">{mode.name}</span>
+                                </div>
+
+                                <div className="w-full pt-1.5 border-t border-black/[0.03]">
+                                  <span className="block text-sm font-bold text-ink-navy">{formatPrice(valueWithBonus)}</span>
+                                  <span className="block text-[9px] text-zinc-400 font-mono">
+                                    {mode.bonus > 0 ? `+${mode.bonus * 100}% Store Bonus (+${formatPrice(Math.round(finalPrice * mode.bonus))})` : 'No hidden fees'}
+                                  </span>
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        {/* Payout Input Details */}
+                        <div className="bg-canvas-white/60 p-4 rounded-sm border border-ice-border space-y-3 mt-4 animate-fadeIn">
+                          {paymentMethod === 'upi' && (
+                            <div>
+                              <label className="text-xs font-semibold text-ink-slate block mb-1">Enter UPI ID *</label>
+                              <input
+                                type="text"
+                                required
+                                value={upiId}
+                                onChange={e => setUpiId(e.target.value)}
+                                placeholder="e.g. name@okhdfc"
+                                className={`w-full p-3 rounded-sm border bg-canvas-white text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all font-light ${
+                                  upiId && !isUpiValid ? 'border-red-400' : upiId && isUpiValid ? 'border-emerald-400' : 'border-ice-border'
+                                }`}
+                                style={{ minHeight: '48px' }}
+                              />
+                              {upiId && !isUpiValid && (
+                                <span className="text-[10px] text-red-400 mt-1 block font-mono">Invalid UPI ID format. Should contain '@'.</span>
+                              )}
+                            </div>
+                          )}
+
+                          {paymentMethod === 'bank' && (
+                            <div className="space-y-3">
+                              <div>
+                                <label className="text-xs font-semibold text-ink-slate block mb-1">Account Holder Name *</label>
+                                <input
+                                  type="text"
+                                  required
+                                  value={accountHolderName}
+                                  onChange={e => setAccountHolderName(e.target.value)}
+                                  placeholder="e.g. Vikramaditya Singh"
+                                  className={`w-full p-3 rounded-sm border bg-canvas-white text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all font-light ${
+                                    accountHolderName && accountHolderName.trim().length < 2 ? 'border-red-400' : accountHolderName ? 'border-emerald-400' : 'border-ice-border'
+                                  }`}
+                                  style={{ minHeight: '48px' }}
+                                />
+                              </div>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                  <label className="text-xs font-semibold text-ink-slate block mb-1">Account Number *</label>
+                                  <input
+                                    type="text"
+                                    required
+                                    value={accountNumber}
+                                    onChange={e => setAccountNumber(e.target.value.replace(/\D/g, ''))}
+                                    placeholder="e.g. 918273645012"
+                                    className={`w-full p-3 rounded-sm border bg-canvas-white text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all font-light ${
+                                      accountNumber && !/^\d{9,18}$/.test(accountNumber.trim()) ? 'border-red-400' : accountNumber ? 'border-emerald-400' : 'border-ice-border'
+                                    }`}
+                                    style={{ minHeight: '48px' }}
+                                  />
+                                  {accountNumber && !/^\d{9,18}$/.test(accountNumber.trim()) && (
+                                    <span className="text-[10px] text-red-400 mt-1 block font-mono">Must be 9–18 digits.</span>
+                                  )}
+                                </div>
+                                <div>
+                                  <label className="text-xs font-semibold text-ink-slate block mb-1">IFSC Code *</label>
+                                  <input
+                                    type="text"
+                                    required
+                                    value={ifscCode}
+                                    onChange={e => setIfscCode(e.target.value.toUpperCase())}
+                                    placeholder="e.g. HDFC0000104"
+                                    className={`w-full p-3 rounded-sm border bg-canvas-white text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all font-light ${
+                                      ifscCode && !/^[A-Z]{4}0[A-Z0-9]{6}$/i.test(ifscCode.trim()) ? 'border-red-400' : ifscCode ? 'border-emerald-400' : 'border-ice-border'
+                                    }`}
+                                    style={{ minHeight: '48px' }}
+                                  />
+                                  {ifscCode && !/^[A-Z]{4}0[A-Z0-9]{6}$/i.test(ifscCode.trim()) && (
+                                    <span className="text-[10px] text-red-400 mt-1 block font-mono">Invalid IFSC format (e.g. HDFC0000104).</span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {paymentMethod !== 'upi' && paymentMethod !== 'bank' && (
+                            <div className="p-3 bg-emerald-500/10 text-emerald-400 rounded-sm border border-emerald-500/20 text-xs flex items-start gap-2.5 animate-fadeIn">
+                              <Award className="w-4 h-4 mt-0.5 text-emerald-400 flex-shrink-0" />
+                              <span className="font-light leading-normal">
+                                <strong>Voucher Dispatch Target:</strong> Your verified digital voucher worth <strong>{formatPrice(totalPayoutVal)}</strong> will be dispatched to your registered email (<strong>{email}</strong>) and text details sent to (<strong>+91 {phone}</strong>) instantly after physical handset handover.
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Payout Comparison Table */}
+                        <div className="bg-canvas-white border border-ice-border rounded-sm p-4 mt-4 shadow-sm">
+                          <span className="text-[10px] font-mono tracking-wider uppercase text-zinc-500 block mb-2 font-bold">Payout Options Comparison</span>
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-left font-mono text-[10px] sm:text-xs border-collapse">
+                              <thead>
+                                <tr className="border-b border-ice-border/40 text-ink-navy uppercase font-bold text-[9px] tracking-wider">
+                                  <th className="py-2 pr-3">Payout Category</th>
+                                  <th className="py-2 px-2 text-center">Store Bonus</th>
+                                  <th className="py-2 px-2 text-center">Availability</th>
+                                  <th className="py-2 pl-3">Redemption Scope</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-white/[0.04] text-ink-slate font-light">
+                                <tr>
+                                  <td className="py-2.5 pr-3 font-semibold text-ink-navy">Cash Payouts (Bank/UPI)</td>
+                                  <td className="py-2.5 px-2 text-center text-zinc-500">None (0%)</td>
+                                  <td className="py-2.5 px-2 text-center text-emerald-400 font-semibold">Instant Releases</td>
+                                  <td className="py-2.5 pl-3">Direct liquid funds deposited into your personal bank account. Spend anywhere.</td>
+                                </tr>
+                                <tr>
+                                  <td className="py-2.5 pr-3 font-semibold text-ink-navy">Store Gift Cards (e.g. Amazon)</td>
+                                  <td className="py-2.5 px-2 text-center text-emerald-400 font-bold">+{selectedPayoutMethodObj.bonus > 0 ? (selectedPayoutMethodObj.bonus * 100).toFixed(1) : '1.5 - 3.0'}% Extra</td>
+                                  <td className="py-2.5 px-2 text-center text-emerald-400 font-semibold">Instant Releases</td>
+                                  <td className="py-2.5 pl-3">Stores-specific shopping voucher details delivered instantly. Higher purchasing value.</td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
                       </div>
 
-                      <div>
-                        {paymentMethod === 'upi' && (
-                          <div>
-                            <label className="text-xs font-semibold text-ink-slate block mb-1">Enter UPI ID *</label>
-                            <input
-                              type="text"
-                              required
-                              maxLength={100}
-                              autoComplete="off"
-                              value={paymentDetails}
-                              onChange={e => setPaymentDetails(e.target.value)}
-                              placeholder="e.g. mobile@upi"
-                              className="w-full p-3 rounded-sm border border-ice-border bg-canvas-white text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all font-light"
-                              style={{ minHeight: '48px' }}
-                            />
+                      {/* Identity Verification Section */}
+                      <div className="pt-4 border-t border-white/[0.04]">
+                        <h3 className="text-[11px] font-mono tracking-[0.25em] text-cobalt uppercase flex items-center gap-1.5 font-bold mb-3">
+                          <ShieldCheck className="w-3.5 h-3.5" /> 3.2 Seller Identity Verification
+                        </h3>
+
+                        {verificationError && (
+                          <div className="bg-red-500/10 text-red-400 p-3 rounded-sm border border-red-500/20 text-xs flex items-start gap-2 mb-3">
+                            <ShieldAlert className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                            <span>{verificationError}</span>
                           </div>
                         )}
 
-                        {paymentMethod === 'bank' && (
-                          <div className="space-y-3">
-                            <label className="text-xs font-semibold text-ink-slate block mb-1">Account Number & IFSC Code *</label>
-                            <input
-                              type="text"
-                              required
-                              value={paymentDetails}
-                              onChange={e => setPaymentDetails(e.target.value)}
-                              placeholder="A/C: 987654321012, IFSC: HDFC0001234"
-                              className="w-full p-3 rounded-sm border border-ice-border bg-canvas-white text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all font-light"
-                              style={{ minHeight: '48px' }}
-                            />
-                          </div>
-                        )}
-
-                        {paymentMethod === 'cash' && (
-                          <div className="bg-red-500/10 text-red-400 p-3.5 rounded-sm border border-red-500/20 text-xs flex items-start gap-2.5">
-                            <ShieldAlert className="w-4 h-4 mt-0.5 text-red-400 flex-shrink-0" />
-                            <span className="font-light leading-normal">
-                              <strong>Security Notice:</strong> Cash handovers require verifying physical matching government ID proofs with the doorstep agent before handset handover.
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Trust Badges */}
-                      <div className="pt-4 border-t border-white/[0.04] grid grid-cols-3 gap-2 text-center">
-                        <div className="bg-canvas-white p-2 border border-ice-border rounded-sm flex flex-col items-center">
-                          <ShieldCheck className="w-5 h-5 text-cobalt mb-1" />
-                          <span className="text-[8px] font-mono text-zinc-400 uppercase leading-tight font-bold">100% Encrypted Transactions</span>
-                        </div>
-                        <div className="bg-canvas-white p-2 border border-ice-border rounded-sm flex flex-col items-center">
-                          <User className="w-5 h-5 text-cobalt mb-1" />
-                          <span className="text-[8px] font-mono text-zinc-400 uppercase leading-tight font-bold">Verified Agent Delivery</span>
-                        </div>
-                        <div className="bg-canvas-white p-2 border border-ice-border rounded-sm flex flex-col items-center">
-                          <Award className="w-5 h-5 text-cobalt mb-1" />
-                          <span className="text-[8px] font-mono text-zinc-400 uppercase leading-tight font-bold">Zero Value Deductions Guarantee</span>
-                        </div>
-                      </div>
-
-                      {/* Assigned Inspector Card */}
-                      <div className="bg-canvas-white border border-ice-border rounded-sm p-4 mt-4 shadow-sm">
-                        <span className="text-[9px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-2">Assigned Agent</span>
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-sm bg-cobalt-light border border-white/[0.06] flex items-center justify-center text-lg">
-                            {assignedAgent.avatar}
-                          </div>
-                          <div>
-                            <h4 className="font-semibold text-ink-navy text-xs">{assignedAgent.name}</h4>
-                            <div className="flex items-center gap-1 mt-0.5">
-                              <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
-                              <span className="text-[10px] font-bold text-ink-navy">{assignedAgent.rating}</span>
-                              <span className="text-[9px] text-ink-muted">({assignedAgent.reviews} reviews)</span>
+                        {verificationStatus === 'verified' ? (
+                          <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-sm space-y-2 animate-fadeIn">
+                            <div className="flex items-center gap-2 text-emerald-400 text-xs font-bold">
+                              <CheckCircle className="w-4 h-4 fill-emerald-500/10" />
+                              <span>Identity Verified via DigiLocker</span>
+                            </div>
+                            <div className="font-mono text-[10px] text-zinc-400 grid grid-cols-2 gap-2 pt-1 border-t border-white/[0.04]">
+                              <div><strong>Name:</strong> {verifiedName}</div>
+                              <div><strong>Aadhaar:</strong> {maskedAadhaar}</div>
+                              <div className="col-span-2"><strong>Verified On:</strong> {new Date(verificationDate).toLocaleString('en-IN')}</div>
                             </div>
                           </div>
+                        ) : (
+                          <div className="border border-ice-border rounded-sm p-4 bg-canvas-white space-y-3">
+                            <div className="flex justify-between items-center">
+                              <div className="flex items-center gap-2">
+                                <span className="w-2.5 h-2.5 rounded-full bg-amber-400 live-pulse" />
+                                <span className="text-xs text-ink-navy font-semibold">Verification Status: Pending KYC</span>
+                              </div>
+                              <span className="text-[8px] font-mono text-zinc-500 uppercase">Aadhaar Required</span>
+                            </div>
+                            <p className="text-[11px] text-ink-muted leading-relaxed font-light">
+                              In compliance with secondhand trade regulations, Aadhaar identity verification is mandatory. Complete verification instantly using DigiLocker.
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setVerificationError('');
+                                setIsVerificationModalOpen(true);
+                              }}
+                              className="w-full py-2.5 px-4 bg-cobalt hover:bg-cobalt-hover text-white text-xs font-bold rounded-sm transition-all flex items-center justify-center gap-1.5"
+                            >
+                              <Shield className="w-3.5 h-3.5" />
+                              {verificationStatus === 'failed' ? 'Retry Verification with DigiLocker' : 'Verify Identity with DigiLocker'}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* DigiLocker Modal rendering */}
+                      <DigiLockerModal
+                        isOpen={isVerificationModalOpen}
+                        onClose={() => setIsVerificationModalOpen(false)}
+                        customerName={name}
+                        onVerifySuccess={(data) => {
+                          setVerificationStatus('verified');
+                          setVerifiedName(data.verifiedName);
+                          setMaskedAadhaar(data.maskedAadhaar);
+                          setVerificationDate(data.verificationDate);
+                        }}
+                        onVerifyFailure={(err) => {
+                          setVerificationStatus('failed');
+                          setVerificationError(err);
+                        }}
+                      />
+                    </div>
+                  )}
+
+                  {/* STEP 4: Final Confirmation Screen */}
+                  {schedulerStep === 4 && (
+                    <div className="space-y-5 animate-fadeIn">
+                      <div className="space-y-1">
+                        <h3 className="text-[11px] font-mono tracking-[0.25em] text-cobalt uppercase flex items-center gap-1.5 font-bold mb-3">
+                          <CheckCircle className="w-3.5 h-3.5" /> 4. Final Review &amp; Confirmation
+                        </h3>
+                        <p className="text-xs text-ink-muted leading-relaxed font-light">
+                          Please verify your pickup coordinates, contact details, identity, and selected payout credentials before submitting.
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {/* Box 1: Client Specs */}
+                        <div className="border border-ice-border rounded-sm p-4 bg-canvas-white space-y-1.5">
+                          <span className="text-[8px] font-mono text-zinc-500 uppercase block font-bold">1. Client Contact Details</span>
+                          <div className="space-y-1 text-xs font-mono text-ink-navy">
+                            <div><strong>Name:</strong> {name}</div>
+                            <div><strong>Mobile:</strong> +91 {phone}</div>
+                            <div className="truncate"><strong>Email:</strong> {email}</div>
+                          </div>
+                        </div>
+
+                        {/* Box 2: Pickup Schedule */}
+                        <div className="border border-ice-border rounded-sm p-4 bg-canvas-white space-y-1.5">
+                          <span className="text-[8px] font-mono text-zinc-500 uppercase block font-bold">2. Doorside Pickup Schedule</span>
+                          <div className="space-y-1 text-xs font-mono text-ink-navy">
+                            <div><strong>Date:</strong> {selectedDate}</div>
+                            <div className="truncate"><strong>Window:</strong> {selectedTimeSlot.split(' (')[0]}</div>
+                            <div className="truncate"><strong>Agent:</strong> {assignedAgent.name}</div>
+                          </div>
+                        </div>
+
+                        {/* Box 3: KYC Details */}
+                        <div className="border border-ice-border rounded-sm p-4 bg-canvas-white space-y-1.5">
+                          <span className="text-[8px] font-mono text-zinc-500 uppercase block font-bold">3. Aadhaar KYC Verification</span>
+                          <div className="space-y-1 text-xs font-mono text-ink-navy">
+                            <div><strong>KYC Status:</strong> <span className="text-emerald-500 font-bold uppercase text-[10px]">Verified ✓</span></div>
+                            <div><strong>Verified Name:</strong> {verifiedName}</div>
+                            <div><strong>Masked Aadhaar:</strong> {maskedAadhaar}</div>
+                          </div>
+                        </div>
+
+                        {/* Box 4: Payout Target */}
+                        <div className="border border-ice-border rounded-sm p-4 bg-canvas-white space-y-1.5">
+                          <span className="text-[8px] font-mono text-zinc-500 uppercase block font-bold">4. Selected Payout Details</span>
+                          <div className="space-y-1 text-xs font-mono text-ink-navy">
+                            <div><strong>Method:</strong> <span className="text-cobalt font-bold">{selectedPayoutMethodObj.name}</span></div>
+                            <div className="truncate">
+                              {paymentMethod === 'upi' ? (
+                                <strong>UPI ID: {upiId}</strong>
+                              ) : paymentMethod === 'bank' ? (
+                                <strong>A/C: ...{accountNumber.slice(-4)} (IFSC: {ifscCode})</strong>
+                              ) : (
+                                <span className="text-emerald-500">Auto-sent to Email &amp; SMS</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Address detail */}
+                      <div className="border border-ice-border rounded-sm p-4 bg-canvas-white space-y-1.5">
+                        <span className="text-[8px] font-mono text-zinc-500 uppercase block font-bold">Pickup Address</span>
+                        <p className="text-xs font-mono text-ink-navy leading-normal">{address}</p>
+                      </div>
+
+                      {/* Final Financial ledger summary box */}
+                      <div className="bg-zinc-950/60 p-4 rounded-sm border border-white/[0.06] space-y-2 font-mono">
+                        <div className="flex justify-between text-xs text-zinc-400">
+                          <span>Diagnostic Base Value:</span>
+                          <span>{formatPrice(finalPrice)}</span>
+                        </div>
+                        {selectedPayoutMethodObj.bonus > 0 && (
+                          <div className="flex justify-between text-xs text-emerald-400">
+                            <span>Store Payout Bonus (+{(selectedPayoutMethodObj.bonus * 100).toFixed(1)}%):</span>
+                            <span>+{formatPrice(payoutBonusAmt)}</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between items-center text-sm font-bold text-ink-navy border-t border-white/[0.06] pt-2.5 mt-2.5">
+                          <span>Final Payout Amount:</span>
+                          <span className="text-xl text-cobalt tracking-tight font-outfit">{formatPrice(totalPayoutVal)}</span>
                         </div>
                       </div>
                     </div>
@@ -709,13 +1075,17 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                   {schedulerStep === 1 ? 'Back' : 'Previous'}
                 </button>
 
-                {schedulerStep < 3 ? (
+                {schedulerStep < 4 ? (
                   <button
                     type="button"
                     onClick={handleNextStep}
-                    disabled={schedulerStep === 1 ? !isStep1Valid : !isStep2Valid}
+                    disabled={
+                      schedulerStep === 1 ? !isStep1Valid : 
+                      schedulerStep === 2 ? !isStep2Valid : 
+                      !isStep3Valid
+                    }
                     className={`flex-1 bg-cobalt hover:bg-cobalt-hover text-white py-3 rounded-sm font-bold text-sm transition-all flex items-center justify-center gap-2 ${
-                      (schedulerStep === 1 ? !isStep1Valid : !isStep2Valid)
+                      (schedulerStep === 1 ? !isStep1Valid : schedulerStep === 2 ? !isStep2Valid : !isStep3Valid)
                         ? 'opacity-40 cursor-not-allowed'
                         : 'hover:scale-[1.01]'
                     }`}
@@ -728,9 +1098,9 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                   <button
                     type="button"
                     onClick={handleSubmit}
-                    disabled={isSubmitting || !isStep3Valid}
+                    disabled={isSubmitting}
                     className={`flex-1 bg-cobalt hover:bg-cobalt-hover text-white py-3 rounded-sm font-bold text-sm transition-all flex items-center justify-center gap-2 ${
-                      (isSubmitting || !isStep3Valid)
+                      isSubmitting
                         ? 'opacity-40 cursor-not-allowed'
                         : 'hover:scale-[1.01]'
                     }`}
@@ -803,7 +1173,12 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                   <div className="flex justify-between items-center bg-zinc-950/40 p-3 rounded-sm border border-white/[0.06] mt-4">
                     <div>
                       <span className="text-[8px] text-zinc-500 uppercase block font-mono">Total Estimated Payout</span>
-                      <span className="text-xl font-bold text-cobalt tracking-tight font-outfit">{formatPrice(finalPrice)}</span>
+                      <span className="text-xl font-bold text-cobalt tracking-tight font-outfit">{formatPrice(totalPayoutVal)}</span>
+                      {selectedPayoutMethodObj.bonus > 0 && (
+                        <span className="text-[9px] text-emerald-400 block font-mono">
+                          (Includes {(selectedPayoutMethodObj.bonus * 100).toFixed(1)}% Store Bonus)
+                        </span>
+                      )}
                     </div>
                     <span className="text-[9px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-sm border border-emerald-500/20 font-bold uppercase tracking-wider">Locked</span>
                   </div>
@@ -842,59 +1217,88 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
               Your doorside pickup has been locked successfully. A confirmation message was sent to <strong className="text-ink-navy font-semibold">+91 {phone}</strong>.
             </p>
 
-            {/* Receipt Details with declared defects summary */}
-            <div className="w-full bg-zinc-950/40 border border-dashed border-white/[0.12] rounded-sm p-5 my-6 text-xs space-y-2.5 font-mono text-left">
-              <div className="flex justify-between font-bold border-b border-white/[0.06] pb-2 mb-2 text-ink-navy">
-                <span>Confirmation ID</span>
-                <span className="text-cobalt">#{confirmationId}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-zinc-500">Device Model</span>
-                <span className="text-ink-navy font-semibold">{selectedModel.name} ({selectedVariant.storageGb}GB)</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-zinc-500">Client Inspector</span>
-                <span className="text-ink-navy">{name}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-zinc-500">Pickup Address</span>
-                <span className="text-ink-navy truncate max-w-[240px]">{address}</span>
-              </div>
-              
-              {/* Date time booking overview */}
-              <div className="flex justify-between border-t border-white/[0.04] pt-2">
-                <span className="text-zinc-500">Scheduled Date</span>
-                <span className="text-ink-navy font-semibold">{selectedDate}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-zinc-500">Time Slot Window</span>
-                <span className="text-ink-navy font-semibold">{selectedTimeSlot}</span>
+            {/* Receipt Details with declared defects summary & Side-by-side Phone Preview */}
+            <div className="w-full grid grid-cols-1 md:grid-cols-12 gap-6 items-start my-6">
+              <div className="md:col-span-8 bg-zinc-950/40 border border-dashed border-white/[0.12] rounded-sm p-5 text-xs space-y-2.5 font-mono text-left shadow-inner">
+                <div className="flex justify-between font-bold border-b border-white/[0.06] pb-2 mb-2 text-ink-navy">
+                  <span>Confirmation ID</span>
+                  <span className="text-cobalt">#{confirmationId}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-zinc-500">Device Model</span>
+                  <span className="text-ink-navy font-semibold">{selectedModel.name} ({selectedVariant.storageGb}GB)</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-zinc-500">Color Variant</span>
+                  <span className="text-ink-navy font-semibold">{selectedVariant.color}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-zinc-500">Model Number</span>
+                  <span className="text-ink-navy font-mono text-[13px] bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded">{selectedModel.modelNumber}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-zinc-500">Client Inspector</span>
+                  <span className="text-ink-navy">{name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-zinc-500">Pickup Address</span>
+                  <span className="text-ink-navy truncate max-w-[240px]">{address}</span>
+                </div>
+                
+                {/* Date time booking overview */}
+                <div className="flex justify-between border-t border-white/[0.04] pt-2">
+                  <span className="text-zinc-500">Scheduled Date</span>
+                  <span className="text-ink-navy font-semibold">{selectedDate}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-zinc-500">Time Slot Window</span>
+                  <span className="text-ink-navy font-semibold">{selectedTimeSlot}</span>
+                </div>
+
+                {/* Declared defects summary on ticket receipt */}
+                <div className="border-t border-white/[0.04] pt-2 space-y-1">
+                  <span className="text-zinc-500 block">Declared Defects Summary:</span>
+                  {selectedDefects.length > 0 ? (
+                    <div className="space-y-1 pl-2 text-[10px] text-zinc-400">
+                      {selectedDefects.map(d => (
+                        <div key={d.id} className="flex justify-between">
+                          <span>• {getEngineeringLabel(d.description)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="pl-2 text-[10px] text-emerald-400 italic">• No defects declared (Flawless Device)</span>
+                  )}
+                </div>
+
+                <div className="flex justify-between border-t border-white/[0.04] pt-2">
+                  <span className="text-zinc-500">KYC Aadhaar Verification</span>
+                  <span className="text-emerald-400 font-bold">VERIFIED ({verifiedName})</span>
+                </div>
+
+                <div className="flex justify-between">
+                  <span className="text-zinc-500">Payout Destination</span>
+                  <span className="text-ink-navy truncate max-w-[200px]">
+                    {paymentMethod === 'upi' ? `UPI: ${upiId}` : 
+                     paymentMethod === 'bank' ? `Bank: A/C ...${accountNumber.slice(-4)}` :
+                     `${selectedPayoutMethodObj.name}`}
+                  </span>
+                </div>
+                
+                <div className="flex justify-between font-bold border-t border-white/[0.06] pt-2.5 mt-2 text-sm text-ink-navy">
+                  <span>Final Locked Payout</span>
+                  <span className="text-cobalt font-light tracking-tight text-base font-outfit">{formatPrice(totalPayoutVal)}</span>
+                </div>
               </div>
 
-              {/* Declared defects summary on ticket receipt */}
-              <div className="border-t border-white/[0.04] pt-2 space-y-1">
-                <span className="text-zinc-500 block">Declared Defects Summary:</span>
-                {selectedDefects.length > 0 ? (
-                  <div className="space-y-1 pl-2 text-[10px] text-zinc-400">
-                    {selectedDefects.map(d => (
-                      <div key={d.id} className="flex justify-between">
-                        <span>• {getEngineeringLabel(d.description)}</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <span className="pl-2 text-[10px] text-emerald-400 italic">• No defects declared (Flawless Device)</span>
-                )}
-              </div>
-
-              <div className="flex justify-between">
-                <span className="text-zinc-500">Payout Method</span>
-                <span className="text-ink-navy uppercase">{paymentMethod}</span>
-              </div>
-              
-              <div className="flex justify-between font-bold border-t border-white/[0.06] pt-2.5 mt-2 text-sm text-ink-navy">
-                <span>Final Locked Payout</span>
-                <span className="text-cobalt font-light tracking-tight text-base font-outfit">{formatPrice(finalPrice)}</span>
+              <div className="md:col-span-4 flex flex-col items-center bg-white dark:bg-zinc-950 p-4 rounded-sm border border-ice-border shadow-sm">
+                <span className="text-xs font-mono font-bold tracking-wider text-ink-slate uppercase mb-3 block text-center">Confirmed Color</span>
+                <PhoneBackPreview 
+                  brandId={selectedModel.brandId} 
+                  modelName={selectedModel.name} 
+                  colorName={selectedVariant.color} 
+                  modelId={selectedModel.id}
+                />
               </div>
             </div>
 

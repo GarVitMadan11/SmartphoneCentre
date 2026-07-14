@@ -6,7 +6,249 @@ import {
   siApple, siSamsung, siXiaomi, siVivo, siOneplus, siGoogle,
 } from 'simple-icons';
 
+export interface ColorSpec {
+  gradient: string;
+  accentColor: string;
+  textColorClass: string;
+  logoColor: string;
+  borderColor: string;
+  filter: string;
+}
+
+export function getColorTheme(colorName: string): ColorSpec {
+  const name = colorName.toLowerCase();
+  
+  if (name.includes('natural titanium')) {
+    return {
+      gradient: 'linear-gradient(180deg, #A69F96 0%, #B8B1A7 50%, #8C867E 100%)',
+      accentColor: '#7C756E',
+      textColorClass: 'text-stone-955/20',
+      logoColor: 'rgba(28,25,23,0.15)',
+      borderColor: '#8C867E',
+      filter: 'sepia(0.2) saturate(0.55) brightness(0.92) contrast(1.05)',
+    };
+  }
+  if (name.includes('black titanium')) {
+    return {
+      gradient: 'linear-gradient(180deg, #2C2C2E 0%, #3A3A3C 50%, #1C1C1E 100%)',
+      accentColor: '#111111',
+      textColorClass: 'text-white/10',
+      logoColor: 'rgba(255,255,255,0.08)',
+      borderColor: '#1C1C1E',
+      filter: 'brightness(0.38) contrast(1.15) grayscale(1)',
+    };
+  }
+  if (name.includes('white titanium') || name.includes('awesome white')) {
+    return {
+      gradient: 'linear-gradient(180deg, #F2F1ED 0%, #FBFBFA 50%, #E5E4DF 100%)',
+      accentColor: '#D1CFCA',
+      textColorClass: 'text-stone-900/20',
+      logoColor: 'rgba(0,0,0,0.1)',
+      borderColor: '#D1CFCA',
+      filter: 'brightness(1.12) contrast(0.95) grayscale(1)',
+    };
+  }
+  if (name.includes('desert titanium')) {
+    return {
+      gradient: 'linear-gradient(180deg, #D4C4B7 0%, #DFD1C4 50%, #C0AEA0 100%)',
+      accentColor: '#9C897C',
+      textColorClass: 'text-stone-900/25',
+      logoColor: 'rgba(67,56,48,0.15)',
+      borderColor: '#C0AEA0',
+      filter: 'sepia(0.35) saturate(0.68) brightness(1.02) contrast(1.02)',
+    };
+  }
+  if (name.includes('space gray')) {
+    return {
+      gradient: 'linear-gradient(180deg, #4B4E52 0%, #5D6065 50%, #3B3D40 100%)',
+      accentColor: '#2D2E30',
+      textColorClass: 'text-white/10',
+      logoColor: 'rgba(255,255,255,0.1)',
+      borderColor: '#3B3D40',
+      filter: 'brightness(0.55) contrast(1.08) grayscale(1)',
+    };
+  }
+  if (name.includes('silver') || name.includes('marble gray') || name.includes('phantom silver')) {
+    return {
+      gradient: 'linear-gradient(180deg, #E3E4E6 0%, #F1F2F4 50%, #CACBCE 100%)',
+      accentColor: '#9FA2A6',
+      textColorClass: 'text-stone-900/20',
+      logoColor: 'rgba(0,0,0,0.12)',
+      borderColor: '#CACBCE',
+      filter: 'brightness(1.05) contrast(1) grayscale(1)',
+    };
+  }
+  if (name.includes('gold')) {
+    return {
+      gradient: 'linear-gradient(180deg, #F7D8B5 0%, #FAEAD4 50%, #E3BE92 100%)',
+      accentColor: '#B09571',
+      textColorClass: 'text-amber-900/20',
+      logoColor: 'rgba(120,80,30,0.15)',
+      borderColor: '#E3BE92',
+      filter: 'sepia(0.5) saturate(1.25) brightness(1.02) contrast(1)',
+    };
+  }
+  if (name.includes('midnight green')) {
+    return {
+      gradient: 'linear-gradient(180deg, #4E5851 0%, #5C675F 50%, #3D4540 100%)',
+      accentColor: '#2C322E',
+      textColorClass: 'text-white/10',
+      logoColor: 'rgba(255,255,255,0.08)',
+      borderColor: '#3D4540',
+      filter: 'hue-rotate(85deg) saturate(0.52) brightness(0.6) contrast(1.1)',
+    };
+  }
+  if (name.includes('midnight') || name.includes('obsidian black') || name.includes('phantom black') || name.includes('awesome black') || name.includes('obsidian')) {
+    return {
+      gradient: 'linear-gradient(180deg, #1B2228 0%, #242D35 50%, #0F1418 100%)',
+      accentColor: '#090C0E',
+      textColorClass: 'text-white/10',
+      logoColor: 'rgba(255,255,255,0.08)',
+      borderColor: '#0F1418',
+      filter: 'hue-rotate(185deg) saturate(0.38) brightness(0.36) contrast(1.15)',
+    };
+  }
+  if (name.includes('starlight') || name.includes('porcelain') || name.includes('cream')) {
+    return {
+      gradient: 'linear-gradient(180deg, #FAF6F0 0%, #FCFAF5 50%, #F0E9DF 100%)',
+      accentColor: '#DCD4C9',
+      textColorClass: 'text-stone-900/20',
+      logoColor: 'rgba(0,0,0,0.1)',
+      borderColor: '#F0E9DF',
+      filter: 'sepia(0.12) saturate(0.48) brightness(1.1) contrast(0.98)',
+    };
+  }
+  if (name.includes('red') || name.includes('coral')) {
+    return {
+      gradient: 'linear-gradient(180deg, #BA0C13 0%, #DC1C24 50%, #99060B 100%)',
+      accentColor: '#780307',
+      textColorClass: 'text-white/20',
+      logoColor: 'rgba(255,255,255,0.18)',
+      borderColor: '#99060B',
+      filter: 'hue-rotate(342deg) saturate(2.4) brightness(0.85) contrast(1.18)',
+    };
+  }
+  if (name.includes('purple') || name.includes('violet') || name.includes('lavender') || name.includes('cobalt violet') || name.includes('phantom violet') || name.includes('awesome violet')) {
+    return {
+      gradient: 'linear-gradient(180deg, #5A556B 0%, #6D6881 50%, #474355 100%)',
+      accentColor: '#363340',
+      textColorClass: 'text-white/15',
+      logoColor: 'rgba(255,255,255,0.1)',
+      borderColor: '#474355',
+      filter: 'hue-rotate(245deg) saturate(0.78) brightness(0.78) contrast(1.05)',
+    };
+  }
+  if (name.includes('pink')) {
+    return {
+      gradient: 'linear-gradient(180deg, #F5C7D1 0%, #FAD3DC 50%, #EAA8B6 100%)',
+      accentColor: '#C48190',
+      textColorClass: 'text-pink-900/20',
+      logoColor: 'rgba(120,40,60,0.15)',
+      borderColor: '#EAA8B6',
+      filter: 'hue-rotate(315deg) saturate(0.85) brightness(1.08) contrast(0.95)',
+    };
+  }
+  if (name.includes('yellow') || name.includes('titanium yellow')) {
+    return {
+      gradient: 'linear-gradient(180deg, #FCEEAC 0%, #FFF5C7 50%, #F1DE85 100%)',
+      accentColor: '#C7B458',
+      textColorClass: 'text-yellow-950/20',
+      logoColor: 'rgba(100,80,20,0.15)',
+      borderColor: '#F1DE85',
+      filter: 'hue-rotate(15deg) saturate(1.25) brightness(1.08) contrast(1)',
+    };
+  }
+  if (name.includes('green') || name.includes('hazel') || name.includes('sage')) {
+    return {
+      gradient: 'linear-gradient(180deg, #CBE8D7 0%, #D5F0E1 50%, #B0D5BE 100%)',
+      accentColor: '#8BB098',
+      textColorClass: 'text-emerald-950/20',
+      logoColor: 'rgba(20,80,40,0.12)',
+      borderColor: '#B0D5BE',
+      filter: 'hue-rotate(95deg) saturate(0.78) brightness(1.02) contrast(0.98)',
+    };
+  }
+  if (name.includes('blue') || name.includes('awesome blue')) {
+    return {
+      gradient: 'linear-gradient(180deg, #C4DEF2 0%, #D3E9F8 50%, #A9C8E3 100%)',
+      accentColor: '#80A2BE',
+      textColorClass: 'text-blue-950/20',
+      logoColor: 'rgba(20,50,90,0.12)',
+      borderColor: '#A9C8E3',
+      filter: 'hue-rotate(185deg) saturate(0.88) brightness(1.05) contrast(0.95)',
+    };
+  }
+  if (name.includes('bespoke') || name.includes('copper') || name.includes('bronze')) {
+    return {
+      gradient: 'linear-gradient(180deg, #E2A684 0%, #EDB696 50%, #CB8B6A 100%)',
+      accentColor: '#A26544',
+      textColorClass: 'text-stone-900/20',
+      logoColor: 'rgba(0,0,0,0.1)',
+      borderColor: '#CB8B6A',
+      filter: 'sepia(0.35) saturate(0.75) brightness(0.95) contrast(1.05)',
+    };
+  }
+  
+  return {
+    gradient: 'linear-gradient(180deg, #D5D8DC 0%, #E5E8EB 50%, #AEB6BF 100%)',
+    accentColor: '#8F969E',
+    textColorClass: 'text-stone-900/20',
+    logoColor: 'rgba(0,0,0,0.1)',
+    borderColor: '#AEB6BF',
+    filter: 'brightness(1.02) contrast(1) grayscale(1)',
+  };
+}
+
+export const PhoneBackPreview: React.FC<{
+  brandId: string;
+  modelName: string;
+  colorName: string;
+  modelId?: string;
+}> = ({ brandId, modelName, colorName, modelId }) => {
+  const theme = useMemo(() => getColorTheme(colorName), [colorName]);
+  
+  const imgUrl = useMemo(() => {
+    if (modelId) {
+      return getDeviceImage(modelId, brandId);
+    }
+    return getDeviceImage('', brandId);
+  }, [modelId, brandId]);
+
+  return (
+    <div className="flex flex-col items-center justify-center p-6 bg-slate-50 dark:bg-zinc-900/30 rounded-lg border border-ice-border/40 mt-2 mb-4 animate-fadeIn w-full">
+      {/* Container for the phone photo with soft pedestal shadow */}
+      <div className="relative w-40 h-60 flex items-center justify-center p-2 overflow-visible transition-all duration-300">
+        
+        {/* Soft realistic drop shadow under the phone */}
+        <div 
+          className="absolute bottom-1 left-1/2 -translate-x-1/2 w-[85%] h-4 bg-black/20 rounded-full blur-md filter pointer-events-none"
+          style={{
+            transform: 'translateX(-50%) scaleY(0.4)',
+          }}
+        />
+
+        {/* Dynamic color-shifting phone image */}
+        <img 
+          src={imgUrl} 
+          alt={modelName} 
+          className="max-h-full max-w-full object-contain transition-all duration-500 hover:scale-[1.03] pointer-events-none drop-shadow-[0_10px_15px_rgba(0,0,0,0.12)]"
+          style={{
+            filter: theme.filter
+          }}
+        />
+      </div>
+
+      {/* Styled color name under phone */}
+      <div className="mt-4 text-center">
+        <span className="text-[10px] uppercase tracking-widest font-mono text-zinc-500 dark:text-zinc-400 block mb-1">Color Option</span>
+        <span className="text-base font-bold text-ink-navy dark:text-zinc-200 font-outfit tracking-tight">{colorName}</span>
+      </div>
+    </div>
+  );
+};
+
 // ── Brand Logo using official Simple Icons SVG paths ─────────────────────────
+
 const BRAND_ICON_MAP: Record<string, { icon: { path: string; viewBox?: string; hex?: string }; size: number; brandColor?: string }> = {
   apple:   { icon: siApple,   size: 20 },
   samsung: { icon: siSamsung, size: 52 }, // Larger size to make horizontal wordmark readable
@@ -134,7 +376,8 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({ onVariantSelecte
       const matchesSeries = debouncedSearchQuery.trim() !== '' 
         ? true 
         : (selectedSeries === null ? true : model.series === selectedSeries);
-      const matchesSearch = model.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase());
+      const matchesSearch = model.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+                            model.modelNumber.toLowerCase().includes(debouncedSearchQuery.toLowerCase());
       return matchesBrand && matchesSeries && matchesSearch;
     });
   }, [selectedBrandId, selectedSeries, debouncedSearchQuery]);
@@ -359,9 +602,12 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({ onVariantSelecte
                                   <Calendar className="w-3 h-3" /> {model.releaseYear}
                                 </span>
                               </div>
-                              <h3 className="font-light text-base text-ink-navy leading-tight mb-2">
+                              <h3 className="font-light text-base text-ink-navy leading-tight mb-1">
                                 {model.name}
                               </h3>
+                              <span className="text-[10px] font-mono font-medium text-slate-500 bg-slate-100 dark:bg-zinc-800 dark:text-zinc-400 px-1.5 py-0.5 rounded border border-slate-200 dark:border-zinc-700/60 inline-block mb-2">
+                                Model: {model.modelNumber}
+                              </span>
                             </div>
                             
                             {/* Brand specific phone image */}
@@ -407,6 +653,14 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({ onVariantSelecte
                   <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block">Selected Model Spec</span>
                 </div>
                 <h3 className="text-3xl font-light text-ink-navy tracking-tight">{selectedModel.name}</h3>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <span className="text-[10px] font-mono font-medium text-slate-500 bg-slate-100 dark:bg-zinc-800 dark:text-zinc-400 px-2 py-0.5 rounded border border-slate-200 dark:border-zinc-700/60">
+                    Model No: {selectedModel.modelNumber}
+                  </span>
+                  <span className="text-[10px] font-mono font-medium text-slate-500 bg-slate-100 dark:bg-zinc-800 dark:text-zinc-400 px-2 py-0.5 rounded border border-slate-200 dark:border-zinc-700/60">
+                    Release: {selectedModel.releaseYear}
+                  </span>
+                </div>
                 <p className="text-xs text-ink-muted mt-2 font-light">Select your device's storage capacity and color to load the live trade-in value.</p>
               </div>
 
@@ -483,6 +737,13 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({ onVariantSelecte
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 10 }}
                   >
+                    <PhoneBackPreview 
+                      brandId={selectedModel.brandId} 
+                      modelName={selectedModel.name} 
+                      colorName={tempVariant.color} 
+                      modelId={selectedModel.id}
+                    />
+
                     <div className="bg-canvas-white rounded-sm p-4 mb-6 border border-white/[0.06] flex items-center justify-between text-left">
                       <div>
                         <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-1">Base Price / Mint</span>
