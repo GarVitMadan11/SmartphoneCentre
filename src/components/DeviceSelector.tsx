@@ -231,7 +231,11 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({ onVariantSelecte
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               className="w-full pl-10 sm:pl-12 pr-4 py-3 sm:py-3.5 rounded-sm border border-ice-border bg-canvas-pure text-ink-navy text-sm placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all duration-300"
-              style          {/* If search query is empty and no series is selected, show Series Cards */}
+              style={{ minHeight: '48px' }}
+            />
+          </div>
+
+          {/* If search query is empty and no series is selected, show Series Cards */}
           {debouncedSearchQuery.trim() === '' && selectedSeries === null && (
             <div className="mb-8 animate-fadeIn">
               <div className="text-left mb-5">
@@ -374,11 +378,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({ onVariantSelecte
               </div>
             </div>
           )}
-        </div>sence>
-          </div>
         </div>
-      )}
-    </div>
 
         {/* Right Side: Variant selector — slides in on desktop, stacks on mobile */}
         <AnimatePresence>
