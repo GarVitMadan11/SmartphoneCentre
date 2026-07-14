@@ -10,6 +10,10 @@ import {
   Code, Database, Info, GitBranch
 } from 'lucide-react';
 
+import applePhoneImg from './assets/apple_phone.png';
+import samsungPhoneImg from './assets/samsung_phone.png';
+import oneplusPhoneImg from './assets/oneplus_phone.png';
+
 // ── Secure localStorage helpers ──────────────────────────────────────────────
 // Only non-sensitive navigation state is persisted (activeStage, wizardStep).
 // PII and financial data (model, variant, price, defects) live in React state only.
@@ -482,17 +486,21 @@ export default function App() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                   {/* Large Card: iPhone 15 Pro Max */}
                   <div className="lg:col-span-2 bg-gradient-to-br from-primary to-slate-900 rounded-3xl p-8 text-white relative overflow-hidden flex flex-col justify-between min-h-[360px] shadow-xl group text-left">
-                    <div className="absolute right-0 bottom-0 opacity-10 group-hover:opacity-15 transition-opacity pointer-events-none">
+                    <div className="absolute right-0 bottom-0 opacity-10 group-hover:opacity-15 transition-opacity pointer-events-none z-0">
                       <svg className="w-96 h-96 text-white" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 4.17c.66-.81 1.11-1.93.99-3.06-1 .04-2.22.67-2.94 1.5-.64.74-1.2 1.88-1.05 2.99 1.12.09 2.26-.57 3-1.43z"/>
                       </svg>
                     </div>
-                    <div>
+                    {/* Actual iPhone Image */}
+                    <div className="absolute right-6 bottom-[-20px] w-56 sm:w-64 h-auto pointer-events-none group-hover:scale-105 group-hover:translate-y-[-10px] transition-all duration-500 ease-out z-10 hidden sm:block">
+                      <img src={applePhoneImg} alt="iPhone 15 Pro Max" className="w-full h-auto object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)]" />
+                    </div>
+                    <div className="z-10 relative">
                       <span className="px-3 py-1 bg-white/10 text-white rounded-full text-xs font-semibold uppercase tracking-wider border border-white/10">Top Offer Today</span>
                       <h3 className="text-3xl font-extrabold mt-6 max-w-md">Sell your iPhone 15 Pro Max</h3>
                       <p className="text-slate-300 mt-2 max-w-sm font-light">Get maximum trade-in value before the next generation release.</p>
                     </div>
-                    <div className="mt-8 flex items-baseline justify-between gap-4 z-10">
+                    <div className="mt-8 flex items-baseline justify-between gap-4 z-10 relative">
                       <div>
                         <p className="text-[10px] text-slate-400 uppercase tracking-widest font-mono">Valuations Up To</p>
                         <p className="text-3xl sm:text-4xl font-black text-green-400 mt-1">₹57,000</p>
@@ -509,34 +517,40 @@ export default function App() {
                   {/* Right stack (Samsung + OnePlus/Google) */}
                   <div className="flex flex-col gap-8 justify-between">
                     {/* Samsung Galaxy S24 Ultra */}
-                    <div className="bg-canvas-pure border border-ice-border rounded-3xl p-6 flex flex-col justify-between min-h-[166px] shadow-sm text-left">
-                      <div className="flex justify-between items-start">
+                    <div className="bg-canvas-pure border border-ice-border rounded-3xl p-6 flex flex-col justify-between min-h-[166px] shadow-sm text-left relative overflow-hidden group">
+                      {/* Actual Samsung Image */}
+                      <div className="absolute right-[-10px] bottom-[-20px] w-24 h-auto pointer-events-none group-hover:scale-105 group-hover:translate-y-[-5px] transition-all duration-500 ease-out z-0 opacity-40 group-hover:opacity-60">
+                        <img src={samsungPhoneImg} alt="Galaxy S24 Ultra" className="w-full h-auto object-contain" />
+                      </div>
+                      <div className="flex justify-between items-start z-10">
                         <div>
                           <h4 className="text-lg font-bold text-ink-navy">Galaxy S24 Ultra</h4>
                           <p className="text-xs text-ink-slate mt-1">Valuations up to ₹42,000</p>
                         </div>
-                        <span className="w-8 h-8 rounded-full bg-ice-gray flex items-center justify-center text-slate-500 text-xs">📱</span>
                       </div>
                       <span 
                         onClick={() => handleDirectSelectModel('sam-s24u')}
-                        className="text-xs font-bold text-secondary flex items-center gap-1 hover:underline cursor-pointer"
+                        className="text-xs font-bold text-secondary flex items-center gap-1 hover:underline cursor-pointer z-10 mt-4"
                       >
                         Get Valuation →
                       </span>
                     </div>
 
                     {/* OnePlus 12 */}
-                    <div className="bg-canvas-pure border border-ice-border rounded-3xl p-6 flex flex-col justify-between min-h-[166px] shadow-sm text-left">
-                      <div className="flex justify-between items-start">
+                    <div className="bg-canvas-pure border border-ice-border rounded-3xl p-6 flex flex-col justify-between min-h-[166px] shadow-sm text-left relative overflow-hidden group">
+                      {/* Actual OnePlus Image */}
+                      <div className="absolute right-[-10px] bottom-[-20px] w-24 h-auto pointer-events-none group-hover:scale-105 group-hover:translate-y-[-5px] transition-all duration-500 ease-out z-0 opacity-40 group-hover:opacity-60">
+                        <img src={oneplusPhoneImg} alt="OnePlus 12" className="w-full h-auto object-contain" />
+                      </div>
+                      <div className="flex justify-between items-start z-10">
                         <div>
                           <h4 className="text-lg font-bold text-ink-navy">OnePlus 12</h4>
                           <p className="text-xs text-ink-slate mt-1">Valuations up to ₹24,000</p>
                         </div>
-                        <span className="w-8 h-8 rounded-full bg-ice-gray flex items-center justify-center text-slate-500 text-xs">📱</span>
                       </div>
                       <span 
                         onClick={() => handleDirectSelectModel('op-12')}
-                        className="text-xs font-bold text-secondary flex items-center gap-1 hover:underline cursor-pointer"
+                        className="text-xs font-bold text-secondary flex items-center gap-1 hover:underline cursor-pointer z-10 mt-4"
                       >
                         Get Valuation →
                       </span>

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { BRANDS, MODELS, Model, Variant, generateVariantsForModel } from '../data/mockDatabase';
+import { BRANDS, MODELS, Model, Variant, generateVariantsForModel, getDeviceImage } from '../data/mockDatabase';
 import { Search, ChevronRight, Smartphone, Calendar, Layers, ShieldCheck, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -333,7 +333,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({ onVariantSelecte
                         layoutId={`model-card-${model.id}`}
                         key={model.id}
                         onClick={() => handleModelClick(model)}
-                        className={`p-4 sm:p-5 rounded-sm border cursor-pointer transition-all duration-300 bg-canvas-pure relative card-shimmer ${
+                        className={`p-4 sm:p-5 rounded-sm border cursor-pointer transition-all duration-300 bg-canvas-pure relative card-shimmer group ${
                           isSelected
                             ? 'border-cobalt ring-1 ring-cobalt/20 scale-[1.01] opacity-100 z-10 shadow-premium'
                             : hasSelection
@@ -342,28 +342,39 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({ onVariantSelecte
                         }`}
                       >
                         {/* Canva style premium layout */}
-                        <div className="flex flex-col h-full justify-between">
-                          <div className="text-left">
-                            <div className="flex items-center justify-between mb-3">
-                              <span className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-sm ${
-                                model.category === 'flagship'
-                                  ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                                  : model.category === 'premium'
-                                  ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                                  : 'bg-zinc-500/10 text-zinc-400 border border-zinc-500/20'
-                              }`}>
-                                {model.category}
-                              </span>
-                              <span className="text-[11px] text-ink-muted flex items-center gap-1 font-mono">
-                                <Calendar className="w-3 h-3" /> {model.releaseYear}
-                              </span>
+                        <div className="flex flex-col h-full justify-between min-h-[140px]">
+                          <div className="flex justify-between items-start gap-3">
+                            <div className="text-left flex-1">
+                              <div className="flex items-center justify-between mb-3">
+                                <span className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-sm ${
+                                  model.category === 'flagship'
+                                    ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                                    : model.category === 'premium'
+                                    ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                                    : 'bg-zinc-500/10 text-zinc-400 border border-zinc-500/20'
+                                }`}>
+                                  {model.category}
+                                </span>
+                                <span className="text-[11px] text-ink-muted flex items-center gap-1 font-mono">
+                                  <Calendar className="w-3 h-3" /> {model.releaseYear}
+                                </span>
+                              </div>
+                              <h3 className="font-light text-base text-ink-navy leading-tight mb-2">
+                                {model.name}
+                              </h3>
                             </div>
-                            <h3 className="font-light text-lg text-ink-navy leading-tight mb-2">
-                              {model.name}
-                            </h3>
+                            
+                            {/* Brand specific phone image */}
+                            <div className="w-16 h-16 flex-shrink-0 flex items-center justify-center overflow-hidden bg-slate-100 rounded-lg p-1.5 border border-ice-border/40">
+                              <img 
+                                src={getDeviceImage(model.id, model.brandId)} 
+                                alt={model.name} 
+                                className="max-h-full max-w-full object-contain pointer-events-none group-hover:scale-105 transition-transform duration-300" 
+                              />
+                            </div>
                           </div>
                           
-                          <div className="pt-4 border-t border-white/[0.04] flex items-center justify-between">
+                          <div className="pt-3 mt-3 border-t border-white/[0.04] flex items-center justify-between">
                             <div className="text-left">
                               <span className="text-[9px] text-zinc-500 block uppercase font-mono tracking-wider">Payout Up To</span>
                               <span className="text-sm font-bold text-cobalt font-outfit">{formatPrice(model.basePrice128GB)}</span>
