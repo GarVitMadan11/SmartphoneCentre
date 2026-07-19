@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Shield, X, AlertCircle, ArrowRight, ShieldCheck, Lock } from 'lucide-react';
-import { useFocusTrap } from '../hooks/useFocusTrap';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 interface DigiLockerModalProps {
   isOpen: boolean;
