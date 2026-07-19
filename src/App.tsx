@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo, lazy, Suspense } from 'react';
 import { Model, Variant, DefectRule, MODELS, BRANDS, generateVariantsForModel, INITIAL_BOOKINGS } from './data/mockDatabase';
 import { DeviceSelector } from './components/DeviceSelector';
+import { useFocusTrap } from './hooks/useFocusTrap';
 // ── Lazy-loaded heavy components (code splitting — P-1 fix) ───────────────────
 const DiagnosticWizard = lazy(() => import('./components/DiagnosticWizard').then(m => ({ default: m.DiagnosticWizard })));
 const PickupScheduler  = lazy(() => import('./components/PickupScheduler').then(m => ({ default: m.PickupScheduler })));
@@ -73,6 +74,9 @@ interface SpecsModalProps {
 }
 
 function SpecsModal({ isOpen, onClose }: SpecsModalProps) {
+  const modalRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(modalRef, isOpen);
+
   if (!isOpen) return null;
   return (
     <div
@@ -81,7 +85,7 @@ function SpecsModal({ isOpen, onClose }: SpecsModalProps) {
       aria-label="System Design Specification"
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
     >
-      <div className="bg-canvas-pure border border-ice-border rounded-lg max-w-3xl w-full max-h-[85vh] flex flex-col shadow-premium overflow-hidden">
+      <div ref={modalRef} className="bg-canvas-pure border border-ice-border rounded-lg max-w-3xl w-full max-h-[85vh] flex flex-col shadow-premium overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-ice-border bg-canvas-white">
           <div className="text-left">
@@ -958,6 +962,8 @@ interface AdminAuthModalProps {
 function AdminAuthModal({ isOpen, onClose, onSuccess }: AdminAuthModalProps) {
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
+  const modalRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(modalRef, isOpen);
 
   if (!isOpen) return null;
 
@@ -979,7 +985,7 @@ function AdminAuthModal({ isOpen, onClose, onSuccess }: AdminAuthModalProps) {
       aria-labelledby="admin-modal-title"
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
     >
-      <div className="bg-canvas-pure border border-ice-border rounded-lg max-w-sm w-full p-6 shadow-premium relative animate-fadeIn">
+      <div ref={modalRef} className="bg-canvas-pure border border-ice-border rounded-lg max-w-sm w-full p-6 shadow-premium relative animate-fadeIn">
         <div className="text-center space-y-4">
           <div className="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto" aria-hidden="true">
             <ShieldAlert className="w-6 h-6 text-red-500 animate-pulse" />

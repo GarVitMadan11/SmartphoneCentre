@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Shield, X, AlertCircle, ArrowRight, ShieldCheck, Lock } from 'lucide-react';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 interface DigiLockerModalProps {
   isOpen: boolean;
@@ -21,6 +22,9 @@ export const DigiLockerModal: React.FC<DigiLockerModalProps> = ({
   const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useFocusTrap(modalRef, isOpen);
 
   if (!isOpen) return null;
 
@@ -76,16 +80,21 @@ export const DigiLockerModal: React.FC<DigiLockerModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm">
-      <div className="bg-canvas-pure border border-ice-border rounded-sm max-w-md w-full overflow-hidden shadow-premium text-left animate-fadeIn">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="digi-modal-title"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm"
+    >
+      <div ref={modalRef} className="bg-canvas-pure border border-ice-border rounded-sm max-w-md w-full overflow-hidden shadow-premium text-left animate-fadeIn">
         {/* DigiLocker Official Header */}
         <div className="bg-slate-900 border-b border-ice-border p-4 flex items-center justify-between text-white">
           <div className="flex items-center gap-2.5">
-            <div className="bg-cobalt p-1.5 rounded-sm flex items-center justify-center">
+            <div className="bg-cobalt p-1.5 rounded-sm flex items-center justify-center" aria-hidden="true">
               <Shield className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h3 className="font-outfit font-bold text-sm tracking-wide">DigiLocker Verification</h3>
+              <h3 id="digi-modal-title" className="font-outfit font-bold text-sm tracking-wide">DigiLocker Verification</h3>
               <span className="text-[9px] font-mono text-slate-400 uppercase tracking-widest block">Govt. of India API Gateway</span>
             </div>
           </div>
@@ -94,9 +103,10 @@ export const DigiLockerModal: React.FC<DigiLockerModalProps> = ({
               resetModal();
               onClose();
             }}
+            aria-label="Close DigiLocker verification"
             className="p-1.5 rounded-sm text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
           >
-            <X className="w-4 h-4" />
+            <X className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
 
