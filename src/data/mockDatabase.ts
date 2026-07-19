@@ -596,9 +596,22 @@ export function getPhoneImageForBrand(brandId: string): string {
   }
 }
 
-export function getDeviceImage(modelId: string, brandId: string): string {
-  const imageName = (phoneImages as Record<string, string>)[modelId];
+export function getDeviceImage(modelId: string, brandId: string, color?: string): string {
+  let imageName: string | undefined;
+  
+  if (color) {
+    const colorKey = `${modelId}-${color.toLowerCase().trim().replace(/\s+/g, '-')}`;
+    imageName = (phoneImages as Record<string, string>)[colorKey];
+  }
+  
+  if (!imageName) {
+    imageName = (phoneImages as Record<string, string>)[modelId];
+  }
+  
   if (imageName) {
+    if (imageName.startsWith('http')) {
+      return imageName;
+    }
     try {
       return new URL(`../assets/phones/${imageName}`, import.meta.url).href;
     } catch (e) {
