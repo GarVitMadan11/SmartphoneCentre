@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { Model, Variant, getDefectRulesForCategory, DefectRule } from '../data/mockDatabase';
 import { calculateValuation } from '../utils/valuation';
 import { 
@@ -8,6 +8,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { getIllustration } from './Illustrations';
 import { getColorTheme, PhoneBackPreview } from './DeviceSelector';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 
 const getEngineeringLabel = (description: string) => {
@@ -88,6 +89,8 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
     visible: boolean;
     type: 'icloud' | 'power' | null;
   }>({ visible: false, type: null });
+  const criticalModalRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(criticalModalRef, criticalModal.visible);
 
   const showCriticalModal = (type: 'icloud' | 'power') => {
     setCriticalModal({ visible: true, type });
@@ -230,12 +233,16 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="critical-modal-title"
+              ref={criticalModalRef}
               className="bg-canvas-pure border border-red-500/30 rounded-sm p-6 max-w-sm w-full shadow-2xl text-center"
             >
-              <div className="w-14 h-14 mx-auto mb-4 rounded-sm bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+              <div className="w-14 h-14 mx-auto mb-4 rounded-sm bg-red-500/10 border border-red-500/20 flex items-center justify-center" aria-hidden="true">
                 <span className="text-2xl">&#128274;</span>
               </div>
-              <h3 className="text-lg font-semibold text-ink-navy mb-2">
+              <h3 id="critical-modal-title" className="text-lg font-semibold text-ink-navy mb-2">
                 {criticalModal.type === 'icloud' ? 'iCloud Lock Detected' : 'Device Dead — Cannot Power On'}
               </h3>
               <p className="text-xs text-ink-muted font-light mb-5 leading-relaxed">
@@ -267,9 +274,10 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
         <div className="flex items-center gap-3">
           <button 
             onClick={handlePrevStep}
+            aria-label="Go back to previous step"
             className="p-2 sm:p-2.5 rounded-sm border border-ice-border hover:border-cobalt hover:bg-cobalt-light/10 text-ink-slate hover:text-cobalt transition-all flex-shrink-0"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-4 h-4" aria-hidden="true" />
           </button>
           
           {/* Phone Vector Silhouette */}
@@ -1101,11 +1109,11 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                 <div className="flex gap-3 mt-4">
                   <button
                     onClick={() => window.print()}
+                    aria-label="Print diagnostic report and quote"
                     className="flex-shrink-0 px-4 py-4 rounded-sm border border-ice-border text-ink-slate hover:border-cobalt hover:text-cobalt transition-all flex items-center gap-2 text-sm font-semibold"
-                    title="Print / Save as PDF"
                     style={{ minHeight: '48px' }}
                   >
-                    <Printer className="w-4 h-4" />
+                    <Printer className="w-4 h-4" aria-hidden="true" />
                     <span className="hidden sm:inline">Print Quote</span>
                   </button>
                   <button
