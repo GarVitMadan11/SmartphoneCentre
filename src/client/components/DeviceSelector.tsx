@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { BRANDS, MODELS, Model, Variant, generateVariantsForModel, getDeviceImage } from '../data/mockDatabase';
+import { BRANDS, MODELS, Model, Variant, generateVariantsForModel, getDeviceImage } from '../../server/data/mockDatabase';
 import { Search, ChevronRight, Smartphone, Calendar, Layers, ShieldCheck, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
