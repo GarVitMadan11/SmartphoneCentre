@@ -1,9 +1,9 @@
-import applePhoneImg from '../assets/apple_phone.png';
-import samsungPhoneImg from '../assets/samsung_phone.png';
-import oneplusPhoneImg from '../assets/oneplus_phone.png';
-import googlePhoneImg from '../assets/google_phone.png';
-import xiaomiPhoneImg from '../assets/xiaomi_phone.png';
-import vivoPhoneImg from '../assets/vivo_phone.png';
+import applePhoneImg from '../../assets/apple_phone.png';
+import samsungPhoneImg from '../../assets/samsung_phone.png';
+import oneplusPhoneImg from '../../assets/oneplus_phone.png';
+import googlePhoneImg from '../../assets/google_phone.png';
+import xiaomiPhoneImg from '../../assets/xiaomi_phone.png';
+import vivoPhoneImg from '../../assets/vivo_phone.png';
 import phoneImages from './phoneImages.json';
 
 export interface Brand {
@@ -613,7 +613,7 @@ export function getDeviceImage(modelId: string, brandId: string, color?: string)
       return imageName;
     }
     try {
-      return new URL(`../assets/phones/${imageName}`, import.meta.url).href;
+      return new URL(`../../assets/phones/${imageName}`, import.meta.url).href;
     } catch (e) {
       // Fallback
     }

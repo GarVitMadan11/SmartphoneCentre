@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { Model, Variant, getDefectRulesForCategory, DefectRule } from '../data/mockDatabase';
-import { calculateValuation } from '../utils/valuation';
+import { Model, Variant, getDefectRulesForCategory, DefectRule } from '../../server/data/mockDatabase';
+import { calculateValuation } from '../../utils/valuation';
 import { 
   ArrowLeft, Check, ChevronRight, Activity, Sparkles, 
   Smartphone, Box, Zap, Trash2, ShieldCheck, Printer
