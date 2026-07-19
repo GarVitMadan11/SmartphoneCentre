@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Booking, saveBookings } from '../data/mockDatabase';
+import { Booking, saveBookings } from '../../data/mockDatabase';
 import { 
   ArrowLeft, Search, Filter, 
   CheckCircle, XCircle, Clock, CreditCard, 

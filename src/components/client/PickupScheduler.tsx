@@ -7,7 +7,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import emailjs from '@emailjs/browser';
-import { Model, Variant, DefectRule, Booking, getSavedBookings, saveBookings } from '../data/mockDatabase';
+import { Model, Variant, DefectRule, Booking, getSavedBookings, saveBookings } from '../../data/mockDatabase';
 import { DigiLockerModal } from './DigiLockerModal';
 import { PhoneBackPreview } from './DeviceSelector';
 
