@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { Model, Variant, getDefectRulesForCategory, DefectRule } from '../../server/data/mockDatabase';
+import { Model, Variant, getDefectRulesForCategory, DefectRule } from '../../data/mockDatabase';
 import { calculateValuation } from '../../utils/valuation';
 import { 
   ArrowLeft, Check, ChevronRight, Activity, Sparkles, 
@@ -8,7 +8,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { getIllustration } from './Illustrations';
 import { getColorTheme, PhoneBackPreview } from './DeviceSelector';
-import { useFocusTrap } from '../hooks/useFocusTrap';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 
 const getEngineeringLabel = (description: string) => {

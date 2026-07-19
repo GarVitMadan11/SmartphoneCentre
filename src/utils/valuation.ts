@@ -1,4 +1,4 @@
-import { Variant, DefectRule } from '../server/data/mockDatabase';
+import { Variant, DefectRule } from '../data/mockDatabase';
 
 export interface ValuationBreakdown {
   basePrice: number;

@@ -1,19 +1,19 @@
 import { useState, useEffect, useRef, useMemo, lazy, Suspense } from 'react';
-import { Model, Variant, DefectRule, MODELS, BRANDS, generateVariantsForModel, INITIAL_BOOKINGS } from './server/data/mockDatabase';
-import { DeviceSelector } from './client/components/DeviceSelector';
-import { useFocusTrap } from './client/hooks/useFocusTrap';
-import { AdminAuthModal } from './server/components/AdminAuthModal';
+import { Model, Variant, DefectRule, MODELS, BRANDS, generateVariantsForModel, INITIAL_BOOKINGS } from './data/mockDatabase';
+import { DeviceSelector } from './components/client/DeviceSelector';
+import { useFocusTrap } from './hooks/useFocusTrap';
+import { AdminAuthModal } from './components/admin/AdminAuthModal';
 // ── Lazy-loaded heavy components (code splitting — P-1 fix) ───────────────────
-const DiagnosticWizard = lazy(() => import('./client/components/DiagnosticWizard').then(m => ({ default: m.DiagnosticWizard })));
-const PickupScheduler  = lazy(() => import('./client/components/PickupScheduler').then(m => ({ default: m.PickupScheduler })));
-const AdminPanel       = lazy(() => import('./server/components/AdminPanel').then(m => ({ default: m.AdminPanel })));
-const AdminPinGate     = lazy(() => import('./server/components/AdminPinGate').then(m => ({ default: m.AdminPinGate })));
-const SmartphoneMockup = lazy(() => import('./client/components/SmartphoneMockup').then(m => ({ default: m.SmartphoneMockup })));
+const DiagnosticWizard = lazy(() => import('./components/client/DiagnosticWizard').then(m => ({ default: m.DiagnosticWizard })));
+const PickupScheduler  = lazy(() => import('./components/client/PickupScheduler').then(m => ({ default: m.PickupScheduler })));
+const AdminPanel       = lazy(() => import('./components/admin/AdminPanel').then(m => ({ default: m.AdminPanel })));
+const AdminPinGate     = lazy(() => import('./components/admin/AdminPinGate').then(m => ({ default: m.AdminPinGate })));
+const SmartphoneMockup = lazy(() => import('./components/client/SmartphoneMockup').then(m => ({ default: m.SmartphoneMockup })));
 // ─────────────────────────────────────────────────────────────────────────────
 import { 
   Award, ShieldCheck, Zap, Search,
   RefreshCw, TrendingUp, FileText, Menu, X,
-  Code, Database, Info, GitBranch, ShieldAlert
+  Code, Database, Info, GitBranch
 } from 'lucide-react';
 
 import applePhoneImg from './assets/apple_phone.png';
@@ -267,33 +267,15 @@ export default function App() {
   const [isAdminAuthorized, setIsAdminAuthorized] = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
 
-  // Hidden admin mode triggered by ?admin=true or ?admin=1 query parameter
-  const [isAdminModeEnabled, setIsAdminModeEnabled] = useState(() => {
-    const params = new URLSearchParams(window.location.search);
-    return (
-      params.get('admin') === 'true' || 
-      params.get('admin') === '1' || 
-      (savedNav.current?.activeStage === 'admin')
-    );
-  });
-
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('admin') === 'true' || params.get('admin') === '1') {
-      setIsAdminModeEnabled(true);
-    }
-  }, []);
-
-  const handleAdminClick = () => {
-    setMobileMenuOpen(false);
-    if (activeStage === 'admin') {
-      setActiveStage('select');
-    } else if (isAdminAuthorized) {
       setActiveStage('admin');
-    } else {
-      setShowAdminLogin(true);
+      if (!isAdminAuthorized) {
+        setShowAdminLogin(true);
+      }
     }
-  };
+  }, [isAdminAuthorized]);
 
   // Persist only non-sensitive navigation hints
   useEffect(() => {
@@ -378,24 +360,13 @@ export default function App() {
               <span>How it Works</span>
             </span>
             <button
-              onClick={() => setIsSpecModalOpen(true)}
+               onClick={() => setIsSpecModalOpen(true)}
               className="px-3 py-2 rounded-sm border border-ice-border text-ink-slate hover:border-cobalt hover:text-cobalt transition-all flex items-center gap-1 text-xs font-mono"
               title="System Design Specification"
               aria-label="View system design specification"
             >
               <FileText className="w-3.5 h-3.5" />
               <span className="hidden lg:inline">Dev Spec</span>
-            </button>
-            <button 
-              onClick={handleAdminClick}
-              className={`px-3 py-2 rounded-sm border transition-all flex items-center gap-1 text-xs font-mono ${
-                activeStage === 'admin' 
-                  ? 'bg-cobalt text-white border-cobalt shadow-sm' 
-                  : 'bg-white hover:bg-zinc-100 text-ink-navy border-ice-border hover:border-cobalt/40'
-              }`}
-            >
-              <ShieldAlert className="w-3.5 h-3.5" />
-              <span>Admin</span>
             </button>
           </div>
 
@@ -438,16 +409,6 @@ export default function App() {
               className="w-full flex items-center gap-2 text-sm font-semibold text-ink-slate py-2 px-3 rounded-sm hover:bg-ice-gray border border-ice-border transition-colors text-left"
             >
               <FileText className="w-4 h-4" /> Dev Spec
-            </button>
-            <button
-              onClick={handleAdminClick}
-              className={`w-full flex items-center gap-2 text-sm font-semibold py-2 px-3 rounded-sm text-left border ${
-                activeStage === 'admin'
-                  ? 'bg-cobalt text-white border-cobalt'
-                  : 'bg-canvas-white hover:bg-ice-gray text-ink-slate border-ice-border'
-              }`}
-            >
-              <ShieldAlert className="w-4 h-4" /> Admin Panel
             </button>
           </div>
         )}
@@ -911,9 +872,6 @@ export default function App() {
             {/* Links */}
             <div className="flex flex-wrap justify-center gap-6 md:gap-8 text-xs font-semibold text-ink-slate">
               <span onClick={handleReset} className="hover:text-cobalt cursor-pointer transition-colors">Home</span>
-              {isAdminModeEnabled && (
-                <span onClick={handleAdminClick} className="hover:text-cobalt cursor-pointer transition-colors">Admin Panel</span>
-              )}
               <span onClick={() => {
                 if (activeStage === 'select') {
                   document.getElementById('how-it-works-section')?.scrollIntoView({ behavior: 'smooth' });

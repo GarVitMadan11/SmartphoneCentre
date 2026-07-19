@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { ShieldAlert } from 'lucide-react';
-import { useFocusTrap } from '../../client/hooks/useFocusTrap';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 interface AdminAuthModalProps {
   isOpen: boolean;
