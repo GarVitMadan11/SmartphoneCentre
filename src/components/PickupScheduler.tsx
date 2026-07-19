@@ -22,10 +22,12 @@ interface PickupSchedulerProps {
   onEditDevice: () => void;
 }
 
+// L-2: Agent phone numbers are placeholder / demo only.
+// In production, these should be fetched server-side — never hardcoded in the bundle.
 const AGENTS = [
-  { name: 'Amit Sharma', rating: 4.9, reviews: 312, avatar: '👤', phone: '+91 98765 43210' },
-  { name: 'Rahul Verma', rating: 4.8, reviews: 245, avatar: '👤', phone: '+91 98765 11223' },
-  { name: 'Priya Patel', rating: 5.0, reviews: 189, avatar: '👤', phone: '+91 98765 55678' }
+  { name: 'Amit Sharma', rating: 4.9, reviews: 312, avatar: '👤', phone: '+91 XXXXX XXXXX' },
+  { name: 'Rahul Verma', rating: 4.8, reviews: 245, avatar: '👤', phone: '+91 XXXXX XXXXX' },
+  { name: 'Priya Patel', rating: 5.0, reviews: 189, avatar: '👤', phone: '+91 XXXXX XXXXX' }
 ];
 
 export interface PayoutMethod {
@@ -138,6 +140,8 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
   const [showTooltip, setShowTooltip] = useState(false);
   // DPDP consent — must be checked before form can proceed
   const [hasConsented, setHasConsented] = useState(false);
+  // Inline form error (replaces window.alert)
+  const [formError, setFormError] = useState('');
 
   // ── Rate limiter ───────────────────────────────────────────────
   // Track submission attempts in sessionStorage (persists across re-renders, cleared on tab close)
@@ -282,7 +286,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isStep1Valid || !isStep2Valid || !isStep3Valid) {
-      alert('Please fill out all required details correctly.');
+      setFormError('Please complete all required steps and fields before submitting.');
       return;
     }
     // Rate-limit check
@@ -388,6 +392,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
   };
 
   const handleNextStep = () => {
+    setFormError(''); // Clear errors on step advance
     if (schedulerStep === 1 && isStep1Valid) {
       setSchedulerStep(2);
     } else if (schedulerStep === 2 && isStep2Valid) {
@@ -793,6 +798,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                               <input
                                 type="text"
                                 required
+                                autoComplete="off"
                                 value={upiId}
                                 onChange={e => setUpiId(e.target.value)}
                                 placeholder="e.g. name@okhdfc"
@@ -814,6 +820,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                                 <input
                                   type="text"
                                   required
+                                  autoComplete="off"
                                   value={accountHolderName}
                                   onChange={e => setAccountHolderName(e.target.value)}
                                   placeholder="e.g. Vikramaditya Singh"
@@ -829,6 +836,8 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                                   <input
                                     type="text"
                                     required
+                                    autoComplete="off"
+                                    inputMode="numeric"
                                     value={accountNumber}
                                     onChange={e => setAccountNumber(e.target.value.replace(/\D/g, ''))}
                                     placeholder="e.g. 918273645012"
@@ -846,6 +855,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                                   <input
                                     type="text"
                                     required
+                                    autoComplete="off"
                                     value={ifscCode}
                                     onChange={e => setIfscCode(e.target.value.toUpperCase())}
                                     placeholder="e.g. HDFC0000104"
@@ -1063,6 +1073,17 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                   )}
                 </div>
               </div>
+
+              {/* Inline form error banner */}
+              {formError && (
+                <div className="flex items-start gap-2.5 p-3 bg-red-500/10 border border-red-500/20 rounded-sm text-xs text-red-400 font-mono mb-4 animate-fadeIn">
+                  <svg className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>{formError}</span>
+                  <button onClick={() => setFormError('')} className="ml-auto flex-shrink-0 text-red-400 hover:text-red-500" aria-label="Dismiss">✕</button>
+                </div>
+              )}
 
               {/* Navigation CTAs */}
               <div className="flex gap-3 border-t border-white/[0.04] pt-4 mt-8">

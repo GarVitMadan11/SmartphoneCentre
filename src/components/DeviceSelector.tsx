@@ -546,9 +546,17 @@ function BrandLogo({ logo, isActive }: { logo: string; isActive: boolean }) {
 
 interface DeviceSelectorProps {
   onVariantSelected: (model: Model, variant: Variant) => void;
+  /** When set, the selector will auto-open this model's variant panel */
+  defaultModelId?: string | null;
+  /** Called after defaultModelId has been consumed so the parent can clear it */
+  onDefaultModelConsumed?: () => void;
 }
 
-export const DeviceSelector: React.FC<DeviceSelectorProps> = ({ onVariantSelected }) => {
+export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
+  onVariantSelected,
+  defaultModelId,
+  onDefaultModelConsumed,
+}) => {
   const [selectedBrandId, setSelectedBrandId] = useState<string>('brand-apple');
   const [selectedSeries, setSelectedSeries] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -563,6 +571,25 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({ onVariantSelecte
     }, 150);
     return () => clearTimeout(timer);
   }, [searchQuery]);
+
+  // Handle external model pre-selection (from hero search)
+  useEffect(() => {
+    if (!defaultModelId) return;
+    const model = MODELS.find(m => m.id === defaultModelId);
+    if (model) {
+      setSelectedBrandId(model.brandId);
+      setSelectedSeries(model.series || null);
+      setSelectedModel(model);
+      setSelectedStorage(null);
+      setTempVariant(null);
+      // Scroll to variant panel after brief paint delay
+      setTimeout(() => {
+        variantSelectorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 200);
+    }
+    onDefaultModelConsumed?.();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [defaultModelId]);
 
   useEffect(() => {
     if (selectedModel && variantSelectorRef.current) {
@@ -630,15 +657,18 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({ onVariantSelecte
   }, [availableSeries, selectedBrandId]);
 
   // Filter models based on brand, series, and debounced search query
+  // When a search query is active, bypass brand AND series filter (cross-brand search)
   const filteredModels = useMemo(() => {
+    const isSearching = debouncedSearchQuery.trim() !== '';
     return MODELS.filter(model => {
-      const matchesBrand = model.brandId === selectedBrandId;
-      // If search query is active, bypass series filter
-      const matchesSeries = debouncedSearchQuery.trim() !== '' 
-        ? true 
+      const matchesBrand = isSearching ? true : model.brandId === selectedBrandId;
+      const matchesSeries = isSearching
+        ? true
         : (selectedSeries === null ? true : model.series === selectedSeries);
-      const matchesSearch = model.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
-                            model.modelNumber.toLowerCase().includes(debouncedSearchQuery.toLowerCase());
+      const matchesSearch = isSearching
+        ? (model.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+           model.modelNumber.toLowerCase().includes(debouncedSearchQuery.toLowerCase()))
+        : true;
       return matchesBrand && matchesSeries && matchesSearch;
     });
   }, [selectedBrandId, selectedSeries, debouncedSearchQuery]);
@@ -730,14 +760,36 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({ onVariantSelecte
           <div className="relative mb-4 sm:mb-6">
             <Search className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 text-ink-muted w-4 h-4 sm:w-5 sm:h-5" />
             <input
+              id="device-search-input"
               type="text"
-              placeholder="Search model (e.g. iPhone 15 Pro, S24)..."
+              placeholder="Search all brands (e.g. iPhone 15 Pro, Galaxy S24)..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="w-full pl-10 sm:pl-12 pr-4 py-3 sm:py-3.5 rounded-sm border border-ice-border bg-canvas-pure text-ink-navy text-sm placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all duration-300"
+              className="w-full pl-10 sm:pl-12 pr-10 py-3 sm:py-3.5 rounded-sm border border-ice-border bg-canvas-pure text-ink-navy text-sm placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all duration-300"
               style={{ minHeight: '48px' }}
+              aria-label="Search all device models"
             />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-ink-muted hover:text-cobalt transition-colors"
+                aria-label="Clear search"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
           </div>
+          {/* Cross-brand hint when searching */}
+          {debouncedSearchQuery.trim() !== '' && (
+            <div className="flex items-center gap-1.5 mb-4 text-[11px] text-cobalt font-mono animate-fadeIn">
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              Searching across all {filteredModels.length > 0 ? `${filteredModels.length} ` : ''}models from all brands
+            </div>
+          )}
 
           {/* If search query is empty and no series is selected, show Series Cards */}
           {debouncedSearchQuery.trim() === '' && selectedSeries === null && (
@@ -815,11 +867,14 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({ onVariantSelecte
               {/* Models Grid: 1 col xs, 2 col sm, 3 col md */}
               <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
                 {filteredModels.length === 0 && (
-                  <div className="col-span-full py-12 px-4 text-center border border-dashed border-ice-border rounded-sm bg-canvas-pure">
+                  <div className="col-span-full py-12 px-4 text-center border border-dashed border-ice-border rounded-sm bg-canvas-pure animate-fadeIn">
                     <Smartphone className="w-10 h-10 text-ink-muted mx-auto mb-3" />
                     <h4 className="text-base font-semibold text-ink-navy">No models found</h4>
-                    <p className="text-xs text-ink-muted mt-1 max-w-xs mx-auto">We couldn't find any results matching "{searchQuery}". Try searching for Apple or Samsung devices.</p>
-                    <button 
+                    <p className="text-xs text-ink-muted mt-1 max-w-xs mx-auto">
+                      No results for <span className="font-mono text-cobalt">"{searchQuery}"</span>.<br />
+                      Try a brand name (e.g. "Apple", "Samsung") or a model number.
+                    </p>
+                    <button
                       onClick={() => setSearchQuery('')}
                       className="mt-4 px-4 py-2 bg-cobalt hover:bg-cobalt-hover text-white text-xs font-bold rounded-sm transition-all"
                       style={{ minHeight: '36px' }}

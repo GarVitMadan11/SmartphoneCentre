@@ -1,12 +1,15 @@
-import { useState, useEffect, useRef } from 'react';
-import { Model, Variant, DefectRule, MODELS, generateVariantsForModel, INITIAL_BOOKINGS } from './data/mockDatabase';
+import { useState, useEffect, useRef, useMemo, lazy, Suspense } from 'react';
+import { Model, Variant, DefectRule, MODELS, BRANDS, generateVariantsForModel, INITIAL_BOOKINGS } from './data/mockDatabase';
 import { DeviceSelector } from './components/DeviceSelector';
-import { DiagnosticWizard } from './components/DiagnosticWizard';
-import { PickupScheduler } from './components/PickupScheduler';
-import { SmartphoneMockup } from './components/SmartphoneMockup';
-import { AdminPanel } from './components/AdminPanel';
+// ── Lazy-loaded heavy components (code splitting — P-1 fix) ───────────────────
+const DiagnosticWizard = lazy(() => import('./components/DiagnosticWizard').then(m => ({ default: m.DiagnosticWizard })));
+const PickupScheduler  = lazy(() => import('./components/PickupScheduler').then(m => ({ default: m.PickupScheduler })));
+const AdminPanel       = lazy(() => import('./components/AdminPanel').then(m => ({ default: m.AdminPanel })));
+const AdminPinGate     = lazy(() => import('./components/AdminPinGate').then(m => ({ default: m.AdminPinGate })));
+const SmartphoneMockup = lazy(() => import('./components/SmartphoneMockup').then(m => ({ default: m.SmartphoneMockup })));
+// ─────────────────────────────────────────────────────────────────────────────
 import { 
-  Award, ShieldCheck, Zap, 
+  Award, ShieldCheck, Zap, Search,
   RefreshCw, TrendingUp, FileText, Menu, X,
   Code, Database, Info, GitBranch, ShieldAlert
 } from 'lucide-react';
@@ -72,7 +75,12 @@ interface SpecsModalProps {
 function SpecsModal({ isOpen, onClose }: SpecsModalProps) {
   if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="System Design Specification"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+    >
       <div className="bg-canvas-pure border border-ice-border rounded-lg max-w-3xl w-full max-h-[85vh] flex flex-col shadow-premium overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-ice-border bg-canvas-white">
@@ -82,9 +90,10 @@ function SpecsModal({ isOpen, onClose }: SpecsModalProps) {
           </div>
           <button 
             onClick={onClose}
+            aria-label="Close system design specification"
             className="p-2 rounded-sm border border-ice-border text-ink-slate hover:border-cobalt hover:text-cobalt transition-colors"
           >
-            <X className="w-4 h-4" />
+            <X className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
         
@@ -215,6 +224,40 @@ export default function App() {
   const [isSpecModalOpen, setIsSpecModalOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Hero search state
+  const [heroSearch, setHeroSearch] = useState('');
+  const [heroSearchOpen, setHeroSearchOpen] = useState(false);
+  const [pendingModelId, setPendingModelId] = useState<string | null>(null);
+  const heroSearchRef = useRef<HTMLDivElement>(null);
+
+  const heroSearchResults = useMemo(() => {
+    if (heroSearch.trim().length < 2) return [];
+    const q = heroSearch.toLowerCase();
+    return MODELS.filter(m =>
+      m.name.toLowerCase().includes(q) ||
+      m.modelNumber.toLowerCase().includes(q)
+    ).slice(0, 8);
+  }, [heroSearch]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (heroSearchRef.current && !heroSearchRef.current.contains(e.target as Node)) {
+        setHeroSearchOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleHeroSearchSelect = (model: Model) => {
+    setHeroSearch('');
+    setHeroSearchOpen(false);
+    setPendingModelId(model.id);
+    setTimeout(() => {
+      document.getElementById('device-selector-section')?.scrollIntoView({ behavior: 'smooth' });
+    }, 50);
+  };
+
   // Admin access authorization state
   const [isAdminAuthorized, setIsAdminAuthorized] = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
@@ -329,26 +372,26 @@ export default function App() {
               <RefreshCw className="w-4 h-4 text-secondary" />
               <span>How it Works</span>
             </span>
-            <button 
+            <button
               onClick={() => setIsSpecModalOpen(true)}
-              className="px-3 py-2 rounded-sm bg-cobalt-light text-cobalt border border-ice-border hover:bg-cobalt hover:text-white transition-all flex items-center gap-1 text-xs font-mono"
+              className="px-3 py-2 rounded-sm border border-ice-border text-ink-slate hover:border-cobalt hover:text-cobalt transition-all flex items-center gap-1 text-xs font-mono"
+              title="System Design Specification"
+              aria-label="View system design specification"
             >
               <FileText className="w-3.5 h-3.5" />
-              <span className="hidden lg:inline">System Spec</span>
+              <span className="hidden lg:inline">Dev Spec</span>
             </button>
-            {isAdminModeEnabled && (
-              <button 
-                onClick={handleAdminClick}
-                className={`px-3 py-2 rounded-sm border transition-all flex items-center gap-1 text-xs font-mono ${
-                  activeStage === 'admin' 
-                    ? 'bg-cobalt text-white border-cobalt shadow-sm' 
-                    : 'bg-white hover:bg-zinc-100 text-ink-navy border-ice-border hover:border-cobalt/40'
-                }`}
-              >
-                <ShieldAlert className="w-3.5 h-3.5" />
-                <span>Admin Panel</span>
-              </button>
-            )}
+            <button 
+              onClick={handleAdminClick}
+              className={`px-3 py-2 rounded-sm border transition-all flex items-center gap-1 text-xs font-mono ${
+                activeStage === 'admin' 
+                  ? 'bg-cobalt text-white border-cobalt shadow-sm' 
+                  : 'bg-white hover:bg-zinc-100 text-ink-navy border-ice-border hover:border-cobalt/40'
+              }`}
+            >
+              <ShieldAlert className="w-3.5 h-3.5" />
+              <span>Admin</span>
+            </button>
           </div>
 
           {/* Mobile hamburger */}
@@ -387,22 +430,20 @@ export default function App() {
                 setIsSpecModalOpen(true);
                 setMobileMenuOpen(false);
               }}
-              className="w-full flex items-center gap-2 text-sm font-semibold text-cobalt py-2 px-3 rounded-sm bg-cobalt-light border border-ice-border text-left"
+              className="w-full flex items-center gap-2 text-sm font-semibold text-ink-slate py-2 px-3 rounded-sm hover:bg-ice-gray border border-ice-border transition-colors text-left"
             >
-              <FileText className="w-4 h-4" /> View System Spec
+              <FileText className="w-4 h-4" /> Dev Spec
             </button>
-            {isAdminModeEnabled && (
-              <button
-                onClick={handleAdminClick}
-                className={`w-full flex items-center gap-2 text-sm font-semibold py-2 px-3 rounded-sm text-left border ${
-                  activeStage === 'admin' 
-                    ? 'bg-cobalt text-white border-cobalt' 
-                    : 'bg-canvas-white hover:bg-ice-gray text-ink-slate border-ice-border'
-                }`}
-              >
-                <ShieldAlert className="w-4 h-4" /> Admin Panel
-              </button>
-            )}
+            <button
+              onClick={handleAdminClick}
+              className={`w-full flex items-center gap-2 text-sm font-semibold py-2 px-3 rounded-sm text-left border ${
+                activeStage === 'admin'
+                  ? 'bg-cobalt text-white border-cobalt'
+                  : 'bg-canvas-white hover:bg-ice-gray text-ink-slate border-ice-border'
+              }`}
+            >
+              <ShieldAlert className="w-4 h-4" /> Admin Panel
+            </button>
           </div>
         )}
       </header>
@@ -429,25 +470,72 @@ export default function App() {
                     Get an instant valuation, free doorstep pickup, and instant cash payment. No hidden deductions, guaranteed.
                   </p>
 
-                  {/* Search Bar Suggestion */}
-                  <div className="w-full max-w-lg bg-canvas-pure p-2 rounded-lg border border-ice-border flex items-center gap-2 mb-8 shadow-sm">
-                    <div className="flex-1 relative">
-                      <svg className="w-5 h-5 text-ink-muted absolute left-3 top-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                      </svg>
-                      <input 
-                        type="text" 
-                        placeholder="Search model (e.g. iPhone 15 Pro, Galaxy S24)..." 
-                        onClick={() => document.getElementById('device-selector-section')?.scrollIntoView({ behavior: 'smooth' })}
-                        className="w-full pl-10 pr-4 py-3 text-sm bg-transparent text-ink-navy placeholder:text-ink-muted focus:outline-none" 
-                      />
+                  {/* Functional Hero Search Bar with live dropdown */}
+                  <div ref={heroSearchRef} className="w-full max-w-lg relative mb-8">
+                    <div className="bg-canvas-pure p-2 rounded-lg border border-ice-border flex items-center gap-2 shadow-sm">
+                      <div className="flex-1 relative">
+                        <Search className="w-5 h-5 text-ink-muted absolute left-3 top-3.5" />
+                        <input
+                          id="hero-search"
+                          type="text"
+                          placeholder="Search model (e.g. iPhone 15 Pro, Galaxy S24)..."
+                          value={heroSearch}
+                          onChange={e => { setHeroSearch(e.target.value); setHeroSearchOpen(true); }}
+                          onFocus={() => setHeroSearchOpen(true)}
+                          className="w-full pl-10 pr-4 py-3 text-sm bg-transparent text-ink-navy placeholder:text-ink-muted focus:outline-none"
+                          aria-label="Search for a smartphone model"
+                          autoComplete="off"
+                        />
+                      </div>
+                      <button
+                        onClick={() => {
+                          if (heroSearch.trim() && heroSearchResults.length > 0) {
+                            handleHeroSearchSelect(heroSearchResults[0]);
+                          } else {
+                            document.getElementById('device-selector-section')?.scrollIntoView({ behavior: 'smooth' });
+                          }
+                        }}
+                        className="bg-cobalt hover:bg-cobalt-hover text-white px-5 py-3 rounded-sm text-sm font-semibold transition-all shadow-sm flex-shrink-0"
+                      >
+                        Find My Device
+                      </button>
                     </div>
-                    <button 
-                      onClick={() => document.getElementById('device-selector-section')?.scrollIntoView({ behavior: 'smooth' })}
-                      className="bg-cobalt hover:bg-cobalt-hover text-white px-5 py-3 rounded-sm text-sm font-semibold transition-all shadow-sm"
-                    >
-                      Find My Device
-                    </button>
+
+                    {/* Live search results dropdown */}
+                    {heroSearchOpen && heroSearchResults.length > 0 && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-canvas-pure border border-ice-border rounded-sm shadow-premium z-30 overflow-hidden animate-fadeIn">
+                        {heroSearchResults.map(model => {
+                          const brand = BRANDS.find(b => b.id === model.brandId);
+                          return (
+                            <button
+                              key={model.id}
+                              onClick={() => handleHeroSearchSelect(model)}
+                              className="w-full flex items-center gap-3 px-4 py-3 hover:bg-cobalt-light/30 transition-colors text-left border-b border-ice-border/40 last:border-0 group"
+                            >
+                              <div className="w-8 h-8 rounded-sm bg-ice-gray border border-ice-border flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-cobalt">
+                                {brand?.name.slice(0, 2).toUpperCase() ?? '??'}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <span className="block text-sm font-semibold text-ink-navy group-hover:text-cobalt transition-colors truncate">{model.name}</span>
+                                <span className="block text-[10px] text-ink-muted font-mono">{brand?.name} · Up to ₹{(model.basePrice128GB).toLocaleString('en-IN')}</span>
+                              </div>
+                              <svg className="w-4 h-4 text-ink-muted group-hover:text-cobalt transition-colors flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                              </svg>
+                            </button>
+                          );
+                        })}
+                        <div className="px-4 py-2 text-[10px] text-ink-muted font-mono border-t border-ice-border/40 bg-canvas-white">
+                          Showing {heroSearchResults.length} result{heroSearchResults.length !== 1 ? 's' : ''} — or <button onClick={() => { setHeroSearchOpen(false); document.getElementById('device-selector-section')?.scrollIntoView({ behavior: 'smooth' }); }} className="text-cobalt underline">browse all models</button>
+                        </div>
+                      </div>
+                    )}
+                    {heroSearchOpen && heroSearch.trim().length >= 2 && heroSearchResults.length === 0 && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-canvas-pure border border-ice-border rounded-sm shadow-premium z-30 px-4 py-4 text-sm text-ink-muted text-center animate-fadeIn">
+                        No models found for <span className="font-mono text-cobalt">"{heroSearch}"</span>.
+                        <button onClick={() => { setHeroSearchOpen(false); document.getElementById('device-selector-section')?.scrollIntoView({ behavior: 'smooth' }); }} className="block text-xs text-cobalt mt-1 underline mx-auto">Browse all models instead →</button>
+                      </div>
+                    )}
                   </div>
 
                   {/* Trust Badge Indicators */}
@@ -483,7 +571,11 @@ export default function App() {
                     Select Brand &amp; Model
                   </h3>
                 </div>
-                <DeviceSelector onVariantSelected={handleVariantSelected} />
+                <DeviceSelector
+                  onVariantSelected={handleVariantSelected}
+                  defaultModelId={pendingModelId}
+                  onDefaultModelConsumed={() => setPendingModelId(null)}
+                />
               </div>
 
               {/* 3. How It Works Section */}
@@ -543,7 +635,7 @@ export default function App() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                   {/* Large Card: iPhone 15 Pro Max */}
-                  <div className="lg:col-span-2 bg-gradient-to-br from-primary to-slate-900 rounded-3xl p-8 text-white relative overflow-hidden flex flex-col justify-between min-h-[360px] shadow-xl group text-left">
+                  <div className="lg:col-span-2 bg-gradient-to-br from-primary to-slate-900 rounded-xl p-8 text-white relative overflow-hidden flex flex-col justify-between min-h-[360px] shadow-xl group text-left">
                     <div className="absolute right-0 bottom-0 opacity-10 group-hover:opacity-15 transition-opacity pointer-events-none z-0">
                       <svg className="w-96 h-96 text-white" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 4.17c.66-.81 1.11-1.93.99-3.06-1 .04-2.22.67-2.94 1.5-.64.74-1.2 1.88-1.05 2.99 1.12.09 2.26-.57 3-1.43z"/>
@@ -551,7 +643,15 @@ export default function App() {
                     </div>
                     {/* Actual iPhone Image */}
                     <div className="absolute right-6 bottom-[-20px] w-56 sm:w-64 h-auto pointer-events-none group-hover:scale-105 group-hover:translate-y-[-10px] transition-all duration-500 ease-out z-10 hidden sm:block">
-                      <img src={applePhoneImg} alt="iPhone 15 Pro Max" className="w-full h-auto object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)]" />
+                      <img
+                        src={applePhoneImg}
+                        alt=""
+                        aria-hidden="true"
+                        width={256}
+                        height={512}
+                        decoding="async"
+                        className="w-full h-auto object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
+                      />
                     </div>
                     <div className="z-10 relative">
                       <span className="px-3 py-1 bg-white/10 text-white rounded-full text-xs font-semibold uppercase tracking-wider border border-white/10">Top Offer Today</span>
@@ -575,10 +675,19 @@ export default function App() {
                   {/* Right stack (Samsung + OnePlus/Google) */}
                   <div className="flex flex-col gap-8 justify-between">
                     {/* Samsung Galaxy S24 Ultra */}
-                    <div className="bg-canvas-pure border border-ice-border rounded-3xl p-6 flex flex-col justify-between min-h-[166px] shadow-sm text-left relative overflow-hidden group">
+                    <div className="bg-canvas-pure border border-ice-border rounded-xl p-6 flex flex-col justify-between min-h-[166px] shadow-sm text-left relative overflow-hidden group">
                       {/* Actual Samsung Image */}
                       <div className="absolute right-[-10px] bottom-[-20px] w-24 h-auto pointer-events-none group-hover:scale-105 group-hover:translate-y-[-5px] transition-all duration-500 ease-out z-0 opacity-40 group-hover:opacity-60">
-                        <img src={samsungPhoneImg} alt="Galaxy S24 Ultra" className="w-full h-auto object-contain" />
+                        <img
+                          src={samsungPhoneImg}
+                          alt=""
+                          aria-hidden="true"
+                          width={96}
+                          height={192}
+                          loading="lazy"
+                          decoding="async"
+                          className="w-full h-auto object-contain"
+                        />
                       </div>
                       <div className="flex justify-between items-start z-10">
                         <div>
@@ -595,10 +704,19 @@ export default function App() {
                     </div>
 
                     {/* OnePlus 12 */}
-                    <div className="bg-canvas-pure border border-ice-border rounded-3xl p-6 flex flex-col justify-between min-h-[166px] shadow-sm text-left relative overflow-hidden group">
+                    <div className="bg-canvas-pure border border-ice-border rounded-xl p-6 flex flex-col justify-between min-h-[166px] shadow-sm text-left relative overflow-hidden group">
                       {/* Actual OnePlus Image */}
                       <div className="absolute right-[-10px] bottom-[-20px] w-24 h-auto pointer-events-none group-hover:scale-105 group-hover:translate-y-[-5px] transition-all duration-500 ease-out z-0 opacity-40 group-hover:opacity-60">
-                        <img src={oneplusPhoneImg} alt="OnePlus 12" className="w-full h-auto object-contain" />
+                        <img
+                          src={oneplusPhoneImg}
+                          alt=""
+                          aria-hidden="true"
+                          width={96}
+                          height={192}
+                          loading="lazy"
+                          decoding="async"
+                          className="w-full h-auto object-contain"
+                        />
                       </div>
                       <div className="flex justify-between items-start z-10">
                         <div>
@@ -616,7 +734,7 @@ export default function App() {
                   </div>
 
                   {/* Bulk Liquidation Banner */}
-                  <div className="lg:col-span-3 bg-primary rounded-3xl p-8 text-white relative overflow-hidden flex flex-col md:flex-row md:items-center md:justify-between shadow-xl text-left">
+                  <div className="lg:col-span-3 bg-primary rounded-xl p-8 text-white relative overflow-hidden flex flex-col md:flex-row md:items-center md:justify-between shadow-xl text-left">
                     <div className="z-10">
                       <span className="px-2.5 py-1 bg-white/10 text-green-400 rounded-full text-xs font-bold uppercase tracking-wider border border-white/5">Corporate Services</span>
                       <h3 className="text-2xl font-extrabold mt-4">Enterprise Device Liquidation</h3>
@@ -635,35 +753,55 @@ export default function App() {
           )}
 
           {activeStage === 'diagnose' && selectedModel && selectedVariant && (
-            <DiagnosticWizard
-              model={selectedModel}
-              variant={selectedVariant}
-              onBack={handleReset}
-              onComplete={handleDiagnosticsComplete}
-              selectedDefects={selectedDefects}
-              setSelectedDefects={setSelectedDefects}
-              step={wizardStep}
-              setStep={setWizardStep}
-            />
+            <Suspense fallback={
+              <div className="flex items-center justify-center min-h-[400px]" aria-label="Loading diagnostic wizard" role="status">
+                <div className="w-8 h-8 border-2 border-cobalt border-t-transparent rounded-full animate-spin" aria-hidden="true" />
+              </div>
+            }>
+              <DiagnosticWizard
+                model={selectedModel}
+                variant={selectedVariant}
+                onBack={() => setActiveStage('select')}
+                onComplete={handleDiagnosticsComplete}
+                selectedDefects={selectedDefects}
+                setSelectedDefects={setSelectedDefects}
+                step={wizardStep}
+                setStep={setWizardStep}
+              />
+            </Suspense>
           )}
 
           {activeStage === 'schedule' && selectedModel && selectedVariant && (
-            <PickupScheduler
-              finalPrice={finalPrice}
-              onBack={() => setActiveStage('diagnose')}
-              onSuccess={handleReset}
-              selectedDefects={selectedDefects}
-              selectedModel={selectedModel}
-              selectedVariant={selectedVariant}
-              onEditDevice={() => setActiveStage('select')}
-            />
+            <Suspense fallback={
+              <div className="flex items-center justify-center min-h-[400px]" aria-label="Loading pickup scheduler" role="status">
+                <div className="w-8 h-8 border-2 border-cobalt border-t-transparent rounded-full animate-spin" aria-hidden="true" />
+              </div>
+            }>
+              <PickupScheduler
+                finalPrice={finalPrice}
+                onBack={() => setActiveStage('diagnose')}
+                onSuccess={handleReset}
+                selectedDefects={selectedDefects}
+                selectedModel={selectedModel}
+                selectedVariant={selectedVariant}
+                onEditDevice={() => setActiveStage('select')}
+              />
+            </Suspense>
           )}
 
           {activeStage === 'admin' && (
-            <AdminPanel
-              onBack={handleReset}
-              initialBookings={INITIAL_BOOKINGS}
-            />
+            <Suspense fallback={
+              <div className="flex items-center justify-center min-h-[400px]" aria-label="Loading admin panel" role="status">
+                <div className="w-8 h-8 border-2 border-cobalt border-t-transparent rounded-full animate-spin" aria-hidden="true" />
+              </div>
+            }>
+              <AdminPinGate onExit={handleReset}>
+                <AdminPanel
+                  onBack={handleReset}
+                  initialBookings={INITIAL_BOOKINGS}
+                />
+              </AdminPinGate>
+            </Suspense>
           )}
         </section>
 
@@ -674,7 +812,7 @@ export default function App() {
             {/* Live Operations */}
             <div className="bg-canvas-pure border border-ice-border rounded-sm p-4 sm:p-5 shadow-premium">
               <div className="border-b border-ice-border/40 pb-2 mb-3 text-left">
-                <span className="text-[10px] font-mono tracking-[0.2em] text-ink-muted uppercase block mb-1">Telemetry Feed</span>
+                <span className="text-[10px] font-mono tracking-[0.2em] text-ink-muted uppercase block mb-1">Illustrative / Demo Data</span>
                 <h4 className="font-light text-xl text-ink-navy">Live Operations</h4>
               </div>
               <div className="space-y-3 sm:space-y-4">
@@ -825,7 +963,7 @@ function AdminAuthModal({ isOpen, onClose, onSuccess }: AdminAuthModalProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (pin === '9999' || pin === 'admin123') {
+    if (pin === '9999') {
       setError('');
       setPin('');
       onSuccess();
@@ -835,14 +973,19 @@ function AdminAuthModal({ isOpen, onClose, onSuccess }: AdminAuthModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="admin-modal-title"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+    >
       <div className="bg-canvas-pure border border-ice-border rounded-lg max-w-sm w-full p-6 shadow-premium relative animate-fadeIn">
         <div className="text-center space-y-4">
-          <div className="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto">
+          <div className="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto" aria-hidden="true">
             <ShieldAlert className="w-6 h-6 text-red-500 animate-pulse" />
           </div>
           <div className="space-y-1">
-            <h3 className="font-outfit font-light text-lg text-ink-navy">Admin Access Gate</h3>
+            <h3 id="admin-modal-title" className="font-outfit font-light text-lg text-ink-navy">Admin Access Gate</h3>
             <p className="text-xs text-ink-muted">Authorized staff only. Enter security PIN to proceed.</p>
           </div>
 
@@ -885,7 +1028,7 @@ function AdminAuthModal({ isOpen, onClose, onSuccess }: AdminAuthModalProps) {
           </form>
           <div className="pt-3 border-t border-dashed border-ice-border/40">
             <span className="text-[10px] font-mono text-zinc-550 dark:text-zinc-400 uppercase tracking-widest block">
-              Default Demo PIN: 9999
+              Authorized personnel only
             </span>
           </div>
         </div>
