@@ -3,7 +3,6 @@ import { Model, Variant, DefectRule, MODELS as STATIC_MODELS, BRANDS as STATIC_B
 import { fetchBrands, fetchModels, fetchBookings as apiFetchBookings } from './utils/api';
 import { DeviceSelector } from './components/client/DeviceSelector';
 import { useFocusTrap } from './hooks/useFocusTrap';
-import { AdminAuthModal } from './components/admin/AdminAuthModal';
 // ── Lazy-loaded heavy components (code splitting — P-1 fix) ───────────────────
 const DiagnosticWizard = lazy(() => import('./components/client/DiagnosticWizard').then(m => ({ default: m.DiagnosticWizard })));
 const PickupScheduler  = lazy(() => import('./components/client/PickupScheduler').then(m => ({ default: m.PickupScheduler })));
@@ -294,19 +293,12 @@ export default function App() {
     }, 50);
   };
 
-  // Admin access authorization state
-  const [isAdminAuthorized, setIsAdminAuthorized] = useState(false);
-  const [showAdminLogin, setShowAdminLogin] = useState(false);
-
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('admin') === 'true' || params.get('admin') === '1') {
       setActiveStage('admin');
-      if (!isAdminAuthorized) {
-        setShowAdminLogin(true);
-      }
     }
-  }, [isAdminAuthorized]);
+  }, []);
 
   // Persist only non-sensitive navigation hints
   useEffect(() => {
@@ -932,16 +924,6 @@ export default function App() {
       {/* Specs Modal */}
       <SpecsModal isOpen={isSpecModalOpen} onClose={() => setIsSpecModalOpen(false)} />
 
-      {/* Admin Authorization Modal */}
-      <AdminAuthModal 
-        isOpen={showAdminLogin} 
-        onClose={() => setShowAdminLogin(false)} 
-        onSuccess={() => {
-          setIsAdminAuthorized(true);
-          setActiveStage('admin');
-          setShowAdminLogin(false);
-        }} 
-      />
     </div>
   );
 }
