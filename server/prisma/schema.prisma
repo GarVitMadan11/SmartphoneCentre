@@ -1,0 +1,84 @@
+// ─────────────────────────────────────────────────────────────
+// Prisma Schema — ReliableExchange Full-Stack Backend
+// Database: SQLite (file-based, zero-install)
+// ─────────────────────────────────────────────────────────────
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ── Master Catalog ──────────────────────────────────────────
+
+model Brand {
+  id     String  @id @default(uuid())
+  name   String
+  logo   String
+  active Boolean @default(true)
+
+  models Model[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Model {
+  id             String @id @default(uuid())
+  legacyId       String @unique // e.g. "apple-16pm" — maps to frontend IDs
+  brandId        String
+  name           String
+  modelNumber    String
+  category       String // flagship | premium | midrange | budget
+  releaseYear    Int
+  basePrice128GB Int    // Anchor price in INR
+  series         String @default("")
+  imageUrl       String @default("") // optional external image URL
+
+  brand Brand @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([brandId])
+  @@index([category])
+}
+
+// ── Trade-In Bookings ───────────────────────────────────────
+
+model Booking {
+  id                 String @id // e.g. "STC-A8B9C0D1"
+  modelLegacyId      String // references Model.legacyId
+  modelName          String
+  modelNumber        String @default("")
+  storageGb          Int
+  color              String
+  customerName       String
+  customerPhone      String
+  customerEmail      String
+  address            String
+  pickupDate         String
+  pickupTimeSlot     String
+  finalPrice         Int
+  verificationStatus String @default("pending") // pending | verified | failed
+  verifiedName       String @default("")
+  maskedAadhaar      String @default("")
+  verificationDate   String @default("")
+  payoutMethod       String
+  payoutMethodName   String
+  bonusPercentage    Float  @default(0)
+  bonusAmount        Int    @default(0)
+  finalPayoutAmount  Int
+  inspectionStatus   String @default("pending") // pending | approved | rejected
+  payoutStatus       String @default("pending") // pending | completed
+  dateCreated        String
+
+  // Payout details stored as JSON string
+  payoutDetailsJson String @default("{}")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

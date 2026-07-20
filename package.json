@@ -6,7 +6,12 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "server": "cd server && npm run dev",
+    "server:build": "cd server && npm run build",
+    "db:setup": "cd server && npx prisma migrate dev --name init && npx tsx prisma/seed.ts",
+    "db:seed": "cd server && npx tsx prisma/seed.ts",
+    "dev:fullstack": "concurrently -n FE,BE -c cyan,green \"npm run dev\" \"npm run server\""
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
