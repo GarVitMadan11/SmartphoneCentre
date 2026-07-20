@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Booking, Brand, Model } from '../../data/mockDatabase';
+import { Booking, Brand, Model, MODELS as STATIC_MODELS } from '../../data/mockDatabase';
 import { 
   ArrowLeft, Search, Filter, 
   CheckCircle, XCircle, Clock, CreditCard, 
@@ -13,8 +13,8 @@ interface AdminPanelProps {
   onBack: () => void;
   initialBookings: Booking[];
   brands: Brand[];
-  onRefreshBookings?: () => Promise<void> | void;
-  onRefreshCatalog?: () => Promise<void> | void;
+  onRefreshBookings?: (updatedBookings?: Booking[]) => Promise<void> | void;
+  onRefreshCatalog?: (updatedModels?: Model[]) => Promise<void> | void;
 }
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({ 
@@ -36,6 +36,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [models, setModels] = useState<Model[]>([]);
   const [loadingModels, setLoadingModels] = useState(false);
   const [selectedCatalogBrandId, setSelectedCatalogBrandId] = useState<string>('brand-apple');
+  const [isApiOffline, setIsApiOffline] = useState(false);
   
   // Add model form states
   const [newModelName, setNewModelName] = useState('');
@@ -51,9 +52,17 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     setLoadingModels(true);
     try {
       const data = await fetchModels();
-      setModels(data as Model[]);
+      if (data && data.length > 0) {
+        setModels(data as Model[]);
+        setIsApiOffline(false);
+      } else {
+        setModels(STATIC_MODELS);
+        setIsApiOffline(true);
+      }
     } catch (err) {
       console.error('Failed to load models:', err);
+      setModels(STATIC_MODELS);
+      setIsApiOffline(true);
     } finally {
       setLoadingModels(false);
     }
@@ -112,6 +121,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
   // Handle Inspection Status change
   const handleInspectionChange = async (id: string, status: 'approved' | 'rejected') => {
+    if (isApiOffline) {
+      const nextBookings = bookings.map(b => b.id === id ? { ...b, inspectionStatus: status, payoutStatus: status === 'rejected' ? 'pending' : b.payoutStatus } : b);
+      setBookings(nextBookings);
+      if (onRefreshBookings) {
+        onRefreshBookings(nextBookings);
+      }
+      return;
+    }
     try {
       await updateBooking(id, {
         inspectionStatus: status,
@@ -127,6 +144,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
   // Handle Payout completion
   const handlePayoutComplete = async (id: string) => {
+    if (isApiOffline) {
+      const nextBookings = bookings.map(b => b.id === id ? { ...b, payoutStatus: 'completed' } : b);
+      setBookings(nextBookings);
+      if (onRefreshBookings) {
+        onRefreshBookings(nextBookings);
+      }
+      return;
+    }
     try {
       await updateBooking(id, {
         payoutStatus: 'completed'
@@ -141,6 +166,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
   // Reset demo bookings
   const handleResetDemoData = () => {
+    if (isApiOffline) {
+      setBookings(initialBookings);
+      if (onRefreshBookings) {
+        onRefreshBookings(initialBookings);
+      }
+      alert('[Offline Demo Mode] Reset in-memory transaction ledger back to default demo bookings.');
+      return;
+    }
     alert('Full-Stack Mode Active: Ledger data is stored in the SQLite dev.db. To reset or re-seed the transaction ledger, run "npm run db:setup" in your server terminal.');
   };
 
@@ -188,6 +221,29 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     const brandClean = selectedCatalogBrandId.replace('brand-', '');
     const legacyId = `${brandClean}-${cleanName}`;
 
+    if (isApiOffline) {
+      const newModel: Model = {
+        id: legacyId,
+        brandId: selectedCatalogBrandId,
+        name: newModelName.trim(),
+        modelNumber: newModelNumber.trim(),
+        category: newModelCategory,
+        releaseYear: Number(newModelYear),
+        basePrice128GB: Number(newModelBasePrice),
+        series: newModelSeries.trim() || undefined,
+      };
+      const nextModels = [newModel, ...models];
+      setModels(nextModels);
+      setFormSuccess(`[Offline Demo Mode] Successfully added model "${newModelName}"!`);
+      setNewModelName('');
+      setNewModelNumber('');
+      setNewModelSeries('');
+      if (onRefreshCatalog) {
+        onRefreshCatalog(nextModels);
+      }
+      return;
+    }
+
     try {
       await createModel({
         legacyId,
@@ -220,6 +276,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     if (!window.confirm(`Are you sure you want to delete model: ${legacyId}?`)) {
       return;
     }
+    if (isApiOffline) {
+      const nextModels = models.filter(m => m.id !== legacyId);
+      setModels(nextModels);
+      setFormSuccess(`[Offline Demo Mode] Deleted model: ${legacyId}`);
+      if (onRefreshCatalog) {
+        onRefreshCatalog(nextModels);
+      }
+      return;
+    }
     try {
       await deleteModel(legacyId);
       await loadModels();
@@ -244,7 +309,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           </button>
           <div>
             <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-0.5">Control Center</span>
-            <h2 className="text-3xl font-light text-ink-navy tracking-tight">Admin Operations Panel</h2>
+            <div className="flex flex-wrap items-center gap-3">
+              <h2 className="text-3xl font-light text-ink-navy tracking-tight">Admin Operations Panel</h2>
+              {isApiOffline ? (
+                <span className="px-2.5 py-0.5 text-[9px] font-mono font-bold tracking-wider rounded-sm bg-amber-500/10 text-amber-500 border border-amber-500/20 uppercase">
+                  ⚠️ Offline Demo Mode (Simulated)
+                </span>
+              ) : (
+                <span className="px-2.5 py-0.5 text-[9px] font-mono font-bold tracking-wider rounded-sm bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 uppercase">
+                  ⚡ SQLite Database Online
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
