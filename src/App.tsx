@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef, useMemo, lazy, Suspense } from 'react';
-import { Model, Variant, DefectRule, MODELS, BRANDS, generateVariantsForModel, INITIAL_BOOKINGS } from './data/mockDatabase';
+import { useState, useEffect, useRef, useMemo, lazy, Suspense, useCallback } from 'react';
+import { Model, Variant, DefectRule, MODELS as STATIC_MODELS, BRANDS as STATIC_BRANDS, generateVariantsForModel, INITIAL_BOOKINGS, Brand, Booking } from './data/mockDatabase';
+import { fetchBrands, fetchModels, fetchBookings as apiFetchBookings } from './utils/api';
 import { DeviceSelector } from './components/client/DeviceSelector';
 import { useFocusTrap } from './hooks/useFocusTrap';
 import { AdminAuthModal } from './components/admin/AdminAuthModal';
@@ -219,6 +220,36 @@ export default function App() {
     savedNav.current?.activeStage ?? 'select'
   );
   const [wizardStep, setWizardStep] = useState<number>(savedNav.current?.wizardStep ?? 0);
+
+  // ── Dynamic data from API (falls back to static data) ─────────────────────
+  const [BRANDS, setBrands] = useState<Brand[]>(STATIC_BRANDS);
+  const [MODELS, setModels] = useState<Model[]>(STATIC_MODELS);
+  const [apiBookings, setApiBookings] = useState<Booking[]>(INITIAL_BOOKINGS);
+
+  const refreshCatalog = useCallback(async () => {
+    try {
+      const [brands, models] = await Promise.all([fetchBrands(), fetchModels()]);
+      if (brands.length > 0) setBrands(brands);
+      if (models.length > 0) setModels(models as Model[]);
+    } catch {
+      // API not available — keep static data
+      console.info('[App] API unavailable, using static catalog data');
+    }
+  }, []);
+
+  const refreshBookings = useCallback(async () => {
+    try {
+      const bookings = await apiFetchBookings();
+      if (bookings.length > 0) setApiBookings(bookings as unknown as Booking[]);
+    } catch {
+      console.info('[App] API unavailable, using initial bookings');
+    }
+  }, []);
+
+  useEffect(() => {
+    refreshCatalog();
+    refreshBookings();
+  }, [refreshCatalog, refreshBookings]);
 
   // ── Sensitive state — React memory only, never persisted to storage ────────
   const [selectedModel, setSelectedModel] = useState<Model | null>(null);
@@ -764,7 +795,10 @@ export default function App() {
               <AdminPinGate onExit={handleReset}>
                 <AdminPanel
                   onBack={handleReset}
-                  initialBookings={INITIAL_BOOKINGS}
+                  initialBookings={apiBookings}
+                  brands={BRANDS}
+                  onRefreshBookings={refreshBookings}
+                  onRefreshCatalog={refreshCatalog}
                 />
               </AdminPinGate>
             </Suspense>
