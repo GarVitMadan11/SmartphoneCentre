@@ -7,7 +7,8 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import emailjs from '@emailjs/browser';
-import { Model, Variant, DefectRule, Booking, getSavedBookings, saveBookings } from '../../data/mockDatabase';
+import { Model, Variant, DefectRule, Booking } from '../../data/mockDatabase';
+import { createBooking } from '../../utils/api';
 import { DigiLockerModal } from './DigiLockerModal';
 import { PhoneBackPreview } from './DeviceSelector';
 
@@ -327,7 +328,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
       confirmation_id: confirmationId,
     };
 
-    // Save booking to mock DB
+    // Save booking to SQLite DB via API
     const newBooking: Booking = {
       id: confirmationId,
       modelId: selectedModel.id,
@@ -364,8 +365,13 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
       dateCreated: new Date().toISOString()
     };
 
-    const currentBookings = getSavedBookings();
-    saveBookings([newBooking, ...currentBookings]);
+    try {
+      await createBooking(newBooking as any);
+    } catch (err) {
+      setIsSubmitting(false);
+      setFormError('Failed to submit booking to server: ' + (err as Error).message);
+      return;
+    }
 
     try {
       const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;

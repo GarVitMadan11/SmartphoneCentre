@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { BRANDS, MODELS, Model, Variant, generateVariantsForModel, getDeviceImage } from '../../data/mockDatabase';
+import { BRANDS as STATIC_BRANDS, MODELS as STATIC_MODELS, Model, Brand, Variant, generateVariantsForModel, getDeviceImage } from '../../data/mockDatabase';
 import { Search, ChevronRight, Smartphone, Calendar, Layers, ShieldCheck, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -569,13 +569,21 @@ interface DeviceSelectorProps {
   defaultModelId?: string | null;
   /** Called after defaultModelId has been consumed so the parent can clear it */
   onDefaultModelConsumed?: () => void;
+  /** Dynamic brands from API (falls back to static) */
+  brands?: Brand[];
+  /** Dynamic models from API (falls back to static) */
+  models?: Model[];
 }
 
 export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
   onVariantSelected,
   defaultModelId,
   onDefaultModelConsumed,
+  brands: propBrands,
+  models: propModels,
 }) => {
+  const BRANDS = propBrands && propBrands.length > 0 ? propBrands : STATIC_BRANDS;
+  const MODELS = propModels && propModels.length > 0 ? propModels : STATIC_MODELS;
   const [selectedBrandId, setSelectedBrandId] = useState<string>('brand-apple');
   const [selectedSeries, setSelectedSeries] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
