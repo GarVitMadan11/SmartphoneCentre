@@ -572,6 +572,8 @@ export default function App() {
                   onVariantSelected={handleVariantSelected}
                   defaultModelId={pendingModelId}
                   onDefaultModelConsumed={() => setPendingModelId(null)}
+                  brands={BRANDS}
+                  models={MODELS}
                 />
               </div>
 
