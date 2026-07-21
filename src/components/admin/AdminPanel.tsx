@@ -122,7 +122,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   // Handle Inspection Status change
   const handleInspectionChange = async (id: string, status: 'approved' | 'rejected') => {
     if (isApiOffline) {
-      const nextBookings = bookings.map(b => b.id === id ? { ...b, inspectionStatus: status, payoutStatus: status === 'rejected' ? 'pending' : b.payoutStatus } : b);
+    const nextBookings = bookings.map(b => b.id === id ? { ...b, inspectionStatus: status, payoutStatus: (status === 'rejected' ? 'pending' : b.payoutStatus) as 'pending' | 'completed' } : b);
       setBookings(nextBookings);
       if (onRefreshBookings) {
         onRefreshBookings(nextBookings);
@@ -145,7 +145,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   // Handle Payout completion
   const handlePayoutComplete = async (id: string) => {
     if (isApiOffline) {
-      const nextBookings = bookings.map(b => b.id === id ? { ...b, payoutStatus: 'completed' } : b);
+      const nextBookings = bookings.map(b => b.id === id ? { ...b, payoutStatus: 'completed' as const } : b);
       setBookings(nextBookings);
       if (onRefreshBookings) {
         onRefreshBookings(nextBookings);
