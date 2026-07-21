@@ -212,6 +212,80 @@ function SpecsModal({ isOpen, onClose }: SpecsModalProps) {
   );
 }
 
+// ── FAQ Section Component ─────────────────────────────────────────────────────
+
+const FAQ_ITEMS = [
+  {
+    q: 'How do I know the price is genuine?',
+    a: 'Our pricing engine computes quotes using market-calibrated base prices and documented deduction rules. The price you see is the price you get — we never renegotiate at pickup unless device condition is materially different from what you reported.',
+  },
+  {
+    q: 'How quickly will I receive payment?',
+    a: 'Payment is processed within minutes of our executive completing the on-site verification at your doorstep. UPI and bank transfers are instant. Cash arrangements are also available on request.',
+  },
+  {
+    q: 'Is my personal data safe after the trade?',
+    a: 'Every device undergoes a military-grade (DoD 5220.22-M) secure erase before leaving your premises. We provide a certified data destruction certificate on request. We never access your personal files.',
+  },
+  {
+    q: 'What if I change my mind after booking?',
+    a: 'You can cancel or reschedule your pickup at any time up to 2 hours before the scheduled slot at no charge. Your quote is locked for 7 days so you can rebook whenever suits you.',
+  },
+  {
+    q: 'Which cities do you currently operate in?',
+    a: 'We currently service Mumbai, Delhi NCR, Bangalore, Hyderabad, Chennai, and Pune. Coverage is expanding — contact us if you\'re in another city and we\'ll check availability.',
+  },
+  {
+    q: 'Can I sell multiple devices at once?',
+    a: 'Yes! For bulk (3+ devices) or corporate liquidations, contact our B2B team for a customized quote, certified bulk data wiping, and dedicated logistics support.',
+  },
+  {
+    q: 'What devices do you accept?',
+    a: 'We accept iPhones (up to 6 years old), Samsung Galaxy S and A series, OnePlus, Google Pixel, and Motorola devices. We continuously expand our catalog — if your model is not listed, reach out via our helpdesk.',
+  },
+];
+
+function FaqSection() {
+  const [openIdx, setOpenIdx] = useState<number | null>(null);
+  return (
+    <div className="py-8 border-t border-ice-border/40">
+      <div className="text-center max-w-2xl mx-auto mb-10">
+        <span className="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold bg-secondary/10 text-secondary mb-4 tracking-wide uppercase">Frequently Asked</span>
+        <h2 className="text-3xl font-extrabold text-ink-navy tracking-tight">Common Questions</h2>
+        <p className="text-ink-slate mt-2 text-sm font-light">Everything you need to know before selling your device.</p>
+      </div>
+      <div className="max-w-3xl mx-auto space-y-3">
+        {FAQ_ITEMS.map((item, i) => (
+          <div key={i} className="border border-ice-border rounded-xl overflow-hidden bg-canvas-pure">
+            <button
+              id={`faq-btn-${i}`}
+              aria-expanded={openIdx === i}
+              aria-controls={`faq-panel-${i}`}
+              onClick={() => setOpenIdx(openIdx === i ? null : i)}
+              className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left hover:bg-ice-gray/50 transition-colors"
+            >
+              <span className="text-sm font-semibold text-ink-navy">{item.q}</span>
+              <svg
+                className={`w-5 h-5 text-ink-muted flex-shrink-0 transition-transform duration-200 ${openIdx === i ? 'rotate-45' : ''}`}
+                fill="none" viewBox="0 0 24 24" stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+            </button>
+            {openIdx === i && (
+              <div id={`faq-panel-${i}`} role="region" aria-labelledby={`faq-btn-${i}`} className="px-5 pb-5 text-sm text-ink-slate font-light leading-relaxed border-t border-ice-border/40 pt-4 animate-fadeIn">
+                {item.a}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 export default function App() {
   // ── Navigation state — persisted in localStorage with TTL (non-sensitive) ──
   const savedNav = useRef(loadNavState());
@@ -617,7 +691,200 @@ export default function App() {
                 </div>
               </div>
 
-              {/* 4. Featured Deals Bento Grid */}
+              {/* 4. Benefits Section ─────────────────────────────────────── */}
+              <div className="py-8">
+                <div className="text-center max-w-2xl mx-auto mb-12">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold bg-cobalt/10 text-cobalt mb-4 tracking-wide uppercase">Why ReliableExchange</span>
+                  <h2 className="text-3xl font-extrabold text-ink-navy tracking-tight">Designed Around You</h2>
+                  <p className="text-ink-slate mt-2 text-sm font-light">Every step crafted to be fast, honest, and completely hassle-free.</p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {[
+                    {
+                      icon: '⚡',
+                      title: 'Instant Payout',
+                      desc: 'Cash transfer or UPI within minutes of our executive verifying your device at your doorstep.',
+                      color: 'from-blue-500/10 to-blue-600/5 border-blue-500/20',
+                      accent: 'text-blue-500',
+                    },
+                    {
+                      icon: '🛡️',
+                      title: 'Zero Hidden Cuts',
+                      desc: 'The price we quote is what you receive. No "on-spot deductions" or last-minute adjustments.',
+                      color: 'from-emerald-500/10 to-emerald-600/5 border-emerald-500/20',
+                      accent: 'text-emerald-500',
+                    },
+                    {
+                      icon: '🏠',
+                      title: 'Free Doorstep Pickup',
+                      desc: 'We come to your home or office at a time slot of your choice. Completely free, always.',
+                      color: 'from-purple-500/10 to-purple-600/5 border-purple-500/20',
+                      accent: 'text-purple-500',
+                    },
+                    {
+                      icon: '🔒',
+                      title: 'Certified Data Wipe',
+                      desc: 'Military-grade secure erasure performed on every device before it leaves your hands.',
+                      color: 'from-amber-500/10 to-amber-600/5 border-amber-500/20',
+                      accent: 'text-amber-500',
+                    },
+                  ].map(b => (
+                    <div key={b.title} className={`bg-gradient-to-br ${b.color} border rounded-xl p-6 text-left hover:scale-[1.02] transition-transform duration-200`}>
+                      <div className="text-3xl mb-4">{b.icon}</div>
+                      <h3 className={`text-base font-bold ${b.accent} mb-2`}>{b.title}</h3>
+                      <p className="text-sm text-ink-slate font-light leading-relaxed">{b.desc}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Stats bar */}
+                <div className="mt-10 grid grid-cols-2 lg:grid-cols-4 gap-4 bg-canvas-pure border border-ice-border rounded-xl p-6">
+                  {[
+                    { value: '12,400+', label: 'Devices Processed' },
+                    { value: '₹14 Cr+', label: 'Paid to Customers' },
+                    { value: '99.4%', label: 'Quote Accuracy' },
+                    { value: '<15 min', label: 'Avg. Pickup Time' },
+                  ].map(s => (
+                    <div key={s.label} className="text-center">
+                      <div className="text-2xl sm:text-3xl font-black text-cobalt">{s.value}</div>
+                      <div className="text-[11px] text-ink-muted font-mono uppercase tracking-wider mt-1">{s.label}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 5. Testimonials ──────────────────────────────────────────── */}
+              <div className="py-8 border-t border-ice-border/40">
+                <div className="text-center max-w-2xl mx-auto mb-10">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold bg-secondary/10 text-secondary mb-4 tracking-wide uppercase">Customer Stories</span>
+                  <h2 className="text-3xl font-extrabold text-ink-navy tracking-tight">Trusted by Thousands</h2>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {[
+                    {
+                      name: 'Priya Mehta',
+                      city: 'Mumbai',
+                      avatar: 'PM',
+                      rating: 5,
+                      device: 'iPhone 14 Pro Max',
+                      quote: 'Got ₹48,000 for my iPhone in under 20 minutes. The agent was punctual, polite, and the UPI transfer hit my account before he even left!',
+                      color: 'bg-blue-100 text-blue-700',
+                    },
+                    {
+                      name: 'Rohit Sharma',
+                      city: 'Bangalore',
+                      avatar: 'RS',
+                      rating: 5,
+                      device: 'Samsung Galaxy S23 Ultra',
+                      quote: 'Skeptical at first, but they actually gave me ₹500 MORE than quoted because my condition was better than I described. Unbelievable honesty.',
+                      color: 'bg-emerald-100 text-emerald-700',
+                    },
+                    {
+                      name: 'Ananya Iyer',
+                      city: 'Chennai',
+                      avatar: 'AI',
+                      rating: 5,
+                      device: 'OnePlus 12',
+                      quote: 'Sold 3 company phones through ReliableExchange for our office upgrade. Bulk pricing was great and the data wipe certificate gave us peace of mind.',
+                      color: 'bg-purple-100 text-purple-700',
+                    },
+                  ].map(t => (
+                    <div key={t.name} className="bg-canvas-pure border border-ice-border rounded-xl p-6 text-left flex flex-col gap-4 hover:shadow-premium transition-shadow duration-200">
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: t.rating }).map((_, i) => (
+                          <span key={i} className="text-amber-400 text-sm">★</span>
+                        ))}
+                      </div>
+                      <p className="text-sm text-ink-slate font-light leading-relaxed flex-1">"{t.quote}"</p>
+                      <div className="flex items-center gap-3 pt-2 border-t border-ice-border/40">
+                        <div className={`w-9 h-9 rounded-full ${t.color} flex items-center justify-center text-xs font-bold flex-shrink-0`}>
+                          {t.avatar}
+                        </div>
+                        <div>
+                          <span className="text-sm font-semibold text-ink-navy block">{t.name}</span>
+                          <span className="text-[11px] text-ink-muted font-mono">{t.city} · {t.device}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 6. Pricing Transparency ──────────────────────────────────── */}
+              <div className="py-8 border-t border-ice-border/40">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+                  <div className="text-left">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold bg-cobalt/10 text-cobalt mb-4 tracking-wide uppercase">Our Pricing Engine</span>
+                    <h2 className="text-3xl font-extrabold text-ink-navy tracking-tight mb-4">How We Calculate Your Price</h2>
+                    <p className="text-ink-slate text-sm font-light leading-relaxed mb-6">
+                      We use a transparent, algorithmically-computed pricing model. No guesswork, no negotiation theatre. Every deduction is based on publicly documented rules.
+                    </p>
+                    <div className="space-y-4">
+                      {[
+                        { label: 'Base Price (Flawless)', desc: 'Market-calibrated anchor for your model + storage variant', color: 'bg-cobalt text-white' },
+                        { label: '− Condition Deductions', desc: 'Fixed or % deductions per reported defect (screen, body, camera, battery)', color: 'bg-red-100 text-red-700' },
+                        { label: '− Accessory Deductions', desc: 'Missing box, charger, or accessories deducted at fixed rates', color: 'bg-orange-100 text-orange-700' },
+                        { label: '= Final Payout', desc: 'Protected by category caps so you always get ≥8% of base value', color: 'bg-emerald-100 text-emerald-700' },
+                      ].map((step, i) => (
+                        <div key={step.label} className="flex items-start gap-3">
+                          <div className={`w-7 h-7 rounded-md flex items-center justify-center text-xs font-bold flex-shrink-0 ${step.color}`}>
+                            {i + 1}
+                          </div>
+                          <div>
+                            <span className="text-sm font-semibold text-ink-navy">{step.label}</span>
+                            <p className="text-xs text-ink-muted font-light">{step.desc}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="bg-canvas-pure border border-ice-border rounded-xl p-6">
+                    <div className="text-[10px] font-mono text-ink-muted uppercase tracking-wider mb-4">Live Example — iPhone 14 Pro Max 256GB</div>
+                    <div className="space-y-3">
+                      {[
+                        { label: 'Base Price (256GB, Flawless)', value: '₹52,000', color: 'text-cobalt' },
+                        { label: '− Screen hairline crack (12%)', value: '− ₹6,240', color: 'text-red-500' },
+                        { label: '− Missing original charger', value: '− ₹500', color: 'text-orange-500' },
+                        { label: '= Your Final Payout', value: '₹45,260', color: 'text-emerald-600', bold: true },
+                      ].map(row => (
+                        <div key={row.label} className={`flex justify-between items-center py-2.5 ${row.bold ? 'border-t-2 border-ink-navy/10 pt-4 mt-2' : 'border-b border-ice-border/40'}`}>
+                          <span className={`text-sm ${row.bold ? 'font-bold text-ink-navy' : 'font-light text-ink-slate'}`}>{row.label}</span>
+                          <span className={`text-sm font-bold ${row.color}`}>{row.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-5 p-3 bg-cobalt/5 border border-cobalt/20 rounded-lg text-xs text-ink-muted font-light leading-relaxed">
+                      💡 Category caps prevent any single defect category from deducting more than 40% (screen), 20% (body), 18% (camera), or 8% (battery).
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 7. FAQ Section ───────────────────────────────────────────── */}
+              <FaqSection />
+
+              {/* 8. CTA Block ─────────────────────────────────────────────── */}
+              <div className="py-8 border-t border-ice-border/40">
+                <div className="bg-gradient-to-br from-cobalt to-blue-700 rounded-2xl p-10 text-white text-center relative overflow-hidden">
+                  <div className="absolute inset-0 opacity-10 pointer-events-none" style={{backgroundImage: 'radial-gradient(circle at 20% 80%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)', backgroundSize: '60px 60px'}} />
+                  <div className="relative z-10">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold bg-white/10 text-white/90 mb-4 tracking-wide uppercase border border-white/10">Ready to sell?</span>
+                    <h2 className="text-3xl sm:text-4xl font-black mb-4 max-w-xl mx-auto leading-tight">Get Your Instant Quote in Under 60 Seconds</h2>
+                    <p className="text-blue-100 font-light mb-8 max-w-md mx-auto text-sm leading-relaxed">
+                      No sign-up required. Just select your device, answer a few questions, and we'll show you your best price — instantly.
+                    </p>
+                    <button
+                      onClick={() => document.getElementById('device-selector-section')?.scrollIntoView({ behavior: 'smooth' })}
+                      className="bg-white text-cobalt hover:bg-blue-50 px-8 py-4 rounded-xl font-black text-sm shadow-xl shadow-black/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                    >
+                      Start Free Valuation →
+                    </button>
+                    <p className="text-blue-200/60 text-[11px] mt-4 font-mono">No commitment. Quote valid for 7 days.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* 9. Featured Deals Bento Grid */}
               <div className="space-y-8">
                 <div className="text-center max-w-3xl mx-auto">
                   <h2 className="text-3xl font-extrabold text-ink-navy tracking-tight">Featured Deals</h2>

@@ -1,7 +1,8 @@
-// ─────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 // Prisma Schema — ReliableExchange Full-Stack Backend
-// Database: SQLite (file-based, zero-install)
-// ─────────────────────────────────────────────────────────────
+// Database: SQLite (development) → PostgreSQL (production via DATABASE_URL)
+// To switch: change provider to "postgresql" and update DATABASE_URL in .env
+// ─────────────────────────────────────────────────────────────────────────────
 
 generator client {
   provider = "prisma-client-js"
@@ -12,7 +13,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ── Master Catalog ──────────────────────────────────────────
+// ── Master Catalog ────────────────────────────────────────────────────────────
 
 model Brand {
   id     String  @id @default(uuid())
@@ -47,10 +48,10 @@ model Model {
   @@index([category])
 }
 
-// ── Trade-In Bookings ───────────────────────────────────────
+// ── Trade-In Bookings ─────────────────────────────────────────────────────────
 
 model Booking {
-  id                 String @id // e.g. "STC-A8B9C0D1"
+  id                 String @id // server-generated: "STC-XXXXXXXX"
   modelLegacyId      String // references Model.legacyId
   modelName          String
   modelNumber        String @default("")
@@ -75,10 +76,55 @@ model Booking {
   inspectionStatus   String @default("pending") // pending | approved | rejected
   payoutStatus       String @default("pending") // pending | completed
   dateCreated        String
+  adminNotes         String @default("")        // internal admin notes
 
   // Payout details stored as JSON string
   payoutDetailsJson String @default("{}")
 
+  events BookingEvent[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([inspectionStatus])
+  @@index([payoutStatus])
+  @@index([createdAt])
+  @@index([customerPhone])
+}
+
+// ── Booking Lifecycle Events ──────────────────────────────────────────────────
+// Append-only log: one record per status change or admin action on a booking.
+
+model BookingEvent {
+  id        String @id @default(uuid())
+  bookingId String
+  eventType String // status_change | admin_note | created | verified
+  fromValue String @default("")
+  toValue   String @default("")
+  note      String @default("")
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([bookingId])
+  @@index([createdAt])
+}
+
+// ── Admin Audit Log ───────────────────────────────────────────────────────────
+// Immutable record of all admin actions for accountability.
+
+model AdminAuditLog {
+  id          String @id @default(uuid())
+  action      String // create_model | delete_model | update_booking_status | etc.
+  targetType  String // "booking" | "model" | "brand"
+  targetId    String // the affected record's ID
+  payload     String @default("{}") // JSON: what changed
+  ipAddress   String @default("")
+  userAgent   String @default("")
+
+  createdAt DateTime @default(now())
+
+  @@index([targetType, targetId])
+  @@index([createdAt])
 }

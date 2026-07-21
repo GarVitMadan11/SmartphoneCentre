@@ -6,41 +6,66 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ReliableExchange | Sell Your Smartphone — Instant Doorstep Pickup</title>
 
-    <!-- ── Security Headers (meta-equivalent) ────────────────────── -->
-    <!-- Content Security Policy: restrict script/style/font origins -->
+    <!-- ── SEO & Canonicalization ──────────────────────────────────── -->
+    <meta name="description" content="ReliableExchange — Get an instant, honest trade-in valuation for your smartphone. Free doorstep pickup, Aadhaar-verified KYC, and secure UPI/bank payout. India's most trusted C2B device resale platform.">
+    <meta name="keywords" content="sell smartphone, sell iPhone India, sell Samsung India, trade-in phone, doorstep pickup, instant payout, mobile phone resale, used phone price">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="ReliableExchange">
+    <meta name="theme-color" content="#1D4ED8">
+
+    <!-- ── Open Graph ──────────────────────────────────────────────── -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="ReliableExchange">
+    <meta property="og:title" content="ReliableExchange | Sell Your Smartphone for the Best Price">
+    <meta property="og:description" content="Get an instant trade-in quote, schedule free doorstep pickup, and get paid instantly. Zero hidden deductions. India's most trusted C2B device resale platform.">
+    <meta property="og:locale" content="en_IN">
+
+    <!-- ── Twitter Card ──────────────────────────────────────────────── -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="ReliableExchange | Sell Your Smartphone for the Best Price">
+    <meta name="twitter:description" content="Instant valuations. Free doorstep pickup. Secure instant payout. India's most honest smartphone resale platform.">
+
+    <!-- ── Security Headers (meta-equivalent) ───────────────────────── -->
     <meta http-equiv="Content-Security-Policy" content="
       default-src 'self';
       script-src  'self' 'unsafe-inline' https://api.emailjs.com;
       style-src   'self' 'unsafe-inline' https://fonts.googleapis.com;
       font-src    'self' https://fonts.gstatic.com;
-      img-src     'self' data: blob:;
-      connect-src 'self' https://api.emailjs.com;
+      img-src     'self' data: blob: https:;
+      connect-src 'self' https://api.emailjs.com http://localhost:4000;
       frame-ancestors 'none';
       base-uri    'self';
       form-action 'self';
     ">
-    <!-- Prevent MIME-type sniffing -->
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
-    <!-- Prevent clickjacking -->
     <meta http-equiv="X-Frame-Options" content="DENY">
-    <!-- Strict referrer policy -->
     <meta name="referrer" content="strict-origin-when-cross-origin">
-    <!-- Disable browser features not needed by this app -->
     <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=()">
 
-    <!-- Google Fonts: Outfit & Inter (trimmed to used weights only — P-3 fix) -->
-    <!-- NOTE M-3: Google Fonts CDN uses dynamic URLs — SRI hashes are not stable.
-         Mitigation: style-src in CSP above is locked to fonts.googleapis.com only.
-         To fully resolve M-3, self-host fonts (download & serve from /public/fonts/). -->
+    <!-- ── Google Fonts ──────────────────────────────────────────────── -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet" crossorigin>
 
-    <!-- SEO Meta -->
-    <meta name="description" content="ReliableExchange — Get an instant, honest trade-in valuation for your smartphone. Free doorstep pickup, Aadhaar-verified KYC, and secure UPI/bank payout. India's most trusted C2B device resale platform.">
-  <meta property="og:title" content="ReliableExchange | Sell Your Smartphone for the Best Price">
-  <meta property="og:description" content="Get an instant trade-in quote, schedule free doorstep pickup, and get paid instantly.">
-  <meta name="theme-color" content="#1D4ED8">
+    <!-- ── Schema.org Structured Data ──────────────────────────────── -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "ReliableExchange",
+      "description": "India's most trusted C2B smartphone resale platform offering instant valuations, free doorstep pickup, and secure payouts.",
+      "url": "https://reliableexchange.in",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer support",
+        "availableLanguage": ["English", "Hindi"]
+      },
+      "areaServed": {
+        "@type": "Country",
+        "name": "India"
+      }
+    }
+    </script>
   </head>
   <body class="bg-canvas-white text-ink-navy min-h-screen font-sans selection:bg-cobalt selection:text-white">
     <div id="root"></div>
