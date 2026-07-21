@@ -95,7 +95,7 @@ app.use(globalLimiter);
 const PHONE_RE = /^[6-9]\d{9}$/;     // Indian mobile number
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-function validateBookingBody(b: Record<string, unknown>): string[] {
+export function validateBookingBody(b: Record<string, unknown>): string[] {
   const errors: string[] = [];
   if (!b.customerName || typeof b.customerName !== 'string' || b.customerName.trim().length < 2)
     errors.push('customerName: must be at least 2 characters');
