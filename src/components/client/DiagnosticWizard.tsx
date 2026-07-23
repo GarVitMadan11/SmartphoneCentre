@@ -1101,6 +1101,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         modelName={model.name} 
                         colorName={variant.color} 
                         modelId={model.id}
+                        customImageUrl={model.imageUrl}
                       />
                     </div>
                   </div>

@@ -204,21 +204,25 @@ export const PhoneBackPreview: React.FC<{
   modelName: string;
   colorName: string;
   modelId?: string;
-}> = ({ brandId, modelName, colorName, modelId }) => {
+  customImageUrl?: string;
+}> = ({ brandId, modelName, colorName, modelId, customImageUrl }) => {
   const theme = useMemo(() => getColorTheme(colorName), [colorName]);
 
   const id = (modelId || '').toLowerCase();
   const name = modelName.toLowerCase();
 
   const officialImgUrl = useMemo(() => {
+    if (customImageUrl && customImageUrl.trim().length > 0) {
+      return customImageUrl.trim();
+    }
     if (modelId) {
       return getDeviceImage(modelId, brandId);
     }
     return '';
-  }, [modelId, brandId]);
+  }, [modelId, brandId, customImageUrl]);
 
-  // Check if we have a crawled image URL (starts with http)
-  const hasOfficialImg = officialImgUrl && officialImgUrl.startsWith('http');
+  // Check if we have a crawled or custom image URL (starts with http or data:)
+  const hasOfficialImg = officialImgUrl && (officialImgUrl.startsWith('http') || officialImgUrl.startsWith('data:'));
 
   // 1. Determine Phone shape, aspect ratio and roundedness
   let chassisClass = "w-32 h-56 rounded-[22px]"; 
@@ -956,7 +960,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                             {/* Brand specific phone image */}
                             <div className="w-16 h-16 flex-shrink-0 flex items-center justify-center overflow-hidden bg-slate-100 rounded-lg p-1.5 border border-ice-border/40">
                               <img 
-                                src={getDeviceImage(model.id, model.brandId)} 
+                                src={getDeviceImage(model.id, model.brandId, undefined, model.imageUrl)} 
                                 alt={model.name} 
                                 className="max-h-full max-w-full object-contain pointer-events-none group-hover:scale-105 transition-transform duration-300" 
                               />
@@ -1085,6 +1089,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                       modelName={selectedModel.name} 
                       colorName={tempVariant.color} 
                       modelId={selectedModel.id}
+                      customImageUrl={selectedModel.imageUrl}
                     />
 
                     <div className="bg-canvas-white rounded-sm p-4 mb-6 border border-white/[0.06] flex items-center justify-between text-left">

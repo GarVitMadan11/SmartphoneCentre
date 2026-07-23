@@ -23,6 +23,7 @@ export interface Model {
   releaseYear: number;
   basePrice128GB: number; // Anchor price in INR
   series?: string;        // Sub-category or series designation
+  imageUrl?: string;      // Custom image URL or Data URL
 }
 
 export interface Variant {
@@ -596,7 +597,10 @@ export function getPhoneImageForBrand(brandId: string): string {
   }
 }
 
-export function getDeviceImage(modelId: string, brandId: string, color?: string): string {
+export function getDeviceImage(modelId: string, brandId: string, color?: string, customImageUrl?: string): string {
+  if (customImageUrl && customImageUrl.trim().length > 0) {
+    return customImageUrl.trim();
+  }
   let imageName: string | undefined;
   
   if (color) {
