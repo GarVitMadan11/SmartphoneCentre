@@ -43,6 +43,18 @@ export const AdminPinGate: React.FC<AdminPinGateProps> = ({ children, onExit }) 
     if (raw) setSessionExpiry(parseInt(raw, 10));
   }, [isAuthenticated]);
 
+  // Close / Exit on Escape key when unauthenticated
+  useEffect(() => {
+    if (isAuthenticated) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onExit();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isAuthenticated, onExit]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isLocked || isLoading || pin.length < 4) return;

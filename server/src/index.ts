@@ -14,6 +14,9 @@ const prisma = new PrismaClient();
 const app = express();
 const PORT = parseInt(process.env.PORT || '4000', 10);
 
+// Trust first proxy (e.g. Nginx, Cloudflare, AWS ALB) for accurate IP rate limiting
+app.set('trust proxy', 1);
+
 // ── Parse allowed origins from env ───────────────────────────────────────────
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? 'http://localhost:5173,http://localhost:3000')
   .split(',')
@@ -53,9 +56,9 @@ app.use(cors({
 // Request logging (combined format in prod, dev format locally)
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
-// Body parsing — tight size limits to prevent payload attacks
-app.use(express.json({ limit: '50kb' }));
-app.use(express.urlencoded({ extended: false, limit: '50kb' }));
+// Body parsing — 4MB limit to support base64 catalog image file uploads
+app.use(express.json({ limit: '4mb' }));
+app.use(express.urlencoded({ extended: false, limit: '4mb' }));
 
 // ── Rate limiting ─────────────────────────────────────────────────────────
 // Global limiter (public endpoints)
@@ -95,16 +98,23 @@ app.use(globalLimiter);
 const PHONE_RE = /^[6-9]\d{9}$/;     // Indian mobile number
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+export function isValidImageUrl(url?: string): boolean {
+  if (!url || typeof url !== 'string') return true;
+  const trimmed = url.trim();
+  if (trimmed === '') return true;
+  return /^https?:\/\//i.test(trimmed) || /^data:image\/(png|jpeg|jpg|webp|gif|svg\+xml);base64,/i.test(trimmed);
+}
+
 export function validateBookingBody(b: Record<string, unknown>): string[] {
   const errors: string[] = [];
-  if (!b.customerName || typeof b.customerName !== 'string' || b.customerName.trim().length < 2)
-    errors.push('customerName: must be at least 2 characters');
+  if (!b.customerName || typeof b.customerName !== 'string' || b.customerName.trim().length < 2 || b.customerName.trim().length > 100)
+    errors.push('customerName: must be between 2 and 100 characters');
   if (!b.customerPhone || typeof b.customerPhone !== 'string' || !PHONE_RE.test(b.customerPhone.trim()))
     errors.push('customerPhone: must be a valid 10-digit Indian mobile number');
-  if (!b.customerEmail || typeof b.customerEmail !== 'string' || !EMAIL_RE.test(b.customerEmail.trim()))
-    errors.push('customerEmail: must be a valid email address');
-  if (!b.address || typeof b.address !== 'string' || b.address.trim().length < 10)
-    errors.push('address: must be at least 10 characters');
+  if (!b.customerEmail || typeof b.customerEmail !== 'string' || b.customerEmail.trim().length > 100 || !EMAIL_RE.test(b.customerEmail.trim()))
+    errors.push('customerEmail: must be a valid email address under 100 characters');
+  if (!b.address || typeof b.address !== 'string' || b.address.trim().length < 10 || b.address.trim().length > 500)
+    errors.push('address: must be between 10 and 500 characters');
   if (!b.pickupDate || typeof b.pickupDate !== 'string')
     errors.push('pickupDate: required');
   if (!b.pickupTimeSlot || typeof b.pickupTimeSlot !== 'string')
@@ -197,6 +207,11 @@ app.post('/api/models', adminAuth, async (req, res) => {
       return;
     }
 
+    if (!isValidImageUrl(imageUrl)) {
+      res.status(400).json({ error: 'BadRequest', message: 'imageUrl must be a valid http(s) URL or base64 Data URL' });
+      return;
+    }
+
     const model = await prisma.model.create({
       data: {
         legacyId: String(legacyId).trim(),
@@ -241,6 +256,11 @@ app.patch('/api/models/:legacyId', adminAuth, async (req, res) => {
     const legacyId = String(req.params.legacyId);
     const { name, modelNumber, category, releaseYear, basePrice128GB, series, imageUrl } = req.body;
 
+    if (imageUrl !== undefined && !isValidImageUrl(imageUrl)) {
+      res.status(400).json({ error: 'BadRequest', message: 'imageUrl must be a valid http(s) URL or base64 Data URL' });
+      return;
+    }
+
     const existing = await prisma.model.findUnique({ where: { legacyId } });
     if (!existing) {
       res.status(404).json({ error: 'NotFound', message: 'Model not found' });
@@ -266,6 +286,18 @@ app.patch('/api/models/:legacyId', adminAuth, async (req, res) => {
       releaseYear: updated.releaseYear, basePrice128GB: updated.basePrice128GB,
       series: updated.series, imageUrl: updated.imageUrl,
     });
+
+    // Fire-and-forget audit log (non-blocking)
+    prisma.adminAuditLog.create({
+      data: {
+        action: 'update_model',
+        targetType: 'model',
+        targetId: updated.legacyId,
+        payload: JSON.stringify({ name: updated.name, basePrice128GB: updated.basePrice128GB, series: updated.series }),
+        ipAddress: String(req.ip ?? ''),
+        userAgent: String(req.headers['user-agent'] ?? ''),
+      },
+    }).catch(e => console.warn('[AuditLog] Failed to write:', e));
   } catch (err) {
     console.error('PATCH /api/models error:', err);
     res.status(500).json({ error: 'ServerError', message: 'Failed to update model' });

@@ -962,6 +962,9 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                               <img 
                                 src={getDeviceImage(model.id, model.brandId, undefined, model.imageUrl)} 
                                 alt={model.name} 
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = getDeviceImage('', model.brandId);
+                                }}
                                 className="max-h-full max-w-full object-contain pointer-events-none group-hover:scale-105 transition-transform duration-300" 
                               />
                             </div>

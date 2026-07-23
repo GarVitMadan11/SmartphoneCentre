@@ -46,6 +46,8 @@ model Model {
 
   @@index([brandId])
   @@index([category])
+  @@index([series])
+  @@index([releaseYear])
 }
 
 // ── Trade-In Bookings ─────────────────────────────────────────────────────────

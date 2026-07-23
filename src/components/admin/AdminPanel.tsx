@@ -1038,6 +1038,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                   <img 
                                     src={imgUrl} 
                                     alt={m.name} 
+                                    onError={(e) => {
+                                      (e.target as HTMLImageElement).src = getDeviceImage('', m.brandId);
+                                    }}
                                     className="w-9 h-9 object-contain mx-auto rounded bg-slate-100 dark:bg-zinc-800 p-0.5 border border-ice-border"
                                   />
                                 ) : (
