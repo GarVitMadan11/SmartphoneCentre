@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Shield, X, AlertCircle, ArrowRight, ShieldCheck, Lock } from 'lucide-react';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 
@@ -25,6 +25,18 @@ export const DigiLockerModal: React.FC<DigiLockerModalProps> = ({
   const modalRef = useRef<HTMLDivElement>(null);
 
   useFocusTrap(modalRef, isOpen);
+
+  // Close modal on Escape key press
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
