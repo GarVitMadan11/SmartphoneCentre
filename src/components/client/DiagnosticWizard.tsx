@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { Model, Variant, getDefectRulesForCategory, DefectRule } from '../../data/mockDatabase';
+import { Model, Variant, getDefectRulesForCategory, DefectRule, isAppleDevice } from '../../data/mockDatabase';
 import { calculateValuation } from '../../utils/valuation';
 import { 
   ArrowLeft, Check, ChevronRight, Activity, Sparkles, 
@@ -7,7 +7,6 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getIllustration } from './Illustrations';
-import { getColorTheme, PhoneBackPreview } from './DeviceSelector';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 
@@ -18,25 +17,31 @@ const getEngineeringLabel = (description: string) => {
     'Screen Burn-in / Lines':            'Display Panel Replacement Fee',
     'Touch / Swipe Unresponsive':        'Digitizer / Touch Layer Repair',
     'True Tone Not Working':             'Original Display Certification Fee',
+    'Display Calibration / Tint Issue':  'Display Panel Recalibration Levy',
     'Dented or Bent Frame':              'Chassis Structure Re-alignment',
     'Scuffed Frame / Normal Wear':       'Frame Bead-Blasting & Refinishing',
     'Air Pass / Waterproof Seal Fail':   'IP Seal & Gasket Replacement',
     'Side Buttons Faulty':               'Button Flex Cable Repair Fee',
     'Screws Stripped / Missing':         'Pentalobe Hardware Replacement',
+    'Bottom Screws Stripped / Missing':  'Chassis Hardware Replacement',
     'Camera Faulty / Lens Blur':         'Optical Sensor Recalibration',
     'Battery Health < 80%':              'Battery Module Replacement',
     'Non-Genuine Battery Warning':       'OEM Battery Compliance Levy',
+    'Non-OEM / Battery Warning Alert':   'Battery Controller Compliance Levy',
     'Network, Calling & SIM Issues':     'Cellular Modem / SIM Tray Repair',
     'Wi-Fi & Bluetooth Issues':          'Antenna & Wireless Module Repair',
     '3uTools Serial Mismatch':           'Counterfeit Parts Detection Levy',
+    'PC Diagnostic Serial Mismatch':     'Hardware Serial Mismatch Levy',
     'Speakers / Microphone Faulty':      'Audio Assembly Replacement Fee',
     'Auto-Restart / Unstable Device':    'PMIC / Board-Level Stabilisation',
     'Missing Original Box':              'OEM Retail Box De-allocation',
     'Missing Original Charger / Cable':  'OEM Power Adapter De-allocation',
     'Missing Bill / Customer Photo ID':  'Legal Compliance Documentation Fee',
     'Device Does Not Turn On':           'Board-Level Hardware Failure',
-    'iCloud / Apple ID Locked':          'Activation Lock — Zero Resale Value',
-    'Biometrics Faulty (Face ID)':       'Biometric Sensor Security Fee'
+    'iCloud / Apple ID Locked':                         'Activation Lock — Zero Resale Value',
+    'Google Account / Factory Reset Protection Locked': 'Factory Reset Protection Lock — Zero Resale Value',
+    'Biometrics Faulty (Face ID)':                      'Biometric Sensor Security Fee',
+    'Biometrics Faulty (Fingerprint / Face Unlock)':    'Biometric Sensor Security Fee'
   };
   return mapping[description] || description;
 };
@@ -64,14 +69,20 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
   step,
   setStep
 }) => {
-  // Obtain rules based on model category
-  const rules = useMemo(() => getDefectRulesForCategory(model.category), [model.category]);
+  const isApple = useMemo(() => isAppleDevice(model.brandId, model.name), [model]);
+
+  // Obtain rules based on model category and brand
+  const rules = useMemo(() => getDefectRulesForCategory(model.category, model.brandId, model.name), [model]);
 
   const stepsList = [
-    { title: 'Boot & iCloud',          icon: Zap,        desc: 'Power on & Apple ID status' },
-    { title: 'Screen & Display',       icon: Smartphone, desc: 'Touch, True Tone & glass' },
+    { 
+      title: isApple ? 'Boot & iCloud' : 'Boot & Account Lock', 
+      icon: Zap, 
+      desc: isApple ? 'Power on & Apple ID status' : 'Power on & Google Account lock status' 
+    },
+    { title: 'Screen & Display',       icon: Smartphone, desc: isApple ? 'Touch, True Tone & glass' : 'Touch, calibration & glass' },
     { title: 'Body & Frame',           icon: ShieldCheck, desc: 'Frame, buttons, screws & seal' },
-    { title: 'Hardware',               icon: Activity,   desc: 'Camera, Face ID, audio & restart' },
+    { title: 'Hardware',               icon: Activity,   desc: isApple ? 'Camera, Face ID, audio & restart' : 'Camera, biometrics, audio & restart' },
     { title: 'Connectivity',           icon: Zap,        desc: 'Battery, network, Wi-Fi & parts' },
     { title: 'Accessories & Docs',     icon: Box,        desc: 'Box, charger & bill' },
   ];
@@ -243,11 +254,15 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                 <span className="text-2xl">&#128274;</span>
               </div>
               <h3 id="critical-modal-title" className="text-lg font-semibold text-ink-navy mb-2">
-                {criticalModal.type === 'icloud' ? 'iCloud Lock Detected' : 'Device Dead — Cannot Power On'}
+                {criticalModal.type === 'icloud'
+                  ? (isApple ? 'iCloud Lock Detected' : 'Account Lock / Factory Reset Protection Detected')
+                  : 'Device Dead — Cannot Power On'}
               </h3>
               <p className="text-xs text-ink-muted font-light mb-5 leading-relaxed">
                 {criticalModal.type === 'icloud'
-                  ? 'Devices with Find My / iCloud lock active have zero resale value and cannot be traded in. Are you sure you want to proceed?'
+                  ? (isApple
+                      ? 'Devices with Find My / iCloud lock active have zero resale value and cannot be traded in. Are you sure you want to proceed?'
+                      : 'Devices with active Google Factory Reset Protection or Brand Account lock have zero resale value and cannot be traded in. Are you sure you want to proceed?')
                   : 'Devices that cannot power on, are boot-looped, or are liquid-damaged have zero resale value. Selecting this will end the diagnostic and show a \u20B90 payout.'}
               </p>
               <div className="grid grid-cols-2 gap-3">
@@ -297,10 +312,6 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
               </span>
               <span className="text-[9px] font-mono tracking-wider bg-cobalt-light text-cobalt px-2 py-0.5 rounded-sm border border-white/[0.06] flex-shrink-0 uppercase">
                 {variant.storageGb >= 1024 ? '1TB' : `${variant.storageGb}GB`}
-              </span>
-              <span className="inline-flex items-center gap-1.5 text-[9px] font-mono tracking-wider bg-canvas-white text-ink-navy px-2 py-0.5 rounded-sm border border-ice-border/40 flex-shrink-0 uppercase">
-                <span className="w-2 h-2 rounded-full border border-black/10 flex-shrink-0" style={{ background: getColorTheme(variant.color).gradient }} />
-                <span>{variant.color}</span>
               </span>
             </div>
           </div>
@@ -374,13 +385,21 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
               >
                 <div className="mb-6 text-left">
                   <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-1">Step 1 of 6 // Critical Gates</span>
-                  <h3 className="text-3xl font-light text-ink-navy tracking-tight">Boot & iCloud Status</h3>
-                  <p className="text-xs text-ink-muted mt-2 font-light">Check Apple ID status first — a locked iCloud renders the device unsellable regardless of condition.</p>
+                  <h3 className="text-3xl font-light text-ink-navy tracking-tight">
+                    {isApple ? 'Boot & iCloud Status' : 'Boot & Account Lock (Factory Reset Protection)'}
+                  </h3>
+                  <p className="text-xs text-ink-muted mt-2 font-light">
+                    {isApple
+                      ? 'Check Apple ID status first — a locked iCloud renders the device unsellable regardless of condition.'
+                      : 'Check Google / Account lock status first — an active Factory Reset Protection or account lock renders the device unsellable regardless of condition.'}
+                  </p>
                 </div>
 
-                {/* iCloud check — must answer first */}
+                {/* Account check — must answer first */}
                 <div className="mb-5 text-left">
-                  <span className="text-[9px] font-mono tracking-[0.15em] text-amber-400 uppercase block mb-2">① Check First: Settings → [Your Name] → iCloud</span>
+                  <span className="text-[9px] font-mono tracking-[0.15em] text-amber-400 uppercase block mb-2">
+                    {isApple ? '① Check First: Settings → [Your Name] → iCloud' : '① Check First: Settings → Accounts → Google / Brand Account'}
+                  </span>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div
                       role="button"
@@ -395,10 +414,16 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                     >
                       <div className="flex items-center gap-2 mb-1">
                         <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                        <span className="font-semibold text-sm text-ink-navy">Apple ID Signed Out</span>
+                        <span className="font-semibold text-sm text-ink-navy">
+                          {isApple ? 'Apple ID Signed Out' : 'Account / Google Signed Out'}
+                        </span>
                         {icloudChecked === 'clear' && <Check className="w-3.5 h-3.5 text-emerald-500 ml-auto" />}
                       </div>
-                      <p className="text-xs text-ink-muted font-light">Find My is OFF. Device can be erased and resold.</p>
+                      <p className="text-xs text-ink-muted font-light">
+                        {isApple
+                          ? 'Find My is OFF. Device can be erased and resold.'
+                          : 'Google Factory Reset Protection & Account locks are OFF. Device can be reset and resold.'}
+                      </p>
                     </div>
                     <div
                       role="button"
@@ -413,10 +438,16 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                     >
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-red-400 font-bold text-sm">&#128274;</span>
-                        <span className="font-semibold text-sm text-red-400">iCloud LOCKED</span>
+                        <span className="font-semibold text-sm text-red-400">
+                          {isApple ? 'iCloud LOCKED' : 'Account / Factory Reset Protection LOCKED'}
+                        </span>
                         {icloudChecked === 'locked' && <Check className="w-3.5 h-3.5 text-red-400 ml-auto" />}
                       </div>
-                      <p className="text-xs text-ink-muted font-light">Find My is ON. Apple ID cannot be removed. Zero resale value.</p>
+                      <p className="text-xs text-ink-muted font-light">
+                        {isApple
+                          ? 'Find My is ON. Apple ID cannot be removed. Zero resale value.'
+                          : 'Google Factory Reset Protection or Brand Account lock is active. Cannot be removed. Zero resale value.'}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -743,7 +774,9 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         </div>
                         <div className="flex-1 min-w-0">
                           <h4 className="font-semibold text-sm text-ink-navy">Hardware Works Perfectly</h4>
-                          <p className="text-xs text-ink-muted mt-0.5 font-light">Front/rear cameras, Face ID, speaker/mic, and system stability are flawless.</p>
+                          <p className="text-xs text-ink-muted mt-0.5 font-light">
+                            Front/rear cameras, {isApple ? 'Face ID' : 'biometrics'}, speaker/mic, and system stability are flawless.
+                          </p>
                         </div>
                         <div className={`w-5 h-5 rounded-sm border flex items-center justify-center flex-shrink-0 ${
                           isSelected ? 'bg-cobalt border-cobalt text-white' : 'border-ice-border'
@@ -851,7 +884,9 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         </div>
                         <div className="flex-1 min-w-0">
                           <h4 className="font-semibold text-sm text-ink-navy">Connectivity & Battery Healthy</h4>
-                          <p className="text-xs text-ink-muted mt-0.5 font-light">Battery is original/above 80%, cellular/Wi-Fi antennas are strong, and 3uTools checks pass.</p>
+                          <p className="text-xs text-ink-muted mt-0.5 font-light">
+                            Battery is original/above 80%, cellular/Wi-Fi antennas are strong, and {isApple ? '3uTools checks pass' : 'hardware diagnostic checks pass'}.
+                          </p>
                         </div>
                         <div className={`w-5 h-5 rounded-sm border flex items-center justify-center flex-shrink-0 ${
                           isSelected ? 'bg-cobalt border-cobalt text-white' : 'border-ice-border'
@@ -1035,50 +1070,73 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                     <p className="text-xs text-ink-muted mt-2 font-light">Review the final computed trade-in receipt. Values are subject to doorside verification.</p>
                   </div>
 
-                  {/* Animated Engineering Receipt with Side-by-Side Phone Preview */}
-                  <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start mb-6">
-                    <div className="md:col-span-8 border border-dashed border-white/[0.12] bg-zinc-950/40 rounded-sm p-5 text-sm relative overflow-hidden text-left shadow-inner">
+                  {/* Animated Engineering Receipt */}
+                  <div className="mb-6">
+                    <div id="printable-quote" className="border border-zinc-700/80 bg-zinc-900 text-zinc-100 rounded-sm p-6 text-sm relative overflow-hidden text-left shadow-2xl">
                       {/* Watermark/stamp — circular badge */}
-                      <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full border-2 border-emerald-500/25 flex items-center justify-center rotate-12 select-none pointer-events-none">
-                        <span className="text-[8px] font-mono text-emerald-500/40 uppercase tracking-widest">VERIFIED</span>
+                      <div className="absolute -right-5 -top-5 w-24 h-24 rounded-full border-2 border-emerald-400/30 bg-emerald-950/20 flex items-center justify-center rotate-12 select-none pointer-events-none print-stamp">
+                        <span className="text-[9px] font-mono text-emerald-400 font-bold uppercase tracking-widest">VERIFIED</span>
                       </div>
 
-                      <div className="flex justify-between items-center mb-6 pb-6 border-b border-white/[0.06] font-mono">
+                      {/* Company Header Logo for Quote & Print */}
+                      <div className="flex items-center justify-between pb-5 mb-5 border-b border-zinc-800 print-border">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-lg bg-cobalt print-logo-bg flex items-center justify-center flex-shrink-0 shadow-sm">
+                            <svg className="w-5 h-5 text-white print-logo-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                            </svg>
+                          </div>
+                          <div>
+                            <span className="text-lg font-extrabold text-white print-text-dark tracking-tight block leading-none">
+                              Reliable<span className="text-sky-400 print-text-cobalt">Exchange</span>
+                            </span>
+                            <span className="text-[10px] font-mono text-zinc-400 print-text-muted tracking-wider uppercase block mt-1">
+                              Official Diagnostic Valuation Quote
+                            </span>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-[9px] font-mono text-zinc-400 print-text-muted uppercase block tracking-wider">OFFICIAL QUOTE</span>
+                          <span className="text-[10px] font-mono text-emerald-400 print-text-emerald font-bold uppercase tracking-widest block mt-0.5">✓ Verified Audit</span>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between items-center mb-6 pb-5 border-b border-zinc-800 print-border font-mono">
                         <div>
-                          <span className="text-[9px] text-zinc-500 uppercase block font-mono tracking-wider">SPECIFICATION AUDIT RECEIPT</span>
-                          <span className="font-semibold text-ink-navy text-base">{model.name}</span>
+                          <span className="text-[10px] text-zinc-400 print-text-muted uppercase block font-mono tracking-wider mb-1">SPECIFICATION AUDIT RECEIPT</span>
+                          <span className="font-bold text-white print-text-dark text-xl tracking-tight block">{model.name}</span>
                           {model.modelNumber && (
-                            <span className="block text-[10px] text-zinc-500 font-mono mt-0.5">Model Ref: {model.modelNumber}</span>
+                            <span className="block text-xs text-zinc-400 print-text-muted font-mono mt-1">Model Ref: {model.modelNumber}</span>
                           )}
                         </div>
                         <div className="text-right">
-                          <span className="text-[9px] text-zinc-500 uppercase block font-mono tracking-wider">REF CODE</span>
-                          <span className="text-[10px] text-zinc-400">#SCH-{receiptRef}</span>
+                          <span className="text-[10px] text-zinc-400 print-text-muted uppercase block font-mono tracking-wider mb-1">REF CODE</span>
+                          <span className="text-xs text-zinc-200 print-text-dark font-mono font-bold">#SCH-{receiptRef}</span>
                         </div>
                       </div>
 
-                      <div className="space-y-2 text-xs font-mono">
-                        <div className="flex justify-between items-center py-2 text-zinc-300 border-b border-white/[0.04]">
-                          <span>00. Base Configuration Value ({variant.storageGb}GB)</span>
-                          <span className="text-cobalt font-semibold font-outfit">+{formatPrice(variant.basePrice)}</span>
+                      <div className="space-y-3 text-xs font-mono">
+                        <div className="flex justify-between items-center py-2 text-zinc-200 print-text-dark border-b border-zinc-800/80 print-border">
+                          <span className="font-medium">00. Base Configuration Value ({variant.storageGb}GB)</span>
+                          <span className="text-emerald-400 print-text-emerald font-bold text-sm font-outfit">+{formatPrice(variant.basePrice)}</span>
                         </div>
 
                         {valuation.deductions.length === 0 ? (
-                          <div className="text-emerald-500 italic py-3 flex items-center gap-1.5 font-mono text-xs">
-                            <Sparkles className="w-3.5 h-3.5 fill-emerald-500/10 text-emerald-400" /> [No defects declared. Maximum payout rate applies.]
+                          <div className="text-emerald-400 print-text-emerald italic py-3 flex items-center gap-1.5 font-mono text-xs font-medium">
+                            <Sparkles className="w-4 h-4 text-emerald-400 fill-emerald-400/20" /> [No defects declared. Maximum payout rate applies.]
                           </div>
                         ) : (
-                          <div className="py-2 space-y-2">
+                          <div className="py-1 space-y-2.5">
                             {valuation.deductions.map((d, i) => (
                               <motion.div 
                                 key={i} 
                                 initial={{ opacity: 0, x: -8 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: i * 0.15 + 0.1 }}
-                                className="flex justify-between items-center text-zinc-400 border-b border-white/[0.04] py-1.5"
+                                className="flex justify-between items-center text-zinc-300 print-text-dark border-b border-zinc-800/60 print-border py-1.5"
                               >
-                                <span>{(i + 1).toString().padStart(2, '0')}. {getEngineeringLabel(d.description)}</span>
-                                <span className="text-red-500 font-outfit">-[{formatPrice(d.totalDeducted)}]</span>
+                                <span className="font-normal">{(i + 1).toString().padStart(2, '0')}. {getEngineeringLabel(d.description)}</span>
+                                <span className="text-red-400 print-text-red font-bold font-outfit text-xs">-[{formatPrice(d.totalDeducted)}]</span>
                               </motion.div>
                             ))}
                           </div>
@@ -1086,37 +1144,26 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                       </div>
 
                       {/* Visual Valuation Retention Bar */}
-                      <div className="mt-3 pt-3 border-t border-white/[0.06] space-y-1.5">
-                        <div className="flex justify-between text-[10px] font-mono text-zinc-400">
+                      <div className="mt-4 pt-4 border-t border-zinc-800 print-border space-y-2">
+                        <div className="flex justify-between text-xs font-mono text-zinc-300 print-text-muted">
                           <span>Value Retention Ratio</span>
-                          <span className="text-emerald-400 font-bold">{Math.round((valuation.finalPrice / variant.basePrice) * 100)}% Retained</span>
+                          <span className="text-emerald-400 print-text-emerald font-bold">{Math.round((valuation.finalPrice / variant.basePrice) * 100)}% Retained</span>
                         </div>
-                        <div className="h-2 w-full bg-zinc-800 rounded-full overflow-hidden flex">
+                        <div className="h-2.5 w-full bg-zinc-800 print-bar-bg rounded-full overflow-hidden flex border border-zinc-700/50 print-border">
                           <div 
-                            className="h-full bg-gradient-to-r from-cobalt to-emerald-400 transition-all duration-700" 
+                            className="h-full bg-gradient-to-r from-blue-500 to-emerald-400 transition-all duration-700 rounded-full" 
                             style={{ width: `${Math.max(5, Math.round((valuation.finalPrice / variant.basePrice) * 100))}%` }}
                           />
                         </div>
                       </div>
 
-                      <div className="flex justify-between items-center border-t border-dashed border-white/[0.12] pt-5 mt-4">
+                      <div className="flex justify-between items-center border-t border-dashed border-zinc-700/80 print-border pt-5 mt-5">
                         <div>
-                          <span className="text-zinc-500 uppercase block text-[9px] font-mono">TOTAL ESTIMATED PAYOUT</span>
-                          <span className="text-[9px] text-emerald-500 uppercase tracking-widest block font-mono font-bold">✓ Payout Rate Locked</span>
+                          <span className="text-zinc-400 print-text-muted uppercase block text-xs font-mono font-semibold">TOTAL ESTIMATED PAYOUT</span>
+                          <span className="text-xs text-emerald-400 print-text-emerald uppercase tracking-wider block font-mono font-bold mt-0.5">✓ Payout Rate Locked</span>
                         </div>
-                        <span className="text-3xl font-light text-cobalt tracking-tight font-mono font-outfit">{formatPrice(valuation.finalPrice)}</span>
+                        <span className="text-3xl sm:text-4xl font-extrabold text-emerald-400 print-text-emerald tracking-tight font-mono font-outfit">{formatPrice(valuation.finalPrice)}</span>
                       </div>
-                    </div>
-
-                    <div className="md:col-span-4 flex flex-col items-center bg-white dark:bg-zinc-950 p-4 rounded-sm border border-ice-border shadow-sm">
-                      <span className="text-xs font-mono font-bold tracking-wider text-ink-slate uppercase mb-3 block text-center">Configured Color</span>
-                      <PhoneBackPreview 
-                        brandId={model.brandId} 
-                        modelName={model.name} 
-                        colorName={variant.color} 
-                        modelId={model.id}
-                        customImageUrl={model.imageUrl}
-                      />
                     </div>
                   </div>
                 </div>

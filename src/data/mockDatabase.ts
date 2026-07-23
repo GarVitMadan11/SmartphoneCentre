@@ -44,8 +44,21 @@ export interface DefectRule {
   isCriticalFailure?: boolean;  // If true, device has zero value
 }
 
-// 3. Dynamic Defect Rules tailored by model category
-export function getDefectRulesForCategory(category: DeviceCategory): DefectRule[] {
+// Helper to identify Apple devices vs Android / non-Apple
+export function isAppleDevice(brandId?: string, modelName?: string): boolean {
+  if (!brandId && !modelName) return false;
+  const b = (brandId || '').toLowerCase();
+  const m = (modelName || '').toLowerCase();
+  return b === 'brand-apple' || b === 'apple' || m.includes('iphone') || m.includes('ipad') || m.includes('apple');
+}
+
+// 3. Dynamic Defect Rules tailored by model category and brand
+export function getDefectRulesForCategory(
+  category: DeviceCategory, 
+  brandId?: string, 
+  modelName?: string
+): DefectRule[] {
+  const isApple = isAppleDevice(brandId, modelName);
   const screenPct   = category === 'flagship' ? 0.28 : category === 'premium' ? 0.22 : 0.18;
   const bodyDentPct = category === 'flagship' ? 0.08 : category === 'premium' ? 0.07 : 0.06;
   const cameraPct   = category === 'flagship' ? 0.15 : category === 'premium' ? 0.12 : 0.08;
@@ -74,7 +87,7 @@ export function getDefectRulesForCategory(category: DeviceCategory): DefectRule[
       description: 'Screen Burn-in / Lines',
       subText: 'Discoloration, pixel bleeding, or permanent glowing lines on display.',
       deductionFixed: 0,
-      deductionPercentage: screenPct  // same cost as crack replacement — was incorrectly +5%
+      deductionPercentage: screenPct
     },
     {
       id: 'defect-screen-touch',
@@ -82,13 +95,15 @@ export function getDefectRulesForCategory(category: DeviceCategory): DefectRule[
       description: 'Touch / Swipe Unresponsive',
       subText: 'Dead zones, ghost touches, or unresponsive areas when swiping across the screen.',
       deductionFixed: 0,
-      deductionPercentage: 0.15  // raised from 10% — touch failure = device barely usable
+      deductionPercentage: 0.15
     },
     {
       id: 'defect-screen-truetone',
       category: 'screen',
-      description: 'True Tone Not Working',
-      subText: 'True Tone toggle missing in Display settings — indicates non-original screen replacement.',
+      description: isApple ? 'True Tone Not Working' : 'Display Calibration / Tint Issue',
+      subText: isApple 
+        ? 'True Tone toggle missing in Display settings — indicates non-original screen replacement.'
+        : 'Screen color profile sync or auto-brightness calibration failing — indicates non-OEM display.',
       deductionFixed: category === 'flagship' ? 2500 : 1500,
       deductionPercentage: 0
     },
@@ -99,8 +114,8 @@ export function getDefectRulesForCategory(category: DeviceCategory): DefectRule[
       category: 'body',
       description: 'Dented or Bent Frame',
       subText: 'Deep frame dents, heavy paint chipping, or structural bending.',
-      deductionFixed: 1000,           // reduced from ₹1,500
-      deductionPercentage: bodyDentPct // now 8% flagship vs old 12%
+      deductionFixed: 1000,
+      deductionPercentage: bodyDentPct
     },
     {
       id: 'defect-body-scuffs',
@@ -129,9 +144,11 @@ export function getDefectRulesForCategory(category: DeviceCategory): DefectRule[
     {
       id: 'defect-body-screws',
       category: 'body',
-      description: 'Screws Stripped / Missing',
-      subText: 'Bottom pentalobe screws are stripped, damaged, or replaced with non-OEM screws.',
-      deductionFixed: 700,  // raised from ₹400 — stripped screws = tamper flag
+      description: isApple ? 'Screws Stripped / Missing' : 'Bottom Screws Stripped / Missing',
+      subText: isApple 
+        ? 'Bottom pentalobe screws are stripped, damaged, or replaced with non-OEM screws.'
+        : 'Bottom housing screws are stripped, damaged, or replaced with non-OEM hardware.',
+      deductionFixed: 700,
       deductionPercentage: 0
     },
 
@@ -149,17 +166,19 @@ export function getDefectRulesForCategory(category: DeviceCategory): DefectRule[
     {
       id: 'defect-critical-security',
       category: 'functionality',
-      description: 'Biometrics Faulty (Face ID)',
-      subText: 'Face ID does not recognise face, fails to set up, or sensor has hardware failure.',
+      description: isApple ? 'Biometrics Faulty (Face ID)' : 'Biometrics Faulty (Fingerprint / Face Unlock)',
+      subText: isApple 
+        ? 'Face ID does not recognise face, fails to set up, or sensor has hardware failure.'
+        : 'Fingerprint scanner or Face Unlock fails to recognize, setup error, or hardware fault.',
       deductionFixed: 0,
-      deductionPercentage: 0.20  // reduced from 25% — device still usable with passcode
+      deductionPercentage: 0.20
     },
     {
       id: 'defect-func-audio',
       category: 'functionality',
       description: 'Speakers / Microphone Faulty',
       subText: 'Stereo speakers sound distorted/low, or Voice Memos mic test reveals microphone failure.',
-      deductionFixed: 2800,  // raised from ₹1,800 — speaker+mic repair cost in India
+      deductionFixed: 2800,
       deductionPercentage: 0
     },
     {
@@ -168,7 +187,7 @@ export function getDefectRulesForCategory(category: DeviceCategory): DefectRule[
       description: 'Auto-Restart / Unstable Device',
       subText: 'Device randomly reboots within 3 minutes of idle use — indicates PMIC/board-level issue.',
       deductionFixed: 0,
-      deductionPercentage: 0.15  // reduced from 18%
+      deductionPercentage: 0.15
     },
 
     // ── CONNECTIVITY & VERIFICATION (Step 4) ─────────────────────────────
@@ -177,16 +196,18 @@ export function getDefectRulesForCategory(category: DeviceCategory): DefectRule[
       category: 'connectivity',
       description: 'Battery Health < 80%',
       subText: 'Device drains quickly, shows service warning, or battery health is below 80%.',
-      deductionFixed: 2500,         // raised from ₹2,000
-      deductionPercentage: 0.05     // raised from 4%
+      deductionFixed: 2500,
+      deductionPercentage: 0.05
     },
     {
       id: 'defect-battery-warning',
       category: 'connectivity',
-      description: 'Non-Genuine Battery Warning',
-      subText: '"Important Battery Message" alert visible in Settings → Battery — battery is non-OEM.',
+      description: isApple ? 'Non-Genuine Battery Warning' : 'Non-OEM / Battery Warning Alert',
+      subText: isApple 
+        ? '"Important Battery Message" alert visible in Settings → Battery — battery is non-OEM.'
+        : 'Non-OEM battery alert or degraded battery controller alert in System Settings.',
       deductionFixed: 2000,
-      deductionPercentage: 0.015   // added % component — ongoing risk
+      deductionPercentage: 0.015
     },
     {
       id: 'defect-func-network',
@@ -207,8 +228,10 @@ export function getDefectRulesForCategory(category: DeviceCategory): DefectRule[
     {
       id: 'defect-func-partmatch',
       category: 'connectivity',
-      description: '3uTools Serial Mismatch',
-      subText: 'PC diagnostic shows motherboard serial does not match screen/battery/camera — parts replaced.',
+      description: isApple ? '3uTools Serial Mismatch' : 'PC Diagnostic Serial Mismatch',
+      subText: isApple 
+        ? 'PC diagnostic shows motherboard serial does not match screen/battery/camera — parts replaced.'
+        : 'Hardware diagnostic tool shows serial numbers do not match original motherboard registry.',
       deductionFixed: 0,
       deductionPercentage: 0.12
     },
@@ -235,7 +258,7 @@ export function getDefectRulesForCategory(category: DeviceCategory): DefectRule[
       category: 'accessories',
       description: 'Missing Bill / Customer Photo ID',
       subText: 'Purchase bill/invoice or seller photo ID not available — affects legal resale compliance.',
-      deductionFixed: 1500,  // raised from ₹800
+      deductionFixed: 1500,
       deductionPercentage: 0
     },
 
@@ -252,8 +275,10 @@ export function getDefectRulesForCategory(category: DeviceCategory): DefectRule[
     {
       id: 'defect-critical-icloud',
       category: 'accessories',
-      description: 'iCloud / Apple ID Locked',
-      subText: 'Find My iPhone is ON and Apple ID cannot be signed out — device is activation locked.',
+      description: isApple ? 'iCloud / Apple ID Locked' : 'Google Account / Factory Reset Protection Locked',
+      subText: isApple 
+        ? 'Find My iPhone is ON and Apple ID cannot be signed out — device is activation locked.'
+        : 'Google Factory Reset Protection or Brand Account lock is active — device is activation locked.',
       deductionFixed: 0,
       deductionPercentage: 1.0,
       isCriticalFailure: true
