@@ -1,14 +1,12 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import { PrismaClient } from '@prisma/client';
-import dotenv from 'dotenv';
 import { adminAuth } from './middleware/adminAuth.js';
 import adminRouter from './routes/admin.js';
-
-dotenv.config();
 
 const prisma = new PrismaClient();
 const app = express();
