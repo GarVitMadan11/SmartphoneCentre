@@ -1085,7 +1085,21 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         )}
                       </div>
 
-                      <div className="flex justify-between items-center border-t border-dashed border-white/[0.12] pt-5 mt-5">
+                      {/* Visual Valuation Retention Bar */}
+                      <div className="mt-3 pt-3 border-t border-white/[0.06] space-y-1.5">
+                        <div className="flex justify-between text-[10px] font-mono text-zinc-400">
+                          <span>Value Retention Ratio</span>
+                          <span className="text-emerald-400 font-bold">{Math.round((valuation.finalPrice / variant.basePrice) * 100)}% Retained</span>
+                        </div>
+                        <div className="h-2 w-full bg-zinc-800 rounded-full overflow-hidden flex">
+                          <div 
+                            className="h-full bg-gradient-to-r from-cobalt to-emerald-400 transition-all duration-700" 
+                            style={{ width: `${Math.max(5, Math.round((valuation.finalPrice / variant.basePrice) * 100))}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between items-center border-t border-dashed border-white/[0.12] pt-5 mt-4">
                         <div>
                           <span className="text-zinc-500 uppercase block text-[9px] font-mono">TOTAL ESTIMATED PAYOUT</span>
                           <span className="text-[9px] text-emerald-500 uppercase tracking-widest block font-mono font-bold">✓ Payout Rate Locked</span>
