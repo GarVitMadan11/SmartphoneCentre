@@ -30,10 +30,12 @@ router.post('/auth', async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  // Always do the compare (even on blank input) to prevent timing attacks
+  const currentPinHash = process.env.ADMIN_PIN_HASH ?? ADMIN_PIN_HASH;
+
+  // Always do the compare to prevent timing attacks
   let isValid = false;
   try {
-    isValid = await bcrypt.compare(pin, ADMIN_PIN_HASH as string);
+    isValid = await bcrypt.compare(pin.trim(), currentPinHash);
   } catch {
     res.status(500).json({ error: 'ServerError', message: 'Authentication failed.' });
     return;
