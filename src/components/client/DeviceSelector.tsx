@@ -216,10 +216,10 @@ export const PhoneBackPreview: React.FC<{
       return customImageUrl.trim();
     }
     if (modelId) {
-      return getDeviceImage(modelId, brandId);
+      return getDeviceImage(modelId, brandId, colorName);
     }
     return '';
-  }, [modelId, brandId, customImageUrl]);
+  }, [modelId, brandId, colorName, customImageUrl]);
 
   // Check if we have a crawled or custom image URL (starts with http or data:)
   const hasOfficialImg = officialImgUrl && (officialImgUrl.startsWith('http') || officialImgUrl.startsWith('data:'));
