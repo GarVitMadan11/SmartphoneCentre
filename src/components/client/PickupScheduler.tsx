@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { 
   Clock, User, MapPin, CreditCard, 
   CheckCircle, ArrowLeft, ShieldAlert, Award, Smartphone, Info, ShieldCheck, ChevronRight, Shield,
@@ -284,8 +284,11 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
     return finalPrice + payoutBonusAmt;
   }, [finalPrice, payoutBonusAmt]);
 
+  const isSubmittingRef = useRef(false);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmittingRef.current || isSubmitting) return;
     if (!isStep1Valid || !isStep2Valid || !isStep3Valid) {
       setFormError('Please complete all required steps and fields before submitting.');
       return;
@@ -296,6 +299,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
       return;
     }
 
+    isSubmittingRef.current = true;
     setIsSubmitting(true);
     recordSubmitAttempt();
 

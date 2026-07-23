@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
+import compression from 'compression';
 import { PrismaClient } from '@prisma/client';
 import dotenv from 'dotenv';
 import { adminAuth } from './middleware/adminAuth.js';
@@ -13,6 +14,9 @@ dotenv.config();
 const prisma = new PrismaClient();
 const app = express();
 const PORT = parseInt(process.env.PORT || '4000', 10);
+
+// Enable response compression (Gzip / Brotli)
+app.use(compression());
 
 // Trust first proxy (e.g. Nginx, Cloudflare, AWS ALB) for accurate IP rate limiting
 app.set('trust proxy', 1);
@@ -554,9 +558,22 @@ app.get('/api/bookings/:id/events', adminAuth, async (req, res) => {
 // SERVER START
 // ═══════════════════════════════════════════════════════════════════════════
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`\n🚀 ReliableExchange API server running at http://localhost:${PORT}`);
   console.log(`   Health:       http://localhost:${PORT}/api/health`);
   console.log(`   Admin auth:   POST http://localhost:${PORT}/api/admin/auth`);
   console.log(`   Environment:  ${process.env.NODE_ENV ?? 'development'}\n`);
 });
+
+// ── Graceful Shutdown ──────────────────────────────────────────────────────────
+const gracefulShutdown = async (signal: string) => {
+  console.log(`\nReceived ${signal}. Gracefully shutting down Express & Prisma database connections...`);
+  server.close(async () => {
+    await prisma.$disconnect();
+    console.log('Database connections closed cleanly. Exiting process.');
+    process.exit(0);
+  });
+};
+
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));

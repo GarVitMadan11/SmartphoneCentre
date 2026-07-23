@@ -235,39 +235,78 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     return Array.from(seriesSet).sort();
   }, [models, selectedCatalogBrandId]);
 
-  // Handle local image file upload converting to Data URL
-  const handleImageFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 3 * 1024 * 1024) {
-      setFormError('Image size must be less than 3MB.');
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      if (evt.target?.result) {
-        setNewModelImageUrl(evt.target.result as string);
-        setFormError('');
-      }
-    };
-    reader.readAsDataURL(file);
+  // Downscale image file using HTML5 Canvas (max 800px width/height)
+  const compressImageFile = (file: File, maxDim = 800, quality = 0.82): Promise<string> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const rawUrl = e.target?.result as string;
+        const img = new Image();
+        img.onload = () => {
+          let { width, height } = img;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            resolve(rawUrl);
+            return;
+          }
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/webp', quality));
+        };
+        img.onerror = () => resolve(rawUrl);
+        img.src = rawUrl;
+      };
+      reader.onerror = () => resolve('');
+      reader.readAsDataURL(file);
+    });
   };
 
-  const handleEditImageFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle local image file upload converting to compressed Data URL
+  const handleImageFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 3 * 1024 * 1024) {
-      setFormError('Image size must be less than 3MB.');
+    if (file.size > 5 * 1024 * 1024) {
+      setFormError('Image size must be less than 5MB.');
       return;
     }
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      if (evt.target?.result) {
-        setEditImageUrl(evt.target.result as string);
+    try {
+      const compressedDataUrl = await compressImageFile(file);
+      if (compressedDataUrl) {
+        setNewModelImageUrl(compressedDataUrl);
         setFormError('');
       }
-    };
-    reader.readAsDataURL(file);
+    } catch {
+      setFormError('Failed to process image file.');
+    }
+  };
+
+  const handleEditImageFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      setFormError('Image size must be less than 5MB.');
+      return;
+    }
+    try {
+      const compressedDataUrl = await compressImageFile(file);
+      if (compressedDataUrl) {
+        setEditImageUrl(compressedDataUrl);
+        setFormError('');
+      }
+    } catch {
+      setFormError('Failed to process image file.');
+    }
   };
 
   const handleStartEditModel = (model: Model) => {
