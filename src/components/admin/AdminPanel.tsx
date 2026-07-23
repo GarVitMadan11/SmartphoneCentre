@@ -1,13 +1,14 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Booking, Brand, Model, MODELS as STATIC_MODELS } from '../../data/mockDatabase';
+import { Booking, Brand, Model, MODELS as STATIC_MODELS, getDeviceImage } from '../../data/mockDatabase';
 import { 
   ArrowLeft, Search, Filter, 
   CheckCircle, XCircle, Clock, CreditCard, 
   ChevronRight, Calendar, MapPin, User,
-  RefreshCw, Plus, Trash2, List
+  RefreshCw, Plus, Trash2, List, Image as ImageIcon,
+  Upload, Link as LinkIcon, Layers, Edit2, Check, X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { updateBooking, fetchModels, createModel, deleteModel } from '../../utils/api';
+import { updateBooking, fetchModels, createModel, updateModel, deleteModel } from '../../utils/api';
 
 interface AdminPanelProps {
   onBack: () => void;
@@ -44,7 +45,23 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [newModelCategory, setNewModelCategory] = useState<'flagship' | 'premium' | 'midrange' | 'budget'>('premium');
   const [newModelYear, setNewModelYear] = useState<number>(new Date().getFullYear());
   const [newModelBasePrice, setNewModelBasePrice] = useState<number>(30000);
-  const [newModelSeries, setNewModelSeries] = useState('');
+  
+  // Hierarchical Series & Image states
+  const [selectedSeriesOption, setSelectedSeriesOption] = useState<string>('__CREATE_NEW__');
+  const [customSeriesInput, setCustomSeriesInput] = useState<string>('');
+  const [newModelImageUrl, setNewModelImageUrl] = useState<string>('');
+
+  // Edit model form states
+  const [editingModelId, setEditingModelId] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editModelNumber, setEditModelNumber] = useState('');
+  const [editCategory, setEditCategory] = useState<'flagship' | 'premium' | 'midrange' | 'budget'>('premium');
+  const [editYear, setEditYear] = useState<number>(new Date().getFullYear());
+  const [editBasePrice, setEditBasePrice] = useState<number>(30000);
+  const [editSeriesOption, setEditSeriesOption] = useState<string>('');
+  const [editCustomSeries, setEditCustomSeries] = useState<string>('');
+  const [editImageUrl, setEditImageUrl] = useState<string>('');
+
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
 
@@ -206,6 +223,148 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     }).format(price);
   };
 
+  // Get unique existing series list for the selected brand
+  const existingSeriesForSelectedBrand = useMemo(() => {
+    const brandModels = models.filter(m => m.brandId === selectedCatalogBrandId);
+    const seriesSet = new Set<string>();
+    brandModels.forEach(m => {
+      if (m.series && m.series.trim()) {
+        seriesSet.add(m.series.trim());
+      }
+    });
+    return Array.from(seriesSet).sort();
+  }, [models, selectedCatalogBrandId]);
+
+  // Handle local image file upload converting to Data URL
+  const handleImageFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 3 * 1024 * 1024) {
+      setFormError('Image size must be less than 3MB.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      if (evt.target?.result) {
+        setNewModelImageUrl(evt.target.result as string);
+        setFormError('');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleEditImageFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 3 * 1024 * 1024) {
+      setFormError('Image size must be less than 3MB.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      if (evt.target?.result) {
+        setEditImageUrl(evt.target.result as string);
+        setFormError('');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleStartEditModel = (model: Model) => {
+    setEditingModelId(model.id);
+    setEditName(model.name);
+    setEditModelNumber(model.modelNumber);
+    setEditCategory(model.category as any);
+    setEditYear(model.releaseYear);
+    setEditBasePrice(model.basePrice128GB);
+    setEditImageUrl(model.imageUrl || '');
+    setFormError('');
+    setFormSuccess('');
+
+    if (model.series && existingSeriesForSelectedBrand.includes(model.series)) {
+      setEditSeriesOption(model.series);
+      setEditCustomSeries('');
+    } else if (model.series) {
+      setEditSeriesOption('__CREATE_NEW__');
+      setEditCustomSeries(model.series);
+    } else {
+      setEditSeriesOption('');
+      setEditCustomSeries('');
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingModelId(null);
+    setFormError('');
+  };
+
+  const handleSaveModelEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingModelId) return;
+    setFormError('');
+    setFormSuccess('');
+
+    if (!editName.trim() || !editModelNumber.trim()) {
+      setFormError('Name and Model Number are required.');
+      return;
+    }
+
+    let finalSeries = '';
+    if (editSeriesOption === '__CREATE_NEW__') {
+      finalSeries = editCustomSeries.trim();
+    } else {
+      finalSeries = editSeriesOption.trim();
+    }
+
+    const imageUrlValue = editImageUrl.trim() || undefined;
+
+    if (isApiOffline) {
+      const nextModels = models.map(m => {
+        if (m.id === editingModelId) {
+          return {
+            ...m,
+            name: editName.trim(),
+            modelNumber: editModelNumber.trim(),
+            category: editCategory,
+            releaseYear: Number(editYear),
+            basePrice128GB: Number(editBasePrice),
+            series: finalSeries || undefined,
+            imageUrl: imageUrlValue,
+          };
+        }
+        return m;
+      });
+      setModels(nextModels);
+      setFormSuccess(`[Offline Demo Mode] Saved changes to "${editName}"!`);
+      setEditingModelId(null);
+      if (onRefreshCatalog) {
+        onRefreshCatalog(nextModels);
+      }
+      return;
+    }
+
+    try {
+      await updateModel(editingModelId, {
+        name: editName.trim(),
+        modelNumber: editModelNumber.trim(),
+        category: editCategory,
+        releaseYear: Number(editYear),
+        basePrice128GB: Number(editBasePrice),
+        series: finalSeries || undefined,
+        imageUrl: imageUrlValue,
+      });
+
+      setFormSuccess(`Successfully updated "${editName}"!`);
+      setEditingModelId(null);
+      await loadModels();
+      if (onRefreshCatalog) {
+        await onRefreshCatalog();
+      }
+    } catch (err) {
+      setFormError('Failed to update model: ' + (err as Error).message);
+    }
+  };
+
   const handleAddModel = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError('');
@@ -215,11 +374,21 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       setFormError('Name and Model Number are required.');
       return;
     }
+
+    // Determine final Series designation
+    let finalSeries = '';
+    if (selectedSeriesOption === '__CREATE_NEW__') {
+      finalSeries = customSeriesInput.trim();
+    } else {
+      finalSeries = selectedSeriesOption.trim();
+    }
     
     // Auto-generate legacyId from name
     const cleanName = newModelName.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-');
     const brandClean = selectedCatalogBrandId.replace('brand-', '');
     const legacyId = `${brandClean}-${cleanName}`;
+
+    const imageUrlValue = newModelImageUrl.trim() || undefined;
 
     if (isApiOffline) {
       const newModel: Model = {
@@ -230,14 +399,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         category: newModelCategory,
         releaseYear: Number(newModelYear),
         basePrice128GB: Number(newModelBasePrice),
-        series: newModelSeries.trim() || undefined,
+        series: finalSeries || undefined,
+        imageUrl: imageUrlValue,
       };
       const nextModels = [newModel, ...models];
       setModels(nextModels);
       setFormSuccess(`[Offline Demo Mode] Successfully added model "${newModelName}"!`);
       setNewModelName('');
       setNewModelNumber('');
-      setNewModelSeries('');
+      setCustomSeriesInput('');
+      setNewModelImageUrl('');
       if (onRefreshCatalog) {
         onRefreshCatalog(nextModels);
       }
@@ -253,14 +424,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         category: newModelCategory,
         releaseYear: Number(newModelYear),
         basePrice128GB: Number(newModelBasePrice),
-        series: newModelSeries.trim() || undefined,
-        imageUrl: undefined
+        series: finalSeries || undefined,
+        imageUrl: imageUrlValue
       });
       
-      setFormSuccess(`Successfully added model "${newModelName}"!`);
+      setFormSuccess(`Successfully added model "${newModelName}" to ${finalSeries || 'catalog'}!`);
       setNewModelName('');
       setNewModelNumber('');
-      setNewModelSeries('');
+      setCustomSeriesInput('');
+      setNewModelImageUrl('');
       
       // Refresh catalog lists
       await loadModels();
@@ -806,8 +978,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         /* Catalog Management Tab Workspace */
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* Left Side: Brand Selector & Model Table */}
-          <div className="lg:col-span-8 bg-canvas-pure border border-ice-border rounded-sm p-4 sm:p-6 shadow-premium">
-            <h3 className="font-outfit font-light text-xl text-ink-navy mb-4">Device Catalog</h3>
+          <div className="lg:col-span-7 bg-canvas-pure border border-ice-border rounded-sm p-4 sm:p-6 shadow-premium">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-outfit font-light text-xl text-ink-navy">Device Catalog</h3>
+              <span className="text-[11px] font-mono text-zinc-500">
+                {models.filter(m => m.brandId === selectedCatalogBrandId).length} models in catalog
+              </span>
+            </div>
             
             {/* Brand filter buttons */}
             <div className="flex flex-wrap gap-2 mb-4 pb-4 border-b border-ice-border/40">
@@ -815,7 +992,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 <button
                   key={b.id}
                   type="button"
-                  onClick={() => setSelectedCatalogBrandId(b.id)}
+                  onClick={() => {
+                    setSelectedCatalogBrandId(b.id);
+                    setSelectedSeriesOption('__CREATE_NEW__');
+                  }}
                   className={`px-3 py-1.5 rounded-sm border text-xs font-bold font-mono transition-all ${
                     selectedCatalogBrandId === b.id
                       ? 'bg-cobalt border-cobalt text-white'
@@ -835,12 +1015,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 <table className="w-full text-xs font-mono border-collapse text-left">
                   <thead>
                     <tr className="border-b border-ice-border/40 text-ink-navy text-[10px] uppercase font-bold tracking-wider">
-                      <th className="py-2.5 px-3">Model ID (Legacy)</th>
+                      <th className="py-2.5 px-2 text-center">Image</th>
                       <th className="py-2.5 px-3">Model Name</th>
-                      <th className="py-2.5 px-3">Model Number</th>
+                      <th className="py-2.5 px-3">Series</th>
+                      <th className="py-2.5 px-3">Model Code</th>
                       <th className="py-2.5 px-3">Category</th>
                       <th className="py-2.5 px-3">Release</th>
-                      <th className="py-2.5 px-3">Base (128GB)</th>
+                      <th className="py-2.5 px-3">Base Price</th>
                       <th className="py-2.5 px-3 text-right">Action</th>
                     </tr>
                   </thead>
@@ -848,42 +1029,80 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     {models.filter(m => m.brandId === selectedCatalogBrandId).length > 0 ? (
                       models
                         .filter(m => m.brandId === selectedCatalogBrandId)
-                        .map(m => (
-                          <tr key={m.id} className="hover:bg-cobalt-light/5 transition-all">
-                            <td className="py-3 px-3 text-zinc-500">{m.id}</td>
-                            <td className="py-3 px-3 text-ink-navy font-bold">{m.name}</td>
-                            <td className="py-3 px-3 text-zinc-600">{m.modelNumber}</td>
-                            <td className="py-3 px-3 uppercase text-[10px]">
-                              <span className={`px-1.5 py-0.5 rounded-sm font-semibold border ${
-                                m.category === 'flagship'
-                                  ? 'bg-red-500/10 text-red-500 border-red-500/20'
-                                  : m.category === 'premium'
-                                  ? 'bg-cobalt/10 text-cobalt border-cobalt/20'
-                                  : m.category === 'midrange'
-                                  ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
-                                  : 'bg-zinc-500/10 text-zinc-600 border-zinc-500/20'
-                              }`}>
-                                {m.category}
-                              </span>
-                            </td>
-                            <td className="py-3 px-3 text-zinc-500">{m.releaseYear}</td>
-                            <td className="py-3 px-3 text-cobalt font-bold">{formatPrice(m.basePrice128GB)}</td>
-                            <td className="py-3 px-3 text-right">
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteModel(m.id)}
-                                className="p-1 rounded-sm border border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white transition-all"
-                                title="Delete Model"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </td>
-                          </tr>
-                        ))
+                        .map(m => {
+                          const imgUrl = getDeviceImage(m.id, m.brandId, undefined, m.imageUrl);
+                          return (
+                            <tr key={m.id} className="hover:bg-cobalt-light/5 transition-all">
+                              <td className="py-2 px-2 text-center">
+                                {imgUrl ? (
+                                  <img 
+                                    src={imgUrl} 
+                                    alt={m.name} 
+                                    className="w-9 h-9 object-contain mx-auto rounded bg-slate-100 dark:bg-zinc-800 p-0.5 border border-ice-border"
+                                  />
+                                ) : (
+                                  <div className="w-9 h-9 mx-auto rounded bg-slate-100 dark:bg-zinc-800 flex items-center justify-center border border-ice-border text-zinc-400">
+                                    <ImageIcon className="w-4 h-4" />
+                                  </div>
+                                )}
+                              </td>
+                              <td className="py-3 px-3 text-ink-navy font-bold">{m.name}</td>
+                              <td className="py-3 px-3">
+                                {m.series ? (
+                                  <span className="px-2 py-0.5 rounded-sm bg-cobalt/10 text-cobalt border border-cobalt/20 font-semibold text-[10px]">
+                                    {m.series}
+                                  </span>
+                                ) : (
+                                  <span className="text-zinc-400 text-[10px]">—</span>
+                                )}
+                              </td>
+                              <td className="py-3 px-3 text-zinc-600">{m.modelNumber}</td>
+                              <td className="py-3 px-3 uppercase text-[10px]">
+                                <span className={`px-1.5 py-0.5 rounded-sm font-semibold border ${
+                                  m.category === 'flagship'
+                                    ? 'bg-red-500/10 text-red-500 border-red-500/20'
+                                    : m.category === 'premium'
+                                    ? 'bg-cobalt/10 text-cobalt border-cobalt/20'
+                                    : m.category === 'midrange'
+                                    ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+                                    : 'bg-zinc-500/10 text-zinc-600 border-zinc-500/20'
+                                }`}>
+                                  {m.category}
+                                </span>
+                              </td>
+                              <td className="py-3 px-3 text-zinc-500">{m.releaseYear}</td>
+                              <td className="py-3 px-3 text-cobalt font-bold">{formatPrice(m.basePrice128GB)}</td>
+                              <td className="py-3 px-3 text-right">
+                                <div className="flex justify-end gap-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleStartEditModel(m)}
+                                    className={`p-1 rounded-sm border transition-all ${
+                                      editingModelId === m.id
+                                        ? 'bg-cobalt border-cobalt text-white'
+                                        : 'border-cobalt/30 text-cobalt hover:bg-cobalt hover:text-white'
+                                    }`}
+                                    title="Edit Model"
+                                  >
+                                    <Edit2 className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteModel(m.id)}
+                                    className="p-1 rounded-sm border border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white transition-all"
+                                    title="Delete Model"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })
                     ) : (
                       <tr>
-                        <td colSpan={7} className="py-8 text-center text-zinc-500 italic">
-                          No models seeded for this brand in SQLite yet.
+                        <td colSpan={8} className="py-8 text-center text-zinc-500 italic">
+                          No models seeded for this brand in database yet.
                         </td>
                       </tr>
                     )}
@@ -893,121 +1112,453 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             )}
           </div>
 
-          {/* Right Side: Add New Model Form */}
-          <div className="lg:col-span-4 bg-canvas-pure border border-ice-border rounded-sm p-4 sm:p-5 shadow-premium text-xs text-left">
-            <div className="border-b border-ice-border/40 pb-3 mb-4 flex items-center gap-1.5">
-              <Plus className="w-4 h-4 text-cobalt" />
-              <h3 className="font-outfit font-light text-lg text-ink-navy">Add Model to Catalog</h3>
-            </div>
-
-            <form onSubmit={handleAddModel} className="space-y-4 font-mono">
-              {formError && (
-                <div className="p-2.5 bg-red-500/10 border border-red-500/20 text-red-500 rounded-sm font-semibold text-[10px]">
-                  Error: {formError}
-                </div>
-              )}
-              {formSuccess && (
-                <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 rounded-sm font-semibold text-[10px]">
-                  {formSuccess}
-                </div>
-              )}
-
+          {/* Right Side: Add or Edit Model Form */}
+          <div className="lg:col-span-5 bg-canvas-pure border border-ice-border rounded-sm p-4 sm:p-5 shadow-premium text-xs text-left">
+            {editingModelId ? (
+              /* Edit Existing Model Form */
               <div>
-                <label className="block text-[10px] text-zinc-500 uppercase font-bold tracking-wider mb-1">Target Brand</label>
-                <select
-                  value={selectedCatalogBrandId}
-                  onChange={e => setSelectedCatalogBrandId(e.target.value)}
-                  className="w-full bg-canvas-white border border-ice-border rounded-sm p-2 text-ink-navy text-xs focus:outline-none focus:ring-1 focus:ring-cobalt focus:border-cobalt"
-                >
-                  {brands.map(b => (
-                    <option key={b.id} value={b.id}>{b.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-[10px] text-zinc-500 uppercase font-bold tracking-wider mb-1">Model Name</label>
-                <input
-                  type="text"
-                  placeholder="e.g. iPhone 17 Pro"
-                  value={newModelName}
-                  onChange={e => setNewModelName(e.target.value)}
-                  className="w-full bg-canvas-white border border-ice-border rounded-sm p-2 text-ink-navy text-xs focus:outline-none focus:ring-1 focus:ring-cobalt focus:border-cobalt"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] text-zinc-500 uppercase font-bold tracking-wider mb-1">Model Number / Code</label>
-                <input
-                  type="text"
-                  placeholder="e.g. A3298 or SM-S958B"
-                  value={newModelNumber}
-                  onChange={e => setNewModelNumber(e.target.value)}
-                  className="w-full bg-canvas-white border border-ice-border rounded-sm p-2 text-ink-navy text-xs focus:outline-none focus:ring-1 focus:ring-cobalt focus:border-cobalt"
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-2.5">
-                <div>
-                  <label className="block text-[10px] text-zinc-500 uppercase font-bold tracking-wider mb-1">Category</label>
-                  <select
-                    value={newModelCategory}
-                    onChange={e => setNewModelCategory(e.target.value as any)}
-                    className="w-full bg-canvas-white border border-ice-border rounded-sm p-2 text-ink-navy text-xs focus:outline-none focus:ring-1 focus:ring-cobalt"
+                <div className="border-b border-ice-border/40 pb-3 mb-4 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-500">
+                      <Edit2 className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h3 className="font-outfit font-light text-lg text-ink-navy">Edit Product</h3>
+                      <p className="text-[10px] text-zinc-400 font-mono">ID: {editingModelId}</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleCancelEdit}
+                    className="p-1 rounded text-zinc-400 hover:text-ink-navy hover:bg-slate-100 dark:hover:bg-zinc-800 transition-all text-[11px] flex items-center gap-1 font-mono font-bold"
                   >
-                    <option value="flagship">Flagship</option>
-                    <option value="premium">Premium</option>
-                    <option value="midrange">Midrange</option>
-                    <option value="budget">Budget</option>
-                  </select>
+                    <X className="w-3.5 h-3.5" /> Cancel
+                  </button>
                 </div>
-                <div>
-                  <label className="block text-[10px] text-zinc-500 uppercase font-bold tracking-wider mb-1">Release Year</label>
-                  <input
-                    type="number"
-                    min="2010"
-                    max="2030"
-                    value={newModelYear}
-                    onChange={e => setNewModelYear(Number(e.target.value))}
-                    className="w-full bg-canvas-white border border-ice-border rounded-sm p-2 text-ink-navy text-xs focus:outline-none focus:ring-1 focus:ring-cobalt focus:border-cobalt"
-                    required
-                  />
+
+                <form onSubmit={handleSaveModelEdit} className="space-y-4 font-mono">
+                  {formError && (
+                    <div className="p-2.5 bg-red-500/10 border border-red-500/20 text-red-500 rounded-sm font-semibold text-[10px]">
+                      Error: {formError}
+                    </div>
+                  )}
+                  {formSuccess && (
+                    <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 rounded-sm font-semibold text-[10px]">
+                      {formSuccess}
+                    </div>
+                  )}
+
+                  {/* Series Selection */}
+                  <div className="p-3 bg-canvas-white border border-ice-border rounded-sm space-y-2">
+                    <label className="block text-[10px] text-zinc-500 uppercase font-bold tracking-wider flex items-center gap-1">
+                      <Layers className="w-3 h-3 text-cobalt" />
+                      <span>Product Series</span>
+                    </label>
+                    
+                    <select
+                      value={editSeriesOption}
+                      onChange={e => setEditSeriesOption(e.target.value)}
+                      className="w-full bg-canvas-pure border border-ice-border rounded-sm p-2 text-ink-navy text-xs focus:outline-none focus:ring-1 focus:ring-cobalt focus:border-cobalt"
+                    >
+                      <option value="">No Specific Series</option>
+                      <option value="__CREATE_NEW__">✨ + Create New Series</option>
+                      {existingSeriesForSelectedBrand.map(s => (
+                        <option key={s} value={s}>Existing: {s}</option>
+                      ))}
+                    </select>
+
+                    {editSeriesOption === '__CREATE_NEW__' && (
+                      <div className="pt-1">
+                        <label className="block text-[9px] text-zinc-400 uppercase font-semibold mb-1">Series Name</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. iPhone 18 Series"
+                          value={editCustomSeries}
+                          onChange={e => setEditCustomSeries(e.target.value)}
+                          className="w-full bg-canvas-pure border border-cobalt/50 rounded-sm p-2 text-ink-navy text-xs focus:outline-none focus:ring-1 focus:ring-cobalt font-bold"
+                          required={editSeriesOption === '__CREATE_NEW__'}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Model Specs */}
+                  <div className="space-y-3 pt-1">
+                    <div className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Model Specifications</div>
+                    
+                    <div>
+                      <label className="block text-[10px] text-zinc-400 font-semibold mb-1">Model Name</label>
+                      <input
+                        type="text"
+                        value={editName}
+                        onChange={e => setEditName(e.target.value)}
+                        className="w-full bg-canvas-white border border-ice-border rounded-sm p-2 text-ink-navy text-xs focus:outline-none focus:ring-1 focus:ring-cobalt focus:border-cobalt"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] text-zinc-400 font-semibold mb-1">Model Code / Number</label>
+                      <input
+                        type="text"
+                        value={editModelNumber}
+                        onChange={e => setEditModelNumber(e.target.value)}
+                        className="w-full bg-canvas-white border border-ice-border rounded-sm p-2 text-ink-navy text-xs focus:outline-none focus:ring-1 focus:ring-cobalt focus:border-cobalt"
+                        required
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <div>
+                        <label className="block text-[10px] text-zinc-400 font-semibold mb-1">Category</label>
+                        <select
+                          value={editCategory}
+                          onChange={e => setEditCategory(e.target.value as any)}
+                          className="w-full bg-canvas-white border border-ice-border rounded-sm p-2 text-ink-navy text-xs focus:outline-none focus:ring-1 focus:ring-cobalt"
+                        >
+                          <option value="flagship">Flagship</option>
+                          <option value="premium">Premium</option>
+                          <option value="midrange">Midrange</option>
+                          <option value="budget">Budget</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-zinc-400 font-semibold mb-1">Release Year</label>
+                        <input
+                          type="number"
+                          min="2010"
+                          max="2030"
+                          value={editYear}
+                          onChange={e => setEditYear(Number(e.target.value))}
+                          className="w-full bg-canvas-white border border-ice-border rounded-sm p-2 text-ink-navy text-xs focus:outline-none focus:ring-1 focus:ring-cobalt focus:border-cobalt"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] text-zinc-400 font-semibold mb-1">Base Price 128GB (INR ₹)</label>
+                      <input
+                        type="number"
+                        min="1000"
+                        step="500"
+                        value={editBasePrice}
+                        onChange={e => setEditBasePrice(Number(e.target.value))}
+                        className="w-full bg-canvas-white border border-ice-border rounded-sm p-2 text-ink-navy text-xs focus:outline-none focus:ring-1 focus:ring-cobalt focus:border-cobalt"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* Image Input */}
+                  <div className="p-3 bg-canvas-white border border-ice-border rounded-sm space-y-2">
+                    <label className="block text-[10px] text-zinc-500 uppercase font-bold tracking-wider flex items-center justify-between">
+                      <span className="flex items-center gap-1">
+                        <ImageIcon className="w-3 h-3 text-cobalt" />
+                        Product Image
+                      </span>
+                      <span className="text-[9px] text-zinc-400 font-normal">URL link or file upload</span>
+                    </label>
+
+                    {/* Option A: URL Link */}
+                    <div className="relative">
+                      <LinkIcon className="w-3.5 h-3.5 text-zinc-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="url"
+                        placeholder="https://example.com/phone-image.png"
+                        value={editImageUrl.startsWith('data:') ? '' : editImageUrl}
+                        onChange={e => setEditImageUrl(e.target.value)}
+                        className="w-full pl-8 pr-2 py-1.5 bg-canvas-pure border border-ice-border rounded-sm text-ink-navy text-[11px] focus:outline-none focus:ring-1 focus:ring-cobalt"
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-2 my-1">
+                      <div className="h-[1px] bg-ice-border flex-1" />
+                      <span className="text-[9px] text-zinc-400 uppercase font-semibold">OR</span>
+                      <div className="h-[1px] bg-ice-border flex-1" />
+                    </div>
+
+                    {/* Option B: Local File Upload */}
+                    <div>
+                      <label className="w-full py-1.5 px-3 bg-canvas-pure border border-dashed border-ice-border hover:border-cobalt rounded-sm text-[11px] text-ink-slate font-semibold cursor-pointer flex items-center justify-center gap-1.5 transition-all">
+                        <Upload className="w-3.5 h-3.5 text-cobalt" />
+                        <span>Upload New Image File</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleEditImageFileUpload}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+
+                    {/* Preview */}
+                    {editImageUrl && (
+                      <div className="pt-2 flex items-center gap-3 bg-slate-50 dark:bg-zinc-800/40 p-2 rounded border border-ice-border">
+                        <img 
+                          src={editImageUrl} 
+                          alt="Preview" 
+                          className="w-12 h-12 object-contain rounded bg-white p-0.5 border"
+                        />
+                        <div className="flex-1 overflow-hidden text-[10px]">
+                          <span className="text-emerald-600 font-bold block">✓ Image Loaded</span>
+                          <span className="text-zinc-400 truncate block">
+                            {editImageUrl.startsWith('data:') ? 'Local file uploaded (Data URL)' : editImageUrl}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setEditImageUrl('')}
+                          className="text-red-500 text-[10px] hover:underline font-bold"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex gap-2 pt-2">
+                    <button
+                      type="submit"
+                      className="flex-1 py-2.5 bg-cobalt hover:bg-cobalt-hover text-white text-xs font-bold rounded-sm transition-all shadow-sm flex items-center justify-center gap-1.5"
+                    >
+                      <Check className="w-4 h-4" />
+                      Save Changes
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCancelEdit}
+                      className="px-4 py-2.5 border border-ice-border text-zinc-400 hover:text-ink-navy text-xs font-bold rounded-sm transition-all"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </div>
+            ) : (
+              /* Add New Model Form */
+              <div>
+                <div className="border-b border-ice-border/40 pb-3 mb-4 flex items-center gap-2">
+                  <div className="p-1.5 rounded bg-cobalt/10 border border-cobalt/20 text-cobalt">
+                    <Plus className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="font-outfit font-light text-lg text-ink-navy">Add Product to Catalog</h3>
+                    <p className="text-[10px] text-zinc-400 font-mono">Brand → Series → Model Hierarchy</p>
+                  </div>
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-[10px] text-zinc-500 uppercase font-bold tracking-wider mb-1">Base Price 128GB (INR)</label>
-                <input
-                  type="number"
-                  min="1000"
-                  step="500"
-                  value={newModelBasePrice}
-                  onChange={e => setNewModelBasePrice(Number(e.target.value))}
-                  className="w-full bg-canvas-white border border-ice-border rounded-sm p-2 text-ink-navy text-xs focus:outline-none focus:ring-1 focus:ring-cobalt focus:border-cobalt"
-                  required
-                />
-              </div>
+                <form onSubmit={handleAddModel} className="space-y-4 font-mono">
+                  {formError && (
+                    <div className="p-2.5 bg-red-500/10 border border-red-500/20 text-red-500 rounded-sm font-semibold text-[10px]">
+                      Error: {formError}
+                    </div>
+                  )}
+                  {formSuccess && (
+                    <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 rounded-sm font-semibold text-[10px]">
+                      {formSuccess}
+                    </div>
+                  )}
 
-              <div>
-                <label className="block text-[10px] text-zinc-500 uppercase font-bold tracking-wider mb-1">Series Designation (Optional)</label>
-                <input
-                  type="text"
-                  placeholder="e.g. iPhone 17 Series"
-                  value={newModelSeries}
-                  onChange={e => setNewModelSeries(e.target.value)}
-                  className="w-full bg-canvas-white border border-ice-border rounded-sm p-2 text-ink-navy text-xs focus:outline-none focus:ring-1 focus:ring-cobalt focus:border-cobalt"
-                />
-              </div>
+                  {/* Step 1: Brand Selection */}
+                  <div className="p-3 bg-canvas-white border border-ice-border rounded-sm space-y-1.5">
+                    <label className="block text-[10px] text-zinc-500 uppercase font-bold tracking-wider flex items-center gap-1">
+                      <span>1. Brand</span>
+                    </label>
+                    <select
+                      value={selectedCatalogBrandId}
+                      onChange={e => {
+                        setSelectedCatalogBrandId(e.target.value);
+                        setSelectedSeriesOption('__CREATE_NEW__');
+                      }}
+                      className="w-full bg-canvas-pure border border-ice-border rounded-sm p-2 text-ink-navy text-xs focus:outline-none focus:ring-1 focus:ring-cobalt focus:border-cobalt font-semibold"
+                    >
+                      {brands.map(b => (
+                        <option key={b.id} value={b.id}>{b.name}</option>
+                      ))}
+                    </select>
+                  </div>
 
-              <button
-                type="submit"
-                className="w-full py-2 bg-cobalt hover:bg-cobalt-hover text-white text-xs font-bold rounded-sm transition-all"
-              >
-                Add Model to SQLite Catalog
-              </button>
-            </form>
+                  {/* Step 2: Series Selection or Creation */}
+                  <div className="p-3 bg-canvas-white border border-ice-border rounded-sm space-y-2">
+                    <label className="block text-[10px] text-zinc-500 uppercase font-bold tracking-wider flex items-center gap-1">
+                      <Layers className="w-3 h-3 text-cobalt" />
+                      <span>2. Product Series</span>
+                    </label>
+                    
+                    <select
+                      value={selectedSeriesOption}
+                      onChange={e => setSelectedSeriesOption(e.target.value)}
+                      className="w-full bg-canvas-pure border border-ice-border rounded-sm p-2 text-ink-navy text-xs focus:outline-none focus:ring-1 focus:ring-cobalt focus:border-cobalt"
+                    >
+                      <option value="__CREATE_NEW__">✨ + Create New Series (e.g. iPhone 18 Series)</option>
+                      {existingSeriesForSelectedBrand.map(s => (
+                        <option key={s} value={s}>Existing: {s}</option>
+                      ))}
+                    </select>
+
+                    {selectedSeriesOption === '__CREATE_NEW__' && (
+                      <div className="pt-1">
+                        <label className="block text-[9px] text-zinc-400 uppercase font-semibold mb-1">New Series Name</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. iPhone 18 Series"
+                          value={customSeriesInput}
+                          onChange={e => setCustomSeriesInput(e.target.value)}
+                          className="w-full bg-canvas-pure border border-cobalt/50 rounded-sm p-2 text-ink-navy text-xs focus:outline-none focus:ring-1 focus:ring-cobalt font-bold"
+                          required={selectedSeriesOption === '__CREATE_NEW__'}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Step 3: Model Details */}
+                  <div className="space-y-3 pt-1">
+                    <div className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">3. Model Information</div>
+                    
+                    <div>
+                      <label className="block text-[10px] text-zinc-400 font-semibold mb-1">Model Name</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. iPhone 18 Pro Max"
+                        value={newModelName}
+                        onChange={e => setNewModelName(e.target.value)}
+                        className="w-full bg-canvas-white border border-ice-border rounded-sm p-2 text-ink-navy text-xs focus:outline-none focus:ring-1 focus:ring-cobalt focus:border-cobalt"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] text-zinc-400 font-semibold mb-1">Model Code / Number</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. A3399 or SM-S958B"
+                        value={newModelNumber}
+                        onChange={e => setNewModelNumber(e.target.value)}
+                        className="w-full bg-canvas-white border border-ice-border rounded-sm p-2 text-ink-navy text-xs focus:outline-none focus:ring-1 focus:ring-cobalt focus:border-cobalt"
+                        required
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <div>
+                        <label className="block text-[10px] text-zinc-400 font-semibold mb-1">Category</label>
+                        <select
+                          value={newModelCategory}
+                          onChange={e => setNewModelCategory(e.target.value as any)}
+                          className="w-full bg-canvas-white border border-ice-border rounded-sm p-2 text-ink-navy text-xs focus:outline-none focus:ring-1 focus:ring-cobalt"
+                        >
+                          <option value="flagship">Flagship</option>
+                          <option value="premium">Premium</option>
+                          <option value="midrange">Midrange</option>
+                          <option value="budget">Budget</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-zinc-400 font-semibold mb-1">Release Year</label>
+                        <input
+                          type="number"
+                          min="2010"
+                          max="2030"
+                          value={newModelYear}
+                          onChange={e => setNewModelYear(Number(e.target.value))}
+                          className="w-full bg-canvas-white border border-ice-border rounded-sm p-2 text-ink-navy text-xs focus:outline-none focus:ring-1 focus:ring-cobalt focus:border-cobalt"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] text-zinc-400 font-semibold mb-1">Base Price 128GB (INR ₹)</label>
+                      <input
+                        type="number"
+                        min="1000"
+                        step="500"
+                        value={newModelBasePrice}
+                        onChange={e => setNewModelBasePrice(Number(e.target.value))}
+                        className="w-full bg-canvas-white border border-ice-border rounded-sm p-2 text-ink-navy text-xs focus:outline-none focus:ring-1 focus:ring-cobalt focus:border-cobalt"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* Step 4: Image Input (URL Link OR Uploaded File) */}
+                  <div className="p-3 bg-canvas-white border border-ice-border rounded-sm space-y-2">
+                    <label className="block text-[10px] text-zinc-500 uppercase font-bold tracking-wider flex items-center justify-between">
+                      <span className="flex items-center gap-1">
+                        <ImageIcon className="w-3 h-3 text-cobalt" />
+                        4. Product Image
+                      </span>
+                      <span className="text-[9px] text-zinc-400 font-normal">URL link or file upload</span>
+                    </label>
+
+                    {/* Option A: Image URL link */}
+                    <div className="relative">
+                      <LinkIcon className="w-3.5 h-3.5 text-zinc-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="url"
+                        placeholder="https://example.com/phone-image.png"
+                        value={newModelImageUrl.startsWith('data:') ? '' : newModelImageUrl}
+                        onChange={e => setNewModelImageUrl(e.target.value)}
+                        className="w-full pl-8 pr-2 py-1.5 bg-canvas-pure border border-ice-border rounded-sm text-ink-navy text-[11px] focus:outline-none focus:ring-1 focus:ring-cobalt"
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-2 my-1">
+                      <div className="h-[1px] bg-ice-border flex-1" />
+                      <span className="text-[9px] text-zinc-400 uppercase font-semibold">OR</span>
+                      <div className="h-[1px] bg-ice-border flex-1" />
+                    </div>
+
+                    {/* Option B: Local File Upload */}
+                    <div>
+                      <label className="w-full py-1.5 px-3 bg-canvas-pure border border-dashed border-ice-border hover:border-cobalt rounded-sm text-[11px] text-ink-slate font-semibold cursor-pointer flex items-center justify-center gap-1.5 transition-all">
+                        <Upload className="w-3.5 h-3.5 text-cobalt" />
+                        <span>Upload Image File</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageFileUpload}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+
+                    {/* Image Live Preview */}
+                    {newModelImageUrl && (
+                      <div className="pt-2 flex items-center gap-3 bg-slate-50 dark:bg-zinc-800/40 p-2 rounded border border-ice-border">
+                        <img 
+                          src={newModelImageUrl} 
+                          alt="Preview" 
+                          className="w-12 h-12 object-contain rounded bg-white p-0.5 border"
+                        />
+                        <div className="flex-1 overflow-hidden text-[10px]">
+                          <span className="text-emerald-600 font-bold block">✓ Image Loaded</span>
+                          <span className="text-zinc-400 truncate block">
+                            {newModelImageUrl.startsWith('data:') ? 'Local file uploaded (Data URL)' : newModelImageUrl}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setNewModelImageUrl('')}
+                          className="text-red-500 text-[10px] hover:underline font-bold"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full py-2.5 bg-cobalt hover:bg-cobalt-hover text-white text-xs font-bold rounded-sm transition-all shadow-sm flex items-center justify-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Product to Catalog
+                  </button>
+                </form>
+              </div>
+            )}
           </div>
         </div>
       )}
