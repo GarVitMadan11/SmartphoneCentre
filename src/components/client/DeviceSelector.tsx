@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { BRANDS as STATIC_BRANDS, MODELS as STATIC_MODELS, Model, Brand, Variant, generateVariantsForModel, getDeviceImage } from '../../data/mockDatabase';
-import { Search, ChevronRight, Smartphone, Calendar, Layers, ShieldCheck, ArrowLeft } from 'lucide-react';
+import { Search, ChevronRight, Smartphone, Calendar, Layers, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   siApple, siSamsung, siXiaomi, siVivo, siOneplus, siGoogle,
@@ -522,9 +522,9 @@ export const PhoneBackPreview: React.FC<{
         )}
       </div>
 
-      {/* Styled color name under phone */}
+      {/* Styled device preview label under phone */}
       <div className="mt-4 text-center">
-        <span className="text-[10px] uppercase tracking-widest font-mono text-zinc-550 dark:text-zinc-400 block mb-1">Color Option</span>
+        <span className="text-[10px] uppercase tracking-widest font-mono text-zinc-550 dark:text-zinc-400 block mb-1">Device Preview</span>
         <span className="text-base font-bold text-ink-navy dark:text-zinc-200 font-outfit tracking-tight">{colorName}</span>
       </div>
     </div>
@@ -717,13 +717,8 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
     return Array.from(storages).sort((a, b) => a - b);
   }, [modelVariants]);
 
-  // Filter colors based on selected storage
+  // Selected storage state
   const [selectedStorage, setSelectedStorage] = useState<number | null>(null);
-
-  const colorOptions = useMemo(() => {
-    if (!selectedStorage) return [];
-    return modelVariants.filter(v => v.storageGb === selectedStorage);
-  }, [selectedStorage, modelVariants]);
 
   const handleModelClick = (model: Model) => {
     setSelectedModel(model);
@@ -733,11 +728,8 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
 
   const handleStorageSelect = (storage: number) => {
     setSelectedStorage(storage);
-    setTempVariant(null);
-  };
-
-  const handleColorSelect = (variant: Variant) => {
-    setTempVariant(variant);
+    const matched = modelVariants.find(v => v.storageGb === storage) || null;
+    setTempVariant(matched);
   };
 
   const handleConfirm = () => {
@@ -1011,10 +1003,10 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                     Release: {selectedModel.releaseYear}
                   </span>
                 </div>
-                <p className="text-xs text-ink-muted mt-2 font-light">Select your device's storage capacity and color to load the live trade-in value.</p>
+                <p className="text-xs text-ink-muted mt-2 font-light">Select your device's storage capacity to load the live trade-in value.</p>
               </div>
 
-              {/* Step 1: Storage */}
+              {/* Storage selection */}
               <div className="mb-6">
                 <label className="text-xs uppercase tracking-wider font-bold text-ink-slate block mb-3 flex items-center gap-1.5 font-mono">
                   <Layers className="w-3.5 h-3.5 text-cobalt" /> Select Storage Capacity
@@ -1043,42 +1035,6 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                 </div>
               </div>
 
-              {/* Step 2: Color */}
-              {selectedStorage && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mb-8"
-                >
-                  <label className="text-xs uppercase tracking-wider font-bold text-ink-slate block mb-3 flex items-center gap-1.5 font-mono">
-                    <ShieldCheck className="w-3.5 h-3.5 text-cobalt" /> Select Color & Carrier
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {colorOptions.map(variant => {
-                      const isSelected = tempVariant?.id === variant.id;
-                      const hasSelection = tempVariant !== null;
-                      return (
-                        <button
-                          key={variant.id}
-                          onClick={() => handleColorSelect(variant)}
-                          className={`p-4 rounded-sm border text-left text-xs transition-all duration-300 flex flex-col justify-between ${
-                            isSelected
-                              ? 'bg-cobalt-light border-cobalt ring-1 ring-cobalt/20 scale-[1.01] opacity-100 shadow-[0_0_10px_rgba(59,130,246,0.15)]'
-                              : hasSelection
-                              ? 'bg-canvas-white text-ink-navy border-ice-border opacity-40 hover:opacity-75'
-                              : 'bg-canvas-white text-ink-navy border-ice-border hover:border-cobalt/20 hover:scale-[1.005]'
-                          }`}
-                          style={{ minHeight: '48px' }}
-                        >
-                          <span className="font-semibold text-ink-navy">{variant.color}</span>
-                          <span className="text-[10px] text-ink-muted mt-1 font-mono uppercase">Unlocked</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </motion.div>
-              )}
-
               {/* Confirm Selection CTA */}
               <AnimatePresence>
                 {tempVariant && (
@@ -1087,14 +1043,6 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 10 }}
                   >
-                    <PhoneBackPreview 
-                      brandId={selectedModel.brandId} 
-                      modelName={selectedModel.name} 
-                      colorName={tempVariant.color} 
-                      modelId={selectedModel.id}
-                      customImageUrl={selectedModel.imageUrl}
-                    />
-
                     <div className="bg-canvas-white rounded-sm p-4 mb-6 border border-white/[0.06] flex items-center justify-between text-left">
                       <div>
                         <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-1">Base Price / Mint</span>

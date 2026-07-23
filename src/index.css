@@ -192,3 +192,64 @@
   animation: fade-in 0.25s ease-out forwards;
 }
 
+/* ─── Print Stylesheet ──────────────────────────────────── */
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+  #printable-quote,
+  #printable-quote * {
+    visibility: visible !important;
+  }
+  #printable-quote {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: 800px !important;
+    margin: 0 auto !important;
+    padding: 32px !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border: 2px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    box-shadow: none !important;
+  }
+  #printable-quote .print-text-dark {
+    color: #0f172a !important;
+  }
+  #printable-quote .print-text-muted {
+    color: #475569 !important;
+  }
+  #printable-quote .print-border {
+    border-color: #e2e8f0 !important;
+  }
+  #printable-quote .print-text-emerald {
+    color: #059669 !important;
+  }
+  #printable-quote .print-text-red {
+    color: #dc2626 !important;
+  }
+  #printable-quote .print-stamp {
+    border-color: #059669 !important;
+    background-color: #ecfdf5 !important;
+  }
+  #printable-quote .print-stamp span {
+    color: #059669 !important;
+  }
+  #printable-quote .print-bar-bg {
+    background-color: #e2e8f0 !important;
+  }
+  #printable-quote .print-logo-bg {
+    background-color: #002045 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  #printable-quote .print-logo-icon {
+    color: #ffffff !important;
+  }
+  #printable-quote .print-text-cobalt {
+    color: #002045 !important;
+  }
+}
+
