@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  # ── Express Backend Server ──────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: smartphone_backend
+    restart: always
+    environment:
+      - PORT=4000
+      - NODE_ENV=production
+      - DATABASE_URL=file:/app/prisma/dev.db
+      - JWT_SECRET=change-this-to-a-secure-random-key-in-production
+      - ADMIN_PIN_HASH=$$2a$$12$$your-bcrypt-hash-here
+      - ALLOWED_ORIGINS=http://localhost,http://localhost:80,http://localhost:3000
+    volumes:
+      - db-data:/app/prisma
+    ports:
+      - "4000:4000"
+
+  # ── React Frontend Served via Nginx ──────────────────────────────────────────
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: smartphone_frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  db-data:
+    driver: local
