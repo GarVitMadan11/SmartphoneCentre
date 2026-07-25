@@ -1,0 +1,17 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Netlify Configuration File
+# ─────────────────────────────────────────────────────────────────────────────
+
+[build]
+  # The directory to run the build command in (root)
+  publish = "dist"
+  command = "npm run build"
+
+# Redirect /api/* requests to the live backend server
+[[redirects]]
+  from = "/api/*"
+  # REPLACE 'https://your-backend-url.com' with your actual live backend URL (e.g. Railway or Render URL)
+  to = "https://your-backend-url.com/api/:splat"
+  status = 200
+  force = true
+  headers = {X-From = "Netlify"}
