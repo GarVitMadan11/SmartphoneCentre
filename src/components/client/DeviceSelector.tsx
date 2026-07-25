@@ -212,13 +212,10 @@ export const PhoneBackPreview: React.FC<{
   const name = modelName.toLowerCase();
 
   const officialImgUrl = useMemo(() => {
-    if (customImageUrl && customImageUrl.trim().length > 0) {
-      return customImageUrl.trim();
-    }
     if (modelId) {
-      return getDeviceImage(modelId, brandId, colorName);
+      return getDeviceImage(modelId, brandId, colorName, customImageUrl);
     }
-    return '';
+    return customImageUrl?.trim() || '';
   }, [modelId, brandId, colorName, customImageUrl]);
 
   // Check if we have a crawled or custom image URL (starts with http or data:)
