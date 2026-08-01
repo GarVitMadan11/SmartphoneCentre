@@ -1088,7 +1088,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           </div>
                           <div>
                             <span className="text-lg font-extrabold text-white print-text-dark tracking-tight block leading-none">
-                              Reliable<span className="text-sky-400 print-text-cobalt">Exchange</span>
+                              Re<span className="text-sky-400 print-text-cobalt">phonix</span>
                             </span>
                             <span className="text-[10px] font-mono text-zinc-400 print-text-muted tracking-wider uppercase block mt-1">
                               Official Diagnostic Valuation Quote

@@ -14,7 +14,7 @@ from reportlab.platypus import (
     PageBreak,
 )
 
-OUTPUT_PATH = r"f:\SmartphoneCentre\SmartphoneCentre_Implementation_Plan.pdf"
+OUTPUT_PATH = r"f:\SmartphoneCentre\Rephonix_Implementation_Plan.pdf"
 
 
 def page_decor(canvas, doc):
@@ -26,7 +26,7 @@ def page_decor(canvas, doc):
     canvas.line(doc.leftMargin, 0.6 * inch, width - doc.rightMargin, 0.6 * inch)
     canvas.setFont("Helvetica", 9)
     canvas.setFillColor(colors.HexColor("#5b6575"))
-    canvas.drawString(doc.leftMargin, height - 0.45 * inch, "SmartphoneCentre")
+    canvas.drawString(doc.leftMargin, height - 0.45 * inch, "Rephonix")
     canvas.drawRightString(width - doc.rightMargin, height - 0.45 * inch, "Implementation Plan")
     canvas.drawString(doc.leftMargin, 0.4 * inch, "Prepared for startup launch planning")
     canvas.drawRightString(width - doc.rightMargin, 0.4 * inch, f"Page {doc.page}")
@@ -102,7 +102,7 @@ def build_pdf():
     doc.addPageTemplates([PageTemplate(id="plan", frames=[frame], onPage=page_decor)])
 
     story = []
-    story.append(Paragraph("SmartphoneCentre Implementation Plan", styles["TitleCustom"]))
+    story.append(Paragraph("Rephonix Implementation Plan", styles["TitleCustom"]))
     story.append(Paragraph(
         "Date: 2026-07-21 | Scope: convert the current prototype into a production-ready startup website and operations platform.",
         styles["SubtitleCustom"],
@@ -112,7 +112,7 @@ def build_pdf():
         (
             "1. Stabilize the product foundation",
             [
-                "Choose one active frontend entrypoint and retire or consolidate the duplicate <b>reliable-exchange</b> app.",
+                "Choose one active frontend entrypoint and retire or consolidate any duplicate <b>rephonix</b> app.",
                 "Define the startup scope clearly: trade-in only, storefront only, or a unified platform.",
                 "Separate demo assets, prototype data, and production code paths so the repository has one clear source of truth.",
             ],

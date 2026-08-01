@@ -557,7 +557,7 @@ app.get('/api/bookings/:id/events', adminAuth, async (req, res) => {
 // ═══════════════════════════════════════════════════════════════════════════
 
 const server = app.listen(PORT, () => {
-  console.log(`\n🚀 ReliableExchange API server running at http://localhost:${PORT}`);
+  console.log(`\n🚀 Rephonix API server running at http://localhost:${PORT}`);
   console.log(`   Health:       http://localhost:${PORT}/api/health`);
   console.log(`   Admin auth:   POST http://localhost:${PORT}/api/admin/auth`);
   console.log(`   Environment:  ${process.env.NODE_ENV ?? 'development'}\n`);

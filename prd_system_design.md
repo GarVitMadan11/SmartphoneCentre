@@ -1,16 +1,16 @@
-# Project SmartphoneCentre: PRD & System Design Architecture
+# Project Rephonix: PRD & System Design Architecture
 
-This document establishes the Product Requirements Document (PRD) and System Design Architecture for **SmartphoneCentre**, a disruptive, premium device trade-in and resale marketplace ecosystem operating a white-labeled hybrid inventory model.
+This document establishes the Product Requirements Document (PRD) and System Design Architecture for **Rephonix**, a disruptive, premium device trade-in and resale marketplace ecosystem operating a white-labeled hybrid inventory model.
 
 ---
 
 ## 1. Executive Summary & Business Ecosystem
 
-SmartphoneCentre bridges the gap between high-volume commercial supply and consumer convenience, structured across three key pillars:
+Rephonix bridges the gap between high-volume commercial supply and consumer convenience, structured across three key pillars:
 
 ```mermaid
 graph TD
-    A[C2B Sourcing Engine] -->|Honest Grading & Instant Quote| B(SmartphoneCentre Central Inventory)
+    A[C2B Sourcing Engine] -->|Honest Grading & Instant Quote| B(Rephonix Central Inventory)
     C[B2B2C Inventory Ingestion] -->|Refurbished/Used Partner Stock| B
     B -->|Certified Quality & Logistics| D[Premium B2C Storefront]
     style B fill:#09090B,stroke:#FAFAFA,stroke-width:2px,color:#FAFAFA
@@ -182,7 +182,7 @@ To support **Industrial Luxury & Spatial Tactility**, the diagnostic interface t
 
 ```
 +-------------------------------------------------------------+
-|  SmartphoneCentre                                           |
+|  Rephonix                                                   |
 +-------------------------------------------------------------+
 |                                                             |
 |  [ iPhone 15 Pro ]                                          |

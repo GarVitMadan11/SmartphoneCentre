@@ -91,7 +91,7 @@ function SpecsModal({ isOpen, onClose }: SpecsModalProps) {
         <div className="flex items-center justify-between px-6 py-4 border-b border-ice-border bg-canvas-white">
           <div className="text-left">
             <h3 className="font-outfit font-light text-xl text-ink-navy">System Design Specification</h3>
-            <span className="text-[10px] font-mono tracking-wider text-zinc-500 uppercase">SmartphoneCentre Architecture</span>
+            <span className="text-[10px] font-mono tracking-wider text-zinc-500 uppercase">Rephonix Architecture</span>
           </div>
           <button 
             onClick={onClose}
@@ -110,7 +110,7 @@ function SpecsModal({ isOpen, onClose }: SpecsModalProps) {
               <Info className="w-5 h-5 text-cobalt" />
               1. Business Architecture &amp; Pillars
             </div>
-            <p className="font-light">SmartphoneCentre bridges the gap between high-volume commercial supply and consumer convenience, structured across three key pillars:</p>
+            <p className="font-light">Rephonix bridges the gap between high-volume commercial supply and consumer convenience, structured across three key pillars:</p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
               <div className="bg-canvas-white p-3 border border-ice-border rounded-sm">
                 <span className="text-cobalt font-semibold block text-xs uppercase font-mono mb-1">C2B Sourcing</span>
@@ -462,7 +462,7 @@ export default function App() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
               </svg>
             </div>
-            <span className="text-xl font-extrabold text-ink-navy tracking-tight">Reliable<span className="text-secondary">Exchange</span></span>
+            <span className="text-xl font-extrabold text-ink-navy tracking-tight">Re<span className="text-secondary">phonix</span></span>
           </div>
 
           {/* Desktop Nav */}
@@ -722,7 +722,7 @@ export default function App() {
               {/* 4. Benefits Section ─────────────────────────────────────── */}
               <div className="py-8">
                 <div className="text-center max-w-2xl mx-auto mb-12">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold bg-cobalt/10 text-cobalt mb-4 tracking-wide uppercase">Why ReliableExchange</span>
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold bg-cobalt/10 text-cobalt mb-4 tracking-wide uppercase">Why Rephonix</span>
                   <h2 className="text-3xl font-extrabold text-ink-navy tracking-tight">Designed Around You</h2>
                   <p className="text-ink-slate mt-2 text-sm font-light">Every step crafted to be fast, honest, and completely hassle-free.</p>
                 </div>
@@ -813,7 +813,7 @@ export default function App() {
                       avatar: 'AI',
                       rating: 5,
                       device: 'OnePlus 12',
-                      quote: 'Sold 3 company phones through ReliableExchange for our office upgrade. Bulk pricing was great and the data wipe certificate gave us peace of mind.',
+                      quote: 'Sold 3 company phones through Rephonix for our office upgrade. Bulk pricing was great and the data wipe certificate gave us peace of mind.',
                       color: 'bg-purple-100 text-purple-700',
                     },
                   ].map(t => (
@@ -1189,7 +1189,7 @@ export default function App() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                 </svg>
               </div>
-              <span className="text-xl font-extrabold text-ink-navy tracking-tight">Reliable<span className="text-secondary">Exchange</span></span>
+              <span className="text-xl font-extrabold text-ink-navy tracking-tight">Re<span className="text-secondary">phonix</span></span>
             </div>
 
             {/* Links */}
@@ -1210,7 +1210,7 @@ export default function App() {
           </div>
 
           <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-[10px] sm:text-xs text-ink-muted gap-4">
-            <p>&copy; {new Date().getFullYear()} Reliable Exchange. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} Rephonix. All rights reserved.</p>
             <p>Built with ❤️ for secure, sustainable device recycling.</p>
           </div>
         </div>

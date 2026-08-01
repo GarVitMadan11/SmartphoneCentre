@@ -494,7 +494,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                           {hasConsented && <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
                         </div>
                         <p className="text-[10px] text-ink-slate font-light leading-relaxed">
-                          <strong className="text-ink-navy">Data Collection Consent (Required)</strong> — I consent to SmartphoneCentre collecting and processing my contact details and device information solely to facilitate this trade-in booking. Data will not be shared with third parties except for pickup coordination.
+                          <strong className="text-ink-navy">Data Collection Consent (Required)</strong> — I consent to Rephonix collecting and processing my contact details and device information solely to facilitate this trade-in booking. Data will not be shared with third parties except for pickup coordination.
                         </p>
                       </div>
 

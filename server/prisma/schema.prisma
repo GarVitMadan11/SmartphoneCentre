@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Prisma Schema — ReliableExchange Full-Stack Backend
+// Prisma Schema — Rephonix Full-Stack Backend
 // Database: SQLite (development) → PostgreSQL (production via DATABASE_URL)
 // To switch: change provider to "postgresql" and update DATABASE_URL in .env
 // ─────────────────────────────────────────────────────────────────────────────
