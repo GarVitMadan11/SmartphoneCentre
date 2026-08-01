@@ -691,15 +691,47 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
   // When a search query is active, bypass brand AND series filter (cross-brand search)
   const filteredModels = useMemo(() => {
     const isSearching = debouncedSearchQuery.trim() !== '';
+    const q = debouncedSearchQuery.toLowerCase().trim();
+
     return MODELS.filter(model => {
       const matchesBrand = isSearching ? true : model.brandId === selectedBrandId;
       const matchesSeries = isSearching
         ? true
         : (selectedSeries === null ? true : model.series === selectedSeries);
-      const matchesSearch = isSearching
-        ? (model.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
-           model.modelNumber.toLowerCase().includes(debouncedSearchQuery.toLowerCase()))
-        : true;
+
+      if (!isSearching) {
+        return matchesBrand && matchesSeries;
+      }
+
+      const brand = STATIC_BRANDS.find(b => b.id === model.brandId);
+      const brandName = brand ? brand.name.toLowerCase() : '';
+      const modelName = model.name.toLowerCase();
+      const modelNum = model.modelNumber.toLowerCase();
+      const seriesName = model.series ? model.series.toLowerCase() : '';
+      const fullText = `${brandName} ${modelName} ${modelNum} ${seriesName}`.toLowerCase();
+
+      let brandAliases: string[] = [brandName];
+      if (model.brandId === 'brand-apple' || brandName === 'apple') {
+        brandAliases.push('apple', 'iphone', 'ios');
+      } else if (model.brandId === 'brand-samsung' || brandName === 'samsung') {
+        brandAliases.push('samsung', 'galaxy');
+      } else if (model.brandId === 'brand-google' || brandName === 'google') {
+        brandAliases.push('google', 'pixel');
+      } else if (model.brandId === 'brand-oneplus' || brandName === 'oneplus') {
+        brandAliases.push('oneplus', '1plus', 'nord');
+      } else if (model.brandId === 'brand-xiaomi' || brandName === 'xiaomi') {
+        brandAliases.push('xiaomi', 'mi', 'redmi', 'poco');
+      } else if (model.brandId === 'brand-vivo' || brandName === 'vivo') {
+        brandAliases.push('vivo', 'iqoo');
+      }
+
+      const matchesSearch =
+        fullText.includes(q) ||
+        modelName.includes(q) ||
+        modelNum.includes(q) ||
+        seriesName.includes(q) ||
+        brandAliases.some(alias => alias.includes(q) || q.includes(alias));
+
       return matchesBrand && matchesSeries && matchesSearch;
     });
   }, [selectedBrandId, selectedSeries, debouncedSearchQuery]);

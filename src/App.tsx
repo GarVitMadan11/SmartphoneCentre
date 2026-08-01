@@ -341,11 +341,39 @@ export default function App() {
 
   const heroSearchResults = useMemo(() => {
     if (heroSearch.trim().length < 2) return [];
-    const q = heroSearch.toLowerCase();
-    return MODELS.filter(m =>
-      m.name.toLowerCase().includes(q) ||
-      m.modelNumber.toLowerCase().includes(q)
-    ).slice(0, 8);
+    const q = heroSearch.toLowerCase().trim();
+
+    return MODELS.filter(m => {
+      const brand = STATIC_BRANDS.find(b => b.id === m.brandId);
+      const brandName = brand ? brand.name.toLowerCase() : '';
+      const modelName = m.name.toLowerCase();
+      const modelNum = m.modelNumber.toLowerCase();
+      const seriesName = m.series ? m.series.toLowerCase() : '';
+      const fullText = `${brandName} ${modelName} ${modelNum} ${seriesName}`.toLowerCase();
+
+      let brandAliases: string[] = [brandName];
+      if (m.brandId === 'brand-apple' || brandName === 'apple') {
+        brandAliases.push('apple', 'iphone', 'ios');
+      } else if (m.brandId === 'brand-samsung' || brandName === 'samsung') {
+        brandAliases.push('samsung', 'galaxy');
+      } else if (m.brandId === 'brand-google' || brandName === 'google') {
+        brandAliases.push('google', 'pixel');
+      } else if (m.brandId === 'brand-oneplus' || brandName === 'oneplus') {
+        brandAliases.push('oneplus', '1plus', 'nord');
+      } else if (m.brandId === 'brand-xiaomi' || brandName === 'xiaomi') {
+        brandAliases.push('xiaomi', 'mi', 'redmi', 'poco');
+      } else if (m.brandId === 'brand-vivo' || brandName === 'vivo') {
+        brandAliases.push('vivo', 'iqoo');
+      }
+
+      return (
+        fullText.includes(q) ||
+        modelName.includes(q) ||
+        modelNum.includes(q) ||
+        seriesName.includes(q) ||
+        brandAliases.some(alias => alias.includes(q) || q.includes(alias))
+      );
+    }).slice(0, 10);
   }, [heroSearch]);
 
   useEffect(() => {
