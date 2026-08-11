@@ -12,8 +12,9 @@ const SmartphoneMockup = lazy(() => import('./components/client/SmartphoneMockup
 // ─────────────────────────────────────────────────────────────────────────────
 import { 
   Award, ShieldCheck, Zap, Search,
-  RefreshCw, TrendingUp, FileText, Menu, X,
-  Code, Database, Info, GitBranch
+  RefreshCw, TrendingUp, Menu, X,
+  Code, Database, Info, GitBranch,
+  Truck, Lock, CheckCircle2, Sparkles, ArrowRight
 } from 'lucide-react';
 
 import applePhoneImg from './assets/apple_phone.png';
@@ -484,15 +485,6 @@ export default function App() {
               <RefreshCw className="w-4 h-4 text-secondary" />
               <span>How it Works</span>
             </span>
-            <button
-               onClick={() => setIsSpecModalOpen(true)}
-              className="px-3 py-2 rounded-sm border border-ice-border text-ink-slate hover:border-cobalt hover:text-cobalt transition-all flex items-center gap-1 text-xs font-mono"
-              title="System Design Specification"
-              aria-label="View system design specification"
-            >
-              <FileText className="w-3.5 h-3.5" />
-              <span className="hidden lg:inline">Dev Spec</span>
-            </button>
           </div>
 
           {/* Mobile hamburger */}
@@ -525,15 +517,6 @@ export default function App() {
               className="w-full flex items-center gap-2 text-sm font-semibold text-ink-slate py-2 px-3 rounded-sm hover:bg-ice-gray transition-colors"
             >
               <RefreshCw className="w-4 h-4 text-secondary" /> How it Works
-            </button>
-            <button
-              onClick={() => {
-                setIsSpecModalOpen(true);
-                setMobileMenuOpen(false);
-              }}
-              className="w-full flex items-center gap-2 text-sm font-semibold text-ink-slate py-2 px-3 rounded-sm hover:bg-ice-gray border border-ice-border transition-colors text-left"
-            >
-              <FileText className="w-4 h-4" /> Dev Spec
             </button>
           </div>
         )}
@@ -719,65 +702,165 @@ export default function App() {
                 </div>
               </div>
 
-              {/* 4. Benefits Section ─────────────────────────────────────── */}
-              <div className="py-8">
+              {/* 4. Benefits Section — Executive Luxury Bento & Command Telemetry ── */}
+              <div className="py-12">
+                {/* Section Header */}
                 <div className="text-center max-w-2xl mx-auto mb-12">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold bg-cobalt/10 text-cobalt mb-4 tracking-wide uppercase">Why Rephonix</span>
-                  <h2 className="text-3xl font-extrabold text-ink-navy tracking-tight">Designed Around You</h2>
-                  <p className="text-ink-slate mt-2 text-sm font-light">Every step crafted to be fast, honest, and completely hassle-free.</p>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {[
-                    {
-                      icon: '⚡',
-                      title: 'Instant Payout',
-                      desc: 'Cash transfer or UPI within minutes of our executive verifying your device at your doorstep.',
-                      color: 'from-blue-500/10 to-blue-600/5 border-blue-500/20',
-                      accent: 'text-blue-500',
-                    },
-                    {
-                      icon: '🛡️',
-                      title: 'Zero Hidden Cuts',
-                      desc: 'The price we quote is what you receive. No "on-spot deductions" or last-minute adjustments.',
-                      color: 'from-emerald-500/10 to-emerald-600/5 border-emerald-500/20',
-                      accent: 'text-emerald-500',
-                    },
-                    {
-                      icon: '🏠',
-                      title: 'Free Doorstep Pickup',
-                      desc: 'We come to your home or office at a time slot of your choice. Completely free, always.',
-                      color: 'from-purple-500/10 to-purple-600/5 border-purple-500/20',
-                      accent: 'text-purple-500',
-                    },
-                    {
-                      icon: '🔒',
-                      title: 'Certified Data Wipe',
-                      desc: 'Military-grade secure erasure performed on every device before it leaves your hands.',
-                      color: 'from-amber-500/10 to-amber-600/5 border-amber-500/20',
-                      accent: 'text-amber-500',
-                    },
-                  ].map(b => (
-                    <div key={b.title} className={`bg-gradient-to-br ${b.color} border rounded-xl p-6 text-left hover:scale-[1.02] transition-transform duration-200`}>
-                      <div className="text-3xl mb-4">{b.icon}</div>
-                      <h3 className={`text-base font-bold ${b.accent} mb-2`}>{b.title}</h3>
-                      <p className="text-sm text-ink-slate font-light leading-relaxed">{b.desc}</p>
-                    </div>
-                  ))}
+                  <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[11px] font-bold bg-cobalt/10 text-cobalt border border-cobalt/15 shadow-sm tracking-widest uppercase">
+                    <Sparkles className="w-3.5 h-3.5 text-cobalt" /> Why Rephonix
+                  </span>
+                  <h2 className="text-3xl sm:text-4xl font-extrabold text-ink-navy tracking-tight mt-3">
+                    Designed Around You. Built for Absolute Trust.
+                  </h2>
+                  <p className="text-ink-slate mt-3 text-base max-w-xl mx-auto font-light leading-relaxed">
+                    No hidden cuts. No delayed payments. Engineered to give you maximum device value with zero doorstep friction.
+                  </p>
                 </div>
 
-                {/* Stats bar */}
-                <div className="mt-10 grid grid-cols-2 lg:grid-cols-4 gap-4 bg-canvas-pure border border-ice-border rounded-xl p-6">
-                  {[
-                    { value: '12,400+', label: 'Devices Processed' },
-                    { value: '₹14 Cr+', label: 'Paid to Customers' },
-                    { value: '99.4%', label: 'Quote Accuracy' },
-                    { value: '<15 min', label: 'Avg. Pickup Time' },
-                  ].map(s => (
-                    <div key={s.label} className="text-center">
-                      <div className="text-2xl sm:text-3xl font-black text-cobalt">{s.value}</div>
-                      <div className="text-[11px] text-ink-muted font-mono uppercase tracking-wider mt-1">{s.label}</div>
+                {/* Executive 4-Card Bento Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+                  {/* Card 1: Instant Payout — Dark Slate Midnight with Electric Blue */}
+                  <div className="relative group overflow-hidden rounded-2xl bg-gradient-to-br from-[#001c3d] via-[#002652] to-[#00142e] border border-blue-500/30 p-6 text-white shadow-xl hover:shadow-2xl hover:border-blue-400/60 transition-all duration-300 flex flex-col justify-between">
+                    <div className="absolute -top-12 -right-12 w-32 h-32 bg-blue-500/20 rounded-full blur-2xl group-hover:bg-blue-500/35 transition-all duration-500 pointer-events-none" />
+                    <div>
+                      <div className="flex items-center justify-between mb-6">
+                        <div className="w-12 h-12 rounded-xl bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-blue-400 shadow-inner group-hover:scale-110 transition-transform duration-300">
+                          <Zap className="w-6 h-6 fill-blue-400/20 stroke-[2.2]" />
+                        </div>
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-blue-500/20 text-blue-300 border border-blue-400/30 tracking-wider">
+                          SUB-60s PAYOUT
+                        </span>
+                      </div>
+                      <h3 className="text-xl font-bold text-white mb-2 tracking-tight">Instant Payout</h3>
+                      <p className="text-sm text-slate-300 font-light leading-relaxed">
+                        Cash transfer or instant UPI within 60 seconds of doorstep verification — right before our executive leaves your presence.
+                      </p>
                     </div>
-                  ))}
+                    <div className="mt-6 pt-4 border-t border-white/10 flex items-center gap-2 text-xs font-medium text-blue-300/90">
+                      <CheckCircle2 className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                      <span>Direct UPI &amp; IMPS Settlement</span>
+                    </div>
+                  </div>
+
+                  {/* Card 2: Zero Hidden Cuts — Clean Slate Glass with Emerald Accent */}
+                  <div className="relative group overflow-hidden rounded-2xl bg-gradient-to-br from-white via-emerald-50/20 to-white border border-emerald-200/80 p-6 shadow-md hover:shadow-xl hover:border-emerald-500/50 transition-all duration-300 flex flex-col justify-between">
+                    <div className="absolute -bottom-10 -left-10 w-28 h-28 bg-emerald-500/10 rounded-full blur-xl group-hover:bg-emerald-500/20 transition-all duration-500 pointer-events-none" />
+                    <div>
+                      <div className="flex items-center justify-between mb-6">
+                        <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-200 flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform duration-300">
+                          <ShieldCheck className="w-6 h-6 stroke-[2.2]" />
+                        </div>
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-emerald-100/90 text-emerald-800 border border-emerald-200 tracking-wider">
+                          GUARANTEED
+                        </span>
+                      </div>
+                      <h3 className="text-xl font-bold text-ink-navy mb-2 tracking-tight">Zero Hidden Cuts</h3>
+                      <p className="text-sm text-ink-slate font-light leading-relaxed">
+                        The price quoted online is exact. Zero last-minute renegotiation, surprise fees, or arbitrary doorstep price reductions.
+                      </p>
+                    </div>
+                    <div className="mt-6 pt-4 border-t border-emerald-100 flex items-center gap-2 text-xs font-semibold text-emerald-700">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                      <span>Binding Price Protection Guarantee</span>
+                    </div>
+                  </div>
+
+                  {/* Card 3: Free Doorstep Pickup — Executive Indigo Accent Card */}
+                  <div className="relative group overflow-hidden rounded-2xl bg-gradient-to-br from-white via-indigo-50/20 to-white border border-indigo-200/80 p-6 shadow-md hover:shadow-xl hover:border-indigo-500/50 transition-all duration-300 flex flex-col justify-between">
+                    <div className="absolute -top-10 -right-10 w-28 h-28 bg-indigo-500/10 rounded-full blur-xl group-hover:bg-indigo-500/20 transition-all duration-500 pointer-events-none" />
+                    <div>
+                      <div className="flex items-center justify-between mb-6">
+                        <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-200 flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform duration-300">
+                          <Truck className="w-6 h-6 stroke-[2.2]" />
+                        </div>
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-indigo-100/90 text-indigo-800 border border-indigo-200 tracking-wider">
+                          FREE PICKUP
+                        </span>
+                      </div>
+                      <h3 className="text-xl font-bold text-ink-navy mb-2 tracking-tight">Free Doorstep Pickup</h3>
+                      <p className="text-sm text-ink-slate font-light leading-relaxed">
+                        Our verified executive visits your home or office at a time slot of your choice. Completely free, always — across India.
+                      </p>
+                    </div>
+                    <div className="mt-6 pt-4 border-t border-indigo-100 flex items-center gap-2 text-xs font-semibold text-indigo-700">
+                      <CheckCircle2 className="w-4 h-4 text-indigo-600 flex-shrink-0" />
+                      <span>Flexible 2-Hour Window Slots</span>
+                    </div>
+                  </div>
+
+                  {/* Card 4: Certified Data Wipe — Dark Slate Obsidian with Gold Metallic Accent */}
+                  <div className="relative group overflow-hidden rounded-2xl bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] border border-amber-500/30 p-6 text-white shadow-xl hover:shadow-2xl hover:border-amber-400/60 transition-all duration-300 flex flex-col justify-between">
+                    <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-amber-500/15 rounded-full blur-2xl group-hover:bg-amber-500/25 transition-all duration-500 pointer-events-none" />
+                    <div>
+                      <div className="flex items-center justify-between mb-6">
+                        <div className="w-12 h-12 rounded-xl bg-amber-500/20 border border-amber-400/30 flex items-center justify-center text-amber-400 shadow-inner group-hover:scale-110 transition-transform duration-300">
+                          <Lock className="w-6 h-6 stroke-[2.2]" />
+                        </div>
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-400/30 tracking-wider">
+                          ENTERPRISE SECURE
+                        </span>
+                      </div>
+                      <h3 className="text-xl font-bold text-white mb-2 tracking-tight">Certified Data Wipe</h3>
+                      <p className="text-sm text-slate-300 font-light leading-relaxed">
+                        NIST SP 800-88 compliant secure data erasure performed on every device with a digital certificate before it leaves your hands.
+                      </p>
+                    </div>
+                    <div className="mt-6 pt-4 border-t border-white/10 flex items-center gap-2 text-xs font-medium text-amber-300/90">
+                      <CheckCircle2 className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                      <span>Digital Erasure Certificate Issued</span>
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* High-Impact Executive Command Telemetry Ticker */}
+                <div className="mt-12 bg-gradient-to-r from-[#001736] via-[#00224d] to-[#001736] border border-blue-950 text-white rounded-2xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+                  {/* Subtle Grid Lines Overlay */}
+                  <div className="absolute inset-0 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:20px_20px] opacity-[0.03] pointer-events-none" />
+                  
+                  {/* Live Telemetry Status Header */}
+                  <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-6 relative z-10">
+                    <div className="flex items-center gap-2.5">
+                      <span className="relative flex h-2.5 w-2.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                      </span>
+                      <span className="text-[11px] font-mono font-bold tracking-widest text-emerald-400 uppercase">
+                        REAL-TIME PLATFORM METRICS
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-slate-400 font-mono hidden sm:block">
+                      100% Aadhaar &amp; IMEI Verified System
+                    </span>
+                  </div>
+
+                  {/* 4 Metric Columns */}
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 relative z-10 text-center sm:text-left">
+                    <div className="sm:border-r sm:border-white/10 sm:pr-4">
+                      <div className="text-3xl sm:text-4xl font-black text-white tracking-tight font-outfit">12,400+</div>
+                      <div className="text-xs font-bold text-blue-300 uppercase tracking-wider mt-1">Devices Processed</div>
+                      <div className="text-[11px] text-slate-400 font-mono mt-0.5">Across 45+ Indian Cities</div>
+                    </div>
+
+                    <div className="lg:border-r lg:border-white/10 lg:pr-4">
+                      <div className="text-3xl sm:text-4xl font-black text-emerald-400 tracking-tight font-outfit">₹14 Cr+</div>
+                      <div className="text-xs font-bold text-emerald-300 uppercase tracking-wider mt-1">Paid to Customers</div>
+                      <div className="text-[11px] text-slate-400 font-mono mt-0.5">Direct Instant UPI Credit</div>
+                    </div>
+
+                    <div className="sm:border-r sm:border-white/10 sm:pr-4">
+                      <div className="text-3xl sm:text-4xl font-black text-white tracking-tight font-outfit">99.4%</div>
+                      <div className="text-xs font-bold text-blue-300 uppercase tracking-wider mt-1">Quote Accuracy</div>
+                      <div className="text-[11px] text-slate-400 font-mono mt-0.5">Zero Doorstep Deduction</div>
+                    </div>
+
+                    <div>
+                      <div className="text-3xl sm:text-4xl font-black text-amber-400 tracking-tight font-outfit">&lt;15 min</div>
+                      <div className="text-xs font-bold text-amber-300 uppercase tracking-wider mt-1">Avg. Pickup Time</div>
+                      <div className="text-[11px] text-slate-400 font-mono mt-0.5">Rapid Executive Dispatch</div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -912,126 +995,146 @@ export default function App() {
                 </div>
               </div>
 
-              {/* 9. Featured Deals Bento Grid */}
-              <div className="space-y-8">
+              {/* 9. Featured Deals Bento Grid — Bespoke Device Stage */}
+              <div className="space-y-8 py-4">
                 <div className="text-center max-w-3xl mx-auto">
-                  <h2 className="text-3xl font-extrabold text-ink-navy tracking-tight">Featured Deals</h2>
-                  <p className="text-ink-slate mt-2 text-sm">Get top value for popular premium devices today</p>
+                  <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[11px] font-bold bg-cobalt/10 text-cobalt border border-cobalt/15 shadow-sm tracking-widest uppercase">
+                    <Sparkles className="w-3.5 h-3.5 text-cobalt" /> TOP VALUATION DEALS
+                  </span>
+                  <h2 className="text-3xl sm:text-4xl font-extrabold text-ink-navy tracking-tight mt-3">
+                    Featured High-Value Trade-Ins
+                  </h2>
+                  <p className="text-ink-slate mt-2 text-sm sm:text-base font-light">
+                    Get top market value for popular premium devices today with guaranteed doorstep payout.
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                  {/* Large Card: iPhone 15 Pro Max */}
-                  <div className="lg:col-span-2 bg-gradient-to-br from-primary to-slate-900 rounded-xl p-8 text-white relative overflow-hidden flex flex-col justify-between min-h-[360px] shadow-xl group text-left">
-                    <div className="absolute right-0 bottom-0 opacity-10 group-hover:opacity-15 transition-opacity pointer-events-none z-0">
-                      <svg className="w-96 h-96 text-white" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 4.17c.66-.81 1.11-1.93.99-3.06-1 .04-2.22.67-2.94 1.5-.64.74-1.2 1.88-1.05 2.99 1.12.09 2.26-.57 3-1.43z"/>
-                      </svg>
-                    </div>
-                    {/* Actual iPhone Image */}
-                    <div className="absolute right-6 bottom-[-20px] w-56 sm:w-64 h-auto pointer-events-none group-hover:scale-105 group-hover:translate-y-[-10px] transition-all duration-500 ease-out z-10 hidden sm:block">
-                      <img
-                        src={applePhoneImg}
-                        alt=""
-                        aria-hidden="true"
-                        width={256}
-                        height={512}
-                        decoding="async"
-                        className="w-full h-auto object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
-                      />
-                    </div>
-                    <div className="z-10 relative">
-                      <span className="px-3 py-1 bg-white/10 text-white rounded-full text-xs font-semibold uppercase tracking-wider border border-white/10">Top Offer Today</span>
-                      <h3 className="text-3xl font-extrabold mt-6 max-w-md">Sell your iPhone 15 Pro Max</h3>
-                      <p className="text-slate-300 mt-2 max-w-sm font-light">Get maximum trade-in value before the next generation release.</p>
-                    </div>
-                    <div className="mt-8 flex items-baseline justify-between gap-4 z-10 relative">
+                  {/* Large Hero Card: iPhone 15 Pro Max */}
+                  <div className="lg:col-span-2 bg-gradient-to-br from-[#001736] via-[#00224d] to-[#00122e] border border-blue-500/30 rounded-2xl p-6 sm:p-8 text-white relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl group text-left">
+                    <div className="absolute -top-16 -left-16 w-48 h-48 bg-blue-500/15 rounded-full blur-3xl pointer-events-none" />
+                    <div className="absolute -bottom-16 -right-16 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+                    
+                    {/* Left Details Column */}
+                    <div className="z-10 flex-1 flex flex-col justify-between h-full">
                       <div>
-                        <p className="text-[10px] text-slate-400 uppercase tracking-widest font-mono">Valuations Up To</p>
-                        <p className="text-3xl sm:text-4xl font-black text-green-400 mt-1">₹57,000</p>
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs font-bold uppercase tracking-wider border border-blue-400/30">
+                          <Zap className="w-3.5 h-3.5 text-blue-400 fill-blue-400/30" /> Top Offer Today
+                        </span>
+                        <h3 className="text-2xl sm:text-3xl font-extrabold text-white mt-4 tracking-tight leading-tight">
+                          iPhone 15 Pro Max
+                        </h3>
+                        <p className="text-slate-300 mt-2 text-sm font-light leading-relaxed max-w-sm">
+                          Lock in maximum resale value before the next generation release. Free doorstep pickup &amp; instant payout.
+                        </p>
                       </div>
-                      <button 
-                        onClick={() => handleDirectSelectModel('apple-15pm')}
-                        className="bg-green-500 hover:bg-green-600 text-slate-900 px-6 py-3 rounded-lg font-bold text-sm shadow-lg shadow-green-500/20 transition-all"
-                      >
-                        Get Valuation
-                      </button>
+
+                      <div className="mt-8 pt-6 border-t border-white/10 flex flex-wrap items-end justify-between gap-4">
+                        <div>
+                          <p className="text-[10px] text-blue-300/80 uppercase tracking-widest font-mono">Valuation Up To</p>
+                          <p className="text-3xl sm:text-4xl font-black text-emerald-400 mt-1 font-outfit">₹57,000</p>
+                        </div>
+                        <button 
+                          onClick={() => handleDirectSelectModel('apple-15pm')}
+                          className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-6 py-3 rounded-xl font-extrabold text-sm shadow-lg shadow-emerald-500/25 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2"
+                        >
+                          <span>Get Valuation</span>
+                          <ArrowRight className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Right Device Showcase Stage */}
+                    <div className="z-10 relative flex-shrink-0 w-full md:w-56 lg:w-64">
+                      <div className="bg-gradient-to-b from-[#f8fafc] via-[#f1f5f9] to-[#e2e8f0] rounded-2xl p-4 border border-white/20 shadow-2xl flex items-center justify-center relative overflow-hidden group-hover:scale-[1.02] transition-transform duration-500">
+                        <div className="absolute top-2 right-2 text-[9px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-900/10 text-slate-700">
+                          256GB / Titanium
+                        </div>
+                        <img
+                          src={applePhoneImg}
+                          alt="iPhone 15 Pro Max"
+                          width={256}
+                          height={512}
+                          decoding="async"
+                          className="w-44 sm:w-48 h-auto object-contain mix-blend-multiply drop-shadow-lg py-2"
+                        />
+                      </div>
                     </div>
                   </div>
 
-                  {/* Right stack (Samsung + OnePlus/Google) */}
-                  <div className="flex flex-col gap-8 justify-between">
+                  {/* Right stack (Samsung + OnePlus) */}
+                  <div className="flex flex-col gap-6 justify-between">
                     {/* Samsung Galaxy S24 Ultra */}
-                    <div className="bg-canvas-pure border border-ice-border rounded-xl p-6 flex flex-col justify-between min-h-[166px] shadow-sm text-left relative overflow-hidden group">
-                      {/* Actual Samsung Image */}
-                      <div className="absolute right-[-10px] bottom-[-20px] w-24 h-auto pointer-events-none group-hover:scale-105 group-hover:translate-y-[-5px] transition-all duration-500 ease-out z-0 opacity-40 group-hover:opacity-60">
+                    <div className="bg-white border border-slate-200/80 rounded-2xl p-5 sm:p-6 flex items-center justify-between shadow-md hover:shadow-xl hover:border-blue-400/50 transition-all duration-300 relative overflow-hidden group text-left">
+                      <div className="z-10 flex-1 pr-4">
+                        <span className="text-[10px] font-mono font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100 uppercase tracking-wider">Galaxy AI</span>
+                        <h4 className="text-lg font-bold text-ink-navy mt-1.5">Galaxy S24 Ultra</h4>
+                        <p className="text-xs text-ink-slate mt-0.5 font-medium">Valuations up to <span className="text-emerald-600 font-extrabold text-sm">₹42,000</span></p>
+                        <button 
+                          onClick={() => handleDirectSelectModel('sam-s24u')}
+                          className="text-xs font-bold text-cobalt hover:text-blue-700 flex items-center gap-1 mt-3 transition-colors"
+                        >
+                          <span>Get Valuation</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <div className="w-20 sm:w-24 h-24 bg-slate-100 rounded-xl p-2 flex items-center justify-center flex-shrink-0 border border-slate-200/60 shadow-inner">
                         <img
                           src={samsungPhoneImg}
-                          alt=""
-                          aria-hidden="true"
+                          alt="Galaxy S24 Ultra"
                           width={96}
                           height={192}
                           loading="lazy"
                           decoding="async"
-                          className="w-full h-auto object-contain"
+                          className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-300"
                         />
                       </div>
-                      <div className="flex justify-between items-start z-10">
-                        <div>
-                          <h4 className="text-lg font-bold text-ink-navy">Galaxy S24 Ultra</h4>
-                          <p className="text-xs text-ink-slate mt-1">Valuations up to ₹42,000</p>
-                        </div>
-                      </div>
-                      <span 
-                        onClick={() => handleDirectSelectModel('sam-s24u')}
-                        className="text-xs font-bold text-secondary flex items-center gap-1 hover:underline cursor-pointer z-10 mt-4"
-                      >
-                        Get Valuation →
-                      </span>
                     </div>
 
                     {/* OnePlus 12 */}
-                    <div className="bg-canvas-pure border border-ice-border rounded-xl p-6 flex flex-col justify-between min-h-[166px] shadow-sm text-left relative overflow-hidden group">
-                      {/* Actual OnePlus Image */}
-                      <div className="absolute right-[-10px] bottom-[-20px] w-24 h-auto pointer-events-none group-hover:scale-105 group-hover:translate-y-[-5px] transition-all duration-500 ease-out z-0 opacity-40 group-hover:opacity-60">
+                    <div className="bg-white border border-slate-200/80 rounded-2xl p-5 sm:p-6 flex items-center justify-between shadow-md hover:shadow-xl hover:border-red-400/50 transition-all duration-300 relative overflow-hidden group text-left">
+                      <div className="z-10 flex-1 pr-4">
+                        <span className="text-[10px] font-mono font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded border border-red-100 uppercase tracking-wider">Fast Charge</span>
+                        <h4 className="text-lg font-bold text-ink-navy mt-1.5">OnePlus 12</h4>
+                        <p className="text-xs text-ink-slate mt-0.5 font-medium">Valuations up to <span className="text-emerald-600 font-extrabold text-sm">₹24,000</span></p>
+                        <button 
+                          onClick={() => handleDirectSelectModel('op-12')}
+                          className="text-xs font-bold text-cobalt hover:text-blue-700 flex items-center gap-1 mt-3 transition-colors"
+                        >
+                          <span>Get Valuation</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <div className="w-20 sm:w-24 h-24 bg-slate-100 rounded-xl p-2 flex items-center justify-center flex-shrink-0 border border-slate-200/60 shadow-inner">
                         <img
                           src={oneplusPhoneImg}
-                          alt=""
-                          aria-hidden="true"
+                          alt="OnePlus 12"
                           width={96}
                           height={192}
                           loading="lazy"
                           decoding="async"
-                          className="w-full h-auto object-contain"
+                          className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-300"
                         />
                       </div>
-                      <div className="flex justify-between items-start z-10">
-                        <div>
-                          <h4 className="text-lg font-bold text-ink-navy">OnePlus 12</h4>
-                          <p className="text-xs text-ink-slate mt-1">Valuations up to ₹24,000</p>
-                        </div>
-                      </div>
-                      <span 
-                        onClick={() => handleDirectSelectModel('op-12')}
-                        className="text-xs font-bold text-secondary flex items-center gap-1 hover:underline cursor-pointer z-10 mt-4"
-                      >
-                        Get Valuation →
-                      </span>
                     </div>
                   </div>
 
-                  {/* Bulk Liquidation Banner */}
-                  <div className="lg:col-span-3 bg-primary rounded-xl p-8 text-white relative overflow-hidden flex flex-col md:flex-row md:items-center md:justify-between shadow-xl text-left">
-                    <div className="z-10">
-                      <span className="px-2.5 py-1 bg-white/10 text-green-400 rounded-full text-xs font-bold uppercase tracking-wider border border-white/5">Corporate Services</span>
-                      <h3 className="text-2xl font-extrabold mt-4">Enterprise Device Liquidation</h3>
-                      <p className="text-slate-300 mt-2 max-w-2xl text-sm font-light leading-relaxed">
-                        Selling company devices? Get customized bulk quotes, certified hardware wiping, and direct corporate logistics.
+                  {/* Bulk Liquidation Corporate Banner */}
+                  <div className="lg:col-span-3 bg-gradient-to-r from-[#001c3d] via-[#002856] to-[#00142e] border border-blue-900 rounded-2xl p-6 sm:p-8 text-white relative overflow-hidden flex flex-col md:flex-row md:items-center md:justify-between gap-6 shadow-2xl text-left">
+                    <div className="z-10 max-w-2xl">
+                      <span className="px-3 py-1 bg-emerald-500/20 text-emerald-300 rounded-full text-xs font-bold uppercase tracking-wider border border-emerald-400/30 inline-flex items-center gap-1.5">
+                        <Award className="w-3.5 h-3.5 text-emerald-400" /> CORPORATE &amp; ENTERPRISE SERVICES
+                      </span>
+                      <h3 className="text-2xl sm:text-3xl font-extrabold mt-3 tracking-tight">Enterprise Device Liquidation</h3>
+                      <p className="text-slate-300 mt-2 text-sm font-light leading-relaxed">
+                        Selling company laptops or smartphone fleets? Get customized bulk pricing, NIST-compliant hardware data wiping, and direct corporate logistics.
                       </p>
                     </div>
-                    <button className="mt-6 md:mt-0 bg-white hover:bg-slate-100 text-primary px-6 py-3 rounded-lg font-bold text-sm shadow-md transition-all whitespace-nowrap z-10">
-                      Contact B2B Team
+                    <button className="mt-4 md:mt-0 bg-white hover:bg-slate-100 text-cobalt px-6 py-3.5 rounded-xl font-bold text-sm shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98] whitespace-nowrap z-10 flex-shrink-0 flex items-center gap-2">
+                      <span>Contact B2B Team</span>
+                      <ArrowRight className="w-4 h-4" />
                     </button>
-                    <div className="absolute -right-12 -bottom-12 w-64 h-64 rounded-full bg-secondary/20 blur-3xl"></div>
+                    <div className="absolute -right-12 -bottom-12 w-64 h-64 rounded-full bg-blue-500/10 blur-3xl pointer-events-none" />
                   </div>
                 </div>
               </div>

@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { BRANDS as FRONTEND_BRANDS, MODELS as FRONTEND_MODELS } from '../../src/data/mockDatabase.ts';
 
 const prisma = new PrismaClient();
 
@@ -131,27 +132,25 @@ const INITIAL_BOOKINGS = [
 async function main() {
   console.log('🌱 Seeding database...');
 
-  // Clear existing data
-  await prisma.booking.deleteMany();
-  await prisma.model.deleteMany();
-  await prisma.brand.deleteMany();
-
   // Seed brands — store mapping of legacyId -> dbId
   const brandMap: Record<string, string> = {};
-  for (const b of BRANDS) {
-    const created = await prisma.brand.create({
-      data: { id: b.legacyId, name: b.name, logo: b.logo },
+  for (const b of FRONTEND_BRANDS) {
+    const created = await prisma.brand.upsert({
+      where: { id: b.id },
+      create: { id: b.id, name: b.name, logo: b.logo },
+      update: { name: b.name, logo: b.logo },
     });
-    brandMap[b.legacyId] = created.id;
+    brandMap[b.id] = created.id;
   }
-  console.log(`  ✓ ${BRANDS.length} brands seeded`);
+  console.log(`  ✓ ${FRONTEND_BRANDS.length} brands seeded`);
 
   // Seed models
-  for (const m of MODELS) {
-    await prisma.model.create({
-      data: {
-        legacyId: m.legacyId,
-        brandId: brandMap[m.brandLegacy],
+  for (const m of FRONTEND_MODELS) {
+    await prisma.model.upsert({
+      where: { legacyId: m.id },
+      create: {
+        legacyId: m.id,
+        brandId: brandMap[m.brandId],
         name: m.name,
         modelNumber: m.modelNumber,
         category: m.category,
@@ -159,13 +158,17 @@ async function main() {
         basePrice128GB: m.basePrice128GB,
         series: m.series,
       },
+      update: {
+        brandId: brandMap[m.brandId], name: m.name, modelNumber: m.modelNumber,
+        category: m.category, releaseYear: m.releaseYear, basePrice128GB: m.basePrice128GB, series: m.series,
+      },
     });
   }
-  console.log(`  ✓ ${MODELS.length} models seeded`);
+  console.log(`  ✓ ${FRONTEND_MODELS.length} models seeded`);
 
-  // Seed bookings
+  // Seed initial example bookings only on a fresh database.
   for (const b of INITIAL_BOOKINGS) {
-    await prisma.booking.create({ data: b });
+    await prisma.booking.upsert({ where: { id: b.id }, create: b, update: {} });
   }
   console.log(`  ✓ ${INITIAL_BOOKINGS.length} bookings seeded`);
 

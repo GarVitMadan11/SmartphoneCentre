@@ -671,18 +671,17 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
     });
   }, [selectedBrandId]);
 
-  // Compute stats (model count, max payout, release year range) for each series
+  // Compute the model count and release-year range for each series.
   const seriesStats = useMemo(() => {
-    const stats: Record<string, { modelCount: number; maxPayout: number; yearRange: string }> = {};
+    const stats: Record<string, { modelCount: number; yearRange: string }> = {};
     availableSeries.forEach(seriesName => {
       const modelsInSeries = MODELS.filter(m => m.brandId === selectedBrandId && m.series === seriesName);
       const modelCount = modelsInSeries.length;
-      const maxPayout = Math.max(...modelsInSeries.map(m => m.basePrice128GB), 0);
       const years = modelsInSeries.map(m => m.releaseYear);
       const minYear = Math.min(...years);
       const maxYear = Math.max(...years);
       const yearRange = minYear === maxYear ? `${minYear}` : `${minYear} - ${maxYear}`;
-      stats[seriesName] = { modelCount, maxPayout, yearRange };
+      stats[seriesName] = { modelCount, yearRange };
     });
     return stats;
   }, [availableSeries, selectedBrandId]);
@@ -857,7 +856,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {availableSeries.map(seriesName => {
-                  const stats = seriesStats[seriesName] || { modelCount: 0, maxPayout: 0, yearRange: '' };
+                  const stats = seriesStats[seriesName] || { modelCount: 0, yearRange: '' };
                   return (
                     <motion.div
                       key={seriesName}
@@ -882,11 +881,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                           {stats.modelCount} {stats.modelCount === 1 ? 'model' : 'models'} available
                         </p>
                       </div>
-                      <div className="mt-4 pt-3 border-t border-white/[0.04] flex items-center justify-between text-left">
-                        <div>
-                          <span className="text-[8px] text-zinc-500 block uppercase font-mono tracking-wider">Payout Up To</span>
-                          <span className="text-sm font-bold text-cobalt font-outfit">{formatPrice(stats.maxPayout)}</span>
-                        </div>
+                      <div className="mt-4 pt-3 border-t border-white/[0.04] flex items-center justify-end text-left">
                         <div className="w-6 h-6 rounded-full bg-canvas-white border border-ice-border flex items-center justify-center group-hover:bg-cobalt group-hover:border-cobalt transition-all duration-300">
                           <ChevronRight className="w-3.5 h-3.5 text-ink-muted group-hover:text-white transition-colors" />
                         </div>
@@ -994,11 +989,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                             </div>
                           </div>
                           
-                          <div className="pt-3 mt-3 border-t border-white/[0.04] flex items-center justify-between">
-                            <div className="text-left">
-                              <span className="text-[9px] text-zinc-500 block uppercase font-mono tracking-wider">Payout Up To</span>
-                              <span className="text-sm font-bold text-cobalt font-outfit">{formatPrice(model.basePrice128GB)}</span>
-                            </div>
+                          <div className="pt-3 mt-3 border-t border-white/[0.04] flex items-center justify-end">
                             <ChevronRight className={`w-4 h-4 transition-transform duration-300 ${isSelected ? 'translate-x-1 text-cobalt' : 'text-ink-muted'}`} />
                           </div>
                         </div>
@@ -1080,7 +1071,6 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                         <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-1">Base Price / Mint</span>
                         <span className="text-xl font-bold text-cobalt">{formatPrice(tempVariant.basePrice)}</span>
                       </div>
-                      <span className="text-xs text-ink-slate font-light">Reference Spec</span>
                     </div>
 
                     <button
