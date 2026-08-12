@@ -347,6 +347,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
       pickupDate: selectedDate,
       pickupTimeSlot: selectedTimeSlot,
       finalPrice: finalPrice,
+      defectIds: selectedDefects.map(defect => defect.id),
       verificationStatus: verificationStatus,
       verifiedName: verifiedName,
       maskedAadhaar: maskedAadhaar,

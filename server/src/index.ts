@@ -5,9 +5,11 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import compression from 'compression';
+import { randomBytes } from 'node:crypto';
 import { PrismaClient } from '@prisma/client';
 import { adminAuth } from './middleware/adminAuth.js';
 import adminRouter from './routes/admin.js';
+import { calculateServerValuation } from './services/valuation.js';
 
 const prisma = new PrismaClient();
 const app = express();
@@ -99,6 +101,13 @@ app.use(globalLimiter);
 
 const PHONE_RE = /^[6-9]\d{9}$/;     // Indian mobile number
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const ALLOWED_STORAGE_GB = new Set([64, 128, 256, 512, 1024]);
+const ALLOWED_PAYOUT_METHODS = new Set(['upi', 'bank', 'amazon', 'flipkart', 'myntra', 'googleplay', 'apple', 'steam', 'swiggy', 'zomato']);
+const STORAGE_PRICE_MULTIPLIERS: Record<number, number> = { 64: 0.85, 128: 1, 256: 1.1, 512: 1.2, 1024: 1.3 };
+
+function isFiniteNonNegativeNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0;
+}
 
 export function isValidImageUrl(url?: string): boolean {
   if (!url || typeof url !== 'string') return true;
@@ -123,15 +132,24 @@ export function validateBookingBody(b: Record<string, unknown>): string[] {
     errors.push('pickupTimeSlot: required');
   if (!b.modelId && !b.modelLegacyId)
     errors.push('modelId: required');
-  if (!b.storageGb || typeof b.storageGb !== 'number' || b.storageGb <= 0)
-    errors.push('storageGb: must be a positive number');
-  if (!b.finalPrice || typeof b.finalPrice !== 'number' || b.finalPrice < 0)
+  if (!ALLOWED_STORAGE_GB.has(Number(b.storageGb)))
+    errors.push('storageGb: must be a supported capacity');
+  if (!isFiniteNonNegativeNumber(b.finalPrice))
     errors.push('finalPrice: must be a non-negative number');
-  if (!b.payoutMethod || typeof b.payoutMethod !== 'string')
-    errors.push('payoutMethod: required');
-  if (typeof b.finalPayoutAmount !== 'number' || b.finalPayoutAmount < 0)
-    errors.push('finalPayoutAmount: must be a non-negative number');
+  if (!b.payoutMethod || typeof b.payoutMethod !== 'string' || !ALLOWED_PAYOUT_METHODS.has(b.payoutMethod))
+    errors.push('payoutMethod: must be a supported method');
+  if (!Array.isArray(b.defectIds) || !b.defectIds.every(id => typeof id === 'string'))
+    errors.push('defectIds: must be an array of defect identifiers');
   return errors;
+}
+
+function maximumQuoteFor(modelBasePrice: number, storageGb: number): number {
+  return Math.round(modelBasePrice * STORAGE_PRICE_MULTIPLIERS[storageGb]);
+}
+
+function payoutBonusFor(method: string, estimatedPrice: number): { percentage: number; amount: number } {
+  const percentage = method === 'amazon' || method === 'flipkart' || method === 'voucher' ? 0.03 : 0;
+  return { percentage, amount: Math.round(estimatedPrice * percentage) };
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -403,17 +421,29 @@ app.post('/api/bookings', bookingLimiter, async (req, res) => {
     }
 
     // Generate booking ID server-side — client-provided IDs are ignored
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    const suffix = Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-    const bookingId = `STC-${suffix}`;
+    const modelLegacyId = String(b.modelId ?? b.modelLegacyId);
+    const model = await prisma.model.findUnique({ where: { legacyId: modelLegacyId } });
+    if (!model) {
+      res.status(400).json({ error: 'ValidationError', message: 'The selected device is no longer available for trade-in.' });
+      return;
+    }
+    const storageGb = Number(b.storageGb);
+    const maximumQuote = maximumQuoteFor(model.basePrice128GB, storageGb);
+    const estimatedPrice = calculateServerValuation(maximumQuote, model.category as import('./services/valuation.js').DeviceCategory, b.defectIds as string[]);
+    if (estimatedPrice === null) {
+      res.status(400).json({ error: 'ValidationError', message: 'One or more declared device conditions are invalid.' });
+      return;
+    }
+    const payout = payoutBonusFor(String(b.payoutMethod), estimatedPrice);
+    const bookingId = `STC-${randomBytes(6).toString('base64url').toUpperCase()}`;
 
     const booking = await prisma.booking.create({
       data: {
         id: bookingId,
-        modelLegacyId: String(b.modelId ?? b.modelLegacyId),
-        modelName: String(b.modelName ?? ''),
-        modelNumber: String(b.modelNumber ?? ''),
-        storageGb: Number(b.storageGb),
+        modelLegacyId: model.legacyId,
+        modelName: model.name,
+        modelNumber: model.modelNumber,
+        storageGb,
         color: String(b.color ?? ''),
         customerName: String(b.customerName).trim(),
         customerPhone: String(b.customerPhone).trim(),
@@ -421,16 +451,16 @@ app.post('/api/bookings', bookingLimiter, async (req, res) => {
         address: String(b.address).trim(),
         pickupDate: String(b.pickupDate),
         pickupTimeSlot: String(b.pickupTimeSlot),
-        finalPrice: Number(b.finalPrice),
+        finalPrice: estimatedPrice,
         verificationStatus: 'pending',
         verifiedName: '',
         maskedAadhaar: '',
         verificationDate: '',
         payoutMethod: String(b.payoutMethod),
         payoutMethodName: String(b.payoutMethodName ?? ''),
-        bonusPercentage: Number(b.bonusPercentage ?? 0),
-        bonusAmount: Number(b.bonusAmount ?? 0),
-        finalPayoutAmount: Number(b.finalPayoutAmount),
+        bonusPercentage: payout.percentage,
+        bonusAmount: payout.amount,
+        finalPayoutAmount: estimatedPrice + payout.amount,
         inspectionStatus: 'pending',
         payoutStatus: 'pending',
         dateCreated: new Date().toISOString(), // server-side timestamp

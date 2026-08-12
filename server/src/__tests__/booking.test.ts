@@ -13,7 +13,7 @@ describe('Booking Body Input Validation', () => {
     storageGb: 256,
     finalPrice: 55000,
     payoutMethod: 'upi',
-    finalPayoutAmount: 55000,
+    defectIds: [],
   });
 
   it('should return no errors for a valid booking payload', () => {
@@ -82,7 +82,7 @@ describe('Booking Body Input Validation', () => {
     expect(validateBookingBody(payload)).toContainEqual(expect.stringContaining('address'));
   });
 
-  it('should validate other mandatory fields', () => {
+  it('should validate supported booking fields', () => {
     const payload = getValidBookingPayload();
 
     delete payload.pickupDate;
@@ -99,5 +99,13 @@ describe('Booking Body Input Validation', () => {
     const payload4 = getValidBookingPayload();
     payload4.finalPrice = -100;
     expect(validateBookingBody(payload4)).toContainEqual(expect.stringContaining('finalPrice'));
+
+    const payload5 = getValidBookingPayload();
+    payload5.storageGb = 777;
+    expect(validateBookingBody(payload5)).toContainEqual(expect.stringContaining('storageGb'));
+
+    const payload6 = getValidBookingPayload();
+    payload6.payoutMethod = 'crypto';
+    expect(validateBookingBody(payload6)).toContainEqual(expect.stringContaining('payoutMethod'));
   });
 });
