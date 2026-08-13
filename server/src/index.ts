@@ -5,8 +5,14 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import compression from 'compression';
+import path from 'node:path';
+import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { randomBytes, randomUUID } from 'node:crypto';
 import { PrismaClient } from '@prisma/client';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 import { adminAuth, requireRole, AuthenticatedRequest } from './middleware/adminAuth.js';
 import adminRouter from './routes/admin.js';
 import {
@@ -669,6 +675,26 @@ app.delete('/api/bookings/:id/payout-details', adminAuth, requireRole(['SUPER_AD
     res.status(500).json({ error: 'ServerError', message: 'Failed to purge payout details.' });
   }
 });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SERVE FRONTEND STATIC ASSETS IN PRODUCTION
+// ═══════════════════════════════════════════════════════════════════════════
+const possibleDistPaths = [
+  path.resolve(process.cwd(), 'dist'),
+  path.resolve(process.cwd(), '../dist'),
+  path.resolve(__dirname, '../../dist'),
+  path.resolve(__dirname, '../../../dist'),
+];
+
+const distPath = possibleDistPaths.find(p => fs.existsSync(path.join(p, 'index.html')));
+if (distPath) {
+  console.log(`📁 Serving frontend static build from: ${distPath}`);
+  app.use(express.static(distPath));
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api')) return next();
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SERVER START
