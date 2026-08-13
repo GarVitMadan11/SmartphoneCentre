@@ -10,13 +10,11 @@ const AdminPanel       = lazy(() => import('./components/admin/AdminPanel').then
 const AdminPinGate     = lazy(() => import('./components/admin/AdminPinGate').then(m => ({ default: m.AdminPinGate })));
 const SmartphoneMockup = lazy(() => import('./components/client/SmartphoneMockup').then(m => ({ default: m.SmartphoneMockup })));
 const OrderTrackingModal = lazy(() => import('./components/client/OrderTrackingModal').then(m => ({ default: m.OrderTrackingModal })));
-const PrivacyPolicy = lazy(() => import('./components/client/legal/PrivacyPolicy').then(m => ({ default: m.PrivacyPolicy })));
-const TermsOfService = lazy(() => import('./components/client/legal/TermsOfService').then(m => ({ default: m.TermsOfService })));
 // ─────────────────────────────────────────────────────────────────────────────
 import { 
   Award, ShieldCheck, Zap, Search,
   RefreshCw, TrendingUp, Menu, X,
-  Truck, Lock, CheckCircle2, Sparkles, ArrowRight
+  Truck, Lock, CheckCircle2, Sparkles, ArrowRight, Info, Code, GitBranch, Database
 } from 'lucide-react';
 
 import applePhoneImg from './assets/apple_phone.png';
@@ -296,6 +294,7 @@ export default function App() {
     savedNav.current?.activeStage ?? 'select'
   );
   const [wizardStep, setWizardStep] = useState<number>(savedNav.current?.wizardStep ?? 0);
+  const [isTrackOpen, setIsTrackOpen] = useState(false);
 
   // ── Dynamic data from API (falls back to static data) ─────────────────────
   const [BRANDS, setBrands] = useState<Brand[]>(STATIC_BRANDS);
@@ -514,7 +513,6 @@ export default function App() {
             <button 
               onClick={() => {
                 setMobileMenuOpen(false);
-                setCurrentView('app');
                 if (activeStage === 'select') {
                   document.getElementById('how-it-works-section')?.scrollIntoView({ behavior: 'smooth' });
                 } else {
@@ -1313,9 +1311,8 @@ export default function App() {
 
             {/* Links */}
             <div className="flex flex-wrap justify-center gap-6 md:gap-8 text-xs font-semibold text-ink-slate">
-              <span onClick={() => { setCurrentView('app'); handleReset(); }} className="hover:text-cobalt cursor-pointer transition-colors">Home</span>
+              <span onClick={handleReset} className="hover:text-cobalt cursor-pointer transition-colors">Home</span>
               <span onClick={() => {
-                setCurrentView('app');
                 if (activeStage === 'select') {
                   document.getElementById('how-it-works-section')?.scrollIntoView({ behavior: 'smooth' });
                 } else {
@@ -1338,6 +1335,9 @@ export default function App() {
 
       {/* Specs Modal */}
       <SpecsModal isOpen={isSpecModalOpen} onClose={() => setIsSpecModalOpen(false)} />
+      <Suspense fallback={null}>
+        <OrderTrackingModal isOpen={isTrackOpen} onClose={() => setIsTrackOpen(false)} />
+      </Suspense>
 
     </div>
   );

@@ -270,6 +270,44 @@ app.post('/api/models', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITOR']
   }
 });
 
+app.patch('/api/models/:legacyId', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITOR']), async (req, res) => {
+  try {
+    const legacyId = String(req.params.legacyId);
+    const updates = req.body as Record<string, unknown>;
+    const data: Record<string, unknown> = {};
+    for (const field of ['name', 'modelNumber', 'category', 'series']) {
+      if (updates[field] !== undefined && typeof updates[field] === 'string' && updates[field].trim().length > 0) data[field] = updates[field].trim();
+    }
+    for (const field of ['releaseYear', 'basePrice128GB']) {
+      if (updates[field] !== undefined && Number.isSafeInteger(Number(updates[field])) && Number(updates[field]) > 0) data[field] = Number(updates[field]);
+    }
+    if (updates.imageUrl !== undefined) {
+      if (typeof updates.imageUrl !== 'string' || !isValidImageUrl(updates.imageUrl)) {
+        res.status(400).json({ error: 'BadRequest', message: 'imageUrl must be an HTTPS URL.' });
+        return;
+      }
+      data.imageUrl = updates.imageUrl.trim();
+    }
+    if (Object.keys(data).length === 0) {
+      res.status(400).json({ error: 'BadRequest', message: 'No valid model fields supplied.' });
+      return;
+    }
+    const model = await prisma.model.update({ where: { legacyId }, data });
+    res.json({ ...model, id: model.legacyId });
+  } catch {
+    res.status(404).json({ error: 'NotFound', message: 'Model not found.' });
+  }
+});
+
+app.delete('/api/models/:legacyId', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITOR']), async (req, res) => {
+  try {
+    await prisma.model.delete({ where: { legacyId: String(req.params.legacyId) } });
+    res.json({ success: true });
+  } catch {
+    res.status(404).json({ error: 'NotFound', message: 'Model not found.' });
+  }
+});
+
 // ═══════════════════════════════════════════════════════════════════════════
 // SERVER-AUTHORITATIVE PRICING QUOTE ENGINE
 // ═══════════════════════════════════════════════════════════════════════════
@@ -454,7 +492,7 @@ app.post('/api/bookings', bookingLimiter, async (req, res) => {
     const storageGb = Number(b.storageGb);
     const defectIds = Array.isArray(b.defectIds) ? (b.defectIds as string[]) : [];
     const maxQuote = maximumQuoteFor(model.basePrice128GB, storageGb);
-    
+
     // Server recomputes valuation — client-supplied finalPrice is strictly IGNORED
     const estimatedPrice = calculateServerValuation(maxQuote, model.category as DeviceCategory, defectIds);
     if (estimatedPrice === null) {
@@ -603,6 +641,32 @@ app.patch('/api/bookings/:id', adminAuth, requireRole(['SUPER_ADMIN', 'FINANCE_A
   } catch (err) {
     console.error('PATCH /api/bookings error:', err);
     res.status(500).json({ error: 'ServerError', message: 'Failed to update booking' });
+  }
+});
+
+// Irreversibly remove payout account details once finance reconciliation is
+// complete. The booking and its audit trail remain available for compliance.
+app.delete('/api/bookings/:id/payout-details', adminAuth, requireRole(['SUPER_ADMIN', 'FINANCE_APPROVER']), async (req: AuthenticatedRequest, res) => {
+  try {
+    const id = String(req.params.id);
+    const booking = await prisma.booking.findUnique({ where: { id } });
+    if (!booking) {
+      res.status(404).json({ error: 'NotFound', message: 'Booking not found.' });
+      return;
+    }
+    if (booking.payoutStatus !== 'completed') {
+      res.status(409).json({ error: 'Conflict', message: 'Payout details may be deleted only after payout completion.' });
+      return;
+    }
+    await prisma.$transaction([
+      prisma.booking.update({ where: { id }, data: { payoutDetailsJson: encryptPayoutDetails({}) } }),
+      prisma.bookingEvent.create({ data: { bookingId: id, eventType: 'payout_details_deleted', note: `Payout details purged by ${req.user?.username ?? 'admin'}` } }),
+      prisma.adminAuditLog.create({ data: { adminUserId: req.user?.sub ?? '', action: 'purge_payout_details', targetType: 'booking', targetId: id, ipAddress: String(req.ip ?? ''), userAgent: String(req.headers['user-agent'] ?? '') } }),
+    ]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('DELETE /api/bookings/:id/payout-details error:', err);
+    res.status(500).json({ error: 'ServerError', message: 'Failed to purge payout details.' });
   }
 });
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Search, CheckCircle2, Clock, ShieldCheck, AlertCircle, Package, ArrowRight, Truck } from 'lucide-react';
+import { X, Search, CheckCircle2, Clock, AlertCircle, Truck } from 'lucide-react';
 import { trackBookingOrder, ApiTrackBooking } from '../../utils/api';
 
 interface OrderTrackingModalProps {

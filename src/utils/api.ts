@@ -5,6 +5,10 @@
 
 const API_BASE = '/api';
 
+function csrfToken(): string | undefined {
+  return document.cookie.split('; ').find(cookie => cookie.startsWith('rex_admin_csrf='))?.split('=').slice(1).join('=');
+}
+
 interface ApiError {
   error: string;
   message: string;
@@ -27,6 +31,11 @@ async function apiFetch<T>(path: string, options?: RequestInit, withAuth = false
     'Content-Type': 'application/json',
     ...(options?.headers as Record<string, string> ?? {}),
   };
+
+  if (options?.method && !['GET', 'HEAD'].includes(options.method.toUpperCase())) {
+    const token = csrfToken();
+    if (token) headers['X-CSRF-Token'] = token;
+  }
 
   // Authentication is carried only by the HttpOnly session cookie.
   void withAuth;
@@ -112,6 +121,14 @@ export function createModel(data: {
   imageUrl?: string;
 }): Promise<ApiModel> {
   return apiFetch<ApiModel>('/models', { method: 'POST', body: JSON.stringify(data) }, true);
+}
+
+export function updateModel(legacyId: string, data: Partial<Omit<ApiModel, 'id' | 'brandId'>>): Promise<ApiModel> {
+  return apiFetch<ApiModel>(`/models/${encodeURIComponent(legacyId)}`, { method: 'PATCH', body: JSON.stringify(data) }, true);
+}
+
+export function deleteModel(legacyId: string): Promise<{ success: boolean }> {
+  return apiFetch<{ success: boolean }>(`/models/${encodeURIComponent(legacyId)}`, { method: 'DELETE' }, true);
 }
 
 // ── Quotes & Valuations ───────────────────────────────────────────────────

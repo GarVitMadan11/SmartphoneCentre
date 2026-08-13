@@ -26,7 +26,7 @@ export interface AuthenticatedRequest extends Request {
 /**
  * Parses cookies from raw Cookie header if cookie-parser is not used.
  */
-function parseCookies(req: Request): Record<string, string> {
+export function parseCookies(req: Request): Record<string, string> {
   const list: Record<string, string> = {};
   const cookieHeader = req.headers.cookie;
   if (!cookieHeader) return list;
@@ -52,11 +52,22 @@ export function adminAuth(
 ): void {
   const cookies = parseCookies(req);
   let token = cookies['rex_admin_token'];
+  const isCookieSession = Boolean(token);
 
   if (!token) {
     const authHeader = req.headers['authorization'];
     if (authHeader && authHeader.startsWith('Bearer ')) {
       token = authHeader.slice(7).trim();
+    }
+  }
+
+  // SameSite cookies are the first CSRF defence; the matching per-session
+  // token protects unsafe admin requests even if a browser policy changes.
+  if (isCookieSession && !['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
+    const csrfToken = req.headers['x-csrf-token'];
+    if (typeof csrfToken !== 'string' || !cookies['rex_admin_csrf'] || csrfToken !== cookies['rex_admin_csrf']) {
+      res.status(403).json({ error: 'CsrfValidationFailed', message: 'A valid CSRF token is required for this request.' });
+      return;
     }
   }
 

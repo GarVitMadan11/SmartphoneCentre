@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, Lock, Trash2, Eye, FileText, ArrowLeft } from 'lucide-react';
+import { ShieldCheck, Lock, Trash2, ArrowLeft } from 'lucide-react';
 
 interface PrivacyPolicyProps {
   onBack: () => void;

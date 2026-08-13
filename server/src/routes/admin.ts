@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { randomBytes } from 'node:crypto';
 import { PrismaClient } from '@prisma/client';
 import { adminAuth, JWT_ISSUER, JWT_AUDIENCE, AuthenticatedRequest } from '../middleware/adminAuth.js';
 
@@ -25,6 +26,13 @@ function setAdminCookie(res: Response, token: string): void {
     secure: isProd,
     sameSite: 'strict',
     maxAge: 4 * 60 * 60 * 1000, // 4 hours in ms
+    path: '/',
+  });
+  res.cookie('rex_admin_csrf', randomBytes(32).toString('base64url'), {
+    httpOnly: false,
+    secure: isProd,
+    sameSite: 'strict',
+    maxAge: 4 * 60 * 60 * 1000,
     path: '/',
   });
 }
@@ -108,6 +116,7 @@ router.post('/auth', async (req: Request, res: Response): Promise<void> => {
  */
 router.post('/logout', (_req: Request, res: Response): void => {
   res.clearCookie('rex_admin_token', { path: '/' });
+  res.clearCookie('rex_admin_csrf', { path: '/' });
   res.json({ success: true, message: 'Logged out successfully' });
 });
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileCheck, ArrowLeft, AlertTriangle, ShieldCheck, DollarSign } from 'lucide-react';
+import { FileCheck, ArrowLeft, AlertTriangle, DollarSign } from 'lucide-react';
 
 interface TermsOfServiceProps {
   onBack: () => void;
