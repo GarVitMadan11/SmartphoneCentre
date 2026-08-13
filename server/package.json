@@ -5,14 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "prisma generate && npx prisma db push && tsc",
+    "build": "npx prisma generate && npx prisma db push && tsc",
     "start": "node dist/index.js",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "db:generate": "prisma generate",
-    "db:migrate": "prisma migrate dev --name init",
-    "db:seed": "tsx prisma/seed.ts",
-    "db:setup": "prisma migrate dev --name init && tsx prisma/seed.ts"
+    "db:generate": "npx prisma generate",
+    "db:migrate": "npx prisma migrate dev --name init",
+    "db:seed": "npx tsx prisma/seed.ts",
+    "db:setup": "npx prisma migrate dev --name init && npx tsx prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.9.0",
@@ -25,7 +25,8 @@
     "express-rate-limit": "^8.6.0",
     "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.3",
-    "morgan": "^1.11.0"
+    "morgan": "^1.11.0",
+    "prisma": "^6.9.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
