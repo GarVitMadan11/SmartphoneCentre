@@ -1,8 +1,20 @@
+import crypto from 'node:crypto';
+
 export type DeviceCategory = 'flagship' | 'premium' | 'midrange' | 'budget';
+
+export const PRICING_ENGINE_VERSION = 'v1.1.0';
+export const QUOTE_TTL_MINUTES = 30;
 
 type Defect = { category: string; fixed?: number; percentage?: number; critical?: boolean };
 
 const CAPS: Record<string, number> = { screen: .40, body: .20, camera: .18, functionality: .25, connectivity: .28, accessories: .12 };
+
+const STORAGE_PRICE_MULTIPLIERS: Record<number, number> = { 64: 0.85, 128: 1.0, 256: 1.1, 512: 1.2, 1024: 1.3 };
+
+export function maximumQuoteFor(basePrice128GB: number, storageGb: number): number {
+  const multiplier = STORAGE_PRICE_MULTIPLIERS[storageGb] ?? 1.0;
+  return Math.round(basePrice128GB * multiplier);
+}
 
 function rulesFor(category: DeviceCategory): Record<string, Defect> {
   const screen = category === 'flagship' ? .28 : category === 'premium' ? .22 : .18;
@@ -24,6 +36,15 @@ function rulesFor(category: DeviceCategory): Record<string, Defect> {
   };
 }
 
+export interface QuoteBreakdown {
+  version: string;
+  maxPrice: number;
+  finalPrice: number;
+  deductionsByCategory: Record<string, number>;
+  expiresAt: string; // ISO string
+  signature: string;
+}
+
 export function calculateServerValuation(basePrice: number, category: DeviceCategory, defectIds: string[]): number | null {
   const rules = rulesFor(category);
   const selected = [...new Set(defectIds)].map(id => rules[id]);
@@ -33,4 +54,18 @@ export function calculateServerValuation(basePrice: number, category: DeviceCate
   for (const rule of selected) totals[rule.category] = (totals[rule.category] ?? 0) + (rule.fixed ?? 0) + Math.round(basePrice * (rule.percentage ?? 0));
   const deduction = Object.entries(totals).reduce((sum, [categoryName, amount]) => sum + Math.min(amount, Math.round(basePrice * (CAPS[categoryName] ?? 1))), 0);
   return Math.max(Math.max(500, Math.round(basePrice * .08)), basePrice - deduction);
+}
+
+export function generateQuoteSignature(modelLegacyId: string, storageGb: number, defectIds: string[], finalPrice: number, expiresAtIso: string): string {
+  const secret = process.env.JWT_SECRET || 'rephonix-default-secret-key-32-chars!!';
+  const payload = `${modelLegacyId}:${storageGb}:${defectIds.sort().join(',')}:${finalPrice}:${expiresAtIso}:${PRICING_ENGINE_VERSION}`;
+  return crypto.createHmac('sha256', secret).update(payload).digest('hex');
+}
+
+export function verifyQuoteSignature(modelLegacyId: string, storageGb: number, defectIds: string[], finalPrice: number, expiresAtIso: string, signature: string): boolean {
+  if (new Date(expiresAtIso).getTime() < Date.now()) {
+    return false; // Quote expired
+  }
+  const expectedSignature = generateQuoteSignature(modelLegacyId, storageGb, defectIds, finalPrice, expiresAtIso);
+  return crypto.timingSafeEqual(Buffer.from(signature, 'hex'), Buffer.from(expectedSignature, 'hex'));
 }

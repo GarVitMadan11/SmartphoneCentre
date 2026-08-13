@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ShieldAlert, Lock, Eye, EyeOff, LogOut, AlertCircle, Clock } from 'lucide-react';
-import { adminLogin, adminLogout, adminToken } from '../../utils/api';
+import { adminLogin, adminLogout, getCurrentAdminUser } from '../../utils/api';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // AdminPinGate — server-authenticated PIN gate
@@ -22,7 +22,7 @@ interface AdminPinGateProps {
 }
 
 export const AdminPinGate: React.FC<AdminPinGateProps> = ({ children, onExit }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => adminToken.isValid());
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [pin, setPin] = useState('');
   const [showPin, setShowPin] = useState(false);
   const [error, setError] = useState('');
@@ -31,16 +31,15 @@ export const AdminPinGate: React.FC<AdminPinGateProps> = ({ children, onExit }) 
   const [isLocked, setIsLocked] = useState(false);
   const [sessionExpiry, setSessionExpiry] = useState<number | null>(null);
 
-  // Re-check token validity on mount (handles page refresh)
+  // Re-check the HttpOnly cookie session on mount (handles page refresh).
   useEffect(() => {
-    setIsAuthenticated(adminToken.isValid());
+    getCurrentAdminUser().then(() => setIsAuthenticated(true)).catch(() => setIsAuthenticated(false));
   }, []);
 
   // Countdown display for session expiry
   useEffect(() => {
     if (!isAuthenticated) return;
-    const raw = sessionStorage.getItem('_rex_ate');
-    if (raw) setSessionExpiry(parseInt(raw, 10));
+    setSessionExpiry(null);
   }, [isAuthenticated]);
 
   // Close / Exit on Escape key when unauthenticated
@@ -63,12 +62,11 @@ export const AdminPinGate: React.FC<AdminPinGateProps> = ({ children, onExit }) 
     setError('');
 
     try {
-      await adminLogin(pin);
+      const session = await adminLogin({ pin });
       setPin('');
       setAttempts(0);
       setIsAuthenticated(true);
-      const raw = sessionStorage.getItem('_rex_ate');
-      if (raw) setSessionExpiry(parseInt(raw, 10));
+      setSessionExpiry(session.expiresAt);
     } catch (err: unknown) {
       const newAttempts = attempts + 1;
       setAttempts(newAttempts);
@@ -93,8 +91,8 @@ export const AdminPinGate: React.FC<AdminPinGateProps> = ({ children, onExit }) 
     }
   };
 
-  const handleSignOut = () => {
-    adminLogout();
+  const handleSignOut = async () => {
+    await adminLogout();
     setIsAuthenticated(false);
     setPin('');
     setError('');

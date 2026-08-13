@@ -9,11 +9,13 @@ const PickupScheduler  = lazy(() => import('./components/client/PickupScheduler'
 const AdminPanel       = lazy(() => import('./components/admin/AdminPanel').then(m => ({ default: m.AdminPanel })));
 const AdminPinGate     = lazy(() => import('./components/admin/AdminPinGate').then(m => ({ default: m.AdminPinGate })));
 const SmartphoneMockup = lazy(() => import('./components/client/SmartphoneMockup').then(m => ({ default: m.SmartphoneMockup })));
+const OrderTrackingModal = lazy(() => import('./components/client/OrderTrackingModal').then(m => ({ default: m.OrderTrackingModal })));
+const PrivacyPolicy = lazy(() => import('./components/client/legal/PrivacyPolicy').then(m => ({ default: m.PrivacyPolicy })));
+const TermsOfService = lazy(() => import('./components/client/legal/TermsOfService').then(m => ({ default: m.TermsOfService })));
 // ─────────────────────────────────────────────────────────────────────────────
 import { 
   Award, ShieldCheck, Zap, Search,
   RefreshCw, TrendingUp, Menu, X,
-  Code, Database, Info, GitBranch,
   Truck, Lock, CheckCircle2, Sparkles, ArrowRight
 } from 'lucide-react';
 
@@ -485,6 +487,13 @@ export default function App() {
               <RefreshCw className="w-4 h-4 text-secondary" />
               <span>How it Works</span>
             </span>
+            <button
+              onClick={() => setIsTrackOpen(true)}
+              className="bg-cobalt/10 hover:bg-cobalt/20 text-cobalt px-3 py-1 rounded-md text-xs font-bold transition-all flex items-center gap-1.5"
+            >
+              <Truck className="w-3.5 h-3.5" />
+              <span>Track Order</span>
+            </button>
           </div>
 
           {/* Mobile hamburger */}
@@ -505,6 +514,7 @@ export default function App() {
             <button 
               onClick={() => {
                 setMobileMenuOpen(false);
+                setCurrentView('app');
                 if (activeStage === 'select') {
                   document.getElementById('how-it-works-section')?.scrollIntoView({ behavior: 'smooth' });
                 } else {
@@ -517,6 +527,12 @@ export default function App() {
               className="w-full flex items-center gap-2 text-sm font-semibold text-ink-slate py-2 px-3 rounded-sm hover:bg-ice-gray transition-colors"
             >
               <RefreshCw className="w-4 h-4 text-secondary" /> How it Works
+            </button>
+            <button
+              onClick={() => { setMobileMenuOpen(false); setIsTrackOpen(true); }}
+              className="w-full flex items-center gap-2 text-sm font-semibold text-cobalt py-2 px-3 rounded-sm bg-cobalt/10 hover:bg-cobalt/20 transition-colors"
+            >
+              <Truck className="w-4 h-4 text-cobalt" /> Track Order
             </button>
           </div>
         )}
@@ -1297,8 +1313,9 @@ export default function App() {
 
             {/* Links */}
             <div className="flex flex-wrap justify-center gap-6 md:gap-8 text-xs font-semibold text-ink-slate">
-              <span onClick={handleReset} className="hover:text-cobalt cursor-pointer transition-colors">Home</span>
+              <span onClick={() => { setCurrentView('app'); handleReset(); }} className="hover:text-cobalt cursor-pointer transition-colors">Home</span>
               <span onClick={() => {
+                setCurrentView('app');
                 if (activeStage === 'select') {
                   document.getElementById('how-it-works-section')?.scrollIntoView({ behavior: 'smooth' });
                 } else {

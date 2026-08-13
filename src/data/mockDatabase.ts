@@ -724,6 +724,7 @@ export interface Booking {
   pickupDate: string;
   pickupTimeSlot: string;
   finalPrice: number;
+  defectIds?: string[];
   verificationStatus: 'pending' | 'verified' | 'failed';
   verifiedName?: string;
   maskedAadhaar?: string;

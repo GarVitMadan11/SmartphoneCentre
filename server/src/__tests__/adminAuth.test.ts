@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { adminAuth, AuthenticatedRequest } from '../middleware/adminAuth';
 import { Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { JWT_AUDIENCE, JWT_ISSUER } from '../middleware/adminAuth';
 
 describe('Admin Authentication Middleware', () => {
   const mockSecret = 'test-jwt-secret-for-unit-tests-only';
@@ -71,7 +72,7 @@ describe('Admin Authentication Middleware', () => {
 
   it('should return 401 if token is expired', () => {
     const expiredToken = jwt.sign(
-      { sub: 'admin', role: 'admin', exp: Math.floor(Date.now() / 1000) - 10 },
+      { sub: 'admin', role: 'admin', exp: Math.floor(Date.now() / 1000) - 10, iss: JWT_ISSUER, aud: JWT_AUDIENCE },
       mockSecret
     );
     const req = createMockReq(`Bearer ${expiredToken}`) as AuthenticatedRequest;
@@ -91,7 +92,7 @@ describe('Admin Authentication Middleware', () => {
 
   it('should return 403 if token role is not admin', () => {
     const userToken = jwt.sign(
-      { sub: 'user123', role: 'user' },
+      { sub: 'user123', role: 'user', iss: JWT_ISSUER, aud: JWT_AUDIENCE },
       mockSecret
     );
     const req = createMockReq(`Bearer ${userToken}`) as AuthenticatedRequest;
@@ -111,7 +112,7 @@ describe('Admin Authentication Middleware', () => {
 
   it('should call next() and assign adminId if token is valid and role is admin', () => {
     const validToken = jwt.sign(
-      { sub: 'admin-id-456', role: 'admin' },
+      { sub: 'admin-id-456', role: 'admin', iss: JWT_ISSUER, aud: JWT_AUDIENCE },
       mockSecret
     );
     const req = createMockReq(`Bearer ${validToken}`) as AuthenticatedRequest;

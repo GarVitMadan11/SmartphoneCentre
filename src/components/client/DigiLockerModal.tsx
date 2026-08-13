@@ -13,8 +13,8 @@ interface DigiLockerModalProps {
 export const DigiLockerModal: React.FC<DigiLockerModalProps> = ({
   isOpen,
   onClose,
-  customerName,
-  onVerifySuccess,
+  customerName: _customerName,
+  onVerifySuccess: _onVerifySuccess,
   onVerifyFailure
 }) => {
   const [step, setStep] = useState<'aadhaar' | 'otp'>('aadhaar');
@@ -57,23 +57,6 @@ export const DigiLockerModal: React.FC<DigiLockerModalProps> = ({
     }, 800);
   };
 
-  const handleSimulateSuccess = () => {
-    setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      const masked = `XXXX-XXXX-${aadhaar.slice(-4) || '1234'}`;
-      const name = customerName.trim() ? customerName.toUpperCase() : 'VERIFIED SELLER';
-      onVerifySuccess({
-        verifiedName: name,
-        maskedAadhaar: masked,
-        verificationDate: new Date().toISOString()
-      });
-      // Reset state and close
-      resetModal();
-      onClose();
-    }, 1000);
-  };
-
   const handleSimulateFailure = () => {
     setIsSubmitting(true);
     setTimeout(() => {
@@ -106,8 +89,8 @@ export const DigiLockerModal: React.FC<DigiLockerModalProps> = ({
               <Shield className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h3 id="digi-modal-title" className="font-outfit font-bold text-sm tracking-wide">DigiLocker Verification</h3>
-              <span className="text-[9px] font-mono text-slate-400 uppercase tracking-widest block">Govt. of India API Gateway</span>
+              <h3 id="digi-modal-title" className="font-outfit font-bold text-sm tracking-wide">Identity verification</h3>
+              <span className="text-[9px] font-mono text-slate-400 uppercase tracking-widest block">Provider integration required</span>
             </div>
           </div>
           <button
@@ -137,7 +120,7 @@ export const DigiLockerModal: React.FC<DigiLockerModalProps> = ({
                 <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block">Identity Portal</span>
                 <h4 className="text-lg font-light text-ink-navy">Enter Aadhaar Number</h4>
                 <p className="text-xs text-ink-muted leading-relaxed font-light">
-                  Provide your 12-digit Aadhaar number. A secure verification request will be dispatched to your UIDAI registered mobile number.
+                  Identity verification is not available in this deployment. Do not enter Aadhaar details here; bookings remain pending until a configured provider completes verification.
                 </p>
               </div>
 
@@ -171,7 +154,7 @@ export const DigiLockerModal: React.FC<DigiLockerModalProps> = ({
                   }`}
                   style={{ minHeight: '36px' }}
                 >
-                  {isSubmitting ? 'Sending OTP...' : 'Request OTP'}
+                  {isSubmitting ? 'Checking...' : 'Verification unavailable'}
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -207,18 +190,17 @@ export const DigiLockerModal: React.FC<DigiLockerModalProps> = ({
                   🧪 Sandbox Testing Controls
                 </span>
                 <p className="text-[10px] font-light text-zinc-400 text-center leading-normal">
-                  Click a button below to simulate the DigiLocker Aadhaar verification outcome.
+                  This sandbox cannot verify a real identity and never marks a booking as verified.
                 </p>
                 <div className="grid grid-cols-2 gap-3 pt-1">
                   <button
                     type="button"
-                    onClick={handleSimulateSuccess}
-                    disabled={isSubmitting || otp.length !== 6}
+                    disabled
                     className={`bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 px-3 rounded-sm text-xs transition-colors flex items-center justify-center gap-1 ${
                       isSubmitting || otp.length !== 6 ? 'opacity-40 cursor-not-allowed' : ''
                     }`}
                   >
-                    Simulate Success
+                    Verification unavailable
                   </button>
                   <button
                     type="button"

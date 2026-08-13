@@ -7,12 +7,13 @@ describe('Booking Body Input Validation', () => {
     customerPhone: '9876543210',
     customerEmail: 'vikram@example.com',
     address: 'Flat 101, Galaxy Apartments, Mumbai - 400001',
-    pickupDate: '2026-08-01',
+    pickupDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
     pickupTimeSlot: '12:00 PM - 03:00 PM (Afternoon)',
     modelId: 'apple-15pm',
     storageGb: 256,
     finalPrice: 55000,
     payoutMethod: 'upi',
+    payoutDetails: { upiId: 'vikram@okaxis' },
     defectIds: [],
   });
 
@@ -96,9 +97,11 @@ describe('Booking Body Input Validation', () => {
     delete payload3.storageGb;
     expect(validateBookingBody(payload3)).toContainEqual(expect.stringContaining('storageGb'));
 
+    // Client-provided amounts are intentionally not validated or trusted:
+    // the booking handler recalculates both price and payout on the server.
     const payload4 = getValidBookingPayload();
     payload4.finalPrice = -100;
-    expect(validateBookingBody(payload4)).toContainEqual(expect.stringContaining('finalPrice'));
+    expect(validateBookingBody(payload4)).toHaveLength(0);
 
     const payload5 = getValidBookingPayload();
     payload5.storageGb = 777;

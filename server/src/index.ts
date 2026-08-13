@@ -5,11 +5,24 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import compression from 'compression';
-import { randomBytes } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 import { PrismaClient } from '@prisma/client';
-import { adminAuth } from './middleware/adminAuth.js';
+import { adminAuth, requireRole, AuthenticatedRequest } from './middleware/adminAuth.js';
 import adminRouter from './routes/admin.js';
-import { calculateServerValuation } from './services/valuation.js';
+import {
+  calculateServerValuation,
+  maximumQuoteFor,
+  PRICING_ENGINE_VERSION,
+  QUOTE_TTL_MINUTES,
+  generateQuoteSignature,
+  verifyQuoteSignature,
+  DeviceCategory,
+} from './services/valuation.js';
+import {
+  encryptPayoutDetails,
+  decryptPayoutDetails,
+  maskPayoutDetails,
+} from './utils/encryption.js';
 
 const prisma = new PrismaClient();
 const app = express();
@@ -18,8 +31,8 @@ const PORT = parseInt(process.env.PORT || '4000', 10);
 // Enable response compression (Gzip / Brotli)
 app.use(compression());
 
-// Trust first proxy (e.g. Nginx, Cloudflare, AWS ALB) for accurate IP rate limiting
-app.set('trust proxy', 1);
+// Restrict trust proxy configuration (e.g. 1 loopback proxy in prod or explicit loopback for local dev)
+app.set('trust proxy', process.env.NODE_ENV === 'production' ? 'loopback, linklocal, uniquelocal' : 1);
 
 // ── Parse allowed origins from env ───────────────────────────────────────────
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? 'http://localhost:5173,http://localhost:3000')
@@ -31,7 +44,6 @@ const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? 'http://localhost:5173,h
 // SECURITY MIDDLEWARE
 // ═══════════════════════════════════════════════════════════════════════════
 
-// Helmet — sets security-critical HTTP headers (CSP, HSTS, X-Frame-Options, etc.)
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'same-origin' },
   contentSecurityPolicy: {
@@ -44,10 +56,8 @@ app.use(helmet({
   },
 }));
 
-// CORS — only allow configured origins
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (server-to-server, curl, Postman)
     if (!origin) return callback(null, true);
     if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
     callback(new Error(`CORS policy: origin '${origin}' is not allowed.`));
@@ -57,40 +67,42 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
-// Request logging (combined format in prod, dev format locally)
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
-
-// Body parsing — 4MB limit to support base64 catalog image file uploads
 app.use(express.json({ limit: '4mb' }));
 app.use(express.urlencoded({ extended: false, limit: '4mb' }));
 
 // ── Rate limiting ─────────────────────────────────────────────────────────
-// Global limiter (public endpoints)
 const globalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,  // 15 minutes
+  windowMs: 15 * 60 * 1000,
   max: 200,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'TooManyRequests', message: 'Too many requests. Please try again later.' },
 });
 
-// Strict limiter for auth endpoint (prevents PIN brute-force)
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10,                   // 10 attempts per 15 min per IP
+  windowMs: 15 * 60 * 1000,
+  max: 10,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'TooManyRequests', message: 'Too many login attempts. Please wait 15 minutes.' },
-  skipSuccessfulRequests: true, // only count failures
+  skipSuccessfulRequests: true,
 });
 
-// Booking creation limiter (anti-spam)
 const bookingLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000,  // 1 hour
-  max: 5,                     // 5 booking submissions per IP per hour
+  windowMs: 60 * 60 * 1000,
+  max: 10,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'TooManyRequests', message: 'Too many booking submissions. Please try again later.' },
+});
+
+const trackingLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'TooManyRequests', message: 'Too many order tracking attempts. Please try again in 15 minutes.' },
 });
 
 app.use(globalLimiter);
@@ -99,11 +111,19 @@ app.use(globalLimiter);
 // VALIDATION HELPERS
 // ═══════════════════════════════════════════════════════════════════════════
 
-const PHONE_RE = /^[6-9]\d{9}$/;     // Indian mobile number
+const PHONE_RE = /^[6-9]\d{9}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const ALLOWED_STORAGE_GB = new Set([64, 128, 256, 512, 1024]);
 const ALLOWED_PAYOUT_METHODS = new Set(['upi', 'bank', 'amazon', 'flipkart', 'myntra', 'googleplay', 'apple', 'steam', 'swiggy', 'zomato']);
-const STORAGE_PRICE_MULTIPLIERS: Record<number, number> = { 64: 0.85, 128: 1, 256: 1.1, 512: 1.2, 1024: 1.3 };
+const ALLOWED_PICKUP_SLOTS = new Set([
+  '09:00 AM - 12:00 PM (Morning)',
+  '12:00 PM - 03:00 PM (Afternoon)',
+  '03:00 PM - 06:00 PM (Evening)',
+  '06:00 PM - 09:00 PM (Night)',
+]);
+const UPI_RE = /^[a-zA-Z0-9._-]{2,256}@[a-zA-Z][a-zA-Z0-9.-]{1,63}$/;
+const IFSC_RE = /^[A-Z]{4}0[A-Z0-9]{6}$/;
+const BANK_ACCOUNT_RE = /^\d{9,18}$/;
 
 function isFiniteNonNegativeNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value) && value >= 0;
@@ -113,7 +133,9 @@ export function isValidImageUrl(url?: string): boolean {
   if (!url || typeof url !== 'string') return true;
   const trimmed = url.trim();
   if (trimmed === '') return true;
-  return /^https?:\/\//i.test(trimmed) || /^data:image\/(png|jpeg|jpg|webp|gif|svg\+xml);base64,/i.test(trimmed);
+  // Only HTTPS images are accepted from the catalog. Data URLs, SVGs, and
+  // arbitrary HTTP origins make stored XSS and remote-content abuse easier.
+  return /^https:\/\//i.test(trimmed);
 }
 
 export function validateBookingBody(b: Record<string, unknown>): string[] {
@@ -126,25 +148,37 @@ export function validateBookingBody(b: Record<string, unknown>): string[] {
     errors.push('customerEmail: must be a valid email address under 100 characters');
   if (!b.address || typeof b.address !== 'string' || b.address.trim().length < 10 || b.address.trim().length > 500)
     errors.push('address: must be between 10 and 500 characters');
-  if (!b.pickupDate || typeof b.pickupDate !== 'string')
-    errors.push('pickupDate: required');
-  if (!b.pickupTimeSlot || typeof b.pickupTimeSlot !== 'string')
-    errors.push('pickupTimeSlot: required');
+  if (!b.pickupDate || typeof b.pickupDate !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(b.pickupDate) || Number.isNaN(Date.parse(`${b.pickupDate}T00:00:00.000Z`)))
+    errors.push('pickupDate: must be a valid ISO date');
+  else if (b.pickupDate < new Date().toISOString().slice(0, 10))
+    errors.push('pickupDate: cannot be in the past');
+  if (!b.pickupTimeSlot || typeof b.pickupTimeSlot !== 'string' || !ALLOWED_PICKUP_SLOTS.has(b.pickupTimeSlot))
+    errors.push('pickupTimeSlot: must be an available pickup slot');
   if (!b.modelId && !b.modelLegacyId)
     errors.push('modelId: required');
   if (!ALLOWED_STORAGE_GB.has(Number(b.storageGb)))
     errors.push('storageGb: must be a supported capacity');
-  if (!isFiniteNonNegativeNumber(b.finalPrice))
-    errors.push('finalPrice: must be a non-negative number');
   if (!b.payoutMethod || typeof b.payoutMethod !== 'string' || !ALLOWED_PAYOUT_METHODS.has(b.payoutMethod))
     errors.push('payoutMethod: must be a supported method');
+  const payoutDetails = b.payoutDetails;
+  if ((b.payoutMethod === 'upi' || b.payoutMethod === 'bank') && (!payoutDetails || typeof payoutDetails !== 'object' || Array.isArray(payoutDetails))) {
+    errors.push('payoutDetails: required for the selected payout method');
+  } else if (payoutDetails && typeof payoutDetails === 'object' && !Array.isArray(payoutDetails)) {
+    const details = payoutDetails as Record<string, unknown>;
+    if (b.payoutMethod === 'upi' && (typeof details.upiId !== 'string' || !UPI_RE.test(details.upiId.trim())))
+      errors.push('payoutDetails.upiId: must be a valid UPI ID');
+    if (b.payoutMethod === 'bank') {
+      if (typeof details.accountHolderName !== 'string' || details.accountHolderName.trim().length < 2 || details.accountHolderName.trim().length > 100)
+        errors.push('payoutDetails.accountHolderName: must be between 2 and 100 characters');
+      if (typeof details.accountNumber !== 'string' || !BANK_ACCOUNT_RE.test(details.accountNumber.trim()))
+        errors.push('payoutDetails.accountNumber: must contain 9 to 18 digits');
+      if (typeof details.ifscCode !== 'string' || !IFSC_RE.test(details.ifscCode.trim().toUpperCase()))
+        errors.push('payoutDetails.ifscCode: must be a valid IFSC code');
+    }
+  }
   if (!Array.isArray(b.defectIds) || !b.defectIds.every(id => typeof id === 'string'))
     errors.push('defectIds: must be an array of defect identifiers');
   return errors;
-}
-
-function maximumQuoteFor(modelBasePrice: number, storageGb: number): number {
-  return Math.round(modelBasePrice * STORAGE_PRICE_MULTIPLIERS[storageGb]);
 }
 
 function payoutBonusFor(method: string, estimatedPrice: number): { percentage: number; amount: number } {
@@ -157,17 +191,13 @@ function payoutBonusFor(method: string, estimatedPrice: number): { percentage: n
 // ═══════════════════════════════════════════════════════════════════════════
 
 app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ status: 'ok', engineVersion: PRICING_ENGINE_VERSION, timestamp: new Date().toISOString() });
 });
-
-// ═══════════════════════════════════════════════════════════════════════════
-// ADMIN AUTH (rate-limited, no adminAuth middleware — this IS the auth gate)
-// ═══════════════════════════════════════════════════════════════════════════
 
 app.use('/api/admin', authLimiter, adminRouter);
 
 // ═══════════════════════════════════════════════════════════════════════════
-// BRANDS — Public read
+// BRANDS & MODELS
 // ═══════════════════════════════════════════════════════════════════════════
 
 app.get('/api/brands', async (_req, res) => {
@@ -182,10 +212,6 @@ app.get('/api/brands', async (_req, res) => {
     res.status(500).json({ error: 'ServerError', message: 'Failed to fetch brands' });
   }
 });
-
-// ═══════════════════════════════════════════════════════════════════════════
-// MODELS — Public read, admin-only write
-// ═══════════════════════════════════════════════════════════════════════════
 
 app.get('/api/models', async (req, res) => {
   try {
@@ -211,22 +237,13 @@ app.get('/api/models', async (req, res) => {
   }
 });
 
-// Add a new model — ADMIN ONLY
-app.post('/api/models', adminAuth, async (req, res) => {
+app.post('/api/models', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITOR']), async (req, res) => {
   try {
     const { legacyId, brandId, name, modelNumber, category, releaseYear, basePrice128GB, series, imageUrl } = req.body;
-
     if (!legacyId || !brandId || !name || !modelNumber || !category || !releaseYear || !basePrice128GB) {
-      res.status(400).json({ error: 'BadRequest', message: 'Missing required fields: legacyId, brandId, name, modelNumber, category, releaseYear, basePrice128GB' });
+      res.status(400).json({ error: 'BadRequest', message: 'Missing required fields' });
       return;
     }
-
-    const existing = await prisma.model.findUnique({ where: { legacyId } });
-    if (existing) {
-      res.status(409).json({ error: 'Conflict', message: 'A model with this ID already exists' });
-      return;
-    }
-
     if (!isValidImageUrl(imageUrl)) {
       res.status(400).json({ error: 'BadRequest', message: 'imageUrl must be a valid http(s) URL or base64 Data URL' });
       return;
@@ -246,127 +263,133 @@ app.post('/api/models', adminAuth, async (req, res) => {
       },
     });
 
-    res.status(201).json({
-      id: model.legacyId, brandId: model.brandId, name: model.name,
-      modelNumber: model.modelNumber, category: model.category,
-      releaseYear: model.releaseYear, basePrice128GB: model.basePrice128GB,
-      series: model.series, imageUrl: model.imageUrl,
-    });
-
-    // Fire-and-forget audit log (non-blocking)
-    prisma.adminAuditLog.create({
-      data: {
-        action: 'create_model',
-        targetType: 'model',
-        targetId: model.legacyId,
-        payload: JSON.stringify({ name: model.name, brandId: model.brandId }),
-        ipAddress: String(req.ip ?? ''),
-        userAgent: String(req.headers['user-agent'] ?? ''),
-      },
-    }).catch(e => console.warn('[AuditLog] Failed to write:', e));
+    res.status(201).json(model);
   } catch (err) {
     console.error('POST /api/models error:', err);
     res.status(500).json({ error: 'ServerError', message: 'Failed to create model' });
   }
 });
 
-// Update a model — ADMIN ONLY
-app.patch('/api/models/:legacyId', adminAuth, async (req, res) => {
+// ═══════════════════════════════════════════════════════════════════════════
+// SERVER-AUTHORITATIVE PRICING QUOTE ENGINE
+// ═══════════════════════════════════════════════════════════════════════════
+
+app.post('/api/quotes', async (req, res) => {
   try {
-    const legacyId = String(req.params.legacyId);
-    const { name, modelNumber, category, releaseYear, basePrice128GB, series, imageUrl } = req.body;
-
-    if (imageUrl !== undefined && !isValidImageUrl(imageUrl)) {
-      res.status(400).json({ error: 'BadRequest', message: 'imageUrl must be a valid http(s) URL or base64 Data URL' });
+    const { modelId, storageGb, defectIds } = req.body;
+    if (!modelId || typeof modelId !== 'string') {
+      res.status(400).json({ error: 'BadRequest', message: 'modelId is required.' });
+      return;
+    }
+    if (!ALLOWED_STORAGE_GB.has(Number(storageGb))) {
+      res.status(400).json({ error: 'BadRequest', message: 'Invalid storage capacity.' });
       return;
     }
 
-    const existing = await prisma.model.findUnique({ where: { legacyId } });
-    if (!existing) {
-      res.status(404).json({ error: 'NotFound', message: 'Model not found' });
+    const model = await prisma.model.findUnique({ where: { legacyId: modelId } });
+    if (!model) {
+      res.status(404).json({ error: 'NotFound', message: 'Model not found in catalog.' });
       return;
     }
 
-    const updated = await prisma.model.update({
-      where: { legacyId },
+    const maxPrice = maximumQuoteFor(model.basePrice128GB, Number(storageGb));
+    const defectList = Array.isArray(defectIds) ? defectIds.map(String) : [];
+    const calculatedPrice = calculateServerValuation(maxPrice, model.category as DeviceCategory, defectList);
+
+    if (calculatedPrice === null) {
+      res.status(400).json({ error: 'ValidationError', message: 'Invalid defect identifiers supplied.' });
+      return;
+    }
+
+    const expiresAtDate = new Date(Date.now() + QUOTE_TTL_MINUTES * 60 * 1000);
+    const expiresAtIso = expiresAtDate.toISOString();
+    const signature = generateQuoteSignature(model.legacyId, Number(storageGb), defectList, calculatedPrice, expiresAtIso);
+
+    const quoteRecord = await prisma.quote.create({
       data: {
-        ...(name !== undefined && { name: String(name).trim() }),
-        ...(modelNumber !== undefined && { modelNumber: String(modelNumber).trim() }),
-        ...(category !== undefined && { category: String(category).trim() }),
-        ...(releaseYear !== undefined && { releaseYear: Number(releaseYear) }),
-        ...(basePrice128GB !== undefined && { basePrice128GB: Number(basePrice128GB) }),
-        ...(series !== undefined && { series: String(series).trim() }),
-        ...(imageUrl !== undefined && { imageUrl: String(imageUrl).trim() }),
+        id: `Q-${randomUUID()}`,
+        modelLegacyId: model.legacyId,
+        storageGb: Number(storageGb),
+        defectIdsJson: JSON.stringify(defectList),
+        calculatedPrice,
+        expiresAt: expiresAtDate,
+        version: PRICING_ENGINE_VERSION,
+        signature,
       },
     });
 
     res.json({
-      id: updated.legacyId, brandId: updated.brandId, name: updated.name,
-      modelNumber: updated.modelNumber, category: updated.category,
-      releaseYear: updated.releaseYear, basePrice128GB: updated.basePrice128GB,
-      series: updated.series, imageUrl: updated.imageUrl,
+      quoteId: quoteRecord.id,
+      modelId: model.legacyId,
+      modelName: model.name,
+      storageGb: Number(storageGb),
+      maxPrice,
+      calculatedPrice,
+      version: PRICING_ENGINE_VERSION,
+      expiresAt: expiresAtIso,
+      signature,
     });
-
-    // Fire-and-forget audit log (non-blocking)
-    prisma.adminAuditLog.create({
-      data: {
-        action: 'update_model',
-        targetType: 'model',
-        targetId: updated.legacyId,
-        payload: JSON.stringify({ name: updated.name, basePrice128GB: updated.basePrice128GB, series: updated.series }),
-        ipAddress: String(req.ip ?? ''),
-        userAgent: String(req.headers['user-agent'] ?? ''),
-      },
-    }).catch(e => console.warn('[AuditLog] Failed to write:', e));
   } catch (err) {
-    console.error('PATCH /api/models error:', err);
-    res.status(500).json({ error: 'ServerError', message: 'Failed to update model' });
+    console.error('POST /api/quotes error:', err);
+    res.status(500).json({ error: 'ServerError', message: 'Failed to generate quote' });
   }
 });
 
-// Delete a model — ADMIN ONLY
-app.delete('/api/models/:legacyId', adminAuth, async (req, res) => {
+// ═══════════════════════════════════════════════════════════════════════════
+// ORDER TRACKING (PUBLIC, RATE-LIMITED BY PHONE + BOOKING ID)
+// ═══════════════════════════════════════════════════════════════════════════
+
+app.post('/api/bookings/track', trackingLimiter, async (req, res) => {
   try {
-    const legacyId = String(req.params.legacyId);
-    const model = await prisma.model.findUnique({ where: { legacyId } });
-    if (!model) {
-      res.status(404).json({ error: 'NotFound', message: 'Model not found' });
+    const { bookingId, phone } = req.body;
+    if (!bookingId || typeof bookingId !== 'string' || !phone || typeof phone !== 'string') {
+      res.status(400).json({ error: 'BadRequest', message: 'bookingId and customer phone are required.' });
       return;
     }
-    await prisma.model.delete({ where: { legacyId } });
-    res.json({ success: true, deleted: legacyId });
 
-    // Fire-and-forget audit log
-    prisma.adminAuditLog.create({
-      data: {
-        action: 'delete_model',
-        targetType: 'model',
-        targetId: legacyId,
-        payload: JSON.stringify({ name: model.name }),
-        ipAddress: String(req.ip ?? ''),
-        userAgent: String(req.headers['user-agent'] ?? ''),
-      },
-    }).catch(e => console.warn('[AuditLog] Failed to write:', e));
+    const booking = await prisma.booking.findUnique({
+      where: { id: bookingId.trim().toUpperCase() },
+      include: { events: { orderBy: { createdAt: 'asc' } } },
+    });
+
+    if (!booking || booking.customerPhone.trim() !== phone.trim()) {
+      res.status(404).json({ error: 'NotFound', message: 'No booking found matching the provided Booking ID and phone number.' });
+      return;
+    }
+
+    res.json({
+      id: booking.id,
+      modelName: booking.modelName,
+      storageGb: booking.storageGb,
+      color: booking.color,
+      customerName: booking.customerName,
+      pickupDate: booking.pickupDate,
+      pickupTimeSlot: booking.pickupTimeSlot,
+      finalPayoutAmount: booking.finalPayoutAmount,
+      inspectionStatus: booking.inspectionStatus,
+      payoutStatus: booking.payoutStatus,
+      verificationStatus: booking.verificationStatus,
+      dateCreated: booking.dateCreated,
+      events: booking.events.map(e => ({
+        eventType: e.eventType,
+        note: e.note,
+        createdAt: e.createdAt,
+      })),
+    });
   } catch (err) {
-    console.error('DELETE /api/models error:', err);
-    res.status(500).json({ error: 'ServerError', message: 'Failed to delete model' });
+    console.error('POST /api/bookings/track error:', err);
+    res.status(500).json({ error: 'ServerError', message: 'Failed to track order' });
   }
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// BOOKINGS
+// BOOKINGS (CREATION & ADMIN MANAGEMENT)
 // ═══════════════════════════════════════════════════════════════════════════
 
-function mapBooking(b: {
-  id: string; modelLegacyId: string; modelName: string; modelNumber: string;
-  storageGb: number; color: string; customerName: string; customerPhone: string;
-  customerEmail: string; address: string; pickupDate: string; pickupTimeSlot: string;
-  finalPrice: number; verificationStatus: string; verifiedName: string;
-  maskedAadhaar: string; verificationDate: string; payoutMethod: string;
-  payoutMethodName: string; bonusPercentage: number; bonusAmount: number;
-  finalPayoutAmount: number; payoutDetailsJson: string; inspectionStatus: string;
-  payoutStatus: string; dateCreated: string;
-}) {
+function mapBooking(b: import('@prisma/client').Booking, includeUnmaskedPayout = false) {
+  const rawDetails = decryptPayoutDetails(b.payoutDetailsJson);
+  const safeDetails = includeUnmaskedPayout ? rawDetails : maskPayoutDetails(rawDetails);
+
   return {
     id: b.id,
     modelId: b.modelLegacyId,
@@ -382,6 +405,7 @@ function mapBooking(b: {
     pickupTimeSlot: b.pickupTimeSlot,
     finalPrice: b.finalPrice,
     verificationStatus: b.verificationStatus,
+    isVerifiedProvider: b.isVerifiedProvider,
     verifiedName: b.verifiedName,
     maskedAadhaar: b.maskedAadhaar,
     verificationDate: b.verificationDate,
@@ -390,52 +414,60 @@ function mapBooking(b: {
     bonusPercentage: b.bonusPercentage,
     bonusAmount: b.bonusAmount,
     finalPayoutAmount: b.finalPayoutAmount,
-    payoutDetails: (() => { try { return JSON.parse(b.payoutDetailsJson || '{}'); } catch { return {}; } })(),
+    payoutDetails: safeDetails,
     inspectionStatus: b.inspectionStatus,
     payoutStatus: b.payoutStatus,
     dateCreated: b.dateCreated,
   };
 }
 
-// Get all bookings — ADMIN ONLY
-app.get('/api/bookings', adminAuth, async (_req, res) => {
+// Get all bookings — ADMIN ONLY (Masked by default, decrypted for Finance Approver / Super Admin)
+app.get('/api/bookings', adminAuth, async (req: AuthenticatedRequest, res) => {
   try {
     const bookings = await prisma.booking.findMany({ orderBy: { createdAt: 'desc' } });
-    res.json(bookings.map(mapBooking));
+    const isFinanceAdmin = req.user?.role === 'SUPER_ADMIN' || req.user?.role === 'FINANCE_APPROVER';
+    res.json(bookings.map(b => mapBooking(b, isFinanceAdmin)));
   } catch (err) {
     console.error('GET /api/bookings error:', err);
     res.status(500).json({ error: 'ServerError', message: 'Failed to fetch bookings' });
   }
 });
 
-// Create booking — public, but rate-limited
+// Create booking — Public & Server-Authoritative
 app.post('/api/bookings', bookingLimiter, async (req, res) => {
   try {
     const b = req.body as Record<string, unknown>;
 
-    // Server-side validation
     const errors = validateBookingBody(b);
     if (errors.length > 0) {
       res.status(400).json({ error: 'ValidationError', message: 'Booking validation failed', fields: errors });
       return;
     }
 
-    // Generate booking ID server-side — client-provided IDs are ignored
     const modelLegacyId = String(b.modelId ?? b.modelLegacyId);
     const model = await prisma.model.findUnique({ where: { legacyId: modelLegacyId } });
     if (!model) {
       res.status(400).json({ error: 'ValidationError', message: 'The selected device is no longer available for trade-in.' });
       return;
     }
+
     const storageGb = Number(b.storageGb);
-    const maximumQuote = maximumQuoteFor(model.basePrice128GB, storageGb);
-    const estimatedPrice = calculateServerValuation(maximumQuote, model.category as import('./services/valuation.js').DeviceCategory, b.defectIds as string[]);
+    const defectIds = Array.isArray(b.defectIds) ? (b.defectIds as string[]) : [];
+    const maxQuote = maximumQuoteFor(model.basePrice128GB, storageGb);
+    
+    // Server recomputes valuation — client-supplied finalPrice is strictly IGNORED
+    const estimatedPrice = calculateServerValuation(maxQuote, model.category as DeviceCategory, defectIds);
     if (estimatedPrice === null) {
       res.status(400).json({ error: 'ValidationError', message: 'One or more declared device conditions are invalid.' });
       return;
     }
+
     const payout = payoutBonusFor(String(b.payoutMethod), estimatedPrice);
     const bookingId = `STC-${randomBytes(6).toString('base64url').toUpperCase()}`;
+
+    // Encrypt sensitive payout details before DB write
+    const rawPayoutDetails = (b.payoutDetails && typeof b.payoutDetails === 'object') ? (b.payoutDetails as Record<string, unknown>) : {};
+    const encryptedPayoutJson = encryptPayoutDetails(rawPayoutDetails);
 
     const booking = await prisma.booking.create({
       data: {
@@ -452,7 +484,11 @@ app.post('/api/bookings', bookingLimiter, async (req, res) => {
         pickupDate: String(b.pickupDate),
         pickupTimeSlot: String(b.pickupTimeSlot),
         finalPrice: estimatedPrice,
+        // Browser input is never evidence of identity. Only an authenticated
+        // provider callback may promote this record to verified.
         verificationStatus: 'pending',
+        isVerifiedProvider: false,
+        verificationProofHash: '',
         verifiedName: '',
         maskedAadhaar: '',
         verificationDate: '',
@@ -463,37 +499,33 @@ app.post('/api/bookings', bookingLimiter, async (req, res) => {
         finalPayoutAmount: estimatedPrice + payout.amount,
         inspectionStatus: 'pending',
         payoutStatus: 'pending',
-        dateCreated: new Date().toISOString(), // server-side timestamp
-        payoutDetailsJson: (() => {
-          try { return JSON.stringify(b.payoutDetails ?? {}); } catch { return '{}'; }
-        })(),
+        dateCreated: new Date().toISOString(),
+        payoutDetailsJson: encryptedPayoutJson,
       },
     });
 
-    res.status(201).json({ success: true, id: booking.id });
-
-    // Fire-and-forget: record the 'created' lifecycle event
-    prisma.bookingEvent.create({
+    await prisma.bookingEvent.create({
       data: {
         bookingId: booking.id,
         eventType: 'created',
         toValue: booking.id,
         note: `Booking created for ${booking.customerName} — ${booking.modelName}`,
       },
-    }).catch(e => console.warn('[BookingEvent] Failed to write:', e));
+    });
+
+    res.status(201).json({ success: true, id: booking.id });
   } catch (err) {
     console.error('POST /api/bookings error:', err);
     res.status(500).json({ error: 'ServerError', message: 'Failed to create booking' });
   }
 });
 
-// Update booking status — ADMIN ONLY
-app.patch('/api/bookings/:id', adminAuth, async (req, res) => {
+// Update booking status — ADMIN ONLY (RBAC protected)
+app.patch('/api/bookings/:id', adminAuth, requireRole(['SUPER_ADMIN', 'FINANCE_APPROVER', 'OPERATIONS_AGENT']), async (req: AuthenticatedRequest, res) => {
   try {
     const id = String(req.params.id);
     const updates = req.body as Record<string, unknown>;
 
-    const ALLOWED = ['inspectionStatus', 'payoutStatus', 'verificationStatus'] as const;
     const VALID_INSPECTION = ['pending', 'approved', 'rejected'];
     const VALID_PAYOUT = ['pending', 'completed'];
     const VALID_VERIFICATION = ['pending', 'verified', 'failed'];
@@ -507,6 +539,10 @@ app.patch('/api/bookings/:id', adminAuth, async (req, res) => {
       else data.inspectionStatus = updates.inspectionStatus;
     }
     if (updates.payoutStatus !== undefined) {
+      if (req.user?.role !== 'SUPER_ADMIN' && req.user?.role !== 'FINANCE_APPROVER') {
+        res.status(403).json({ error: 'Forbidden', message: 'Only Finance Approvers or Super Admins can update payout status.' });
+        return;
+      }
       if (!VALID_PAYOUT.includes(String(updates.payoutStatus)))
         fieldErrors.push(`payoutStatus must be one of: ${VALID_PAYOUT.join(', ')}`);
       else data.payoutStatus = updates.payoutStatus;
@@ -514,6 +550,8 @@ app.patch('/api/bookings/:id', adminAuth, async (req, res) => {
     if (updates.verificationStatus !== undefined) {
       if (!VALID_VERIFICATION.includes(String(updates.verificationStatus)))
         fieldErrors.push(`verificationStatus must be one of: ${VALID_VERIFICATION.join(', ')}`);
+      else if (updates.verificationStatus === 'verified')
+        fieldErrors.push('verificationStatus cannot be set to verified manually; it requires an authenticated provider callback');
       else data.verificationStatus = updates.verificationStatus;
     }
 
@@ -522,11 +560,10 @@ app.patch('/api/bookings/:id', adminAuth, async (req, res) => {
       return;
     }
     if (Object.keys(data).length === 0) {
-      res.status(400).json({ error: 'BadRequest', message: `No valid fields to update. Allowed: ${ALLOWED.join(', ')}` });
+      res.status(400).json({ error: 'BadRequest', message: 'No valid fields to update.' });
       return;
     }
 
-    // Fetch the current booking to record 'from' values in events
     const currentBooking = await prisma.booking.findUnique({ where: { id } });
     if (!currentBooking) {
       res.status(404).json({ error: 'NotFound', message: 'Booking not found' });
@@ -534,24 +571,25 @@ app.patch('/api/bookings/:id', adminAuth, async (req, res) => {
     }
 
     const booking = await prisma.booking.update({ where: { id }, data });
-    res.json({ success: true, id: booking.id });
 
-    // Fire-and-forget: write BookingEvent and AuditLog entries for each changed field
+    // Synchronous durable writes for booking events & audit log
     const now = new Date();
-    const eventWrites = Object.entries(data).map(([field, toValue]) => {
+    for (const [field, toValue] of Object.entries(data)) {
       const fromValue = String((currentBooking as Record<string, unknown>)[field] ?? '');
-      return prisma.bookingEvent.create({
+      await prisma.bookingEvent.create({
         data: {
           bookingId: id,
           eventType: 'status_change',
           fromValue,
           toValue: String(toValue),
-          note: `${field} changed from '${fromValue}' to '${toValue}'`,
+          note: `${field} changed from '${fromValue}' to '${toValue}' by ${req.user?.username ?? 'admin'}`,
         },
       });
-    });
-    const auditWrite = prisma.adminAuditLog.create({
+    }
+
+    await prisma.adminAuditLog.create({
       data: {
+        adminUserId: req.user?.sub ?? '',
         action: 'update_booking_status',
         targetType: 'booking',
         targetId: id,
@@ -560,25 +598,11 @@ app.patch('/api/bookings/:id', adminAuth, async (req, res) => {
         userAgent: String(req.headers['user-agent'] ?? ''),
       },
     });
-    Promise.all([...eventWrites, auditWrite]).catch(e => console.warn('[AuditLog] Failed to write:', e));
+
+    res.json({ success: true, id: booking.id });
   } catch (err) {
     console.error('PATCH /api/bookings error:', err);
     res.status(500).json({ error: 'ServerError', message: 'Failed to update booking' });
-  }
-});
-
-// Get booking lifecycle events — ADMIN ONLY
-app.get('/api/bookings/:id/events', adminAuth, async (req, res) => {
-  try {
-    const id = String(req.params.id);
-    const events = await prisma.bookingEvent.findMany({
-      where: { bookingId: id },
-      orderBy: { createdAt: 'asc' },
-    });
-    res.json(events);
-  } catch (err) {
-    console.error('GET /api/bookings/:id/events error:', err);
-    res.status(500).json({ error: 'ServerError', message: 'Failed to fetch booking events' });
   }
 });
 
@@ -587,13 +611,12 @@ app.get('/api/bookings/:id/events', adminAuth, async (req, res) => {
 // ═══════════════════════════════════════════════════════════════════════════
 
 const server = app.listen(PORT, () => {
-  console.log(`\n🚀 Rephonix API server running at http://localhost:${PORT}`);
+  console.log(`\n🚀 SmartphoneCentre API server running at http://localhost:${PORT}`);
   console.log(`   Health:       http://localhost:${PORT}/api/health`);
   console.log(`   Admin auth:   POST http://localhost:${PORT}/api/admin/auth`);
   console.log(`   Environment:  ${process.env.NODE_ENV ?? 'development'}\n`);
 });
 
-// ── Graceful Shutdown ──────────────────────────────────────────────────────────
 const gracefulShutdown = async (signal: string) => {
   console.log(`\nReceived ${signal}. Gracefully shutting down Express & Prisma database connections...`);
   server.close(async () => {

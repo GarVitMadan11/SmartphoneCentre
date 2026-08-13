@@ -50,37 +50,69 @@ model Model {
   @@index([releaseYear])
 }
 
+// ── Admin Staff Accounts & RBAC ───────────────────────────────────────────────
+
+model AdminUser {
+  id           String   @id @default(uuid())
+  username     String   @unique
+  email        String   @unique
+  passwordHash String
+  role         String   @default("OPERATIONS_AGENT") // SUPER_ADMIN | FINANCE_APPROVER | OPERATIONS_AGENT | CATALOG_EDITOR
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// ── Versioned Server Quotes ───────────────────────────────────────────────────
+
+model Quote {
+  id             String   @id @default(uuid())
+  modelLegacyId  String
+  storageGb      Int
+  defectIdsJson  String   @default("[]")
+  calculatedPrice Int
+  expiresAt      DateTime
+  version        String   @default("v1.1.0")
+  signature      String
+  createdAt      DateTime @default(now())
+
+  @@index([modelLegacyId])
+  @@index([expiresAt])
+}
+
 // ── Trade-In Bookings ─────────────────────────────────────────────────────────
 
 model Booking {
-  id                 String @id // server-generated: "STC-XXXXXXXX"
-  modelLegacyId      String // references Model.legacyId
-  modelName          String
-  modelNumber        String @default("")
-  storageGb          Int
-  color              String
-  customerName       String
-  customerPhone      String
-  customerEmail      String
-  address            String
-  pickupDate         String
-  pickupTimeSlot     String
-  finalPrice         Int
-  verificationStatus String @default("pending") // pending | verified | failed
-  verifiedName       String @default("")
-  maskedAadhaar      String @default("")
-  verificationDate   String @default("")
-  payoutMethod       String
-  payoutMethodName   String
-  bonusPercentage    Float  @default(0)
-  bonusAmount        Int    @default(0)
-  finalPayoutAmount  Int
-  inspectionStatus   String @default("pending") // pending | approved | rejected
-  payoutStatus       String @default("pending") // pending | completed
-  dateCreated        String
-  adminNotes         String @default("")        // internal admin notes
+  id                     String  @id // server-generated: "STC-XXXXXXXX"
+  modelLegacyId          String // references Model.legacyId
+  modelName              String
+  modelNumber            String  @default("")
+  storageGb              Int
+  color                  String
+  customerName           String
+  customerPhone          String
+  customerEmail          String
+  address                String
+  pickupDate             String
+  pickupTimeSlot         String
+  finalPrice             Int
+  verificationStatus     String  @default("pending") // pending | verified | failed
+  isVerifiedProvider     Boolean @default(false)     // true ONLY when verified via authentic provider callback
+  verificationProofHash  String  @default("")        // cryptographic hash of verification payload
+  verifiedName           String  @default("")
+  maskedAadhaar          String  @default("")
+  verificationDate       String  @default("")
+  payoutMethod           String
+  payoutMethodName       String
+  bonusPercentage        Float   @default(0)
+  bonusAmount            Int     @default(0)
+  finalPayoutAmount      Int
+  inspectionStatus       String  @default("pending") // pending | approved | rejected
+  payoutStatus           String  @default("pending") // pending | completed
+  dateCreated            String
+  adminNotes             String  @default("")        // internal admin notes
 
-  // Payout details stored as JSON string
+  // Payout details stored as AES-256-GCM encrypted JSON string
   payoutDetailsJson String @default("{}")
 
   events BookingEvent[]
@@ -117,13 +149,14 @@ model BookingEvent {
 // Immutable record of all admin actions for accountability.
 
 model AdminAuditLog {
-  id          String @id @default(uuid())
-  action      String // create_model | delete_model | update_booking_status | etc.
-  targetType  String // "booking" | "model" | "brand"
-  targetId    String // the affected record's ID
-  payload     String @default("{}") // JSON: what changed
-  ipAddress   String @default("")
-  userAgent   String @default("")
+  id          String   @id @default(uuid())
+  adminUserId String   @default("") // ID or username of acting staff member
+  action      String   // create_model | delete_model | update_booking_status | etc.
+  targetType  String   // "booking" | "model" | "brand"
+  targetId    String   // the affected record's ID
+  payload     String   @default("{}") // JSON: what changed
+  ipAddress   String   @default("")
+  userAgent   String   @default("")
 
   createdAt DateTime @default(now())
 

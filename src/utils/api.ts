@@ -1,50 +1,9 @@
 // ─────────────────────────────────────────────────────────────
 // API Client — communicates with the Express backend
-// Includes automatic Bearer token injection for admin routes.
+// Supports HttpOnly cookie authentication and server quotes
 // ─────────────────────────────────────────────────────────────
 
 const API_BASE = '/api';
-
-// ── Admin Token Management ────────────────────────────────────────────────
-// Token is stored in sessionStorage so it's cleared when the tab closes.
-// Key names are intentionally non-descriptive to reduce info leakage.
-
-const TOKEN_KEY = '_rex_at';
-const EXPIRY_KEY = '_rex_ate';
-
-export const adminToken = {
-  get(): string | null {
-    try {
-      const token = sessionStorage.getItem(TOKEN_KEY);
-      const expiry = parseInt(sessionStorage.getItem(EXPIRY_KEY) ?? '0', 10);
-      if (!token || !expiry) return null;
-      if (Date.now() >= expiry) {
-        adminToken.clear();
-        return null;
-      }
-      return token;
-    } catch {
-      return null;
-    }
-  },
-  set(token: string, expiresAt: number): void {
-    try {
-      sessionStorage.setItem(TOKEN_KEY, token);
-      sessionStorage.setItem(EXPIRY_KEY, String(expiresAt));
-    } catch { /* ignore */ }
-  },
-  clear(): void {
-    try {
-      sessionStorage.removeItem(TOKEN_KEY);
-      sessionStorage.removeItem(EXPIRY_KEY);
-    } catch { /* ignore */ }
-  },
-  isValid(): boolean {
-    return adminToken.get() !== null;
-  },
-};
-
-// ── Core fetch wrapper ───────────────────────────────────────────────────
 
 interface ApiError {
   error: string;
@@ -52,7 +11,7 @@ interface ApiError {
   fields?: string[];
 }
 
-class ApiRequestError extends Error {
+export class ApiRequestError extends Error {
   status: number;
   fields?: string[];
   constructor(status: number, message: string, fields?: string[]) {
@@ -69,14 +28,14 @@ async function apiFetch<T>(path: string, options?: RequestInit, withAuth = false
     ...(options?.headers as Record<string, string> ?? {}),
   };
 
-  if (withAuth) {
-    const token = adminToken.get();
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-  }
+  // Authentication is carried only by the HttpOnly session cookie.
+  void withAuth;
 
-  const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+  const res = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers,
+    credentials: 'include', // Automatically send and receive HttpOnly cookies
+  });
 
   if (!res.ok) {
     const body: ApiError = await res.json().catch(() => ({ error: `HTTP ${res.status}`, message: res.statusText }));
@@ -88,24 +47,31 @@ async function apiFetch<T>(path: string, options?: RequestInit, withAuth = false
 
 // ── Admin Authentication ──────────────────────────────────────────────────
 
-/**
- * Sends the PIN to the server, stores the returned JWT if valid.
- * Returns { success: true } or throws ApiRequestError.
- */
-export async function adminLogin(pin: string): Promise<{ success: boolean }> {
-  const data = await apiFetch<{ token: string; expiresAt: number }>(
+export interface AdminUserSession {
+  id: string;
+  username: string;
+  role: 'SUPER_ADMIN' | 'FINANCE_APPROVER' | 'OPERATIONS_AGENT' | 'CATALOG_EDITOR' | 'admin';
+}
+
+export async function adminLogin(credentials: { pin?: string; username?: string; password?: string }): Promise<{ success: boolean; expiresAt: number; user?: AdminUserSession }> {
+  const data = await apiFetch<{ expiresAt: number; user?: AdminUserSession }>(
     '/admin/auth',
-    { method: 'POST', body: JSON.stringify({ pin }) }
+    { method: 'POST', body: JSON.stringify(credentials) }
   );
-  adminToken.set(data.token, data.expiresAt);
-  return { success: true };
+  return { success: true, expiresAt: data.expiresAt, user: data.user };
 }
 
-export function adminLogout(): void {
-  adminToken.clear();
+export async function adminLogout(): Promise<void> {
+  try {
+    await apiFetch<{ success: boolean }>('/admin/logout', { method: 'POST' });
+  } catch { /* ignore */ }
 }
 
-// ── Brands ────────────────────────────────────────────────────────────────
+export function getCurrentAdminUser(): Promise<AdminUserSession> {
+  return apiFetch<AdminUserSession>('/admin/me', undefined, true);
+}
+
+// ── Brands & Models ───────────────────────────────────────────────────────
 
 export interface ApiBrand {
   id: string;
@@ -116,8 +82,6 @@ export interface ApiBrand {
 export function fetchBrands(): Promise<ApiBrand[]> {
   return apiFetch<ApiBrand[]>('/brands');
 }
-
-// ── Models ───────────────────────────────────────────────────────────────
 
 export interface ApiModel {
   id: string;
@@ -150,15 +114,28 @@ export function createModel(data: {
   return apiFetch<ApiModel>('/models', { method: 'POST', body: JSON.stringify(data) }, true);
 }
 
-export function updateModel(legacyId: string, data: Partial<Omit<ApiModel, 'id' | 'brandId'>>): Promise<ApiModel> {
-  return apiFetch<ApiModel>(`/models/${encodeURIComponent(legacyId)}`, { method: 'PATCH', body: JSON.stringify(data) }, true);
+// ── Quotes & Valuations ───────────────────────────────────────────────────
+
+export interface ApiQuote {
+  quoteId: string;
+  modelId: string;
+  modelName: string;
+  storageGb: number;
+  maxPrice: number;
+  calculatedPrice: number;
+  version: string;
+  expiresAt: string;
+  signature: string;
 }
 
-export function deleteModel(legacyId: string): Promise<{ success: boolean }> {
-  return apiFetch<{ success: boolean }>(`/models/${encodeURIComponent(legacyId)}`, { method: 'DELETE' }, true);
+export function requestServerQuote(modelId: string, storageGb: number, defectIds: string[]): Promise<ApiQuote> {
+  return apiFetch<ApiQuote>('/quotes', {
+    method: 'POST',
+    body: JSON.stringify({ modelId, storageGb, defectIds }),
+  });
 }
 
-// ── Bookings ──────────────────────────────────────────────────────────────
+// ── Bookings & Order Tracking ──────────────────────────────────────────────
 
 export interface ApiBooking {
   id: string;
@@ -175,6 +152,7 @@ export interface ApiBooking {
   pickupTimeSlot: string;
   finalPrice: number;
   verificationStatus: 'pending' | 'verified' | 'failed';
+  isVerifiedProvider?: boolean;
   verifiedName?: string;
   maskedAadhaar?: string;
   verificationDate?: string;
@@ -189,17 +167,37 @@ export interface ApiBooking {
   dateCreated: string;
 }
 
-// Admin-only: requires Bearer token
+export interface ApiTrackBooking {
+  id: string;
+  modelName: string;
+  storageGb: number;
+  color: string;
+  customerName: string;
+  pickupDate: string;
+  pickupTimeSlot: string;
+  finalPayoutAmount: number;
+  inspectionStatus: 'pending' | 'approved' | 'rejected';
+  payoutStatus: 'pending' | 'completed';
+  verificationStatus: 'pending' | 'verified' | 'failed';
+  dateCreated: string;
+  events: Array<{ eventType: string; note: string; createdAt: string }>;
+}
+
+export function trackBookingOrder(bookingId: string, phone: string): Promise<ApiTrackBooking> {
+  return apiFetch<ApiTrackBooking>('/bookings/track', {
+    method: 'POST',
+    body: JSON.stringify({ bookingId, phone }),
+  });
+}
+
 export function fetchBookings(): Promise<ApiBooking[]> {
   return apiFetch<ApiBooking[]>('/bookings', undefined, true);
 }
 
-// Public: no auth required (but rate-limited on the server)
 export function createBooking(data: Record<string, unknown>): Promise<{ success: boolean; id: string }> {
   return apiFetch<{ success: boolean; id: string }>('/bookings', { method: 'POST', body: JSON.stringify(data) });
 }
 
-// Admin-only: requires Bearer token
 export function updateBooking(
   id: string,
   updates: Partial<Pick<ApiBooking, 'inspectionStatus' | 'payoutStatus' | 'verificationStatus'>>
