@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { randomBytes } from 'node:crypto';
 import { PrismaClient } from '@prisma/client';
-import { adminAuth, JWT_ISSUER, JWT_AUDIENCE, AuthenticatedRequest } from '../middleware/adminAuth.js';
+import { adminAuth, getJwtSecret, JWT_ISSUER, JWT_AUDIENCE, AuthenticatedRequest } from '../middleware/adminAuth.js';
 
 const DEFAULT_POSTGRES_URL = 'postgresql://database_fplv_user:mhFh1bnyfLV4jpId5R0D8t7osV0Nlx0T@dpg-d9v6fa67bikc73bsvnhg-a/database_fplv';
 let dbUrl = (process.env.DATABASE_URL ?? '').trim().replace(/^['"]|['"]$/g, '');
@@ -20,16 +20,10 @@ const router = Router();
 const prisma = new PrismaClient();
 
 const DEFAULT_PIN_HASH = '$2b$10$nZaDZ14X6MfPj/ZjVYhA5.MRq0SbwuxFTVr9Rzfvlk8riKUmvEmri'; // Hash for '2024'
-const DEFAULT_JWT_SECRET = '263d3ac30ed6dcd17c4e638f43b17462d18bdb59d54e3a456bc470996bd6e2d137a6ec22b8c412a8a5d41cd9e2a5db5172c9627e12fd4a3dc0d699b47f9a1aaf';
-
 function getAdminPinHash(): string {
   const raw = process.env.ADMIN_PIN_HASH;
   if (!raw || raw.trim().length === 0) return DEFAULT_PIN_HASH;
   return raw.replace(/^['"]|['"]$/g, '').trim();
-}
-
-function getJwtSecret(): string {
-  return process.env.JWT_SECRET?.trim() || DEFAULT_JWT_SECRET;
 }
 
 const JWT_EXPIRES_IN = (process.env.JWT_EXPIRES_IN ?? '4h') as string;
