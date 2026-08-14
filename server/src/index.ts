@@ -754,7 +754,18 @@ const possibleDistPaths = [
 const distPath = possibleDistPaths.find(p => fs.existsSync(path.join(p, 'index.html')));
 if (distPath) {
   console.log(`📁 Serving frontend static build from: ${distPath}`);
-  app.use(express.static(distPath));
+
+  // Serve static assets. For index.html specifically, force no-cache so browsers
+  // always fetch a fresh copy — preventing them from loading a stale JS bundle hash.
+  app.use(express.static(distPath, {
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('index.html')) {
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+      }
+    },
+  }));
 
   // SPA catch-all: serve index.html for any non-API, non-static GET/HEAD navigation.
   // CRITICAL: Use app.use() + explicit guards instead of app.get('*') because in
@@ -763,10 +774,11 @@ if (distPath) {
   // of being processed by the correct route handler — which was the root cause of
   // the "Server returned non-JSON response (200)" error in the Admin Panel.
   app.use((req, res, next) => {
-    // Only handle navigation requests (GET / HEAD). Let all other methods fall through.
     if (req.method !== 'GET' && req.method !== 'HEAD') return next();
-    // Never serve index.html for /api/* paths — those should already be handled above.
     if (req.path.startsWith('/api')) return next();
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     res.sendFile(path.join(distPath!, 'index.html'));
   });
 }
