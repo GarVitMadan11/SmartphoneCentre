@@ -3,6 +3,7 @@ import { Model, Variant, DefectRule, MODELS as STATIC_MODELS, BRANDS as STATIC_B
 import { fetchBrands, fetchModels, fetchBookings as apiFetchBookings } from './utils/api';
 import { DeviceSelector } from './components/client/DeviceSelector';
 import { DeviceCategoryShowcase } from './components/client/DeviceCategoryShowcase';
+import { SellYourDevice } from './components/client/SellYourDevice';
 import { useFocusTrap } from './hooks/useFocusTrap';
 // ── Lazy-loaded heavy components (code splitting — P-1 fix) ───────────────────
 const DiagnosticWizard = lazy(() => import('./components/client/DiagnosticWizard').then(m => ({ default: m.DiagnosticWizard })));
@@ -347,7 +348,7 @@ export default function App() {
     const q = heroSearch.toLowerCase().trim();
 
     return MODELS.filter(m => {
-      const brand = BRANDS.find(b => b.id === m.brandId);
+      const brand = STATIC_BRANDS.find(b => b.id === m.brandId);
       const brandName = brand ? brand.name.toLowerCase() : '';
       const modelName = m.name.toLowerCase();
       const modelNum = m.modelNumber.toLowerCase();
@@ -377,7 +378,7 @@ export default function App() {
         brandAliases.some(alias => alias.includes(q) || q.includes(alias))
       );
     }).slice(0, 10);
-  }, [heroSearch, BRANDS, MODELS]);
+  }, [heroSearch]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -654,7 +655,7 @@ export default function App() {
               <DeviceCategoryShowcase />
 
               {/* 2. Popular Brands & Catalog Selector section */}
-              <div id="device-selector-section" className="bg-canvas-pure border border-ice-border/60 rounded-xl p-5 sm:p-8 shadow-3d-card scroll-mt-24">
+              <div id="device-selector-section" className="bg-canvas-pure border border-ice-border/60 rounded-xl p-5 sm:p-8 shadow-3d-card scroll-mt-24 mb-12">
                 <div className="mb-8 pb-5 border-b border-ice-border/40 text-left">
                   <span className="text-[10px] font-mono tracking-[0.2em] text-cobalt font-bold uppercase block mb-1">
                     Catalog / Hardware Selector
@@ -671,6 +672,11 @@ export default function App() {
                   models={MODELS}
                 />
               </div>
+
+              {/* 1.6 Sell Your Device Section */}
+              <SellYourDevice onGetValuation={() => {
+                document.getElementById('device-selector-section')?.scrollIntoView({ behavior: 'smooth' });
+              }} />
 
               {/* 3. How It Works Section */}
               <div id="how-it-works-section" className="py-12 border-t border-b border-ice-border/40">
@@ -708,7 +714,7 @@ export default function App() {
 
                     {/* Step 3 */}
                     <div className="flex flex-col items-center text-center group">
-                      <div className="w-16 h-16 rounded-2xl bg-secondary text-white flex items-center justify-center text-xl font-black shadow-lg shadow-secondary/20 mb-6 group-hover:scale-110 transition-transform duration-300 font-outfit">
+                      <div className="w-16 h-16 rounded-2xl bg-cobalt text-white flex items-center justify-center text-xl font-black shadow-lg shadow-cobalt/20 mb-6 group-hover:scale-110 transition-transform duration-300 font-outfit">
                         3
                       </div>
                       <h3 className="text-xl font-extrabold text-ink-navy mb-2 font-outfit">Get Paid</h3>
