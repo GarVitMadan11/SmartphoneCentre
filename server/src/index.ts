@@ -32,10 +32,14 @@ import {
 
 const DEFAULT_POSTGRES_URL = 'postgresql://database_fplv_user:mhFh1bnyfLV4jpId5R0D8t7osV0Nlx0T@dpg-d9v6fa67bikc73bsvnhg-a/database_fplv';
 let dbUrl = (process.env.DATABASE_URL ?? '').trim().replace(/^['"]|['"]$/g, '');
-if (!dbUrl) {
-  dbUrl = DEFAULT_POSTGRES_URL;
-  process.env.DATABASE_URL = dbUrl;
+const isRenderEnv = Boolean(process.env.RENDER || process.env.RENDER_SERVICE_ID);
+
+if (isRenderEnv) {
+  dbUrl = dbUrl || DEFAULT_POSTGRES_URL;
+} else if (!dbUrl || dbUrl.includes('dpg-d9v6fa67bikc73bsvnhg-a')) {
+  dbUrl = 'file:./dev.db';
 }
+process.env.DATABASE_URL = dbUrl;
 
 const prisma = new PrismaClient();
 const app = express();
