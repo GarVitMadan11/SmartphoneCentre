@@ -330,7 +330,7 @@ app.post('/api/models', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITOR']
     });
   } catch (err) {
     console.error('POST /api/models error:', err);
-    res.status(500).json({ error: 'ServerError', message: 'Failed to create model' });
+    res.status(500).json({ error: 'ServerError', message: (err as Error).message || 'Failed to create model' });
   }
 });
 
@@ -459,7 +459,7 @@ app.patch('/api/models/:legacyId', adminAuth, requireRole(['SUPER_ADMIN', 'CATAL
     });
   } catch (err) {
     console.error('PATCH /api/models error:', err);
-    res.status(500).json({ error: 'ServerError', message: 'Failed to update model.' });
+    res.status(500).json({ error: 'ServerError', message: (err as Error).message || 'Failed to update model.' });
   }
 });
 
