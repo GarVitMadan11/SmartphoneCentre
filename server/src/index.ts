@@ -733,8 +733,9 @@ app.delete('/api/bookings/:id/payout-details', adminAuth, requireRole(['SUPER_AD
   }
 });
 
-// 404 Handler for all unhandled /api/* routes (must ALWAYS return JSON, never HTML)
-app.all('/api/*', (_req, res) => {
+// 404 Handler for all unhandled /api/* routes (must ALWAYS return JSON, never HTML).
+// Use a regex so this works correctly in Express 5 (path-to-regexp@8 broke bare `*`).
+app.all(/^\/api(\/|$)/, (_req, res) => {
   res.status(404).json({ error: 'NotFound', message: 'API endpoint not found.' });
 });
 
@@ -752,9 +753,19 @@ const distPath = possibleDistPaths.find(p => fs.existsSync(path.join(p, 'index.h
 if (distPath) {
   console.log(`📁 Serving frontend static build from: ${distPath}`);
   app.use(express.static(distPath));
-  app.get('*', (req, res, next) => {
+
+  // SPA catch-all: serve index.html for any non-API, non-static GET/HEAD navigation.
+  // CRITICAL: Use app.use() + explicit guards instead of app.get('*') because in
+  // Express 5 (path-to-regexp@8) a bare `*` wildcard can match ALL HTTP methods,
+  // causing PATCH/POST/DELETE requests to receive index.html (status 200) instead
+  // of being processed by the correct route handler — which was the root cause of
+  // the "Server returned non-JSON response (200)" error in the Admin Panel.
+  app.use((req, res, next) => {
+    // Only handle navigation requests (GET / HEAD). Let all other methods fall through.
+    if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+    // Never serve index.html for /api/* paths — those should already be handled above.
     if (req.path.startsWith('/api')) return next();
-    res.sendFile(path.join(distPath, 'index.html'));
+    res.sendFile(path.join(distPath!, 'index.html'));
   });
 }
 
