@@ -35,6 +35,9 @@ dist-ssr
 
 # Local SQLite databases
 *.db
+**/*.db
 *.db-journal
 *.sqlite
 dev.db
+**/dev.db
+server/prisma/dev.db
