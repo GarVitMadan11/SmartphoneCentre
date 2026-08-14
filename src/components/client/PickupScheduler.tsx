@@ -118,6 +118,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
   const [phone, setPhone] = useState('');
   const [imei, setImei] = useState('');
   const [address, setAddress] = useState('');
+  const [pincode, setPincode] = useState('');
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>('');
   const [paymentMethod, setPaymentMethod] = useState<string>('upi');
@@ -247,9 +248,10 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
     return selectedDate >= todayStr && selectedDate <= maxStr;
   }, [selectedDate]);
   const isAddressValid = useMemo(() => address.trim().length >= 10 && address.trim().length <= 500, [address]);
+  const isDelhiPincodeValid = useMemo(() => /^110\d{3}$/.test(pincode.trim()), [pincode]);
   const isStep2Valid = useMemo(() => {
-    return isAddressValid && isDateInRange && selectedTimeSlot !== '';
-  }, [isAddressValid, isDateInRange, selectedTimeSlot]);
+    return isAddressValid && isDelhiPincodeValid && isDateInRange && selectedTimeSlot !== '';
+  }, [isAddressValid, isDelhiPincodeValid, isDateInRange, selectedTimeSlot]);
 
   // Step 3 Validation
   const isUpiValid = useMemo(() => {
@@ -322,7 +324,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
       to_email: email.trim(),
       phone: `+91 ${phone}`,
       imei: imei || 'Not provided',
-      address: address.trim().slice(0, 500),
+      address: `${address.trim().slice(0, 500)} (Pincode: ${pincode.trim()})`,
       pickup_date: selectedDate,
       time_slot: selectedTimeSlot,
       payment_method: selectedMethodObj.name.toUpperCase(),
@@ -343,7 +345,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
       customerName: name.trim(),
       customerPhone: phone.trim(),
       customerEmail: email.trim(),
-      address: address.trim(),
+      address: `${address.trim()} (Pincode: ${pincode.trim()})`,
       pickupDate: selectedDate,
       pickupTimeSlot: selectedTimeSlot,
       finalPrice: finalPrice,
@@ -678,6 +680,60 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                         )}
                         {address && isAddressValid && (
                           <span className="text-[10px] text-emerald-400 mt-1 block">✓ Address looks good.</span>
+                        )}
+                      </div>
+
+                      {/* Delhi Pincode Validator */}
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="text-xs font-semibold text-ink-slate flex items-center gap-1.5">
+                            <MapPin className="w-3.5 h-3.5 text-cobalt" />
+                            Delhi Pickup Pincode *
+                          </label>
+                          <span className="text-[10px] font-mono text-cobalt font-bold uppercase">
+                            Delhi Only (110xxx)
+                          </span>
+                        </div>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            required
+                            inputMode="numeric"
+                            maxLength={6}
+                            value={pincode}
+                            onChange={e => setPincode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                            placeholder="e.g. 110001 (Connaught Place) or 110016 (Hauz Khas)"
+                            className={`w-full p-3 pr-9 rounded-sm border bg-canvas-white text-ink-navy text-sm font-mono focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all ${
+                              pincode && isDelhiPincodeValid
+                                ? 'border-emerald-400'
+                                : pincode && !isDelhiPincodeValid
+                                ? 'border-red-400'
+                                : 'border-ice-border'
+                            }`}
+                            style={{ minHeight: '48px' }}
+                          />
+                          {pincode && (
+                            <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-sm ${
+                              isDelhiPincodeValid ? 'text-emerald-400' : 'text-red-400'
+                            }`}>
+                              {isDelhiPincodeValid ? '✓' : '✗'}
+                            </span>
+                          )}
+                        </div>
+
+                        {pincode && !isDelhiPincodeValid && pincode.length === 6 && (
+                          <div className="mt-1.5 p-2 bg-amber-500/10 border border-amber-500/20 rounded text-[11px] text-amber-700 flex items-start gap-1.5">
+                            <ShieldAlert className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                            <span>
+                              Doorstep pickup is currently exclusive to <strong>Delhi NCT (Pincodes starting with 110)</strong>. Please enter a valid 110xxx Delhi pincode.
+                            </span>
+                          </div>
+                        )}
+
+                        {pincode && isDelhiPincodeValid && (
+                          <span className="text-[10px] text-emerald-500 font-semibold mt-1 block">
+                            ✓ Verified Delhi Service Area (110xxx)
+                          </span>
                         )}
                       </div>
 
