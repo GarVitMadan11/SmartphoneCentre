@@ -257,14 +257,12 @@ app.get('/api/models', async (req, res) => {
 
     const models = await prisma.model.findMany({ where, orderBy: { releaseYear: 'desc' } });
     res.json(models.map(m => {
-      let parsedStorageGb: number[] | undefined = undefined;
-      if (m.supportedStorageGb) {
-        try {
-          parsedStorageGb = JSON.parse(m.supportedStorageGb);
-        } catch {
-          parsedStorageGb = [64, 128, 256, 512];
-        }
-      }
+      let parsedStorageGb: number[] | undefined;
+      let parsedRamGb: number[] | undefined;
+      let parsedVariantPrices: Record<string, number> | undefined;
+      try { parsedStorageGb = JSON.parse(m.supportedStorageGb); } catch { parsedStorageGb = [128, 256, 512]; }
+      try { parsedRamGb = JSON.parse((m as any).supportedRamGb ?? '[0]'); } catch { parsedRamGb = [0]; }
+      try { parsedVariantPrices = JSON.parse((m as any).variantPrices ?? '{}'); } catch { parsedVariantPrices = {}; }
       return {
         id: m.legacyId,
         brandId: m.brandId,
@@ -276,6 +274,8 @@ app.get('/api/models', async (req, res) => {
         series: m.series || '',
         imageUrl: m.imageUrl || undefined,
         supportedStorageGb: parsedStorageGb,
+        supportedRamGb: parsedRamGb,
+        variantPrices: parsedVariantPrices,
       };
     }));
   } catch (err) {
@@ -284,9 +284,11 @@ app.get('/api/models', async (req, res) => {
   }
 });
 
+
 app.post('/api/models', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITOR']), async (req, res) => {
   try {
-    const { legacyId, brandId, name, modelNumber, category, releaseYear, basePrice128GB, series, imageUrl, supportedStorageGb } = req.body;
+    const { legacyId, brandId, name, modelNumber, category, releaseYear, basePrice128GB,
+            series, imageUrl, supportedStorageGb, supportedRamGb, variantPrices } = req.body;
     if (!legacyId || !brandId || !name || !modelNumber || !category || !releaseYear || !basePrice128GB) {
       res.status(400).json({ error: 'BadRequest', message: 'Missing required fields' });
       return;
@@ -296,7 +298,12 @@ app.post('/api/models', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITOR']
       return;
     }
 
-    const storageStr = Array.isArray(supportedStorageGb) ? JSON.stringify(supportedStorageGb) : JSON.stringify([64, 128, 256, 512]);
+    const storageStr = Array.isArray(supportedStorageGb) ? JSON.stringify(supportedStorageGb) : JSON.stringify([128, 256, 512]);
+    const ramStr = Array.isArray(supportedRamGb) ? JSON.stringify(supportedRamGb) : JSON.stringify([0]);
+    const pricesObj = (variantPrices && typeof variantPrices === 'object' && !Array.isArray(variantPrices)) ? variantPrices : {};
+    // Auto-compute basePrice128GB from minimum variant price if prices are set
+    const allPrices = Object.values(pricesObj).filter((v): v is number => typeof v === 'number' && v > 0);
+    const resolvedBase = allPrices.length > 0 ? Math.min(...allPrices) : Number(basePrice128GB);
 
     const model = await prisma.model.create({
       data: {
@@ -306,10 +313,11 @@ app.post('/api/models', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITOR']
         modelNumber: String(modelNumber).trim(),
         category: String(category).trim(),
         releaseYear: Number(releaseYear),
-        basePrice128GB: Number(basePrice128GB),
+        basePrice128GB: resolvedBase,
         series: series ? String(series).trim() : '',
         imageUrl: imageUrl ? String(imageUrl).trim() : '',
         supportedStorageGb: storageStr,
+        ...(({ supportedRamGb: ramStr, variantPrices: JSON.stringify(pricesObj) }) as any),
       },
     });
 
@@ -317,12 +325,15 @@ app.post('/api/models', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITOR']
       ...model,
       id: model.legacyId,
       supportedStorageGb: JSON.parse(model.supportedStorageGb),
+      supportedRamGb: JSON.parse((model as any).supportedRamGb ?? '[0]'),
+      variantPrices: JSON.parse((model as any).variantPrices ?? '{}'),
     });
   } catch (err) {
     console.error('POST /api/models error:', err);
     res.status(500).json({ error: 'ServerError', message: 'Failed to create model' });
   }
 });
+
 
 app.post('/api/models/bulk-update', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITOR']), async (req, res) => {
   try {
@@ -354,19 +365,23 @@ app.post('/api/models/bulk-update', adminAuth, requireRole(['SUPER_ADMIN', 'CATA
         }
       }
       if (changes.imageUrl !== undefined && (typeof changes.imageUrl === 'string')) {
-        if (isValidImageUrl(changes.imageUrl)) {
-          data.imageUrl = changes.imageUrl.trim();
-        }
+        if (isValidImageUrl(changes.imageUrl)) data.imageUrl = changes.imageUrl.trim();
       }
       if (changes.supportedStorageGb !== undefined && Array.isArray(changes.supportedStorageGb)) {
         data.supportedStorageGb = JSON.stringify(changes.supportedStorageGb);
       }
+      if (changes.supportedRamGb !== undefined && Array.isArray(changes.supportedRamGb)) {
+        (data as any).supportedRamGb = JSON.stringify(changes.supportedRamGb);
+      }
+      if (changes.variantPrices !== undefined && typeof changes.variantPrices === 'object' && !Array.isArray(changes.variantPrices)) {
+        (data as any).variantPrices = JSON.stringify(changes.variantPrices);
+        // Auto-update basePrice128GB from minimum variant price
+        const prices = Object.values(changes.variantPrices as Record<string, number>).filter((v): v is number => typeof v === 'number' && v > 0);
+        if (prices.length > 0) data.basePrice128GB = Math.min(...prices);
+      }
 
       if (Object.keys(data).length > 0) {
-        await prisma.model.update({
-          where: { id: existing.id },
-          data,
-        });
+        await prisma.model.update({ where: { id: existing.id }, data });
         updatedCount++;
       }
     }
@@ -378,14 +393,15 @@ app.post('/api/models/bulk-update', adminAuth, requireRole(['SUPER_ADMIN', 'CATA
   }
 });
 
+
 app.patch('/api/models/:legacyId', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITOR']), async (req, res) => {
   try {
     const legacyId = String(req.params.legacyId);
     const updates = req.body as Record<string, unknown>;
     const data: Record<string, unknown> = {};
     for (const field of ['name', 'modelNumber', 'category']) {
-      if (updates[field] !== undefined && typeof updates[field] === 'string' && updates[field].trim().length > 0) {
-        data[field] = updates[field].trim();
+      if (updates[field] !== undefined && typeof updates[field] === 'string' && (updates[field] as string).trim().length > 0) {
+        data[field] = (updates[field] as string).trim();
       }
     }
     if (updates.series !== undefined && typeof updates.series === 'string') {
@@ -401,10 +417,19 @@ app.patch('/api/models/:legacyId', adminAuth, requireRole(['SUPER_ADMIN', 'CATAL
         res.status(400).json({ error: 'BadRequest', message: 'imageUrl must be a valid http(s) URL or base64 Data URL.' });
         return;
       }
-      data.imageUrl = updates.imageUrl.trim();
+      data.imageUrl = (updates.imageUrl as string).trim();
     }
     if (updates.supportedStorageGb !== undefined && Array.isArray(updates.supportedStorageGb)) {
       data.supportedStorageGb = JSON.stringify(updates.supportedStorageGb);
+    }
+    if (updates.supportedRamGb !== undefined && Array.isArray(updates.supportedRamGb)) {
+      (data as any).supportedRamGb = JSON.stringify(updates.supportedRamGb);
+    }
+    if (updates.variantPrices !== undefined && typeof updates.variantPrices === 'object' && !Array.isArray(updates.variantPrices)) {
+      (data as any).variantPrices = JSON.stringify(updates.variantPrices);
+      // Auto-update basePrice128GB from minimum variant price
+      const prices = Object.values(updates.variantPrices as Record<string, number>).filter((v): v is number => typeof v === 'number' && v > 0);
+      if (prices.length > 0) data.basePrice128GB = Math.min(...prices);
     }
     if (Object.keys(data).length === 0) {
       res.status(400).json({ error: 'BadRequest', message: 'No valid model fields supplied.' });
@@ -428,13 +453,16 @@ app.patch('/api/models/:legacyId', adminAuth, requireRole(['SUPER_ADMIN', 'CATAL
     res.json({
       ...model,
       id: model.legacyId,
-      supportedStorageGb: model.supportedStorageGb ? JSON.parse(model.supportedStorageGb) : [64, 128, 256, 512],
+      supportedStorageGb: model.supportedStorageGb ? JSON.parse(model.supportedStorageGb) : [128, 256, 512],
+      supportedRamGb: (model as any).supportedRamGb ? JSON.parse((model as any).supportedRamGb) : [0],
+      variantPrices: (model as any).variantPrices ? JSON.parse((model as any).variantPrices) : {},
     });
   } catch (err) {
     console.error('PATCH /api/models error:', err);
     res.status(500).json({ error: 'ServerError', message: 'Failed to update model.' });
   }
 });
+
 
 app.delete('/api/models/:legacyId', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITOR']), async (req, res) => {
   try {

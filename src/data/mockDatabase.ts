@@ -21,10 +21,12 @@ export interface Model {
   modelNumber: string;
   category: DeviceCategory;
   releaseYear: number;
-  basePrice128GB: number; // Anchor price in INR
+  basePrice128GB: number; // Anchor price in INR (lowest variant or explicit)
   series?: string;        // Sub-category or series designation
   imageUrl?: string;      // Custom image URL or Data URL
-  supportedStorageGb?: number[]; // Configured memory variants (e.g. [64, 128, 256, 512, 1024])
+  supportedStorageGb?: number[]; // Storage tiers e.g. [128, 256, 512, 1024]
+  supportedRamGb?: number[];     // RAM tiers e.g. [6, 8, 12]; [0] = no RAM variants (Apple)
+  variantPrices?: Record<string, number>; // key: "ramGb_storageGb" e.g. "8_256" → 84900
 }
 
 export interface Variant {
@@ -610,6 +612,39 @@ export function generateVariantsForModel(model: Model): Variant[] {
 
   let modelStorages: { gb: number; multiplier: number }[] = [];
 
+  if (model.variantPrices && Object.keys(model.variantPrices).length > 0) {
+    // Use explicit variant prices — derive storage list from variantPrices keys
+    const storageSet = new Set<number>();
+    Object.keys(model.variantPrices).forEach(key => {
+      const parts = key.split('_');
+      const storageGb = Number(parts[parts.length - 1]);
+      if (!isNaN(storageGb)) storageSet.add(storageGb);
+    });
+    const sortedStorages = Array.from(storageSet).sort((a, b) => a - b);
+    const colors = getColorsForModel(model);
+    const variants: Variant[] = [];
+    sortedStorages.forEach(storageGb => {
+      // Find the best price for this storage across all RAM variants
+      let bestPrice = model.basePrice128GB;
+      Object.entries(model.variantPrices!).forEach(([key, price]) => {
+        const parts = key.split('_');
+        const s = Number(parts[parts.length - 1]);
+        if (s === storageGb) bestPrice = Math.min(bestPrice === model.basePrice128GB ? Infinity : bestPrice, price);
+      });
+      if (bestPrice === Infinity) bestPrice = model.basePrice128GB;
+      colors.slice(0, storageGb >= 1024 ? 2 : 4).forEach(color => {
+        variants.push({
+          id: `var-${model.id}-${storageGb}-${color.toLowerCase().replace(/\s+/g, '-')}`,
+          modelId: model.id,
+          storageGb,
+          color,
+          basePrice: bestPrice,
+        });
+      });
+    });
+    return variants;
+  }
+
   if (model.supportedStorageGb && Array.isArray(model.supportedStorageGb) && model.supportedStorageGb.length > 0) {
     const storageMultiplierMap: Record<number, number> = {
       64: 0.88,
@@ -621,7 +656,6 @@ export function generateVariantsForModel(model: Model): Variant[] {
     const sortedGbs = [...model.supportedStorageGb].sort((a, b) => a - b);
     const minGb = sortedGbs[0];
     modelStorages = sortedGbs.map(gb => {
-      // Scale multiplier relative to smallest supported storage tier
       const rawMult = storageMultiplierMap[gb] || (gb >= 512 ? 1.35 : 1.0);
       const minMult = storageMultiplierMap[minGb] || 1.0;
       return {
@@ -654,7 +688,6 @@ export function generateVariantsForModel(model: Model): Variant[] {
       modelStorages.push({ gb: 512, multiplier: 1.28 });
     }
   } else {
-    // Premium / regular flagship starting at 128GB
     modelStorages = [
       { gb: 128, multiplier: 1.00 },
       { gb: 256, multiplier: 1.12 },
@@ -681,6 +714,14 @@ export function generateVariantsForModel(model: Model): Variant[] {
   });
 
   return variants;
+}
+
+/** Get the admin-defined price for a specific RAM+Storage combo, or best-guess fallback */
+export function getVariantPrice(model: Model, ramGb: number, storageGb: number): number | null {
+  if (!model.variantPrices) return null;
+  const key = `${ramGb}_${storageGb}`;
+  const price = model.variantPrices[key];
+  return price !== undefined ? price : null;
 }
 
 export function getPhoneImageForBrand(brandId: string): string {

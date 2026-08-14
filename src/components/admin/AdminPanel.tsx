@@ -1,17 +1,25 @@
-﻿import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { Booking, Brand, Model, MODELS as STATIC_MODELS, getDeviceImage } from '../../data/mockDatabase';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { Booking, Brand, Model, MODELS as STATIC_MODELS, isAppleDevice } from '../../data/mockDatabase';
 import { 
   ArrowLeft, Search, Filter, 
   CheckCircle, XCircle, Clock, CreditCard, 
   ChevronRight, Calendar, MapPin, User,
-  RefreshCw, Plus, Trash2, List, Image as ImageIcon,
-  Upload, Link as LinkIcon, Layers, Edit2, Check, X,
-  MessageSquare, HardDrive, ChevronUp, ChevronDown,
-  SquareCheck, Square, Zap, Save, PencilLine, AlertCircle
+  RefreshCw, Plus, Trash2, List,
+  Layers, Check, X,
+  MessageSquare, HardDrive, ChevronDown,
+  AlertCircle, Cpu, Grid, Smartphone
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { updateBooking, fetchModels, createModel, updateModel, deleteModel, bulkUpdateModels } from '../../utils/api';
+import { updateBooking, fetchModels, createModel, updateModel, deleteModel } from '../../utils/api';
 import { SupportInbox } from './SupportInbox';
+
+const ALL_RAM_OPTIONS: { gb: number; label: string }[] = [
+  { gb: 4, label: '4 GB' },
+  { gb: 6, label: '6 GB' },
+  { gb: 8, label: '8 GB' },
+  { gb: 12, label: '12 GB' },
+  { gb: 16, label: '16 GB' },
+];
 
 const ALL_STORAGE_OPTIONS: { gb: number; label: string }[] = [
   { gb: 64, label: '64 GB' },
@@ -50,6 +58,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [selectedCatalogBrandId, setSelectedCatalogBrandId] = useState<string>('brand-apple');
   const [isApiOffline, setIsApiOffline] = useState(false);
   
+  // Tree view navigation states
+  const [selectedTreeModelId, setSelectedTreeModelId] = useState<string | null>(null);
+  const [expandedSeries, setExpandedSeries] = useState<Record<string, boolean>>({});
+
   // Add model form states
   const [newModelName, setNewModelName] = useState('');
   const [newModelNumber, setNewModelNumber] = useState('');
@@ -57,6 +69,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [newModelYear, setNewModelYear] = useState<number>(new Date().getFullYear());
   const [newModelBasePrice, setNewModelBasePrice] = useState<number>(30000);
   const [newModelStorageGb, setNewModelStorageGb] = useState<number[]>([128, 256, 512]);
+  const [newModelRamGb, setNewModelRamGb] = useState<number[]>([0]); // [0] = no RAM variants (Apple-style)
+  const [newVariantPrices, setNewVariantPrices] = useState<Record<string, number>>({});
   
   // Hierarchical Series & Image states
   const [selectedSeriesOption, setSelectedSeriesOption] = useState<string>('__CREATE_NEW__');
@@ -74,26 +88,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [editCustomSeries, setEditCustomSeries] = useState<string>('');
   const [editImageUrl, setEditImageUrl] = useState<string>('');
   const [editStorageGb, setEditStorageGb] = useState<number[]>([128, 256, 512]);
+  const [editRamGb, setEditRamGb] = useState<number[]>([0]);
+  const [editVariantPrices, setEditVariantPrices] = useState<Record<string, number>>({});
 
-  // Catalog search, sort, and bulk selection states
+  // Catalog search state
   const [catalogSearch, setCatalogSearch] = useState('');
-  const [catalogSort, setCatalogSort] = useState<{ field: 'name' | 'releaseYear' | 'basePrice128GB' | 'category'; dir: 'asc' | 'desc' }>({ field: 'releaseYear', dir: 'desc' });
-  const [selectedModelIds, setSelectedModelIds] = useState<Set<string>>(new Set());
-  const [bulkOpSuccess, setBulkOpSuccess] = useState('');
-  const [bulkOpError, setBulkOpError] = useState('');
-  const [bulkOpLoading, setBulkOpLoading] = useState(false);
-
-  // Inline spreadsheet edit state: { [modelId]: { field: value } }
-  const [inlineEdits, setInlineEdits] = useState<Record<string, Partial<Model>>>({});
-  const [inlineEditMode, setInlineEditMode] = useState(false);
-  const [inlineSaving, setInlineSaving] = useState(false);
-
-  // Bulk action panel values
-  const [bulkCategory, setBulkCategory] = useState<string>('flagship');
-  const [bulkSeries, setBulkSeries] = useState<string>('');
-  const [bulkStorageGb, setBulkStorageGb] = useState<number[]>([128, 256, 512]);
-  const [bulkPriceMode, setBulkPriceMode] = useState<'pct' | 'fixed'>('pct');
-  const [bulkPriceValue, setBulkPriceValue] = useState<number>(0);
 
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
@@ -123,6 +122,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       loadModels();
     }
   }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab === 'catalog' && models.length > 0 && !editingModelId) {
+      const brandModels = models.filter(m => m.brandId === selectedCatalogBrandId);
+      if (brandModels.length > 0) {
+        handleStartEditModel(brandModels[0]);
+      }
+    }
+  }, [selectedCatalogBrandId, models, activeTab]);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
@@ -343,6 +351,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   };
 
   const handleStartEditModel = (model: Model) => {
+    setSelectedTreeModelId(model.id);
     setEditingModelId(model.id);
     setEditName(model.name);
     setEditModelNumber(model.modelNumber);
@@ -351,6 +360,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     setEditBasePrice(model.basePrice128GB);
     setEditImageUrl(model.imageUrl || '');
     setEditStorageGb(model.supportedStorageGb && model.supportedStorageGb.length > 0 ? model.supportedStorageGb : [128, 256, 512]);
+    const isApple = isAppleDevice(model.brandId, model.name);
+    setEditRamGb(model.supportedRamGb && model.supportedRamGb.length > 0 ? model.supportedRamGb : (isApple ? [0] : [8]));
+    setEditVariantPrices(model.variantPrices || {});
     setFormError('');
     setFormSuccess('');
 
@@ -381,7 +393,17 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     }
   }, []);
 
-  // Computed: filtered + sorted catalog models for selected brand
+  // Toggle a RAM option in an array
+  const toggleRam = useCallback((gb: number, arr: number[], setArr: (v: number[]) => void) => {
+    if (arr.includes(gb)) {
+      if (arr.length === 1 && gb !== 0) return; // must have at least one
+      setArr(arr.filter(g => g !== gb));
+    } else {
+      setArr([...arr.filter(g => g !== 0), gb].sort((a, b) => a - b));
+    }
+  }, []);
+
+  // Computed: filtered catalog models for selected brand
   const displayedCatalogModels = useMemo(() => {
     let list = models.filter(m => m.brandId === selectedCatalogBrandId);
     if (catalogSearch.trim()) {
@@ -392,131 +414,39 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         (m.series || '').toLowerCase().includes(q)
       );
     }
-    list = [...list].sort((a, b) => {
-      const { field, dir } = catalogSort;
-      let va: string | number = a[field] as string | number;
-      let vb: string | number = b[field] as string | number;
-      if (typeof va === 'string') va = va.toLowerCase();
-      if (typeof vb === 'string') vb = vb.toLowerCase();
-      if (va < vb) return dir === 'asc' ? -1 : 1;
-      if (va > vb) return dir === 'asc' ? 1 : -1;
-      return 0;
-    });
     return list;
-  }, [models, selectedCatalogBrandId, catalogSearch, catalogSort]);
+  }, [models, selectedCatalogBrandId, catalogSearch]);
 
-  const handleSortCatalog = (field: typeof catalogSort.field) => {
-    setCatalogSort(prev =>
-      prev.field === field ? { field, dir: prev.dir === 'asc' ? 'desc' : 'asc' } : { field, dir: 'asc' }
-    );
-  };
-
-  const allBrandModelIds = useMemo(() => displayedCatalogModels.map(m => m.id), [displayedCatalogModels]);
-  const allSelected = allBrandModelIds.length > 0 && allBrandModelIds.every(id => selectedModelIds.has(id));
-
-  const toggleSelectAll = () => {
-    if (allSelected) {
-      setSelectedModelIds(new Set());
-    } else {
-      setSelectedModelIds(new Set(allBrandModelIds));
+  // Group displayed models for the selected brand by series (Brand → Series → Model hierarchy)
+  const brandSeriesMap = useMemo(() => {
+    const brandModels = models.filter(m => m.brandId === selectedCatalogBrandId);
+    let filtered = brandModels;
+    if (catalogSearch.trim()) {
+      const q = catalogSearch.trim().toLowerCase();
+      filtered = brandModels.filter(m =>
+        m.name.toLowerCase().includes(q) ||
+        (m.modelNumber || '').toLowerCase().includes(q) ||
+        (m.series || '').toLowerCase().includes(q)
+      );
     }
-  };
 
-  const toggleSelectModel = (id: string) => {
-    setSelectedModelIds(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
+    const map = new Map<string, Model[]>();
+    filtered.forEach(m => {
+      const seriesName = (m.series && m.series.trim()) ? m.series.trim() : 'Other Models';
+      if (!map.has(seriesName)) {
+        map.set(seriesName, []);
+      }
+      map.get(seriesName)!.push(m);
     });
-  };
 
-  // Inline spreadsheet helpers
-  const setInlineField = (modelId: string, field: keyof Model, value: unknown) => {
-    setInlineEdits(prev => ({
-      ...prev,
-      [modelId]: { ...prev[modelId], [field]: value }
-    }));
-  };
+    map.forEach((modelList) => {
+      modelList.sort((a, b) => b.releaseYear - a.releaseYear || a.name.localeCompare(b.name));
+    });
 
-  const handleSaveAllInlineEdits = async () => {
-    const updates = Object.entries(inlineEdits)
-      .filter(([, changes]) => Object.keys(changes).length > 0)
-      .map(([id, changes]) => ({ id, changes }));
-    if (updates.length === 0) {
-      setInlineEditMode(false);
-      return;
-    }
-    setInlineSaving(true);
-    setBulkOpError('');
-    try {
-      const result = await bulkUpdateModels(updates as any);
-      setBulkOpSuccess(`âœ“ Saved changes for ${result.updatedCount} model(s) successfully.`);
-      setInlineEdits({});
-      setInlineEditMode(false);
-      await loadModels();
-      if (onRefreshCatalog) await onRefreshCatalog();
-    } catch (err) {
-      setBulkOpError('Failed to save changes: ' + (err as Error).message);
-    } finally {
-      setInlineSaving(false);
-    }
-  };
+    return map;
+  }, [models, selectedCatalogBrandId, catalogSearch]);
 
-  const handleBulkCategoryUpdate = async () => {
-    if (selectedModelIds.size === 0) return;
-    setBulkOpLoading(true); setBulkOpError(''); setBulkOpSuccess('');
-    try {
-      const updates = Array.from(selectedModelIds).map(id => ({ id, changes: { category: bulkCategory } }));
-      const r = await bulkUpdateModels(updates as any);
-      setBulkOpSuccess(`âœ“ Category updated to "${bulkCategory}" for ${r.updatedCount} model(s).`);
-      await loadModels(); if (onRefreshCatalog) await onRefreshCatalog();
-    } catch (err) { setBulkOpError('Bulk category update failed: ' + (err as Error).message); }
-    finally { setBulkOpLoading(false); }
-  };
 
-  const handleBulkSeriesUpdate = async () => {
-    if (selectedModelIds.size === 0 || !bulkSeries.trim()) return;
-    setBulkOpLoading(true); setBulkOpError(''); setBulkOpSuccess('');
-    try {
-      const updates = Array.from(selectedModelIds).map(id => ({ id, changes: { series: bulkSeries.trim() } }));
-      const r = await bulkUpdateModels(updates as any);
-      setBulkOpSuccess(`âœ“ Series set to "${bulkSeries}" for ${r.updatedCount} model(s).`);
-      await loadModels(); if (onRefreshCatalog) await onRefreshCatalog();
-    } catch (err) { setBulkOpError('Bulk series update failed: ' + (err as Error).message); }
-    finally { setBulkOpLoading(false); }
-  };
-
-  const handleBulkStorageUpdate = async () => {
-    if (selectedModelIds.size === 0) return;
-    setBulkOpLoading(true); setBulkOpError(''); setBulkOpSuccess('');
-    try {
-      const updates = Array.from(selectedModelIds).map(id => ({ id, changes: { supportedStorageGb: bulkStorageGb } }));
-      const r = await bulkUpdateModels(updates as any);
-      setBulkOpSuccess(`âœ“ Memory variants updated for ${r.updatedCount} model(s).`);
-      await loadModels(); if (onRefreshCatalog) await onRefreshCatalog();
-    } catch (err) { setBulkOpError('Bulk storage update failed: ' + (err as Error).message); }
-    finally { setBulkOpLoading(false); }
-  };
-
-  const handleBulkPriceUpdate = async () => {
-    if (selectedModelIds.size === 0 || bulkPriceValue === 0) return;
-    setBulkOpLoading(true); setBulkOpError(''); setBulkOpSuccess('');
-    try {
-      const updates = Array.from(selectedModelIds).map(id => {
-        const model = models.find(m => m.id === id);
-        if (!model) return null;
-        const current = model.basePrice128GB;
-        const newPrice = bulkPriceMode === 'pct'
-          ? Math.round(current * (1 + bulkPriceValue / 100))
-          : current + bulkPriceValue;
-        return { id, changes: { basePrice128GB: Math.max(1000, newPrice) } };
-      }).filter(Boolean) as { id: string; changes: object }[];
-      const r = await bulkUpdateModels(updates as any);
-      setBulkOpSuccess(`âœ“ Prices adjusted for ${r.updatedCount} model(s).`);
-      await loadModels(); if (onRefreshCatalog) await onRefreshCatalog();
-    } catch (err) { setBulkOpError('Bulk price update failed: ' + (err as Error).message); }
-    finally { setBulkOpLoading(false); }
-  };
 
   const handleSaveModelEdit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -548,6 +478,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         series: finalSeries || undefined,
         imageUrl: imageUrlValue,
         supportedStorageGb: editStorageGb,
+        supportedRamGb: editRamGb,
+        variantPrices: editVariantPrices,
       });
 
       setFormSuccess(`Successfully saved changes to "${editName}"!`);
@@ -600,6 +532,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         series: finalSeries || undefined,
         imageUrl: imageUrlValue,
         supportedStorageGb: newModelStorageGb,
+        supportedRamGb: newModelRamGb,
+        variantPrices: newVariantPrices,
       });
       
       setFormSuccess(`Successfully added model "${newModelName}" to database!`);
@@ -608,6 +542,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       setCustomSeriesInput('');
       setNewModelImageUrl('');
       setNewModelStorageGb([128, 256, 512]);
+      setNewModelRamGb([0]);
+      setNewVariantPrices({});
       setIsApiOffline(false);
       
       // Refresh catalog lists
@@ -715,7 +651,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         </button>
       </div>
 
-      {activeTab === 'ledger' ? (
+      {activeTab === 'ledger' && (
         <>
           {/* KPI Ribbon */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1155,622 +1091,421 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             </AnimatePresence>
           </div>
         </>
-      ) : (
+      )}
+
+      {activeTab === 'catalog' && (
         /* Catalog Management Tab Workspace */
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* Left Side: Brand Selector & Model Table */}
-          <div className="lg:col-span-7 bg-canvas-pure border border-ice-border rounded-sm p-4 sm:p-6 shadow-premium space-y-4">
-            {/* Header row */}
-            <div className="flex flex-wrap justify-between items-center gap-3">
-              <h3 className="font-outfit font-light text-xl text-ink-navy">Device Catalog</h3>
-              <div className="flex items-center gap-2">
-                {/* Inline Edit Mode Toggle */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (inlineEditMode) {
-                      setInlineEdits({});
-                      setInlineEditMode(false);
-                    } else {
-                      setInlineEditMode(true);
-                      setBulkOpSuccess('');
-                      setBulkOpError('');
-                    }
-                  }}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm border text-[10px] font-bold font-mono transition-all ${
-                    inlineEditMode
-                      ? 'bg-amber-500/10 border-amber-500/30 text-amber-600'
-                      : 'bg-canvas-white border-ice-border text-ink-slate hover:border-cobalt hover:text-cobalt'
-                  }`}
-                >
-                  <PencilLine className="w-3 h-3" />
-                  {inlineEditMode ? 'Exit Edit Mode' : 'Spreadsheet Edit'}
-                </button>
-                {inlineEditMode && Object.keys(inlineEdits).length > 0 && (
+        <div className="space-y-6">
+          {/* Top Brand Filter Bar */}
+          <div className="bg-canvas-pure border border-ice-border rounded-sm p-3 shadow-sm flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-500 font-bold">Select Brand:</span>
+              <div className="flex flex-wrap gap-1.5">
+                {brands.map(b => (
                   <button
+                    key={b.id}
                     type="button"
-                    onClick={handleSaveAllInlineEdits}
-                    disabled={inlineSaving}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm border bg-cobalt border-cobalt text-white text-[10px] font-bold font-mono transition-all hover:bg-cobalt-hover"
+                    onClick={() => {
+                      setSelectedCatalogBrandId(b.id);
+                      setSelectedTreeModelId(null);
+                      setEditingModelId(null);
+                      setFormError('');
+                      setFormSuccess('');
+                    }}
+                    className={`px-3 py-1.5 rounded-sm border text-xs font-bold font-mono transition-all flex items-center gap-1.5 ${
+                      selectedCatalogBrandId === b.id
+                        ? 'bg-cobalt border-cobalt text-white shadow-sm'
+                        : 'bg-canvas-white border-ice-border text-ink-slate hover:border-cobalt/50 hover:text-cobalt'
+                    }`}
                   >
-                    <Save className="w-3 h-3" />
-                    {inlineSaving ? 'Savingâ€¦' : `Save All (${Object.keys(inlineEdits).length})`}
+                    <Smartphone className="w-3.5 h-3.5" />
+                    {b.name}
                   </button>
-                )}
-                <span className="text-[11px] font-mono text-zinc-500">
-                  {displayedCatalogModels.length} models
-                </span>
+                ))}
               </div>
             </div>
-
-            {/* Brand filter buttons */}
-            <div className="flex flex-wrap gap-2 pb-3 border-b border-ice-border/40">
-              {brands.map(b => (
-                <button
-                  key={b.id}
-                  type="button"
-                  onClick={() => {
-                    setSelectedCatalogBrandId(b.id);
-                    setSelectedSeriesOption('__CREATE_NEW__');
-                    setSelectedModelIds(new Set());
-                    setInlineEdits({});
-                    setInlineEditMode(false);
-                  }}
-                  className={`px-3 py-1.5 rounded-sm border text-xs font-bold font-mono transition-all ${
-                    selectedCatalogBrandId === b.id
-                      ? 'bg-cobalt border-cobalt text-white'
-                      : 'bg-canvas-white border-ice-border text-ink-slate hover:border-cobalt/50 hover:text-cobalt'
-                  }`}
-                >
-                  {b.name}
-                </button>
-              ))}
-            </div>
-
-            {/* Catalog Search */}
-            <div className="relative">
-              <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                placeholder="Search by model name, code or seriesâ€¦"
-                value={catalogSearch}
-                onChange={e => setCatalogSearch(e.target.value)}
-                className="w-full pl-8 pr-3 py-2 rounded-sm border border-ice-border bg-canvas-white text-ink-navy text-xs focus:outline-none focus:ring-1 focus:ring-cobalt focus:border-cobalt font-mono"
-              />
-            </div>
-
-            {/* Bulk Op Feedback */}
-            {bulkOpSuccess && (
-              <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 rounded-sm font-semibold text-[10px] flex items-center gap-2">
-                <CheckCircle className="w-3.5 h-3.5 flex-shrink-0" />{bulkOpSuccess}
-              </div>
-            )}
-            {bulkOpError && (
-              <div className="p-2.5 bg-red-500/10 border border-red-500/20 text-red-500 rounded-sm font-semibold text-[10px] flex items-center gap-2">
-                <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />{bulkOpError}
-              </div>
-            )}
-
-            {/* Bulk Action Bar - visible when models are selected */}
-            {selectedModelIds.size > 0 && (
-              <div className="border border-cobalt/20 bg-cobalt/5 rounded-sm p-3 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono font-bold text-cobalt flex items-center gap-1.5">
-                    <Zap className="w-3 h-3" />
-                    Bulk Actions â€” {selectedModelIds.size} model{selectedModelIds.size > 1 ? 's' : ''} selected
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedModelIds(new Set())}
-                    className="text-[9px] text-zinc-500 hover:text-red-500 font-mono font-bold flex items-center gap-0.5 transition-all"
-                  >
-                    <X className="w-3 h-3" /> Clear selection
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  {/* Bulk Category */}
-                  <div className="flex items-center gap-1.5">
-                    <select
-                      value={bulkCategory}
-                      onChange={e => setBulkCategory(e.target.value)}
-                      className="flex-1 bg-canvas-pure border border-ice-border rounded-sm p-1.5 text-ink-navy text-[10px] focus:outline-none focus:ring-1 focus:ring-cobalt font-mono"
-                    >
-                      <option value="flagship">Flagship</option>
-                      <option value="premium">Premium</option>
-                      <option value="midrange">Midrange</option>
-                      <option value="budget">Budget</option>
-                    </select>
-                    <button
-                      type="button"
-                      disabled={bulkOpLoading}
-                      onClick={handleBulkCategoryUpdate}
-                      className="px-2.5 py-1.5 bg-cobalt text-white text-[10px] font-bold rounded-sm hover:bg-cobalt-hover transition-all"
-                    >
-                      Set Category
-                    </button>
-                  </div>
-
-                  {/* Bulk Series */}
-                  <div className="flex items-center gap-1.5">
-                    <input
-                      type="text"
-                      placeholder="Series nameâ€¦"
-                      value={bulkSeries}
-                      onChange={e => setBulkSeries(e.target.value)}
-                      className="flex-1 bg-canvas-pure border border-ice-border rounded-sm p-1.5 text-ink-navy text-[10px] focus:outline-none focus:ring-1 focus:ring-cobalt font-mono"
-                    />
-                    <button
-                      type="button"
-                      disabled={bulkOpLoading || !bulkSeries.trim()}
-                      onClick={handleBulkSeriesUpdate}
-                      className="px-2.5 py-1.5 bg-cobalt text-white text-[10px] font-bold rounded-sm hover:bg-cobalt-hover transition-all disabled:opacity-50"
-                    >
-                      Set Series
-                    </button>
-                  </div>
-
-                  {/* Bulk Price Adjustment */}
-                  <div className="flex items-center gap-1.5">
-                    <select
-                      value={bulkPriceMode}
-                      onChange={e => setBulkPriceMode(e.target.value as 'pct' | 'fixed')}
-                      className="bg-canvas-pure border border-ice-border rounded-sm p-1.5 text-ink-navy text-[10px] focus:outline-none focus:ring-1 focus:ring-cobalt font-mono"
-                    >
-                      <option value="pct">% Change</option>
-                      <option value="fixed">Â±â‚¹ Fixed</option>
-                    </select>
-                    <input
-                      type="number"
-                      value={bulkPriceValue}
-                      onChange={e => setBulkPriceValue(Number(e.target.value))}
-                      placeholder={bulkPriceMode === 'pct' ? 'e.g. -10' : 'e.g. +2000'}
-                      className="flex-1 w-0 bg-canvas-pure border border-ice-border rounded-sm p-1.5 text-ink-navy text-[10px] focus:outline-none focus:ring-1 focus:ring-cobalt font-mono"
-                    />
-                    <button
-                      type="button"
-                      disabled={bulkOpLoading || bulkPriceValue === 0}
-                      onClick={handleBulkPriceUpdate}
-                      className="px-2.5 py-1.5 bg-emerald-600 text-white text-[10px] font-bold rounded-sm hover:bg-emerald-700 transition-all disabled:opacity-50 whitespace-nowrap"
-                    >
-                      Adjust Price
-                    </button>
-                  </div>
-
-                  {/* Bulk Memory Variants */}
-                  <div className="space-y-1.5">
-                    <div className="flex flex-wrap gap-1">
-                      {ALL_STORAGE_OPTIONS.map(opt => (
-                        <button
-                          key={opt.gb}
-                          type="button"
-                          onClick={() => toggleStorage(opt.gb, bulkStorageGb, setBulkStorageGb)}
-                          className={`px-2 py-0.5 rounded-sm border text-[10px] font-bold font-mono transition-all ${
-                            bulkStorageGb.includes(opt.gb)
-                              ? 'bg-cobalt/15 border-cobalt/40 text-cobalt'
-                              : 'bg-canvas-pure border-ice-border text-zinc-500 hover:border-cobalt/30'
-                          }`}
-                        >
-                          {opt.label}
-                        </button>
-                      ))}
-                    </div>
-                    <button
-                      type="button"
-                      disabled={bulkOpLoading}
-                      onClick={handleBulkStorageUpdate}
-                      className="w-full flex items-center justify-center gap-1.5 px-2.5 py-1.5 bg-violet-600/10 border border-violet-500/20 text-violet-600 text-[10px] font-bold rounded-sm hover:bg-violet-600/20 transition-all"
-                    >
-                      <HardDrive className="w-3 h-3" /> Apply Memory Variants to Selected
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Model List Table */}
-            {loadingModels ? (
-              <div className="py-8 text-center text-zinc-500 font-mono">Loading models from databaseâ€¦</div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs font-mono border-collapse text-left">
-                  <thead>
-                    <tr className="border-b border-ice-border/40 text-ink-navy text-[10px] uppercase font-bold tracking-wider">
-                      <th className="py-2.5 px-2 text-center">
-                        <button
-                          type="button"
-                          onClick={toggleSelectAll}
-                          className="text-cobalt hover:text-cobalt-hover transition-colors"
-                          title={allSelected ? 'Deselect All' : 'Select All'}
-                        >
-                          {allSelected ? <SquareCheck className="w-4 h-4" /> : <Square className="w-4 h-4 text-zinc-400" />}
-                        </button>
-                      </th>
-                      <th className="py-2.5 px-2 text-center">Img</th>
-                      <th className="py-2.5 px-3 cursor-pointer select-none hover:text-cobalt transition-colors" onClick={() => handleSortCatalog('name')}>
-                        <span className="flex items-center gap-1">
-                          Model Name
-                          {catalogSort.field === 'name' ? (catalogSort.dir === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />) : null}
-                        </span>
-                      </th>
-                      <th className="py-2.5 px-3 cursor-pointer select-none hover:text-cobalt transition-colors" onClick={() => handleSortCatalog('category')}>
-                        <span className="flex items-center gap-1">
-                          Cat
-                          {catalogSort.field === 'category' ? (catalogSort.dir === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />) : null}
-                        </span>
-                      </th>
-                      <th className="py-2.5 px-3 cursor-pointer select-none hover:text-cobalt transition-colors" onClick={() => handleSortCatalog('releaseYear')}>
-                        <span className="flex items-center gap-1">
-                          Year
-                          {catalogSort.field === 'releaseYear' ? (catalogSort.dir === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />) : null}
-                        </span>
-                      </th>
-                      <th className="py-2.5 px-3 cursor-pointer select-none hover:text-cobalt transition-colors" onClick={() => handleSortCatalog('basePrice128GB')}>
-                        <span className="flex items-center gap-1">
-                          Base Price
-                          {catalogSort.field === 'basePrice128GB' ? (catalogSort.dir === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />) : null}
-                        </span>
-                      </th>
-                      <th className="py-2.5 px-3">
-                        <span className="flex items-center gap-1"><HardDrive className="w-3 h-3" /> Memory</span>
-                      </th>
-                      <th className="py-2.5 px-3 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/[0.04]">
-                    {displayedCatalogModels.length > 0 ? (
-                      displayedCatalogModels.map(m => {
-                        const imgUrl = getDeviceImage(m.id, m.brandId, undefined, m.imageUrl);
-                        const isSelected = selectedModelIds.has(m.id);
-                        const ie = inlineEdits[m.id] || {};
-                        const rowStorageGb = m.supportedStorageGb && m.supportedStorageGb.length > 0 ? m.supportedStorageGb : [128, 256, 512];
-                        return (
-                          <tr
-                            key={m.id}
-                            className={`transition-all ${isSelected ? 'bg-cobalt/5' : 'hover:bg-cobalt-light/5'} ${inlineEditMode ? 'cursor-text' : ''}`}
-                          >
-                            {/* Checkbox */}
-                            <td className="py-2 px-2 text-center">
-                              <button
-                                type="button"
-                                onClick={() => toggleSelectModel(m.id)}
-                                className={`transition-colors ${isSelected ? 'text-cobalt' : 'text-zinc-300 hover:text-cobalt'}`}
-                              >
-                                {isSelected ? <SquareCheck className="w-4 h-4" /> : <Square className="w-4 h-4" />}
-                              </button>
-                            </td>
-                            {/* Image */}
-                            <td className="py-2 px-2 text-center">
-                              {imgUrl ? (
-                                <img
-                                  src={imgUrl}
-                                  alt={m.name}
-                                  onError={(e) => { (e.target as HTMLImageElement).src = getDeviceImage('', m.brandId); }}
-                                  className="w-8 h-8 object-contain mx-auto rounded bg-slate-100 dark:bg-zinc-800 p-0.5 border border-ice-border"
-                                />
-                              ) : (
-                                <div className="w-8 h-8 mx-auto rounded bg-slate-100 dark:bg-zinc-800 flex items-center justify-center border border-ice-border text-zinc-400">
-                                  <ImageIcon className="w-3.5 h-3.5" />
-                                </div>
-                              )}
-                            </td>
-                            {/* Name â€” inline editable */}
-                            <td className="py-2 px-3">
-                              {inlineEditMode ? (
-                                <input
-                                  type="text"
-                                  value={ie.name !== undefined ? ie.name : m.name}
-                                  onChange={e => setInlineField(m.id, 'name', e.target.value)}
-                                  className="w-full bg-canvas-white border border-cobalt/30 rounded-sm px-1.5 py-0.5 text-ink-navy text-xs focus:outline-none focus:ring-1 focus:ring-cobalt font-bold"
-                                />
-                              ) : (
-                                <span className="font-bold text-ink-navy">{m.name}</span>
-                              )}
-                              {m.series ? (
-                                <span className="block px-1.5 py-0.5 mt-0.5 rounded-sm bg-cobalt/10 text-cobalt border border-cobalt/20 font-semibold text-[9px] w-fit">{m.series}</span>
-                              ) : null}
-                            </td>
-                            {/* Category */}
-                            <td className="py-2 px-3 uppercase text-[10px]">
-                              {inlineEditMode ? (
-                                <select
-                                  value={ie.category !== undefined ? ie.category : m.category}
-                                  onChange={e => setInlineField(m.id, 'category', e.target.value as any)}
-                                  className="bg-canvas-white border border-cobalt/30 rounded-sm px-1 py-0.5 text-ink-navy text-[10px] focus:outline-none focus:ring-1 focus:ring-cobalt"
-                                >
-                                  <option value="flagship">Flagship</option>
-                                  <option value="premium">Premium</option>
-                                  <option value="midrange">Midrange</option>
-                                  <option value="budget">Budget</option>
-                                </select>
-                              ) : (
-                                <span className={`px-1.5 py-0.5 rounded-sm font-semibold border ${
-                                  m.category === 'flagship' ? 'bg-red-500/10 text-red-500 border-red-500/20'
-                                  : m.category === 'premium' ? 'bg-cobalt/10 text-cobalt border-cobalt/20'
-                                  : m.category === 'midrange' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
-                                  : 'bg-zinc-500/10 text-zinc-600 border-zinc-500/20'
-                                }`}>
-                                  {m.category}
-                                </span>
-                              )}
-                            </td>
-                            {/* Year â€” inline editable */}
-                            <td className="py-2 px-3 text-zinc-500">
-                              {inlineEditMode ? (
-                                <input
-                                  type="number"
-                                  min={2010} max={2030}
-                                  value={ie.releaseYear !== undefined ? ie.releaseYear : m.releaseYear}
-                                  onChange={e => setInlineField(m.id, 'releaseYear', Number(e.target.value))}
-                                  className="w-16 bg-canvas-white border border-cobalt/30 rounded-sm px-1.5 py-0.5 text-ink-navy text-xs focus:outline-none focus:ring-1 focus:ring-cobalt"
-                                />
-                              ) : m.releaseYear}
-                            </td>
-                            {/* Base Price â€” inline editable */}
-                            <td className="py-2 px-3 text-cobalt font-bold">
-                              {inlineEditMode ? (
-                                <input
-                                  type="number"
-                                  min={1000} step={500}
-                                  value={ie.basePrice128GB !== undefined ? ie.basePrice128GB : m.basePrice128GB}
-                                  onChange={e => setInlineField(m.id, 'basePrice128GB', Number(e.target.value))}
-                                  className="w-24 bg-canvas-white border border-cobalt/30 rounded-sm px-1.5 py-0.5 text-cobalt text-xs focus:outline-none focus:ring-1 focus:ring-cobalt font-bold"
-                                />
-                              ) : formatPrice(m.basePrice128GB)}
-                            </td>
-                            {/* Memory Variants tags */}
-                            <td className="py-2 px-3">
-                              <div className="flex flex-wrap gap-0.5">
-                                {rowStorageGb.map(gb => (
-                                  <span
-                                    key={gb}
-                                    className="px-1.5 py-0.5 rounded-sm bg-violet-500/10 text-violet-600 border border-violet-500/20 font-semibold text-[9px] font-mono"
-                                  >
-                                    {gb === 1024 ? '1TB' : `${gb}G`}
-                                  </span>
-                                ))}
-                              </div>
-                            </td>
-                            {/* Actions */}
-                            <td className="py-2 px-3 text-right">
-                              <div className="flex justify-end gap-1.5">
-                                <button
-                                  type="button"
-                                  onClick={() => handleStartEditModel(m)}
-                                  className={`p-1 rounded-sm border transition-all ${
-                                    editingModelId === m.id
-                                      ? 'bg-cobalt border-cobalt text-white'
-                                      : 'border-cobalt/30 text-cobalt hover:bg-cobalt hover:text-white'
-                                  }`}
-                                  title="Edit Model"
-                                >
-                                  <Edit2 className="w-3.5 h-3.5" />
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleDeleteModel(m.id)}
-                                  className="p-1 rounded-sm border border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white transition-all"
-                                  title="Delete Model"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })
-                    ) : (
-                      <tr>
-                        <td colSpan={8} className="py-8 text-center text-zinc-500 italic">
-                          {catalogSearch ? 'No models match your search.' : 'No models seeded for this brand in database yet.'}
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            )}
+            <span className="text-[11px] font-mono text-zinc-500">
+              {displayedCatalogModels.length} models for {brands.find(b => b.id === selectedCatalogBrandId)?.name || 'Brand'}
+            </span>
           </div>
 
-          {/* Right Side: Add or Edit Model Form */}
-          <div className="lg:col-span-5 bg-canvas-pure border border-ice-border rounded-sm p-4 sm:p-5 shadow-premium text-xs text-left">
-            {editingModelId ? (
-              /* Edit Existing Model Form */
-              <div>
-                <div className="border-b border-ice-border/40 pb-3 mb-4 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="p-1.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-500">
-                      <Edit2 className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <h3 className="font-outfit font-light text-lg text-ink-navy">Edit Product</h3>
-                      <p className="text-[10px] text-zinc-400 font-mono">ID: {editingModelId}</p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleCancelEdit}
-                    className="p-1 rounded text-zinc-400 hover:text-ink-navy hover:bg-slate-100 dark:hover:bg-zinc-800 transition-all text-[11px] flex items-center gap-1 font-mono font-bold"
-                  >
-                    <X className="w-3.5 h-3.5" /> Cancel
-                  </button>
+          {/* Main 2-Column Tree + Editor Workspace */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {/* Left Column: Brand → Series → Model Tree Hierarchy */}
+            <div className="lg:col-span-5 bg-canvas-pure border border-ice-border rounded-sm p-4 shadow-premium space-y-4">
+              <div className="flex items-center justify-between border-b border-ice-border/60 pb-3">
+                <div className="flex items-center gap-2">
+                  <Layers className="w-4 h-4 text-cobalt" />
+                  <h3 className="font-outfit text-base font-semibold text-ink-navy">Catalog Navigation</h3>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingModelId(null);
+                    setSelectedTreeModelId(null);
+                    setFormError('');
+                    setFormSuccess('');
+                  }}
+                  className="px-2.5 py-1 bg-cobalt/10 hover:bg-cobalt/20 text-cobalt border border-cobalt/30 rounded-sm text-[10px] font-bold font-mono transition-all flex items-center gap-1"
+                >
+                  <Plus className="w-3 h-3" />
+                  New Model
+                </button>
+              </div>
 
-                <form onSubmit={handleSaveModelEdit} className="space-y-4 font-mono">
-                  {formError && (
-                    <div className="p-2.5 bg-red-500/10 border border-red-500/20 text-red-500 rounded-sm font-semibold text-[10px]">
-                      Error: {formError}
-                    </div>
-                  )}
-                  {formSuccess && (
-                    <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 rounded-sm font-semibold text-[10px]">
-                      {formSuccess}
-                    </div>
-                  )}
+              {/* Tree Search Filter */}
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Search series or models..."
+                  value={catalogSearch}
+                  onChange={e => setCatalogSearch(e.target.value)}
+                  className="w-full pl-8 pr-3 py-1.5 bg-canvas-white border border-ice-border rounded-sm text-xs font-mono text-ink-navy focus:outline-none focus:ring-1 focus:ring-cobalt"
+                />
+                {catalogSearch && (
+                  <button onClick={() => setCatalogSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600">
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
 
-                  {/* Series Selection */}
-                  <div className="p-3 bg-canvas-white border border-ice-border rounded-sm space-y-2">
-                    <label className="block text-[10px] text-zinc-500 uppercase font-bold tracking-wider flex items-center gap-1">
-                      <Layers className="w-3 h-3 text-cobalt" />
-                      <span>Product Series</span>
-                    </label>
-                    <select
-                      value={editSeriesOption}
-                      onChange={e => setEditSeriesOption(e.target.value)}
-                      className="w-full bg-canvas-pure border border-ice-border rounded-sm p-2 text-ink-navy text-xs focus:outline-none focus:ring-1 focus:ring-cobalt focus:border-cobalt"
-                    >
-                      <option value="">No Specific Series</option>
-                      <option value="__CREATE_NEW__">âœ¨ + Create New Series</option>
-                      {existingSeriesForSelectedBrand.map(s => (
-                        <option key={s} value={s}>Existing: {s}</option>
-                      ))}
-                    </select>
-                    {editSeriesOption === '__CREATE_NEW__' && (
-                      <div className="pt-1">
-                        <label className="block text-[9px] text-zinc-400 uppercase font-semibold mb-1">Series Name</label>
-                        <input
-                          type="text"
-                          placeholder="e.g. iPhone 18 Series"
-                          value={editCustomSeries}
-                          onChange={e => setEditCustomSeries(e.target.value)}
-                          className="w-full bg-canvas-pure border border-cobalt/50 rounded-sm p-2 text-ink-navy text-xs focus:outline-none focus:ring-1 focus:ring-cobalt font-bold"
-                          required={editSeriesOption === '__CREATE_NEW__'}
-                        />
+              {/* Tree Accordion / List */}
+              {loadingModels ? (
+                <div className="py-8 text-center text-zinc-400 font-mono text-xs">Loading device hierarchy...</div>
+              ) : brandSeriesMap.size === 0 ? (
+                <div className="py-8 text-center text-zinc-400 font-mono text-xs">No models found for this brand.</div>
+              ) : (
+                <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1">
+                  {Array.from(brandSeriesMap.entries()).map(([seriesName, seriesModels]) => {
+                    const isCollapsed = expandedSeries[seriesName] === false;
+                    return (
+                      <div key={seriesName} className="border border-ice-border/60 rounded-sm overflow-hidden bg-canvas-white">
+                        {/* Series Node Header */}
+                        <button
+                          type="button"
+                          onClick={() => setExpandedSeries(prev => ({ ...prev, [seriesName]: !isCollapsed }))}
+                          className="w-full px-3 py-2 bg-slate-50 dark:bg-zinc-800/40 hover:bg-slate-100 dark:hover:bg-zinc-800 border-b border-ice-border/40 flex items-center justify-between text-left transition-all"
+                        >
+                          <div className="flex items-center gap-2">
+                            {isCollapsed ? <ChevronRight className="w-3.5 h-3.5 text-zinc-400" /> : <ChevronDown className="w-3.5 h-3.5 text-cobalt" />}
+                            <span className="font-outfit text-xs font-bold text-ink-navy">{seriesName}</span>
+                          </div>
+                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-200/60 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300">
+                            {seriesModels.length}
+                          </span>
+                        </button>
+
+                        {/* Series Models Children */}
+                        {!isCollapsed && (
+                          <div className="p-1 space-y-1">
+                            {seriesModels.map(m => {
+                              const isSelected = selectedTreeModelId === m.id || editingModelId === m.id;
+                              return (
+                                <button
+                                  key={m.id}
+                                  type="button"
+                                  onClick={() => handleStartEditModel(m)}
+                                  className={`w-full p-2 rounded-sm text-left font-mono transition-all flex items-center justify-between ${
+                                    isSelected
+                                      ? 'bg-cobalt text-white shadow-sm'
+                                      : 'hover:bg-cobalt/5 text-ink-slate hover:text-cobalt'
+                                  }`}
+                                >
+                                  <div>
+                                    <div className="text-xs font-bold flex items-center gap-1.5">
+                                      <span>{m.name}</span>
+                                      <span className={`text-[9px] px-1 rounded ${isSelected ? 'bg-white/20 text-white' : 'bg-zinc-100 text-zinc-500'}`}>
+                                        {m.releaseYear}
+                                      </span>
+                                    </div>
+                                    <span className={`text-[10px] ${isSelected ? 'text-white/80' : 'text-zinc-400'}`}>
+                                      {m.modelNumber || m.id}
+                                    </span>
+                                  </div>
+                                  <div className="text-right">
+                                    <span className={`text-[11px] font-bold block ${isSelected ? 'text-white' : 'text-emerald-600'}`}>
+                                      {formatPrice(m.basePrice128GB)}
+                                    </span>
+                                    <span className={`text-[9px] uppercase font-bold ${isSelected ? 'text-white/70' : 'text-zinc-400'}`}>
+                                      {m.category}
+                                    </span>
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
-                    )}
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Right Column: Model Detail & Price Matrix Editor */}
+            <div className="lg:col-span-7 bg-canvas-pure border border-ice-border rounded-sm p-4 sm:p-6 shadow-premium space-y-6">
+              {formError && (
+                <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-600 rounded-sm text-xs font-mono font-bold flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{formError}</span>
+                </div>
+              )}
+              {formSuccess && (
+                <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 rounded-sm text-xs font-mono font-bold flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 shrink-0" />
+                  <span>{formSuccess}</span>
+                </div>
+              )}
+
+              {editingModelId ? (
+                /* Edit Existing Model Mode */
+                <form onSubmit={handleSaveModelEdit} className="space-y-6">
+                  <div className="flex justify-between items-center border-b border-ice-border/60 pb-3">
+                    <div>
+                      <span className="text-[10px] font-mono uppercase tracking-wider text-cobalt font-bold">Model Configurator</span>
+                      <h3 className="font-outfit text-xl font-bold text-ink-navy">{editName || 'Edit Model'}</h3>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleCancelEdit}
+                        className="px-3 py-1.5 border border-ice-border text-zinc-400 hover:text-ink-navy text-xs font-bold font-mono rounded-sm transition-all"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteModel(editingModelId)}
+                        className="px-3 py-1.5 border border-red-500/30 text-red-500 hover:bg-red-500/10 text-xs font-bold font-mono rounded-sm transition-all flex items-center gap-1.5"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        Delete
+                      </button>
+                    </div>
                   </div>
 
-                  {/* Model Specs */}
-                  <div className="space-y-3 pt-1">
-                    <div className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Model Specifications</div>
+                  {/* Basic Specifications */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-[10px] text-zinc-400 font-semibold mb-1">Model Name</label>
+                      <label className="block text-[10px] font-mono text-zinc-500 uppercase font-bold mb-1">Model Name</label>
                       <input
                         type="text"
                         value={editName}
                         onChange={e => setEditName(e.target.value)}
-                        className="w-full bg-canvas-white border border-ice-border rounded-sm p-2 text-ink-navy text-xs focus:outline-none focus:ring-1 focus:ring-cobalt focus:border-cobalt"
-                        required
+                        className="w-full px-3 py-2 bg-canvas-white border border-ice-border rounded-sm text-xs font-mono font-bold text-ink-navy focus:border-cobalt focus:outline-none"
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] text-zinc-400 font-semibold mb-1">Model Code / Number</label>
+                      <label className="block text-[10px] font-mono text-zinc-500 uppercase font-bold mb-1">Model Code / Number</label>
                       <input
                         type="text"
                         value={editModelNumber}
                         onChange={e => setEditModelNumber(e.target.value)}
-                        className="w-full bg-canvas-white border border-ice-border rounded-sm p-2 text-ink-navy text-xs focus:outline-none focus:ring-1 focus:ring-cobalt focus:border-cobalt"
-                        required
+                        className="w-full px-3 py-2 bg-canvas-white border border-ice-border rounded-sm text-xs font-mono font-bold text-ink-navy focus:border-cobalt focus:outline-none"
                       />
                     </div>
-                    <div className="grid grid-cols-2 gap-2.5">
-                      <div>
-                        <label className="block text-[10px] text-zinc-400 font-semibold mb-1">Category</label>
-                        <select
-                          value={editCategory}
-                          onChange={e => setEditCategory(e.target.value as any)}
-                          className="w-full bg-canvas-white border border-ice-border rounded-sm p-2 text-ink-navy text-xs focus:outline-none focus:ring-1 focus:ring-cobalt"
-                        >
-                          <option value="flagship">Flagship</option>
-                          <option value="premium">Premium</option>
-                          <option value="midrange">Midrange</option>
-                          <option value="budget">Budget</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-[10px] text-zinc-400 font-semibold mb-1">Release Year</label>
-                        <input
-                          type="number"
-                          min="2010"
-                          max="2030"
-                          value={editYear}
-                          onChange={e => setEditYear(Number(e.target.value))}
-                          className="w-full bg-canvas-white border border-ice-border rounded-sm p-2 text-ink-navy text-xs focus:outline-none focus:ring-1 focus:ring-cobalt focus:border-cobalt"
-                          required
-                        />
-                      </div>
+                    <div>
+                      <label className="block text-[10px] font-mono text-zinc-500 uppercase font-bold mb-1">Category</label>
+                      <select
+                        value={editCategory}
+                        onChange={e => setEditCategory(e.target.value as any)}
+                        className="w-full px-3 py-2 bg-canvas-white border border-ice-border rounded-sm text-xs font-mono text-ink-navy focus:border-cobalt focus:outline-none"
+                      >
+                        <option value="flagship">Flagship</option>
+                        <option value="premium">Premium</option>
+                        <option value="midrange">Midrange</option>
+                        <option value="budget">Budget</option>
+                      </select>
                     </div>
                     <div>
-                      <label className="block text-[10px] text-zinc-400 font-semibold mb-1">Base Price 128GB (INR â‚¹)</label>
+                      <label className="block text-[10px] font-mono text-zinc-500 uppercase font-bold mb-1">Release Year</label>
                       <input
                         type="number"
-                        min="1000"
-                        step="500"
-                        value={editBasePrice}
-                        onChange={e => setEditBasePrice(Number(e.target.value))}
-                        className="w-full bg-canvas-white border border-ice-border rounded-sm p-2 text-ink-navy text-xs focus:outline-none focus:ring-1 focus:ring-cobalt focus:border-cobalt"
-                        required
+                        value={editYear}
+                        onChange={e => setEditYear(Number(e.target.value))}
+                        className="w-full px-3 py-2 bg-canvas-white border border-ice-border rounded-sm text-xs font-mono text-ink-navy focus:border-cobalt focus:outline-none"
                       />
                     </div>
                   </div>
 
-                  {/* Memory Variants */}
-                  <div className="p-3 bg-canvas-white border border-ice-border rounded-sm space-y-2">
-                    <label className="block text-[10px] text-zinc-500 uppercase font-bold tracking-wider flex items-center gap-1">
-                      <HardDrive className="w-3 h-3 text-violet-500" />
-                      Memory / Storage Variants
-                    </label>
-                    <p className="text-[9px] text-zinc-400">Select which storage tiers are available for this model.</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {ALL_STORAGE_OPTIONS.map(opt => (
+                  {/* RAM & Storage Variant Selection */}
+                  <div className="space-y-4 bg-canvas-white p-4 border border-ice-border rounded-sm">
+                    {/* RAM variants selector */}
+                    <div>
+                      <div className="flex justify-between items-center mb-2">
+                        <label className="text-[11px] font-mono font-bold text-ink-navy flex items-center gap-1.5">
+                          <Cpu className="w-3.5 h-3.5 text-cobalt" />
+                          RAM Variants (GB)
+                        </label>
                         <button
-                          key={opt.gb}
                           type="button"
-                          onClick={() => toggleStorage(opt.gb, editStorageGb, setEditStorageGb)}
-                          className={`px-3 py-1 rounded-sm border text-[10px] font-bold font-mono transition-all ${
-                            editStorageGb.includes(opt.gb)
-                              ? 'bg-violet-500/15 border-violet-500/40 text-violet-600'
-                              : 'bg-canvas-pure border-ice-border text-zinc-500 hover:border-violet-400/50 hover:text-violet-500'
+                          onClick={() => {
+                            if (editRamGb.length === 1 && editRamGb[0] === 0) {
+                              setEditRamGb([8]);
+                            } else {
+                              setEditRamGb([0]);
+                            }
+                          }}
+                          className={`text-[10px] font-mono px-2 py-0.5 rounded border font-bold transition-all ${
+                            editRamGb.length === 1 && editRamGb[0] === 0
+                              ? 'bg-amber-500/10 border-amber-500/30 text-amber-600'
+                              : 'bg-zinc-100 border-zinc-300 text-zinc-600 hover:border-cobalt'
                           }`}
                         >
-                          {opt.label}
-                          {editStorageGb.includes(opt.gb) && <span className="ml-1 text-violet-500">âœ“</span>}
+                          {editRamGb.length === 1 && editRamGb[0] === 0 ? '✓ No RAM variants (Apple-style)' : 'Switch to Storage Only (Apple)'}
                         </button>
-                      ))}
+                      </div>
+
+                      {!(editRamGb.length === 1 && editRamGb[0] === 0) && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {ALL_RAM_OPTIONS.map(opt => (
+                            <button
+                              key={opt.gb}
+                              type="button"
+                              onClick={() => toggleRam(opt.gb, editRamGb, setEditRamGb)}
+                              className={`px-3 py-1.5 rounded-sm border text-xs font-bold font-mono transition-all ${
+                                editRamGb.includes(opt.gb)
+                                  ? 'bg-cobalt border-cobalt text-white'
+                                  : 'bg-canvas-pure border-ice-border text-zinc-500 hover:border-cobalt/50'
+                              }`}
+                            >
+                              {opt.label}
+                              {editRamGb.includes(opt.gb) && <span className="ml-1 text-white">✓</span>}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    <p className="text-[9px] text-cobalt font-mono">
-                      Selected: {editStorageGb.map(g => g === 1024 ? '1TB' : `${g}GB`).join(', ')}
-                    </p>
+
+                    {/* Storage variants selector */}
+                    <div>
+                      <label className="block text-[11px] font-mono font-bold text-ink-navy mb-2 flex items-center gap-1.5">
+                        <HardDrive className="w-3.5 h-3.5 text-violet-500" />
+                        Storage Variants (GB)
+                      </label>
+                      <div className="flex flex-wrap gap-1.5">
+                        {ALL_STORAGE_OPTIONS.map(opt => (
+                          <button
+                            key={opt.gb}
+                            type="button"
+                            onClick={() => toggleStorage(opt.gb, editStorageGb, setEditStorageGb)}
+                            className={`px-3 py-1.5 rounded-sm border text-xs font-bold font-mono transition-all ${
+                              editStorageGb.includes(opt.gb)
+                                ? 'bg-violet-600 border-violet-600 text-white'
+                                : 'bg-canvas-pure border-ice-border text-zinc-500 hover:border-violet-400'
+                            }`}
+                          >
+                            {opt.label}
+                            {editStorageGb.includes(opt.gb) && <span className="ml-1 text-white">✓</span>}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Image Input */}
+                  {/* RAM × Storage Variant Price Matrix */}
+                  <div className="space-y-3 bg-canvas-white p-4 border border-ice-border rounded-sm">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <Grid className="w-4 h-4 text-cobalt" />
+                        <h4 className="font-outfit text-sm font-semibold text-ink-navy">Variant Price Matrix (₹)</h4>
+                      </div>
+                      <span className="text-[10px] font-mono text-zinc-500">Edit price for each variant combination</span>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-xs font-mono border-collapse">
+                        <thead>
+                          <tr className="border-b border-ice-border text-zinc-500 text-[10px] uppercase">
+                            {!(editRamGb.length === 1 && editRamGb[0] === 0) && (
+                              <th className="p-2 text-left bg-zinc-100/50">RAM \ Storage</th>
+                            )}
+                            {editStorageGb.map(s => (
+                              <th key={s} className="p-2 text-center bg-zinc-100/50 min-w-[100px]">
+                                {s >= 1024 ? `${s / 1024} TB` : `${s} GB`}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-ice-border/40">
+                          {(editRamGb.length === 1 && editRamGb[0] === 0 ? [0] : editRamGb).map(ram => (
+                            <tr key={ram} className="hover:bg-zinc-50/50">
+                              {!(editRamGb.length === 1 && editRamGb[0] === 0) && (
+                                <td className="p-2 font-bold text-cobalt bg-zinc-50/50 whitespace-nowrap">
+                                  {ram} GB RAM
+                                </td>
+                              )}
+                              {editStorageGb.map(storage => {
+                                const key = `${ram}_${storage}`;
+                                const val = editVariantPrices[key] !== undefined ? editVariantPrices[key] : '';
+                                return (
+                                  <td key={storage} className="p-1.5 text-center">
+                                    <div className="relative">
+                                      <span className="absolute left-2 top-2 text-zinc-400 text-[10px]">₹</span>
+                                      <input
+                                        type="number"
+                                        value={val}
+                                        placeholder="Price"
+                                        onChange={e => {
+                                          const num = parseInt(e.target.value, 10);
+                                          setEditVariantPrices(prev => {
+                                            const next = { ...prev };
+                                            if (isNaN(num) || num <= 0) {
+                                              delete next[key];
+                                            } else {
+                                              next[key] = num;
+                                            }
+                                            return next;
+                                          });
+                                        }}
+                                        className="w-full pl-5 pr-2 py-1.5 bg-canvas-pure border border-ice-border focus:border-cobalt rounded-sm text-xs font-mono font-bold text-ink-navy text-right"
+                                      />
+                                    </div>
+                                    {val && (
+                                      <span className="text-[9px] text-emerald-600 block mt-0.5 font-bold">
+                                        {formatPrice(Number(val))}
+                                      </span>
+                                    )}
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Product Image Input */}
                   <div className="p-3 bg-canvas-white border border-ice-border rounded-sm space-y-2">
-                    <label className="block text-[10px] text-zinc-500 uppercase font-bold tracking-wider flex items-center justify-between">
-                      <span className="flex items-center gap-1">
-                        <ImageIcon className="w-3 h-3 text-cobalt" />
-                        Product Image
-                      </span>
+                    <label className="block text-[10px] font-mono text-zinc-500 uppercase font-bold tracking-wider flex items-center justify-between">
+                      <span>Product Image</span>
                       <span className="text-[9px] text-zinc-400 font-normal">URL link or file upload</span>
                     </label>
-                    <div className="relative">
-                      <LinkIcon className="w-3.5 h-3.5 text-zinc-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="url"
-                        placeholder="https://example.com/phone-image.png"
-                        value={editImageUrl.startsWith('data:') ? '' : editImageUrl}
-                        onChange={e => setEditImageUrl(e.target.value)}
-                        className="w-full pl-8 pr-2 py-1.5 bg-canvas-pure border border-ice-border rounded-sm text-ink-navy text-[11px] focus:outline-none focus:ring-1 focus:ring-cobalt"
-                      />
-                    </div>
+                    <input
+                      type="url"
+                      placeholder="https://example.com/phone-image.png"
+                      value={editImageUrl.startsWith('data:') ? '' : editImageUrl}
+                      onChange={e => setEditImageUrl(e.target.value)}
+                      className="w-full px-3 py-1.5 bg-canvas-pure border border-ice-border rounded-sm text-ink-navy text-xs font-mono focus:outline-none focus:ring-1 focus:ring-cobalt"
+                    />
                     <div className="flex items-center gap-2 my-1">
                       <div className="h-[1px] bg-ice-border flex-1" />
-                      <span className="text-[9px] text-zinc-400 uppercase font-semibold">OR</span>
+                      <span className="text-[9px] text-zinc-400 font-mono uppercase font-semibold">OR</span>
                       <div className="h-[1px] bg-ice-border flex-1" />
                     </div>
-                    <div>
-                      <label className="w-full py-1.5 px-3 bg-canvas-pure border border-dashed border-ice-border hover:border-cobalt rounded-sm text-[11px] text-ink-slate font-semibold cursor-pointer flex items-center justify-center gap-1.5 transition-all">
-                        <Upload className="w-3.5 h-3.5 text-cobalt" />
-                        <span>Upload New Image File</span>
-                        <input type="file" accept="image/*" onChange={handleEditImageFileUpload} className="hidden" />
-                      </label>
-                    </div>
+                    <label className="w-full py-1.5 px-3 bg-canvas-pure border border-dashed border-ice-border hover:border-cobalt rounded-sm text-xs font-mono text-ink-slate font-semibold cursor-pointer flex items-center justify-center gap-1.5 transition-all">
+                      <span>Upload Image File</span>
+                      <input type="file" accept="image/*" onChange={handleEditImageFileUpload} className="hidden" />
+                    </label>
                     {editImageUrl && (
-                      <div className="pt-2 flex items-center gap-3 bg-slate-50 dark:bg-zinc-800/40 p-2 rounded border border-ice-border">
-                        <img src={editImageUrl} alt="Preview" className="w-12 h-12 object-contain rounded bg-white p-0.5 border" />
+                      <div className="pt-2 flex items-center gap-3 bg-slate-50 dark:bg-zinc-800/40 p-2 rounded border border-ice-border font-mono">
+                        <img src={editImageUrl} alt="Preview" className="w-10 h-10 object-contain rounded bg-white p-0.5 border" />
                         <div className="flex-1 overflow-hidden text-[10px]">
-                          <span className="text-emerald-600 font-bold block">âœ“ Image Loaded</span>
+                          <span className="text-emerald-600 font-bold block">✓ Image Attached</span>
                           <span className="text-zinc-400 truncate block">
-                            {editImageUrl.startsWith('data:') ? 'Local file uploaded (Data URL)' : editImageUrl}
+                            {editImageUrl.startsWith('data:') ? 'Local file uploaded' : editImageUrl}
                           </span>
                         </div>
                         <button type="button" onClick={() => setEditImageUrl('')} className="text-red-500 text-[10px] hover:underline font-bold">
@@ -1780,232 +1515,276 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     )}
                   </div>
 
-                  <div className="flex gap-2 pt-2">
-                    <button
-                      type="submit"
-                      className="flex-1 py-2.5 bg-cobalt hover:bg-cobalt-hover text-white text-xs font-bold rounded-sm transition-all shadow-sm flex items-center justify-center gap-1.5"
-                    >
-                      <Check className="w-4 h-4" />
-                      Save Changes
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleCancelEdit}
-                      className="px-4 py-2.5 border border-ice-border text-zinc-400 hover:text-ink-navy text-xs font-bold rounded-sm transition-all"
-                    >
-                      Cancel
-                    </button>
-                  </div>
+                  {/* Form Submit Button */}
+                  <button
+                    type="submit"
+                    className="w-full py-3 bg-cobalt hover:bg-cobalt-hover text-white text-xs font-bold rounded-sm shadow-md transition-all flex items-center justify-center gap-2"
+                  >
+                    <Check className="w-4 h-4" />
+                    Save Model & Variant Prices
+                  </button>
                 </form>
-              </div>
-            ) : (
-              /* Add New Model Form */
-              <div>
-                <div className="border-b border-ice-border/40 pb-3 mb-4 flex items-center gap-2">
-                  <div className="p-1.5 rounded bg-cobalt/10 border border-cobalt/20 text-cobalt">
-                    <Plus className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h3 className="font-outfit font-light text-lg text-ink-navy">Add Product to Catalog</h3>
-                    <p className="text-[10px] text-zinc-400 font-mono">Brand â†’ Series â†’ Model Hierarchy</p>
-                  </div>
-                </div>
-
-                <form onSubmit={handleAddModel} className="space-y-4 font-mono">
-                  {formError && (
-                    <div className="p-2.5 bg-red-500/10 border border-red-500/20 text-red-500 rounded-sm font-semibold text-[10px]">
-                      Error: {formError}
-                    </div>
-                  )}
-                  {formSuccess && (
-                    <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 rounded-sm font-semibold text-[10px]">
-                      {formSuccess}
-                    </div>
-                  )}
-
-                  {/* Step 1: Brand Selection */}
-                  <div className="p-3 bg-canvas-white border border-ice-border rounded-sm space-y-1.5">
-                    <label className="block text-[10px] text-zinc-500 uppercase font-bold tracking-wider flex items-center gap-1">
-                      <span>1. Brand</span>
-                    </label>
-                    <select
-                      value={selectedCatalogBrandId}
-                      onChange={e => {
-                        setSelectedCatalogBrandId(e.target.value);
-                        setSelectedSeriesOption('__CREATE_NEW__');
-                      }}
-                      className="w-full bg-canvas-pure border border-ice-border rounded-sm p-2 text-ink-navy text-xs focus:outline-none focus:ring-1 focus:ring-cobalt focus:border-cobalt font-semibold"
-                    >
-                      {brands.map(b => (
-                        <option key={b.id} value={b.id}>{b.name}</option>
-                      ))}
-                    </select>
+              ) : (
+                /* Add New Model Mode */
+                <form onSubmit={handleAddModel} className="space-y-6">
+                  <div className="border-b border-ice-border/60 pb-3">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-cobalt font-bold">Catalog Creator</span>
+                    <h3 className="font-outfit text-xl font-bold text-ink-navy">Add New Model to Catalog</h3>
                   </div>
 
-                  {/* Step 2: Series Selection or Creation */}
-                  <div className="p-3 bg-canvas-white border border-ice-border rounded-sm space-y-2">
-                    <label className="block text-[10px] text-zinc-500 uppercase font-bold tracking-wider flex items-center gap-1">
-                      <Layers className="w-3 h-3 text-cobalt" />
-                      <span>2. Product Series</span>
-                    </label>
-                    <select
-                      value={selectedSeriesOption}
-                      onChange={e => setSelectedSeriesOption(e.target.value)}
-                      className="w-full bg-canvas-pure border border-ice-border rounded-sm p-2 text-ink-navy text-xs focus:outline-none focus:ring-1 focus:ring-cobalt focus:border-cobalt"
-                    >
-                      <option value="__CREATE_NEW__">âœ¨ + Create New Series (e.g. iPhone 18 Series)</option>
-                      {existingSeriesForSelectedBrand.map(s => (
-                        <option key={s} value={s}>Existing: {s}</option>
-                      ))}
-                    </select>
-                    {selectedSeriesOption === '__CREATE_NEW__' && (
-                      <div className="pt-1">
-                        <label className="block text-[9px] text-zinc-400 uppercase font-semibold mb-1">New Series Name</label>
-                        <input
-                          type="text"
-                          placeholder="e.g. iPhone 18 Series"
-                          value={customSeriesInput}
-                          onChange={e => setCustomSeriesInput(e.target.value)}
-                          className="w-full bg-canvas-pure border border-cobalt/50 rounded-sm p-2 text-ink-navy text-xs focus:outline-none focus:ring-1 focus:ring-cobalt font-bold"
-                          required={selectedSeriesOption === '__CREATE_NEW__'}
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Step 3: Model Details */}
-                  <div className="space-y-3 pt-1">
-                    <div className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">3. Model Information</div>
+                  {/* Basic Specifications */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-[10px] text-zinc-400 font-semibold mb-1">Model Name</label>
+                      <label className="block text-[10px] font-mono text-zinc-500 uppercase font-bold mb-1">Model Name *</label>
                       <input
                         type="text"
-                        placeholder="e.g. iPhone 18 Pro Max"
+                        placeholder="e.g. iPhone 16 Pro Max / Galaxy S24"
                         value={newModelName}
                         onChange={e => setNewModelName(e.target.value)}
-                        className="w-full bg-canvas-white border border-ice-border rounded-sm p-2 text-ink-navy text-xs focus:outline-none focus:ring-1 focus:ring-cobalt focus:border-cobalt"
-                        required
+                        className="w-full px-3 py-2 bg-canvas-white border border-ice-border rounded-sm text-xs font-mono font-bold text-ink-navy focus:border-cobalt focus:outline-none"
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] text-zinc-400 font-semibold mb-1">Model Code / Number</label>
+                      <label className="block text-[10px] font-mono text-zinc-500 uppercase font-bold mb-1">Model Code / Number *</label>
                       <input
                         type="text"
-                        placeholder="e.g. A3399 or SM-S958B"
+                        placeholder="e.g. A3106 / SM-S928B"
                         value={newModelNumber}
                         onChange={e => setNewModelNumber(e.target.value)}
-                        className="w-full bg-canvas-white border border-ice-border rounded-sm p-2 text-ink-navy text-xs focus:outline-none focus:ring-1 focus:ring-cobalt focus:border-cobalt"
-                        required
+                        className="w-full px-3 py-2 bg-canvas-white border border-ice-border rounded-sm text-xs font-mono font-bold text-ink-navy focus:border-cobalt focus:outline-none"
                       />
                     </div>
-                    <div className="grid grid-cols-2 gap-2.5">
-                      <div>
-                        <label className="block text-[10px] text-zinc-400 font-semibold mb-1">Category</label>
-                        <select
-                          value={newModelCategory}
-                          onChange={e => setNewModelCategory(e.target.value as any)}
-                          className="w-full bg-canvas-white border border-ice-border rounded-sm p-2 text-ink-navy text-xs focus:outline-none focus:ring-1 focus:ring-cobalt"
-                        >
-                          <option value="flagship">Flagship</option>
-                          <option value="premium">Premium</option>
-                          <option value="midrange">Midrange</option>
-                          <option value="budget">Budget</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-[10px] text-zinc-400 font-semibold mb-1">Release Year</label>
+                    <div>
+                      <label className="block text-[10px] font-mono text-zinc-500 uppercase font-bold mb-1">Series</label>
+                      <select
+                        value={selectedSeriesOption}
+                        onChange={e => setSelectedSeriesOption(e.target.value)}
+                        className="w-full px-3 py-2 bg-canvas-white border border-ice-border rounded-sm text-xs font-mono font-bold text-ink-navy focus:border-cobalt focus:outline-none"
+                      >
+                        <option value="">No Series / Standalone</option>
+                        <option value="__CREATE_NEW__">+ Create New Series...</option>
+                        {existingSeriesForSelectedBrand.map(s => (
+                          <option key={s} value={s}>{s}</option>
+                        ))}
+                      </select>
+                      {selectedSeriesOption === '__CREATE_NEW__' && (
                         <input
-                          type="number"
-                          min="2010"
-                          max="2030"
-                          value={newModelYear}
-                          onChange={e => setNewModelYear(Number(e.target.value))}
-                          className="w-full bg-canvas-white border border-ice-border rounded-sm p-2 text-ink-navy text-xs focus:outline-none focus:ring-1 focus:ring-cobalt focus:border-cobalt"
-                          required
+                          type="text"
+                          placeholder="e.g. Galaxy S24 Series"
+                          value={customSeriesInput}
+                          onChange={e => setCustomSeriesInput(e.target.value)}
+                          className="w-full mt-1.5 px-3 py-2 bg-canvas-white border border-ice-border rounded-sm text-xs font-mono text-ink-navy focus:border-cobalt focus:outline-none"
                         />
-                      </div>
+                      )}
                     </div>
                     <div>
-                      <label className="block text-[10px] text-zinc-400 font-semibold mb-1">Base Price 128GB (INR â‚¹)</label>
+                      <label className="block text-[10px] font-mono text-zinc-500 uppercase font-bold mb-1">Base Price (INR ₹)</label>
                       <input
                         type="number"
-                        min="1000"
-                        step="500"
                         value={newModelBasePrice}
                         onChange={e => setNewModelBasePrice(Number(e.target.value))}
-                        className="w-full bg-canvas-white border border-ice-border rounded-sm p-2 text-ink-navy text-xs focus:outline-none focus:ring-1 focus:ring-cobalt focus:border-cobalt"
-                        required
+                        className="w-full px-3 py-2 bg-canvas-white border border-ice-border rounded-sm text-xs font-mono font-bold text-ink-navy focus:border-cobalt focus:outline-none"
                       />
-                    </div>
-                  </div>
-
-                  {/* Step 4: Memory Variants */}
-                  <div className="p-3 bg-canvas-white border border-ice-border rounded-sm space-y-2">
-                    <label className="block text-[10px] text-zinc-500 uppercase font-bold tracking-wider flex items-center gap-1">
-                      <HardDrive className="w-3 h-3 text-violet-500" />
-                      4. Memory / Storage Variants
-                    </label>
-                    <p className="text-[9px] text-zinc-400">Select available storage tiers for this model.</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {ALL_STORAGE_OPTIONS.map(opt => (
-                        <button
-                          key={opt.gb}
-                          type="button"
-                          onClick={() => toggleStorage(opt.gb, newModelStorageGb, setNewModelStorageGb)}
-                          className={`px-3 py-1 rounded-sm border text-[10px] font-bold font-mono transition-all ${
-                            newModelStorageGb.includes(opt.gb)
-                              ? 'bg-violet-500/15 border-violet-500/40 text-violet-600'
-                              : 'bg-canvas-pure border-ice-border text-zinc-500 hover:border-violet-400/50 hover:text-violet-500'
-                          }`}
-                        >
-                          {opt.label}
-                          {newModelStorageGb.includes(opt.gb) && <span className="ml-1 text-violet-500">âœ“</span>}
-                        </button>
-                      ))}
-                    </div>
-                    <p className="text-[9px] text-cobalt font-mono">
-                      Selected: {newModelStorageGb.map(g => g === 1024 ? '1TB' : `${g}GB`).join(', ')}
-                    </p>
-                  </div>
-
-                  {/* Step 5: Image Input (URL Link OR Uploaded File) */}
-                  <div className="p-3 bg-canvas-white border border-ice-border rounded-sm space-y-2">
-                    <label className="block text-[10px] text-zinc-500 uppercase font-bold tracking-wider flex items-center justify-between">
-                      <span className="flex items-center gap-1">
-                        <ImageIcon className="w-3 h-3 text-cobalt" />
-                        5. Product Image
-                      </span>
-                      <span className="text-[9px] text-zinc-400 font-normal">URL link or file upload</span>
-                    </label>
-                    <div className="relative">
-                      <LinkIcon className="w-3.5 h-3.5 text-zinc-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="url"
-                        placeholder="https://example.com/phone-image.png"
-                        value={newModelImageUrl.startsWith('data:') ? '' : newModelImageUrl}
-                        onChange={e => setNewModelImageUrl(e.target.value)}
-                        className="w-full pl-8 pr-2 py-1.5 bg-canvas-pure border border-ice-border rounded-sm text-ink-navy text-[11px] focus:outline-none focus:ring-1 focus:ring-cobalt"
-                      />
-                    </div>
-                    <div className="flex items-center gap-2 my-1">
-                      <div className="h-[1px] bg-ice-border flex-1" />
-                      <span className="text-[9px] text-zinc-400 uppercase font-semibold">OR</span>
-                      <div className="h-[1px] bg-ice-border flex-1" />
                     </div>
                     <div>
-                      <label className="w-full py-1.5 px-3 bg-canvas-pure border border-dashed border-ice-border hover:border-cobalt rounded-sm text-[11px] text-ink-slate font-semibold cursor-pointer flex items-center justify-center gap-1.5 transition-all">
-                        <Upload className="w-3.5 h-3.5 text-cobalt" />
-                        <span>Upload Image File</span>
-                        <input type="file" accept="image/*" onChange={handleImageFileUpload} className="hidden" />
-                      </label>
+                      <label className="block text-[10px] font-mono text-zinc-500 uppercase font-bold mb-1">Category</label>
+                      <select
+                        value={newModelCategory}
+                        onChange={e => setNewModelCategory(e.target.value as any)}
+                        className="w-full px-3 py-2 bg-canvas-white border border-ice-border rounded-sm text-xs font-mono text-ink-navy focus:border-cobalt focus:outline-none"
+                      >
+                        <option value="flagship">Flagship</option>
+                        <option value="premium">Premium</option>
+                        <option value="midrange">Midrange</option>
+                        <option value="budget">Budget</option>
+                      </select>
                     </div>
+                    <div>
+                      <label className="block text-[10px] font-mono text-zinc-500 uppercase font-bold mb-1">Release Year</label>
+                      <input
+                        type="number"
+                        value={newModelYear}
+                        onChange={e => setNewModelYear(Number(e.target.value))}
+                        className="w-full px-3 py-2 bg-canvas-white border border-ice-border rounded-sm text-xs font-mono text-ink-navy focus:border-cobalt focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* RAM & Storage Selection */}
+                  <div className="space-y-4 bg-canvas-white p-4 border border-ice-border rounded-sm">
+                    <div>
+                      <div className="flex justify-between items-center mb-2">
+                        <label className="text-[11px] font-mono font-bold text-ink-navy flex items-center gap-1.5">
+                          <Cpu className="w-3.5 h-3.5 text-cobalt" />
+                          RAM Variants (GB)
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (newModelRamGb.length === 1 && newModelRamGb[0] === 0) {
+                              setNewModelRamGb([8]);
+                            } else {
+                              setNewModelRamGb([0]);
+                            }
+                          }}
+                          className={`text-[10px] font-mono px-2 py-0.5 rounded border font-bold transition-all ${
+                            newModelRamGb.length === 1 && newModelRamGb[0] === 0
+                              ? 'bg-amber-500/10 border-amber-500/30 text-amber-600'
+                              : 'bg-zinc-100 border-zinc-300 text-zinc-600 hover:border-cobalt'
+                          }`}
+                        >
+                          {newModelRamGb.length === 1 && newModelRamGb[0] === 0 ? '✓ No RAM variants (Apple-style)' : 'Switch to Storage Only (Apple)'}
+                        </button>
+                      </div>
+
+                      {!(newModelRamGb.length === 1 && newModelRamGb[0] === 0) && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {ALL_RAM_OPTIONS.map(opt => (
+                            <button
+                              key={opt.gb}
+                              type="button"
+                              onClick={() => toggleRam(opt.gb, newModelRamGb, setNewModelRamGb)}
+                              className={`px-3 py-1.5 rounded-sm border text-xs font-bold font-mono transition-all ${
+                                newModelRamGb.includes(opt.gb)
+                                  ? 'bg-cobalt border-cobalt text-white'
+                                  : 'bg-canvas-pure border-ice-border text-zinc-500 hover:border-cobalt/50'
+                              }`}
+                            >
+                              {opt.label}
+                              {newModelRamGb.includes(opt.gb) && <span className="ml-1 text-white">✓</span>}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-mono font-bold text-ink-navy mb-2 flex items-center gap-1.5">
+                        <HardDrive className="w-3.5 h-3.5 text-violet-500" />
+                        Storage Variants (GB)
+                      </label>
+                      <div className="flex flex-wrap gap-1.5">
+                        {ALL_STORAGE_OPTIONS.map(opt => (
+                          <button
+                            key={opt.gb}
+                            type="button"
+                            onClick={() => toggleStorage(opt.gb, newModelStorageGb, setNewModelStorageGb)}
+                            className={`px-3 py-1.5 rounded-sm border text-xs font-bold font-mono transition-all ${
+                              newModelStorageGb.includes(opt.gb)
+                                ? 'bg-violet-600 border-violet-600 text-white'
+                                : 'bg-canvas-pure border-ice-border text-zinc-500 hover:border-violet-400'
+                            }`}
+                          >
+                            {opt.label}
+                            {newModelStorageGb.includes(opt.gb) && <span className="ml-1 text-white">✓</span>}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* RAM × Storage Price Matrix */}
+                  <div className="space-y-3 bg-canvas-white p-4 border border-ice-border rounded-sm">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <Grid className="w-4 h-4 text-cobalt" />
+                        <h4 className="font-outfit text-sm font-semibold text-ink-navy">Variant Price Matrix (₹)</h4>
+                      </div>
+                      <span className="text-[10px] font-mono text-zinc-500">Set price for each variant</span>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-xs font-mono border-collapse">
+                        <thead>
+                          <tr className="border-b border-ice-border text-zinc-500 text-[10px] uppercase">
+                            {!(newModelRamGb.length === 1 && newModelRamGb[0] === 0) && (
+                              <th className="p-2 text-left bg-zinc-100/50">RAM \ Storage</th>
+                            )}
+                            {newModelStorageGb.map(s => (
+                              <th key={s} className="p-2 text-center bg-zinc-100/50 min-w-[100px]">
+                                {s >= 1024 ? `${s / 1024} TB` : `${s} GB`}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-ice-border/40">
+                          {(newModelRamGb.length === 1 && newModelRamGb[0] === 0 ? [0] : newModelRamGb).map(ram => (
+                            <tr key={ram} className="hover:bg-zinc-50/50">
+                              {!(newModelRamGb.length === 1 && newModelRamGb[0] === 0) && (
+                                <td className="p-2 font-bold text-cobalt bg-zinc-50/50 whitespace-nowrap">
+                                  {ram} GB RAM
+                                </td>
+                              )}
+                              {newModelStorageGb.map(storage => {
+                                const key = `${ram}_${storage}`;
+                                const val = newVariantPrices[key] !== undefined ? newVariantPrices[key] : '';
+                                return (
+                                  <td key={storage} className="p-1.5 text-center">
+                                    <div className="relative">
+                                      <span className="absolute left-2 top-2 text-zinc-400 text-[10px]">₹</span>
+                                      <input
+                                        type="number"
+                                        value={val}
+                                        placeholder="Price"
+                                        onChange={e => {
+                                          const num = parseInt(e.target.value, 10);
+                                          setNewVariantPrices(prev => {
+                                            const next = { ...prev };
+                                            if (isNaN(num) || num <= 0) {
+                                              delete next[key];
+                                            } else {
+                                              next[key] = num;
+                                            }
+                                            return next;
+                                          });
+                                        }}
+                                        className="w-full pl-5 pr-2 py-1.5 bg-canvas-pure border border-ice-border focus:border-cobalt rounded-sm text-xs font-mono font-bold text-ink-navy text-right"
+                                      />
+                                    </div>
+                                    {val && (
+                                      <span className="text-[9px] text-emerald-600 block mt-0.5 font-bold">
+                                        {formatPrice(Number(val))}
+                                      </span>
+                                    )}
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Product Image Input */}
+                  <div className="p-3 bg-canvas-white border border-ice-border rounded-sm space-y-2">
+                    <label className="block text-[10px] font-mono text-zinc-500 uppercase font-bold tracking-wider flex items-center justify-between">
+                      <span>Product Image</span>
+                      <span className="text-[9px] text-zinc-400 font-normal">URL link or file upload</span>
+                    </label>
+                    <input
+                      type="url"
+                      placeholder="https://example.com/phone-image.png"
+                      value={newModelImageUrl.startsWith('data:') ? '' : newModelImageUrl}
+                      onChange={e => setNewModelImageUrl(e.target.value)}
+                      className="w-full px-3 py-1.5 bg-canvas-pure border border-ice-border rounded-sm text-ink-navy text-xs font-mono focus:outline-none focus:ring-1 focus:ring-cobalt"
+                    />
+                    <div className="flex items-center gap-2 my-1">
+                      <div className="h-[1px] bg-ice-border flex-1" />
+                      <span className="text-[9px] text-zinc-400 font-mono uppercase font-semibold">OR</span>
+                      <div className="h-[1px] bg-ice-border flex-1" />
+                    </div>
+                    <label className="w-full py-1.5 px-3 bg-canvas-pure border border-dashed border-ice-border hover:border-cobalt rounded-sm text-xs font-mono text-ink-slate font-semibold cursor-pointer flex items-center justify-center gap-1.5 transition-all">
+                      <span>Upload Image File</span>
+                      <input type="file" accept="image/*" onChange={handleImageFileUpload} className="hidden" />
+                    </label>
                     {newModelImageUrl && (
-                      <div className="pt-2 flex items-center gap-3 bg-slate-50 dark:bg-zinc-800/40 p-2 rounded border border-ice-border">
-                        <img src={newModelImageUrl} alt="Preview" className="w-12 h-12 object-contain rounded bg-white p-0.5 border" />
+                      <div className="pt-2 flex items-center gap-3 bg-slate-50 dark:bg-zinc-800/40 p-2 rounded border border-ice-border font-mono">
+                        <img src={newModelImageUrl} alt="Preview" className="w-10 h-10 object-contain rounded bg-white p-0.5 border" />
                         <div className="flex-1 overflow-hidden text-[10px]">
-                          <span className="text-emerald-600 font-bold block">âœ“ Image Loaded</span>
+                          <span className="text-emerald-600 font-bold block">✓ Image Attached</span>
                           <span className="text-zinc-400 truncate block">
-                            {newModelImageUrl.startsWith('data:') ? 'Local file uploaded (Data URL)' : newModelImageUrl}
+                            {newModelImageUrl.startsWith('data:') ? 'Local file uploaded' : newModelImageUrl}
                           </span>
                         </div>
                         <button type="button" onClick={() => setNewModelImageUrl('')} className="text-red-500 text-[10px] hover:underline font-bold">
@@ -2017,18 +1796,17 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
                   <button
                     type="submit"
-                    className="w-full py-2.5 bg-cobalt hover:bg-cobalt-hover text-white text-xs font-bold rounded-sm transition-all shadow-sm flex items-center justify-center gap-2"
+                    className="w-full py-3 bg-cobalt hover:bg-cobalt-hover text-white text-xs font-bold rounded-sm shadow-md transition-all flex items-center justify-center gap-2"
                   >
                     <Plus className="w-4 h-4" />
                     Add Product to Catalog
                   </button>
                 </form>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       )}
-
       {activeTab === 'support' && (
         <SupportInbox />
       )}

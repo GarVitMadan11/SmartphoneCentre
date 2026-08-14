@@ -38,7 +38,9 @@ model Model {
   basePrice128GB Int    // Anchor price in INR
   series         String @default("")
   imageUrl       String @default("") // optional external image URL
-  supportedStorageGb String @default("[64,128,256,512]") // JSON array of supported storage sizes in GB
+  supportedStorageGb String @default("[128,256,512]") // JSON array of storage sizes in GB
+  supportedRamGb     String @default("[0]")           // JSON array of RAM sizes in GB; [0] = no RAM variant (Apple-style)
+  variantPrices      String @default("{}")            // JSON: { "ramGb_storageGb": priceINR } e.g. {"8_128":75000}
 
   brand Brand @relation(fields: [brandId], references: [id], onDelete: Cascade)
 
