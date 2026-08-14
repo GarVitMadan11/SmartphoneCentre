@@ -51,22 +51,23 @@ export function adminAuth(
   next: NextFunction
 ): void {
   const cookies = parseCookies(req);
-  let token = cookies['rex_admin_token'];
-  const isCookieSession = Boolean(token);
+  const authHeader = req.headers['authorization'];
+  let token: string | undefined;
+  let isCookieSession = false;
 
-  if (!token) {
-    const authHeader = req.headers['authorization'];
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      token = authHeader.slice(7).trim();
-    }
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.slice(7).trim();
+    isCookieSession = false;
+  } else if (cookies['rex_admin_token']) {
+    token = cookies['rex_admin_token'];
+    isCookieSession = true;
   }
 
-  // SameSite cookies are the first CSRF defence; the matching per-session
-  // token protects unsafe admin requests even if a browser policy changes.
+  // SameSite cookies are the first CSRF defence; cookie-only sessions require matching CSRF token.
   if (isCookieSession && !['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
     const csrfToken = req.headers['x-csrf-token'];
     if (typeof csrfToken !== 'string' || !cookies['rex_admin_csrf'] || csrfToken !== cookies['rex_admin_csrf']) {
-      res.status(403).json({ error: 'CsrfValidationFailed', message: 'A valid CSRF token is required for this request.' });
+      res.status(403).json({ error: 'CsrfValidationFailed', message: 'A valid CSRF token is required for cookie session requests.' });
       return;
     }
   }
