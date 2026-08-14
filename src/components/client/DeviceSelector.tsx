@@ -666,7 +666,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
       };
       return priority(b) - priority(a);
     });
-  }, [selectedBrandId]);
+  }, [selectedBrandId, MODELS]);
 
   // Compute the model count and release-year range for each series.
   const seriesStats = useMemo(() => {
@@ -681,7 +681,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
       stats[seriesName] = { modelCount, yearRange };
     });
     return stats;
-  }, [availableSeries, selectedBrandId]);
+  }, [availableSeries, selectedBrandId, MODELS]);
 
   // Filter models based on brand, series, and debounced search query
   // When a search query is active, bypass brand AND series filter (cross-brand search)
@@ -699,7 +699,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
         return matchesBrand && matchesSeries;
       }
 
-      const brand = STATIC_BRANDS.find(b => b.id === model.brandId);
+      const brand = BRANDS.find(b => b.id === model.brandId);
       const brandName = brand ? brand.name.toLowerCase() : '';
       const modelName = model.name.toLowerCase();
       const modelNum = model.modelNumber.toLowerCase();
@@ -730,7 +730,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
 
       return matchesBrand && matchesSeries && matchesSearch;
     });
-  }, [selectedBrandId, selectedSeries, debouncedSearchQuery]);
+  }, [selectedBrandId, selectedSeries, debouncedSearchQuery, MODELS, BRANDS]);
 
   // Generate variants for the selected model
   const modelVariants = useMemo(() => {

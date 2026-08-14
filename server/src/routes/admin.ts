@@ -25,17 +25,18 @@ const JWT_EXPIRES_IN = (process.env.JWT_EXPIRES_IN ?? '4h') as string;
 
 function setAdminCookie(res: Response, token: string): void {
   const isProd = process.env.NODE_ENV === 'production';
+  const sameSiteMode = isProd ? 'none' : 'lax';
   res.cookie('rex_admin_token', token, {
     httpOnly: true,
     secure: isProd,
-    sameSite: 'strict',
+    sameSite: sameSiteMode,
     maxAge: 4 * 60 * 60 * 1000, // 4 hours in ms
     path: '/',
   });
   res.cookie('rex_admin_csrf', randomBytes(32).toString('base64url'), {
     httpOnly: false,
     secure: isProd,
-    sameSite: 'strict',
+    sameSite: sameSiteMode,
     maxAge: 4 * 60 * 60 * 1000,
     path: '/',
   });
