@@ -5,6 +5,7 @@ import { DeviceSelector } from './components/client/DeviceSelector';
 import { DeviceCategoryShowcase } from './components/client/DeviceCategoryShowcase';
 import { SellYourDevice } from './components/client/SellYourDevice';
 import { SupportChatWidget } from './components/client/SupportChatWidget';
+import { CategoryBar } from './components/client/CategoryBar';
 import { useFocusTrap } from './hooks/useFocusTrap';
 // ── Lazy-loaded heavy components (code splitting — P-1 fix) ───────────────────
 const DiagnosticWizard = lazy(() => import('./components/client/DiagnosticWizard').then(m => ({ default: m.DiagnosticWizard })));
@@ -538,6 +539,22 @@ export default function App() {
           </div>
         )}
       </header>
+
+      {/* ── Focused Category Sub-Header Bar (Smartphones, Tablets, Smartwatches) ── */}
+      <CategoryBar
+        onSelectBrand={(brandId) => {
+          const firstModelOfBrand = MODELS.find(m => m.brandId === brandId);
+          if (firstModelOfBrand) {
+            setPendingModelId(firstModelOfBrand.id);
+          }
+          document.getElementById('device-selector-section')?.scrollIntoView({ behavior: 'smooth' });
+        }}
+        onSelectCategory={() => {
+          document.getElementById('explore-devices-section')?.scrollIntoView({ behavior: 'smooth' });
+        }}
+        onOpenTrackOrder={() => setIsTrackOpen(true)}
+        onNavigateHome={handleReset}
+      />
 
       {/* ── Main Layout ── */}
       <main className={`flex-1 w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 ${(activeStage === 'select' || activeStage === 'admin') ? 'max-w-7xl flex flex-col' : 'max-w-7xl flex flex-col xl:grid xl:grid-cols-12 gap-6 xl:gap-8 items-start'}`}>
