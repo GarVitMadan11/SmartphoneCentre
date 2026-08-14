@@ -6,6 +6,18 @@ export const SmartphoneMockup: React.FC = () => {
   const [activePreviewModel, setActivePreviewModel] = useState<PreviewModel>('apple');
   const [time, setTime] = useState<string>('09:41 AM');
   const [islandExpanded, setIslandExpanded] = useState<boolean>(false);
+  const [rotate, setRotate] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left - rect.width / 2;
+    const y = e.clientY - rect.top - rect.height / 2;
+    setRotate({ x: -y / 15, y: x / 15 });
+  };
+
+  const handleMouseLeave = () => {
+    setRotate({ x: 0, y: 0 });
+  };
 
   // Dynamic system clock
   useEffect(() => {
@@ -65,7 +77,18 @@ export const SmartphoneMockup: React.FC = () => {
   };
 
   return (
-    <div className="relative flex justify-center py-2 select-none">
+    <div
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      className="relative flex justify-center py-2 select-none perspective-1000"
+    >
+      <div
+        style={{
+          transform: `rotateX(${rotate.x}deg) rotateY(${rotate.y}deg)`,
+          transition: 'transform 0.15s ease-out',
+        }}
+        className="transform-style-3d relative"
+      >
       {/* Physical Hardware Buttons on Left Side (Mute switch + Volume buttons) */}
       <div className="absolute left-[-4px] top-[106px] w-[5px] h-[18px] bg-gradient-to-b from-[#47484c] via-[#2d2e31] to-[#121315] border-y border-l border-neutral-700/60 rounded-l-[3px] shadow-[inset_1px_1px_1px_rgba(255,255,255,0.15),-1px_2px_4px_rgba(0,0,0,0.3)] z-0" />
       <div className="absolute left-[-4px] top-[142px] w-[5px] h-[42px] bg-gradient-to-b from-[#47484c] via-[#2d2e31] to-[#121315] border-y border-l border-neutral-700/60 rounded-l-[3px] shadow-[inset_1px_1px_1px_rgba(255,255,255,0.15),-1px_2px_4px_rgba(0,0,0,0.3)] z-0" />
@@ -236,6 +259,7 @@ export const SmartphoneMockup: React.FC = () => {
 
           </div>
         </div>
+      </div>
       </div>
     </div>
   );
