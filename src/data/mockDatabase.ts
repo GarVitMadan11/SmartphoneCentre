@@ -683,30 +683,29 @@ export function getPhoneImageForBrand(brandId: string): string {
 }
 
 export function getDeviceImage(modelId: string, brandId: string, color?: string, customImageUrl?: string): string {
+  if (color) {
+    const colorKey = `${modelId}-${color.toLowerCase().trim().replace(/\s+/g, '-')}`;
+    const colorImg = (phoneImages as Record<string, string>)[colorKey];
+    if (colorImg) {
+      if (colorImg.startsWith('http')) return colorImg;
+      try {
+        return new URL(`../../assets/phones/${colorImg}`, import.meta.url).href;
+      } catch { /* fallback */ }
+    }
+  }
+
   if (customImageUrl && customImageUrl.trim().length > 0) {
     return customImageUrl.trim();
   }
-  let imageName: string | undefined;
-  
-  if (color) {
-    const colorKey = `${modelId}-${color.toLowerCase().trim().replace(/\s+/g, '-')}`;
-    imageName = (phoneImages as Record<string, string>)[colorKey];
-  }
-  
-  if (!imageName) {
-    imageName = (phoneImages as Record<string, string>)[modelId];
-  }
-  
-  if (imageName) {
-    if (imageName.startsWith('http')) {
-      return imageName;
-    }
+
+  const modelImg = (phoneImages as Record<string, string>)[modelId];
+  if (modelImg) {
+    if (modelImg.startsWith('http')) return modelImg;
     try {
-      return new URL(`../../assets/phones/${imageName}`, import.meta.url).href;
-    } catch (e) {
-      // Fallback
-    }
+      return new URL(`../../assets/phones/${modelImg}`, import.meta.url).href;
+    } catch { /* fallback */ }
   }
+
   return getPhoneImageForBrand(brandId);
 }
 

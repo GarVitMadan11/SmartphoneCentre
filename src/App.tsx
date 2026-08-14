@@ -628,17 +628,17 @@ export default function App() {
 
                   {/* Trust Badge Indicators */}
                   <div className="flex flex-wrap items-center gap-6 text-xs sm:text-sm font-semibold text-ink-slate">
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-5 h-5 rounded-full bg-secondary/10 flex items-center justify-center text-secondary text-xs">✓</div>
-                      <span>Secure &amp; Encrypted</span>
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/80 border border-ice-border shadow-sm">
+                      <div className="w-5 h-5 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600 text-xs font-bold">✓</div>
+                      <span className="font-outfit text-ink-navy">Secure &amp; Encrypted</span>
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-5 h-5 rounded-full bg-secondary/10 flex items-center justify-center text-secondary text-xs">✓</div>
-                      <span>Instant Payout</span>
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/80 border border-ice-border shadow-sm">
+                      <div className="w-5 h-5 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600 text-xs font-bold">✓</div>
+                      <span className="font-outfit text-ink-navy">Instant Payout</span>
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-5 h-5 rounded-full bg-secondary/10 flex items-center justify-center text-secondary text-xs">✓</div>
-                      <span>Free Doorstep Pickup</span>
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/80 border border-ice-border shadow-sm">
+                      <div className="w-5 h-5 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600 text-xs font-bold">✓</div>
+                      <span className="font-outfit text-ink-navy">Free Doorstep Pickup</span>
                     </div>
                   </div>
                 </div>
@@ -650,12 +650,12 @@ export default function App() {
               </div>
 
               {/* 2. Popular Brands & Catalog Selector section */}
-              <div id="device-selector-section" className="bg-canvas-pure border border-ice-border rounded-sm p-4 sm:p-6 shadow-premium scroll-mt-20">
-                <div className="mb-6 pb-4 border-b border-ice-border/40 text-left">
-                  <span className="text-[10px] font-mono tracking-[0.2em] text-ink-muted uppercase block mb-1">
+              <div id="device-selector-section" className="bg-canvas-pure border border-ice-border/60 rounded-xl p-5 sm:p-8 shadow-3d-card scroll-mt-24">
+                <div className="mb-8 pb-5 border-b border-ice-border/40 text-left">
+                  <span className="text-[10px] font-mono tracking-[0.2em] text-cobalt font-bold uppercase block mb-1">
                     Catalog / Hardware Selector
                   </span>
-                  <h3 className="text-3xl font-light text-ink-navy tracking-tight">
+                  <h3 className="text-3xl sm:text-4xl font-extrabold text-ink-navy tracking-tight font-outfit">
                     Select Brand &amp; Model
                   </h3>
                 </div>
@@ -669,10 +669,10 @@ export default function App() {
               </div>
 
               {/* 3. How It Works Section */}
-              <div id="how-it-works-section" className="py-8 border-t border-b border-ice-border/40">
+              <div id="how-it-works-section" className="py-12 border-t border-b border-ice-border/40">
                 <div className="text-center max-w-3xl mx-auto mb-12">
-                  <h2 className="text-3xl font-extrabold text-ink-navy tracking-tight">How it Works</h2>
-                  <p className="text-ink-slate mt-2 text-sm">Our transparent process ensures you get the highest value with zero hassle.</p>
+                  <h2 className="text-3xl sm:text-4xl font-black text-ink-navy tracking-tight font-outfit">How it Works</h2>
+                  <p className="text-ink-slate mt-2 text-base font-light">Our transparent process ensures you get the highest value with zero doorstep friction.</p>
                 </div>
 
                 <div className="relative">
@@ -681,34 +681,34 @@ export default function App() {
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative z-10">
                     {/* Step 1 */}
-                    <div className="flex flex-col items-center text-center">
-                      <div className="w-16 h-16 rounded-full bg-cobalt text-white flex items-center justify-center text-xl font-bold shadow-lg shadow-cobalt/20 mb-6">
+                    <div className="flex flex-col items-center text-center group">
+                      <div className="w-16 h-16 rounded-2xl bg-cobalt text-white flex items-center justify-center text-xl font-black shadow-lg shadow-cobalt/20 mb-6 group-hover:scale-110 transition-transform duration-300 font-outfit">
                         1
                       </div>
-                      <h3 className="text-lg font-bold text-ink-navy mb-2">Check Price</h3>
-                      <p className="text-sm text-ink-slate max-w-xs font-light">
+                      <h3 className="text-xl font-extrabold text-ink-navy mb-2 font-outfit">Check Price</h3>
+                      <p className="text-sm text-ink-slate max-w-xs font-light leading-relaxed">
                         Select your smartphone model and answer a few questions about its condition. Get a quote instantly.
                       </p>
                     </div>
 
                     {/* Step 2 */}
-                    <div className="flex flex-col items-center text-center">
-                      <div className="w-16 h-16 rounded-full bg-cobalt text-white flex items-center justify-center text-xl font-bold shadow-lg shadow-cobalt/20 mb-6">
+                    <div className="flex flex-col items-center text-center group">
+                      <div className="w-16 h-16 rounded-2xl bg-cobalt text-white flex items-center justify-center text-xl font-black shadow-lg shadow-cobalt/20 mb-6 group-hover:scale-110 transition-transform duration-300 font-outfit">
                         2
                       </div>
-                      <h3 className="text-lg font-bold text-ink-navy mb-2">Schedule Pickup</h3>
-                      <p className="text-sm text-ink-slate max-w-xs font-light">
+                      <h3 className="text-xl font-extrabold text-ink-navy mb-2 font-outfit">Schedule Pickup</h3>
+                      <p className="text-sm text-ink-slate max-w-xs font-light leading-relaxed">
                         Choose a convenient date and time slot. Our executive will visit your home or office for verification.
                       </p>
                     </div>
 
                     {/* Step 3 */}
-                    <div className="flex flex-col items-center text-center">
-                      <div className="w-16 h-16 rounded-full bg-secondary text-white flex items-center justify-center text-xl font-bold shadow-lg shadow-secondary/20 mb-6">
+                    <div className="flex flex-col items-center text-center group">
+                      <div className="w-16 h-16 rounded-2xl bg-secondary text-white flex items-center justify-center text-xl font-black shadow-lg shadow-secondary/20 mb-6 group-hover:scale-110 transition-transform duration-300 font-outfit">
                         3
                       </div>
-                      <h3 className="text-lg font-bold text-ink-navy mb-2">Get Paid</h3>
-                      <p className="text-sm text-ink-slate max-w-xs font-light">
+                      <h3 className="text-xl font-extrabold text-ink-navy mb-2 font-outfit">Get Paid</h3>
+                      <p className="text-sm text-ink-slate max-w-xs font-light leading-relaxed">
                         Once condition is verified at your doorstep, get paid instantly via digital bank transfer or UPI.
                       </p>
                     </div>
@@ -720,10 +720,10 @@ export default function App() {
               <div className="py-12">
                 {/* Section Header */}
                 <div className="text-center max-w-2xl mx-auto mb-12">
-                  <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[11px] font-bold bg-cobalt/10 text-cobalt border border-cobalt/15 shadow-sm tracking-widest uppercase">
+                  <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[11px] font-bold bg-cobalt/10 text-cobalt border border-cobalt/15 shadow-sm tracking-widest uppercase font-outfit">
                     <Sparkles className="w-3.5 h-3.5 text-cobalt" /> Why Rephonix
                   </span>
-                  <h2 className="text-3xl sm:text-4xl font-extrabold text-ink-navy tracking-tight mt-3">
+                  <h2 className="text-3xl sm:text-4xl font-extrabold text-ink-navy tracking-tight mt-3 font-outfit">
                     Designed Around You. Built for Absolute Trust.
                   </h2>
                   <p className="text-ink-slate mt-3 text-base max-w-xl mx-auto font-light leading-relaxed">
@@ -734,7 +734,7 @@ export default function App() {
                 {/* Executive 4-Card Bento Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
-                  {/* Card 1: Instant Payout — Dark Slate Midnight with Electric Blue */}
+                  {/* Card 1: Instant Payout */}
                   <div className="relative group overflow-hidden rounded-2xl bg-gradient-to-br from-[#001c3d] via-[#002652] to-[#00142e] border border-blue-500/30 p-6 text-white shadow-xl hover:shadow-2xl hover:border-blue-400/60 transition-all duration-300 flex flex-col justify-between">
                     <div className="absolute -top-12 -right-12 w-32 h-32 bg-blue-500/20 rounded-full blur-2xl group-hover:bg-blue-500/35 transition-all duration-500 pointer-events-none" />
                     <div>
@@ -746,7 +746,7 @@ export default function App() {
                           SUB-60s PAYOUT
                         </span>
                       </div>
-                      <h3 className="text-xl font-bold text-white mb-2 tracking-tight">Instant Payout</h3>
+                      <h3 className="text-xl font-bold text-white mb-2 tracking-tight font-outfit">Instant Payout</h3>
                       <p className="text-sm text-slate-300 font-light leading-relaxed">
                         Cash transfer or instant UPI within 60 seconds of doorstep verification — right before our executive leaves your presence.
                       </p>

@@ -1330,6 +1330,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                   modelName={selectedModel.name} 
                   colorName={selectedVariant.color} 
                   modelId={selectedModel.id}
+                  customImageUrl={selectedModel.imageUrl}
                 />
               </div>
             </div>

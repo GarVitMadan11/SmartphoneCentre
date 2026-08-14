@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -5,6 +7,10 @@
 @layer base {
   body {
     @apply antialiased text-ink-navy bg-canvas-white font-sans;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+  h1, h2, h3, h4, h5, h6, .font-outfit {
+    font-family: 'Outfit', 'Inter', system-ui, sans-serif;
   }
 }
 
@@ -252,4 +258,50 @@
     color: #002045 !important;
   }
 }
+
+/* ─── Premium 3D Perspective & Elevation Utilities ─────────────────────── */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.perspective-2000 {
+  perspective: 2000px;
+}
+
+.transform-style-3d {
+  transform-style: preserve-3d;
+}
+
+.glass-navbar {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(0, 32, 69, 0.08);
+}
+
+.shadow-3d-card {
+  box-shadow: 
+    0 12px 32px -4px rgba(0, 32, 69, 0.08),
+    0 4px 12px -2px rgba(0, 32, 69, 0.04),
+    inset 0 1px 1px rgba(255, 255, 255, 0.8);
+}
+
+.shadow-3d-card-hover {
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.shadow-3d-card-hover:hover {
+  transform: translateY(-6px) rotateX(2deg);
+  box-shadow: 
+    0 24px 48px -8px rgba(0, 32, 69, 0.15),
+    0 8px 24px -4px rgba(0, 32, 69, 0.08),
+    inset 0 1px 2px rgba(255, 255, 255, 0.9);
+}
+
+.grid-3d-bg {
+  background-image: 
+    linear-gradient(to right, rgba(0, 32, 69, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 32, 69, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
 
