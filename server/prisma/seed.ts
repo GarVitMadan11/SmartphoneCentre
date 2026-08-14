@@ -30,6 +30,10 @@ const BRANDS = [
 
 const BASE_MODELS = [
   // --- APPLE ---
+  { id: 'apple-17pm',   brandId: 'brand-apple', name: 'iPhone 17 Pro Max',   modelNumber: 'A3596', category: 'flagship', releaseYear: 2025, basePrice128GB: 78000, series: 'iPhone 17 Series' },
+  { id: 'apple-17p',    brandId: 'brand-apple', name: 'iPhone 17 Pro',       modelNumber: 'A3593', category: 'flagship', releaseYear: 2025, basePrice128GB: 68000, series: 'iPhone 17 Series' },
+  { id: 'apple-17air',  brandId: 'brand-apple', name: 'iPhone 17 Air',       modelNumber: 'A3590', category: 'premium',  releaseYear: 2025, basePrice128GB: 55000, series: 'iPhone 17 Series' },
+  { id: 'apple-17',     brandId: 'brand-apple', name: 'iPhone 17',           modelNumber: 'A3587', category: 'premium',  releaseYear: 2025, basePrice128GB: 50000, series: 'iPhone 17 Series' },
   { id: 'apple-16pm',   brandId: 'brand-apple', name: 'iPhone 16 Pro Max',   modelNumber: 'A3296', category: 'flagship', releaseYear: 2024, basePrice128GB: 67000, series: 'iPhone 16 Series' },
   { id: 'apple-16p',    brandId: 'brand-apple', name: 'iPhone 16 Pro',       modelNumber: 'A3293', category: 'flagship', releaseYear: 2024, basePrice128GB: 57000, series: 'iPhone 16 Series' },
   { id: 'apple-16plus', brandId: 'brand-apple', name: 'iPhone 16 Plus',      modelNumber: 'A3290', category: 'premium',  releaseYear: 2024, basePrice128GB: 45000, series: 'iPhone 16 Series' },

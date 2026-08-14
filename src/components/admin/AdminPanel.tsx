@@ -5,10 +5,12 @@ import {
   CheckCircle, XCircle, Clock, CreditCard, 
   ChevronRight, Calendar, MapPin, User,
   RefreshCw, Plus, Trash2, List, Image as ImageIcon,
-  Upload, Link as LinkIcon, Layers, Edit2, Check, X
+  Upload, Link as LinkIcon, Layers, Edit2, Check, X,
+  MessageSquare
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { updateBooking, fetchModels, createModel, updateModel, deleteModel } from '../../utils/api';
+import { SupportInbox } from './SupportInbox';
 
 interface AdminPanelProps {
   onBack: () => void;
@@ -26,7 +28,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   onRefreshCatalog 
 }) => {
   const [bookings, setBookings] = useState<Booking[]>(initialBookings);
-  const [activeTab, setActiveTab] = useState<'ledger' | 'catalog'>('ledger');
+  const [activeTab, setActiveTab] = useState<'ledger' | 'catalog' | 'support'>('ledger');
   
   // Sync bookings from props
   useEffect(() => {
@@ -517,6 +519,17 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         >
           <List className="w-3.5 h-3.5" />
           Catalog Management ({loadingModels ? '...' : models.length})
+        </button>
+        <button
+          onClick={() => setActiveTab('support')}
+          className={`px-4 py-2.5 border-b-2 text-xs font-bold transition-all flex items-center gap-2 ${
+            activeTab === 'support'
+              ? 'border-cobalt text-cobalt'
+              : 'border-transparent text-ink-slate hover:text-ink-navy'
+          }`}
+        >
+          <MessageSquare className="w-3.5 h-3.5" />
+          Support Inbox
         </button>
       </div>
 
@@ -1550,6 +1563,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             )}
           </div>
         </div>
+      )}
+      
+      {activeTab === 'support' && (
+        <SupportInbox />
       )}
     </div>
   );

@@ -15,6 +15,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 import { adminAuth, requireRole, AuthenticatedRequest } from './middleware/adminAuth.js';
 import adminRouter from './routes/admin.js';
+import supportRouter from './routes/support.js';
 import {
   calculateServerValuation,
   maximumQuoteFor,
@@ -229,6 +230,7 @@ app.get('/api/health', (_req, res) => {
 });
 
 app.use('/api/admin', authLimiter, adminRouter);
+app.use('/api/support', supportRouter);
 
 // ═══════════════════════════════════════════════════════════════════════════
 // BRANDS & MODELS
@@ -734,7 +736,7 @@ app.delete('/api/bookings/:id/payout-details', adminAuth, requireRole(['SUPER_AD
 });
 
 // 404 Handler for all unhandled /api/* routes (must ALWAYS return JSON, never HTML)
-app.all('/api/*', (_req, res) => {
+app.use('/api', (_req, res) => {
   res.status(404).json({ error: 'NotFound', message: 'API endpoint not found.' });
 });
 
@@ -752,7 +754,7 @@ const distPath = possibleDistPaths.find(p => fs.existsSync(path.join(p, 'index.h
 if (distPath) {
   console.log(`📁 Serving frontend static build from: ${distPath}`);
   app.use(express.static(distPath));
-  app.get('*', (req, res, next) => {
+  app.get(/.*/, (req, res, next) => {
     if (req.path.startsWith('/api')) return next();
     res.sendFile(path.join(distPath, 'index.html'));
   });

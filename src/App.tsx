@@ -4,6 +4,7 @@ import { fetchBrands, fetchModels, fetchBookings as apiFetchBookings } from './u
 import { DeviceSelector } from './components/client/DeviceSelector';
 import { DeviceCategoryShowcase } from './components/client/DeviceCategoryShowcase';
 import { SellYourDevice } from './components/client/SellYourDevice';
+import { SupportChatWidget } from './components/client/SupportChatWidget';
 import { useFocusTrap } from './hooks/useFocusTrap';
 // ── Lazy-loaded heavy components (code splitting — P-1 fix) ───────────────────
 const DiagnosticWizard = lazy(() => import('./components/client/DiagnosticWizard').then(m => ({ default: m.DiagnosticWizard })));
@@ -1308,6 +1309,9 @@ export default function App() {
           </aside>
         )}
       </main>
+
+      {/* ── Support Chat Widget ── */}
+      <SupportChatWidget />
 
       {/* ── Footer ────────────────────────────────────────────────── */}
       <footer className="bg-canvas-pure border-t border-ice-border mt-8 sm:mt-16 py-8">

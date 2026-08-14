@@ -163,3 +163,39 @@ model AdminAuditLog {
   @@index([targetType, targetId])
   @@index([createdAt])
 }
+
+// ── AI Support Agent & Human Handoff ──────────────────────────────────────────
+
+model SupportConversation {
+  id              String   @id @default(uuid())
+  customerId      String?
+  customerName    String?
+  customerEmail   String?
+  detectedIntent  String?
+  status          String   @default("AI_ACTIVE") // AI_ACTIVE | WAITING_FOR_CUSTOMER | WAITING_FOR_HUMAN | HUMAN_ACTIVE | RESOLVED | CLOSED
+  handoffReason   String?
+  summary         String?
+  collectedInfo   String   @default("{}") // JSON
+
+  messages        SupportMessage[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model SupportMessage {
+  id              String   @id @default(uuid())
+  conversationId  String
+  role            String   // system | ai | user | human_agent
+  content         String
+  
+  conversation    SupportConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime @default(now())
+
+  @@index([conversationId])
+  @@index([createdAt])
+}
