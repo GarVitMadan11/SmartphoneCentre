@@ -1,18 +1,22 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Smartphone, Tablet, Watch, Headphones, ChevronDown, Zap, Truck, Sparkles } from 'lucide-react';
+import { Smartphone, Tablet, Watch, ChevronDown, Zap, Truck, Sparkles } from 'lucide-react';
 
 interface CategoryBarProps {
   onSelectBrand?: (brandId: string) => void;
-  onSelectCategory?: (category: 'smartphones' | 'tablets' | 'smartwatches') => void;
+  onNavigateTablets?: () => void;
+  onNavigateSmartwatches?: () => void;
   onOpenTrackOrder?: () => void;
   onNavigateHome?: () => void;
+  activeStage?: string;
 }
 
 export const CategoryBar: React.FC<CategoryBarProps> = ({
   onSelectBrand,
-  onSelectCategory,
+  onNavigateTablets,
+  onNavigateSmartwatches,
   onOpenTrackOrder,
   onNavigateHome,
+  activeStage,
 }) => {
   const [activeDropdown, setActiveDropdown] = useState<'phones' | 'tablets' | 'watches' | 'more' | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -30,21 +34,11 @@ export const CategoryBar: React.FC<CategoryBarProps> = ({
 
   const handleBrandClick = (brandId: string) => {
     setActiveDropdown(null);
+    if (onNavigateHome) onNavigateHome();
     if (onSelectBrand) {
       onSelectBrand(brandId);
     }
     const el = document.getElementById('device-selector-section');
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
-  const handleCategoryClick = (cat: 'smartphones' | 'tablets' | 'smartwatches') => {
-    setActiveDropdown(null);
-    if (onSelectCategory) {
-      onSelectCategory(cat);
-    }
-    const el = document.getElementById('explore-devices-section') || document.getElementById('device-selector-section');
     if (el) {
       el.scrollIntoView({ behavior: 'smooth' });
     }
@@ -62,9 +56,13 @@ export const CategoryBar: React.FC<CategoryBarProps> = ({
             <button
               type="button"
               onClick={onNavigateHome}
-              className="px-3 py-1.5 text-ink-navy hover:text-cobalt font-bold rounded-sm flex items-center gap-1.5 transition-all hover:bg-canvas-white"
+              className={`px-3 py-1.5 font-bold rounded-sm flex items-center gap-1.5 transition-all ${
+                activeStage === 'select'
+                  ? 'bg-cobalt text-white shadow-sm'
+                  : 'text-ink-navy hover:text-cobalt hover:bg-canvas-white'
+              }`}
             >
-              <Sparkles className="w-3.5 h-3.5 text-cobalt" />
+              <Sparkles className={`w-3.5 h-3.5 ${activeStage === 'select' ? 'text-white' : 'text-cobalt'}`} />
               <span>All Gadgets</span>
             </button>
 
@@ -139,38 +137,34 @@ export const CategoryBar: React.FC<CategoryBarProps> = ({
               )}
             </div>
 
-            {/* 3. Tablets Dropdown */}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => handleCategoryClick('tablets')}
-                className="px-3 py-1.5 text-ink-navy hover:text-cobalt font-bold rounded-sm flex items-center gap-1.5 transition-all hover:bg-canvas-white"
-              >
-                <Tablet className="w-3.5 h-3.5 text-violet-600" />
-                <span>Sell Tablets</span>
-              </button>
-            </div>
-
-            {/* 4. Smartwatches Dropdown */}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => handleCategoryClick('smartwatches')}
-                className="px-3 py-1.5 text-ink-navy hover:text-cobalt font-bold rounded-sm flex items-center gap-1.5 transition-all hover:bg-canvas-white"
-              >
-                <Watch className="w-3.5 h-3.5 text-emerald-600" />
-                <span>Sell Smartwatches</span>
-              </button>
-            </div>
-
-            {/* 5. Audio & Wearables */}
+            {/* 3. Dedicated Tablets Button */}
             <button
               type="button"
-              onClick={() => handleCategoryClick('smartwatches')}
-              className="px-3 py-1.5 text-ink-navy hover:text-cobalt font-bold rounded-sm flex items-center gap-1.5 transition-all hover:bg-canvas-white hidden md:flex"
+              onClick={onNavigateTablets}
+              className={`px-3 py-1.5 font-bold rounded-sm flex items-center gap-1.5 transition-all ${
+                activeStage === 'tablets'
+                  ? 'bg-violet-600 text-white shadow-sm'
+                  : 'text-ink-navy hover:text-cobalt hover:bg-canvas-white'
+              }`}
             >
-              <Headphones className="w-3.5 h-3.5 text-amber-500" />
-              <span>Audio &amp; AirPods</span>
+              <Tablet className={`w-3.5 h-3.5 ${activeStage === 'tablets' ? 'text-white' : 'text-violet-600'}`} />
+              <span>Sell Tablets</span>
+              <span className="text-[9px] px-1.5 py-0.5 rounded bg-violet-500/10 text-violet-600 font-mono">Apple &amp; Samsung</span>
+            </button>
+
+            {/* 4. Dedicated Smartwatches Button */}
+            <button
+              type="button"
+              onClick={onNavigateSmartwatches}
+              className={`px-3 py-1.5 font-bold rounded-sm flex items-center gap-1.5 transition-all ${
+                activeStage === 'smartwatches'
+                  ? 'bg-emerald-600 text-white shadow-sm'
+                  : 'text-ink-navy hover:text-cobalt hover:bg-canvas-white'
+              }`}
+            >
+              <Watch className={`w-3.5 h-3.5 ${activeStage === 'smartwatches' ? 'text-white' : 'text-emerald-600'}`} />
+              <span>Sell Smartwatches</span>
+              <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 font-mono">Apple &amp; Samsung</span>
             </button>
 
           </div>
@@ -180,8 +174,10 @@ export const CategoryBar: React.FC<CategoryBarProps> = ({
             <button
               type="button"
               onClick={() => {
-                const el = document.getElementById('device-selector-section');
-                if (el) el.scrollIntoView({ behavior: 'smooth' });
+                if (onNavigateHome) onNavigateHome();
+                setTimeout(() => {
+                  document.getElementById('device-selector-section')?.scrollIntoView({ behavior: 'smooth' });
+                }, 50);
               }}
               className="px-3 py-1 rounded bg-cobalt/10 text-cobalt hover:bg-cobalt/20 font-bold text-[11px] transition-all flex items-center gap-1"
             >

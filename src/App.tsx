@@ -6,6 +6,8 @@ import { DeviceCategoryShowcase } from './components/client/DeviceCategoryShowca
 import { SellYourDevice } from './components/client/SellYourDevice';
 import { SupportChatWidget } from './components/client/SupportChatWidget';
 import { CategoryBar } from './components/client/CategoryBar';
+import { TabletsShowcase } from './components/client/TabletsShowcase';
+import { SmartwatchesShowcase } from './components/client/SmartwatchesShowcase';
 import { useFocusTrap } from './hooks/useFocusTrap';
 // ── Lazy-loaded heavy components (code splitting — P-1 fix) ───────────────────
 const DiagnosticWizard = lazy(() => import('./components/client/DiagnosticWizard').then(m => ({ default: m.DiagnosticWizard })));
@@ -32,7 +34,7 @@ import oneplusPhoneImg from './assets/oneplus_phone.png';
 const SESSION_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 interface StoredNavState {
-  activeStage: 'select' | 'diagnose' | 'schedule' | 'admin';
+  activeStage: 'select' | 'tablets' | 'smartwatches' | 'diagnose' | 'schedule' | 'admin';
   wizardStep: number;
   timestamp: number;
 }
@@ -45,7 +47,7 @@ function loadNavState(): StoredNavState | null {
     // Validate shape and TTL
     if (
       typeof parsed !== 'object' || parsed === null ||
-      !['select', 'diagnose', 'schedule', 'admin'].includes(parsed.activeStage) ||
+      !['select', 'tablets', 'smartwatches', 'diagnose', 'schedule', 'admin'].includes(parsed.activeStage) ||
       typeof parsed.wizardStep !== 'number' ||
       typeof parsed.timestamp !== 'number' ||
       Date.now() - parsed.timestamp > SESSION_TTL_MS
@@ -294,7 +296,7 @@ function FaqSection() {
 export default function App() {
   // ── Navigation state — persisted in localStorage with TTL (non-sensitive) ──
   const savedNav = useRef(loadNavState());
-  const [activeStage, setActiveStage] = useState<'select' | 'diagnose' | 'schedule' | 'admin'>(
+  const [activeStage, setActiveStage] = useState<'select' | 'tablets' | 'smartwatches' | 'diagnose' | 'schedule' | 'admin'>(
     savedNav.current?.activeStage ?? 'select'
   );
   const [wizardStep, setWizardStep] = useState<number>(savedNav.current?.wizardStep ?? 0);
@@ -542,25 +544,40 @@ export default function App() {
 
       {/* ── Focused Category Sub-Header Bar (Smartphones, Tablets, Smartwatches) ── */}
       <CategoryBar
+        activeStage={activeStage}
         onSelectBrand={(brandId) => {
           const firstModelOfBrand = MODELS.find(m => m.brandId === brandId);
           if (firstModelOfBrand) {
             setPendingModelId(firstModelOfBrand.id);
           }
+          setActiveStage('select');
           document.getElementById('device-selector-section')?.scrollIntoView({ behavior: 'smooth' });
         }}
-        onSelectCategory={() => {
-          document.getElementById('explore-devices-section')?.scrollIntoView({ behavior: 'smooth' });
-        }}
+        onNavigateTablets={() => setActiveStage('tablets')}
+        onNavigateSmartwatches={() => setActiveStage('smartwatches')}
         onOpenTrackOrder={() => setIsTrackOpen(true)}
         onNavigateHome={handleReset}
       />
 
       {/* ── Main Layout ── */}
-      <main className={`flex-1 w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 ${(activeStage === 'select' || activeStage === 'admin') ? 'max-w-7xl flex flex-col' : 'max-w-7xl flex flex-col xl:grid xl:grid-cols-12 gap-6 xl:gap-8 items-start'}`}>
+      <main className={`flex-1 w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 ${(activeStage === 'select' || activeStage === 'tablets' || activeStage === 'smartwatches' || activeStage === 'admin') ? 'max-w-7xl flex flex-col' : 'max-w-7xl flex flex-col xl:grid xl:grid-cols-12 gap-6 xl:gap-8 items-start'}`}>
 
         {/* Active Stage Content Area */}
-        <section className={(activeStage === 'select' || activeStage === 'admin') ? 'w-full space-y-16' : 'w-full xl:col-span-9 space-y-4 sm:space-y-6 min-w-0'}>
+        <section className={(activeStage === 'select' || activeStage === 'tablets' || activeStage === 'smartwatches' || activeStage === 'admin') ? 'w-full space-y-16' : 'w-full xl:col-span-9 space-y-4 sm:space-y-6 min-w-0'}>
+
+          {activeStage === 'tablets' && (
+            <TabletsShowcase
+              onSelectVariant={handleVariantSelected}
+              onBackToHome={handleReset}
+            />
+          )}
+
+          {activeStage === 'smartwatches' && (
+            <SmartwatchesShowcase
+              onSelectVariant={handleVariantSelected}
+              onBackToHome={handleReset}
+            />
+          )}
 
           {activeStage === 'select' && (
             <div className="space-y-16 py-4">
@@ -689,7 +706,15 @@ export default function App() {
               </div>
 
               {/* 1.5 Premium 3D Device Category Showcase */}
-              <DeviceCategoryShowcase />
+              <DeviceCategoryShowcase
+                onSelectCategory={(cat) => {
+                  if (cat === 'tablets') setActiveStage('tablets');
+                  else if (cat === 'smartwatches') setActiveStage('smartwatches');
+                  else {
+                    document.getElementById('device-selector-section')?.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
+              />
 
               {/* 1.6 Sell Your Device Section */}
               <SellYourDevice onGetValuation={() => {
