@@ -38,7 +38,10 @@ const isRenderEnv = Boolean(process.env.RENDER || process.env.RENDER_SERVICE_ID)
 if (isRenderEnv) {
   dbUrl = dbUrl || DEFAULT_POSTGRES_URL;
 } else if (!dbUrl || dbUrl.includes('dpg-d9v6fa67bikc73bsvnhg-a') || dbUrl.startsWith('file:')) {
-  const localDbPath = path.resolve(__dirname, '../dev.db');
+  let localDbPath = path.resolve(__dirname, '../prisma/dev.db');
+  if (!fs.existsSync(localDbPath)) {
+    localDbPath = path.resolve(__dirname, '../dev.db');
+  }
   dbUrl = `file:${localDbPath}`;
 }
 process.env.DATABASE_URL = dbUrl;
@@ -72,9 +75,12 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", 'data:', 'https:'],
+      scriptSrc: ["'self'", "'unsafe-inline'", 'https://api.emailjs.com'],
+      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      styleSrcElem: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
+      imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
+      connectSrc: ["'self'", 'https://api.emailjs.com', 'http://localhost:4000', 'http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002', 'http://localhost:5173', 'http://localhost:5174'],
     },
   },
 }));
