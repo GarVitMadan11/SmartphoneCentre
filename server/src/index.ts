@@ -762,8 +762,8 @@ if (distPath) {
 // SERVER START
 // ═══════════════════════════════════════════════════════════════════════════
 
-const server = app.listen(PORT, () => {
-  console.log(`\n🚀 SmartphoneCentre API server running at http://localhost:${PORT}`);
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`\n🚀 SmartphoneCentre API server running at http://0.0.0.0:${PORT}`);
   console.log(`   Health:       http://localhost:${PORT}/api/health`);
   console.log(`   Admin auth:   POST http://localhost:${PORT}/api/admin/auth`);
   console.log(`   Environment:  ${process.env.NODE_ENV ?? 'development'}\n`);

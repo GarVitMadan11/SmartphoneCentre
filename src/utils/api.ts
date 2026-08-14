@@ -66,7 +66,8 @@ async function apiFetch<T>(path: string, options?: RequestInit, withAuth = false
   // Authentication is carried by session cookie or Bearer token header
   void withAuth;
 
-  const res = await fetch(`${API_BASE}${path}`, {
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl}${path}`, {
     ...options,
     headers,
     credentials: 'include', // Automatically send and receive HttpOnly cookies
