@@ -26,18 +26,31 @@ export class ApiRequestError extends Error {
   }
 }
 
+function getStoredAdminToken(): string | null {
+  try {
+    return sessionStorage.getItem('rex_admin_token');
+  } catch {
+    return null;
+  }
+}
+
 async function apiFetch<T>(path: string, options?: RequestInit, withAuth = false): Promise<T> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options?.headers as Record<string, string> ?? {}),
   };
 
+  const storedToken = getStoredAdminToken();
+  if (storedToken && !headers['Authorization']) {
+    headers['Authorization'] = `Bearer ${storedToken}`;
+  }
+
   if (options?.method && !['GET', 'HEAD'].includes(options.method.toUpperCase())) {
     const token = csrfToken();
     if (token) headers['X-CSRF-Token'] = token;
   }
 
-  // Authentication is carried only by the HttpOnly session cookie.
+  // Authentication is carried by session cookie or Bearer token header
   void withAuth;
 
   const res = await fetch(`${API_BASE}${path}`, {
@@ -63,14 +76,22 @@ export interface AdminUserSession {
 }
 
 export async function adminLogin(credentials: { pin?: string; username?: string; password?: string }): Promise<{ success: boolean; expiresAt: number; user?: AdminUserSession }> {
-  const data = await apiFetch<{ expiresAt: number; user?: AdminUserSession }>(
+  const data = await apiFetch<{ token?: string; expiresAt: number; user?: AdminUserSession }>(
     '/admin/auth',
     { method: 'POST', body: JSON.stringify(credentials) }
   );
+  if (data.token) {
+    try {
+      sessionStorage.setItem('rex_admin_token', data.token);
+    } catch { /* ignore storage error */ }
+  }
   return { success: true, expiresAt: data.expiresAt, user: data.user };
 }
 
 export async function adminLogout(): Promise<void> {
+  try {
+    sessionStorage.removeItem('rex_admin_token');
+  } catch { /* ignore */ }
   try {
     await apiFetch<{ success: boolean }>('/admin/logout', { method: 'POST' });
   } catch { /* ignore */ }
