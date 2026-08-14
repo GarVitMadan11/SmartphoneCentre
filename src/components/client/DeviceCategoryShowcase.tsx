@@ -16,6 +16,7 @@ export const DeviceCategoryShowcase: React.FC<DeviceCategoryShowcaseProps> = ({
   });
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>, cardId: string) => {
+    if (window.matchMedia('(pointer: coarse)').matches) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left - rect.width / 2;
     const y = e.clientY - rect.top - rect.height / 2;
