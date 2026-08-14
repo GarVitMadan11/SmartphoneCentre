@@ -256,17 +256,28 @@ app.get('/api/models', async (req, res) => {
     if (brandId && typeof brandId === 'string') where.brandId = brandId;
 
     const models = await prisma.model.findMany({ where, orderBy: { releaseYear: 'desc' } });
-    res.json(models.map(m => ({
-      id: m.legacyId,
-      brandId: m.brandId,
-      name: m.name,
-      modelNumber: m.modelNumber,
-      category: m.category,
-      releaseYear: m.releaseYear,
-      basePrice128GB: m.basePrice128GB,
-      series: m.series || '',
-      imageUrl: m.imageUrl || undefined,
-    })));
+    res.json(models.map(m => {
+      let parsedStorageGb: number[] | undefined = undefined;
+      if (m.supportedStorageGb) {
+        try {
+          parsedStorageGb = JSON.parse(m.supportedStorageGb);
+        } catch {
+          parsedStorageGb = [64, 128, 256, 512];
+        }
+      }
+      return {
+        id: m.legacyId,
+        brandId: m.brandId,
+        name: m.name,
+        modelNumber: m.modelNumber,
+        category: m.category,
+        releaseYear: m.releaseYear,
+        basePrice128GB: m.basePrice128GB,
+        series: m.series || '',
+        imageUrl: m.imageUrl || undefined,
+        supportedStorageGb: parsedStorageGb,
+      };
+    }));
   } catch (err) {
     console.error('GET /api/models error:', err);
     res.status(500).json({ error: 'ServerError', message: 'Failed to fetch models' });
@@ -275,7 +286,7 @@ app.get('/api/models', async (req, res) => {
 
 app.post('/api/models', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITOR']), async (req, res) => {
   try {
-    const { legacyId, brandId, name, modelNumber, category, releaseYear, basePrice128GB, series, imageUrl } = req.body;
+    const { legacyId, brandId, name, modelNumber, category, releaseYear, basePrice128GB, series, imageUrl, supportedStorageGb } = req.body;
     if (!legacyId || !brandId || !name || !modelNumber || !category || !releaseYear || !basePrice128GB) {
       res.status(400).json({ error: 'BadRequest', message: 'Missing required fields' });
       return;
@@ -284,6 +295,8 @@ app.post('/api/models', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITOR']
       res.status(400).json({ error: 'BadRequest', message: 'imageUrl must be a valid http(s) URL or base64 Data URL' });
       return;
     }
+
+    const storageStr = Array.isArray(supportedStorageGb) ? JSON.stringify(supportedStorageGb) : JSON.stringify([64, 128, 256, 512]);
 
     const model = await prisma.model.create({
       data: {
@@ -296,13 +309,72 @@ app.post('/api/models', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITOR']
         basePrice128GB: Number(basePrice128GB),
         series: series ? String(series).trim() : '',
         imageUrl: imageUrl ? String(imageUrl).trim() : '',
+        supportedStorageGb: storageStr,
       },
     });
 
-    res.status(201).json(model);
+    res.status(201).json({
+      ...model,
+      id: model.legacyId,
+      supportedStorageGb: JSON.parse(model.supportedStorageGb),
+    });
   } catch (err) {
     console.error('POST /api/models error:', err);
     res.status(500).json({ error: 'ServerError', message: 'Failed to create model' });
+  }
+});
+
+app.post('/api/models/bulk-update', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITOR']), async (req, res) => {
+  try {
+    const { updates } = req.body;
+    if (!Array.isArray(updates) || updates.length === 0) {
+      res.status(400).json({ error: 'BadRequest', message: 'updates array is required and must not be empty.' });
+      return;
+    }
+
+    let updatedCount = 0;
+    for (const item of updates) {
+      const { id, changes } = item;
+      if (!id || !changes || typeof changes !== 'object') continue;
+
+      const existing = await prisma.model.findFirst({
+        where: { OR: [{ legacyId: String(id) }, { id: String(id) }] }
+      });
+      if (!existing) continue;
+
+      const data: Record<string, unknown> = {};
+      for (const field of ['name', 'modelNumber', 'category', 'series']) {
+        if (changes[field] !== undefined && typeof changes[field] === 'string') {
+          data[field] = changes[field].trim();
+        }
+      }
+      for (const field of ['releaseYear', 'basePrice128GB']) {
+        if (changes[field] !== undefined && Number.isFinite(Number(changes[field])) && Number(changes[field]) > 0) {
+          data[field] = Number(changes[field]);
+        }
+      }
+      if (changes.imageUrl !== undefined && (typeof changes.imageUrl === 'string')) {
+        if (isValidImageUrl(changes.imageUrl)) {
+          data.imageUrl = changes.imageUrl.trim();
+        }
+      }
+      if (changes.supportedStorageGb !== undefined && Array.isArray(changes.supportedStorageGb)) {
+        data.supportedStorageGb = JSON.stringify(changes.supportedStorageGb);
+      }
+
+      if (Object.keys(data).length > 0) {
+        await prisma.model.update({
+          where: { id: existing.id },
+          data,
+        });
+        updatedCount++;
+      }
+    }
+
+    res.json({ success: true, updatedCount });
+  } catch (err) {
+    console.error('POST /api/models/bulk-update error:', err);
+    res.status(500).json({ error: 'ServerError', message: 'Failed bulk updating models.' });
   }
 });
 
@@ -331,6 +403,9 @@ app.patch('/api/models/:legacyId', adminAuth, requireRole(['SUPER_ADMIN', 'CATAL
       }
       data.imageUrl = updates.imageUrl.trim();
     }
+    if (updates.supportedStorageGb !== undefined && Array.isArray(updates.supportedStorageGb)) {
+      data.supportedStorageGb = JSON.stringify(updates.supportedStorageGb);
+    }
     if (Object.keys(data).length === 0) {
       res.status(400).json({ error: 'BadRequest', message: 'No valid model fields supplied.' });
       return;
@@ -350,7 +425,11 @@ app.patch('/api/models/:legacyId', adminAuth, requireRole(['SUPER_ADMIN', 'CATAL
       data,
     });
 
-    res.json({ ...model, id: model.legacyId });
+    res.json({
+      ...model,
+      id: model.legacyId,
+      supportedStorageGb: model.supportedStorageGb ? JSON.parse(model.supportedStorageGb) : [64, 128, 256, 512],
+    });
   } catch (err) {
     console.error('PATCH /api/models error:', err);
     res.status(500).json({ error: 'ServerError', message: 'Failed to update model.' });

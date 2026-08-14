@@ -162,6 +162,7 @@ export interface ApiModel {
   basePrice128GB: number;
   series: string;
   imageUrl?: string;
+  supportedStorageGb?: number[];
 }
 
 export function fetchModels(brandId?: string): Promise<ApiModel[]> {
@@ -179,12 +180,17 @@ export function createModel(data: {
   basePrice128GB: number;
   series?: string;
   imageUrl?: string;
+  supportedStorageGb?: number[];
 }): Promise<ApiModel> {
   return apiFetch<ApiModel>('/models', { method: 'POST', body: JSON.stringify(data) }, true);
 }
 
 export function updateModel(legacyId: string, data: Partial<Omit<ApiModel, 'id' | 'brandId'>>): Promise<ApiModel> {
   return apiFetch<ApiModel>(`/models/${encodeURIComponent(legacyId)}`, { method: 'PATCH', body: JSON.stringify(data) }, true);
+}
+
+export function bulkUpdateModels(updates: Array<{ id: string; changes: Partial<Omit<ApiModel, 'id' | 'brandId'>> }>): Promise<{ updatedCount: number }> {
+  return apiFetch<{ updatedCount: number }>('/models/bulk-update', { method: 'POST', body: JSON.stringify({ updates }) }, true);
 }
 
 export function deleteModel(legacyId: string): Promise<{ success: boolean }> {

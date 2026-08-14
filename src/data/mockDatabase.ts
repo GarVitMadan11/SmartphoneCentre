@@ -24,6 +24,7 @@ export interface Model {
   basePrice128GB: number; // Anchor price in INR
   series?: string;        // Sub-category or series designation
   imageUrl?: string;      // Custom image URL or Data URL
+  supportedStorageGb?: number[]; // Configured memory variants (e.g. [64, 128, 256, 512, 1024])
 }
 
 export interface Variant {
@@ -609,7 +610,26 @@ export function generateVariantsForModel(model: Model): Variant[] {
 
   let modelStorages: { gb: number; multiplier: number }[] = [];
 
-  if (startsAt256GB.includes(model.id)) {
+  if (model.supportedStorageGb && Array.isArray(model.supportedStorageGb) && model.supportedStorageGb.length > 0) {
+    const storageMultiplierMap: Record<number, number> = {
+      64: 0.88,
+      128: 1.00,
+      256: 1.15,
+      512: 1.32,
+      1024: 1.55,
+    };
+    const sortedGbs = [...model.supportedStorageGb].sort((a, b) => a - b);
+    const minGb = sortedGbs[0];
+    modelStorages = sortedGbs.map(gb => {
+      // Scale multiplier relative to smallest supported storage tier
+      const rawMult = storageMultiplierMap[gb] || (gb >= 512 ? 1.35 : 1.0);
+      const minMult = storageMultiplierMap[minGb] || 1.0;
+      return {
+        gb,
+        multiplier: Number((rawMult / minMult).toFixed(2))
+      };
+    });
+  } else if (startsAt256GB.includes(model.id)) {
     modelStorages = [
       { gb: 256, multiplier: 1.00 },
       { gb: 512, multiplier: 1.15 }
