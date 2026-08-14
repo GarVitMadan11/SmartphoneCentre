@@ -733,6 +733,11 @@ app.delete('/api/bookings/:id/payout-details', adminAuth, requireRole(['SUPER_AD
   }
 });
 
+// 404 Handler for all unhandled /api/* routes (must ALWAYS return JSON, never HTML)
+app.all('/api/*', (_req, res) => {
+  res.status(404).json({ error: 'NotFound', message: 'API endpoint not found.' });
+});
+
 // ═══════════════════════════════════════════════════════════════════════════
 // SERVE FRONTEND STATIC ASSETS IN PRODUCTION
 // ═══════════════════════════════════════════════════════════════════════════

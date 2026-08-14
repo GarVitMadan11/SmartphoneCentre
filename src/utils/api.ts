@@ -59,9 +59,28 @@ async function apiFetch<T>(path: string, options?: RequestInit, withAuth = false
     credentials: 'include', // Automatically send and receive HttpOnly cookies
   });
 
+  const contentType = res.headers.get('content-type') || '';
+  const isJson = contentType.includes('application/json');
+
   if (!res.ok) {
-    const body: ApiError = await res.json().catch(() => ({ error: `HTTP ${res.status}`, message: res.statusText }));
-    throw new ApiRequestError(res.status, body.message ?? body.error, body.fields);
+    let message = res.statusText;
+    let fields: string[] | undefined;
+    if (isJson) {
+      const body: ApiError = await res.json().catch(() => ({ error: `HTTP ${res.status}`, message: res.statusText }));
+      message = body.message ?? body.error;
+      fields = body.fields;
+    } else {
+      const text = await res.text();
+      const cleanSnippet = text.slice(0, 120).replace(/<[^>]*>/g, '').trim();
+      message = `Server error (${res.status}): ${cleanSnippet || res.statusText}`;
+    }
+    throw new ApiRequestError(res.status, message, fields);
+  }
+
+  if (!isJson) {
+    const text = await res.text();
+    const cleanSnippet = text.slice(0, 120).replace(/<[^>]*>/g, '').trim();
+    throw new ApiRequestError(res.status, `Server returned non-JSON response (${res.status}): ${cleanSnippet || 'HTML page'}`);
   }
 
   return res.json() as Promise<T>;
