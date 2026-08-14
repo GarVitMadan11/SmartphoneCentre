@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "cd server && npm install && npm run build && cd .. && tsc && vite build",
+    "build": "cd server && npm install --include=dev && npm run build && cd .. && tsc && vite build",
     "start": "cd server && npm start",
     "preview": "vite preview",
     "test": "npm run test --prefix server",
