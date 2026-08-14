@@ -1050,7 +1050,11 @@ export default function App() {
                       <div className="mt-8 pt-6 border-t border-white/10 flex flex-wrap items-end justify-between gap-4">
                         <div>
                           <p className="text-[10px] text-blue-300/80 uppercase tracking-widest font-mono">Valuation Up To</p>
-                          <p className="text-3xl sm:text-4xl font-black text-emerald-400 mt-1 font-outfit">₹57,000</p>
+                          <p className="text-3xl sm:text-4xl font-black text-emerald-400 mt-1 font-outfit">
+                            {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(
+                              MODELS.find(m => m.id === 'apple-15pm')?.basePrice128GB ?? 57000
+                            )}
+                          </p>
                         </div>
                         <button 
                           onClick={() => handleDirectSelectModel('apple-15pm')}
@@ -1087,7 +1091,7 @@ export default function App() {
                       <div className="z-10 flex-1 pr-4">
                         <span className="text-[10px] font-mono font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100 uppercase tracking-wider">Galaxy AI</span>
                         <h4 className="text-lg font-bold text-ink-navy mt-1.5">Galaxy S24 Ultra</h4>
-                        <p className="text-xs text-ink-slate mt-0.5 font-medium">Valuations up to <span className="text-emerald-600 font-extrabold text-sm">₹42,000</span></p>
+                        <p className="text-xs text-ink-slate mt-0.5 font-medium">Valuations up to <span className="text-emerald-600 font-extrabold text-sm">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(MODELS.find(m => m.id === 'sam-s24u')?.basePrice128GB ?? 42000)}</span></p>
                         <button 
                           onClick={() => handleDirectSelectModel('sam-s24u')}
                           className="text-xs font-bold text-cobalt hover:text-blue-700 flex items-center gap-1 mt-3 transition-colors"
@@ -1114,7 +1118,7 @@ export default function App() {
                       <div className="z-10 flex-1 pr-4">
                         <span className="text-[10px] font-mono font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded border border-red-100 uppercase tracking-wider">Fast Charge</span>
                         <h4 className="text-lg font-bold text-ink-navy mt-1.5">OnePlus 12</h4>
-                        <p className="text-xs text-ink-slate mt-0.5 font-medium">Valuations up to <span className="text-emerald-600 font-extrabold text-sm">₹24,000</span></p>
+                        <p className="text-xs text-ink-slate mt-0.5 font-medium">Valuations up to <span className="text-emerald-600 font-extrabold text-sm">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(MODELS.find(m => m.id === 'op-12')?.basePrice128GB ?? 24000)}</span></p>
                         <button 
                           onClick={() => handleDirectSelectModel('op-12')}
                           className="text-xs font-bold text-cobalt hover:text-blue-700 flex items-center gap-1 mt-3 transition-colors"
