@@ -33,12 +33,24 @@ if (fs.existsSync(schemaPath)) {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// BUILD — compile only. No database calls here.
+//
+// WHY: Render's build machines cannot reach the internal PostgreSQL hostname
+// (dpg-...-a). Running `prisma db push` or seeding here causes the build to
+// fail with a connection error, leaving the OLD deployment running forever.
+//
+// `prisma db push` and seed are deferred to server STARTUP (in the start
+// script), when the web service IS inside Render's internal network and CAN
+// reach the database.
+// ─────────────────────────────────────────────────────────────────────────
 try {
-  execSync('npx prisma generate && npx prisma db push && npx tsx prisma/seed.ts && tsc', {
+  execSync('npx prisma generate && tsc', {
     stdio: 'inherit',
     env: process.env,
   });
+  console.log('\u2705 Server compiled successfully.');
 } catch (err) {
-  console.error('❌ Server build failed:', err);
+  console.error('\u274c Server build failed:', err);
   process.exit(1);
 }
