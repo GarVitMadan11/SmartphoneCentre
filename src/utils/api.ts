@@ -16,8 +16,6 @@ function getApiBaseUrl(): string {
   return '/api';
 }
 
-const API_BASE = getApiBaseUrl();
-
 function csrfToken(): string | undefined {
   return document.cookie.split('; ').find(cookie => cookie.startsWith('rex_admin_csrf='))?.split('=').slice(1).join('=');
 }
