@@ -51,7 +51,7 @@ const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? 'http://localhost:5173,h
 // ═══════════════════════════════════════════════════════════════════════════
 
 app.use(helmet({
-  crossOriginResourcePolicy: { policy: 'same-origin' },
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
@@ -65,12 +65,23 @@ app.use(helmet({
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
-    if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+    try {
+      const hostname = new URL(origin).hostname;
+      if (
+        ALLOWED_ORIGINS.includes(origin) ||
+        hostname.endsWith('.onrender.com') ||
+        hostname === 'localhost' ||
+        hostname === '127.0.0.1' ||
+        process.env.NODE_ENV !== 'production'
+      ) {
+        return callback(null, true);
+      }
+    } catch { /* ignore invalid origin URL */ }
     callback(new Error(`CORS policy: origin '${origin}' is not allowed.`));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
 }));
 
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));

@@ -357,31 +357,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
     const imageUrlValue = editImageUrl.trim() || undefined;
 
-    if (isApiOffline) {
-      const nextModels = models.map(m => {
-        if (m.id === editingModelId) {
-          return {
-            ...m,
-            name: editName.trim(),
-            modelNumber: editModelNumber.trim(),
-            category: editCategory,
-            releaseYear: Number(editYear),
-            basePrice128GB: Number(editBasePrice),
-            series: finalSeries || undefined,
-            imageUrl: imageUrlValue,
-          };
-        }
-        return m;
-      });
-      setModels(nextModels);
-      setFormSuccess(`[Offline Demo Mode] Saved changes to "${editName}"!`);
-      setEditingModelId(null);
-      if (onRefreshCatalog) {
-        onRefreshCatalog(nextModels);
-      }
-      return;
-    }
-
     try {
       await updateModel(editingModelId, {
         name: editName.trim(),
@@ -393,14 +368,39 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         imageUrl: imageUrlValue,
       });
 
-      setFormSuccess(`Successfully updated "${editName}"!`);
+      setFormSuccess(`Successfully saved changes to "${editName}"!`);
       setEditingModelId(null);
+      setIsApiOffline(false);
       await loadModels();
       if (onRefreshCatalog) {
         await onRefreshCatalog();
       }
     } catch (err) {
-      setFormError('Failed to update model: ' + (err as Error).message);
+      if (isApiOffline) {
+        const nextModels = models.map(m => {
+          if (m.id === editingModelId) {
+            return {
+              ...m,
+              name: editName.trim(),
+              modelNumber: editModelNumber.trim(),
+              category: editCategory,
+              releaseYear: Number(editYear),
+              basePrice128GB: Number(editBasePrice),
+              series: finalSeries || undefined,
+              imageUrl: imageUrlValue,
+            };
+          }
+          return m;
+        });
+        setModels(nextModels);
+        setFormSuccess(`[Offline Demo Mode] Saved changes to "${editName}"!`);
+        setEditingModelId(null);
+        if (onRefreshCatalog) {
+          onRefreshCatalog(nextModels);
+        }
+      } else {
+        setFormError('Failed to update model in database: ' + (err as Error).message);
+      }
     }
   };
 
@@ -429,31 +429,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
     const imageUrlValue = newModelImageUrl.trim() || undefined;
 
-    if (isApiOffline) {
-      const newModel: Model = {
-        id: legacyId,
-        brandId: selectedCatalogBrandId,
-        name: newModelName.trim(),
-        modelNumber: newModelNumber.trim(),
-        category: newModelCategory,
-        releaseYear: Number(newModelYear),
-        basePrice128GB: Number(newModelBasePrice),
-        series: finalSeries || undefined,
-        imageUrl: imageUrlValue,
-      };
-      const nextModels = [newModel, ...models];
-      setModels(nextModels);
-      setFormSuccess(`[Offline Demo Mode] Successfully added model "${newModelName}"!`);
-      setNewModelName('');
-      setNewModelNumber('');
-      setCustomSeriesInput('');
-      setNewModelImageUrl('');
-      if (onRefreshCatalog) {
-        onRefreshCatalog(nextModels);
-      }
-      return;
-    }
-
     try {
       await createModel({
         legacyId,
@@ -467,11 +442,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         imageUrl: imageUrlValue
       });
       
-      setFormSuccess(`Successfully added model "${newModelName}" to ${finalSeries || 'catalog'}!`);
+      setFormSuccess(`Successfully added model "${newModelName}" to database!`);
       setNewModelName('');
       setNewModelNumber('');
       setCustomSeriesInput('');
       setNewModelImageUrl('');
+      setIsApiOffline(false);
       
       // Refresh catalog lists
       await loadModels();
@@ -479,7 +455,31 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         await onRefreshCatalog();
       }
     } catch (err) {
-      setFormError('Failed to create model: ' + (err as Error).message);
+      if (isApiOffline) {
+        const newModel: Model = {
+          id: legacyId,
+          brandId: selectedCatalogBrandId,
+          name: newModelName.trim(),
+          modelNumber: newModelNumber.trim(),
+          category: newModelCategory,
+          releaseYear: Number(newModelYear),
+          basePrice128GB: Number(newModelBasePrice),
+          series: finalSeries || undefined,
+          imageUrl: imageUrlValue,
+        };
+        const nextModels = [newModel, ...models];
+        setModels(nextModels);
+        setFormSuccess(`[Offline Demo Mode] Successfully added model "${newModelName}"!`);
+        setNewModelName('');
+        setNewModelNumber('');
+        setCustomSeriesInput('');
+        setNewModelImageUrl('');
+        if (onRefreshCatalog) {
+          onRefreshCatalog(nextModels);
+        }
+      } else {
+        setFormError('Failed to create model in database: ' + (err as Error).message);
+      }
     }
   };
 
@@ -487,23 +487,24 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     if (!window.confirm(`Are you sure you want to delete model: ${legacyId}?`)) {
       return;
     }
-    if (isApiOffline) {
-      const nextModels = models.filter(m => m.id !== legacyId);
-      setModels(nextModels);
-      setFormSuccess(`[Offline Demo Mode] Deleted model: ${legacyId}`);
-      if (onRefreshCatalog) {
-        onRefreshCatalog(nextModels);
-      }
-      return;
-    }
     try {
       await deleteModel(legacyId);
+      setIsApiOffline(false);
       await loadModels();
       if (onRefreshCatalog) {
         await onRefreshCatalog();
       }
     } catch (err) {
-      alert('Failed to delete model: ' + (err as Error).message);
+      if (isApiOffline) {
+        const nextModels = models.filter(m => m.id !== legacyId);
+        setModels(nextModels);
+        setFormSuccess(`[Offline Demo Mode] Deleted model: ${legacyId}`);
+        if (onRefreshCatalog) {
+          onRefreshCatalog(nextModels);
+        }
+      } else {
+        alert('Failed to delete model from database: ' + (err as Error).message);
+      }
     }
   };
 
