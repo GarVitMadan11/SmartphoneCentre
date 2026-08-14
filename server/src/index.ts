@@ -792,6 +792,15 @@ const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`   Health:       http://localhost:${PORT}/api/health`);
   console.log(`   Admin auth:   POST http://localhost:${PORT}/api/admin/auth`);
   console.log(`   Environment:  ${process.env.NODE_ENV ?? 'development'}\n`);
+
+  // Verify DB connection asynchronously AFTER Express is already listening.
+  // This is intentionally fire-and-forget: Express must pass Render's health
+  // check immediately. On free-tier PostgreSQL, the DB can take 30+ seconds
+  // to cold-start. If we wait for it synchronously the process times out and
+  // Render falls back to serving the static dist/ folder for all paths.
+  prisma.$connect()
+    .then(() => console.log('✅ Database connected'))
+    .catch((err) => console.error('⚠️  Database connection failed (queries will return 500 until DB wakes up):', err));
 });
 
 const gracefulShutdown = async (signal: string) => {
