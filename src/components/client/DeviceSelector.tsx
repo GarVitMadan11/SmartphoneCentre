@@ -702,9 +702,8 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
       const brand = BRANDS.find(b => b.id === model.brandId);
       const brandName = brand ? brand.name.toLowerCase() : '';
       const modelName = model.name.toLowerCase();
-      const modelNum = model.modelNumber.toLowerCase();
       const seriesName = model.series ? model.series.toLowerCase() : '';
-      const fullText = `${brandName} ${modelName} ${modelNum} ${seriesName}`.toLowerCase();
+      const fullText = `${brandName} ${modelName} ${seriesName}`.toLowerCase();
 
       let brandAliases: string[] = [brandName];
       if (model.brandId === 'brand-apple' || brandName === 'apple') {
@@ -724,7 +723,6 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
       const matchesSearch =
         fullText.includes(q) ||
         modelName.includes(q) ||
-        modelNum.includes(q) ||
         seriesName.includes(q) ||
         brandAliases.some(alias => alias.includes(q) || q.includes(alias));
 
@@ -968,9 +966,6 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                               <h3 className="font-light text-base text-ink-navy leading-tight mb-1">
                                 {model.name}
                               </h3>
-                              <span className="text-[10px] font-mono font-medium text-slate-500 bg-slate-100 dark:bg-zinc-800 dark:text-zinc-400 px-1.5 py-0.5 rounded border border-slate-200 dark:border-zinc-700/60 inline-block mb-2">
-                                Model: {model.modelNumber}
-                              </span>
                             </div>
                             
                             {/* Brand specific phone image */}
@@ -1016,9 +1011,6 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                 </div>
                 <h3 className="text-3xl font-light text-ink-navy tracking-tight">{selectedModel.name}</h3>
                 <div className="mt-2 flex flex-wrap gap-2">
-                  <span className="text-[10px] font-mono font-medium text-slate-500 bg-slate-100 dark:bg-zinc-800 dark:text-zinc-400 px-2 py-0.5 rounded border border-slate-200 dark:border-zinc-700/60">
-                    Model No: {selectedModel.modelNumber}
-                  </span>
                   <span className="text-[10px] font-mono font-medium text-slate-500 bg-slate-100 dark:bg-zinc-800 dark:text-zinc-400 px-2 py-0.5 rounded border border-slate-200 dark:border-zinc-700/60">
                     Release: {selectedModel.releaseYear}
                   </span>

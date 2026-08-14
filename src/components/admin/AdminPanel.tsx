@@ -64,7 +64,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
   // Add model form states
   const [newModelName, setNewModelName] = useState('');
-  const [newModelNumber, setNewModelNumber] = useState('');
   const [newModelCategory, setNewModelCategory] = useState<'flagship' | 'premium' | 'midrange' | 'budget'>('premium');
   const [newModelYear, setNewModelYear] = useState<number>(new Date().getFullYear());
   const [newModelBasePrice, setNewModelBasePrice] = useState<number>(30000);
@@ -80,7 +79,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   // Edit model form states
   const [editingModelId, setEditingModelId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
-  const [editModelNumber, setEditModelNumber] = useState('');
   const [editCategory, setEditCategory] = useState<'flagship' | 'premium' | 'midrange' | 'budget'>('premium');
   const [editYear, setEditYear] = useState<number>(new Date().getFullYear());
   const [editBasePrice, setEditBasePrice] = useState<number>(30000);
@@ -243,8 +241,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         b.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
         b.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         b.customerPhone.includes(searchTerm) ||
-        b.modelName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (b.modelNumber && b.modelNumber.toLowerCase().includes(searchTerm.toLowerCase()));
+        b.modelName.toLowerCase().includes(searchTerm.toLowerCase());
 
       // Filter matches
       const matchesVerify = filterVerification === 'all' || b.verificationStatus === filterVerification;
@@ -354,7 +351,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     setSelectedTreeModelId(model.id);
     setEditingModelId(model.id);
     setEditName(model.name);
-    setEditModelNumber(model.modelNumber);
     setEditCategory(model.category as any);
     setEditYear(model.releaseYear);
     setEditBasePrice(model.basePrice128GB);
@@ -410,7 +406,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       const q = catalogSearch.trim().toLowerCase();
       list = list.filter(m =>
         m.name.toLowerCase().includes(q) ||
-        (m.modelNumber || '').toLowerCase().includes(q) ||
         (m.series || '').toLowerCase().includes(q)
       );
     }
@@ -425,7 +420,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       const q = catalogSearch.trim().toLowerCase();
       filtered = brandModels.filter(m =>
         m.name.toLowerCase().includes(q) ||
-        (m.modelNumber || '').toLowerCase().includes(q) ||
         (m.series || '').toLowerCase().includes(q)
       );
     }
@@ -454,8 +448,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     setFormError('');
     setFormSuccess('');
 
-    if (!editName.trim() || !editModelNumber.trim()) {
-      setFormError('Name and Model Number are required.');
+    if (!editName.trim()) {
+      setFormError('Name is required.');
       return;
     }
 
@@ -471,7 +465,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     try {
       await updateModel(editingModelId, {
         name: editName.trim(),
-        modelNumber: editModelNumber.trim(),
         category: editCategory,
         releaseYear: Number(editYear),
         basePrice128GB: Number(editBasePrice),
@@ -500,8 +493,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     setFormError('');
     setFormSuccess('');
     
-    if (!newModelName.trim() || !newModelNumber.trim()) {
-      setFormError('Name and Model Number are required.');
+    if (!newModelName.trim()) {
+      setFormError('Name is required.');
       return;
     }
 
@@ -525,7 +518,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         legacyId,
         brandId: selectedCatalogBrandId,
         name: newModelName.trim(),
-        modelNumber: newModelNumber.trim(),
         category: newModelCategory,
         releaseYear: Number(newModelYear),
         basePrice128GB: Number(newModelBasePrice),
@@ -538,7 +530,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       
       setFormSuccess(`Successfully added model "${newModelName}" to database!`);
       setNewModelName('');
-      setNewModelNumber('');
       setCustomSeriesInput('');
       setNewModelImageUrl('');
       setNewModelStorageGb([128, 256, 512]);
@@ -801,7 +792,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                               <span className="block text-[10px] text-zinc-500">{b.customerPhone}</span>
                             </td>
                             <td className="py-3 px-3">
-                              <span className="block text-ink-navy">{b.modelName} {b.modelNumber && <span className="text-[10px] font-mono text-zinc-500 font-medium">({b.modelNumber})</span>}</span>
+                              <span className="block text-ink-navy">{b.modelName}</span>
                               <span className="block text-zinc-400 text-[10px]">Base: {formatPrice(b.finalPrice)}</span>
                               <span className="block text-cobalt font-bold text-[11px]">{formatPrice(b.finalPayoutAmount !== undefined ? b.finalPayoutAmount : b.finalPrice)}</span>
                               {b.bonusPercentage > 0 && (
@@ -1013,7 +1004,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     <span className="text-[9px] font-mono tracking-[0.15em] text-zinc-500 uppercase block font-bold">4. Device Valuation spec</span>
                     <div className="border border-ice-border/60 bg-canvas-white rounded-sm p-3 font-mono">
                       <div className="flex justify-between items-center text-ink-navy font-bold border-b border-ice-border/40 pb-1.5 mb-1.5">
-                        <span>{selectedBooking.modelName} {selectedBooking.modelNumber && <span className="font-mono font-medium text-[11px] text-zinc-500">({selectedBooking.modelNumber})</span>}</span>
+                        <span>{selectedBooking.modelName}</span>
                         <span className="text-zinc-500 font-normal">{selectedBooking.storageGb}GB â€¢ {selectedBooking.color}</span>
                       </div>
                       <div className="flex justify-between items-center text-[10px] text-zinc-500 mb-2">
@@ -1220,7 +1211,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                       </span>
                                     </div>
                                     <span className={`text-[10px] ${isSelected ? 'text-white/80' : 'text-zinc-400'}`}>
-                                      {m.modelNumber || m.id}
+                                      {m.id}
                                     </span>
                                   </div>
                                   <div className="text-right">
@@ -1293,15 +1284,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         type="text"
                         value={editName}
                         onChange={e => setEditName(e.target.value)}
-                        className="w-full px-3 py-2 bg-canvas-white border border-ice-border rounded-sm text-xs font-mono font-bold text-ink-navy focus:border-cobalt focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-mono text-zinc-500 uppercase font-bold mb-1">Model Code / Number</label>
-                      <input
-                        type="text"
-                        value={editModelNumber}
-                        onChange={e => setEditModelNumber(e.target.value)}
                         className="w-full px-3 py-2 bg-canvas-white border border-ice-border rounded-sm text-xs font-mono font-bold text-ink-navy focus:border-cobalt focus:outline-none"
                       />
                     </div>
@@ -1541,16 +1523,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         placeholder="e.g. iPhone 16 Pro Max / Galaxy S24"
                         value={newModelName}
                         onChange={e => setNewModelName(e.target.value)}
-                        className="w-full px-3 py-2 bg-canvas-white border border-ice-border rounded-sm text-xs font-mono font-bold text-ink-navy focus:border-cobalt focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-mono text-zinc-500 uppercase font-bold mb-1">Model Code / Number *</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. A3106 / SM-S928B"
-                        value={newModelNumber}
-                        onChange={e => setNewModelNumber(e.target.value)}
                         className="w-full px-3 py-2 bg-canvas-white border border-ice-border rounded-sm text-xs font-mono font-bold text-ink-navy focus:border-cobalt focus:outline-none"
                       />
                     </div>

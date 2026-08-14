@@ -309,7 +309,6 @@ app.get('/api/models', async (req, res) => {
         id: m.legacyId,
         brandId: m.brandId,
         name: m.name,
-        modelNumber: m.modelNumber,
         category: m.category,
         releaseYear: m.releaseYear,
         basePrice128GB: m.basePrice128GB,
@@ -329,9 +328,9 @@ app.get('/api/models', async (req, res) => {
 
 app.post('/api/models', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITOR']), async (req, res) => {
   try {
-    const { legacyId, brandId, name, modelNumber, category, releaseYear, basePrice128GB,
+    const { legacyId, brandId, name, category, releaseYear, basePrice128GB,
             series, imageUrl, supportedStorageGb, supportedRamGb, variantPrices } = req.body;
-    if (!legacyId || !brandId || !name || !modelNumber || !category || !releaseYear || !basePrice128GB) {
+    if (!legacyId || !brandId || !name || !category || !releaseYear || !basePrice128GB) {
       res.status(400).json({ error: 'BadRequest', message: 'Missing required fields' });
       return;
     }
@@ -352,7 +351,6 @@ app.post('/api/models', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITOR']
         legacyId: String(legacyId).trim(),
         brandId: String(brandId),
         name: String(name).trim(),
-        modelNumber: String(modelNumber).trim(),
         category: String(category).trim(),
         releaseYear: Number(releaseYear),
         basePrice128GB: resolvedBase,
@@ -396,7 +394,7 @@ app.post('/api/models/bulk-update', adminAuth, requireRole(['SUPER_ADMIN', 'CATA
       if (!existing) continue;
 
       const data: Record<string, unknown> = {};
-      for (const field of ['name', 'modelNumber', 'category', 'series']) {
+      for (const field of ['name', 'category', 'series']) {
         if (changes[field] !== undefined && typeof changes[field] === 'string') {
           data[field] = changes[field].trim();
         }
@@ -441,7 +439,7 @@ app.patch('/api/models/:legacyId', adminAuth, requireRole(['SUPER_ADMIN', 'CATAL
     const legacyId = String(req.params.legacyId);
     const updates = req.body as Record<string, unknown>;
     const data: Record<string, unknown> = {};
-    for (const field of ['name', 'modelNumber', 'category']) {
+    for (const field of ['name', 'category']) {
       if (updates[field] !== undefined && typeof updates[field] === 'string' && (updates[field] as string).trim().length > 0) {
         data[field] = (updates[field] as string).trim();
       }
@@ -657,7 +655,6 @@ function mapBooking(b: import('@prisma/client').Booking, includeUnmaskedPayout =
     id: b.id,
     modelId: b.modelLegacyId,
     modelName: b.modelName,
-    modelNumber: b.modelNumber,
     storageGb: b.storageGb,
     color: b.color,
     customerName: b.customerName,
@@ -737,7 +734,6 @@ app.post('/api/bookings', bookingLimiter, async (req, res) => {
         id: bookingId,
         modelLegacyId: model.legacyId,
         modelName: model.name,
-        modelNumber: model.modelNumber,
         storageGb,
         color: String(b.color ?? ''),
         customerName: String(b.customerName).trim(),

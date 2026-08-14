@@ -355,9 +355,8 @@ export default function App() {
       const brand = STATIC_BRANDS.find(b => b.id === m.brandId);
       const brandName = brand ? brand.name.toLowerCase() : '';
       const modelName = m.name.toLowerCase();
-      const modelNum = m.modelNumber.toLowerCase();
       const seriesName = m.series ? m.series.toLowerCase() : '';
-      const fullText = `${brandName} ${modelName} ${modelNum} ${seriesName}`.toLowerCase();
+      const fullText = `${brandName} ${modelName} ${seriesName}`.toLowerCase();
 
       let brandAliases: string[] = [brandName];
       if (m.brandId === 'brand-apple' || brandName === 'apple') {
@@ -377,7 +376,6 @@ export default function App() {
       return (
         fullText.includes(q) ||
         modelName.includes(q) ||
-        modelNum.includes(q) ||
         seriesName.includes(q) ||
         brandAliases.some(alias => alias.includes(q) || q.includes(alias))
       );

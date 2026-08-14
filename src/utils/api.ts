@@ -156,7 +156,6 @@ export interface ApiModel {
   id: string;
   brandId: string;
   name: string;
-  modelNumber: string;
   category: string;
   releaseYear: number;
   basePrice128GB: number;
@@ -176,7 +175,6 @@ export function createModel(data: {
   legacyId: string;
   brandId: string;
   name: string;
-  modelNumber: string;
   category: string;
   releaseYear: number;
   basePrice128GB: number;
@@ -228,7 +226,6 @@ export interface ApiBooking {
   id: string;
   modelId: string;
   modelName: string;
-  modelNumber?: string;
   storageGb: number;
   color: string;
   customerName: string;

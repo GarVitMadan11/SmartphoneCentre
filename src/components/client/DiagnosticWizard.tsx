@@ -307,9 +307,6 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
             <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-0.5">Diagnostic wizard</span>
             <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
               <span className="font-light text-ink-navy text-xl sm:text-2xl tracking-tight truncate">{model.name}</span>
-              <span className="text-[10px] font-mono font-medium text-slate-500 bg-slate-100 dark:bg-zinc-800 dark:text-zinc-400 px-1.5 py-0.5 rounded border border-slate-200 dark:border-zinc-700/60 flex-shrink-0">
-                {model.modelNumber}
-              </span>
               <span className="text-[9px] font-mono tracking-wider bg-cobalt-light text-cobalt px-2 py-0.5 rounded-sm border border-white/[0.06] flex-shrink-0 uppercase">
                 {variant.storageGb >= 1024 ? '1TB' : `${variant.storageGb}GB`}
               </span>
@@ -1105,9 +1102,6 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         <div>
                           <span className="text-[10px] text-zinc-400 print-text-muted uppercase block font-mono tracking-wider mb-1">SPECIFICATION AUDIT RECEIPT</span>
                           <span className="font-bold text-white print-text-dark text-xl tracking-tight block">{model.name}</span>
-                          {model.modelNumber && (
-                            <span className="block text-xs text-zinc-400 print-text-muted font-mono mt-1">Model Ref: {model.modelNumber}</span>
-                          )}
                         </div>
                         <div className="text-right">
                           <span className="text-[10px] text-zinc-400 print-text-muted uppercase block font-mono tracking-wider mb-1">REF CODE</span>

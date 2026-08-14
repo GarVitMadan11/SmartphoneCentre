@@ -32,7 +32,6 @@ model Model {
   legacyId       String @unique // e.g. "apple-16pm" — maps to frontend IDs
   brandId        String
   name           String
-  modelNumber    String
   category       String // flagship | premium | midrange | budget
   releaseYear    Int
   basePrice128GB Int    // Anchor price in INR
@@ -95,7 +94,6 @@ model Booking {
   id                     String  @id // server-generated: "STC-XXXXXXXX"
   modelLegacyId          String // references Model.legacyId
   modelName              String
-  modelNumber            String  @default("")
   storageGb              Int
   color                  String
   customerName           String

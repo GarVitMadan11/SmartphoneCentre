@@ -339,7 +339,6 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
       id: confirmationId,
       modelId: selectedModel.id,
       modelName: selectedModel.name,
-      modelNumber: selectedModel.modelNumber,
       storageGb: selectedVariant.storageGb,
       color: selectedVariant.color,
       customerName: name.trim(),
@@ -1319,10 +1318,6 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                 <div className="flex justify-between">
                   <span className="text-zinc-500">Color Variant</span>
                   <span className="text-ink-navy font-semibold">{selectedVariant.color}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-zinc-500">Model Number</span>
-                  <span className="text-ink-navy font-mono text-[13px] bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded">{selectedModel.modelNumber}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-zinc-500">Client Inspector</span>
