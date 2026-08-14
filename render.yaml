@@ -1,0 +1,37 @@
+# render.yaml — Declarative Render deployment configuration
+# Tells Render to use Node.js runtime with npm commands, NOT the Dockerfile.
+# Reference: https://render.com/docs/render-yaml-reference
+
+services:
+  - type: web
+    name: SmartphoneCentre
+    runtime: node
+    region: oregon
+    plan: free
+
+    # Build: compile server TypeScript + Vite React bundle
+    buildCommand: npm run build
+
+    # Start: run the Express server (serves both /api/* AND static frontend)
+    startCommand: npm start
+
+    # Render sends health-check pings here. Must return 2xx for the service to be "healthy".
+    healthCheckPath: /api/health
+
+    # These env vars are read from the Render dashboard; list them here so
+    # render.yaml documents what variables are expected (actual values stay secret).
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        generateValue: false
+      - key: DATABASE_URL
+        sync: false       # secret — set manually in Render dashboard
+      - key: JWT_SECRET
+        sync: false       # secret — set manually in Render dashboard
+      - key: JWT_EXPIRES_IN
+        sync: false
+      - key: ADMIN_PIN_HASH
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false

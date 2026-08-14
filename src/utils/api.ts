@@ -4,15 +4,23 @@
 // ─────────────────────────────────────────────────────────────
 
 function getApiBaseUrl(): string {
-  const envUrl = (import.meta.env.VITE_API_URL as string | undefined)?.trim().replace(/\/$/, '');
-  if (envUrl) return envUrl;
   if (typeof window !== 'undefined') {
     const hostname = window.location.hostname;
-    const port = window.location.port;
-    if ((hostname === 'localhost' || hostname === '127.0.0.1') && port && port !== '4000') {
-      return `${window.location.protocol}//${hostname}:4000/api`;
+    // Local development only: frontend runs on 3000/5173, backend runs on 4000
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      // Allow explicit override via env var for local dev only
+      const envUrl = (import.meta.env.VITE_API_URL as string | undefined)?.trim().replace(/\/$/, '');
+      if (envUrl && !envUrl.includes(hostname === 'localhost' ? 'onrender.com' : '')) return envUrl;
+      const port = window.location.port;
+      if (port && port !== '4000') {
+        return `${window.location.protocol}//${hostname}:4000/api`;
+      }
+      return '/api';
     }
   }
+  // Production (Render, etc.): Express serves BOTH the frontend AND /api/* from
+  // the SAME origin. Always use a relative URL so the browser sends the request
+  // to the correct Express server — never depend on VITE_API_URL in production.
   return '/api';
 }
 
