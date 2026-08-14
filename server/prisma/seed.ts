@@ -34,16 +34,24 @@ const DEFAULT_ADMIN_USERS = [
 const INITIAL_BOOKINGS: any[] = [];
 
 async function main() {
-  console.log('🌱 Seeding database...');
+  const existingBrandCount = await prisma.brand.count();
+  const existingModelCount = await prisma.model.count();
+
+  if (existingBrandCount > 0 && existingModelCount > 0) {
+    console.log(`🌱 Database already contains live data (${existingBrandCount} brands, ${existingModelCount} models). Skipping initial seeding to preserve your actual live catalog edits.`);
+    return;
+  }
+
+  console.log('🌱 Initializing database with starter catalog & admin accounts...');
 
   for (const b of BRANDS) {
     await prisma.brand.upsert({
       where: { id: b.id },
       create: { id: b.id, name: b.name, logo: b.logo },
-      update: { name: b.name, logo: b.logo },
+      update: {}, // Do NOT overwrite existing live brand edits
     });
   }
-  console.log(`  ✓ ${BRANDS.length} brands seeded`);
+  console.log(`  ✓ ${BRANDS.length} brands initialized`);
 
   for (const m of MODELS) {
     await prisma.model.upsert({
@@ -58,29 +66,26 @@ async function main() {
         basePrice128GB: m.basePrice128GB,
         series: m.series,
       },
-      update: {
-        brandId: m.brandId, name: m.name, modelNumber: m.modelNumber,
-        category: m.category, releaseYear: m.releaseYear, basePrice128GB: m.basePrice128GB, series: m.series,
-      },
+      update: {}, // Do NOT overwrite existing live model edits
     });
   }
-  console.log(`  ✓ ${MODELS.length} models seeded`);
+  console.log(`  ✓ ${MODELS.length} models initialized`);
 
   for (const adminUser of DEFAULT_ADMIN_USERS) {
     await prisma.adminUser.upsert({
       where: { username: adminUser.username },
       create: adminUser,
-      update: { role: adminUser.role, passwordHash: adminUser.passwordHash },
+      update: {}, // Do NOT overwrite existing live admin user edits
     });
   }
-  console.log(`  ✓ ${DEFAULT_ADMIN_USERS.length} admin staff accounts seeded`);
+  console.log(`  ✓ ${DEFAULT_ADMIN_USERS.length} admin staff accounts initialized`);
 
   for (const b of INITIAL_BOOKINGS) {
     await prisma.booking.upsert({ where: { id: b.id }, create: b, update: {} });
   }
-  console.log(`  ✓ ${INITIAL_BOOKINGS.length} bookings seeded`);
+  console.log(`  ✓ ${INITIAL_BOOKINGS.length} bookings initialized`);
 
-  console.log('✅ Seed complete!');
+  console.log('✅ Database initialization complete!');
 }
 
 main()
