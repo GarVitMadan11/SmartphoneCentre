@@ -38,7 +38,13 @@ export default defineConfig({
     }
   },
   preview: {
-    // Same headers for `vite preview` (production preview)
+    // Same proxy and security headers for `vite preview` (production preview)
+    proxy: {
+      '/api': {
+        target: 'http://127.0.0.1:4000',
+        changeOrigin: true,
+      },
+    },
     headers: {
       'X-Content-Type-Options': 'nosniff',
       'X-Frame-Options': 'DENY',

@@ -3,7 +3,20 @@
 // Supports HttpOnly cookie authentication and server quotes
 // ─────────────────────────────────────────────────────────────
 
-const API_BASE = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '') || '/api';
+function getApiBaseUrl(): string {
+  const envUrl = (import.meta.env.VITE_API_URL as string | undefined)?.trim().replace(/\/$/, '');
+  if (envUrl) return envUrl;
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    const port = window.location.port;
+    if ((hostname === 'localhost' || hostname === '127.0.0.1') && port && port !== '4000') {
+      return `${window.location.protocol}//${hostname}:4000/api`;
+    }
+  }
+  return '/api';
+}
+
+const API_BASE = getApiBaseUrl();
 
 function csrfToken(): string | undefined {
   return document.cookie.split('; ').find(cookie => cookie.startsWith('rex_admin_csrf='))?.split('=').slice(1).join('=');
