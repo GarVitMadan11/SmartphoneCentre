@@ -30,30 +30,8 @@ const DEFAULT_ADMIN_USERS = [
   { username: 'catalog_mgr', email: 'catalog@smartphonecentre.com', passwordHash: DEFAULT_ADMIN_PASSWORD_HASH, role: 'CATALOG_EDITOR', active: true },
 ];
 
-const INITIAL_BOOKINGS = [
-  {
-    id: 'STC-A8B9C0D1', modelLegacyId: 'apple-15pm', modelName: 'iPhone 15 Pro Max', modelNumber: 'A3106',
-    storageGb: 256, color: 'Natural Titanium', customerName: 'Amit Sharma', customerPhone: '9876543210',
-    customerEmail: 'amit.sharma@example.com', address: 'Flat 402, Block C, Green Park, New Delhi - 110016',
-    pickupDate: '2026-07-12', pickupTimeSlot: '12:00 PM - 03:00 PM (Afternoon)', finalPrice: 53500,
-    verificationStatus: 'verified', verifiedName: 'AMIT SHARMA', maskedAadhaar: 'XXXX-XXXX-4321',
-    verificationDate: '2026-07-12T11:20:00.000Z', payoutMethod: 'upi', payoutMethodName: 'UPI Transfer',
-    bonusPercentage: 0, bonusAmount: 0, finalPayoutAmount: 53500, inspectionStatus: 'approved',
-    payoutStatus: 'completed', dateCreated: '2026-07-12T11:05:00.000Z',
-    payoutDetailsJson: JSON.stringify({ upiId: 'amit.sharma@okaxis' }),
-  },
-  {
-    id: 'STC-F5E4D3C2', modelLegacyId: 'sam-s24u', modelName: 'Galaxy S24 Ultra', modelNumber: 'SM-S928B',
-    storageGb: 256, color: 'Phantom Black', customerName: 'Rohan Gupta', customerPhone: '8765432109',
-    customerEmail: 'rohan.gupta@example.com', address: '15, Sector 4, HSR Layout, Bengaluru, Karnataka - 560102',
-    pickupDate: '2026-07-13', pickupTimeSlot: '09:00 AM - 12:00 PM (Morning)', finalPrice: 38200,
-    verificationStatus: 'verified', verifiedName: 'ROHAN GUPTA', maskedAadhaar: 'XXXX-XXXX-8765',
-    verificationDate: '2026-07-13T08:45:00.000Z', payoutMethod: 'bank', payoutMethodName: 'Bank Transfer',
-    bonusPercentage: 0, bonusAmount: 0, finalPayoutAmount: 38200, inspectionStatus: 'approved',
-    payoutStatus: 'pending', dateCreated: '2026-07-13T08:30:00.000Z',
-    payoutDetailsJson: JSON.stringify({ accountHolderName: 'Rohan Gupta', accountNumber: '918273645012', ifscCode: 'HDFC0000104' }),
-  },
-];
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const INITIAL_BOOKINGS: any[] = [];
 
 async function main() {
   console.log('🌱 Seeding database...');
