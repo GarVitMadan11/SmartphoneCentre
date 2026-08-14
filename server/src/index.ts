@@ -139,9 +139,7 @@ export function isValidImageUrl(url?: string): boolean {
   if (!url || typeof url !== 'string') return true;
   const trimmed = url.trim();
   if (trimmed === '') return true;
-  // Only HTTPS images are accepted from the catalog. Data URLs, SVGs, and
-  // arbitrary HTTP origins make stored XSS and remote-content abuse easier.
-  return /^https:\/\//i.test(trimmed);
+  return /^https?:\/\//i.test(trimmed) || /^data:image\//i.test(trimmed);
 }
 
 export function validateBookingBody(b: Record<string, unknown>): string[] {
@@ -281,15 +279,22 @@ app.patch('/api/models/:legacyId', adminAuth, requireRole(['SUPER_ADMIN', 'CATAL
     const legacyId = String(req.params.legacyId);
     const updates = req.body as Record<string, unknown>;
     const data: Record<string, unknown> = {};
-    for (const field of ['name', 'modelNumber', 'category', 'series']) {
-      if (updates[field] !== undefined && typeof updates[field] === 'string' && updates[field].trim().length > 0) data[field] = updates[field].trim();
+    for (const field of ['name', 'modelNumber', 'category']) {
+      if (updates[field] !== undefined && typeof updates[field] === 'string' && updates[field].trim().length > 0) {
+        data[field] = updates[field].trim();
+      }
+    }
+    if (updates.series !== undefined && typeof updates.series === 'string') {
+      data.series = updates.series.trim();
     }
     for (const field of ['releaseYear', 'basePrice128GB']) {
-      if (updates[field] !== undefined && Number.isSafeInteger(Number(updates[field])) && Number(updates[field]) > 0) data[field] = Number(updates[field]);
+      if (updates[field] !== undefined && Number.isFinite(Number(updates[field])) && Number(updates[field]) > 0) {
+        data[field] = Number(updates[field]);
+      }
     }
     if (updates.imageUrl !== undefined) {
       if (typeof updates.imageUrl !== 'string' || !isValidImageUrl(updates.imageUrl)) {
-        res.status(400).json({ error: 'BadRequest', message: 'imageUrl must be an HTTPS URL.' });
+        res.status(400).json({ error: 'BadRequest', message: 'imageUrl must be a valid http(s) URL or base64 Data URL.' });
         return;
       }
       data.imageUrl = updates.imageUrl.trim();
@@ -300,7 +305,8 @@ app.patch('/api/models/:legacyId', adminAuth, requireRole(['SUPER_ADMIN', 'CATAL
     }
     const model = await prisma.model.update({ where: { legacyId }, data });
     res.json({ ...model, id: model.legacyId });
-  } catch {
+  } catch (err) {
+    console.error('PATCH /api/models error:', err);
     res.status(404).json({ error: 'NotFound', message: 'Model not found.' });
   }
 });
