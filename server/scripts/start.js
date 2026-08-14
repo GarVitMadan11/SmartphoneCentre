@@ -1,4 +1,4 @@
-import { execSync } from 'node:child_process';
+import { execSync, spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -22,7 +22,7 @@ if (isRenderEnv) {
 }
 
 process.env.DATABASE_URL = dbUrl;
-console.log(`🔧 Building with DATABASE_URL: ${process.env.DATABASE_URL} (Render: ${isRenderEnv})`);
+console.log(`🚀 Starting server with DATABASE_URL: ${process.env.DATABASE_URL} (Render: ${isRenderEnv})`);
 
 // Dynamically sync schema.prisma provider to match DATABASE_URL
 const schemaPath = path.resolve(__dirname, '../prisma/schema.prisma');
@@ -37,23 +37,32 @@ if (fs.existsSync(schemaPath)) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// BUILD — compile only. No database calls here.
-//
-// WHY: Render's build machines cannot reach the internal PostgreSQL hostname
-// (dpg-...-a). Running `prisma db push` or seeding here causes the build to
-// fail with a connection error, leaving the OLD deployment running forever.
-//
-// `prisma db push` and seed are deferred to server STARTUP (in the start
-// script), when the web service IS inside Render's internal network and CAN
-// reach the database.
+// DATABASE PUSH & SEED (Runs on Server Startup inside Render internal network)
 // ─────────────────────────────────────────────────────────────────────────
 try {
-  execSync('npx prisma generate && tsc', {
+  console.log('🔄 Executing Prisma DB Push...');
+  execSync('npx prisma db push --accept-data-loss', {
     stdio: 'inherit',
     env: process.env,
   });
-  console.log('\u2705 Server compiled successfully.');
+  console.log('✅ Database schema in sync.');
+
+  console.log('🌱 Syncing catalog seed data...');
+  execSync('npx tsx prisma/seed.ts', {
+    stdio: 'inherit',
+    env: process.env,
+  });
+  console.log('✅ Catalog seed data synced.');
 } catch (err) {
-  console.error('\u274c Server build failed:', err);
-  process.exit(1);
+  console.error('⚠️ Database sync on startup notice:', (err && err.message) || err);
 }
+
+// Start Express Application Server
+const serverProcess = spawn('node', ['dist/index.js'], {
+  stdio: 'inherit',
+  env: process.env,
+});
+
+serverProcess.on('exit', (code) => {
+  process.exit(code ?? 0);
+});
