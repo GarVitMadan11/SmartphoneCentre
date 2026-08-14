@@ -30,6 +30,13 @@ import {
   maskPayoutDetails,
 } from './utils/encryption.js';
 
+const DEFAULT_POSTGRES_URL = 'postgresql://database_fplv_user:mhFh1bnyfLV4jpId5R0D8t7osV0Nlx0T@dpg-d9v6fa67bikc73bsvnhg-a/database_fplv';
+let dbUrl = (process.env.DATABASE_URL ?? '').trim().replace(/^['"]|['"]$/g, '');
+if (!dbUrl) {
+  dbUrl = DEFAULT_POSTGRES_URL;
+  process.env.DATABASE_URL = dbUrl;
+}
+
 const prisma = new PrismaClient();
 const app = express();
 const PORT = parseInt(process.env.PORT || '4000', 10);

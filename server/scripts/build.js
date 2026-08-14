@@ -6,11 +6,13 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Ensure DATABASE_URL is set and starts with valid protocol
+const DEFAULT_POSTGRES_URL = 'postgresql://database_fplv_user:mhFh1bnyfLV4jpId5R0D8t7osV0Nlx0T@dpg-d9v6fa67bikc73bsvnhg-a/database_fplv';
+
+// Ensure DATABASE_URL is set to Render PostgreSQL connection string
 let dbUrl = (process.env.DATABASE_URL ?? '').trim().replace(/^['"]|['"]$/g, '');
 
 if (!dbUrl) {
-  dbUrl = 'file:./dev.db';
+  dbUrl = DEFAULT_POSTGRES_URL;
 } else if (!dbUrl.startsWith('file:') && !dbUrl.startsWith('postgres:') && !dbUrl.startsWith('postgresql:')) {
   dbUrl = `file:${dbUrl}`;
 }
