@@ -311,12 +311,49 @@ const catalogCategory = (name: string): DeviceCategory => {
   return 'midrange';
 };
 
-const catalogPrice = (category: DeviceCategory) => ({ flagship: 30000, premium: 18000, midrange: 11000, budget: 6500 })[category];
+const catalogPrice = (brandId: string, name: string, category: DeviceCategory, releaseYear: number): number => {
+  let base = 11000;
+  if (category === 'flagship') base = 32000;
+  else if (category === 'premium') base = 20000;
+  else if (category === 'midrange') base = 12000;
+  else if (category === 'budget') base = 6500;
+
+  // Brand market value multiplier
+  let brandMult = 1.0;
+  if (brandId === 'brand-apple') brandMult = 1.35;
+  else if (brandId === 'brand-samsung') brandMult = /fold|flip|ultra|s2/i.test(name) ? 1.15 : 0.9;
+  else if (brandId === 'brand-google') brandMult = 1.05;
+  else if (brandId === 'brand-oneplus') brandMult = 1.0;
+  else if (brandId === 'brand-vivo' || brandId === 'brand-oppo') brandMult = /ultra|pro|find x|x\d+/i.test(name) ? 1.05 : 0.85;
+  else if (brandId === 'brand-xiaomi') brandMult = /ultra|civi|pro/i.test(name) ? 0.95 : 0.75;
+  else if (brandId === 'brand-nothing') brandMult = 0.9;
+  else if (brandId === 'brand-motorola') brandMult = 0.85;
+
+  // Release year retention factor
+  let yearFactor = 1.0;
+  if (releaseYear >= 2026) yearFactor = 1.35;
+  else if (releaseYear === 2025) yearFactor = 1.20;
+  else if (releaseYear === 2024) yearFactor = 1.0;
+  else if (releaseYear === 2023) yearFactor = 0.82;
+  else if (releaseYear === 2022) yearFactor = 0.65;
+  else if (releaseYear === 2021) yearFactor = 0.50;
+  else yearFactor = 0.40;
+
+  // Keyword tier modifiers
+  let keywordBonus = 0;
+  if (/ultra|pro max|fold 8|fold 7/i.test(name)) keywordBonus += 6000;
+  if (/pro\b|plus|flip|air/i.test(name)) keywordBonus += 2500;
+  if (/fe|lite|mini|c\b|e\b|x\b/i.test(name)) keywordBonus -= 1500;
+
+  const raw = (base * brandMult * yearFactor) + keywordBonus;
+  // Return exact price rounded to clean 500 INR step
+  return Math.max(3500, Math.round(raw / 500) * 500);
+};
 
 const makeCatalogModels = (brandId: string, series: string, releaseYear: number, names: string[]): Model[] =>
   names.map((name) => {
     const category = catalogCategory(name);
-    return { id: catalogId(brandId, name), brandId, name, category, releaseYear, basePrice128GB: catalogPrice(category), series };
+    return { id: catalogId(brandId, name), brandId, name, category, releaseYear, basePrice128GB: catalogPrice(brandId, name, category, releaseYear), series };
   });
 
 // Models requested for the current catalog that were not part of the original data set.
