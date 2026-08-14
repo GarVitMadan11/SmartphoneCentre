@@ -1301,9 +1301,9 @@ export default function App() {
                 <h4 className="font-light text-xl text-ink-navy">Need Help?</h4>
                 <p className="mt-1 text-ink-muted text-[10px] sm:text-xs leading-relaxed font-light">Corporate trade-in, bulk logistics, or carrier lock valuations?</p>
               </div>
-              <button className="w-full bg-cobalt hover:bg-cobalt-hover text-white py-2 rounded-sm font-bold text-xs transition-all">
+              <a href="mailto:support@rephonix.in" className="w-full bg-cobalt hover:bg-cobalt-hover text-white py-2 rounded-sm font-bold text-xs transition-all text-center block">
                 Connect to Helpdesk
-              </button>
+              </a>
             </div>
           </aside>
         )}
