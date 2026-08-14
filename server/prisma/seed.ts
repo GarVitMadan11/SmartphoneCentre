@@ -151,7 +151,7 @@ const catalogId = (brandId: string, name: string) =>
   `catalog-${brandId.replace('brand-', '')}-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}`;
 
 const catalogCategory = (name: string) => {
-  if (/ultra|pro max|fold|flip|x300|x200 pro|x100 pro|x90 pro|x80 pro/i.test(name)) return 'flagship';
+  if (/ultra|pro max|fold|flip|iphone 17|iphone air|s26|s25|x300|x200 pro|x100 pro|find x9|find x8/i.test(name)) return 'flagship';
   if (/\bpro\b|plus|edge|air|reno|razr|v\d+ elite/i.test(name)) return 'premium';
   if (/\b(a|y|m|f|g)\d|lite|ce|cmf/i.test(name)) return 'budget';
   return 'midrange';
@@ -185,8 +185,9 @@ const catalogPrice = (brandId: string, name: string, category: string, releaseYe
 
   let keywordBonus = 0;
   if (/ultra|pro max|fold 8|fold 7/i.test(name)) keywordBonus += 6000;
-  if (/pro\b|plus|flip|air/i.test(name)) keywordBonus += 2500;
-  if (/fe|lite|mini|c\b|e\b|x\b/i.test(name)) keywordBonus -= 1500;
+  else if (/pro\b|plus|flip|air/i.test(name)) keywordBonus += 3000;
+
+  if (/\b(fe|lite|mini|c|e|x)\b/i.test(name)) keywordBonus -= 1500;
 
   const raw = (base * brandMult * yearFactor) + keywordBonus;
   return Math.max(3500, Math.round(raw / 500) * 500);
