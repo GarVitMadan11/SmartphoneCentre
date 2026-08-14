@@ -37,12 +37,17 @@ const isRenderEnv = Boolean(process.env.RENDER || process.env.RENDER_SERVICE_ID)
 
 if (isRenderEnv) {
   dbUrl = dbUrl || DEFAULT_POSTGRES_URL;
-} else if (!dbUrl || dbUrl.includes('dpg-d9v6fa67bikc73bsvnhg-a')) {
-  dbUrl = 'file:./dev.db';
+} else if (!dbUrl || dbUrl.includes('dpg-d9v6fa67bikc73bsvnhg-a') || dbUrl.startsWith('file:')) {
+  const localDbPath = path.resolve(__dirname, '../dev.db');
+  dbUrl = `file:${localDbPath}`;
 }
 process.env.DATABASE_URL = dbUrl;
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  datasources: {
+    db: { url: dbUrl }
+  }
+});
 const app = express();
 const PORT = parseInt(process.env.PORT || '4000', 10);
 
@@ -280,7 +285,7 @@ app.get('/api/models', async (req, res) => {
     }));
   } catch (err) {
     console.error('GET /api/models error:', err);
-    res.status(500).json({ error: 'ServerError', message: 'Failed to fetch models' });
+    res.status(500).json({ error: 'ServerError', message: (err as Error).message || 'Failed to fetch models' });
   }
 });
 
