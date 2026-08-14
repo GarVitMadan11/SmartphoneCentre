@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { TABLET_MODELS, Model, Variant, generateVariantsForModel } from '../../data/mockDatabase';
-import { Tablet, Sparkles, ArrowRight, ShieldCheck, Search } from 'lucide-react';
+import { Tablet, Sparkles, ArrowRight, Search } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface TabletsShowcaseProps {
