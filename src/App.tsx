@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo, lazy, Suspense, useCallback } fro
 import { Model, Variant, DefectRule, MODELS as STATIC_MODELS, BRANDS as STATIC_BRANDS, generateVariantsForModel, INITIAL_BOOKINGS, Brand, Booking } from './data/mockDatabase';
 import { fetchBrands, fetchModels, fetchBookings as apiFetchBookings } from './utils/api';
 import { DeviceSelector } from './components/client/DeviceSelector';
+import { DeviceCategoryShowcase } from './components/client/DeviceCategoryShowcase';
 import { useFocusTrap } from './hooks/useFocusTrap';
 // ── Lazy-loaded heavy components (code splitting — P-1 fix) ───────────────────
 const DiagnosticWizard = lazy(() => import('./components/client/DiagnosticWizard').then(m => ({ default: m.DiagnosticWizard })));
@@ -648,6 +649,9 @@ export default function App() {
                   <SmartphoneMockup />
                 </div>
               </div>
+
+              {/* 1.5 Premium 3D Device Category Showcase */}
+              <DeviceCategoryShowcase />
 
               {/* 2. Popular Brands & Catalog Selector section */}
               <div id="device-selector-section" className="bg-canvas-pure border border-ice-border/60 rounded-xl p-5 sm:p-8 shadow-3d-card scroll-mt-24">
