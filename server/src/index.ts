@@ -40,25 +40,13 @@ import {
   const isProduction = process.env.NODE_ENV === 'production';
   const missing: string[] = [];
 
-  // DATABASE_URL is always required
-  let dbUrl = (process.env.DATABASE_URL ?? '').trim().replace(/^['"]|['"]$/g, '');
+  const dbUrl = (process.env.DATABASE_URL ?? '').trim().replace(/^['"]|['"]$/g, '');
   const isRenderEnv = Boolean(process.env.RENDER || process.env.RENDER_SERVICE_ID);
 
-  if (!dbUrl || dbUrl.startsWith('file:')) {
-    // Allow SQLite in local development only
-    if (isRenderEnv || isProduction) {
-      missing.push('DATABASE_URL (must be a PostgreSQL connection string in production)');
-    } else {
-      // Resolve local SQLite path for development
-      let localDbPath = path.resolve(__dirname, '../prisma/dev.db');
-      if (!fs.existsSync(localDbPath)) {
-        localDbPath = path.resolve(__dirname, '../dev.db');
-      }
-      dbUrl = `file:${localDbPath}`;
-      process.env.DATABASE_URL = dbUrl;
-    }
-  } else {
-    process.env.DATABASE_URL = dbUrl;
+  if (!dbUrl) {
+    missing.push('DATABASE_URL environment variable is missing');
+  } else if ((isProduction || isRenderEnv) && dbUrl.startsWith('file:')) {
+    missing.push('DATABASE_URL must be a production PostgreSQL connection string in production environments');
   }
 
   if (isProduction || isRenderEnv) {
