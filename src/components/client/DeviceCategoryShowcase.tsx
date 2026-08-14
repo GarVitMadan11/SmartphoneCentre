@@ -49,13 +49,13 @@ export const DeviceCategoryShowcase: React.FC<DeviceCategoryShowcaseProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-10 gap-4">
         <div>
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-cobalt/10 text-cobalt border border-cobalt/15 tracking-widest uppercase font-outfit">
-            <Sparkles className="w-3.5 h-3.5 text-cobalt" /> CURATED SHOWROOM
+            <Sparkles className="w-3.5 h-3.5 text-cobalt" /> VALUATION CENTER
           </span>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-ink-navy tracking-tight font-outfit mt-2 uppercase">
-            EXPLORE <span className="text-secondary font-black">DEVICES</span>
+            SELL YOUR <span className="text-secondary font-black">DEVICES</span>
           </h2>
           <p className="text-ink-slate text-sm font-light mt-1.5 max-w-lg">
-            Select a hardware category to inspect market valuations, certified diagnostics, and trade-in pricing.
+            Select a hardware category to calculate your instant trade-in value, diagnostic report, and cash payout options.
           </p>
         </div>
       </div>
@@ -96,7 +96,7 @@ export const DeviceCategoryShowcase: React.FC<DeviceCategoryShowcaseProps> = ({
                 SMARTPHONES
               </h3>
               <p className="text-slate-300 text-sm font-light mt-1.5 max-w-sm">
-                Find your next device.
+                Get the best cash value for your phone.
               </p>
             </div>
 
@@ -120,10 +120,10 @@ export const DeviceCategoryShowcase: React.FC<DeviceCategoryShowcaseProps> = ({
             {/* Footer CTA */}
             <div className="relative z-10 pt-4 border-t border-white/10 flex items-center justify-between">
               <span className="text-xs font-bold text-slate-300 group-hover:text-white transition-colors flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-emerald-400" /> Instant Doorstep Valuation
+                <ShieldCheck className="w-4 h-4 text-emerald-400" /> Instant Valuation &amp; Payout
               </span>
               <span className="inline-flex items-center gap-2 text-xs font-bold text-white bg-cobalt/80 px-4 py-2 rounded-xl group-hover:bg-cobalt transition-all shadow-md group-hover:translate-x-1">
-                <span>Explore Category</span>
+                <span>Check Phone Value</span>
                 <ArrowRight className="w-4 h-4" />
               </span>
             </div>
@@ -157,7 +157,7 @@ export const DeviceCategoryShowcase: React.FC<DeviceCategoryShowcaseProps> = ({
                     TABLETS &amp; iPADS
                   </h3>
                   <p className="text-ink-slate text-xs font-light mt-1">
-                    Power and portability.
+                    Value estimation for iPads &amp; tablets.
                   </p>
                 </div>
 
@@ -170,9 +170,9 @@ export const DeviceCategoryShowcase: React.FC<DeviceCategoryShowcaseProps> = ({
               </div>
 
               <div className="mt-4 pt-3 border-t border-ice-border/50 flex items-center justify-between text-xs">
-                <span className="text-ink-slate font-medium text-[11px]">Trade-in &amp; Diagnostics</span>
+                <span className="text-ink-slate font-medium text-[11px]">Secure Data Wipe</span>
                 <span className="inline-flex items-center gap-1 font-bold text-cobalt group-hover:translate-x-1 transition-transform">
-                  <span>View Models</span>
+                  <span>Check Tablet Value</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </span>
               </div>
@@ -203,7 +203,7 @@ export const DeviceCategoryShowcase: React.FC<DeviceCategoryShowcaseProps> = ({
                     SMARTWATCHES
                   </h3>
                   <p className="text-ink-slate text-xs font-light mt-1">
-                    Technology on your wrist.
+                    Instant cash values for wearables.
                   </p>
                 </div>
 
@@ -218,9 +218,9 @@ export const DeviceCategoryShowcase: React.FC<DeviceCategoryShowcaseProps> = ({
               </div>
 
               <div className="mt-4 pt-3 border-t border-ice-border/50 flex items-center justify-between text-xs">
-                <span className="text-ink-slate font-medium text-[11px]">Instant Value Check</span>
+                <span className="text-ink-slate font-medium text-[11px]">Wearable Diagnostics</span>
                 <span className="inline-flex items-center gap-1 font-bold text-cobalt group-hover:translate-x-1 transition-transform">
-                  <span>View Models</span>
+                  <span>Check Watch Value</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </span>
               </div>
