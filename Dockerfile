@@ -58,6 +58,10 @@ EXPOSE 4000
 ENV NODE_ENV=production
 ENV PORT=4000
 
+# Run as a non-root user to limit blast radius of any RCE vulnerability
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
+
 # Start Express — it serves /api/* routes AND static frontend files
 WORKDIR /app/server
 CMD ["node", "dist/index.js"]

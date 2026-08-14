@@ -1,18 +1,36 @@
 import crypto from 'node:crypto';
 
-// Encryption key from environment or fallback dev key (32 bytes = 256 bits)
-const MASTER_KEY_HEX = process.env.PAYOUT_ENCRYPTION_KEY || '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
 const ALGORITHM = 'aes-256-gcm';
-const IV_LENGTH = 12; // 96 bits for GCM
-const AUTH_TAG_LENGTH = 16;
+const IV_LENGTH = 12;        // 96 bits for GCM
+const AUTH_TAG_LENGTH = 16;  // 128-bit authentication tag
 
+/**
+ * Returns the AES-256-GCM encryption key from the environment.
+ *
+ * Throws a fatal error if:
+ * - PAYOUT_ENCRYPTION_KEY is not set
+ * - The hex string does not decode to exactly 32 bytes (256 bits)
+ *
+ * Generate a suitable key with:
+ *   node -e "require('crypto').randomBytes(32).toString('hex')"
+ */
 function getEncryptionKey(): Buffer {
-  if (process.env.NODE_ENV === 'production' && !process.env.PAYOUT_ENCRYPTION_KEY) {
-    throw new Error('PAYOUT_ENCRYPTION_KEY must be set in production');
+  const keyHex = (process.env.PAYOUT_ENCRYPTION_KEY ?? '').trim();
+  if (!keyHex) {
+    throw new Error(
+      'PAYOUT_ENCRYPTION_KEY environment variable is missing. ' +
+      'Generate one with: node -e "require(\'crypto\').randomBytes(32).toString(\'hex\')"'
+    );
   }
-  const keyBuf = Buffer.from(MASTER_KEY_HEX, 'hex');
-  if (keyBuf.length === 32) return keyBuf;
-  return crypto.createHash('sha256').update(MASTER_KEY_HEX).digest();
+  const keyBuf = Buffer.from(keyHex, 'hex');
+  if (keyBuf.length !== 32) {
+    throw new Error(
+      `PAYOUT_ENCRYPTION_KEY must decode to exactly 32 bytes (256 bits). ` +
+      `Current key decodes to ${keyBuf.length} bytes. ` +
+      'Generate one with: node -e "require(\'crypto\').randomBytes(32).toString(\'hex\')"'
+    );
+  }
+  return keyBuf;
 }
 
 export interface EncryptedPayload {

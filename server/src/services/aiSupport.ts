@@ -1,8 +1,6 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../db.js';
 import { KNOWLEDGE_BASE } from '../config/supportKnowledgeBase.js';
 import { maximumQuoteFor } from './valuation.js';
-
-const prisma = new PrismaClient();
 
 interface AiResponse {
   response: string;

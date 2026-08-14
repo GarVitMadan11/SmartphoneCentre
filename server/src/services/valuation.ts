@@ -57,7 +57,8 @@ export function calculateServerValuation(basePrice: number, category: DeviceCate
 }
 
 export function generateQuoteSignature(modelLegacyId: string, storageGb: number, defectIds: string[], finalPrice: number, expiresAtIso: string): string {
-  const secret = process.env.JWT_SECRET || 'rephonix-default-secret-key-32-chars!!';
+  const secret = process.env.QUOTE_SIGNING_SECRET || process.env.JWT_SECRET;
+  if (!secret) throw new Error('QUOTE_SIGNING_SECRET environment variable is required');
   const payload = `${modelLegacyId}:${storageGb}:${defectIds.sort().join(',')}:${finalPrice}:${expiresAtIso}:${PRICING_ENGINE_VERSION}`;
   return crypto.createHmac('sha256', secret).update(payload).digest('hex');
 }

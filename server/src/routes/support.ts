@@ -1,21 +1,58 @@
 import { Router } from 'express';
-import { PrismaClient } from '@prisma/client';
+import rateLimit from 'express-rate-limit';
+import prisma from '../db.js';
 import { processSupportMessage } from '../services/aiSupport.js';
 import { adminAuth, requireRole, AuthenticatedRequest } from '../middleware/adminAuth.js';
 
 const router = Router();
-const prisma = new PrismaClient();
+
+// Maximum allowed length for a single chat message
+const MAX_MESSAGE_LENGTH = 2000;
+
+// Per-IP rate limiter for public support chat to prevent:
+// - Gemini API cost amplification attacks
+// - Conversation/message database flooding
+// - Device price enumeration via bulk queries
+const chatLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'TooManyRequests', message: 'Too many support messages. Please wait 15 minutes before trying again.' },
+});
 
 // ── Public Routes ────────────────────────────────────────────────────────
 
 // Send a message (from customer to AI)
-router.post('/chat', async (req, res) => {
+router.post('/chat', chatLimiter, async (req, res) => {
   try {
     const { conversationId, message, customerData } = req.body;
     
     if (!message || typeof message !== 'string') {
       res.status(400).json({ error: 'BadRequest', message: 'Message text is required.' });
       return;
+    }
+
+    // Enforce message length to prevent cost amplification and storage exhaustion
+    if (message.length > MAX_MESSAGE_LENGTH) {
+      res.status(400).json({
+        error: 'BadRequest',
+        message: `Message is too long. Maximum allowed length is ${MAX_MESSAGE_LENGTH} characters.`,
+      });
+      return;
+    }
+
+    // Validate optional customerData fields
+    if (customerData && typeof customerData === 'object') {
+      const { name, email } = customerData as Record<string, unknown>;
+      if (name !== undefined && (typeof name !== 'string' || name.length > 100)) {
+        res.status(400).json({ error: 'BadRequest', message: 'customerData.name must be a string under 100 characters.' });
+        return;
+      }
+      if (email !== undefined && (typeof email !== 'string' || email.length > 100)) {
+        res.status(400).json({ error: 'BadRequest', message: 'customerData.email must be a string under 100 characters.' });
+        return;
+      }
     }
 
     const result = await processSupportMessage(conversationId, message, customerData);
@@ -26,8 +63,11 @@ router.post('/chat', async (req, res) => {
   }
 });
 
-// Fetch full conversation history (for the customer client)
-router.get('/chat/:id', async (req, res) => {
+// Fetch full conversation history (for the customer client).
+// Requires admin authentication — conversation history contains customer PII
+// (name, email, message content). Without auth, any guessed/leaked UUID would
+// expose a full conversation.
+router.get('/chat/:id', adminAuth, requireRole(['SUPER_ADMIN', 'OPERATIONS_AGENT']), async (req, res) => {
   try {
     const { id } = req.params;
     const conversation = await prisma.supportConversation.findUnique({
@@ -118,6 +158,15 @@ router.patch('/conversations/:id', adminAuth, requireRole(['SUPER_ADMIN', 'OPERA
     }
 
     if (newMessage && typeof newMessage === 'string') {
+      // Enforce length limit on agent messages too
+      if (newMessage.length > MAX_MESSAGE_LENGTH) {
+        res.status(400).json({
+          error: 'BadRequest',
+          message: `Message is too long. Maximum allowed length is ${MAX_MESSAGE_LENGTH} characters.`,
+        });
+        return;
+      }
+
       await prisma.supportMessage.create({
         data: {
           conversationId: id as string,

@@ -8,8 +8,8 @@ import compression from 'compression';
 import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { randomBytes, randomUUID } from 'node:crypto';
-import { PrismaClient } from '@prisma/client';
+import { randomBytes, randomUUID, timingSafeEqual } from 'node:crypto';
+import prisma from './db.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -31,26 +31,51 @@ import {
   maskPayoutDetails,
 } from './utils/encryption.js';
 
-const DEFAULT_POSTGRES_URL = 'postgresql://database_fplv_user:mhFh1bnyfLV4jpId5R0D8t7osV0Nlx0T@dpg-d9v6fa67bikc73bsvnhg-a/database_fplv';
-let dbUrl = (process.env.DATABASE_URL ?? '').trim().replace(/^['"]|['"]$/g, '');
-const isRenderEnv = Boolean(process.env.RENDER || process.env.RENDER_SERVICE_ID);
+// ═══════════════════════════════════════════════════════════════════════════
+// STARTUP ENVIRONMENT VALIDATION
+// Fatal-error early if required secrets are absent in production.
+// ═══════════════════════════════════════════════════════════════════════════
 
-if (isRenderEnv) {
-  dbUrl = dbUrl || DEFAULT_POSTGRES_URL;
-} else if (!dbUrl || dbUrl.includes('dpg-d9v6fa67bikc73bsvnhg-a') || dbUrl.startsWith('file:')) {
-  let localDbPath = path.resolve(__dirname, '../prisma/dev.db');
-  if (!fs.existsSync(localDbPath)) {
-    localDbPath = path.resolve(__dirname, '../dev.db');
+{
+  const isProduction = process.env.NODE_ENV === 'production';
+  const missing: string[] = [];
+
+  // DATABASE_URL is always required
+  let dbUrl = (process.env.DATABASE_URL ?? '').trim().replace(/^['"]|['"]$/g, '');
+  const isRenderEnv = Boolean(process.env.RENDER || process.env.RENDER_SERVICE_ID);
+
+  if (!dbUrl || dbUrl.startsWith('file:')) {
+    // Allow SQLite in local development only
+    if (isRenderEnv || isProduction) {
+      missing.push('DATABASE_URL (must be a PostgreSQL connection string in production)');
+    } else {
+      // Resolve local SQLite path for development
+      let localDbPath = path.resolve(__dirname, '../prisma/dev.db');
+      if (!fs.existsSync(localDbPath)) {
+        localDbPath = path.resolve(__dirname, '../dev.db');
+      }
+      dbUrl = `file:${localDbPath}`;
+      process.env.DATABASE_URL = dbUrl;
+    }
+  } else {
+    process.env.DATABASE_URL = dbUrl;
   }
-  dbUrl = `file:${localDbPath}`;
+
+  if (isProduction || isRenderEnv) {
+    const jwtSecret = (process.env.JWT_SECRET ?? '').trim();
+    if (jwtSecret.length < 32) missing.push('JWT_SECRET (minimum 32 characters)');
+
+    const encKey = (process.env.PAYOUT_ENCRYPTION_KEY ?? '').trim();
+    if (!encKey) missing.push('PAYOUT_ENCRYPTION_KEY');
+  }
+
+  if (missing.length > 0) {
+    console.error('\n❌ FATAL: Missing or invalid required environment variables:');
+    missing.forEach(v => console.error(`   • ${v}`));
+    console.error('\nSet these variables in your deployment environment and restart.\n');
+    process.exit(1);
+  }
 }
-process.env.DATABASE_URL = dbUrl;
-
-const prisma = new PrismaClient({
-  datasources: {
-    db: { url: dbUrl }
-  }
-});
 const app = express();
 const PORT = parseInt(process.env.PORT || '4000', 10);
 
@@ -75,7 +100,9 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", 'https://api.emailjs.com'],
+      // 'unsafe-inline' intentionally excluded from scriptSrc — all JS is in content-hashed bundles.
+      // If a specific inline script is ever needed, use a per-request nonce instead.
+      scriptSrc: ["'self'", 'https://api.emailjs.com'],
       styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       styleSrcElem: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
@@ -87,15 +114,17 @@ app.use(helmet({
 
 app.use(cors({
   origin: (origin, callback) => {
+    // No origin = same-origin request or server-to-server — always allowed.
     if (!origin) return callback(null, true);
     try {
       const hostname = new URL(origin).hostname;
+      // Whitelist: explicit allowed origins OR any *.onrender.com subdomain (Render preview deployments)
+      // NOTE: NODE_ENV bypass has been removed — all environments use the explicit whitelist.
       if (
         ALLOWED_ORIGINS.includes(origin) ||
         hostname.endsWith('.onrender.com') ||
         hostname === 'localhost' ||
-        hostname === '127.0.0.1' ||
-        process.env.NODE_ENV !== 'production'
+        hostname === '127.0.0.1'
       ) {
         return callback(null, true);
       }
@@ -108,8 +137,10 @@ app.use(cors({
 }));
 
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
-app.use(express.json({ limit: '4mb' }));
-app.use(express.urlencoded({ extended: false, limit: '4mb' }));
+// 50kb is generous for all standard API payloads (bookings, quotes, model updates).
+// The previous 4mb limit enabled memory-exhaustion DoS with a single large request.
+app.use(express.json({ limit: '50kb' }));
+app.use(express.urlencoded({ extended: false, limit: '50kb' }));
 
 // ── Rate limiting ─────────────────────────────────────────────────────────
 const globalLimiter = rateLimit({
@@ -291,7 +322,7 @@ app.get('/api/models', async (req, res) => {
     }));
   } catch (err) {
     console.error('GET /api/models error:', err);
-    res.status(500).json({ error: 'ServerError', message: (err as Error).message || 'Failed to fetch models' });
+    res.status(500).json({ error: 'ServerError', message: 'Failed to fetch models' });
   }
 });
 
@@ -341,7 +372,7 @@ app.post('/api/models', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITOR']
     });
   } catch (err) {
     console.error('POST /api/models error:', err);
-    res.status(500).json({ error: 'ServerError', message: (err as Error).message || 'Failed to create model' });
+    res.status(500).json({ error: 'ServerError', message: 'Failed to create model' });
   }
 });
 
@@ -470,7 +501,7 @@ app.patch('/api/models/:legacyId', adminAuth, requireRole(['SUPER_ADMIN', 'CATAL
     });
   } catch (err) {
     console.error('PATCH /api/models error:', err);
-    res.status(500).json({ error: 'ServerError', message: (err as Error).message || 'Failed to update model.' });
+    res.status(500).json({ error: 'ServerError', message: 'Failed to update model.' });
   }
 });
 
@@ -573,7 +604,18 @@ app.post('/api/bookings/track', trackingLimiter, async (req, res) => {
       include: { events: { orderBy: { createdAt: 'asc' } } },
     });
 
-    if (!booking || booking.customerPhone.trim() !== phone.trim()) {
+    // Use constant-time comparison for the phone number to prevent timing attacks
+    // that could be used to enumerate valid booking IDs.
+    const phoneMatch = booking &&
+      (() => {
+        try {
+          const a = Buffer.from(booking.customerPhone.trim());
+          const b = Buffer.from(phone.trim());
+          return a.length === b.length && timingSafeEqual(a, b);
+        } catch { return false; }
+      })();
+
+    if (!phoneMatch) {
       res.status(404).json({ error: 'NotFound', message: 'No booking found matching the provided Booking ID and phone number.' });
       return;
     }

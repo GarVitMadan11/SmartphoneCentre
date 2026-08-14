@@ -62,6 +62,12 @@ model AdminUser {
   passwordHash String
   role         String   @default("OPERATIONS_AGENT") // SUPER_ADMIN | FINANCE_APPROVER | OPERATIONS_AGENT | CATALOG_EDITOR
   active       Boolean  @default(true)
+
+  // Brute-force protection
+  failedLoginAttempts Int      @default(0)
+  lockedUntil         DateTime?
+  lastLoginAt         DateTime?
+
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }

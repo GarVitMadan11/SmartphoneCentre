@@ -2,28 +2,23 @@ import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { randomBytes } from 'node:crypto';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../db.js';
 import { adminAuth, getJwtSecret, JWT_ISSUER, JWT_AUDIENCE, AuthenticatedRequest } from '../middleware/adminAuth.js';
 
-const DEFAULT_POSTGRES_URL = 'postgresql://database_fplv_user:mhFh1bnyfLV4jpId5R0D8t7osV0Nlx0T@dpg-d9v6fa67bikc73bsvnhg-a/database_fplv';
-let dbUrl = (process.env.DATABASE_URL ?? '').trim().replace(/^['"]|['"]$/g, '');
-const isRenderEnv = Boolean(process.env.RENDER || process.env.RENDER_SERVICE_ID);
-
-if (isRenderEnv) {
-  dbUrl = dbUrl || DEFAULT_POSTGRES_URL;
-} else if (!dbUrl || dbUrl.includes('dpg-d9v6fa67bikc73bsvnhg-a')) {
-  dbUrl = 'file:./dev.db';
-}
-process.env.DATABASE_URL = dbUrl;
-
 const router = Router();
-const prisma = new PrismaClient();
 
-const DEFAULT_PIN_HASH = '$2b$10$nZaDZ14X6MfPj/ZjVYhA5.MRq0SbwuxFTVr9Rzfvlk8riKUmvEmri'; // Hash for '2024'
+// Maximum consecutive failed login attempts before account is temporarily locked
+const MAX_FAILED_ATTEMPTS = 5;
+// Lock duration in minutes
+const LOCKOUT_MINUTES = 30;
+
 function getAdminPinHash(): string {
   const raw = process.env.ADMIN_PIN_HASH;
-  if (!raw || raw.trim().length === 0) return DEFAULT_PIN_HASH;
-  return raw.replace(/^['"]|['"]$/g, '').trim();
+  if (!raw || raw.trim().length === 0) {
+    // If no hash is configured, PIN auth is effectively disabled
+    return '';
+  }
+  return raw.replace(/^['\"]|['\"]$/g, '').trim();
 }
 
 const JWT_EXPIRES_IN = (process.env.JWT_EXPIRES_IN ?? '4h') as string;
@@ -49,7 +44,14 @@ function setAdminCookie(res: Response, token: string): void {
 
 /**
  * POST /api/admin/auth
- * Authenticates via PIN or username/password, sets HttpOnly cookie, returns user details.
+ * Authenticates via PIN or username/password, sets HttpOnly cookie.
+ * Returns user details but NOT the raw token (the cookie is the secure channel).
+ *
+ * Security controls:
+ * - Per-account consecutive failure counter stored in DB
+ * - Account locked for LOCKOUT_MINUTES after MAX_FAILED_ATTEMPTS failures
+ * - PIN auth always uses bcrypt.compare — no plain-text bypass
+ * - JWT secret fetched at runtime; fatal error if not configured
  */
 router.post('/auth', async (req: Request, res: Response): Promise<void> => {
   const { pin, username, password } = req.body;
@@ -59,33 +61,92 @@ router.post('/auth', async (req: Request, res: Response): Promise<void> => {
   let role: 'SUPER_ADMIN' | 'FINANCE_APPROVER' | 'OPERATIONS_AGENT' | 'CATALOG_EDITOR' | 'admin' = 'admin';
 
   if (username && typeof username === 'string' && password && typeof password === 'string') {
-    // Authenticate via named staff user account
+    // ── Named user account authentication ──────────────────────────────────
     const user = await prisma.adminUser.findUnique({ where: { username: username.trim().toLowerCase() } });
+
+    // Generic error — don't reveal whether the username exists
+    const invalidCredsResponse = { error: 'InvalidCredentials', message: 'Invalid username or password.' };
+
     if (!user || !user.active) {
-      res.status(401).json({ error: 'InvalidCredentials', message: 'Invalid username or password.' });
+      res.status(401).json(invalidCredsResponse);
       return;
     }
+
+    // Check account lockout
+    const now = new Date();
+    if (user.lockedUntil && user.lockedUntil > now) {
+      const minutesLeft = Math.ceil((user.lockedUntil.getTime() - now.getTime()) / 60000);
+      res.status(429).json({
+        error: 'AccountLocked',
+        message: `Account is temporarily locked due to too many failed login attempts. Try again in ${minutesLeft} minute(s).`,
+      });
+      return;
+    }
+
     const isValidPass = await bcrypt.compare(password, user.passwordHash);
     if (!isValidPass) {
-      res.status(401).json({ error: 'InvalidCredentials', message: 'Invalid username or password.' });
+      // Increment failure counter and possibly lock the account
+      const newFailCount = (user.failedLoginAttempts ?? 0) + 1;
+      const lockUntil = newFailCount >= MAX_FAILED_ATTEMPTS
+        ? new Date(now.getTime() + LOCKOUT_MINUTES * 60 * 1000)
+        : null;
+
+      await prisma.adminUser.update({
+        where: { id: user.id },
+        data: {
+          failedLoginAttempts: newFailCount,
+          ...(lockUntil ? { lockedUntil: lockUntil } : {}),
+        },
+      });
+
+      // Log failed attempt
+      await prisma.adminAuditLog.create({
+        data: {
+          adminUserId: user.id,
+          action: 'login_failed',
+          targetType: 'adminUser',
+          targetId: user.id,
+          payload: JSON.stringify({ failedAttempts: newFailCount, locked: !!lockUntil }),
+          ipAddress: String(req.ip ?? ''),
+          userAgent: String(req.headers['user-agent'] ?? ''),
+        },
+      });
+
+      res.status(401).json(invalidCredsResponse);
       return;
     }
+
+    // Successful login — reset failure counter
+    await prisma.adminUser.update({
+      where: { id: user.id },
+      data: { failedLoginAttempts: 0, lockedUntil: null, lastLoginAt: now },
+    });
+
     sub = user.id;
     userUsername = user.username;
     role = user.role as typeof role;
+
   } else if (typeof pin === 'string' && pin.trim().length > 0) {
-    // PIN authentication (supports default PIN 2024 or custom ADMIN_PIN_HASH env variable)
+    // ── PIN authentication ──────────────────────────────────────────────────
+    // NOTE: PIN auth always uses bcrypt.compare. The plain-text '2024' bypass
+    // has been removed. If ADMIN_PIN_HASH is not configured, PIN auth is
+    // disabled and the admin must use a named user account instead.
     const pinHashToUse = getAdminPinHash();
+    if (!pinHashToUse) {
+      res.status(400).json({
+        error: 'BadRequest',
+        message: 'PIN authentication is not configured on this server. Use username/password.',
+      });
+      return;
+    }
+
     let isValid = false;
     try {
-      if (pin.trim() === '2024') {
-        isValid = true;
-      } else {
-        isValid = await bcrypt.compare(pin.trim(), pinHashToUse);
-      }
+      isValid = await bcrypt.compare(pin.trim(), pinHashToUse);
     } catch {
-      isValid = pin.trim() === '2024';
+      isValid = false;
     }
+
     if (!isValid) {
       res.status(401).json({ error: 'InvalidCredentials', message: 'Incorrect PIN.' });
       return;
@@ -93,6 +154,7 @@ router.post('/auth', async (req: Request, res: Response): Promise<void> => {
     sub = 'superadmin-legacy';
     userUsername = 'superadmin';
     role = 'SUPER_ADMIN';
+
   } else {
     res.status(400).json({ error: 'BadRequest', message: 'Provide PIN or username/password.' });
     return;
@@ -117,8 +179,10 @@ router.post('/auth', async (req: Request, res: Response): Promise<void> => {
   // Set HttpOnly SameSite cookie
   setAdminCookie(res, token);
 
+  // Return user info and expiry — but NOT the raw token.
+  // The HttpOnly cookie is the secure transport; exposing the token in the
+  // JSON body makes it readable by JavaScript and negates the cookie's purpose.
   res.json({
-    token,
     expiresAt: expiresAtMs,
     user: { id: sub, username: userUsername, role },
   });

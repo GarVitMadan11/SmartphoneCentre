@@ -2,12 +2,18 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import 'dotenv/config';
 
-export const DEFAULT_JWT_SECRET = '263d3ac30ed6dcd17c4e638f43b17462d18bdb59d54e3a456bc470996bd6e2d137a6ec22b8c412a8a5d41cd9e2a5db5172c9627e12fd4a3dc0d699b47f9a1aaf';
-
+/**
+ * Returns the JWT signing secret from the environment.
+ * Throws a fatal error if the secret is absent — we must never fall back to a
+ * known default in any environment because that lets attackers forge tokens.
+ */
 export function getJwtSecret(): string {
-  const secret = (process.env.JWT_SECRET ?? '').trim().replace(/^['"]|['"]$/g, '');
-  if (secret.length > 0) return secret;
-  return DEFAULT_JWT_SECRET;
+  const secret = (process.env.JWT_SECRET ?? '').trim().replace(/^['\"]|['\"]$/g, '');
+  if (secret.length >= 32) return secret;
+  throw new Error(
+    'JWT_SECRET environment variable is missing or too short (minimum 32 characters). ' +
+    'Generate one with: node -e "require(\'crypto\').randomBytes(64).toString(\'hex\')"'
+  );
 }
 
 export const JWT_ISSUER = 'smartphone-centre-api';
