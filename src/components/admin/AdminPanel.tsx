@@ -376,31 +376,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         await onRefreshCatalog();
       }
     } catch (err) {
-      if (isApiOffline) {
-        const nextModels = models.map(m => {
-          if (m.id === editingModelId) {
-            return {
-              ...m,
-              name: editName.trim(),
-              modelNumber: editModelNumber.trim(),
-              category: editCategory,
-              releaseYear: Number(editYear),
-              basePrice128GB: Number(editBasePrice),
-              series: finalSeries || undefined,
-              imageUrl: imageUrlValue,
-            };
-          }
-          return m;
-        });
-        setModels(nextModels);
-        setFormSuccess(`[Offline Demo Mode] Saved changes to "${editName}"!`);
-        setEditingModelId(null);
-        if (onRefreshCatalog) {
-          onRefreshCatalog(nextModels);
-        }
-      } else {
-        setFormError('Failed to update model in database: ' + (err as Error).message);
-      }
+      console.error('Failed to update model in database:', err);
+      setFormError('Failed to update model in database: ' + (err as Error).message);
     }
   };
 
@@ -455,31 +432,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         await onRefreshCatalog();
       }
     } catch (err) {
-      if (isApiOffline) {
-        const newModel: Model = {
-          id: legacyId,
-          brandId: selectedCatalogBrandId,
-          name: newModelName.trim(),
-          modelNumber: newModelNumber.trim(),
-          category: newModelCategory,
-          releaseYear: Number(newModelYear),
-          basePrice128GB: Number(newModelBasePrice),
-          series: finalSeries || undefined,
-          imageUrl: imageUrlValue,
-        };
-        const nextModels = [newModel, ...models];
-        setModels(nextModels);
-        setFormSuccess(`[Offline Demo Mode] Successfully added model "${newModelName}"!`);
-        setNewModelName('');
-        setNewModelNumber('');
-        setCustomSeriesInput('');
-        setNewModelImageUrl('');
-        if (onRefreshCatalog) {
-          onRefreshCatalog(nextModels);
-        }
-      } else {
-        setFormError('Failed to create model in database: ' + (err as Error).message);
-      }
+      console.error('Failed to create model in database:', err);
+      setFormError('Failed to create model in database: ' + (err as Error).message);
     }
   };
 
@@ -495,16 +449,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         await onRefreshCatalog();
       }
     } catch (err) {
-      if (isApiOffline) {
-        const nextModels = models.filter(m => m.id !== legacyId);
-        setModels(nextModels);
-        setFormSuccess(`[Offline Demo Mode] Deleted model: ${legacyId}`);
-        if (onRefreshCatalog) {
-          onRefreshCatalog(nextModels);
-        }
-      } else {
-        alert('Failed to delete model from database: ' + (err as Error).message);
-      }
+      console.error('Failed to delete model in database:', err);
+      setFormError('Failed to delete model in database: ' + (err as Error).message);
     }
   };
 

@@ -110,7 +110,7 @@ export interface ApiBrand {
 }
 
 export function fetchBrands(): Promise<ApiBrand[]> {
-  return apiFetch<ApiBrand[]>('/brands');
+  return apiFetch<ApiBrand[]>(`/brands?_t=${Date.now()}`);
 }
 
 export interface ApiModel {
@@ -126,8 +126,8 @@ export interface ApiModel {
 }
 
 export function fetchModels(brandId?: string): Promise<ApiModel[]> {
-  const qs = brandId ? `?brandId=${encodeURIComponent(brandId)}` : '';
-  return apiFetch<ApiModel[]>(`/models${qs}`);
+  const qs = brandId ? `brandId=${encodeURIComponent(brandId)}&` : '';
+  return apiFetch<ApiModel[]>(`/models?${qs}_t=${Date.now()}`);
 }
 
 export function createModel(data: {

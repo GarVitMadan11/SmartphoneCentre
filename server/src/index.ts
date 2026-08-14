@@ -208,6 +208,14 @@ function payoutBonusFor(method: string, estimatedPrice: number): { percentage: n
   return { percentage, amount: Math.round(estimatedPrice * percentage) };
 }
 
+// Prevent API response caching across all environments
+app.use('/api', (req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  next();
+});
+
 // ═══════════════════════════════════════════════════════════════════════════
 // HEALTH CHECK
 // ═══════════════════════════════════════════════════════════════════════════
@@ -250,8 +258,8 @@ app.get('/api/models', async (req, res) => {
       category: m.category,
       releaseYear: m.releaseYear,
       basePrice128GB: m.basePrice128GB,
-      series: m.series,
-      imageUrl: m.imageUrl,
+      series: m.series || '',
+      imageUrl: m.imageUrl || undefined,
     })));
   } catch (err) {
     console.error('GET /api/models error:', err);
@@ -321,20 +329,41 @@ app.patch('/api/models/:legacyId', adminAuth, requireRole(['SUPER_ADMIN', 'CATAL
       res.status(400).json({ error: 'BadRequest', message: 'No valid model fields supplied.' });
       return;
     }
-    const model = await prisma.model.update({ where: { legacyId }, data });
+
+    const existing = await prisma.model.findFirst({
+      where: { OR: [{ legacyId }, { id: legacyId }] }
+    });
+
+    if (!existing) {
+      res.status(404).json({ error: 'NotFound', message: `Model '${legacyId}' not found in database.` });
+      return;
+    }
+
+    const model = await prisma.model.update({
+      where: { id: existing.id },
+      data,
+    });
+
     res.json({ ...model, id: model.legacyId });
   } catch (err) {
     console.error('PATCH /api/models error:', err);
-    res.status(404).json({ error: 'NotFound', message: 'Model not found.' });
+    res.status(500).json({ error: 'ServerError', message: 'Failed to update model.' });
   }
 });
 
 app.delete('/api/models/:legacyId', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITOR']), async (req, res) => {
   try {
-    await prisma.model.delete({ where: { legacyId: String(req.params.legacyId) } });
+    const legacyId = String(req.params.legacyId);
+    const existing = await prisma.model.findFirst({
+      where: { OR: [{ legacyId }, { id: legacyId }] }
+    });
+    if (existing) {
+      await prisma.model.delete({ where: { id: existing.id } });
+    }
     res.json({ success: true });
-  } catch {
-    res.status(404).json({ error: 'NotFound', message: 'Model not found.' });
+  } catch (err) {
+    console.error('DELETE /api/models error:', err);
+    res.status(500).json({ error: 'ServerError', message: 'Failed to delete model.' });
   }
 });
 
