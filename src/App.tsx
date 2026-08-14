@@ -654,8 +654,13 @@ export default function App() {
               {/* 1.5 Premium 3D Device Category Showcase */}
               <DeviceCategoryShowcase />
 
+              {/* 1.6 Sell Your Device Section */}
+              <SellYourDevice onGetValuation={() => {
+                document.getElementById('device-selector-section')?.scrollIntoView({ behavior: 'smooth' });
+              }} />
+
               {/* 2. Popular Brands & Catalog Selector section */}
-              <div id="device-selector-section" className="bg-canvas-pure border border-ice-border/60 rounded-xl p-5 sm:p-8 shadow-3d-card scroll-mt-24 mb-12">
+              <div id="device-selector-section" className="bg-canvas-pure border border-ice-border/60 rounded-xl p-5 sm:p-8 shadow-3d-card scroll-mt-24">
                 <div className="mb-8 pb-5 border-b border-ice-border/40 text-left">
                   <span className="text-[10px] font-mono tracking-[0.2em] text-cobalt font-bold uppercase block mb-1">
                     Catalog / Hardware Selector
@@ -672,11 +677,6 @@ export default function App() {
                   models={MODELS}
                 />
               </div>
-
-              {/* 1.6 Sell Your Device Section */}
-              <SellYourDevice onGetValuation={() => {
-                document.getElementById('device-selector-section')?.scrollIntoView({ behavior: 'smooth' });
-              }} />
 
               {/* 3. How It Works Section */}
               <div id="how-it-works-section" className="py-12 border-t border-b border-ice-border/40">

@@ -52,10 +52,10 @@ export const DeviceCategoryShowcase: React.FC<DeviceCategoryShowcaseProps> = ({
             <Sparkles className="w-3.5 h-3.5 text-cobalt" /> CURATED SHOWROOM
           </span>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-ink-navy tracking-tight font-outfit mt-2 uppercase">
-            EXPLORE <span className="text-secondary font-black">DEVICES</span>
+            SELL YOUR <span className="text-secondary font-black">DEVICE</span>
           </h2>
           <p className="text-ink-slate text-sm font-light mt-1.5 max-w-lg">
-            Select a hardware category to inspect market valuations, certified diagnostics, and trade-in pricing.
+            Select your hardware category to check market trade-in values, run diagnostics, and start your sell order.
           </p>
         </div>
       </div>
@@ -93,7 +93,7 @@ export const DeviceCategoryShowcase: React.FC<DeviceCategoryShowcaseProps> = ({
                 SMARTPHONES
               </h3>
               <p className="text-ink-slate text-sm font-light mt-1.5 max-w-sm">
-                Find your next device.
+                Get an instant value estimate for your smartphone.
               </p>
             </div>
 
@@ -113,7 +113,7 @@ export const DeviceCategoryShowcase: React.FC<DeviceCategoryShowcaseProps> = ({
                 <ShieldCheck className="w-4 h-4 text-secondary" /> Instant Doorstep Valuation
               </span>
               <span className="inline-flex items-center gap-1 font-bold text-cobalt group-hover:translate-x-1 transition-transform text-xs">
-                <span>Explore Category</span>
+                <span>Calculate Value</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </span>
             </div>
@@ -147,7 +147,7 @@ export const DeviceCategoryShowcase: React.FC<DeviceCategoryShowcaseProps> = ({
                     TABLETS &amp; iPADS
                   </h3>
                   <p className="text-ink-slate text-xs font-light mt-1">
-                    Power and portability.
+                    Value your iPad or tablet.
                   </p>
                 </div>
 
@@ -165,7 +165,7 @@ export const DeviceCategoryShowcase: React.FC<DeviceCategoryShowcaseProps> = ({
               <div className="mt-4 pt-3 border-t border-ice-border/50 flex items-center justify-between text-xs">
                 <span className="text-ink-slate font-medium text-[11px]">Trade-in &amp; Diagnostics</span>
                 <span className="inline-flex items-center gap-1 font-bold text-cobalt group-hover:translate-x-1 transition-transform">
-                  <span>View Models</span>
+                  <span>Calculate Value</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </span>
               </div>
@@ -196,7 +196,7 @@ export const DeviceCategoryShowcase: React.FC<DeviceCategoryShowcaseProps> = ({
                     SMARTWATCHES
                   </h3>
                   <p className="text-ink-slate text-xs font-light mt-1">
-                    Technology on your wrist.
+                    Trade in your Apple Watch.
                   </p>
                 </div>
 
@@ -214,7 +214,7 @@ export const DeviceCategoryShowcase: React.FC<DeviceCategoryShowcaseProps> = ({
               <div className="mt-4 pt-3 border-t border-ice-border/50 flex items-center justify-between text-xs">
                 <span className="text-ink-slate font-medium text-[11px]">Instant Value Check</span>
                 <span className="inline-flex items-center gap-1 font-bold text-cobalt group-hover:translate-x-1 transition-transform">
-                  <span>View Models</span>
+                  <span>Calculate Value</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </span>
               </div>
