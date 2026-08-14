@@ -3,7 +3,18 @@
 // Supports HttpOnly cookie authentication and server quotes
 // ─────────────────────────────────────────────────────────────
 
-const API_BASE = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '') || '/api';
+function getApiBaseUrl(): string {
+  const envUrl = (import.meta.env.VITE_API_URL as string | undefined)?.trim().replace(/\/$/, '');
+  if (envUrl) return envUrl;
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    const port = window.location.port;
+    if ((hostname === 'localhost' || hostname === '127.0.0.1') && port && port !== '4000') {
+      return `${window.location.protocol}//${hostname}:4000/api`;
+    }
+  }
+  return '/api';
+}
 
 function csrfToken(): string | undefined {
   return document.cookie.split('; ').find(cookie => cookie.startsWith('rex_admin_csrf='))?.split('=').slice(1).join('=');
@@ -26,29 +37,62 @@ export class ApiRequestError extends Error {
   }
 }
 
+function getStoredAdminToken(): string | null {
+  try {
+    return sessionStorage.getItem('rex_admin_token');
+  } catch {
+    return null;
+  }
+}
+
 async function apiFetch<T>(path: string, options?: RequestInit, withAuth = false): Promise<T> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options?.headers as Record<string, string> ?? {}),
   };
 
+  const storedToken = getStoredAdminToken();
+  if (storedToken && !headers['Authorization']) {
+    headers['Authorization'] = `Bearer ${storedToken}`;
+  }
+
   if (options?.method && !['GET', 'HEAD'].includes(options.method.toUpperCase())) {
     const token = csrfToken();
     if (token) headers['X-CSRF-Token'] = token;
   }
 
-  // Authentication is carried only by the HttpOnly session cookie.
+  // Authentication is carried by session cookie or Bearer token header
   void withAuth;
 
-  const res = await fetch(`${API_BASE}${path}`, {
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl}${path}`, {
     ...options,
     headers,
     credentials: 'include', // Automatically send and receive HttpOnly cookies
   });
 
+  const contentType = res.headers.get('content-type') || '';
+  const isJson = contentType.includes('application/json');
+
   if (!res.ok) {
-    const body: ApiError = await res.json().catch(() => ({ error: `HTTP ${res.status}`, message: res.statusText }));
-    throw new ApiRequestError(res.status, body.message ?? body.error, body.fields);
+    let message = res.statusText;
+    let fields: string[] | undefined;
+    if (isJson) {
+      const body: ApiError = await res.json().catch(() => ({ error: `HTTP ${res.status}`, message: res.statusText }));
+      message = body.message ?? body.error;
+      fields = body.fields;
+    } else {
+      const text = await res.text();
+      const cleanSnippet = text.slice(0, 120).replace(/<[^>]*>/g, '').trim();
+      message = `Server error (${res.status}): ${cleanSnippet || res.statusText}`;
+    }
+    throw new ApiRequestError(res.status, message, fields);
+  }
+
+  if (!isJson) {
+    const text = await res.text();
+    const cleanSnippet = text.slice(0, 120).replace(/<[^>]*>/g, '').trim();
+    throw new ApiRequestError(res.status, `Server returned non-JSON response (${res.status}): ${cleanSnippet || 'HTML page'}`);
   }
 
   return res.json() as Promise<T>;
@@ -63,14 +107,22 @@ export interface AdminUserSession {
 }
 
 export async function adminLogin(credentials: { pin?: string; username?: string; password?: string }): Promise<{ success: boolean; expiresAt: number; user?: AdminUserSession }> {
-  const data = await apiFetch<{ expiresAt: number; user?: AdminUserSession }>(
+  const data = await apiFetch<{ token?: string; expiresAt: number; user?: AdminUserSession }>(
     '/admin/auth',
     { method: 'POST', body: JSON.stringify(credentials) }
   );
+  if (data.token) {
+    try {
+      sessionStorage.setItem('rex_admin_token', data.token);
+    } catch { /* ignore storage error */ }
+  }
   return { success: true, expiresAt: data.expiresAt, user: data.user };
 }
 
 export async function adminLogout(): Promise<void> {
+  try {
+    sessionStorage.removeItem('rex_admin_token');
+  } catch { /* ignore */ }
   try {
     await apiFetch<{ success: boolean }>('/admin/logout', { method: 'POST' });
   } catch { /* ignore */ }
@@ -89,7 +141,7 @@ export interface ApiBrand {
 }
 
 export function fetchBrands(): Promise<ApiBrand[]> {
-  return apiFetch<ApiBrand[]>('/brands');
+  return apiFetch<ApiBrand[]>(`/brands?_t=${Date.now()}`);
 }
 
 export interface ApiModel {
@@ -105,8 +157,8 @@ export interface ApiModel {
 }
 
 export function fetchModels(brandId?: string): Promise<ApiModel[]> {
-  const qs = brandId ? `?brandId=${encodeURIComponent(brandId)}` : '';
-  return apiFetch<ApiModel[]>(`/models${qs}`);
+  const qs = brandId ? `brandId=${encodeURIComponent(brandId)}&` : '';
+  return apiFetch<ApiModel[]>(`/models?${qs}_t=${Date.now()}`);
 }
 
 export function createModel(data: {

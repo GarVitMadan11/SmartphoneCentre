@@ -25,8 +25,9 @@ export default defineConfig({
     // Proxy API requests to Express backend
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:4000',
+        target: 'http://localhost:4000',
         changeOrigin: true,
+        secure: false,
       },
     },
     // Security headers served during development
@@ -38,7 +39,14 @@ export default defineConfig({
     }
   },
   preview: {
-    // Same headers for `vite preview` (production preview)
+    // Same proxy and security headers for `vite preview` (production preview)
+    proxy: {
+      '/api': {
+        target: 'http://localhost:4000',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
     headers: {
       'X-Content-Type-Options': 'nosniff',
       'X-Frame-Options': 'DENY',

@@ -30,6 +30,17 @@ import {
   maskPayoutDetails,
 } from './utils/encryption.js';
 
+const DEFAULT_POSTGRES_URL = 'postgresql://database_fplv_user:mhFh1bnyfLV4jpId5R0D8t7osV0Nlx0T@dpg-d9v6fa67bikc73bsvnhg-a/database_fplv';
+let dbUrl = (process.env.DATABASE_URL ?? '').trim().replace(/^['"]|['"]$/g, '');
+const isRenderEnv = Boolean(process.env.RENDER || process.env.RENDER_SERVICE_ID);
+
+if (isRenderEnv) {
+  dbUrl = dbUrl || DEFAULT_POSTGRES_URL;
+} else if (!dbUrl || dbUrl.includes('dpg-d9v6fa67bikc73bsvnhg-a')) {
+  dbUrl = 'file:./dev.db';
+}
+process.env.DATABASE_URL = dbUrl;
+
 const prisma = new PrismaClient();
 const app = express();
 const PORT = parseInt(process.env.PORT || '4000', 10);
@@ -201,6 +212,14 @@ function payoutBonusFor(method: string, estimatedPrice: number): { percentage: n
   return { percentage, amount: Math.round(estimatedPrice * percentage) };
 }
 
+// Prevent API response caching across all environments
+app.use('/api', (req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  next();
+});
+
 // ═══════════════════════════════════════════════════════════════════════════
 // HEALTH CHECK
 // ═══════════════════════════════════════════════════════════════════════════
@@ -243,8 +262,8 @@ app.get('/api/models', async (req, res) => {
       category: m.category,
       releaseYear: m.releaseYear,
       basePrice128GB: m.basePrice128GB,
-      series: m.series,
-      imageUrl: m.imageUrl,
+      series: m.series || '',
+      imageUrl: m.imageUrl || undefined,
     })));
   } catch (err) {
     console.error('GET /api/models error:', err);
@@ -314,20 +333,41 @@ app.patch('/api/models/:legacyId', adminAuth, requireRole(['SUPER_ADMIN', 'CATAL
       res.status(400).json({ error: 'BadRequest', message: 'No valid model fields supplied.' });
       return;
     }
-    const model = await prisma.model.update({ where: { legacyId }, data });
+
+    const existing = await prisma.model.findFirst({
+      where: { OR: [{ legacyId }, { id: legacyId }] }
+    });
+
+    if (!existing) {
+      res.status(404).json({ error: 'NotFound', message: `Model '${legacyId}' not found in database.` });
+      return;
+    }
+
+    const model = await prisma.model.update({
+      where: { id: existing.id },
+      data,
+    });
+
     res.json({ ...model, id: model.legacyId });
   } catch (err) {
     console.error('PATCH /api/models error:', err);
-    res.status(404).json({ error: 'NotFound', message: 'Model not found.' });
+    res.status(500).json({ error: 'ServerError', message: 'Failed to update model.' });
   }
 });
 
 app.delete('/api/models/:legacyId', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITOR']), async (req, res) => {
   try {
-    await prisma.model.delete({ where: { legacyId: String(req.params.legacyId) } });
+    const legacyId = String(req.params.legacyId);
+    const existing = await prisma.model.findFirst({
+      where: { OR: [{ legacyId }, { id: legacyId }] }
+    });
+    if (existing) {
+      await prisma.model.delete({ where: { id: existing.id } });
+    }
     res.json({ success: true });
-  } catch {
-    res.status(404).json({ error: 'NotFound', message: 'Model not found.' });
+  } catch (err) {
+    console.error('DELETE /api/models error:', err);
+    res.status(500).json({ error: 'ServerError', message: 'Failed to delete model.' });
   }
 });
 
@@ -693,6 +733,11 @@ app.delete('/api/bookings/:id/payout-details', adminAuth, requireRole(['SUPER_AD
   }
 });
 
+// 404 Handler for all unhandled /api/* routes (must ALWAYS return JSON, never HTML)
+app.all('/api/*', (_req, res) => {
+  res.status(404).json({ error: 'NotFound', message: 'API endpoint not found.' });
+});
+
 // ═══════════════════════════════════════════════════════════════════════════
 // SERVE FRONTEND STATIC ASSETS IN PRODUCTION
 // ═══════════════════════════════════════════════════════════════════════════
@@ -717,8 +762,8 @@ if (distPath) {
 // SERVER START
 // ═══════════════════════════════════════════════════════════════════════════
 
-const server = app.listen(PORT, () => {
-  console.log(`\n🚀 SmartphoneCentre API server running at http://localhost:${PORT}`);
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`\n🚀 SmartphoneCentre API server running at http://0.0.0.0:${PORT}`);
   console.log(`   Health:       http://localhost:${PORT}/api/health`);
   console.log(`   Admin auth:   POST http://localhost:${PORT}/api/admin/auth`);
   console.log(`   Environment:  ${process.env.NODE_ENV ?? 'development'}\n`);

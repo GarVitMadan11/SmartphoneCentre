@@ -6,17 +6,20 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Ensure DATABASE_URL is set and starts with valid protocol
-let dbUrl = (process.env.DATABASE_URL ?? '').trim().replace(/^['"]|['"]$/g, '');
+const DEFAULT_POSTGRES_URL = 'postgresql://database_fplv_user:mhFh1bnyfLV4jpId5R0D8t7osV0Nlx0T@dpg-d9v6fa67bikc73bsvnhg-a/database_fplv';
 
-if (!dbUrl) {
+let dbUrl = (process.env.DATABASE_URL ?? '').trim().replace(/^['"]|['"]$/g, '');
+const isRenderEnv = Boolean(process.env.RENDER || process.env.RENDER_SERVICE_ID);
+
+if (isRenderEnv) {
+  dbUrl = dbUrl || DEFAULT_POSTGRES_URL;
+} else if (!dbUrl || dbUrl.includes('dpg-d9v6fa67bikc73bsvnhg-a')) {
+  // Local machine fallback: Render internal hostname is only reachable inside Render network
   dbUrl = 'file:./dev.db';
-} else if (!dbUrl.startsWith('file:') && !dbUrl.startsWith('postgres:') && !dbUrl.startsWith('postgresql:')) {
-  dbUrl = `file:${dbUrl}`;
 }
 
 process.env.DATABASE_URL = dbUrl;
-console.log(`🔧 Building with DATABASE_URL: ${process.env.DATABASE_URL}`);
+console.log(`🔧 Building with DATABASE_URL: ${process.env.DATABASE_URL} (Render: ${isRenderEnv})`);
 
 // Dynamically sync schema.prisma provider to match DATABASE_URL
 const schemaPath = path.resolve(__dirname, '../prisma/schema.prisma');
