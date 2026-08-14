@@ -15,7 +15,7 @@ export interface ColorSpec {
   filter: string;
 }
 
-export function getColorTheme(colorName: string): ColorSpec {
+function getColorTheme(colorName: string): ColorSpec {
   const name = colorName.toLowerCase();
   
   if (name.includes('natural titanium')) {
