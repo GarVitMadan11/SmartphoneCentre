@@ -347,7 +347,7 @@ export default function App() {
     const q = heroSearch.toLowerCase().trim();
 
     return MODELS.filter(m => {
-      const brand = STATIC_BRANDS.find(b => b.id === m.brandId);
+      const brand = BRANDS.find(b => b.id === m.brandId);
       const brandName = brand ? brand.name.toLowerCase() : '';
       const modelName = m.name.toLowerCase();
       const modelNum = m.modelNumber.toLowerCase();
@@ -377,7 +377,7 @@ export default function App() {
         brandAliases.some(alias => alias.includes(q) || q.includes(alias))
       );
     }).slice(0, 10);
-  }, [heroSearch]);
+  }, [heroSearch, BRANDS, MODELS]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {

@@ -13,7 +13,7 @@ process.env.DATABASE_URL = dbUrl;
 console.log(`🔧 Building with DATABASE_URL: ${process.env.DATABASE_URL}`);
 
 try {
-  execSync('npx prisma generate && npx prisma db push && tsc', {
+  execSync('npx prisma generate && npx prisma db push && npx tsx prisma/seed.ts && tsc', {
     stdio: 'inherit',
     env: process.env,
   });

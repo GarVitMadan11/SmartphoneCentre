@@ -3,7 +3,7 @@
 // Supports HttpOnly cookie authentication and server quotes
 // ─────────────────────────────────────────────────────────────
 
-const API_BASE = '/api';
+const API_BASE = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '') || '/api';
 
 function csrfToken(): string | undefined {
   return document.cookie.split('; ').find(cookie => cookie.startsWith('rex_admin_csrf='))?.split('=').slice(1).join('=');
