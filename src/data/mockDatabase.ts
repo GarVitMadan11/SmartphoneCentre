@@ -721,14 +721,16 @@ function getColorsForModel(model: Model): string[] {
 
 // Helper to programmatically generate variants for a model
 export function generateVariantsForModel(model: Model): Variant[] {
-  // High-end flagships that start at 256GB in real life
+  // High-end flagships that start at 256GB in real life (Apple discontinued 128GB on Pro/Flagship models)
   const startsAt256GB = [
-    'apple-15pm', 'apple-16pm', 
+    'apple-17pm', 'apple-17p', 'apple-17air', 'apple-17',
+    'apple-16pm', 'apple-16p',
+    'apple-15pm',
     'sam-s23u', 'sam-s24u', 'sam-s25u',
     'sam-fold3', 'sam-fold4', 'sam-fold5', 'sam-fold6'
   ];
 
-  const has1TB = ['apple-15pm', 'apple-16pm', 'apple-15p', 'apple-16p', 'sam-s23u', 'sam-s24u', 'sam-s25u', 'sam-fold5', 'sam-fold6'];
+  const has1TB = ['apple-17pm', 'apple-17p', 'apple-16pm', 'apple-16p', 'apple-15pm', 'apple-15p', 'sam-s23u', 'sam-s24u', 'sam-s25u', 'sam-fold5', 'sam-fold6'];
 
   let modelStorages: { gb: number; multiplier: number }[] = [];
 
