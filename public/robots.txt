@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+# Disallow private admin routes from Google search index
+Disallow: /admin
+Disallow: /admin/*
+Disallow: /api/*
+
+# Sitemap Location
+Sitemap: https://rephonix.in/sitemap.xml
