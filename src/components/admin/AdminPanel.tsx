@@ -691,16 +691,37 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               <div className="flex flex-col sm:flex-row gap-4 justify-between items-stretch sm:items-center pb-4 mb-4 border-b border-white/[0.04]">
                 <h3 className="font-outfit font-light text-xl text-ink-navy">Transactions Ledger ({filteredBookings.length})</h3>
                 
-                {/* Search */}
-                <div className="relative max-w-sm w-full sm:w-64">
-                  <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-3" />
-                  <input
-                    type="text"
-                    placeholder="Search Client, IMEI, ID..."
-                    value={searchTerm}
-                    onChange={e => setSearchTerm(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 rounded-sm border border-ice-border bg-canvas-white text-ink-navy text-xs focus:outline-none focus:ring-1 focus:ring-cobalt focus:border-cobalt font-mono"
-                  />
+                {/* Search & Export */}
+                <div className="flex items-center gap-2 max-w-md w-full sm:w-auto">
+                  <div className="relative flex-1 sm:w-64">
+                    <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-3" />
+                    <input
+                      type="text"
+                      placeholder="Search Client, IMEI, ID..."
+                      value={searchTerm}
+                      onChange={e => setSearchTerm(e.target.value)}
+                      className="w-full pl-9 pr-4 py-2 rounded-sm border border-ice-border bg-canvas-white text-ink-navy text-xs focus:outline-none focus:ring-1 focus:ring-cobalt focus:border-cobalt font-mono"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const csvHeader = "ID,Client,Phone,Model,Valuation,KYC,Inspection,Payout\n";
+                      const csvRows = filteredBookings.map(b => 
+                        `"${b.id}","${b.customerName}","${b.customerPhone}","${b.modelName}",${b.finalPrice},"${b.verificationStatus}","${b.inspectionStatus}","${b.payoutStatus}"`
+                      ).join("\n");
+                      const blob = new Blob([csvHeader + csvRows], { type: 'text/csv' });
+                      const url = window.URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `smartphone_centre_ledger_${new Date().toISOString().slice(0,10)}.csv`;
+                      a.click();
+                    }}
+                    className="px-3 py-2 bg-canvas-white hover:bg-slate-100 dark:hover:bg-zinc-800 border border-ice-border rounded-sm text-xs font-bold text-ink-navy font-mono transition-all flex items-center gap-1.5 focus-ring"
+                    title="Export current table view to CSV"
+                  >
+                    <span>Export CSV</span>
+                  </button>
                 </div>
               </div>
 
@@ -756,19 +777,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 </div>
               </div>
 
-              {/* Table */}
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs font-mono border-collapse text-left">
-                  <thead>
-                    <tr className="border-b border-ice-border/40 text-ink-navy text-[10px] uppercase font-bold tracking-wider">
-                      <th className="py-2.5 px-3">Transaction ID</th>
-                      <th className="py-2.5 px-3">Date</th>
-                      <th className="py-2.5 px-3">Client Info</th>
-                      <th className="py-2.5 px-3">Device & Quote</th>
-                      <th className="py-2.5 px-3">KYC (Aadhaar)</th>
-                      <th className="py-2.5 px-3">Inspection</th>
-                      <th className="py-2.5 px-3">Payout</th>
-                      <th className="py-2.5 px-3 text-right">Ledger</th>
+              {/* Table Container */}
+              <div className="overflow-x-auto border border-ice-border/60 rounded-sm max-h-[600px] overflow-y-auto">
+                <table className="w-full text-left text-xs font-mono">
+                  <thead className="sticky top-0 z-20 bg-canvas-white/95 backdrop-blur-md border-b border-ice-border text-zinc-500 font-semibold tracking-wider text-[10px] uppercase shadow-xs">
+                    <tr>
+                      <th className="p-3">Order ID</th>
+                      <th className="p-3">Client</th>
+                      <th className="p-3">Device</th>
+                      <th className="p-3">Est. Value</th>
+                      <th className="p-3">KYC Status</th>
+                      <th className="p-3">Inspection</th>
+                      <th className="p-3">Payout</th>
+                      <th className="p-3 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/[0.04]">

@@ -47,7 +47,12 @@ export const CategoryBar: React.FC<CategoryBarProps> = ({
   return (
     <div className="bg-canvas-pure border-b border-ice-border/80 sticky top-[61px] sm:top-[69px] z-30 shadow-xs backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-11 text-xs font-mono font-medium overflow-x-auto no-scrollbar" ref={dropdownRef}>
+        <div 
+          role="tablist"
+          aria-label="Device Categories and Quick Actions"
+          className="flex items-center justify-between h-11 text-xs font-mono font-medium overflow-x-auto no-scrollbar" 
+          ref={dropdownRef}
+        >
           
           {/* Main Focused Categories */}
           <div className="flex items-center gap-1 sm:gap-2 min-w-max">
@@ -55,11 +60,13 @@ export const CategoryBar: React.FC<CategoryBarProps> = ({
             {/* 1. All Focused Categories Button */}
             <button
               type="button"
+              role="tab"
+              aria-selected={activeStage === 'select'}
               onClick={onNavigateHome}
-              className={`px-3 py-1.5 font-bold rounded-sm flex items-center gap-1.5 transition-all ${
+              className={`px-3 py-1.5 font-bold rounded-sm flex items-center gap-1.5 transition-all focus-ring ${
                 activeStage === 'select'
                   ? 'bg-cobalt text-white shadow-sm'
-                  : 'text-ink-navy hover:text-cobalt hover:bg-canvas-white'
+                  : 'text-slate-700 hover:text-cobalt hover:bg-canvas-white'
               }`}
             >
               <Sparkles className={`w-3.5 h-3.5 ${activeStage === 'select' ? 'text-white' : 'text-cobalt'}`} />

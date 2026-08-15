@@ -1075,7 +1075,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
 
                     <button
                       onClick={handleConfirm}
-                      className="w-full bg-cobalt hover:bg-cobalt-hover text-white py-4 rounded-sm font-bold transition-all duration-300 flex items-center justify-center gap-2 hover:scale-[1.01]"
+                      className="w-full bg-cobalt hover:bg-cobalt-hover text-white py-4 rounded-sm font-bold transition-all duration-300 flex items-center justify-center gap-2 hover:scale-[1.01] focus-ring"
                     >
                       Diagnose Condition
                       <ChevronRight className="w-5 h-5" />
@@ -1083,6 +1083,34 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                   </motion.div>
                 )}
               </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Mobile Floating Sticky Valuation Action Bar */}
+        <AnimatePresence>
+          {selectedModel && tempVariant && (
+            <motion.div
+              initial={{ y: 100, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 100, opacity: 0 }}
+              className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-xl border-t border-slate-700/80 p-3.5 px-4 flex items-center justify-between shadow-2xl"
+            >
+              <div className="text-left">
+                <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest block">
+                  {selectedModel.name} ({tempVariant.storageGb >= 1024 ? '1 TB' : `${tempVariant.storageGb} GB`})
+                </span>
+                <span className="text-lg font-black text-emerald-400 font-mono">
+                  {formatPrice(tempVariant.basePrice)}
+                </span>
+              </div>
+              <button
+                onClick={handleConfirm}
+                className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold rounded-md shadow-lg flex items-center gap-1.5 active:scale-95 transition-all"
+              >
+                <span>Diagnose Now</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
             </motion.div>
           )}
         </AnimatePresence>
