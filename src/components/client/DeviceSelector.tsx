@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { BRANDS as STATIC_BRANDS, MODELS as STATIC_MODELS, Model, Brand, Variant, generateVariantsForModel, getDeviceImage } from '../../data/mockDatabase';
-import { Search, ChevronRight, Smartphone, Calendar, Layers, ArrowLeft } from 'lucide-react';
+import { Search, ChevronRight, Smartphone, Layers, ArrowLeft, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   siApple, siSamsung, siXiaomi, siVivo, siOneplus, siGoogle,
@@ -909,10 +909,10 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                 </div>
               )}
 
-              {/* Models Grid: 1 col xs, 2 col sm, 3 col md */}
-              <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+              {/* Models Grid: vertical cards matching tablet showcase design */}
+              <div className={`grid grid-cols-1 sm:grid-cols-2 ${selectedModel ? 'lg:grid-cols-2' : 'lg:grid-cols-3'} gap-6`}>
                 {filteredModels.length === 0 && (
-                  <div className="col-span-full py-12 px-4 text-center border border-dashed border-ice-border rounded-sm bg-canvas-pure animate-fadeIn">
+                  <div className="col-span-full py-12 px-4 text-center border border-dashed border-ice-border rounded-2xl bg-canvas-pure animate-fadeIn">
                     <Smartphone className="w-10 h-10 text-ink-muted mx-auto mb-3" />
                     <h4 className="text-base font-semibold text-ink-navy">No models found</h4>
                     <p className="text-xs text-ink-muted mt-1 max-w-xs mx-auto">
@@ -921,7 +921,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                     </p>
                     <button
                       onClick={() => setSearchQuery('')}
-                      className="mt-4 px-4 py-2 bg-cobalt hover:bg-cobalt-hover text-white text-xs font-bold rounded-sm transition-all"
+                      className="mt-4 px-4 py-2 bg-cobalt hover:bg-cobalt-hover text-white text-xs font-bold rounded-lg transition-all"
                       style={{ minHeight: '36px' }}
                     >
                       Clear Search
@@ -936,54 +936,65 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                       <motion.div
                         layoutId={`model-card-${model.id}`}
                         key={model.id}
+                        whileHover={{ y: -4 }}
                         onClick={() => handleModelClick(model)}
-                        className={`p-4 sm:p-5 rounded-sm border cursor-pointer transition-all duration-300 bg-canvas-pure relative card-shimmer group ${
+                        className={`cursor-pointer bg-canvas-pure border rounded-2xl p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group ${
                           isSelected
-                            ? 'border-cobalt ring-1 ring-cobalt/20 scale-[1.01] opacity-100 z-10 shadow-premium'
+                            ? 'border-cobalt ring-2 ring-cobalt/20 scale-[1.01] opacity-100 z-10 shadow-md'
                             : hasSelection
-                            ? 'border-ice-border opacity-40 hover:opacity-75 hover:scale-[1.005]'
-                            : 'border-ice-border hover:border-cobalt/40 hover:-translate-y-0.5 shadow-sm hover:shadow-premium'
+                            ? 'border-ice-border opacity-50 hover:opacity-100 hover:scale-[1.005]'
+                            : 'border-ice-border hover:border-cobalt/40'
                         }`}
                       >
-                        {/* Canva style premium layout */}
-                        <div className="flex flex-col h-full justify-between min-h-[140px]">
-                          <div className="flex justify-between items-start gap-3">
-                            <div className="text-left flex-1">
-                              <div className="flex items-center justify-between mb-3">
-                                <span className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-sm ${
-                                  model.category === 'flagship'
-                                    ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                                    : model.category === 'premium'
-                                    ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                                    : 'bg-zinc-500/10 text-zinc-400 border border-zinc-500/20'
-                                }`}>
-                                  {model.category}
-                                </span>
-                                <span className="text-[11px] text-ink-muted flex items-center gap-1 font-mono">
-                                  <Calendar className="w-3 h-3" /> {model.releaseYear}
-                                </span>
-                              </div>
-                              <h3 className="font-light text-base text-ink-navy leading-tight mb-1">
-                                {model.name}
-                              </h3>
-                            </div>
-                            
-                            {/* Brand specific phone image */}
-                            <div className="w-16 h-16 flex-shrink-0 flex items-center justify-center overflow-hidden bg-slate-100 rounded-lg p-1.5 border border-ice-border/40">
-                              <img 
-                                src={getDeviceImage(model.id, model.brandId, undefined, model.imageUrl)} 
-                                alt={model.name} 
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).src = getDeviceImage('', model.brandId);
-                                }}
-                                className="max-h-full max-w-full object-contain pointer-events-none group-hover:scale-105 transition-transform duration-300" 
-                              />
-                            </div>
+                        <div>
+                          <div className="flex items-center justify-between mb-4">
+                            <span className={`px-2.5 py-1 text-[10px] font-mono font-bold rounded-full uppercase tracking-wider ${
+                              model.category === 'flagship'
+                                ? 'bg-amber-100 text-amber-800'
+                                : model.category === 'premium'
+                                ? 'bg-blue-50 text-blue-700'
+                                : 'bg-zinc-100 text-zinc-800'
+                            }`}>
+                              {model.category || (model.brandId === 'brand-apple' ? 'Apple iPhone' : 'Smartphone')}
+                            </span>
+                            <span className="text-[10px] font-mono text-zinc-400">{model.releaseYear}</span>
                           </div>
-                          
-                          <div className="pt-3 mt-3 border-t border-white/[0.04] flex items-center justify-end">
-                            <ChevronRight className={`w-4 h-4 transition-transform duration-300 ${isSelected ? 'translate-x-1 text-cobalt' : 'text-ink-muted'}`} />
+
+                          <h3 className="text-xl font-bold font-outfit text-ink-navy uppercase group-hover:text-cobalt transition-colors text-left">
+                            {model.name}
+                          </h3>
+                          {model.series && (
+                            <p className="text-xs font-mono text-zinc-400 mt-1 text-left">Series: {model.series}</p>
+                          )}
+
+                          {/* Smartphone Image */}
+                          <div className="my-6 h-44 flex items-center justify-center pointer-events-none">
+                            <img
+                              src={getDeviceImage(model.id, model.brandId, undefined, model.imageUrl)}
+                              alt={model.name}
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = getDeviceImage('', model.brandId);
+                              }}
+                              className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
+                              draggable={false}
+                            />
                           </div>
+                        </div>
+
+                        <div className="pt-4 border-t border-ice-border/60 flex items-center justify-between">
+                          <div className="text-left">
+                            <span className="text-[10px] text-zinc-400 uppercase font-mono block">Up to Get</span>
+                            <span className="text-lg font-extrabold text-emerald-600 font-mono">
+                              {formatPrice(model.basePrice128GB)}
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            className="px-3.5 py-1.5 rounded-lg bg-cobalt text-white text-xs font-bold flex items-center gap-1 group-hover:bg-cobalt/90 transition-all shadow-xs"
+                          >
+                            <span>Sell Now</span>
+                            <ArrowRight className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                       </motion.div>
                     );
