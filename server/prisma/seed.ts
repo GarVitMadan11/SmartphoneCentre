@@ -23,7 +23,7 @@ const BASE_MODELS = [
   // --- APPLE ---
   { id: 'apple-17pm',   brandId: 'brand-apple', name: 'iPhone 17 Pro Max', category: 'flagship', releaseYear: 2025, basePrice128GB: 97500, series: 'iPhone 17 Series', imageUrl: 'https://m.media-amazon.com/images/I/71MXmswILHL.jpg' },
   { id: 'apple-17p',    brandId: 'brand-apple', name: 'iPhone 17 Pro', category: 'flagship', releaseYear: 2025, basePrice128GB: 88000, series: 'iPhone 17 Series', imageUrl: 'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-17-pro-witb-silver-202509_FMT_WHH?wid=560&hei=744&fmt=jpeg&qlt=90&.v=NXh3OEZPWW1IYUpzT1hwc0dnVnRpN2xjb1BZUGlLdTFQY2JON3p2THhKQkRTSmgzaUlOemtOUUdMUks5SUpNNTk1ZWt1OVVsVGluOVVGbTJNUkdoeGJRN3lOQ3ExU09KSFlRbElPWFhiUWhpMEE2OXU2czQrZ21Ba2RWMjR4cDc' },
-  { id: 'apple-17air',  brandId: 'brand-apple', name: 'iPhone 17 Air', category: 'premium',  releaseYear: 2025, basePrice128GB: 74000, series: 'iPhone 17 Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/apple-iphone-air.jpg' },
+  { id: 'apple-17air',  brandId: 'brand-apple', name: 'iPhone 17 Air', category: 'premium',  releaseYear: 2025, basePrice128GB: 74000, series: 'iPhone 17 Series', imageUrl: 'https://www.apple.com/newsroom/images/2025/09/introducing-iphone-air-a-powerful-new-iphone-with-a-breakthrough-design/article/Apple-iPhone-Air-color-lineup-250909_big.jpg.large.jpg' },
   { id: 'apple-17',     brandId: 'brand-apple', name: 'iPhone 17', category: 'premium',  releaseYear: 2025, basePrice128GB: 66000, series: 'iPhone 17 Series', imageUrl: 'https://rukmini1.flixcart.com/image/300/300/xif0q/mobile/s/t/g/-original-imahft5gqkxzyeqa.jpeg' },
   { id: 'apple-16pm',   brandId: 'brand-apple', name: 'iPhone 16 Pro Max', category: 'flagship', releaseYear: 2024, basePrice128GB: 83500, series: 'iPhone 16 Series' },
   { id: 'apple-16p',    brandId: 'brand-apple', name: 'iPhone 16 Pro', category: 'flagship', releaseYear: 2024, basePrice128GB: 75500, series: 'iPhone 16 Series' },
@@ -50,7 +50,7 @@ const BASE_MODELS = [
   { id: 'apple-11',     brandId: 'brand-apple', name: 'iPhone 11', category: 'midrange', releaseYear: 2019, basePrice128GB:  7500, series: 'iPhone 12 & 11 Series' },
   { id: 'apple-se3',    brandId: 'brand-apple', name: 'iPhone SE3', category: 'budget',   releaseYear: 2022, basePrice128GB:  8500, series: 'iPhone SE & Legacy' },
   { id: 'apple-se2',    brandId: 'brand-apple', name: 'iPhone SE2', category: 'budget',   releaseYear: 2020, basePrice128GB:  6000, series: 'iPhone SE & Legacy' },
-  { id: 'apple-16e',    brandId: 'brand-apple', name: 'iPhone 16e', category: 'midrange', releaseYear: 2024, basePrice128GB: 32000, series: 'iPhone 16 Series' },
+  { id: 'apple-16e',    brandId: 'brand-apple', name: 'iPhone 16e', category: 'midrange', releaseYear: 2024, basePrice128GB: 32000, series: 'iPhone 16 Series', imageUrl: 'https://vsprod.vijaysales.com/media/catalog/product/w/h/white_17_e_5_.jpg?optimize=medium&fit=bounds&height=500&width=500' },
   { id: 'apple-xr',     brandId: 'brand-apple', name: 'iPhone XR', category: 'budget',   releaseYear: 2018, basePrice128GB:  5500, series: 'iPhone SE & Legacy' },
   { id: 'apple-xs',     brandId: 'brand-apple', name: 'iPhone XS', category: 'budget',   releaseYear: 2018, basePrice128GB:  6500, series: 'iPhone SE & Legacy' },
   { id: 'apple-xsmax',  brandId: 'brand-apple', name: 'iPhone XS Max', category: 'budget',   releaseYear: 2018, basePrice128GB:  8000, series: 'iPhone SE & Legacy' },
