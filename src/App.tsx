@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo, lazy, Suspense, useCallback } from 'react';
-import { Model, Variant, DefectRule, MODELS as STATIC_MODELS, BRANDS as STATIC_BRANDS, generateVariantsForModel, INITIAL_BOOKINGS, Brand, Booking, TABLET_MODELS, SMARTWATCH_MODELS } from './data/mockDatabase';
+import { Model, Variant, DefectRule, MODELS as STATIC_MODELS, BRANDS as STATIC_BRANDS, generateVariantsForModel, INITIAL_BOOKINGS, Brand, Booking, TABLET_MODELS, SMARTWATCH_MODELS, getDeviceImage } from './data/mockDatabase';
 import { fetchBrands, fetchModels, fetchBookings as apiFetchBookings } from './utils/api';
 import { DeviceSelector } from './components/client/DeviceSelector';
 import { DeviceCategoryShowcase } from './components/client/DeviceCategoryShowcase';
@@ -798,6 +798,69 @@ export default function App() {
                   }
                 }}
               />
+
+              {/* CURATED FEATURED DEVICES SECTION */}
+              <div className="space-y-8 py-4">
+                <div className="text-center max-w-3xl mx-auto">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-secondary/10 text-secondary border border-secondary/15 tracking-widest uppercase font-mono">
+                    <Sparkles className="w-3.5 h-3.5 text-secondary" /> Curated Trending Models
+                  </span>
+                  <h2 className="text-3xl sm:text-4xl font-extrabold text-ink-navy tracking-tight mt-3">
+                    Featured Selling Devices
+                  </h2>
+                  <p className="text-ink-slate mt-2 text-sm sm:text-base font-light">
+                    Select a popular model directly to get an instant doorstep payout valuation.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+                  {[
+                    { id: 'apple-17pm', brand: 'Apple', name: 'iPhone 17 Pro Max', price: '₹1,09,000' },
+                    { id: 'apple-17air', brand: 'Apple', name: 'iPhone 17 Air', price: '₹77,000' },
+                    { id: 'sam-s24u', brand: 'Samsung', name: 'Galaxy S24 Ultra', price: '₹42,000' },
+                    { id: 'apple-16pm', brand: 'Apple', name: 'iPhone 16 Pro Max', price: '₹73,000' },
+                  ].map((dev) => {
+                    const imgUrl = getDeviceImage(dev.id, dev.id.startsWith('apple') ? 'brand-apple' : 'brand-samsung');
+                    return (
+                      <div
+                        key={dev.id}
+                        onClick={() => handleDirectSelectModel(dev.id)}
+                        className="bg-canvas-pure border border-ice-border/60 hover:border-cobalt hover:shadow-premium rounded-2xl p-5 flex flex-col items-center justify-between text-center transition-all cursor-pointer group hover:scale-[1.02] active:scale-[0.98] shadow-sm relative overflow-hidden"
+                      >
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-cobalt/5 blur-2xl rounded-full pointer-events-none group-hover:bg-cobalt/10 transition-all" />
+                        
+                        {/* Device Image */}
+                        <div className="w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center mb-4 relative z-10 transition-transform group-hover:scale-105 duration-300">
+                          {imgUrl ? (
+                            <img
+                              src={imgUrl}
+                              alt={dev.name}
+                              className="max-w-full max-h-full object-contain filter drop-shadow-md"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <div className="w-full h-full rounded bg-ice-gray flex items-center justify-center text-ink-muted text-[10px]">
+                              {dev.name}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Device Title details */}
+                        <div className="space-y-1 relative z-10 w-full text-center">
+                          <span className="text-[9px] font-mono font-bold tracking-wider text-ink-muted uppercase block">{dev.brand}</span>
+                          <h4 className="text-xs sm:text-sm font-extrabold text-ink-navy group-hover:text-cobalt transition-colors font-outfit truncate w-full">
+                            {dev.name}
+                          </h4>
+                          <div className="pt-2 border-t border-ice-border/40 mt-2">
+                            <span className="text-[9px] font-mono text-ink-slate font-light uppercase block">Valuations Up To</span>
+                            <span className="text-xs sm:text-sm font-black text-emerald-600 font-outfit">{dev.price}</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
 
               {/* 1.6 Sell Your Device Section */}
               <SellYourDevice onGetValuation={() => {
