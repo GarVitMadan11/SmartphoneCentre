@@ -438,7 +438,7 @@ const makeCatalogModels = (brandId: string, series: string, releaseYear: number,
 
 // Models requested for the current catalog that were not part of the original data set.
 const CATALOG_ADDITIONS: Model[] = [
-  ...makeCatalogModels('brand-apple', 'iPhone 17 Series', 2025, ['iPhone 17 Pro Max', 'iPhone 17 Pro', 'iPhone Air', 'iPhone 17', 'iPhone 17e']),
+  ...makeCatalogModels('brand-apple', 'iPhone 17 Series', 2025, ['iPhone 17 Pro Max', 'iPhone 17 Pro', 'iPhone 17', 'iPhone 17e']),
   ...makeCatalogModels('brand-samsung', 'S Series', 2026, ['Galaxy S26 Ultra', 'Galaxy S26 Plus', 'Galaxy S26']),
   ...makeCatalogModels('brand-samsung', 'S Series', 2025, ['Galaxy S25 FE', 'Galaxy S25 Edge']),
   ...makeCatalogModels('brand-samsung', 'Z Fold & Z Flip', 2025, ['Galaxy Z Fold 7', 'Galaxy Z Flip 7', 'Galaxy Z Flip 7 FE']),
@@ -723,7 +723,7 @@ function getColorsForModel(model: Model): string[] {
 export function generateVariantsForModel(model: Model): Variant[] {
   // High-end flagships that start at 256GB in real life (Apple discontinued 128GB on Pro/Flagship models)
   const startsAt256GB = [
-    'apple-17pm', 'apple-17p', 'apple-17air', 'apple-17',
+    'apple-17pm', 'apple-17p', 'apple-17',
     'apple-16pm', 'apple-16p',
     'apple-15pm',
     'sam-s23u', 'sam-s24u', 'sam-s25u',
