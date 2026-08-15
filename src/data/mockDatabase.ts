@@ -881,12 +881,25 @@ export function getDeviceImage(modelId: string, brandId: string, color?: string,
     return customImageUrl.trim();
   }
 
-  const modelImg = (phoneImages as Record<string, string>)[modelId];
-  if (modelImg) {
-    if (modelImg.startsWith('http')) return modelImg;
-    try {
-      return new URL(`../../assets/phones/${modelImg}`, import.meta.url).href;
-    } catch { /* fallback */ }
+  const cleanId = modelId.replace(/^catalog-/, '');
+  const possibleKeys = [
+    modelId,
+    cleanId,
+    cleanId.replace(/^apple-iphone-/, 'apple-'),
+    cleanId.replace(/^apple-iphone-17-/, 'apple-17'),
+    cleanId.replace(/^apple-iphone-16-/, 'apple-16'),
+    cleanId.replace(/^apple-iphone-15-/, 'apple-15'),
+    cleanId.replace(/^samsung-galaxy-/, 'sam-'),
+  ];
+
+  for (const key of possibleKeys) {
+    const modelImg = (phoneImages as Record<string, string>)[key];
+    if (modelImg) {
+      if (modelImg.startsWith('http')) return modelImg;
+      try {
+        return new URL(`../../assets/phones/${modelImg}`, import.meta.url).href;
+      } catch { /* fallback */ }
+    }
   }
 
   return getPhoneImageForBrand(brandId);
