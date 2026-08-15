@@ -16,8 +16,13 @@ async function callGeminiRestApi(
   userMessage: string
 ): Promise<AiResponse | null> {
   try {
-    const dbModels = await prisma.model.findMany({ select: { name: true, basePrice128GB: true } });
-    const catalogSummary = dbModels.map(m => `- ${m.name}: ~₹${maximumQuoteFor(m.basePrice128GB, 64)} to ₹${maximumQuoteFor(m.basePrice128GB, 256)}`).join('\n');
+    const dbModels = await prisma.model.findMany({ select: { name: true, basePrice128GB: true, category: true } });
+    const catalogSummary = dbModels.map(m => {
+      const is256Base = m.category === 'flagship' || m.name.includes('15 Pro Max') || m.name.includes('16 Pro') || m.name.includes('17');
+      const minGb = is256Base ? 256 : 128;
+      const maxGb = is256Base ? 512 : 256;
+      return `- ${m.name}: ~₹${maximumQuoteFor(m.basePrice128GB, minGb)} to ₹${maximumQuoteFor(m.basePrice128GB, maxGb)} (Base ${minGb}GB)`;
+    }).join('\n');
 
     const systemPrompt = `${KNOWLEDGE_BASE}
 

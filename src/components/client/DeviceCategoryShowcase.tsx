@@ -37,8 +37,9 @@ export const DeviceCategoryShowcase: React.FC<DeviceCategoryShowcaseProps> = ({
   const handleCardClick = (cat: 'smartphones' | 'tablets' | 'smartwatches') => {
     if (onSelectCategory) {
       onSelectCategory(cat);
+    } else {
+      document.getElementById('device-selector-section')?.scrollIntoView({ behavior: 'smooth' });
     }
-    document.getElementById('device-selector-section')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
