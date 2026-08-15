@@ -21,10 +21,10 @@ const BRANDS = [
 
 const BASE_MODELS = [
   // --- APPLE ---
-  { id: 'apple-17pm',   brandId: 'brand-apple', name: 'iPhone 17 Pro Max', category: 'flagship', releaseYear: 2025, basePrice128GB: 97500, series: 'iPhone 17 Series' },
-  { id: 'apple-17p',    brandId: 'brand-apple', name: 'iPhone 17 Pro', category: 'flagship', releaseYear: 2025, basePrice128GB: 88000, series: 'iPhone 17 Series' },
-  { id: 'apple-17air',  brandId: 'brand-apple', name: 'iPhone 17 Air', category: 'premium',  releaseYear: 2025, basePrice128GB: 74000, series: 'iPhone 17 Series' },
-  { id: 'apple-17',     brandId: 'brand-apple', name: 'iPhone 17', category: 'premium',  releaseYear: 2025, basePrice128GB: 66000, series: 'iPhone 17 Series' },
+  { id: 'apple-17pm',   brandId: 'brand-apple', name: 'iPhone 17 Pro Max', category: 'flagship', releaseYear: 2025, basePrice128GB: 97500, series: 'iPhone 17 Series', imageUrl: 'https://www.geeky-gadgets.com/wp-content/uploads/2025/09/iphone-17-pro-vs-standard-comparison.webp' },
+  { id: 'apple-17p',    brandId: 'brand-apple', name: 'iPhone 17 Pro', category: 'flagship', releaseYear: 2025, basePrice128GB: 88000, series: 'iPhone 17 Series', imageUrl: 'https://www.geeky-gadgets.com/wp-content/uploads/2025/09/iphone-17-pro-vs-standard-comparison.webp' },
+  { id: 'apple-17air',  brandId: 'brand-apple', name: 'iPhone 17 Air', category: 'premium',  releaseYear: 2025, basePrice128GB: 74000, series: 'iPhone 17 Series', imageUrl: 'https://www.geeky-gadgets.com/wp-content/uploads/2025/09/iphone-17-pro-vs-standard-comparison.webp' },
+  { id: 'apple-17',     brandId: 'brand-apple', name: 'iPhone 17', category: 'premium',  releaseYear: 2025, basePrice128GB: 66000, series: 'iPhone 17 Series', imageUrl: 'https://www.geeky-gadgets.com/wp-content/uploads/2025/09/iphone-17-pro-vs-standard-comparison.webp' },
   { id: 'apple-16pm',   brandId: 'brand-apple', name: 'iPhone 16 Pro Max', category: 'flagship', releaseYear: 2024, basePrice128GB: 83500, series: 'iPhone 16 Series' },
   { id: 'apple-16p',    brandId: 'brand-apple', name: 'iPhone 16 Pro', category: 'flagship', releaseYear: 2024, basePrice128GB: 75500, series: 'iPhone 16 Series' },
   { id: 'apple-16plus', brandId: 'brand-apple', name: 'iPhone 16 Plus', category: 'premium',  releaseYear: 2024, basePrice128GB: 57500, series: 'iPhone 16 Series' },
