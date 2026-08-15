@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo, lazy, Suspense, useCallback } from 'react';
-import { Model, Variant, DefectRule, MODELS as STATIC_MODELS, BRANDS as STATIC_BRANDS, generateVariantsForModel, INITIAL_BOOKINGS, Brand, Booking } from './data/mockDatabase';
+import { Model, Variant, DefectRule, MODELS as STATIC_MODELS, BRANDS as STATIC_BRANDS, generateVariantsForModel, INITIAL_BOOKINGS, Brand, Booking, TABLET_MODELS, SMARTWATCH_MODELS } from './data/mockDatabase';
 import { fetchBrands, fetchModels, fetchBookings as apiFetchBookings } from './utils/api';
 import { DeviceSelector } from './components/client/DeviceSelector';
 import { DeviceCategoryShowcase } from './components/client/DeviceCategoryShowcase';
@@ -8,6 +8,9 @@ import { SupportChatWidget } from './components/client/SupportChatWidget';
 import { CategoryBar } from './components/client/CategoryBar';
 import { TabletsShowcase } from './components/client/TabletsShowcase';
 import { SmartwatchesShowcase } from './components/client/SmartwatchesShowcase';
+import { AboutPage } from './components/client/AboutPage';
+import { ContactPage } from './components/client/ContactPage';
+import { ToastContainer, ToastMessage } from './components/Toast';
 import { useFocusTrap } from './hooks/useFocusTrap';
 // ── Lazy-loaded heavy components (code splitting — P-1 fix) ───────────────────
 const DiagnosticWizard = lazy(() => import('./components/client/DiagnosticWizard').then(m => ({ default: m.DiagnosticWizard })));
@@ -19,7 +22,7 @@ const OrderTrackingModal = lazy(() => import('./components/client/OrderTrackingM
 // ─────────────────────────────────────────────────────────────────────────────
 import { 
   Award, ShieldCheck, Zap, Search,
-  RefreshCw, TrendingUp, Menu, X,
+  TrendingUp, Menu, X,
   Truck, Lock, CheckCircle2, Sparkles, ArrowRight, Info, Code, GitBranch, Database
 } from 'lucide-react';
 
@@ -301,6 +304,61 @@ export default function App() {
   );
   const [wizardStep, setWizardStep] = useState<number>(savedNav.current?.wizardStep ?? 0);
   const [isTrackOpen, setIsTrackOpen] = useState(false);
+  const [path, setPath] = useState(window.location.pathname);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setPath(window.location.pathname);
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const navigate = (newPath: string) => {
+    window.history.pushState({}, '', newPath);
+    setPath(newPath);
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  };
+
+  const getPathForModel = (model: Model): string => {
+    if (TABLET_MODELS.some(m => m.id === model.id)) return '/tablets';
+    if (SMARTWATCH_MODELS.some(m => m.id === model.id)) return '/smartwatches';
+    return '/smartphones';
+  };
+
+  useEffect(() => {
+    let title = "Rephonix | Sell Your Devices at the Best Price";
+    switch (path) {
+      case '/smartphones':
+        title = "Sell Smartphones | Rephonix";
+        break;
+      case '/tablets':
+        title = "Sell Tablets & iPads | Rephonix";
+        break;
+      case '/smartwatches':
+        title = "Sell Smartwatches | Rephonix";
+        break;
+      case '/about':
+        title = "About Rephonix";
+        break;
+      case '/contact':
+        title = "Contact Rephonix";
+        break;
+      case '/admin':
+        title = "Admin Console | Rephonix";
+        break;
+    }
+    document.title = title;
+  }, [path]);
+
+  // If path is admin, automatically set activeStage to admin
+  useEffect(() => {
+    if (path === '/admin') {
+      setActiveStage('admin');
+    } else if (activeStage === 'admin') {
+      setActiveStage('select');
+    }
+  }, [path]);
 
   // ── Dynamic data from API (falls back to static data) ─────────────────────
   const [BRANDS, setBrands] = useState<Brand[]>(STATIC_BRANDS);
@@ -340,6 +398,16 @@ export default function App() {
 
   const [isSpecModalOpen, setIsSpecModalOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success', title: string = 'Notice') => {
+    const id = Math.random().toString();
+    setToasts(prev => [...prev, { id, type, title, message }]);
+  };
+
+  const dismissToast = (id: string) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  };
 
   // Hero search state
   const [heroSearch, setHeroSearch] = useState('');
@@ -396,9 +464,9 @@ export default function App() {
     setHeroSearch('');
     setHeroSearchOpen(false);
     setPendingModelId(model.id);
-    setTimeout(() => {
-      document.getElementById('device-selector-section')?.scrollIntoView({ behavior: 'smooth' });
-    }, 50);
+    const targetPath = getPathForModel(model);
+    handleReset();
+    navigate(targetPath);
   };
 
   useEffect(() => {
@@ -425,6 +493,9 @@ export default function App() {
     setWizardStep(0);
     setFinalPrice(variant.basePrice);
     setActiveStage('diagnose');
+    
+    const targetPath = getPathForModel(model);
+    navigate(targetPath);
   };
 
   const handleDirectSelectModel = (modelId: string) => {
@@ -454,6 +525,10 @@ export default function App() {
     clearNavState();
   };
 
+  const isWorkflow = (activeStage === 'diagnose' || activeStage === 'schedule') && 
+                     (path === '/smartphones' || path === '/tablets' || path === '/smartwatches') && 
+                     selectedModel !== null && selectedVariant !== null;
+
   return (
     <div className="min-h-screen bg-canvas-white text-ink-navy flex flex-col font-sans selection:bg-cobalt selection:text-white">
 
@@ -462,7 +537,7 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4 flex items-center justify-between">
 
           {/* Logo */}
-          <div className="flex items-center gap-2 cursor-pointer flex-shrink-0" onClick={handleReset}>
+          <div className="flex items-center gap-2 cursor-pointer flex-shrink-0" onClick={() => { handleReset(); navigate('/'); }}>
             <div className="w-8 h-8 rounded-lg bg-cobalt flex items-center justify-center">
               <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
@@ -473,22 +548,23 @@ export default function App() {
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-4 lg:gap-6 text-sm font-semibold text-ink-slate">
-            <span onClick={handleReset} className="hover:text-cobalt cursor-pointer transition-colors flex items-center gap-1 font-light">
-              <ShieldCheck className="w-4 h-4 text-secondary" />
-              <span className="hidden lg:inline">Trusted Partner</span>
+            <span onClick={() => { handleReset(); navigate('/'); }} className={`hover:text-cobalt cursor-pointer transition-colors font-light ${path === '/' ? 'text-cobalt font-semibold' : ''}`}>
+              Home
             </span>
-            <span onClick={() => {
-              if (activeStage === 'select') {
-                document.getElementById('how-it-works-section')?.scrollIntoView({ behavior: 'smooth' });
-              } else {
-                handleReset();
-                setTimeout(() => {
-                  document.getElementById('how-it-works-section')?.scrollIntoView({ behavior: 'smooth' });
-                }, 100);
-              }
-            }} className="hover:text-cobalt cursor-pointer transition-colors flex items-center gap-1 font-light">
-              <RefreshCw className="w-4 h-4 text-secondary" />
-              <span>How it Works</span>
+            <span onClick={() => { handleReset(); navigate('/smartphones'); }} className={`hover:text-cobalt cursor-pointer transition-colors font-light ${path === '/smartphones' ? 'text-cobalt font-semibold' : ''}`}>
+              Smartphones
+            </span>
+            <span onClick={() => { handleReset(); navigate('/tablets'); }} className={`hover:text-cobalt cursor-pointer transition-colors font-light ${path === '/tablets' ? 'text-cobalt font-semibold' : ''}`}>
+              Tablets/iPads
+            </span>
+            <span onClick={() => { handleReset(); navigate('/smartwatches'); }} className={`hover:text-cobalt cursor-pointer transition-colors font-light ${path === '/smartwatches' ? 'text-cobalt font-semibold' : ''}`}>
+              Smartwatches
+            </span>
+            <span onClick={() => { handleReset(); navigate('/about'); }} className={`hover:text-cobalt cursor-pointer transition-colors font-light ${path === '/about' ? 'text-cobalt font-semibold' : ''}`}>
+              About
+            </span>
+            <span onClick={() => { handleReset(); navigate('/contact'); }} className={`hover:text-cobalt cursor-pointer transition-colors font-light ${path === '/contact' ? 'text-cobalt font-semibold' : ''}`}>
+              Contact
             </span>
             <button
               onClick={() => setIsTrackOpen(true)}
@@ -511,24 +587,23 @@ export default function App() {
         {/* Mobile drop-down menu */}
         {mobileMenuOpen && (
           <div className="md:hidden border-t border-ice-border bg-canvas-pure px-4 py-3 space-y-2 text-left">
-            <button onClick={handleReset} className="w-full flex items-center gap-2 text-sm font-semibold text-ink-slate py-2 px-3 rounded-sm hover:bg-ice-gray transition-colors">
-              <ShieldCheck className="w-4 h-4 text-secondary" /> Trusted Partner
+            <button onClick={() => { setMobileMenuOpen(false); handleReset(); navigate('/'); }} className={`w-full text-left text-sm font-semibold py-2 px-3 rounded-sm hover:bg-ice-gray transition-colors ${path === '/' ? 'text-cobalt bg-cobalt/5' : 'text-ink-slate'}`}>
+              Home
             </button>
-            <button 
-              onClick={() => {
-                setMobileMenuOpen(false);
-                if (activeStage === 'select') {
-                  document.getElementById('how-it-works-section')?.scrollIntoView({ behavior: 'smooth' });
-                } else {
-                  handleReset();
-                  setTimeout(() => {
-                    document.getElementById('how-it-works-section')?.scrollIntoView({ behavior: 'smooth' });
-                  }, 100);
-                }
-              }} 
-              className="w-full flex items-center gap-2 text-sm font-semibold text-ink-slate py-2 px-3 rounded-sm hover:bg-ice-gray transition-colors"
-            >
-              <RefreshCw className="w-4 h-4 text-secondary" /> How it Works
+            <button onClick={() => { setMobileMenuOpen(false); handleReset(); navigate('/smartphones'); }} className={`w-full text-left text-sm font-semibold py-2 px-3 rounded-sm hover:bg-ice-gray transition-colors ${path === '/smartphones' ? 'text-cobalt bg-cobalt/5' : 'text-ink-slate'}`}>
+              Smartphones
+            </button>
+            <button onClick={() => { setMobileMenuOpen(false); handleReset(); navigate('/tablets'); }} className={`w-full text-left text-sm font-semibold py-2 px-3 rounded-sm hover:bg-ice-gray transition-colors ${path === '/tablets' ? 'text-cobalt bg-cobalt/5' : 'text-ink-slate'}`}>
+              Tablets/iPads
+            </button>
+            <button onClick={() => { setMobileMenuOpen(false); handleReset(); navigate('/smartwatches'); }} className={`w-full text-left text-sm font-semibold py-2 px-3 rounded-sm hover:bg-ice-gray transition-colors ${path === '/smartwatches' ? 'text-cobalt bg-cobalt/5' : 'text-ink-slate'}`}>
+              Smartwatches
+            </button>
+            <button onClick={() => { setMobileMenuOpen(false); handleReset(); navigate('/about'); }} className={`w-full text-left text-sm font-semibold py-2 px-3 rounded-sm hover:bg-ice-gray transition-colors ${path === '/about' ? 'text-cobalt bg-cobalt/5' : 'text-ink-slate'}`}>
+              About
+            </button>
+            <button onClick={() => { setMobileMenuOpen(false); handleReset(); navigate('/contact'); }} className={`w-full text-left text-sm font-semibold py-2 px-3 rounded-sm hover:bg-ice-gray transition-colors ${path === '/contact' ? 'text-cobalt bg-cobalt/5' : 'text-ink-slate'}`}>
+              Contact
             </button>
             <button
               onClick={() => { setMobileMenuOpen(false); setIsTrackOpen(true); }}
@@ -542,42 +617,65 @@ export default function App() {
 
       {/* ── Focused Category Sub-Header Bar (Smartphones, Tablets, Smartwatches) ── */}
       <CategoryBar
-        activeStage={activeStage}
+        currentPath={path}
+        onNavigate={(p) => { handleReset(); navigate(p); }}
         onSelectBrand={(brandId) => {
           const firstModelOfBrand = MODELS.find(m => m.brandId === brandId);
           if (firstModelOfBrand) {
             setPendingModelId(firstModelOfBrand.id);
           }
+          handleReset();
           setActiveStage('select');
-          document.getElementById('device-selector-section')?.scrollIntoView({ behavior: 'smooth' });
+          navigate('/smartphones');
         }}
-        onNavigateTablets={() => setActiveStage('tablets')}
-        onNavigateSmartwatches={() => setActiveStage('smartwatches')}
         onOpenTrackOrder={() => setIsTrackOpen(true)}
-        onNavigateHome={handleReset}
       />
 
       {/* ── Main Layout ── */}
-      <main className={`flex-1 w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 ${(activeStage === 'select' || activeStage === 'tablets' || activeStage === 'smartwatches' || activeStage === 'admin') ? 'max-w-7xl flex flex-col' : 'max-w-7xl flex flex-col xl:grid xl:grid-cols-12 gap-6 xl:gap-8 items-start'}`}>
+      <main className={`flex-1 w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 ${!isWorkflow ? 'max-w-7xl flex flex-col' : 'max-w-7xl flex flex-col xl:grid xl:grid-cols-12 gap-6 xl:gap-8 items-start'}`}>
 
         {/* Active Stage Content Area */}
-        <section className={(activeStage === 'select' || activeStage === 'tablets' || activeStage === 'smartwatches' || activeStage === 'admin') ? 'w-full space-y-16' : 'w-full xl:col-span-9 space-y-4 sm:space-y-6 min-w-0'}>
+        <section className={!isWorkflow ? 'w-full space-y-16' : 'w-full xl:col-span-9 space-y-4 sm:space-y-6 min-w-0'}>
 
-          {activeStage === 'tablets' && (
+          {path === '/about' && <AboutPage />}
+
+          {path === '/contact' && <ContactPage onShowToast={showToast} />}
+
+          {path === '/tablets' && !isWorkflow && (
             <TabletsShowcase
               onSelectVariant={handleVariantSelected}
-              onBackToHome={handleReset}
+              onBackToHome={() => { handleReset(); navigate('/'); }}
             />
           )}
 
-          {activeStage === 'smartwatches' && (
+          {path === '/smartwatches' && !isWorkflow && (
             <SmartwatchesShowcase
               onSelectVariant={handleVariantSelected}
-              onBackToHome={handleReset}
+              onBackToHome={() => { handleReset(); navigate('/'); }}
             />
           )}
 
-          {activeStage === 'select' && (
+          {path === '/smartphones' && !isWorkflow && (
+            <div className="bg-canvas-pure border border-ice-border/60 rounded-xl p-5 sm:p-8 shadow-3d-card scroll-mt-24 mb-12">
+              <div className="mb-8 pb-5 border-b border-ice-border/40 text-left">
+                <span className="text-[10px] font-mono tracking-[0.2em] text-cobalt font-bold uppercase block mb-1">
+                  Catalog / Hardware Selector
+                </span>
+                <h3 className="text-3xl sm:text-4xl font-extrabold text-ink-navy tracking-tight font-outfit">
+                  Select Brand &amp; Model
+                </h3>
+              </div>
+              <DeviceSelector
+                onVariantSelected={handleVariantSelected}
+                defaultModelId={pendingModelId}
+                onDefaultModelConsumed={() => setPendingModelId(null)}
+                brands={BRANDS}
+                models={MODELS}
+              />
+            </div>
+          )}
+
+          {path === '/' && (
             <div className="space-y-16 py-4">
               {/* 1. Hero Section */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
@@ -615,7 +713,8 @@ export default function App() {
                           if (heroSearch.trim() && heroSearchResults.length > 0) {
                             handleHeroSearchSelect(heroSearchResults[0]);
                           } else {
-                            document.getElementById('device-selector-section')?.scrollIntoView({ behavior: 'smooth' });
+                            handleReset();
+                            navigate('/smartphones');
                           }
                         }}
                         className="bg-cobalt hover:bg-cobalt-hover text-white px-5 py-3 rounded-sm text-sm font-semibold transition-all shadow-sm flex-shrink-0"
@@ -649,14 +748,14 @@ export default function App() {
                           );
                         })}
                         <div className="px-4 py-2 text-[10px] text-ink-muted font-mono border-t border-ice-border/40 bg-canvas-white">
-                          Showing {heroSearchResults.length} result{heroSearchResults.length !== 1 ? 's' : ''} — or <button onClick={() => { setHeroSearchOpen(false); document.getElementById('device-selector-section')?.scrollIntoView({ behavior: 'smooth' }); }} className="text-cobalt underline">browse all models</button>
+                          Showing {heroSearchResults.length} result{heroSearchResults.length !== 1 ? 's' : ''} — or <button onClick={() => { setHeroSearchOpen(false); handleReset(); navigate('/smartphones'); }} className="text-cobalt underline">browse all models</button>
                         </div>
                       </div>
                     )}
                     {heroSearchOpen && heroSearch.trim().length >= 2 && heroSearchResults.length === 0 && (
                       <div className="absolute top-full left-0 right-0 mt-1 bg-canvas-pure border border-ice-border rounded-sm shadow-premium z-30 px-4 py-4 text-sm text-ink-muted text-center animate-fadeIn">
                         No models found for <span className="font-mono text-cobalt">"{heroSearch}"</span>.
-                        <button onClick={() => { setHeroSearchOpen(false); document.getElementById('device-selector-section')?.scrollIntoView({ behavior: 'smooth' }); }} className="block text-xs text-cobalt mt-1 underline mx-auto">Browse all models instead →</button>
+                        <button onClick={() => { setHeroSearchOpen(false); handleReset(); navigate('/smartphones'); }} className="block text-xs text-cobalt mt-1 underline mx-auto">Browse all models instead →</button>
                       </div>
                     )}
                   </div>
@@ -680,43 +779,30 @@ export default function App() {
 
                 {/* Hero Interactive Phone Panel Graphic */}
                 <div className="lg:col-span-5 flex justify-center">
-                  <SmartphoneMockup />
+                  <SmartphoneMockup onSelect={() => { handleReset(); navigate('/smartphones'); }} />
                 </div>
-              </div>
-
-              {/* 2. Popular Brands & Catalog Selector section */}
-              <div id="device-selector-section" className="bg-canvas-pure border border-ice-border/60 rounded-xl p-5 sm:p-8 shadow-3d-card scroll-mt-24 mb-12">
-                <div className="mb-8 pb-5 border-b border-ice-border/40 text-left">
-                  <span className="text-[10px] font-mono tracking-[0.2em] text-cobalt font-bold uppercase block mb-1">
-                    Catalog / Hardware Selector
-                  </span>
-                  <h3 className="text-3xl sm:text-4xl font-extrabold text-ink-navy tracking-tight font-outfit">
-                    Select Brand &amp; Model
-                  </h3>
-                </div>
-                <DeviceSelector
-                  onVariantSelected={handleVariantSelected}
-                  defaultModelId={pendingModelId}
-                  onDefaultModelConsumed={() => setPendingModelId(null)}
-                  brands={BRANDS}
-                  models={MODELS}
-                />
               </div>
 
               {/* 1.5 Premium 3D Device Category Showcase */}
               <DeviceCategoryShowcase
                 onSelectCategory={(cat) => {
-                  if (cat === 'tablets') setActiveStage('tablets');
-                  else if (cat === 'smartwatches') setActiveStage('smartwatches');
-                  else {
-                    document.getElementById('device-selector-section')?.scrollIntoView({ behavior: 'smooth' });
+                  if (cat === 'tablets') {
+                    handleReset();
+                    navigate('/tablets');
+                  } else if (cat === 'smartwatches') {
+                    handleReset();
+                    navigate('/smartwatches');
+                  } else {
+                    handleReset();
+                    navigate('/smartphones');
                   }
                 }}
               />
 
               {/* 1.6 Sell Your Device Section */}
               <SellYourDevice onGetValuation={() => {
-                document.getElementById('device-selector-section')?.scrollIntoView({ behavior: 'smooth' });
+                handleReset();
+                navigate('/smartphones');
               }} />
 
               {/* 3. How It Works Section */}
@@ -1050,7 +1136,7 @@ export default function App() {
                       No sign-up required. Just select your device, answer a few questions, and we'll show you your best price — instantly.
                     </p>
                     <button
-                      onClick={() => document.getElementById('device-selector-section')?.scrollIntoView({ behavior: 'smooth' })}
+                      onClick={() => { handleReset(); navigate('/smartphones'); }}
                       className="bg-white text-cobalt hover:bg-blue-50 px-8 py-4 rounded-xl font-black text-sm shadow-xl shadow-black/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
                     >
                       Start Free Valuation →
@@ -1199,7 +1285,10 @@ export default function App() {
                         Selling company laptops or smartphone fleets? Get customized bulk pricing, NIST-compliant hardware data wiping, and direct corporate logistics.
                       </p>
                     </div>
-                    <button className="mt-4 md:mt-0 bg-white hover:bg-slate-100 text-cobalt px-6 py-3.5 rounded-xl font-bold text-sm shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98] whitespace-nowrap z-10 flex-shrink-0 flex items-center gap-2">
+                    <button
+                      onClick={() => { handleReset(); navigate('/contact'); }}
+                      className="mt-4 md:mt-0 bg-white hover:bg-slate-100 text-cobalt px-6 py-3.5 rounded-xl font-bold text-sm shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98] whitespace-nowrap z-10 flex-shrink-0 flex items-center gap-2"
+                    >
                       <span>Contact B2B Team</span>
                       <ArrowRight className="w-4 h-4" />
                     </button>
@@ -1210,7 +1299,7 @@ export default function App() {
             </div>
           )}
 
-          {activeStage === 'diagnose' && selectedModel && selectedVariant && (
+          {isWorkflow && activeStage === 'diagnose' && selectedModel && selectedVariant && (
             <Suspense fallback={
               <div className="flex items-center justify-center min-h-[400px]" aria-label="Loading diagnostic wizard" role="status">
                 <div className="w-8 h-8 border-2 border-cobalt border-t-transparent rounded-full animate-spin" aria-hidden="true" />
@@ -1229,7 +1318,7 @@ export default function App() {
             </Suspense>
           )}
 
-          {activeStage === 'schedule' && selectedModel && selectedVariant && (
+          {isWorkflow && activeStage === 'schedule' && selectedModel && selectedVariant && (
             <Suspense fallback={
               <div className="flex items-center justify-center min-h-[400px]" aria-label="Loading pickup scheduler" role="status">
                 <div className="w-8 h-8 border-2 border-cobalt border-t-transparent rounded-full animate-spin" aria-hidden="true" />
@@ -1238,7 +1327,7 @@ export default function App() {
               <PickupScheduler
                 finalPrice={finalPrice}
                 onBack={() => setActiveStage('diagnose')}
-                onSuccess={handleReset}
+                onSuccess={() => { handleReset(); navigate('/'); }}
                 selectedDefects={selectedDefects}
                 selectedModel={selectedModel}
                 selectedVariant={selectedVariant}
@@ -1247,15 +1336,15 @@ export default function App() {
             </Suspense>
           )}
 
-          {activeStage === 'admin' && (
+          {(path === '/admin' || activeStage === 'admin') && (
             <Suspense fallback={
               <div className="flex items-center justify-center min-h-[400px]" aria-label="Loading admin panel" role="status">
                 <div className="w-8 h-8 border-2 border-cobalt border-t-transparent rounded-full animate-spin" aria-hidden="true" />
               </div>
             }>
-              <AdminPinGate onExit={handleReset}>
+              <AdminPinGate onExit={() => { handleReset(); navigate('/'); }}>
                 <AdminPanel
-                  onBack={handleReset}
+                  onBack={() => { handleReset(); navigate('/'); }}
                   initialBookings={apiBookings}
                   brands={BRANDS}
                   onRefreshBookings={refreshBookings}
@@ -1267,7 +1356,7 @@ export default function App() {
         </section>
 
         {/* Right Sidebar (Only during diagnose and schedule workflow) */}
-        {activeStage !== 'select' && activeStage !== 'admin' && (
+        {isWorkflow && (
           <aside className="w-full xl:col-span-3 grid grid-cols-1 sm:grid-cols-3 xl:grid-cols-1 gap-4 xl:gap-6 no-print">
 
             {/* Live Operations */}
@@ -1369,17 +1458,12 @@ export default function App() {
 
             {/* Links */}
             <div className="flex flex-wrap justify-center gap-6 md:gap-8 text-xs font-semibold text-ink-slate">
-              <span onClick={handleReset} className="hover:text-cobalt cursor-pointer transition-colors">Home</span>
-              <span onClick={() => {
-                if (activeStage === 'select') {
-                  document.getElementById('how-it-works-section')?.scrollIntoView({ behavior: 'smooth' });
-                } else {
-                  handleReset();
-                  setTimeout(() => {
-                    document.getElementById('how-it-works-section')?.scrollIntoView({ behavior: 'smooth' });
-                  }, 100);
-                }
-              }} className="hover:text-cobalt cursor-pointer transition-colors">How it Works</span>
+              <span onClick={() => { handleReset(); navigate('/'); }} className="hover:text-cobalt cursor-pointer transition-colors">Home</span>
+              <span onClick={() => { handleReset(); navigate('/smartphones'); }} className="hover:text-cobalt cursor-pointer transition-colors">Smartphones</span>
+              <span onClick={() => { handleReset(); navigate('/tablets'); }} className="hover:text-cobalt cursor-pointer transition-colors">Tablets/iPads</span>
+              <span onClick={() => { handleReset(); navigate('/smartwatches'); }} className="hover:text-cobalt cursor-pointer transition-colors">Smartwatches</span>
+              <span onClick={() => { handleReset(); navigate('/about'); }} className="hover:text-cobalt cursor-pointer transition-colors">About</span>
+              <span onClick={() => { handleReset(); navigate('/contact'); }} className="hover:text-cobalt cursor-pointer transition-colors">Contact</span>
               <span onClick={() => setIsSpecModalOpen(true)} className="hover:text-cobalt cursor-pointer transition-colors">System Spec</span>
             </div>
           </div>
@@ -1396,6 +1480,9 @@ export default function App() {
       <Suspense fallback={null}>
         <OrderTrackingModal isOpen={isTrackOpen} onClose={() => setIsTrackOpen(false)} />
       </Suspense>
+
+      {/* Toast notifications */}
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
 
     </div>
   );

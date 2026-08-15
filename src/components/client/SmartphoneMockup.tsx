@@ -2,7 +2,11 @@ import React, { useState, useEffect } from 'react';
 
 type PreviewModel = 'apple' | 'samsung' | 'google';
 
-export const SmartphoneMockup: React.FC = () => {
+interface SmartphoneMockupProps {
+  onSelect?: () => void;
+}
+
+export const SmartphoneMockup: React.FC<SmartphoneMockupProps> = ({ onSelect }) => {
   const [activePreviewModel, setActivePreviewModel] = useState<PreviewModel>('apple');
   const [time, setTime] = useState<string>('09:41 AM');
   const [islandExpanded, setIslandExpanded] = useState<boolean>(false);
@@ -74,7 +78,11 @@ export const SmartphoneMockup: React.FC = () => {
 
   // Smooth scroll handler
   const handleScrollToSearch = () => {
-    document.getElementById('device-selector-section')?.scrollIntoView({ behavior: 'smooth' });
+    if (onSelect) {
+      onSelect();
+    } else {
+      document.getElementById('device-selector-section')?.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   return (

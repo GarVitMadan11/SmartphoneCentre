@@ -3,20 +3,16 @@ import { Smartphone, Tablet, Watch, ChevronDown, Zap, Truck, Sparkles } from 'lu
 
 interface CategoryBarProps {
   onSelectBrand?: (brandId: string) => void;
-  onNavigateTablets?: () => void;
-  onNavigateSmartwatches?: () => void;
   onOpenTrackOrder?: () => void;
-  onNavigateHome?: () => void;
-  activeStage?: string;
+  onNavigate: (path: string) => void;
+  currentPath: string;
 }
 
 export const CategoryBar: React.FC<CategoryBarProps> = ({
   onSelectBrand,
-  onNavigateTablets,
-  onNavigateSmartwatches,
   onOpenTrackOrder,
-  onNavigateHome,
-  activeStage,
+  onNavigate,
+  currentPath,
 }) => {
   const [activeDropdown, setActiveDropdown] = useState<'phones' | 'tablets' | 'watches' | 'more' | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -34,13 +30,9 @@ export const CategoryBar: React.FC<CategoryBarProps> = ({
 
   const handleBrandClick = (brandId: string) => {
     setActiveDropdown(null);
-    if (onNavigateHome) onNavigateHome();
+    onNavigate('/smartphones');
     if (onSelectBrand) {
       onSelectBrand(brandId);
-    }
-    const el = document.getElementById('device-selector-section');
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
@@ -55,14 +47,14 @@ export const CategoryBar: React.FC<CategoryBarProps> = ({
             {/* 1. All Focused Categories Button */}
             <button
               type="button"
-              onClick={onNavigateHome}
+              onClick={() => onNavigate('/')}
               className={`px-3 py-1.5 font-bold rounded-sm flex items-center gap-1.5 transition-all ${
-                activeStage === 'select'
+                currentPath === '/'
                   ? 'bg-cobalt text-white shadow-sm'
                   : 'text-ink-navy hover:text-cobalt hover:bg-canvas-white'
               }`}
             >
-              <Sparkles className={`w-3.5 h-3.5 ${activeStage === 'select' ? 'text-white' : 'text-cobalt'}`} />
+              <Sparkles className={`w-3.5 h-3.5 ${currentPath === '/' ? 'text-white' : 'text-cobalt'}`} />
               <span>All Gadgets</span>
             </button>
 
@@ -74,14 +66,14 @@ export const CategoryBar: React.FC<CategoryBarProps> = ({
                 type="button"
                 onClick={() => setActiveDropdown(prev => prev === 'phones' ? null : 'phones')}
                 className={`px-3 py-1.5 rounded-sm flex items-center gap-1.5 font-bold transition-all ${
-                  activeDropdown === 'phones'
+                  currentPath === '/smartphones' || activeDropdown === 'phones'
                     ? 'bg-cobalt text-white shadow-sm'
                     : 'text-ink-navy hover:text-cobalt hover:bg-canvas-white'
                 }`}
               >
-                <Smartphone className="w-3.5 h-3.5 text-cobalt group-hover:text-cobalt" />
+                <Smartphone className={`w-3.5 h-3.5 ${currentPath === '/smartphones' || activeDropdown === 'phones' ? 'text-white' : 'text-cobalt'}`} />
                 <span>Sell Phone</span>
-                <ChevronDown className={`w-3 h-3 transition-transform ${activeDropdown === 'phones' ? 'rotate-180 text-white' : 'text-zinc-400'}`} />
+                <ChevronDown className={`w-3 h-3 transition-transform ${currentPath === '/smartphones' || activeDropdown === 'phones' ? 'rotate-180 text-white' : 'text-zinc-400'}`} />
               </button>
 
               {activeDropdown === 'phones' && (
@@ -140,14 +132,14 @@ export const CategoryBar: React.FC<CategoryBarProps> = ({
             {/* 3. Dedicated Tablets Button */}
             <button
               type="button"
-              onClick={onNavigateTablets}
+              onClick={() => onNavigate('/tablets')}
               className={`px-3 py-1.5 font-bold rounded-sm flex items-center gap-1.5 transition-all ${
-                activeStage === 'tablets'
+                currentPath === '/tablets'
                   ? 'bg-violet-600 text-white shadow-sm'
                   : 'text-ink-navy hover:text-cobalt hover:bg-canvas-white'
               }`}
             >
-              <Tablet className={`w-3.5 h-3.5 ${activeStage === 'tablets' ? 'text-white' : 'text-violet-600'}`} />
+              <Tablet className={`w-3.5 h-3.5 ${currentPath === '/tablets' ? 'text-white' : 'text-violet-600'}`} />
               <span>Sell Tablets</span>
               <span className="text-[9px] px-1.5 py-0.5 rounded bg-violet-500/10 text-violet-600 font-mono">Apple &amp; Samsung</span>
             </button>
@@ -155,14 +147,14 @@ export const CategoryBar: React.FC<CategoryBarProps> = ({
             {/* 4. Dedicated Smartwatches Button */}
             <button
               type="button"
-              onClick={onNavigateSmartwatches}
+              onClick={() => onNavigate('/smartwatches')}
               className={`px-3 py-1.5 font-bold rounded-sm flex items-center gap-1.5 transition-all ${
-                activeStage === 'smartwatches'
+                currentPath === '/smartwatches'
                   ? 'bg-emerald-600 text-white shadow-sm'
                   : 'text-ink-navy hover:text-cobalt hover:bg-canvas-white'
               }`}
             >
-              <Watch className={`w-3.5 h-3.5 ${activeStage === 'smartwatches' ? 'text-white' : 'text-emerald-600'}`} />
+              <Watch className={`w-3.5 h-3.5 ${currentPath === '/smartwatches' ? 'text-white' : 'text-emerald-600'}`} />
               <span>Sell Smartwatches</span>
               <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 font-mono">Apple &amp; Samsung</span>
             </button>
@@ -173,12 +165,7 @@ export const CategoryBar: React.FC<CategoryBarProps> = ({
           <div className="flex items-center gap-2 min-w-max">
             <button
               type="button"
-              onClick={() => {
-                if (onNavigateHome) onNavigateHome();
-                setTimeout(() => {
-                  document.getElementById('device-selector-section')?.scrollIntoView({ behavior: 'smooth' });
-                }, 50);
-              }}
+              onClick={() => onNavigate('/smartphones')}
               className="px-3 py-1 rounded bg-cobalt/10 text-cobalt hover:bg-cobalt/20 font-bold text-[11px] transition-all flex items-center gap-1"
             >
               <Zap className="w-3 h-3" />
