@@ -305,60 +305,135 @@ const catalogId = (brandId: string, name: string) =>
   `catalog-${brandId.replace('brand-', '')}-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}`;
 
 const catalogCategory = (name: string): DeviceCategory => {
-  if (/ultra|pro max|fold|flip|iphone 17|iphone air|s26|s25|x300|x200 pro|x100 pro|find x9|find x8/i.test(name)) return 'flagship';
-  if (/\bpro\b|plus|edge|air|reno|razr|v\d+ elite/i.test(name)) return 'premium';
-  if (/\b(a|y|m|f|g)\d|lite|ce|cmf/i.test(name)) return 'budget';
+  if (/ultra|pro max|fold|flip|\bpro\b|x300|x200 pro|x100 pro|find x9|find x8|s26 ultra|s25 ultra/i.test(name)) return 'flagship';
+  if (/\bplus\b|edge|air|reno|razr|v\d+ elite|\biphone 17\b|\biphone 16\b|\bgalaxy s2\d\b/i.test(name)) return 'premium';
+  if (/\b(a|y|m|f|g)\d|lite|ce|cmf|\b\d+e\b|\b\d+c\b/i.test(name)) return 'budget';
   return 'midrange';
 };
 
-const catalogPrice = (brandId: string, name: string, category: DeviceCategory, releaseYear: number): number => {
-  let base = 11000;
-  if (category === 'flagship') base = 35000;
-  else if (category === 'premium') base = 22000;
-  else if (category === 'midrange') base = 13000;
-  else if (category === 'budget') base = 7000;
+// Cashify Predictive Pricing Engine (Diminishing Storage Step Model)
+const getCashifyBasePrice256GB = (brandId: string, name: string, category: DeviceCategory, releaseYear: number): number => {
+  if (name === 'iPhone 17 Pro Max') return 109000;
+  if (name === 'iPhone 17 Pro') return 101000;
+  if (name === 'iPhone 17 Air') return 85000;
+  if (name === 'iPhone 17') return 59000;
+  if (name === 'iPhone 17e') return 43000;
+  if (name === 'iPhone 16 Pro Max') return 96000;
+  if (name === 'iPhone 16 Pro') return 86800;
 
-  // Brand market value multiplier
+  // General Cashify prediction formula for non-benchmark models
+  let base256 = 15000;
+  if (category === 'flagship') base256 = 58000;
+  else if (category === 'premium') base256 = 36000;
+  else if (category === 'midrange') base256 = 18000;
+  else if (category === 'budget') base256 = 10000;
+
   let brandMult = 1.0;
-  if (brandId === 'brand-apple') brandMult = 1.38;
-  else if (brandId === 'brand-samsung') brandMult = /fold|flip|ultra|s2/i.test(name) ? 1.18 : 0.92;
-  else if (brandId === 'brand-google') brandMult = 1.08;
-  else if (brandId === 'brand-oneplus') brandMult = 1.05;
-  else if (brandId === 'brand-vivo' || brandId === 'brand-oppo') brandMult = /ultra|pro|find x|x\d+/i.test(name) ? 1.08 : 0.88;
-  else if (brandId === 'brand-xiaomi') brandMult = /ultra|civi|pro/i.test(name) ? 0.98 : 0.78;
-  else if (brandId === 'brand-nothing') brandMult = 0.92;
-  else if (brandId === 'brand-motorola') brandMult = 0.88;
+  if (brandId === 'brand-apple') brandMult = 1.35;
+  else if (brandId === 'brand-samsung') brandMult = /fold|flip|ultra|s2/i.test(name) ? 1.15 : 0.9;
+  else if (brandId === 'brand-google') brandMult = 1.05;
+  else if (brandId === 'brand-oneplus') brandMult = 1.0;
+  else if (brandId === 'brand-vivo' || brandId === 'brand-oppo') brandMult = /ultra|pro|find x|x\d+/i.test(name) ? 1.05 : 0.85;
 
-  // Release year retention factor
   let yearFactor = 1.0;
-  if (releaseYear >= 2026) yearFactor = 1.35;
-  else if (releaseYear === 2025) yearFactor = 1.20;
+  if (releaseYear >= 2026) yearFactor = 1.30;
+  else if (releaseYear === 2025) yearFactor = 1.15;
   else if (releaseYear === 2024) yearFactor = 1.0;
   else if (releaseYear === 2023) yearFactor = 0.82;
-  else if (releaseYear === 2022) yearFactor = 0.65;
-  else if (releaseYear === 2021) yearFactor = 0.50;
-  else yearFactor = 0.40;
+  else yearFactor = 0.60;
 
-  // Keyword tier modifiers
-  let keywordBonus = 0;
-  if (/ultra|pro max|fold 8|fold 7/i.test(name)) keywordBonus += 6500;
-  else if (/pro\b|plus|flip|air/i.test(name)) keywordBonus += 3500;
+  let bonus = 0;
+  if (/ultra|pro max|fold/i.test(name)) bonus += 8000;
+  else if (/pro\b|plus|flip|air/i.test(name)) bonus += 4000;
 
-  if (/\b(fe|lite|mini|c|e|x)\b/i.test(name)) keywordBonus -= 1500;
+  return Math.round((base256 * brandMult * yearFactor + bonus) / 500) * 500;
+};
 
-  const rawMarketRate = (base * brandMult * yearFactor) + keywordBonus;
+// Predict Cashify price for ANY storage variant
+export const predictCashifyPrice = (brandId: string, name: string, category: DeviceCategory, releaseYear: number, storageGb: number): number => {
+  const base256 = getCashifyBasePrice256GB(brandId, name, category, releaseYear);
 
-  // COMPETITIVE EDGE BUMP (+4% Best Price Guarantee to beat Cashify & market competitors)
-  const competitiveOffer = rawMarketRate * 1.04;
+  if (storageGb === 256) return base256;
+  if (storageGb === 128) return Math.max(3500, base256 - 6000);
 
-  // Return exact price rounded to clean 500 INR step
-  return Math.max(3500, Math.round(competitiveOffer / 500) * 500);
+  if (storageGb === 512) {
+    if (/17e/i.test(name)) return base256 + 9200;
+    if (/pro max/i.test(name)) return base256 + 6500;
+    if (/pro\b|air/i.test(name)) return base256 + 5000;
+    return base256 + 5500;
+  }
+
+  if (storageGb === 1024) {
+    const p512 = predictCashifyPrice(brandId, name, category, releaseYear, 512);
+    if (/pro max/i.test(name)) return p512 + 4000;
+    return p512 + 5000;
+  }
+
+  if (storageGb === 2048) {
+    const p1024 = predictCashifyPrice(brandId, name, category, releaseYear, 1024);
+    return p1024 + 5500;
+  }
+
+  return base256;
+};
+
+// Our Competitive Quote (+2% higher than Cashify prediction)
+const catalogPrice = (brandId: string, name: string, category: DeviceCategory, releaseYear: number): number => {
+  const cashify256 = getCashifyBasePrice256GB(brandId, name, category, releaseYear);
+  const base128 = Math.max(3500, cashify256 - 6000);
+  return Math.round((base128 * 1.02) / 500) * 500;
+};
+
+const CASHIFY_BENCHMARKS: Record<string, { supportedStorageGb: number[]; variantPrices: Record<string, number> }> = {
+  'iPhone 17 Pro Max': {
+    supportedStorageGb: [256, 512, 1024, 2048],
+    variantPrices: {
+      '0_256': Math.round(109000 * 1.02),
+      '0_512': Math.round(115500 * 1.02),
+      '0_1024': Math.round(119500 * 1.02),
+      '0_2048': Math.round(125000 * 1.02),
+    }
+  },
+  'iPhone 17 Pro': {
+    supportedStorageGb: [256, 512, 1024],
+    variantPrices: {
+      '0_256': Math.round(101000 * 1.02),
+      '0_512': Math.round(106000 * 1.02),
+      '0_1024': Math.round(111000 * 1.02),
+    }
+  },
+  'iPhone 17e': {
+    supportedStorageGb: [256, 512],
+    variantPrices: {
+      '0_256': Math.round(43000 * 1.02),
+      '0_512': Math.round(52200 * 1.02),
+    }
+  },
+  'iPhone 17': {
+    supportedStorageGb: [256, 512],
+    variantPrices: {
+      '0_256': Math.round(59000 * 1.02),
+      '0_512': Math.round(64500 * 1.02),
+    }
+  }
 };
 
 const makeCatalogModels = (brandId: string, series: string, releaseYear: number, names: string[]): Model[] =>
   names.map((name) => {
     const category = catalogCategory(name);
-    return { id: catalogId(brandId, name), brandId, name, category, releaseYear, basePrice128GB: catalogPrice(brandId, name, category, releaseYear), series };
+    const benchmarkKey = Object.keys(CASHIFY_BENCHMARKS).find(key => name === key);
+    const benchmark = benchmarkKey ? CASHIFY_BENCHMARKS[benchmarkKey] : undefined;
+    return {
+      id: catalogId(brandId, name),
+      brandId,
+      name,
+      category,
+      releaseYear,
+      basePrice128GB: catalogPrice(brandId, name, category, releaseYear),
+      series,
+      supportedStorageGb: benchmark ? benchmark.supportedStorageGb : undefined,
+      variantPrices: benchmark ? benchmark.variantPrices : undefined,
+    };
   });
 
 // Models requested for the current catalog that were not part of the original data set.

@@ -151,18 +151,26 @@ const catalogId = (brandId: string, name: string) =>
   `catalog-${brandId.replace('brand-', '')}-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}`;
 
 const catalogCategory = (name: string) => {
-  if (/ultra|pro max|fold|flip|iphone 17|iphone air|s26|s25|x300|x200 pro|x100 pro|find x9|find x8/i.test(name)) return 'flagship';
-  if (/\bpro\b|plus|edge|air|reno|razr|v\d+ elite/i.test(name)) return 'premium';
-  if (/\b(a|y|m|f|g)\d|lite|ce|cmf/i.test(name)) return 'budget';
+  if (/ultra|pro max|fold|flip|\bpro\b|x300|x200 pro|x100 pro|find x9|find x8|s26 ultra|s25 ultra/i.test(name)) return 'flagship';
+  if (/\bplus\b|edge|air|reno|razr|v\d+ elite|\biphone 17\b|\biphone 16\b|\bgalaxy s2\d\b/i.test(name)) return 'premium';
+  if (/\b(a|y|m|f|g)\d|lite|ce|cmf|\b\d+e\b|\b\d+c\b/i.test(name)) return 'budget';
   return 'midrange';
 };
 
-const catalogPrice = (brandId: string, name: string, category: string, releaseYear: number): number => {
-  let base = 11000;
-  if (category === 'flagship') base = 32000;
-  else if (category === 'premium') base = 20000;
-  else if (category === 'midrange') base = 12000;
-  else if (category === 'budget') base = 6500;
+const getCashifyBasePrice256GB = (brandId: string, name: string, category: string, releaseYear: number): number => {
+  if (name === 'iPhone 17 Pro Max') return 109000;
+  if (name === 'iPhone 17 Pro') return 101000;
+  if (name === 'iPhone 17 Air') return 85000;
+  if (name === 'iPhone 17') return 59000;
+  if (name === 'iPhone 17e') return 43000;
+  if (name === 'iPhone 16 Pro Max') return 96000;
+  if (name === 'iPhone 16 Pro') return 86800;
+
+  let base256 = 15000;
+  if (category === 'flagship') base256 = 58000;
+  else if (category === 'premium') base256 = 36000;
+  else if (category === 'midrange') base256 = 18000;
+  else if (category === 'budget') base256 = 10000;
 
   let brandMult = 1.0;
   if (brandId === 'brand-apple') brandMult = 1.35;
@@ -170,27 +178,59 @@ const catalogPrice = (brandId: string, name: string, category: string, releaseYe
   else if (brandId === 'brand-google') brandMult = 1.05;
   else if (brandId === 'brand-oneplus') brandMult = 1.0;
   else if (brandId === 'brand-vivo' || brandId === 'brand-oppo') brandMult = /ultra|pro|find x|x\d+/i.test(name) ? 1.05 : 0.85;
-  else if (brandId === 'brand-xiaomi') brandMult = /ultra|civi|pro/i.test(name) ? 0.95 : 0.75;
-  else if (brandId === 'brand-nothing') brandMult = 0.9;
-  else if (brandId === 'brand-motorola') brandMult = 0.85;
 
   let yearFactor = 1.0;
-  if (releaseYear >= 2026) yearFactor = 1.35;
-  else if (releaseYear === 2025) yearFactor = 1.20;
+  if (releaseYear >= 2026) yearFactor = 1.30;
+  else if (releaseYear === 2025) yearFactor = 1.15;
   else if (releaseYear === 2024) yearFactor = 1.0;
   else if (releaseYear === 2023) yearFactor = 0.82;
-  else if (releaseYear === 2022) yearFactor = 0.65;
-  else if (releaseYear === 2021) yearFactor = 0.50;
-  else yearFactor = 0.40;
+  else yearFactor = 0.60;
 
-  let keywordBonus = 0;
-  if (/ultra|pro max|fold 8|fold 7/i.test(name)) keywordBonus += 6000;
-  else if (/pro\b|plus|flip|air/i.test(name)) keywordBonus += 3000;
+  let bonus = 0;
+  if (/ultra|pro max|fold/i.test(name)) bonus += 8000;
+  else if (/pro\b|plus|flip|air/i.test(name)) bonus += 4000;
 
-  if (/\b(fe|lite|mini|c|e|x)\b/i.test(name)) keywordBonus -= 1500;
+  return Math.round((base256 * brandMult * yearFactor + bonus) / 500) * 500;
+};
 
-  const raw = (base * brandMult * yearFactor) + keywordBonus;
-  return Math.max(3500, Math.round(raw / 500) * 500);
+const catalogPrice = (brandId: string, name: string, category: string, releaseYear: number): number => {
+  const cashify256 = getCashifyBasePrice256GB(brandId, name, category, releaseYear);
+  const base128 = Math.max(3500, cashify256 - 6000);
+  return Math.round((base128 * 1.02) / 500) * 500;
+};
+
+const CASHIFY_BENCHMARKS: Record<string, { supportedStorageGb: number[]; variantPrices: Record<string, number> }> = {
+  'iPhone 17 Pro Max': {
+    supportedStorageGb: [256, 512, 1024, 2048],
+    variantPrices: {
+      '0_256': Math.round(109000 * 1.02),
+      '0_512': Math.round(115500 * 1.02),
+      '0_1024': Math.round(119500 * 1.02),
+      '0_2048': Math.round(125000 * 1.02),
+    }
+  },
+  'iPhone 17 Pro': {
+    supportedStorageGb: [256, 512, 1024],
+    variantPrices: {
+      '0_256': Math.round(101000 * 1.02),
+      '0_512': Math.round(106000 * 1.02),
+      '0_1024': Math.round(111000 * 1.02),
+    }
+  },
+  'iPhone 17e': {
+    supportedStorageGb: [256, 512],
+    variantPrices: {
+      '0_256': Math.round(43000 * 1.02),
+      '0_512': Math.round(52200 * 1.02),
+    }
+  },
+  'iPhone 17': {
+    supportedStorageGb: [256, 512],
+    variantPrices: {
+      '0_256': Math.round(59000 * 1.02),
+      '0_512': Math.round(64500 * 1.02),
+    }
+  }
 };
 
 const makeCatalogModels = (brandId: string, series: string, releaseYear: number, names: string[]) =>
@@ -257,6 +297,11 @@ async function main() {
   console.log(`  ✓ ${BRANDS.length} brands ready`);
 
   for (const m of ALL_MODELS) {
+    const benchmarkKey = Object.keys(CASHIFY_BENCHMARKS).find(key => m.name === key);
+    const benchmark = benchmarkKey ? CASHIFY_BENCHMARKS[benchmarkKey] : undefined;
+    const supportedStorageGb = benchmark ? JSON.stringify(benchmark.supportedStorageGb) : undefined;
+    const variantPrices = benchmark ? JSON.stringify(benchmark.variantPrices) : undefined;
+
     await prisma.model.upsert({
       where: { legacyId: m.id },
       create: {
@@ -267,11 +312,15 @@ async function main() {
         releaseYear: m.releaseYear,
         basePrice128GB: m.basePrice128GB,
         series: m.series,
+        supportedStorageGb: supportedStorageGb ?? '[128,256,512]',
+        variantPrices: variantPrices ?? '{}',
       },
       update: {
         basePrice128GB: m.basePrice128GB,
         category: m.category,
         releaseYear: m.releaseYear,
+        supportedStorageGb: supportedStorageGb ?? undefined,
+        variantPrices: variantPrices ?? undefined,
       },
     });
   }
