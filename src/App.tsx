@@ -514,6 +514,9 @@ export default function App() {
     setActiveStage('schedule');
   };
 
+  const [selectedTabletBrand, setSelectedTabletBrand] = useState<'all' | 'apple' | 'samsung'>('all');
+  const [selectedWatchBrand, setSelectedWatchBrand] = useState<'all' | 'apple' | 'samsung'>('all');
+
   const handleReset = () => {
     setSelectedModel(null);
     setSelectedVariant(null);
@@ -522,6 +525,8 @@ export default function App() {
     setWizardStep(0);
     setActiveStage('select');
     setMobileMenuOpen(false);
+    setSelectedTabletBrand('all');
+    setSelectedWatchBrand('all');
     clearNavState();
   };
 
@@ -628,6 +633,16 @@ export default function App() {
           setActiveStage('select');
           navigate('/smartphones');
         }}
+        onSelectTabletBrand={(brand) => {
+          handleReset();
+          setSelectedTabletBrand(brand);
+          navigate('/tablets');
+        }}
+        onSelectWatchBrand={(brand) => {
+          handleReset();
+          setSelectedWatchBrand(brand);
+          navigate('/smartwatches');
+        }}
         onOpenTrackOrder={() => setIsTrackOpen(true)}
       />
 
@@ -645,6 +660,7 @@ export default function App() {
             <TabletsShowcase
               onSelectVariant={handleVariantSelected}
               onBackToHome={() => { handleReset(); navigate('/'); }}
+              defaultBrand={selectedTabletBrand}
             />
           )}
 
@@ -652,6 +668,7 @@ export default function App() {
             <SmartwatchesShowcase
               onSelectVariant={handleVariantSelected}
               onBackToHome={() => { handleReset(); navigate('/'); }}
+              defaultBrand={selectedWatchBrand}
             />
           )}
 

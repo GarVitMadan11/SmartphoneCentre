@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SMARTWATCH_MODELS, Model, Variant, generateVariantsForModel } from '../../data/mockDatabase';
 import { Watch, Sparkles, ArrowRight, Search } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -6,14 +6,22 @@ import { motion } from 'framer-motion';
 interface SmartwatchesShowcaseProps {
   onSelectVariant: (model: Model, variant: Variant) => void;
   onBackToHome: () => void;
+  defaultBrand?: 'all' | 'apple' | 'samsung';
 }
 
 export const SmartwatchesShowcase: React.FC<SmartwatchesShowcaseProps> = ({
   onSelectVariant,
   onBackToHome,
+  defaultBrand,
 }) => {
-  const [selectedBrand, setSelectedBrand] = useState<'all' | 'apple' | 'samsung'>('all');
+  const [selectedBrand, setSelectedBrand] = useState<'all' | 'apple' | 'samsung'>(defaultBrand ?? 'all');
   const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    if (defaultBrand) {
+      setSelectedBrand(defaultBrand);
+    }
+  }, [defaultBrand]);
 
   const filteredModels = SMARTWATCH_MODELS.filter(m => {
     const matchesBrand =
