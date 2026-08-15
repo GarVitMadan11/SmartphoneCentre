@@ -313,21 +313,21 @@ const catalogCategory = (name: string): DeviceCategory => {
 
 const catalogPrice = (brandId: string, name: string, category: DeviceCategory, releaseYear: number): number => {
   let base = 11000;
-  if (category === 'flagship') base = 32000;
-  else if (category === 'premium') base = 20000;
-  else if (category === 'midrange') base = 12000;
-  else if (category === 'budget') base = 6500;
+  if (category === 'flagship') base = 35000;
+  else if (category === 'premium') base = 22000;
+  else if (category === 'midrange') base = 13000;
+  else if (category === 'budget') base = 7000;
 
   // Brand market value multiplier
   let brandMult = 1.0;
-  if (brandId === 'brand-apple') brandMult = 1.35;
-  else if (brandId === 'brand-samsung') brandMult = /fold|flip|ultra|s2/i.test(name) ? 1.15 : 0.9;
-  else if (brandId === 'brand-google') brandMult = 1.05;
-  else if (brandId === 'brand-oneplus') brandMult = 1.0;
-  else if (brandId === 'brand-vivo' || brandId === 'brand-oppo') brandMult = /ultra|pro|find x|x\d+/i.test(name) ? 1.05 : 0.85;
-  else if (brandId === 'brand-xiaomi') brandMult = /ultra|civi|pro/i.test(name) ? 0.95 : 0.75;
-  else if (brandId === 'brand-nothing') brandMult = 0.9;
-  else if (brandId === 'brand-motorola') brandMult = 0.85;
+  if (brandId === 'brand-apple') brandMult = 1.38;
+  else if (brandId === 'brand-samsung') brandMult = /fold|flip|ultra|s2/i.test(name) ? 1.18 : 0.92;
+  else if (brandId === 'brand-google') brandMult = 1.08;
+  else if (brandId === 'brand-oneplus') brandMult = 1.05;
+  else if (brandId === 'brand-vivo' || brandId === 'brand-oppo') brandMult = /ultra|pro|find x|x\d+/i.test(name) ? 1.08 : 0.88;
+  else if (brandId === 'brand-xiaomi') brandMult = /ultra|civi|pro/i.test(name) ? 0.98 : 0.78;
+  else if (brandId === 'brand-nothing') brandMult = 0.92;
+  else if (brandId === 'brand-motorola') brandMult = 0.88;
 
   // Release year retention factor
   let yearFactor = 1.0;
@@ -341,14 +341,18 @@ const catalogPrice = (brandId: string, name: string, category: DeviceCategory, r
 
   // Keyword tier modifiers
   let keywordBonus = 0;
-  if (/ultra|pro max|fold 8|fold 7/i.test(name)) keywordBonus += 6000;
-  else if (/pro\b|plus|flip|air/i.test(name)) keywordBonus += 3000;
+  if (/ultra|pro max|fold 8|fold 7/i.test(name)) keywordBonus += 6500;
+  else if (/pro\b|plus|flip|air/i.test(name)) keywordBonus += 3500;
 
   if (/\b(fe|lite|mini|c|e|x)\b/i.test(name)) keywordBonus -= 1500;
 
-  const raw = (base * brandMult * yearFactor) + keywordBonus;
+  const rawMarketRate = (base * brandMult * yearFactor) + keywordBonus;
+
+  // COMPETITIVE EDGE BUMP (+4% Best Price Guarantee to beat Cashify & market competitors)
+  const competitiveOffer = rawMarketRate * 1.04;
+
   // Return exact price rounded to clean 500 INR step
-  return Math.max(3500, Math.round(raw / 500) * 500);
+  return Math.max(3500, Math.round(competitiveOffer / 500) * 500);
 };
 
 const makeCatalogModels = (brandId: string, series: string, releaseYear: number, names: string[]): Model[] =>
@@ -392,12 +396,16 @@ const CATALOG_ADDITIONS: Model[] = [
 // 2. Models List (Comprehensive)
 const BASE_MODELS: Model[] = [
   // --- APPLE ---
-  { id: 'apple-16pm',   brandId: 'brand-apple', name: 'iPhone 16 Pro Max', category: 'flagship', releaseYear: 2024, basePrice128GB: 67000, series: 'iPhone 16 Series' },
-  { id: 'apple-16p',    brandId: 'brand-apple', name: 'iPhone 16 Pro', category: 'flagship', releaseYear: 2024, basePrice128GB: 57000, series: 'iPhone 16 Series' },
-  { id: 'apple-16plus', brandId: 'brand-apple', name: 'iPhone 16 Plus', category: 'premium',  releaseYear: 2024, basePrice128GB: 45000, series: 'iPhone 16 Series' },
-  { id: 'apple-16',     brandId: 'brand-apple', name: 'iPhone 16', category: 'premium',  releaseYear: 2024, basePrice128GB: 40000, series: 'iPhone 16 Series' },
-  { id: 'apple-15pm',   brandId: 'brand-apple', name: 'iPhone 15 Pro Max', category: 'flagship', releaseYear: 2023, basePrice128GB: 57000, series: 'iPhone 15 Series' },
-  { id: 'apple-15p',    brandId: 'brand-apple', name: 'iPhone 15 Pro', category: 'flagship', releaseYear: 2023, basePrice128GB: 47000, series: 'iPhone 15 Series' },
+  { id: 'apple-17pm',   brandId: 'brand-apple', name: 'iPhone 17 Pro Max', category: 'flagship', releaseYear: 2025, basePrice128GB: 101000, series: 'iPhone 17 Series' },
+  { id: 'apple-17p',    brandId: 'brand-apple', name: 'iPhone 17 Pro', category: 'flagship', releaseYear: 2025, basePrice128GB: 91000, series: 'iPhone 17 Series' },
+  { id: 'apple-17air',  brandId: 'brand-apple', name: 'iPhone 17 Air', category: 'premium',  releaseYear: 2025, basePrice128GB: 77000, series: 'iPhone 17 Series' },
+  { id: 'apple-17',     brandId: 'brand-apple', name: 'iPhone 17', category: 'premium',  releaseYear: 2025, basePrice128GB: 68500, series: 'iPhone 17 Series' },
+  { id: 'apple-16pm',   brandId: 'brand-apple', name: 'iPhone 16 Pro Max', category: 'flagship', releaseYear: 2024, basePrice128GB: 86500, series: 'iPhone 16 Series' },
+  { id: 'apple-16p',    brandId: 'brand-apple', name: 'iPhone 16 Pro', category: 'flagship', releaseYear: 2024, basePrice128GB: 78000, series: 'iPhone 16 Series' },
+  { id: 'apple-16plus', brandId: 'brand-apple', name: 'iPhone 16 Plus', category: 'premium',  releaseYear: 2024, basePrice128GB: 59500, series: 'iPhone 16 Series' },
+  { id: 'apple-16',     brandId: 'brand-apple', name: 'iPhone 16', category: 'premium',  releaseYear: 2024, basePrice128GB: 52500, series: 'iPhone 16 Series' },
+  { id: 'apple-15pm',   brandId: 'brand-apple', name: 'iPhone 15 Pro Max', category: 'flagship', releaseYear: 2023, basePrice128GB: 71000, series: 'iPhone 15 Series' },
+  { id: 'apple-15p',    brandId: 'brand-apple', name: 'iPhone 15 Pro', category: 'flagship', releaseYear: 2023, basePrice128GB: 61500, series: 'iPhone 15 Series' },
   { id: 'apple-15plus', brandId: 'brand-apple', name: 'iPhone 15 Plus', category: 'premium',  releaseYear: 2023, basePrice128GB: 37000, series: 'iPhone 15 Series' },
   { id: 'apple-15',     brandId: 'brand-apple', name: 'iPhone 15', category: 'premium',  releaseYear: 2023, basePrice128GB: 33000, series: 'iPhone 15 Series' },
   { id: 'apple-14pm',   brandId: 'brand-apple', name: 'iPhone 14 Pro Max', category: 'flagship', releaseYear: 2022, basePrice128GB: 37000, series: 'iPhone 14 Series' },

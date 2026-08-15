@@ -9,7 +9,7 @@ type Defect = { category: string; fixed?: number; percentage?: number; critical?
 
 const CAPS: Record<string, number> = { screen: .40, body: .20, camera: .18, functionality: .25, connectivity: .28, accessories: .12 };
 
-const STORAGE_PRICE_MULTIPLIERS: Record<number, number> = { 64: 0.85, 128: 1.0, 256: 1.1, 512: 1.2, 1024: 1.3 };
+const STORAGE_PRICE_MULTIPLIERS: Record<number, number> = { 64: 0.88, 128: 1.0, 256: 1.15, 512: 1.32, 1024: 1.55 };
 
 export function maximumQuoteFor(basePrice128GB: number, storageGb: number): number {
   const multiplier = STORAGE_PRICE_MULTIPLIERS[storageGb] ?? 1.0;
