@@ -81,7 +81,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onShowToast }) => {
               <div>
                 <span className="text-[10px] font-mono tracking-wider text-ink-muted uppercase block">Headquarters</span>
                 <p className="text-sm font-semibold text-ink-navy leading-relaxed">
-                  Rephonix Recycling Pvt Ltd,<br />
+                  Rephonix Resale Pvt Ltd,<br />
                   Tilak Nagar,<br />
                   New Delhi - 110018
                 </p>

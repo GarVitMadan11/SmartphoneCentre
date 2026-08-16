@@ -16,7 +16,7 @@ export const AboutPage: React.FC = () => {
             Bridging Premium Tech &amp; <span className="text-cobalt">Eco-Friendly Resale</span>
           </h1>
           <p className="text-ink-slate text-base font-light mt-3 max-w-2xl leading-relaxed">
-            Rephonix is India's premier electronic resale and secure recycling platform. We empower users to unlock maximum value from their pre-owned smartphones, tablets, and wearables through a secure, transparent, and completely friction-free process.
+            Rephonix is India's premier electronic resale and secure trade-in platform. We empower users to unlock maximum value from their pre-owned smartphones, tablets, and wearables through a secure, transparent, and completely friction-free process.
           </p>
         </div>
       </div>

@@ -4,6 +4,7 @@ import { Search, ChevronRight, Smartphone, Layers, ArrowLeft, ArrowRight } from 
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   siApple, siSamsung, siXiaomi, siVivo, siOneplus, siGoogle,
+  siOppo, siMotorola,
 } from 'simple-icons';
 
 export interface ColorSpec {
@@ -531,15 +532,51 @@ export const PhoneBackPreview: React.FC<{
 // ── Brand Logo using official Simple Icons SVG paths ─────────────────────────
 
 const BRAND_ICON_MAP: Record<string, { icon: { path: string; viewBox?: string; hex?: string }; size: number; brandColor?: string }> = {
-  apple:   { icon: siApple,   size: 20 },
-  samsung: { icon: siSamsung, size: 52 }, // Larger size to make horizontal wordmark readable
-  xiaomi:  { icon: siXiaomi,  size: 20 },
-  vivo:    { icon: siVivo,    size: 40 }, // Larger size to make horizontal wordmark readable
-  oneplus: { icon: siOneplus, size: 20 },
-  google:  { icon: siGoogle,  size: 20, brandColor: '#4285F4' },
+  apple:    { icon: siApple,    size: 20 },
+  samsung:  { icon: siSamsung,  size: 52 }, // Larger size to make horizontal wordmark readable
+  xiaomi:   { icon: siXiaomi,   size: 20 },
+  vivo:     { icon: siVivo,     size: 40 }, // Larger size to make horizontal wordmark readable
+  oneplus:  { icon: siOneplus,  size: 20 },
+  google:   { icon: siGoogle,   size: 20, brandColor: '#4285F4' },
+  oppo:     { icon: siOppo,     size: 45, brandColor: '#008A5E' },
+  motorola: { icon: siMotorola, size: 22, brandColor: '#00112C' },
 };
 
 function BrandLogo({ logo, isActive }: { logo: string; isActive: boolean }) {
+  if (logo === 'nothing') {
+    const fillColor = isActive ? '#ffffff' : '#000000';
+    return (
+      <div className="h-6 flex items-center justify-center overflow-visible" style={{ flexShrink: 0 }}>
+        <svg
+          role="img"
+          viewBox="0 0 20 20"
+          width="20"
+          height="20"
+          fill={fillColor}
+          aria-label="nothing"
+          style={{ flexShrink: 0 }}
+        >
+          {/* Col 1 */}
+          <circle cx="2" cy="2" r="1.8" />
+          <circle cx="2" cy="6" r="1.8" />
+          <circle cx="2" cy="10" r="1.8" />
+          <circle cx="2" cy="14" r="1.8" />
+          <circle cx="2" cy="18" r="1.8" />
+          {/* Diagonal */}
+          <circle cx="6" cy="6" r="1.8" />
+          <circle cx="10" cy="10" r="1.8" />
+          <circle cx="14" cy="14" r="1.8" />
+          {/* Col 5 */}
+          <circle cx="18" cy="2" r="1.8" />
+          <circle cx="18" cy="6" r="1.8" />
+          <circle cx="18" cy="10" r="1.8" />
+          <circle cx="18" cy="14" r="1.8" />
+          <circle cx="18" cy="18" r="1.8" />
+        </svg>
+      </div>
+    );
+  }
+
   const entry = BRAND_ICON_MAP[logo];
   if (!entry) return <span className="text-sm font-bold">{logo}</span>;
 
@@ -779,8 +816,9 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
         {BRANDS.map(brand => {
           const isActive = selectedBrandId === brand.id;
           return (
-            <button
+            <motion.button
               key={brand.id}
+              whileTap={{ scale: 0.95 }}
               onClick={() => {
                 setSelectedBrandId(brand.id);
                 setSelectedSeries(null);
@@ -788,23 +826,36 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                 setSelectedStorage(null);
                 setTempVariant(null);
               }}
-              className={`flex-shrink-0 px-4 sm:px-5 py-2.5 sm:py-3 rounded-sm font-semibold text-xs sm:text-sm transition-all duration-300 flex flex-col items-center justify-center gap-1.5 border ${
+              className={`relative flex-shrink-0 px-4 sm:px-5 py-2.5 sm:py-3 rounded-md font-semibold text-xs sm:text-sm flex flex-col items-center justify-center gap-1.5 border transition-all duration-300 ${
                 isActive
-                  ? 'bg-cobalt text-white border-cobalt scale-[1.02] opacity-100 shadow-[0_0_15px_rgba(59,130,246,0.3)]'
-                  : 'bg-canvas-pure text-ink-slate border-ice-border hover:border-cobalt/40 hover:bg-cobalt-light/10 opacity-80 hover:opacity-100'
+                  ? 'border-transparent text-white shadow-[0_4px_15px_rgba(59,130,246,0.25)]'
+                  : 'bg-canvas-pure text-ink-slate border-ice-border hover:border-cobalt/40 hover:bg-cobalt-light/10 opacity-85 hover:opacity-100'
               }`}
               style={{ minHeight: '64px', minWidth: '72px' }}
             >
-              <BrandLogo logo={brand.logo} isActive={isActive} />
-              <span className={`text-[10px] font-semibold tracking-wide ${isActive ? 'text-white' : 'text-ink-slate'}`}>{brand.name}</span>
-            </button>
+              {isActive && (
+                <motion.div
+                  layoutId="activeBrandBg"
+                  className="absolute inset-0 bg-cobalt rounded-md z-0"
+                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                />
+              )}
+              <div className="relative z-10 flex flex-col items-center gap-1.5">
+                <BrandLogo logo={brand.logo} isActive={isActive} />
+                <span className={`text-[10px] font-semibold tracking-wide transition-colors duration-300 ${isActive ? 'text-white font-bold' : 'text-ink-slate'}`}>{brand.name}</span>
+              </div>
+            </motion.button>
           );
         })}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-8 items-start">
         {/* Left Side: Search and Models list / Series Cards */}
-        <div className={`${selectedModel ? 'lg:col-span-7' : 'lg:col-span-12'} transition-all duration-500`}>
+        <motion.div 
+          layout="position"
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          className={`${selectedModel ? 'lg:col-span-7' : 'lg:col-span-12'}`}
+        >
           {/* Search bar */}
           <div className="relative mb-4 sm:mb-6">
             <Search className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 text-ink-muted w-4 h-4 sm:w-5 sm:h-5" />
@@ -840,180 +891,196 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
             </div>
           )}
 
-          {/* If search query is empty and no series is selected, show Series Cards */}
-          {debouncedSearchQuery.trim() === '' && selectedSeries === null && (
-            <div className="mb-8 animate-fadeIn">
-              <div className="text-left mb-5">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-ink-slate font-mono flex items-center gap-1.5">
-                  <Layers className="w-4 h-4 text-cobalt" /> Select Device Series
-                </h4>
-                <p className="text-xs text-ink-muted font-light mt-1">Select a series below to see the available models for trade-in.</p>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {availableSeries.map(seriesName => {
-                  const stats = seriesStats[seriesName] || { modelCount: 0, yearRange: '' };
-                  return (
-                    <motion.div
-                      key={seriesName}
-                      whileHover={{ scale: 1.015, y: -2 }}
-                      onClick={() => setSelectedSeries(seriesName)}
-                      className="p-5 rounded-sm border border-ice-border bg-canvas-pure cursor-pointer hover:border-cobalt/40 transition-all duration-300 shadow-sm hover:shadow-premium group flex flex-col justify-between"
-                      style={{ minHeight: '140px' }}
-                    >
-                      <div className="text-left">
-                        <div className="flex justify-between items-start mb-3">
-                          <div className="p-2 rounded-sm bg-cobalt-light/10 text-cobalt border border-cobalt/10 group-hover:bg-cobalt group-hover:text-white transition-colors duration-300">
-                            <Smartphone className="w-5 h-5" />
-                          </div>
-                          <span className="text-[10px] font-mono font-semibold tracking-wider text-zinc-500 bg-white/[0.03] px-2 py-0.5 rounded-sm">
-                            {stats.yearRange}
-                          </span>
-                        </div>
-                        <h4 className="font-semibold text-base text-ink-navy leading-tight group-hover:text-cobalt transition-colors duration-300">
-                          {seriesName}
-                        </h4>
-                        <p className="text-[11px] text-ink-muted mt-1.5 font-light">
-                          {stats.modelCount} {stats.modelCount === 1 ? 'model' : 'models'} available
-                        </p>
-                      </div>
-                      <div className="mt-4 pt-3 border-t border-white/[0.04] flex items-center justify-end text-left">
-                        <div className="w-6 h-6 rounded-full bg-canvas-white border border-ice-border flex items-center justify-center group-hover:bg-cobalt group-hover:border-cobalt transition-all duration-300">
-                          <ChevronRight className="w-3.5 h-3.5 text-ink-muted group-hover:text-white transition-colors" />
-                        </div>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* If search query is NOT empty OR a series is selected, show Models Grid */}
-          {(debouncedSearchQuery.trim() !== '' || selectedSeries !== null) && (
-            <div className="animate-fadeIn">
-              {/* Breadcrumb / Back Navigation if not searching */}
-              {debouncedSearchQuery.trim() === '' && (
-                <div className="flex items-center justify-between mb-5 pb-3 border-b border-white/[0.04]">
-                  <button
-                    onClick={() => {
-                      setSelectedSeries(null);
-                      setSelectedModel(null);
-                      setSelectedStorage(null);
-                      setTempVariant(null);
-                    }}
-                    className="flex items-center gap-1.5 text-xs text-ink-muted hover:text-cobalt transition-colors font-semibold"
-                  >
-                    <ArrowLeft className="w-4 h-4" /> Back to Series
-                  </button>
-                  <span className="text-xs text-zinc-500 font-mono font-semibold uppercase">{selectedSeries}</span>
+          <AnimatePresence mode="wait">
+            {debouncedSearchQuery.trim() === '' && selectedSeries === null ? (
+              <motion.div
+                key="series-view"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                className="mb-8"
+              >
+                <div className="text-left mb-5">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-ink-slate font-mono flex items-center gap-1.5">
+                    <Layers className="w-4 h-4 text-cobalt" /> Select Device Series
+                  </h4>
+                  <p className="text-xs text-ink-muted font-light mt-1">Select a series below to see the available models for trade-in.</p>
                 </div>
-              )}
-
-              {/* Models Grid: vertical cards matching tablet showcase design */}
-              <div className={`grid grid-cols-1 sm:grid-cols-2 ${selectedModel ? 'lg:grid-cols-2' : 'lg:grid-cols-3'} gap-6`}>
-                {filteredModels.length === 0 && (
-                  <div className="col-span-full py-12 px-4 text-center border border-dashed border-ice-border rounded-2xl bg-canvas-pure animate-fadeIn">
-                    <Smartphone className="w-10 h-10 text-ink-muted mx-auto mb-3" />
-                    <h4 className="text-base font-semibold text-ink-navy">No models found</h4>
-                    <p className="text-xs text-ink-muted mt-1 max-w-xs mx-auto">
-                      No results for <span className="font-mono text-cobalt">"{searchQuery}"</span>.<br />
-                      Try a brand name (e.g. "Apple", "Samsung") or a model number.
-                    </p>
-                    <button
-                      onClick={() => setSearchQuery('')}
-                      className="mt-4 px-4 py-2 bg-cobalt hover:bg-cobalt-hover text-white text-xs font-bold rounded-lg transition-all"
-                      style={{ minHeight: '36px' }}
-                    >
-                      Clear Search
-                    </button>
-                  </div>
-                )}
-                <AnimatePresence mode="popLayout">
-                  {filteredModels.map(model => {
-                    const isSelected = selectedModel?.id === model.id;
-                    const hasSelection = selectedModel !== null;
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  {availableSeries.map(seriesName => {
+                    const stats = seriesStats[seriesName] || { modelCount: 0, yearRange: '' };
                     return (
                       <motion.div
-                        layoutId={`model-card-${model.id}`}
-                        key={model.id}
-                        whileHover={{ y: -4 }}
-                        onClick={() => handleModelClick(model)}
-                        className={`cursor-pointer bg-canvas-pure border rounded-2xl p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group ${
-                          isSelected
-                            ? 'border-cobalt ring-2 ring-cobalt/20 scale-[1.01] opacity-100 z-10 shadow-md'
-                            : hasSelection
-                            ? 'border-ice-border opacity-50 hover:opacity-100 hover:scale-[1.005]'
-                            : 'border-ice-border hover:border-cobalt/40'
-                        }`}
+                        key={seriesName}
+                        whileHover={{ scale: 1.015, y: -2 }}
+                        whileTap={{ scale: 0.985 }}
+                        onClick={() => setSelectedSeries(seriesName)}
+                        className="p-5 rounded-sm border border-ice-border bg-canvas-pure cursor-pointer hover:border-cobalt/40 transition-all duration-300 shadow-sm hover:shadow-premium group flex flex-col justify-between"
+                        style={{ minHeight: '140px' }}
                       >
-                        <div>
-                          <div className="flex items-center justify-between mb-4">
-                            <span className={`px-2.5 py-1 text-[10px] font-mono font-bold rounded-full uppercase tracking-wider ${
-                              model.category === 'flagship'
-                                ? 'bg-amber-100 text-amber-800'
-                                : model.category === 'premium'
-                                ? 'bg-blue-50 text-blue-700'
-                                : 'bg-zinc-100 text-zinc-800'
-                            }`}>
-                              {model.category || (model.brandId === 'brand-apple' ? 'Apple iPhone' : 'Smartphone')}
+                        <div className="text-left">
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="p-2 rounded-sm bg-cobalt-light/10 text-cobalt border border-cobalt/10 group-hover:bg-cobalt group-hover:text-white transition-colors duration-300">
+                              <Smartphone className="w-5 h-5" />
+                            </div>
+                            <span className="text-[10px] font-mono font-semibold tracking-wider text-zinc-500 bg-white/[0.03] px-2 py-0.5 rounded-sm">
+                              {stats.yearRange}
                             </span>
-                            <span className="text-[10px] font-mono text-zinc-400">{model.releaseYear}</span>
                           </div>
-
-                          <h3 className="text-xl font-bold font-outfit text-ink-navy uppercase group-hover:text-cobalt transition-colors text-left">
-                            {model.name}
-                          </h3>
-                          {model.series && (
-                            <p className="text-xs font-mono text-zinc-400 mt-1 text-left">Series: {model.series}</p>
-                          )}
-
-                          {/* Smartphone Image */}
-                          <div className="my-6 h-44 flex items-center justify-center pointer-events-none">
-                            <img
-                              src={getDeviceImage(model.id, model.brandId, undefined, model.imageUrl)}
-                              alt={model.name}
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).src = getDeviceImage('', model.brandId);
-                              }}
-                              className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
-                              draggable={false}
-                            />
-                          </div>
+                          <h4 className="font-semibold text-base text-ink-navy leading-tight group-hover:text-cobalt transition-colors duration-300">
+                            {seriesName}
+                          </h4>
+                          <p className="text-[11px] text-ink-muted mt-1.5 font-light">
+                            {stats.modelCount} {stats.modelCount === 1 ? 'model' : 'models'} available
+                          </p>
                         </div>
-
-                        <div className="pt-4 border-t border-ice-border/60 flex items-center justify-between">
-                          <div className="text-left">
-                            <span className="text-[10px] text-zinc-400 uppercase font-mono block">Up to Get</span>
-                            <span className="text-lg font-extrabold text-emerald-600 font-mono">
-                              {formatPrice(model.basePrice128GB)}
-                            </span>
+                        <div className="mt-4 pt-3 border-t border-white/[0.04] flex items-center justify-end text-left">
+                          <div className="w-6 h-6 rounded-full bg-canvas-white border border-ice-border flex items-center justify-center group-hover:bg-cobalt group-hover:border-cobalt transition-all duration-300">
+                            <ChevronRight className="w-3.5 h-3.5 text-ink-muted group-hover:text-white transition-colors" />
                           </div>
-                          <button
-                            type="button"
-                            className="px-3.5 py-1.5 rounded-lg bg-cobalt text-white text-xs font-bold flex items-center gap-1 group-hover:bg-cobalt/90 transition-all shadow-xs"
-                          >
-                            <span>Sell Now</span>
-                            <ArrowRight className="w-3.5 h-3.5" />
-                          </button>
                         </div>
                       </motion.div>
                     );
                   })}
-                </AnimatePresence>
-              </div>
-            </div>
-          )}
-        </div>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="models-view"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+              >
+                {/* Breadcrumb / Back Navigation if not searching */}
+                {debouncedSearchQuery.trim() === '' && (
+                  <div className="flex items-center justify-between mb-5 pb-3 border-b border-white/[0.04]">
+                    <motion.button
+                      whileHover={{ x: -2 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => {
+                        setSelectedSeries(null);
+                        setSelectedModel(null);
+                        setSelectedStorage(null);
+                        setTempVariant(null);
+                      }}
+                      className="flex items-center gap-1.5 text-xs text-ink-muted hover:text-cobalt transition-colors font-semibold"
+                    >
+                      <ArrowLeft className="w-4 h-4" /> Back to Series
+                    </motion.button>
+                    <span className="text-xs text-zinc-500 font-mono font-semibold uppercase">{selectedSeries}</span>
+                  </div>
+                )}
+
+                {/* Models Grid: vertical cards matching tablet showcase design */}
+                <div className={`grid grid-cols-1 sm:grid-cols-2 ${selectedModel ? 'lg:grid-cols-2' : 'lg:grid-cols-3'} gap-6`}>
+                  {filteredModels.length === 0 && (
+                    <div className="col-span-full py-12 px-4 text-center border border-dashed border-ice-border rounded-2xl bg-canvas-pure">
+                      <Smartphone className="w-10 h-10 text-ink-muted mx-auto mb-3" />
+                      <h4 className="text-base font-semibold text-ink-navy">No models found</h4>
+                      <p className="text-xs text-ink-muted mt-1 max-w-xs mx-auto">
+                        No results for <span className="font-mono text-cobalt">"{searchQuery}"</span>.<br />
+                        Try a brand name (e.g. "Apple", "Samsung") or a model number.
+                      </p>
+                      <button
+                        onClick={() => setSearchQuery('')}
+                        className="mt-4 px-4 py-2 bg-cobalt hover:bg-cobalt-hover text-white text-xs font-bold rounded-lg transition-all"
+                        style={{ minHeight: '36px' }}
+                      >
+                        Clear Search
+                      </button>
+                    </div>
+                  )}
+                  <AnimatePresence>
+                    {filteredModels.map(model => {
+                      const isSelected = selectedModel?.id === model.id;
+                      const hasSelection = selectedModel !== null;
+                      return (
+                        <motion.div
+                          layout="position"
+                          key={model.id}
+                          whileHover={{ y: -6, boxShadow: "0 10px 25px -5px rgba(59, 130, 246, 0.08), 0 8px 16px -8px rgba(59, 130, 246, 0.08)" }}
+                          whileTap={{ scale: 0.985 }}
+                          onClick={() => handleModelClick(model)}
+                          className={`cursor-pointer bg-canvas-pure border rounded-2xl p-6 shadow-sm flex flex-col justify-between group transition-colors duration-300 ${
+                            isSelected
+                              ? 'border-cobalt ring-2 ring-cobalt/20 scale-[1.01] opacity-100 z-10 shadow-md'
+                              : hasSelection
+                              ? 'border-ice-border opacity-50 hover:opacity-100 hover:scale-[1.005]'
+                              : 'border-ice-border hover:border-cobalt/40'
+                          }`}
+                        >
+                          <div>
+                            <div className="flex items-center justify-between mb-4">
+                              <span className={`px-2.5 py-1 text-[10px] font-mono font-bold rounded-full uppercase tracking-wider ${
+                                model.category === 'flagship'
+                                  ? 'bg-amber-100 text-amber-800'
+                                  : model.category === 'premium'
+                                  ? 'bg-blue-50 text-blue-700'
+                                  : 'bg-zinc-100 text-zinc-800'
+                              }`}>
+                                {model.category || (model.brandId === 'brand-apple' ? 'Apple iPhone' : 'Smartphone')}
+                              </span>
+                              <span className="text-[10px] font-mono text-zinc-400">{model.releaseYear}</span>
+                            </div>
+
+                            <h3 className="text-xl font-bold font-outfit text-ink-navy uppercase group-hover:text-cobalt transition-colors text-left">
+                              {model.name}
+                            </h3>
+                            {model.series && (
+                              <p className="text-xs font-mono text-zinc-400 mt-1 text-left">Series: {model.series}</p>
+                            )}
+
+                            {/* Smartphone Image */}
+                            <div className="my-6 h-44 flex items-center justify-center pointer-events-none">
+                              <img
+                                src={getDeviceImage(model.id, model.brandId, undefined, model.imageUrl)}
+                                alt={model.name}
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = getDeviceImage('', model.brandId);
+                                }}
+                                className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
+                                draggable={false}
+                              />
+                            </div>
+                          </div>
+
+                          <div className="pt-4 border-t border-ice-border/60 flex items-center justify-between">
+                            <div className="text-left">
+                              <span className="text-[10px] text-zinc-400 uppercase font-mono block">Up to Get</span>
+                              <span className="text-lg font-extrabold text-emerald-600 font-mono">
+                                {formatPrice(model.basePrice128GB)}
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              className="px-3.5 py-1.5 rounded-lg bg-cobalt text-white text-xs font-bold flex items-center gap-1 group-hover:bg-cobalt/90 transition-all shadow-xs"
+                            >
+                              <span>Sell Now</span>
+                              <ArrowRight className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </AnimatePresence>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
 
         {/* Right Side: Variant selector — slides in on desktop, stacks on mobile */}
         <AnimatePresence>
           {selectedModel && (
             <motion.div
               ref={variantSelectorRef}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 20 }}
-              className="lg:col-span-5 bg-canvas-pure rounded-sm border border-ice-border p-4 sm:p-6"
+              initial={{ opacity: 0, x: 24, y: 0 }}
+              animate={{ opacity: 1, x: 0, y: 0 }}
+              exit={{ opacity: 0, x: 24, y: 0 }}
+              transition={{ type: "spring", stiffness: 280, damping: 26 }}
+              className="lg:col-span-5 bg-canvas-pure rounded-md border border-ice-border p-4 sm:p-6 shadow-md"
             >
               <div className="mb-6 pb-6 border-b border-white/[0.04] text-left">
                 <div className="flex items-center gap-3 mb-2">
@@ -1039,20 +1106,22 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                     const isSelected = selectedStorage === storage;
                     const hasSelection = selectedStorage !== null;
                     return (
-                      <button
+                      <motion.button
                         key={storage}
+                        whileHover={{ y: -1 }}
+                        whileTap={{ scale: 0.97 }}
                         onClick={() => handleStorageSelect(storage)}
-                        className={`py-3.5 rounded-sm border text-sm font-semibold transition-all duration-300 ${
+                        className={`py-3.5 rounded-md border text-sm font-semibold transition-all duration-300 ${
                           isSelected
-                            ? 'bg-cobalt text-white border-cobalt scale-[1.01] opacity-100 shadow-[0_0_10px_rgba(59,130,246,0.2)]'
+                            ? 'bg-cobalt text-white border-cobalt shadow-[0_4px_12px_rgba(29,78,216,0.2)] opacity-100'
                             : hasSelection
                             ? 'bg-canvas-white text-ink-navy border-ice-border opacity-40 hover:opacity-75'
-                            : 'bg-canvas-white text-ink-navy border-ice-border hover:border-cobalt/30 hover:scale-[1.005]'
+                            : 'bg-canvas-white text-ink-navy border-ice-border hover:border-cobalt/30 hover:bg-cobalt-light/5'
                         }`}
                         style={{ minHeight: '48px' }}
                       >
                         {storage >= 1024 ? '1 TB' : `${storage} GB`}
-                      </button>
+                      </motion.button>
                     );
                   })}
                 </div>
@@ -1073,13 +1142,15 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                       </div>
                     </div>
 
-                    <button
+                    <motion.button
+                      whileHover={{ scale: 1.01 }}
+                      whileTap={{ scale: 0.99 }}
                       onClick={handleConfirm}
-                      className="w-full bg-cobalt hover:bg-cobalt-hover text-white py-4 rounded-sm font-bold transition-all duration-300 flex items-center justify-center gap-2 hover:scale-[1.01] focus-ring"
+                      className="w-full bg-cobalt hover:bg-cobalt-hover text-white py-4 rounded-md font-bold transition-all duration-300 flex items-center justify-center gap-2 shadow-[0_4px_14px_rgba(29,78,216,0.35)] hover:shadow-[0_6px_20px_rgba(29,78,216,0.45)] focus-ring"
                     >
                       Diagnose Condition
                       <ChevronRight className="w-5 h-5" />
-                    </button>
+                    </motion.button>
                   </motion.div>
                 )}
               </AnimatePresence>

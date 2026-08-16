@@ -85,7 +85,7 @@ export function calculateValuation(
 
   const totalDeductedSum = deductions.reduce((sum, d) => sum + d.totalDeducted, 0);
 
-  // Clamp to a minimum recycling floor (8% of base, minimum ₹500)
+  // Clamp to a minimum resale floor (8% of base, minimum ₹500)
   let finalPrice = basePrice - totalDeductedSum;
   const baselineRecycleOffer = Math.max(500, Math.round(basePrice * 0.08));
   if (finalPrice < baselineRecycleOffer) {

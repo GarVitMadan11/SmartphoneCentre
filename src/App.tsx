@@ -191,7 +191,7 @@ function SpecsModal({ isOpen, onClose }: SpecsModalProps) {
               <div>• <strong>Price_Base</strong>: Anchor price set for a flawless device variant.</div>
               <div>• <strong>Deduction_Fixed</strong>: Cash deduction applied for accessories (e.g. missing box).</div>
               <div>• <strong>Deduction_Percentage</strong>: Proportional penalty for wear/damage (e.g. 28% for flagship screen crack).</div>
-              <div>• <strong>Category Caps</strong>: Screen (Max 40%), Body (Max 20%), Camera (Max 18%), Battery (Max 8%), Accessories (Max 12%). Prevent compounding deductions from driving value below an 8% baseline recycling floor.</div>
+              <div>• <strong>Category Caps</strong>: Screen (Max 40%), Body (Max 20%), Camera (Max 18%), Battery (Max 8%), Accessories (Max 12%). Prevent compounding deductions from driving value below an 8% baseline resale floor.</div>
             </div>
           </div>
 
@@ -543,11 +543,7 @@ export default function App() {
 
           {/* Logo */}
           <div className="flex items-center gap-2 cursor-pointer flex-shrink-0" onClick={() => { handleReset(); navigate('/'); }}>
-            <div className="w-8 h-8 rounded-lg bg-cobalt flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-              </svg>
-            </div>
+            <img src="/logo.svg" className="w-8 h-8 object-contain rounded-md" alt="Rephonix Logo" />
             <span className="text-xl font-extrabold text-ink-navy tracking-tight">Re<span className="text-secondary">phonix</span></span>
           </div>
 
@@ -1527,12 +1523,8 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6 pb-8 border-b border-ice-border/40">
             {/* Logo */}
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-cobalt/10 flex items-center justify-center">
-                <svg className="w-5 h-5 text-cobalt" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                </svg>
-              </div>
+            <div className="flex items-center gap-2 cursor-pointer" onClick={() => { handleReset(); navigate('/'); }}>
+              <img src="/logo.svg" className="w-8 h-8 object-contain rounded-md" alt="Rephonix Logo" />
               <span className="text-xl font-extrabold text-ink-navy tracking-tight">Re<span className="text-secondary">phonix</span></span>
             </div>
 
@@ -1550,7 +1542,7 @@ export default function App() {
 
           <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-[10px] sm:text-xs text-ink-muted gap-4">
             <p>&copy; {new Date().getFullYear()} Rephonix. All rights reserved.</p>
-            <p>Built with ❤️ for secure, sustainable device recycling.</p>
+            <p>Built with ❤️ for secure, sustainable device resale.</p>
           </div>
         </div>
       </footer>

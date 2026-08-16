@@ -1078,11 +1078,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                       {/* Company Header Logo for Quote & Print */}
                       <div className="flex items-center justify-between pb-5 mb-5 border-b border-zinc-800 print-border">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-lg bg-cobalt print-logo-bg flex items-center justify-center flex-shrink-0 shadow-sm">
-                            <svg className="w-5 h-5 text-white print-logo-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                            </svg>
-                          </div>
+                          <img src="/logo.svg" className="w-9 h-9 object-contain rounded-md print-logo-bg flex-shrink-0 shadow-sm" alt="Rephonix Logo" />
                           <div>
                             <span className="text-lg font-extrabold text-white print-text-dark tracking-tight block leading-none">
                               Re<span className="text-sky-400 print-text-cobalt">phonix</span>
