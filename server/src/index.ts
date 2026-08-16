@@ -74,10 +74,18 @@ app.use(compression());
 app.set('trust proxy', process.env.NODE_ENV === 'production' ? 'loopback, linklocal, uniquelocal' : 1);
 
 // ── Parse allowed origins from env ───────────────────────────────────────────
-const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? 'http://localhost:5173,http://localhost:3000,https://rephonix.in,https://www.rephonix.in')
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? 'http://localhost:5173,http://localhost:3000')
   .split(',')
-  .map(o => o.trim())
+  .map(o => o.trim().replace(/\/$/, ''))
   .filter(Boolean);
+
+// Always ensure production domains are explicitly allowed
+if (!ALLOWED_ORIGINS.includes('https://rephonix.in')) {
+  ALLOWED_ORIGINS.push('https://rephonix.in');
+}
+if (!ALLOWED_ORIGINS.includes('https://www.rephonix.in')) {
+  ALLOWED_ORIGINS.push('https://www.rephonix.in');
+}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SECURITY MIDDLEWARE
@@ -105,11 +113,12 @@ app.use(cors({
     // No origin = same-origin request or server-to-server — always allowed.
     if (!origin) return callback(null, true);
     try {
-      const hostname = new URL(origin).hostname;
+      const cleanOrigin = origin.trim().replace(/\/$/, '');
+      const hostname = new URL(cleanOrigin).hostname;
       // Whitelist: explicit allowed origins OR any *.onrender.com subdomain (Render preview deployments)
       // NOTE: NODE_ENV bypass has been removed — all environments use the explicit whitelist.
       if (
-        ALLOWED_ORIGINS.includes(origin) ||
+        ALLOWED_ORIGINS.includes(cleanOrigin) ||
         hostname.endsWith('.onrender.com') ||
         hostname === 'localhost' ||
         hostname === '127.0.0.1'
@@ -117,7 +126,9 @@ app.use(cors({
         return callback(null, true);
       }
     } catch { /* ignore invalid origin URL */ }
-    callback(new Error(`CORS policy: origin '${origin}' is not allowed.`));
+    
+    // Safety: If origin is not allowed, do not crash with 500 error, just refuse CORS headers
+    callback(null, false);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
@@ -136,6 +147,17 @@ const distExists = fs.existsSync(path.join(distPath, 'index.html'));
 
 if (distExists) {
   console.log(`📁 Serving frontend static build from: ${distPath}`);
+  try {
+    const files = fs.readdirSync(distPath);
+    console.log(`   Files in dist:`, files);
+    if (files.includes('assets')) {
+      const assetFiles = fs.readdirSync(path.join(distPath, 'assets'));
+      console.log(`   Files in dist/assets (first 10):`, assetFiles.slice(0, 10), assetFiles.length > 10 ? `... (${assetFiles.length} files total)` : '');
+    }
+  } catch (err: any) {
+    console.error(`   Error reading dist directory contents:`, err.message || err);
+  }
+
   app.use(express.static(distPath, {
     setHeaders: (res, filePath) => {
       if (filePath.endsWith('index.html')) {
@@ -147,6 +169,8 @@ if (distExists) {
   }));
 } else {
   console.warn(`⚠️ Frontend static build not found at: ${distPath}`);
+  console.warn(`   process.cwd(): ${process.cwd()}`);
+  console.warn(`   __dirname: ${__dirname}`);
 }
 
 // ── Rate limiting ─────────────────────────────────────────────────────────
