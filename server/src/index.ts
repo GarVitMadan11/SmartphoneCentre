@@ -74,7 +74,7 @@ app.use(compression());
 app.set('trust proxy', process.env.NODE_ENV === 'production' ? 'loopback, linklocal, uniquelocal' : 1);
 
 // ── Parse allowed origins from env ───────────────────────────────────────────
-const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? 'http://localhost:5173,http://localhost:3000')
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? 'http://localhost:5173,http://localhost:3000,https://rephonix.in,https://www.rephonix.in')
   .split(',')
   .map(o => o.trim())
   .filter(Boolean);
@@ -95,7 +95,7 @@ app.use(helmet({
       styleSrcElem: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
       imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
-      connectSrc: ["'self'", 'https://api.emailjs.com', 'http://localhost:4000', 'http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002', 'http://localhost:5173', 'http://localhost:5174'],
+      connectSrc: ["'self'", 'https://api.emailjs.com', 'http://localhost:4000', 'http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002', 'http://localhost:5173', 'http://localhost:5174', 'https://rephonix.in', 'https://www.rephonix.in'],
     },
   },
 }));
@@ -129,6 +129,25 @@ app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 // The previous 4mb limit enabled memory-exhaustion DoS with a single large request.
 app.use(express.json({ limit: '50kb' }));
 app.use(express.urlencoded({ extended: false, limit: '50kb' }));
+
+// ── Serve frontend static assets in production ────────────────────────────────
+const distPath = path.resolve(__dirname, '../../dist');
+const distExists = fs.existsSync(path.join(distPath, 'index.html'));
+
+if (distExists) {
+  console.log(`📁 Serving frontend static build from: ${distPath}`);
+  app.use(express.static(distPath, {
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('index.html')) {
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+      }
+    },
+  }));
+} else {
+  console.warn(`⚠️ Frontend static build not found at: ${distPath}`);
+}
 
 // ── Rate limiting ─────────────────────────────────────────────────────────
 const globalLimiter = rateLimit({
@@ -886,44 +905,19 @@ app.all(/^\/api(\/|$)/, (_req, res) => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// SERVE FRONTEND STATIC ASSETS IN PRODUCTION
+// SPA FALLBACK FOR FRONTEND NAVIGATION
 // ═══════════════════════════════════════════════════════════════════════════
-const possibleDistPaths = [
-  path.resolve(process.cwd(), 'dist'),
-  path.resolve(process.cwd(), '../dist'),
-  path.resolve(__dirname, '../../dist'),
-  path.resolve(__dirname, '../../../dist'),
-];
-
-const distPath = possibleDistPaths.find(p => fs.existsSync(path.join(p, 'index.html')));
-if (distPath) {
-  console.log(`📁 Serving frontend static build from: ${distPath}`);
-
-  // Serve static assets. For index.html specifically, force no-cache so browsers
-  // always fetch a fresh copy — preventing them from loading a stale JS bundle hash.
-  app.use(express.static(distPath, {
-    setHeaders: (res, filePath) => {
-      if (filePath.endsWith('index.html')) {
-        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-        res.setHeader('Pragma', 'no-cache');
-        res.setHeader('Expires', '0');
-      }
-    },
-  }));
-
-  // SPA catch-all: serve index.html for any non-API, non-static GET/HEAD navigation.
-  // CRITICAL: Use app.use() + explicit guards instead of app.get('*') because in
-  // Express 5 (path-to-regexp@8) a bare `*` wildcard can match ALL HTTP methods,
-  // causing PATCH/POST/DELETE requests to receive index.html (status 200) instead
-  // of being processed by the correct route handler — which was the root cause of
-  // the "Server returned non-JSON response (200)" error in the Admin Panel.
+if (distExists) {
   app.use((req, res, next) => {
     if (req.method !== 'GET' && req.method !== 'HEAD') return next();
     if (req.path.startsWith('/api')) return next();
+    if (req.path.startsWith('/assets')) return next();
+    if (path.extname(req.path)) return next();
+
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
-    res.sendFile(path.join(distPath!, 'index.html'));
+    res.sendFile(path.join(distPath, 'index.html'));
   });
 }
 
