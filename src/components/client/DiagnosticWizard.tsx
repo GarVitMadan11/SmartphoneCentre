@@ -1,14 +1,13 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { Model, Variant, getDefectRulesForCategory, DefectRule, isAppleDevice } from '../../data/mockDatabase';
+import { Model, Variant, getDefectRulesForCategory, DefectRule, isAppleDevice, isSmartwatchDevice, isTabletDevice } from '../../data/mockDatabase';
 import { calculateValuation } from '../../utils/valuation';
 import { 
   ArrowLeft, Check, ChevronRight, Activity, Sparkles, 
-  Smartphone, Box, Zap, Trash2, ShieldCheck, Printer
+  Smartphone, Tablet, Box, Zap, Trash2, ShieldCheck, Printer, Watch
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getIllustration } from './Illustrations';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
-
 
 const getEngineeringLabel = (description: string) => {
   const mapping: { [key: string]: string } = {
@@ -41,7 +40,34 @@ const getEngineeringLabel = (description: string) => {
     'iCloud / Apple ID Locked':                         'Activation Lock — Zero Resale Value',
     'Google Account / Factory Reset Protection Locked': 'Factory Reset Protection Lock — Zero Resale Value',
     'Biometrics Faulty (Face ID)':                      'Biometric Sensor Security Fee',
-    'Biometrics Faulty (Fingerprint / Face Unlock)':    'Biometric Sensor Security Fee'
+    'Biometrics Faulty (Fingerprint / Face Unlock)':    'Biometric Sensor Security Fee',
+    
+    // Smartwatch specific engineering fee labels
+    'Cracked Watch Glass / Sapphire Dial':               'Watch Glass / Sapphire Dial Restoration',
+    'Cracked Super AMOLED / Gorilla Glass':              'Super AMOLED Glass Panel Restoration',
+    'Glass Lens & Bezel Micro-Scratches':                'Watch Glass & Bezel Micro-Polishing',
+    'Always-On Display Burn-in / Lines':                 'Watch Display Module Replacement',
+    'Touchscreen / Touch Bezel Unresponsive':            'Digitizer / Rotary Touch Repair',
+    'Titanium / Aluminum Casing Dented':                 'Titanium Casing Structural Re-alignment',
+    'Armor Aluminum / Stainless Casing Dented':          'Armor Aluminum Casing Refinishing',
+    'Digital Crown / Action Button Faulty':              'Digital Crown & Action Flex Repair',
+    'Rotating Bezel / Home Button Faulty':               'Rotary Bezel Mechanism Repair',
+    'Water Resistance Seal Fail (50m/100m)':             '50m/100m Swim Gasket & Seal Replacement',
+    'Original Watch Band / Strap Missing or Heavy Damage': 'OEM Watch Band De-allocation Fee',
+    'PPG Heart Rate & SpO2 Sensor Faulty':               'PPG Health Sensor Array Recalibration',
+    'ECG App / Electrical Heart Sensor Fail':            'ECG Electrode Controller Compliance Levy',
+    'ECG / BIA Body Composition Sensor Fail':            'BIA Body Composition Sensor Recalibration',
+    'Fall & Crash Detection Sensors Faulty':             'Motion Gyroscope & Fall Sensor Repair',
+    'Speaker, Mic or Emergency Siren Faulty':            'Audio & Emergency Siren Assembly Fee',
+    'Speaker / Microphone Call Audio Faulty':            'Speaker & Microphone Assembly Fee',
+    'Wireless Magnetic Receiver Charge Faulty':          'Inductive Charging Receiver Coil Repair',
+    'Cellular / LTE eSIM Functionality Faulty':          'eSIM Modem Transceiver Recalibration',
+    'Wi-Fi, Bluetooth & Dual-Frequency GPS Fail':        'Wireless Antenna & GPS Array Repair',
+    'Missing Original Magnetic Fast Charging Puck':      'OEM Magnetic Fast Charger De-allocation',
+    'Missing Original Retail Watch Box':                 'OEM Watch Retail Packaging De-allocation',
+    'Smartwatch Does Not Turn On':                       'Watch Logic Board Hardware Failure',
+    'iCloud / Apple Watch Activation Locked':            'Activation Lock — Zero Resale Value',
+    'Samsung Account / Google Knox Lock Active':         'Knox Lock — Zero Resale Value'
   };
   return mapping[description] || description;
 };
@@ -70,22 +96,55 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
   setStep
 }) => {
   const isApple = useMemo(() => isAppleDevice(model.brandId, model.name), [model]);
+  const isWatch = useMemo(() => isSmartwatchDevice(model.brandId, model.name, model.id), [model]);
+  const isTablet = useMemo(() => isTabletDevice(model.brandId, model.name, model.id), [model]);
+  const deviceType: 'phone' | 'watch' | 'tablet' = isWatch ? 'watch' : isTablet ? 'tablet' : 'phone';
 
-  // Obtain rules based on model category and brand
-  const rules = useMemo(() => getDefectRulesForCategory(model.category, model.brandId, model.name), [model]);
+  // Obtain rules based on model category, brand and model ID
+  const rules = useMemo(() => getDefectRulesForCategory(model.category, model.brandId, model.name, model.id), [model]);
 
-  const stepsList = [
-    { 
-      title: isApple ? 'Boot & iCloud' : 'Boot & Account Lock', 
-      icon: Zap, 
-      desc: isApple ? 'Power on & Apple ID status' : 'Power on & Google Account lock status' 
-    },
-    { title: 'Screen & Display',       icon: Smartphone, desc: isApple ? 'Touch, True Tone & glass' : 'Touch, calibration & glass' },
-    { title: 'Body & Frame',           icon: ShieldCheck, desc: 'Frame, buttons, screws & seal' },
-    { title: 'Hardware',               icon: Activity,   desc: isApple ? 'Camera, Face ID, audio & restart' : 'Camera, biometrics, audio & restart' },
-    { title: 'Connectivity',           icon: Zap,        desc: 'Battery, network, Wi-Fi & parts' },
-    { title: 'Accessories & Docs',     icon: Box,        desc: 'Box, charger & bill' },
-  ];
+  const stepsList = useMemo(() => {
+    if (isWatch) {
+      return [
+        { 
+          title: isApple ? 'Boot & Pair Lock' : 'Boot & Knox Lock', 
+          icon: Zap, 
+          desc: isApple ? 'Power on & Apple ID pair status' : 'Power on & Samsung Knox lock status' 
+        },
+        { title: 'Display & Watch Dial',   icon: Watch,       desc: 'Touch, Sapphire/Ion-X glass & burn-in' },
+        { title: 'Casing & Crown',         icon: ShieldCheck, desc: 'Frame, Digital Crown / Bezel & Band' },
+        { title: 'Health & Sensors',       icon: Activity,   desc: 'Heart rate, ECG, SpO2 & fall detection' },
+        { title: 'Battery & Wireless',     icon: Zap,        desc: 'Battery health, magnetic charging & GPS' },
+        { title: 'Accessories & Docs',     icon: Box,        desc: 'Charging puck, box & bill' },
+      ];
+    }
+    if (isTablet) {
+      return [
+        { 
+          title: isApple ? 'Boot & iCloud' : 'Boot & Account Lock', 
+          icon: Zap, 
+          desc: isApple ? 'Power on & Apple ID status' : 'Power on & Google Account lock status' 
+        },
+        { title: 'Screen & Display',       icon: Tablet,     desc: isApple ? 'Touch, True Tone & glass' : 'Touch, calibration & glass' },
+        { title: 'Body & Frame',           icon: ShieldCheck, desc: 'Aluminium chassis, buttons & seal' },
+        { title: 'Hardware',               icon: Activity,   desc: isApple ? 'Camera, Face ID/Touch ID, audio & restart' : 'Camera, biometrics, audio & restart' },
+        { title: 'Connectivity',           icon: Zap,        desc: 'Battery, cellular, Wi-Fi & parts' },
+        { title: 'Accessories & Docs',     icon: Box,        desc: 'Box, charger & bill' },
+      ];
+    }
+    return [
+      { 
+        title: isApple ? 'Boot & iCloud' : 'Boot & Account Lock', 
+        icon: Zap, 
+        desc: isApple ? 'Power on & Apple ID status' : 'Power on & Google Account lock status' 
+      },
+      { title: 'Screen & Display',       icon: Smartphone, desc: isApple ? 'Touch, True Tone & glass' : 'Touch, calibration & glass' },
+      { title: 'Body & Frame',           icon: ShieldCheck, desc: 'Frame, buttons, screws & seal' },
+      { title: 'Hardware',               icon: Activity,   desc: isApple ? 'Camera, Face ID, audio & restart' : 'Camera, biometrics, audio & restart' },
+      { title: 'Connectivity',           icon: Zap,        desc: 'Battery, network, Wi-Fi & parts' },
+      { title: 'Accessories & Docs',     icon: Box,        desc: 'Box, charger & bill' },
+    ];
+  }, [isApple, isWatch, isTablet]);
 
   // Confirmation state — session only, never persisted to localStorage
   const [screenConfirmed, setScreenConfirmed] = useState(false);
@@ -295,12 +354,21 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
             <ArrowLeft className="w-4 h-4" aria-hidden="true" />
           </button>
           
-          {/* Phone Vector Silhouette */}
-          <div className="hidden sm:flex w-10 h-10 rounded-sm bg-cobalt-light border border-white/[0.06] items-center justify-center text-cobalt flex-shrink-0 shadow-sm">
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
-              <rect x="5" y="2" width="14" height="20" rx="3" />
-              <line x1="12" y1="18" x2="12" y2="18.01" strokeLinecap="round" strokeWidth="2" />
-            </svg>
+          {/* Device Vector Silhouette Badge */}
+          <div className={`hidden sm:flex w-10 h-10 rounded-sm items-center justify-center flex-shrink-0 shadow-sm border ${
+            isWatch
+              ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+              : isTablet
+              ? 'bg-violet-500/10 border-violet-500/20 text-violet-600 dark:text-violet-400'
+              : 'bg-cobalt-light border-white/[0.06] text-cobalt'
+          }`}>
+            {isWatch ? (
+              <Watch className="w-5 h-5" aria-hidden="true" />
+            ) : isTablet ? (
+              <Tablet className="w-5 h-5" aria-hidden="true" />
+            ) : (
+              <Smartphone className="w-5 h-5" aria-hidden="true" />
+            )}
           </div>
 
           <div className="min-w-0">
@@ -460,7 +528,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                       style={{ minHeight: '100px' }}
                     >
                       <div className="w-12 h-12 rounded-sm bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform overflow-hidden">
-                        {getIllustration('power-on')}
+                        {getIllustration('power-on', deviceType)}
                       </div>
                       <h4 className="font-semibold text-sm text-ink-navy">Powers On</h4>
                       <p className="text-xs text-ink-muted mt-0.5 font-light">Boots to lock screen and functions normally.</p>
@@ -472,7 +540,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                       style={{ minHeight: '100px' }}
                     >
                       <div className="w-12 h-12 rounded-sm bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform overflow-hidden">
-                        {getIllustration('defect-critical-power')}
+                        {getIllustration('defect-critical-power', deviceType)}
                       </div>
                       <h4 className="font-semibold text-sm text-red-400">Dead / Fails to Boot</h4>
                       <p className="text-xs text-ink-muted mt-0.5 font-light">Does not turn on, water damaged, or stuck on boot loop.</p>
@@ -524,7 +592,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         style={{ minHeight: '72px' }}
                       >
                         <div className="w-14 h-14 flex-shrink-0 rounded-sm bg-ice-gray border border-ice-border flex items-center justify-center overflow-hidden">
-                          {getIllustration('screen-flawless')}
+                          {getIllustration('screen-flawless', deviceType)}
                         </div>
                         <div className="flex-1 min-w-0">
                           <h4 className="font-semibold text-sm text-ink-navy">Flawless Display</h4>
@@ -580,7 +648,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         style={{ minHeight: '72px' }}
                       >
                         <div className="w-14 h-14 flex-shrink-0 rounded-sm bg-ice-gray border border-ice-border flex items-center justify-center overflow-hidden">
-                          {getIllustration(defect.id)}
+                          {getIllustration(defect.id, deviceType)}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
@@ -645,7 +713,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         style={{ minHeight: '72px' }}
                       >
                         <div className="w-14 h-14 flex-shrink-0 rounded-sm bg-ice-gray border border-ice-border flex items-center justify-center overflow-hidden">
-                          {getIllustration('body-flawless')}
+                          {getIllustration('body-flawless', deviceType)}
                         </div>
                         <div className="flex-1 min-w-0">
                           <h4 className="font-semibold text-sm text-ink-navy">Flawless Frame</h4>
@@ -701,7 +769,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         style={{ minHeight: '72px' }}
                       >
                         <div className="w-14 h-14 flex-shrink-0 rounded-sm bg-ice-gray border border-ice-border flex items-center justify-center overflow-hidden">
-                          {getIllustration(defect.id)}
+                          {getIllustration(defect.id, deviceType)}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
@@ -811,7 +879,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         style={{ minHeight: '72px' }}
                       >
                         <div className="w-14 h-14 flex-shrink-0 rounded-sm bg-ice-gray border border-ice-border flex items-center justify-center overflow-hidden">
-                          {getIllustration(defect.id)}
+                          {getIllustration(defect.id, deviceType)}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
@@ -921,7 +989,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         style={{ minHeight: '72px' }}
                       >
                         <div className="w-14 h-14 flex-shrink-0 rounded-sm bg-ice-gray border border-ice-border flex items-center justify-center overflow-hidden">
-                          {getIllustration(defect.id)}
+                          {getIllustration(defect.id, deviceType)}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
@@ -1029,7 +1097,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         style={{ minHeight: '72px' }}
                       >
                         <div className="w-14 h-14 flex-shrink-0 rounded-sm bg-ice-gray border border-ice-border flex items-center justify-center overflow-hidden">
-                          {getIllustration(defect.id)}
+                          {getIllustration(defect.id, deviceType)}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">

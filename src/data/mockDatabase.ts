@@ -51,15 +51,234 @@ export function isAppleDevice(brandId?: string, modelName?: string): boolean {
   if (!brandId && !modelName) return false;
   const b = (brandId || '').toLowerCase();
   const m = (modelName || '').toLowerCase();
-  return b === 'brand-apple' || b === 'apple' || m.includes('iphone') || m.includes('ipad') || m.includes('apple');
+  return b === 'brand-apple' || b === 'apple' || m.includes('iphone') || m.includes('ipad') || m.includes('apple') || m.includes('watch');
+}
+
+export function isSmartwatchDevice(brandId?: string, modelName?: string, modelId?: string): boolean {
+  if (modelId && SMARTWATCH_MODELS.some(m => m.id === modelId)) return true;
+  const b = (brandId || '').toLowerCase();
+  const m = (modelName || '').toLowerCase();
+  const id = (modelId || '').toLowerCase();
+  return m.includes('watch') || id.includes('watch') || b.includes('watch');
+}
+
+export function isTabletDevice(_brandId?: string, modelName?: string, modelId?: string): boolean {
+  if (modelId && TABLET_MODELS.some(m => m.id === modelId)) return true;
+  const m = (modelName || '').toLowerCase();
+  const id = (modelId || '').toLowerCase();
+  return m.includes('ipad') || m.includes('tab') || id.includes('ipad') || id.includes('tab');
+}
+
+export function getSmartwatchDefectRules(
+  category: DeviceCategory,
+  brandId?: string,
+  modelName?: string
+): DefectRule[] {
+  const isApple = isAppleDevice(brandId, modelName);
+  const screenPct   = category === 'flagship' ? 0.30 : category === 'premium' ? 0.24 : 0.18;
+  const bodyDentPct = category === 'flagship' ? 0.08 : category === 'premium' ? 0.06 : 0.04;
+  const fixedBody   = category === 'flagship' ? 2500 : category === 'premium' ? 1500 : 1000;
+
+  return [
+    // ── BOOT & PAIR LOCK ─────────────────────────────────────────────────
+    {
+      id: 'defect-critical-power',
+      category: 'accessories',
+      description: 'Smartwatch Does Not Turn On',
+      subText: 'Watch screen stays dark, no haptic boot feedback, or battery fails to accept charge.',
+      deductionFixed: 0,
+      deductionPercentage: 1.0,
+      isCriticalFailure: true
+    },
+    {
+      id: 'defect-critical-icloud',
+      category: 'accessories',
+      description: isApple ? 'iCloud / Apple Watch Activation Locked' : 'Samsung Account / Google Knox Lock Active',
+      subText: isApple 
+        ? 'Apple Watch is still paired to an Apple ID or Activation Lock is enabled on iCloud.'
+        : 'Galaxy Watch is still paired to a Samsung/Google account or Knox security lock is active.',
+      deductionFixed: 0,
+      deductionPercentage: 1.0,
+      isCriticalFailure: true
+    },
+
+    // ── DISPLAY & WATCH DIAL ─────────────────────────────────────────────
+    {
+      id: 'defect-watch-screen-cracked',
+      category: 'screen',
+      description: isApple ? 'Cracked Watch Glass / Sapphire Dial' : 'Cracked Super AMOLED / Gorilla Glass',
+      subText: 'Visible cracks, chipped edges, or shattered top crystal lens.',
+      deductionFixed: 0,
+      deductionPercentage: screenPct
+    },
+    {
+      id: 'defect-watch-screen-scratches',
+      category: 'screen',
+      description: 'Glass Lens & Bezel Micro-Scratches',
+      subText: 'Scratches on the watch crystal face or visible bezel abrasions under direct light.',
+      deductionFixed: category === 'flagship' ? 1500 : 800,
+      deductionPercentage: 0.03
+    },
+    {
+      id: 'defect-watch-screen-burn',
+      category: 'screen',
+      description: 'Always-On Display Burn-in / Lines',
+      subText: 'Ghosting, OLED image retention, or vertical glowing lines on watch face.',
+      deductionFixed: 0,
+      deductionPercentage: 0.22
+    },
+    {
+      id: 'defect-watch-screen-touch',
+      category: 'screen',
+      description: 'Touchscreen / Touch Bezel Unresponsive',
+      subText: 'Unresponsive taps, ghost swipes, or digital touch layer failure.',
+      deductionFixed: 0,
+      deductionPercentage: 0.15
+    },
+
+    // ── CASING, CROWN & WATER SEAL ────────────────────────────────────────
+    {
+      id: 'defect-watch-body-dented',
+      category: 'body',
+      description: isApple ? 'Titanium / Aluminum Casing Dented' : 'Armor Aluminum / Stainless Casing Dented',
+      subText: 'Deep frame dents, heavy metal gouges, or damaged watch lug mounts.',
+      deductionFixed: fixedBody,
+      deductionPercentage: bodyDentPct
+    },
+    {
+      id: 'defect-watch-crown-faulty',
+      category: 'body',
+      description: isApple ? 'Digital Crown / Action Button Faulty' : 'Rotating Bezel / Home Button Faulty',
+      subText: isApple 
+        ? 'Digital Crown rotary scroll, press click, or side Action button is stuck/unresponsive.'
+        : 'Rotating physical/touch bezel or side power buttons are sticky/loose/faulty.',
+      deductionFixed: isApple ? 2200 : 1600,
+      deductionPercentage: 0
+    },
+    {
+      id: 'defect-watch-water-seal',
+      category: 'body',
+      description: 'Water Resistance Seal Fail (50m/100m)',
+      subText: 'Seal compromised from high-velocity water, drops, or prior repair opening.',
+      deductionFixed: category === 'flagship' ? 2000 : 1200,
+      deductionPercentage: 0
+    },
+    {
+      id: 'defect-watch-strap-damaged',
+      category: 'body',
+      description: 'Original Watch Band / Strap Missing or Heavy Damage',
+      subText: 'Original OEM sport band, loop, or leather strap is missing or torn.',
+      deductionFixed: isApple ? 2000 : 1400,
+      deductionPercentage: 0
+    },
+
+    // ── HEALTH & BIOMETRIC SENSORS ────────────────────────────────────────
+    {
+      id: 'defect-watch-sensor-heart',
+      category: 'functionality',
+      description: 'PPG Heart Rate & SpO2 Sensor Faulty',
+      subText: 'Optical heart rate monitor or Blood Oxygen sensor fails to read pulse/oxygen levels.',
+      deductionFixed: 2500,
+      deductionPercentage: 0.08
+    },
+    {
+      id: 'defect-watch-sensor-ecg',
+      category: 'functionality',
+      description: isApple ? 'ECG App / Electrical Heart Sensor Fail' : 'ECG / BIA Body Composition Sensor Fail',
+      subText: 'Electrical heart sensor electrodes in Digital Crown/back crystal fail ECG recording.',
+      deductionFixed: 2000,
+      deductionPercentage: 0.05
+    },
+    {
+      id: 'defect-watch-sensor-motion',
+      category: 'functionality',
+      description: 'Fall & Crash Detection Sensors Faulty',
+      subText: 'High-g accelerometer or gyroscope calibration error affecting workout/fall detection.',
+      deductionFixed: 1800,
+      deductionPercentage: 0
+    },
+    {
+      id: 'defect-watch-speaker-mic',
+      category: 'functionality',
+      description: isApple ? 'Speaker, Mic or Emergency Siren Faulty' : 'Speaker / Microphone Call Audio Faulty',
+      subText: 'Siri/voice assistant mic unresponsive, call audio crackles, or speaker low volume.',
+      deductionFixed: 2200,
+      deductionPercentage: 0
+    },
+
+    // ── BATTERY & CONNECTIVITY ────────────────────────────────────────────
+    {
+      id: 'defect-watch-battery-health',
+      category: 'connectivity',
+      description: 'Battery Maximum Capacity < 80%',
+      subText: 'Watch battery drains in < 12 hours or shows "Service Recommended" alert in Settings.',
+      deductionFixed: isApple ? 2200 : 1600,
+      deductionPercentage: 0
+    },
+    {
+      id: 'defect-watch-charging-puck',
+      category: 'connectivity',
+      description: 'Wireless Magnetic Receiver Charge Faulty',
+      subText: 'Fails to charge when placed on magnetic inductive charging puck.',
+      deductionFixed: 2000,
+      deductionPercentage: 0
+    },
+    {
+      id: 'defect-watch-cellular-esim',
+      category: 'connectivity',
+      description: 'Cellular / LTE eSIM Functionality Faulty',
+      subText: 'eSIM fails to activate, cellular antenna drops signal, or standalone LTE calling fails.',
+      deductionFixed: 2500,
+      deductionPercentage: 0
+    },
+    {
+      id: 'defect-watch-wireless-gps',
+      category: 'connectivity',
+      description: 'Wi-Fi, Bluetooth & Dual-Frequency GPS Fail',
+      subText: 'Fails to pair with phone over Bluetooth, Wi-Fi sync drops, or outdoor GPS tracking fails.',
+      deductionFixed: 1800,
+      deductionPercentage: 0
+    },
+
+    // ── ACCESSORIES & PACKAGING ───────────────────────────────────────────
+    {
+      id: 'defect-watch-charger-missing',
+      category: 'accessories',
+      description: 'Missing Original Magnetic Fast Charging Puck',
+      subText: 'Original OEM magnetic charging cable/puck is not included.',
+      deductionFixed: isApple ? 1500 : 1200,
+      deductionPercentage: 0
+    },
+    {
+      id: 'defect-watch-box-missing',
+      category: 'accessories',
+      description: 'Missing Original Retail Watch Box',
+      subText: 'Original packaging box with matching watch serial number is missing.',
+      deductionFixed: category === 'flagship' ? 1000 : 600,
+      deductionPercentage: 0
+    },
+    {
+      id: 'defect-watch-bill-missing',
+      category: 'accessories',
+      description: 'Missing Bill / Customer Photo ID',
+      subText: 'Original tax invoice or valid government photo ID not available.',
+      deductionFixed: 1200,
+      deductionPercentage: 0
+    }
+  ];
 }
 
 // 3. Dynamic Defect Rules tailored by model category and brand
 export function getDefectRulesForCategory(
   category: DeviceCategory, 
   brandId?: string, 
-  modelName?: string
+  modelName?: string,
+  modelId?: string
 ): DefectRule[] {
+  if (isSmartwatchDevice(brandId, modelName, modelId)) {
+    return getSmartwatchDefectRules(category, brandId, modelName);
+  }
+
   const isApple = isAppleDevice(brandId, modelName);
   const screenPct   = category === 'flagship' ? 0.28 : category === 'premium' ? 0.22 : 0.18;
   const bodyDentPct = category === 'flagship' ? 0.08 : category === 'premium' ? 0.07 : 0.06;

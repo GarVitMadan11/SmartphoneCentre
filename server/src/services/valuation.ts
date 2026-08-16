@@ -33,6 +33,27 @@ function rulesFor(category: DeviceCategory): Record<string, Defect> {
     'defect-func-network': { category: 'connectivity', percentage: .10 }, 'defect-func-wireless': { category: 'connectivity', percentage: .07 }, 'defect-func-partmatch': { category: 'connectivity', percentage: .12 },
     'defect-box-missing': { category: 'accessories', fixed: box }, 'defect-charger-missing': { category: 'accessories', fixed: 1500 }, 'defect-acc-nodocs': { category: 'accessories', fixed: 1500 },
     'defect-critical-power': { category: 'accessories', critical: true }, 'defect-critical-icloud': { category: 'accessories', critical: true },
+    
+    // Smartwatch specific defect rules
+    'defect-watch-screen-cracked': { category: 'screen', percentage: category === 'flagship' ? .30 : category === 'premium' ? .24 : .18 },
+    'defect-watch-screen-scratches': { category: 'screen', fixed: category === 'flagship' ? 1500 : 800, percentage: .03 },
+    'defect-watch-screen-burn': { category: 'screen', percentage: .22 },
+    'defect-watch-screen-touch': { category: 'screen', percentage: .15 },
+    'defect-watch-body-dented': { category: 'body', fixed: category === 'flagship' ? 2500 : category === 'premium' ? 1500 : 1000, percentage: category === 'flagship' ? .08 : .06 },
+    'defect-watch-crown-faulty': { category: 'body', fixed: 2200 },
+    'defect-watch-water-seal': { category: 'body', fixed: category === 'flagship' ? 2000 : 1200 },
+    'defect-watch-strap-damaged': { category: 'body', fixed: 1800 },
+    'defect-watch-sensor-heart': { category: 'functionality', fixed: 2500, percentage: .08 },
+    'defect-watch-sensor-ecg': { category: 'functionality', fixed: 2000, percentage: .05 },
+    'defect-watch-sensor-motion': { category: 'functionality', fixed: 1800 },
+    'defect-watch-speaker-mic': { category: 'functionality', fixed: 2200 },
+    'defect-watch-battery-health': { category: 'connectivity', fixed: 2000 },
+    'defect-watch-charging-puck': { category: 'connectivity', fixed: 2000 },
+    'defect-watch-cellular-esim': { category: 'connectivity', fixed: 2500 },
+    'defect-watch-wireless-gps': { category: 'connectivity', fixed: 1800 },
+    'defect-watch-charger-missing': { category: 'accessories', fixed: 1500 },
+    'defect-watch-box-missing': { category: 'accessories', fixed: category === 'flagship' ? 1000 : 600 },
+    'defect-watch-bill-missing': { category: 'accessories', fixed: 1200 },
   };
 }
 
