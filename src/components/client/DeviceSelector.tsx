@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { BRANDS as STATIC_BRANDS, MODELS as STATIC_MODELS, Model, Brand, Variant, generateVariantsForModel, getDeviceImage, getModelSupportedRam, getModelSupportedStorage, getVariantPrice, isTabletDevice } from '../../data/mockDatabase';
-import { Search, ChevronRight, Smartphone, Layers, ArrowLeft, ArrowRight, Cpu, Wifi, Radio } from 'lucide-react';
+import { Search, ChevronRight, Smartphone, Layers, ArrowLeft, ArrowRight, Cpu, Wifi, Radio, X, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   siApple, siSamsung, siXiaomi, siVivo, siOneplus, siGoogle,
@@ -798,10 +799,21 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
   const handleModelClick = (model: Model) => {
     setSelectedModel(model);
     const rams = getModelSupportedRam(model).filter(r => r > 0);
-    setSelectedRam(rams.length > 0 ? rams[0] : null);
-    setSelectedStorage(null);
+    const storages = getModelSupportedStorage(model);
+    const defaultRam = rams.length > 0 ? rams[0] : null;
+    const defaultStorage = storages.length > 0 ? storages[0] : 128;
+    setSelectedRam(defaultRam);
+    setSelectedStorage(defaultStorage);
     setSelectedConnectivity('cellular');
-    setTempVariant(null);
+
+    const baseVar = generateVariantsForModel(model)[0];
+    const baseVal = getVariantPrice(model, defaultRam || 0, defaultStorage);
+    setTempVariant({
+      ...baseVar,
+      ramGb: defaultRam || undefined,
+      storageGb: defaultStorage,
+      basePrice: baseVal,
+    });
   };
 
   const handleConnectivitySelect = (conn: 'wifi' | 'cellular') => {
@@ -913,7 +925,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
         <motion.div 
           layout="position"
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className={`${selectedModel ? 'lg:col-span-7' : 'lg:col-span-12'}`}
+          className="lg:col-span-12"
         >
           {/* Search bar */}
           <div className="relative mb-4 sm:mb-6">
@@ -1130,158 +1142,197 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
           </AnimatePresence>
         </motion.div>
 
-        {/* Right Side: Variant selector — slides in on desktop, stacks on mobile */}
+      {/* Specification Selection Modal (Matching Tablet Spec Modal Design) */}
+      {typeof document !== 'undefined' && createPortal(
         <AnimatePresence>
           {selectedModel && (
-            <motion.div
-              ref={variantSelectorRef}
-              initial={{ opacity: 0, x: 24, y: 0 }}
-              animate={{ opacity: 1, x: 0, y: 0 }}
-              exit={{ opacity: 0, x: 24, y: 0 }}
-              transition={{ type: "spring", stiffness: 280, damping: 26 }}
-              className="lg:col-span-5 bg-canvas-pure rounded-md border border-ice-border p-4 sm:p-6 shadow-md"
-            >
-              <div className="mb-6 pb-6 border-b border-white/[0.04] text-left">
-                <div className="flex items-center gap-3 mb-2">
-                  <Smartphone className="w-6 h-6 text-cobalt" />
-                  <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block">Selected Model Spec</span>
-                </div>
-                <h3 className="text-3xl font-light text-ink-navy tracking-tight">{selectedModel.name}</h3>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  <span className="text-[10px] font-mono font-medium text-slate-500 bg-slate-100 dark:bg-zinc-800 dark:text-zinc-400 px-2 py-0.5 rounded border border-slate-200 dark:border-zinc-700/60">
-                    Release: {selectedModel.releaseYear}
-                  </span>
-                </div>
-                <p className="text-xs text-ink-muted mt-2 font-light">Select your device's storage capacity to load the live trade-in value.</p>
-              </div>
-
-              {/* Connectivity selection for Tablets (Wi-Fi + Cellular vs Wi-Fi Only) */}
-              {isTablet && (
-                <div className="mb-5">
-                  <label className="text-xs uppercase tracking-wider font-bold text-ink-slate block mb-2.5 flex items-center gap-1.5 font-mono">
-                    <Wifi className="w-3.5 h-3.5 text-cobalt" /> Select Network &amp; Connectivity
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleConnectivitySelect('cellular')}
-                      className={`py-2.5 px-3 rounded-md border text-xs font-bold font-mono transition-all flex items-center justify-center gap-1.5 ${
-                        selectedConnectivity === 'cellular'
-                          ? 'bg-cobalt text-white border-cobalt shadow-[0_3px_10px_rgba(29,78,216,0.25)]'
-                          : 'bg-canvas-white text-ink-navy border-ice-border hover:border-cobalt/30'
-                      }`}
-                    >
-                      <Radio className="w-3.5 h-3.5" />
-                      <span>Wi-Fi + Cellular (SIM)</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleConnectivitySelect('wifi')}
-                      className={`py-2.5 px-3 rounded-md border text-xs font-bold font-mono transition-all flex items-center justify-center gap-1.5 ${
-                        selectedConnectivity === 'wifi'
-                          ? 'bg-cobalt text-white border-cobalt shadow-[0_3px_10px_rgba(29,78,216,0.25)]'
-                          : 'bg-canvas-white text-ink-navy border-ice-border hover:border-cobalt/30'
-                      }`}
-                    >
-                      <Wifi className="w-3.5 h-3.5" />
-                      <span>Wi-Fi Only (No SIM)</span>
-                    </button>
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto min-h-screen">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 12 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 12 }}
+                transition={{ type: "spring", stiffness: 320, damping: 28 }}
+                className="bg-canvas-pure border border-ice-border rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl text-left my-auto max-h-[90vh] flex flex-col"
+              >
+                {/* Modal Header */}
+                <div className="p-6 border-b border-ice-border flex items-center justify-between bg-canvas-white">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-cobalt/10 border border-cobalt/20 flex items-center justify-center text-cobalt flex-shrink-0">
+                      <Smartphone className="w-6 h-6 stroke-[2.2]" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-ink-navy uppercase font-outfit tracking-wide">
+                        {selectedModel.name}
+                      </h3>
+                      <p className="text-xs font-mono text-zinc-400 mt-0.5">
+                        {selectedModel.series || selectedModel.category} · Release: {selectedModel.releaseYear}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              )}
 
-              {/* RAM Selection (Android Smartphones & Android Tablets) */}
-              {ramOptions.length > 0 && (
-                <div className="mb-5">
-                  <label className="text-xs uppercase tracking-wider font-bold text-ink-slate block mb-2.5 flex items-center gap-1.5 font-mono">
-                    <Cpu className="w-3.5 h-3.5 text-cobalt" /> Select RAM Variant
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {ramOptions.map(ram => {
-                      const isSelected = selectedRam === ram;
-                      return (
-                        <motion.button
-                          key={ram}
-                          whileHover={{ y: -1 }}
-                          whileTap={{ scale: 0.97 }}
-                          onClick={() => handleRamSelect(ram)}
-                          className={`px-4 py-2.5 rounded-md border text-xs font-bold font-mono transition-all duration-200 ${
-                            isSelected
-                              ? 'bg-cobalt text-white border-cobalt shadow-[0_3px_10px_rgba(29,78,216,0.25)]'
-                              : 'bg-canvas-white text-ink-navy border-ice-border hover:border-cobalt/30 hover:bg-cobalt-light/5'
-                          }`}
-                          style={{ minHeight: '40px' }}
-                        >
-                          {ram} GB RAM
-                        </motion.button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Storage selection */}
-              <div className="mb-6">
-                <label className="text-xs uppercase tracking-wider font-bold text-ink-slate block mb-3 flex items-center gap-1.5 font-mono">
-                  <Layers className="w-3.5 h-3.5 text-cobalt" /> Select Storage Capacity
-                </label>
-                <div className="grid grid-cols-3 gap-2">
-                  {storageOptions.map(storage => {
-                    const isSelected = selectedStorage === storage;
-                    const hasSelection = selectedStorage !== null;
-                    return (
-                      <motion.button
-                        key={storage}
-                        whileHover={{ y: -1 }}
-                        whileTap={{ scale: 0.97 }}
-                        onClick={() => handleStorageSelect(storage)}
-                        className={`py-3.5 rounded-md border text-sm font-semibold transition-all duration-300 ${
-                          isSelected
-                            ? 'bg-cobalt text-white border-cobalt shadow-[0_4px_12px_rgba(29,78,216,0.2)] opacity-100'
-                            : hasSelection
-                            ? 'bg-canvas-white text-ink-navy border-ice-border opacity-40 hover:opacity-75'
-                            : 'bg-canvas-white text-ink-navy border-ice-border hover:border-cobalt/30 hover:bg-cobalt-light/5'
-                        }`}
-                        style={{ minHeight: '48px' }}
-                      >
-                        {storage >= 1024 ? `${storage / 1024} TB` : `${storage} GB`}
-                      </motion.button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Confirm Selection CTA */}
-              <AnimatePresence>
-                {tempVariant && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedModel(null)}
+                    className="p-2 rounded-lg border border-ice-border text-zinc-400 hover:text-ink-navy hover:bg-zinc-100 transition-all"
+                    aria-label="Close dialog"
                   >
-                    <div className="bg-canvas-white rounded-sm p-4 mb-6 border border-white/[0.06] flex items-center justify-between text-left">
-                      <div>
-                        <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-1">Base Price / Mint</span>
-                        <span className="text-xl font-bold text-cobalt">{formatPrice(tempVariant.basePrice)}</span>
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Modal Body */}
+                <div className="p-6 space-y-6 text-left overflow-y-auto flex-1">
+
+                  {/* Connectivity selection for Tablets (Wi-Fi + Cellular vs Wi-Fi Only) */}
+                  {isTablet && (
+                    <div>
+                      <div className="flex items-center justify-between mb-2.5">
+                        <span className="text-xs font-mono font-bold text-ink-navy uppercase tracking-wider flex items-center gap-1.5">
+                          <Wifi className="w-4 h-4 text-cobalt" /> Select Network &amp; Connectivity
+                        </span>
+                        <span className="text-[10px] text-zinc-400 font-mono">SIM / Cellular Specs</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2.5">
+                        <button
+                          type="button"
+                          onClick={() => handleConnectivitySelect('cellular')}
+                          className={`py-3.5 px-3.5 rounded-xl border text-xs font-bold font-mono transition-all flex items-center justify-between ${
+                            selectedConnectivity === 'cellular'
+                              ? 'bg-cobalt text-white border-cobalt shadow-md shadow-cobalt/20'
+                              : 'bg-canvas-white text-ink-slate border-ice-border hover:border-cobalt/40'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <Radio className="w-4 h-4" />
+                            <div className="text-left">
+                              <span className="block font-bold text-xs">Wi-Fi + Cellular</span>
+                              <span className={`text-[9px] ${selectedConnectivity === 'cellular' ? 'text-white/80' : 'text-zinc-400'}`}>Has SIM Slot / 5G / 4G</span>
+                            </div>
+                          </div>
+                          {selectedConnectivity === 'cellular' && <CheckCircle2 className="w-4 h-4 text-white" />}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleConnectivitySelect('wifi')}
+                          className={`py-3.5 px-3.5 rounded-xl border text-xs font-bold font-mono transition-all flex items-center justify-between ${
+                            selectedConnectivity === 'wifi'
+                              ? 'bg-cobalt text-white border-cobalt shadow-md shadow-cobalt/20'
+                              : 'bg-canvas-white text-ink-slate border-ice-border hover:border-cobalt/40'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <Wifi className="w-4 h-4" />
+                            <div className="text-left">
+                              <span className="block font-bold text-xs">Wi-Fi Only</span>
+                              <span className={`text-[9px] ${selectedConnectivity === 'wifi' ? 'text-white/80' : 'text-zinc-400'}`}>No SIM Card Slot</span>
+                            </div>
+                          </div>
+                          {selectedConnectivity === 'wifi' && <CheckCircle2 className="w-4 h-4 text-white" />}
+                        </button>
                       </div>
                     </div>
+                  )}
 
-                    <motion.button
-                      whileHover={{ scale: 1.01 }}
-                      whileTap={{ scale: 0.99 }}
-                      onClick={handleConfirm}
-                      className="w-full bg-cobalt hover:bg-cobalt-hover text-white py-4 rounded-md font-bold transition-all duration-300 flex items-center justify-center gap-2 shadow-[0_4px_14px_rgba(29,78,216,0.35)] hover:shadow-[0_6px_20px_rgba(29,78,216,0.45)] focus-ring"
-                    >
-                      Diagnose Condition
-                      <ChevronRight className="w-5 h-5" />
-                    </motion.button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
+                  {/* RAM Selection (Android Smartphones & Android Tablets) */}
+                  {ramOptions.length > 0 && (
+                    <div>
+                      <div className="flex items-center justify-between mb-2.5">
+                        <span className="text-xs font-mono font-bold text-ink-navy uppercase tracking-wider flex items-center gap-1.5">
+                          <Cpu className="w-4 h-4 text-cobalt" /> Select RAM Variant
+                        </span>
+                        <span className="text-[10px] text-zinc-400 font-mono">Memory Specs</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {ramOptions.map(ram => (
+                          <button
+                            key={ram}
+                            type="button"
+                            onClick={() => handleRamSelect(ram)}
+                            className={`px-4 py-2.5 rounded-xl border text-xs font-bold font-mono transition-all flex items-center justify-center gap-1.5 ${
+                              selectedRam === ram
+                                ? 'bg-cobalt text-white border-cobalt shadow-md shadow-cobalt/20'
+                                : 'bg-canvas-white text-ink-slate border-ice-border hover:border-cobalt/40'
+                            }`}
+                          >
+                            <span>{ram} GB RAM</span>
+                            {selectedRam === ram && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Storage selection */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2.5">
+                      <span className="text-xs font-mono font-bold text-ink-navy uppercase tracking-wider flex items-center gap-1.5">
+                        <Layers className="w-4 h-4 text-violet-500" /> Select Storage Capacity
+                      </span>
+                      <span className="text-[10px] text-zinc-400 font-mono">Internal Storage</span>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                      {storageOptions.map(storage => (
+                        <button
+                          key={storage}
+                          type="button"
+                          onClick={() => handleStorageSelect(storage)}
+                          className={`py-3 px-3 rounded-xl border text-xs font-bold font-mono transition-all flex items-center justify-center gap-1.5 ${
+                            selectedStorage === storage
+                              ? 'bg-violet-600 text-white border-violet-600 shadow-md shadow-violet-600/20'
+                              : 'bg-canvas-white text-ink-slate border-ice-border hover:border-violet-400'
+                          }`}
+                        >
+                          <span>{storage >= 1024 ? `${storage / 1024} TB` : `${storage} GB`}</span>
+                          {selectedStorage === storage && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Live Estimated Payout Banner */}
+                  <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200/80 rounded-xl p-4 flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] font-mono font-bold text-emerald-800 uppercase block tracking-wider mb-0.5">
+                        Live Estimated Payout
+                      </span>
+                      <span className="text-xs font-mono text-emerald-700">
+                        Spec: {isTablet ? (selectedConnectivity === 'cellular' ? 'Wi-Fi + Cellular · ' : 'Wi-Fi Only · ') : ''}
+                        {ramOptions.length > 0 && selectedRam ? `${selectedRam}GB RAM / ` : ''}
+                        {selectedStorage ? (selectedStorage >= 1024 ? `${selectedStorage / 1024}TB` : `${selectedStorage}GB`) : ''}
+                      </span>
+                    </div>
+                    <span className="text-2xl font-black text-emerald-700 font-mono">
+                      {formatPrice(tempVariant?.basePrice || selectedModel.basePrice128GB)}
+                    </span>
+                  </div>
+
+                </div>
+
+                {/* Modal Footer */}
+                <div className="p-6 border-t border-ice-border bg-canvas-white flex items-center justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedModel(null)}
+                    className="px-4 py-2.5 rounded-xl border border-ice-border text-xs font-bold text-ink-slate hover:bg-zinc-100 transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleConfirm}
+                    className="px-5 py-2.5 rounded-xl bg-cobalt hover:bg-cobalt/90 text-white text-xs font-bold flex items-center gap-2 shadow-md shadow-cobalt/20 transition-all"
+                  >
+                    <span>Proceed to Diagnostics</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </motion.div>
+            </div>
           )}
-        </AnimatePresence>
+        </AnimatePresence>,
+        document.body
+      )}
 
         {/* Mobile Floating Sticky Valuation Action Bar */}
         <AnimatePresence>

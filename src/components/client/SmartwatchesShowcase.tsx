@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { SMARTWATCH_MODELS, Model, Variant, getVariantPrice } from '../../data/mockDatabase';
 import { Watch, Sparkles, ArrowRight, Search, X, HardDrive, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -229,107 +230,110 @@ export const SmartwatchesShowcase: React.FC<SmartwatchesShowcaseProps> = ({
       )}
 
       {/* Smartwatch Storage Spec Selection Modal */}
-      <AnimatePresence>
-        {selectedModelForSpec && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="bg-canvas-pure border border-ice-border rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl"
-            >
-              {/* Modal Header */}
-              <div className="p-6 border-b border-ice-border flex items-center justify-between bg-canvas-white">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 flex-shrink-0">
-                    <Watch className="w-6 h-6 stroke-[2.2]" />
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {selectedModelForSpec && (
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto min-h-screen">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                className="bg-canvas-pure border border-ice-border rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl my-auto max-h-[90vh] flex flex-col text-left"
+              >
+                {/* Modal Header */}
+                <div className="p-6 border-b border-ice-border flex items-center justify-between bg-canvas-white">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 flex-shrink-0">
+                      <Watch className="w-6 h-6 stroke-[2.2]" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-ink-navy font-outfit uppercase">
+                        {selectedModelForSpec.name}
+                      </h3>
+                      <p className="text-xs font-mono text-zinc-400">
+                        {selectedModelForSpec.series} · Release: {selectedModelForSpec.releaseYear}
+                      </p>
+                    </div>
                   </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedModelForSpec(null)}
+                    className="p-2 rounded-lg border border-ice-border text-zinc-400 hover:text-ink-navy hover:bg-zinc-100 transition-all"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Modal Body */}
+                <div className="p-6 space-y-6 text-left overflow-y-auto flex-1">
+                  {/* Storage Capacity Selector */}
                   <div>
-                    <h3 className="text-lg font-bold text-ink-navy font-outfit uppercase">
-                      {selectedModelForSpec.name}
-                    </h3>
-                    <p className="text-xs font-mono text-zinc-400">
-                      {selectedModelForSpec.series} · Release: {selectedModelForSpec.releaseYear}
-                    </p>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-mono font-bold text-ink-navy uppercase tracking-wider flex items-center gap-1.5">
+                        <HardDrive className="w-4 h-4 text-emerald-600" /> Select Storage / Case Spec
+                      </span>
+                      <span className="text-[10px] text-zinc-400 font-mono">Internal Capacity</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2.5">
+                      {storageOptions.map(st => (
+                        <button
+                          key={st}
+                          type="button"
+                          onClick={() => setSelectedStorage(st)}
+                          className={`py-3 px-3 rounded-xl border text-xs font-bold font-mono transition-all flex items-center justify-center gap-1 ${
+                            selectedStorage === st
+                              ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-600/20'
+                              : 'bg-canvas-white text-ink-slate border-ice-border hover:border-emerald-400'
+                          }`}
+                        >
+                          <span>{st} GB</span>
+                          {selectedStorage === st && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Live Calculated Trade-In Price Banner */}
+                  <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200/80 rounded-xl p-4 flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] font-mono font-bold text-emerald-800 uppercase block tracking-wider">
+                        Live Estimated Payout
+                      </span>
+                      <span className="text-xs font-mono text-emerald-700">
+                        Spec: {selectedStorage}GB Internal Storage
+                      </span>
+                    </div>
+                    <span className="text-2xl font-black text-emerald-700 font-mono">
+                      {formatPrice(calculatedPrice)}
+                    </span>
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => setSelectedModelForSpec(null)}
-                  className="p-2 rounded-lg border border-ice-border text-zinc-400 hover:text-ink-navy hover:bg-zinc-100 transition-all"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Modal Body */}
-              <div className="p-6 space-y-6 text-left">
-                {/* Storage Capacity Selector */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-mono font-bold text-ink-navy uppercase tracking-wider flex items-center gap-1.5">
-                      <HardDrive className="w-4 h-4 text-emerald-600" /> Select Storage / Case Spec
-                    </span>
-                    <span className="text-[10px] text-zinc-400 font-mono">Internal Capacity</span>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2.5">
-                    {storageOptions.map(st => (
-                      <button
-                        key={st}
-                        type="button"
-                        onClick={() => setSelectedStorage(st)}
-                        className={`py-3 px-3 rounded-xl border text-xs font-bold font-mono transition-all flex items-center justify-center gap-1 ${
-                          selectedStorage === st
-                            ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-600/20'
-                            : 'bg-canvas-white text-ink-slate border-ice-border hover:border-emerald-400'
-                        }`}
-                      >
-                        <span>{st} GB</span>
-                        {selectedStorage === st && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
-                      </button>
-                    ))}
-                  </div>
+                {/* Modal Footer */}
+                <div className="p-6 border-t border-ice-border bg-canvas-white flex items-center justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedModelForSpec(null)}
+                    className="px-4 py-2.5 rounded-xl border border-ice-border text-xs font-bold text-ink-slate hover:bg-zinc-100 transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleProceedWithSpec}
+                    className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-2 shadow-md shadow-emerald-600/20 transition-all"
+                  >
+                    <span>Proceed to Diagnostics</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
                 </div>
-
-                {/* Live Calculated Trade-In Price Banner */}
-                <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200/80 rounded-xl p-4 flex items-center justify-between">
-                  <div>
-                    <span className="text-[10px] font-mono font-bold text-emerald-800 uppercase block tracking-wider">
-                      Live Estimated Payout
-                    </span>
-                    <span className="text-xs font-mono text-emerald-700">
-                      Spec: {selectedStorage}GB Internal Storage
-                    </span>
-                  </div>
-                  <span className="text-2xl font-black text-emerald-700 font-mono">
-                    {formatPrice(calculatedPrice)}
-                  </span>
-                </div>
-              </div>
-
-              {/* Modal Footer */}
-              <div className="p-6 border-t border-ice-border bg-canvas-white flex items-center justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => setSelectedModelForSpec(null)}
-                  className="px-4 py-2.5 rounded-xl border border-ice-border text-xs font-bold text-ink-slate hover:bg-zinc-100 transition-all"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleProceedWithSpec}
-                  className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-2 shadow-md shadow-emerald-600/20 transition-all"
-                >
-                  <span>Proceed to Diagnostics</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   );
 };
