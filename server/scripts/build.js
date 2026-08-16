@@ -24,11 +24,11 @@ if (isRenderEnv) {
 process.env.DATABASE_URL = dbUrl;
 console.log(`🔧 Building with DATABASE_URL: ${process.env.DATABASE_URL} (Render: ${isRenderEnv})`);
 
-// Dynamically sync schema.prisma provider to match DATABASE_URL
+// Dynamically sync schema.prisma provider to match DATABASE_URL (always postgresql for production auth)
 const schemaPath = path.resolve(__dirname, '../prisma/schema.prisma');
 if (fs.existsSync(schemaPath)) {
   let schemaContent = fs.readFileSync(schemaPath, 'utf8');
-  const targetProvider = (dbUrl.startsWith('postgres:') || dbUrl.startsWith('postgresql:')) ? 'postgresql' : 'sqlite';
+  const targetProvider = 'postgresql';
   const updatedSchema = schemaContent.replace(/provider\s*=\s*"(sqlite|postgresql)"/, `provider = "${targetProvider}"`);
   if (schemaContent !== updatedSchema) {
     fs.writeFileSync(schemaPath, updatedSchema, 'utf8');

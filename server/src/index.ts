@@ -57,6 +57,10 @@ import {
 
     const encKey = (process.env.PAYOUT_ENCRYPTION_KEY ?? '').trim();
     if (!encKey) missing.push('PAYOUT_ENCRYPTION_KEY');
+
+    // Auth system secrets
+    if (!(process.env.GOOGLE_CLIENT_ID ?? '').trim()) missing.push('GOOGLE_CLIENT_ID');
+    if (!(process.env.SMTP_PASS ?? '').trim()) missing.push('SMTP_PASS');
   }
 
   if (missing.length > 0) {
@@ -99,8 +103,8 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       // 'unsafe-inline' intentionally excluded from scriptSrc — all JS is in content-hashed bundles.
-      // If a specific inline script is ever needed, use a per-request nonce instead.
-      scriptSrc: ["'self'", 'https://api.emailjs.com'],
+      // Google Identity Services (GSI) requires its own origin to be trusted.
+      scriptSrc: ["'self'", 'https://api.emailjs.com', 'https://accounts.google.com'],
       styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       styleSrcElem: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],

@@ -301,7 +301,11 @@ export interface ApiUser {
   id: string;
   name: string;
   email: string;
-  phone: string;
+  phone: string | null;
+  picture: string | null;
+  emailVerified: boolean;
+  hasGoogleLinked: boolean;
+  hasPassword: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -341,5 +345,90 @@ export function updateCustomerProfile(name: string, phone: string): Promise<{ us
   return apiFetch<{ user: ApiUser }>('/auth/profile', {
     method: 'PATCH',
     body: JSON.stringify({ name, phone }),
+  });
+}
+
+// ── New Authentication API Helpers ───────────────────────────────────────────
+
+/** Register with email + password (sends verification email, does not log in) */
+export function registerWithEmail(
+  name: string,
+  email: string,
+  password: string
+): Promise<{ status: string; message: string }> {
+  return apiFetch<{ status: string; message: string }>('/auth/register', {
+    method: 'POST',
+    body: JSON.stringify({ name, email, password }),
+  });
+}
+
+/** Sign in or sign up with a Google ID token */
+export function googleAuth(credential: string): Promise<{
+  user: ApiUser;
+  csrfToken: string;
+  isNewUser?: boolean;
+  requiresLinking?: boolean;
+  email?: string;
+}> {
+  return apiFetch<{
+    user: ApiUser;
+    csrfToken: string;
+    isNewUser?: boolean;
+    requiresLinking?: boolean;
+    email?: string;
+  }>('/auth/google', {
+    method: 'POST',
+    body: JSON.stringify({ credential }),
+  });
+}
+
+/** Verify email address using the token from the verification email */
+export function verifyEmail(token: string): Promise<{ success: boolean; message: string }> {
+  return apiFetch<{ success: boolean; message: string }>('/auth/verify-email', {
+    method: 'POST',
+    body: JSON.stringify({ token }),
+  });
+}
+
+/** Resend verification email */
+export function resendVerification(email: string): Promise<{ message: string }> {
+  return apiFetch<{ message: string }>('/auth/resend-verification', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+}
+
+/** Request a password reset email (always returns 200, no email enumeration) */
+export function forgotPassword(email: string): Promise<{ message: string }> {
+  return apiFetch<{ message: string }>('/auth/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+}
+
+/** Reset password with the token from the reset email */
+export function resetPassword(
+  token: string,
+  password: string
+): Promise<{ success: boolean; message: string }> {
+  return apiFetch<{ success: boolean; message: string }>('/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify({ token, password }),
+  });
+}
+
+/** Link a Google account to the currently authenticated user's account */
+export function linkGoogleAccount(credential: string): Promise<{ success: boolean; user: ApiUser }> {
+  return apiFetch<{ success: boolean; user: ApiUser }>('/auth/link-google', {
+    method: 'POST',
+    body: JSON.stringify({ credential }),
+  });
+}
+
+/** Unlink Google from the currently authenticated user's account */
+export function unlinkGoogleAccount(): Promise<{ success: boolean; user: ApiUser }> {
+  return apiFetch<{ success: boolean; user: ApiUser }>('/auth/unlink-google', {
+    method: 'POST',
+    body: JSON.stringify({}),
   });
 }

@@ -1,9 +1,25 @@
-import React, { useState } from 'react';
-import { Eye, EyeOff, Lock, Mail, ArrowLeft, AlertCircle } from 'lucide-react';
-import { customerLogin } from '../../utils/api';
+import React, { useState, useEffect, useRef } from 'react';
+import { Eye, EyeOff, Lock, Mail, ArrowLeft, AlertCircle, Loader2 } from 'lucide-react';
+import { customerLogin, googleAuth, ApiUser } from '../../utils/api';
+
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (config: any) => void;
+          renderButton: (element: HTMLElement, config: any) => void;
+          prompt?: () => void;
+        };
+      };
+    };
+  }
+}
+
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
 
 interface LoginPageProps {
-  onLoginSuccess: (user: any) => void;
+  onLoginSuccess: (user: ApiUser) => void;
   onNavigate: (path: string) => void;
   redirectParam?: string | null;
 }
@@ -14,6 +30,72 @@ export default function LoginPage({ onLoginSuccess, onNavigate, redirectParam }:
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [linkingRequired, setLinkingRequired] = useState(false);
+  const googleBtnRef = useRef<HTMLDivElement>(null);
+
+  const handleRedirect = () => {
+    if (redirectParam === 'booking') {
+      onNavigate('/smartphones');
+    } else {
+      onNavigate('/');
+    }
+  };
+
+  // Load Google Identity Services script and render button
+  useEffect(() => {
+    if (!GOOGLE_CLIENT_ID) return;
+
+    const initGoogle = () => {
+      if (!window.google?.accounts?.id) return;
+      window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleGoogleCredential,
+        auto_select: false,
+        cancel_on_tap_outside: true,
+      });
+      if (googleBtnRef.current) {
+        window.google.accounts.id.renderButton(googleBtnRef.current, {
+          theme: 'outline',
+          size: 'large',
+          width: googleBtnRef.current.offsetWidth || 400,
+          text: 'signin_with',
+          shape: 'rectangular',
+        });
+      }
+    };
+
+    if (window.google?.accounts?.id) {
+      initGoogle();
+    } else {
+      const script = document.createElement('script');
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
+      script.onload = initGoogle;
+      document.head.appendChild(script);
+    }
+  }, []);
+
+  const handleGoogleCredential = async (response: { credential: string }) => {
+    setGoogleLoading(true);
+    setError('');
+    setLinkingRequired(false);
+    try {
+      const result = await googleAuth(response.credential);
+      onLoginSuccess(result.user);
+      handleRedirect();
+    } catch (err: any) {
+      if (err.status === 409) {
+        setLinkingRequired(true);
+        setError('An account with this email already exists. Please log in with your password, then link Google in your account settings.');
+      } else {
+        setError(err.message || 'Google sign-in failed. Please try again.');
+      }
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,16 +105,13 @@ export default function LoginPage({ onLoginSuccess, onNavigate, redirectParam }:
     }
 
     setError('');
+    setLinkingRequired(false);
     setIsLoading(true);
 
     try {
       const response = await customerLogin(emailOrPhone.trim(), password);
       onLoginSuccess(response.user);
-      if (redirectParam === 'booking') {
-        onNavigate('/smartphones'); // App will handle redirecting back to stage 'schedule'
-      } else {
-        onNavigate('/');
-      }
+      handleRedirect();
     } catch (err: any) {
       setError(err.message || 'Invalid email/phone or password.');
     } finally {
@@ -42,8 +121,8 @@ export default function LoginPage({ onLoginSuccess, onNavigate, redirectParam }:
 
   return (
     <div className="min-h-[70vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-canvas-pure border border-ice-border rounded-xl p-8 shadow-3d-card text-left">
-        
+      <div className="max-w-md w-full space-y-6 bg-canvas-pure border border-ice-border rounded-xl p-8 shadow-3d-card text-left">
+
         {/* Header */}
         <div className="text-center">
           <div className="flex justify-center mb-4">
@@ -67,16 +146,42 @@ export default function LoginPage({ onLoginSuccess, onNavigate, redirectParam }:
 
         {/* Error Alert */}
         {error && (
-          <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 text-red-500 p-3 rounded-sm text-xs font-medium">
-            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+          <div className={`flex items-start gap-2 ${linkingRequired ? 'bg-amber-500/10 border-amber-500/20 text-amber-600' : 'bg-red-500/10 border-red-500/20 text-red-500'} border p-3 rounded-sm text-xs font-medium`}>
+            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
             <span>{error}</span>
           </div>
         )}
 
-        {/* Form */}
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        {/* Google Sign-In */}
+        {GOOGLE_CLIENT_ID && (
+          <div className="space-y-3">
+            <div className="relative" style={{ minHeight: '44px' }}>
+              {googleLoading ? (
+                <div className="flex items-center justify-center gap-2 w-full h-11 border border-ice-border rounded-sm text-xs text-ink-muted bg-canvas-pure">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Signing in with Google...</span>
+                </div>
+              ) : (
+                <div
+                  ref={googleBtnRef}
+                  id="google-signin-btn"
+                  className="w-full overflow-hidden"
+                />
+              )}
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="flex-1 border-t border-ice-border/40" />
+              <span className="text-[10px] font-mono tracking-wider text-ink-muted uppercase">or</span>
+              <div className="flex-1 border-t border-ice-border/40" />
+            </div>
+          </div>
+        )}
+
+        {/* Email/Password Form */}
+        <form className="space-y-5" onSubmit={handleSubmit}>
           <div className="space-y-4">
-            
+
             {/* Email/Phone */}
             <div>
               <label htmlFor="emailOrPhone" className="text-[10px] font-mono tracking-wider text-ink-muted uppercase block mb-1.5">
@@ -122,20 +227,19 @@ export default function LoginPage({ onLoginSuccess, onNavigate, redirectParam }:
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center text-ink-muted hover:text-ink-navy"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
             </div>
-
           </div>
 
           {/* Links */}
           <div className="flex items-center justify-between text-xs">
             <button
               type="button"
-              onClick={() => alert('Password reset functionality is under maintenance. Please contact support.')}
+              onClick={() => onNavigate('/forgot-password')}
               className="text-ink-muted hover:text-cobalt font-light transition-colors"
             >
               Forgot password?
@@ -143,15 +247,14 @@ export default function LoginPage({ onLoginSuccess, onNavigate, redirectParam }:
           </div>
 
           {/* Submit */}
-          <div>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full flex justify-center py-2.5 px-4 bg-cobalt hover:bg-cobalt-hover text-white rounded-sm font-bold text-xs transition-all shadow-premium disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? 'Signing in...' : 'Login'}
-            </button>
-          </div>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full flex justify-center items-center gap-2 py-2.5 px-4 bg-cobalt hover:bg-cobalt-hover text-white rounded-sm font-bold text-xs transition-all shadow-premium disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+            {isLoading ? 'Signing in...' : 'Login'}
+          </button>
         </form>
 
         {/* Signup Link */}
