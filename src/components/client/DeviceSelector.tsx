@@ -1245,7 +1245,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                         }`}
                         style={{ minHeight: '48px' }}
                       >
-                        {storage >= 1024 ? '1 TB' : `${storage} GB`}
+                        {storage >= 1024 ? `${storage / 1024} TB` : `${storage} GB`}
                       </motion.button>
                     );
                   })}
