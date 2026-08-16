@@ -52,6 +52,20 @@ model Model {
   @@index([releaseYear])
 }
 
+// ── Customer Accounts & Authentication ────────────────────────────────────────
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  phone        String
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  bookings     Booking[]
+}
+
 // ── Admin Staff Accounts & RBAC ───────────────────────────────────────────────
 
 model AdminUser {
@@ -122,6 +136,9 @@ model Booking {
   // Payout details stored as AES-256-GCM encrypted JSON string
   payoutDetailsJson String @default("{}")
 
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
   events BookingEvent[]
 
   createdAt DateTime @default(now())
@@ -131,6 +148,7 @@ model Booking {
   @@index([payoutStatus])
   @@index([createdAt])
   @@index([customerPhone])
+  @@index([userId])
 }
 
 // ── Booking Lifecycle Events ──────────────────────────────────────────────────
@@ -205,4 +223,14 @@ model SupportMessage {
 
   @@index([conversationId])
   @@index([createdAt])
+}
+
+// ── Customer OTP Verification ────────────────────────────────────────────────
+
+model OtpVerification {
+  id        String   @id @default(uuid())
+  phone     String   @unique
+  otp       String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }

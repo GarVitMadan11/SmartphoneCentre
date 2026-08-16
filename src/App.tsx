@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo, lazy, Suspense, useCallback } from 'react';
 import { Model, Variant, DefectRule, MODELS as STATIC_MODELS, BRANDS as STATIC_BRANDS, generateVariantsForModel, INITIAL_BOOKINGS, Brand, Booking, TABLET_MODELS, SMARTWATCH_MODELS, getDeviceImage } from './data/mockDatabase';
-import { fetchBrands, fetchModels, fetchBookings as apiFetchBookings } from './utils/api';
+import { fetchBrands, fetchModels, fetchBookings as apiFetchBookings, fetchCurrentUser, customerLogout, ApiUser } from './utils/api';
 import { DeviceSelector } from './components/client/DeviceSelector';
 import { DeviceCategoryShowcase } from './components/client/DeviceCategoryShowcase';
 import { SellYourDevice } from './components/client/SellYourDevice';
@@ -10,6 +10,9 @@ import { TabletsShowcase } from './components/client/TabletsShowcase';
 import { SmartwatchesShowcase } from './components/client/SmartwatchesShowcase';
 import { AboutPage } from './components/client/AboutPage';
 import { ContactPage } from './components/client/ContactPage';
+import LoginPage from './components/client/LoginPage';
+import SignupPage from './components/client/SignupPage';
+import ProfilePage from './components/client/ProfilePage';
 import { ToastContainer, ToastMessage } from './components/Toast';
 import { useFocusTrap } from './hooks/useFocusTrap';
 // ── Lazy-loaded heavy components (code splitting — P-1 fix) ───────────────────
@@ -306,6 +309,9 @@ export default function App() {
   const [isTrackOpen, setIsTrackOpen] = useState(false);
   const [path, setPath] = useState(window.location.pathname);
 
+  // Customer Session states
+  const [currentUser, setCurrentUser] = useState<ApiUser | null>(null);
+
   useEffect(() => {
     const handlePopState = () => {
       setPath(window.location.pathname);
@@ -313,6 +319,62 @@ export default function App() {
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
+
+  // Fetch customer session on startup
+  useEffect(() => {
+    fetchCurrentUser()
+      .then(res => {
+        if (res.user) {
+          setCurrentUser(res.user);
+        }
+      })
+      .catch(err => console.warn('Customer session fetch error:', err));
+  }, []);
+
+  // Restore pending booking flow if user logs in
+  useEffect(() => {
+    if (currentUser) {
+      const pendingData = localStorage.getItem('pending_booking_flow');
+      if (pendingData) {
+        try {
+          const parsed = JSON.parse(pendingData);
+          if (parsed.selectedModel) {
+            setSelectedModel(parsed.selectedModel);
+          }
+          if (parsed.selectedVariant) {
+            setSelectedVariant(parsed.selectedVariant);
+          }
+          if (parsed.selectedDefects) {
+            setSelectedDefects(parsed.selectedDefects);
+          }
+          if (parsed.finalPrice) {
+            setFinalPrice(parsed.finalPrice);
+          }
+          if (parsed.wizardStep) {
+            setWizardStep(parsed.wizardStep);
+          }
+          if (parsed.activeStage) {
+            setActiveStage(parsed.activeStage);
+          }
+          localStorage.removeItem('pending_booking_flow');
+          showToast('Resumed your device selling workflow.', 'info');
+        } catch (err) {
+          console.error('Failed to restore pending booking flow:', err);
+        }
+      }
+    }
+  }, [currentUser]);
+
+  const handleLogout = async () => {
+    try {
+      await customerLogout();
+      setCurrentUser(null);
+      showToast('Logged out successfully.', 'info');
+      navigate('/');
+    } catch (err: any) {
+      showToast('Logout failed: ' + (err.message || err), 'error');
+    }
+  };
 
   const navigate = (newPath: string) => {
     window.history.pushState({}, '', newPath);
@@ -328,7 +390,8 @@ export default function App() {
 
   useEffect(() => {
     let title = "Rephonix | Sell Your Devices at the Best Price";
-    switch (path) {
+    const cleanPath = path.split('?')[0];
+    switch (cleanPath) {
       case '/smartphones':
         title = "Sell Smartphones | Rephonix";
         break;
@@ -346,6 +409,15 @@ export default function App() {
         break;
       case '/admin':
         title = "Admin Console | Rephonix";
+        break;
+      case '/login':
+        title = "Login | Rephonix";
+        break;
+      case '/signup':
+        title = "Create Account | Rephonix";
+        break;
+      case '/profile':
+        title = "My Profile | Rephonix";
         break;
     }
     document.title = title;
@@ -559,6 +631,8 @@ export default function App() {
           navigate('/smartwatches');
         }}
         onOpenTrackOrder={() => setIsTrackOpen(true)}
+        currentUser={currentUser}
+        onLogout={handleLogout}
       />
 
       {/* ── Main Layout ── */}
@@ -566,6 +640,38 @@ export default function App() {
 
         {/* Active Stage Content Area */}
         <section className={!isWorkflow ? 'w-full space-y-16' : 'w-full xl:col-span-9 space-y-4 sm:space-y-6 min-w-0'}>
+
+          {path.startsWith('/login') && (
+            <LoginPage
+              onLoginSuccess={(user) => setCurrentUser(user)}
+              onNavigate={navigate}
+              redirectParam={new URLSearchParams(window.location.search).get('redirect')}
+            />
+          )}
+
+          {path.startsWith('/signup') && (
+            <SignupPage
+              onSignupSuccess={(user) => setCurrentUser(user)}
+              onNavigate={navigate}
+              redirectParam={new URLSearchParams(window.location.search).get('redirect')}
+            />
+          )}
+
+          {path.startsWith('/profile') && currentUser && (
+            <ProfilePage
+              user={currentUser}
+              onLogout={handleLogout}
+              onUpdateUser={(updatedUser) => setCurrentUser(updatedUser)}
+              onNavigate={navigate}
+            />
+          )}
+
+          {path.startsWith('/profile') && !currentUser && (
+            <LoginPage
+              onLoginSuccess={(user) => setCurrentUser(user)}
+              onNavigate={navigate}
+            />
+          )}
 
           {path === '/about' && <AboutPage />}
 
@@ -1327,6 +1433,8 @@ export default function App() {
                 selectedModel={selectedModel}
                 selectedVariant={selectedVariant}
                 onEditDevice={() => setActiveStage('select')}
+                currentUser={currentUser}
+                onNavigate={navigate}
               />
             </Suspense>
           )}

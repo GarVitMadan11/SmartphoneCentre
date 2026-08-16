@@ -25,7 +25,10 @@ function getApiBaseUrl(): string {
 }
 
 function csrfToken(): string | undefined {
-  return document.cookie.split('; ').find(cookie => cookie.startsWith('rex_admin_csrf='))?.split('=').slice(1).join('=');
+  const cookies = document.cookie.split('; ');
+  const customerToken = cookies.find(cookie => cookie.startsWith('rex_csrf='))?.split('=').slice(1).join('=');
+  if (customerToken) return customerToken;
+  return cookies.find(cookie => cookie.startsWith('rex_admin_csrf='))?.split('=').slice(1).join('=');
 }
 
 interface ApiError {
@@ -290,4 +293,53 @@ export function updateBooking(
     method: 'PATCH',
     body: JSON.stringify(updates),
   }, true);
+}
+
+// ── Customer Authentication API Helpers ─────────────────────────────────────
+
+export interface ApiUser {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export function customerLogin(emailOrPhone: string, password: string): Promise<{ user: ApiUser; csrfToken: string }> {
+  return apiFetch<{ user: ApiUser; csrfToken: string }>('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ emailOrPhone, password }),
+  });
+}
+
+export function customerSignup(name: string, email: string, phone: string, password: string): Promise<{ status: string; phone: string; testOtp?: string }> {
+  return apiFetch<{ status: string; phone: string; testOtp?: string }>('/auth/signup', {
+    method: 'POST',
+    body: JSON.stringify({ name, email, phone, password }),
+  });
+}
+
+export function verifyOtp(data: Record<string, unknown>): Promise<{ user: ApiUser; csrfToken: string }> {
+  return apiFetch<{ user: ApiUser; csrfToken: string }>('/auth/verify-otp', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export function customerLogout(): Promise<{ success: boolean; message: string }> {
+  return apiFetch<{ success: boolean; message: string }>('/auth/logout', {
+    method: 'POST',
+  });
+}
+
+export function fetchCurrentUser(): Promise<{ user: ApiUser | null }> {
+  return apiFetch<{ user: ApiUser | null }>('/auth/me');
+}
+
+export function updateCustomerProfile(name: string, phone: string): Promise<{ user: ApiUser }> {
+  return apiFetch<{ user: ApiUser }>('/auth/profile', {
+    method: 'PATCH',
+    body: JSON.stringify({ name, phone }),
+  });
 }

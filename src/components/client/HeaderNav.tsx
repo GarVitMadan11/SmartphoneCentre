@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Smartphone, Tablet, Watch, ChevronDown, Zap, Truck, Menu, X } from 'lucide-react';
+import { ApiUser } from '../../utils/api';
 
 interface HeaderNavProps {
   currentPath: string;
@@ -8,6 +9,8 @@ interface HeaderNavProps {
   onSelectTabletBrand?: (brand: 'apple' | 'samsung') => void;
   onSelectWatchBrand?: (brand: 'apple' | 'samsung') => void;
   onOpenTrackOrder?: () => void;
+  currentUser?: ApiUser | null;
+  onLogout?: () => void;
 }
 
 export const HeaderNav: React.FC<HeaderNavProps> = ({
@@ -17,10 +20,13 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
   onSelectTabletBrand,
   onSelectWatchBrand,
   onOpenTrackOrder,
+  currentUser,
+  onLogout,
 }) => {
   const [activeDropdown, setActiveDropdown] = useState<'phones' | 'tablets' | 'watches' | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSubMenu, setMobileSubMenu] = useState<'phones' | 'tablets' | 'watches' | null>(null);
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const navRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown on click outside
@@ -28,6 +34,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
     const handleClickOutside = (e: MouseEvent) => {
       if (navRef.current && !navRef.current.contains(e.target as Node)) {
         setActiveDropdown(null);
+        setUserDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -237,7 +244,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
         <div className="hidden sm:flex items-center gap-2.5">
           <button
             type="button"
-            onClick={() => { setActiveDropdown(null); onNavigate('/smartphones'); }}
+            onClick={() => { setActiveDropdown(null); setUserDropdownOpen(false); onNavigate('/smartphones'); }}
             className="px-3.5 py-1.5 rounded-lg bg-cobalt hover:bg-cobalt-hover text-white font-semibold text-xs transition-all shadow-sm flex items-center gap-1.5 active:scale-95"
           >
             <Zap className="w-3.5 h-3.5 fill-current" />
@@ -247,11 +254,52 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
           {onOpenTrackOrder && (
             <button
               type="button"
-              onClick={() => { setActiveDropdown(null); onOpenTrackOrder(); }}
+              onClick={() => { setActiveDropdown(null); setUserDropdownOpen(false); onOpenTrackOrder(); }}
               className="px-3.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 font-semibold text-xs transition-all flex items-center gap-1.5 border border-ice-border hover:border-cobalt"
             >
               <Truck className="w-3.5 h-3.5 text-cobalt" />
               <span>Track Order</span>
+            </button>
+          )}
+
+          {/* Customer Auth Session Controls */}
+          {currentUser ? (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => { setActiveDropdown(null); setUserDropdownOpen(prev => !prev); }}
+                className={`px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 border border-ice-border hover:border-cobalt hover:text-cobalt font-semibold text-xs transition-all bg-canvas-white ${
+                  userDropdownOpen ? 'border-cobalt text-cobalt' : 'text-slate-700 dark:text-zinc-200'
+                }`}
+              >
+                <span>Hi, {currentUser.name.split(' ')[0]}</span>
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${userDropdownOpen ? 'rotate-180 text-cobalt' : 'text-slate-400'}`} />
+              </button>
+
+              {userDropdownOpen && (
+                <div className="absolute right-0 top-full mt-1 w-44 bg-white dark:bg-canvas-pure border border-ice-border rounded-lg shadow-premium p-1.5 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                  <button
+                    onClick={() => { setUserDropdownOpen(false); onNavigate('/profile'); }}
+                    className="w-full text-left text-xs font-semibold p-2 rounded-md hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 hover:text-cobalt transition-colors"
+                  >
+                    Profile Settings
+                  </button>
+                  <button
+                    onClick={() => { setUserDropdownOpen(false); onLogout?.(); }}
+                    className="w-full text-left text-xs font-semibold p-2 rounded-md hover:bg-red-50 text-red-500 transition-colors"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => { setActiveDropdown(null); setUserDropdownOpen(false); onNavigate('/login'); }}
+              className="px-3.5 py-1.5 rounded-lg border border-ice-border hover:border-cobalt hover:text-cobalt text-slate-700 dark:text-zinc-200 font-semibold text-xs transition-all active:scale-95"
+            >
+              Login
             </button>
           )}
         </div>
@@ -260,17 +308,17 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
         <div className="flex items-center gap-2 lg:hidden">
           <button
             type="button"
-            onClick={() => { setActiveDropdown(null); onNavigate('/smartphones'); }}
+            onClick={() => { setActiveDropdown(null); setUserDropdownOpen(false); onNavigate('/smartphones'); }}
             className="px-2.5 py-1.5 rounded-lg bg-cobalt text-white font-semibold text-xs flex items-center gap-1"
           >
-            <Zap className="w-3 h-3 fill-current" />
+            <Zap className="w-3.5 h-3.5 fill-current" />
             <span>Quote</span>
           </button>
           <button
             type="button"
             aria-label="Toggle Navigation Menu"
             className="p-2 rounded-lg border border-ice-border text-slate-700 hover:border-cobalt hover:text-cobalt transition-colors"
-            onClick={() => setMobileMenuOpen(o => !o)}
+            onClick={() => { setActiveDropdown(null); setUserDropdownOpen(false); setMobileMenuOpen(o => !o); }}
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -378,6 +426,34 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
             >
               <Truck className="w-4 h-4 text-cobalt" />
               <span>Track Order</span>
+            </button>
+          )}
+
+          {/* Mobile User Session controls */}
+          {currentUser ? (
+            <div className="border-t border-ice-border/40 pt-2 mt-2 space-y-1">
+              <div className="px-3 py-1 text-[10px] font-mono uppercase tracking-wider text-ink-muted">
+                Hi, {currentUser.name}
+              </div>
+              <button
+                onClick={() => { setMobileMenuOpen(false); onNavigate('/profile'); }}
+                className="w-full text-left text-sm font-semibold py-2 px-3 rounded-lg hover:bg-slate-100 text-slate-700 transition-colors"
+              >
+                Profile Settings
+              </button>
+              <button
+                onClick={() => { setMobileMenuOpen(false); onLogout?.(); }}
+                className="w-full text-left text-sm font-semibold py-2 px-3 rounded-lg hover:bg-red-50 text-red-500 transition-colors"
+              >
+                Logout
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => { setMobileMenuOpen(false); onNavigate('/login'); }}
+              className="w-full text-left text-sm font-semibold py-2 px-3 rounded-lg hover:bg-slate-100 text-cobalt border border-cobalt/10 bg-cobalt/5 mt-2"
+            >
+              Login / Register
             </button>
           )}
         </div>

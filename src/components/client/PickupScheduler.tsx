@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import emailjs from '@emailjs/browser';
 import { Model, Variant, DefectRule, Booking } from '../../data/mockDatabase';
-import { createBooking } from '../../utils/api';
+import { createBooking, ApiUser } from '../../utils/api';
 import { DigiLockerModal } from './DigiLockerModal';
 import { PhoneBackPreview } from './DeviceSelector';
 
@@ -21,6 +21,8 @@ interface PickupSchedulerProps {
   selectedModel: Model;
   selectedVariant: Variant;
   onEditDevice: () => void;
+  currentUser?: ApiUser | null;
+  onNavigate?: (path: string) => void;
 }
 
 // L-2: Agent phone numbers are placeholder / demo only.
@@ -109,14 +111,56 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
   selectedDefects,
   selectedModel,
   selectedVariant,
-  onEditDevice
+  onEditDevice,
+  currentUser,
+  onNavigate
 }) => {
   const [schedulerStep, setSchedulerStep] = useState<number>(1);
 
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
+  const [name, setName] = useState(currentUser?.name || '');
+  const [email, setEmail] = useState(currentUser?.email || '');
+  const [phone, setPhone] = useState(currentUser?.phone || '');
   const [imei, setImei] = useState('');
+
+  // Synchronize state if currentUser loads after component mount
+  React.useEffect(() => {
+    if (currentUser) {
+      setName(prev => prev || currentUser.name);
+      setEmail(prev => prev || currentUser.email);
+      setPhone(prev => prev || currentUser.phone);
+    }
+  }, [currentUser]);
+
+  // Restore fields if user was redirected to login and returned
+  React.useEffect(() => {
+    const savedFieldsStr = localStorage.getItem('pending_scheduler_fields');
+    if (savedFieldsStr) {
+      try {
+        const fields = JSON.parse(savedFieldsStr);
+        if (fields.name) setName(fields.name);
+        if (fields.email) setEmail(fields.email);
+        if (fields.phone) setPhone(fields.phone);
+        if (fields.imei) setImei(fields.imei);
+        if (fields.address) setAddress(fields.address);
+        if (fields.pincode) setPincode(fields.pincode);
+        if (fields.selectedDate) setSelectedDate(fields.selectedDate);
+        if (fields.selectedTimeSlot) setSelectedTimeSlot(fields.selectedTimeSlot);
+        if (fields.paymentMethod) setPaymentMethod(fields.paymentMethod);
+        if (fields.upiId) setUpiId(fields.upiId);
+        if (fields.accountHolderName) setAccountHolderName(fields.accountHolderName);
+        if (fields.accountNumber) setAccountNumber(fields.accountNumber);
+        if (fields.ifscCode) setIfscCode(fields.ifscCode);
+        if (fields.verificationStatus) setVerificationStatus(fields.verificationStatus);
+        if (fields.verifiedName) setVerifiedName(fields.verifiedName);
+        if (fields.maskedAadhaar) setMaskedAadhaar(fields.maskedAadhaar);
+        if (fields.verificationDate) setVerificationDate(fields.verificationDate);
+        
+        localStorage.removeItem('pending_scheduler_fields');
+      } catch (err) {
+        console.error('Failed to parse pending scheduler fields:', err);
+      }
+    }
+  }, []);
   const [address, setAddress] = useState('');
   const [pincode, setPincode] = useState('');
   const [selectedDate, setSelectedDate] = useState<string>('');
@@ -295,6 +339,50 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
       setFormError('Please complete all required steps and fields before submitting.');
       return;
     }
+
+    if (!currentUser) {
+      // Save pending booking flow so we can restore the user's wizard state
+      const pendingFlow = {
+        selectedModel,
+        selectedVariant,
+        selectedDefects: selectedDefects,
+        finalPrice,
+        activeStage: 'schedule',
+        wizardStep: 4, // final wizard step (PickupScheduler)
+      };
+      localStorage.setItem('pending_booking_flow', JSON.stringify(pendingFlow));
+
+      // Save form fields so they are preserved
+      const pendingFields = {
+        name,
+        email,
+        phone,
+        imei,
+        address,
+        pincode,
+        selectedDate,
+        selectedTimeSlot,
+        paymentMethod,
+        upiId,
+        accountHolderName,
+        accountNumber,
+        ifscCode,
+        verificationStatus,
+        verifiedName,
+        maskedAadhaar,
+        verificationDate,
+      };
+      localStorage.setItem('pending_scheduler_fields', JSON.stringify(pendingFields));
+
+      // Redirect to login
+      if (onNavigate) {
+        onNavigate('/login?redirect=booking');
+      } else {
+        window.history.pushState({}, '', '/login?redirect=booking');
+        window.dispatchEvent(new Event('popstate'));
+      }
+      return;
+    }
     // Rate-limit check
     if (isRateLimited()) {
       alert('Too many submission attempts. Please wait 10 minutes before trying again.');
@@ -374,6 +462,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
     try {
       await createBooking(newBooking as any);
     } catch (err) {
+      isSubmittingRef.current = false;
       setIsSubmitting(false);
       setFormError('Failed to submit booking to server: ' + (err as Error).message);
       return;

@@ -16,6 +16,8 @@ const __dirname = path.dirname(__filename);
 import { adminAuth, requireRole, AuthenticatedRequest } from './middleware/adminAuth.js';
 import adminRouter from './routes/admin.js';
 import supportRouter from './routes/support.js';
+import { customerAuth, AuthenticatedCustomerRequest } from './middleware/customerAuth.js';
+import authRouter from './routes/auth.js';
 import {
   calculateServerValuation,
   maximumQuoteFor,
@@ -304,6 +306,7 @@ app.get('/api/health', (_req, res) => {
 
 app.use('/api/admin', authLimiter, adminRouter);
 app.use('/api/support', supportRouter);
+app.use('/api/auth', authLimiter, authRouter);
 
 // ═══════════════════════════════════════════════════════════════════════════
 // BRANDS & MODELS
@@ -725,7 +728,7 @@ app.get('/api/bookings', adminAuth, async (req: AuthenticatedRequest, res) => {
 });
 
 // Create booking — Public & Server-Authoritative
-app.post('/api/bookings', bookingLimiter, async (req, res) => {
+app.post('/api/bookings', bookingLimiter, customerAuth, async (req: AuthenticatedCustomerRequest, res) => {
   try {
     const b = req.body as Record<string, unknown>;
 
@@ -763,13 +766,14 @@ app.post('/api/bookings', bookingLimiter, async (req, res) => {
     const booking = await prisma.booking.create({
       data: {
         id: bookingId,
+        userId: req.userId,
         modelLegacyId: model.legacyId,
         modelName: model.name,
         storageGb,
         color: String(b.color ?? ''),
-        customerName: String(b.customerName).trim(),
-        customerPhone: String(b.customerPhone).trim(),
-        customerEmail: String(b.customerEmail).trim().toLowerCase(),
+        customerName: req.customer.name,
+        customerPhone: req.customer.phone,
+        customerEmail: req.customer.email,
         address: String(b.address).trim(),
         pickupDate: String(b.pickupDate),
         pickupTimeSlot: String(b.pickupTimeSlot),
