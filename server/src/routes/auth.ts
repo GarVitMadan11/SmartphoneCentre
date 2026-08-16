@@ -44,6 +44,22 @@ function sanitizeUser(user: any) {
   };
 }
 
+// Check if phone exists
+router.post('/check-phone', async (req, res) => {
+  try {
+    const { phone } = req.body;
+    if (!phone) {
+      res.status(400).json({ error: 'ValidationError', message: 'Phone is required.' });
+      return;
+    }
+    const user = await prisma.user.findFirst({ where: { phone: phone.trim() } });
+    res.status(200).json({ exists: !!user });
+  } catch (err) {
+    console.error('Check phone error:', err);
+    res.status(500).json({ error: 'ServerError', message: 'Failed to verify phone number.' });
+  }
+});
+
 // Sign Up
 router.post('/signup', async (req, res) => {
   try {

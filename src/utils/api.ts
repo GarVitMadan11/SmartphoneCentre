@@ -306,6 +306,13 @@ export interface ApiUser {
   updatedAt: string;
 }
 
+export function checkPhone(phone: string): Promise<{ exists: boolean }> {
+  return apiFetch<{ exists: boolean }>('/auth/check-phone', {
+    method: 'POST',
+    body: JSON.stringify({ phone }),
+  });
+}
+
 export function customerLogin(emailOrPhone: string, password: string): Promise<{ user: ApiUser; csrfToken: string }> {
   return apiFetch<{ user: ApiUser; csrfToken: string }>('/auth/login', {
     method: 'POST',

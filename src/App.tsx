@@ -1415,6 +1415,8 @@ export default function App() {
                 setSelectedDefects={setSelectedDefects}
                 step={wizardStep}
                 setStep={setWizardStep}
+                currentUser={currentUser}
+                onLoginSuccess={(user) => setCurrentUser(user)}
               />
             </Suspense>
           )}
