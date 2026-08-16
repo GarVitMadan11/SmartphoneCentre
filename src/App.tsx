@@ -5,7 +5,7 @@ import { DeviceSelector } from './components/client/DeviceSelector';
 import { DeviceCategoryShowcase } from './components/client/DeviceCategoryShowcase';
 import { SellYourDevice } from './components/client/SellYourDevice';
 import { SupportChatWidget } from './components/client/SupportChatWidget';
-import { CategoryBar } from './components/client/CategoryBar';
+import { HeaderNav } from './components/client/HeaderNav';
 import { TabletsShowcase } from './components/client/TabletsShowcase';
 import { SmartwatchesShowcase } from './components/client/SmartwatchesShowcase';
 import { AboutPage } from './components/client/AboutPage';
@@ -22,7 +22,7 @@ const OrderTrackingModal = lazy(() => import('./components/client/OrderTrackingM
 // ─────────────────────────────────────────────────────────────────────────────
 import { 
   Award, ShieldCheck, Zap, Search,
-  TrendingUp, Menu, X,
+  TrendingUp, X,
   Truck, Lock, CheckCircle2, Sparkles, ArrowRight, Info, Code, GitBranch, Database
 } from 'lucide-react';
 
@@ -397,7 +397,6 @@ export default function App() {
   const [selectedDefects, setSelectedDefects] = useState<DefectRule[]>([]);
 
   const [isSpecModalOpen, setIsSpecModalOpen] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success', title: string = 'Notice') => {
@@ -524,7 +523,6 @@ export default function App() {
     setFinalPrice(0);
     setWizardStep(0);
     setActiveStage('select');
-    setMobileMenuOpen(false);
     setSelectedTabletBrand('all');
     setSelectedWatchBrand('all');
     clearNavState();
@@ -537,87 +535,8 @@ export default function App() {
   return (
     <div className="min-h-screen bg-canvas-white text-ink-navy flex flex-col font-sans selection:bg-cobalt selection:text-white">
 
-      {/* ── Header ────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-40 bg-white/85 backdrop-blur-md border-b border-ice-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4 flex items-center justify-between">
-
-          {/* Logo */}
-          <div className="flex items-center gap-2 cursor-pointer flex-shrink-0" onClick={() => { handleReset(); navigate('/'); }}>
-            <img src="/logo.svg" className="w-8 h-8 object-contain rounded-md" alt="Rephonix Logo" />
-            <span className="text-xl font-extrabold text-ink-navy tracking-tight">Re<span className="text-secondary">phonix</span></span>
-          </div>
-
-          {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-4 lg:gap-6 text-sm font-semibold text-ink-slate">
-            <span onClick={() => { handleReset(); navigate('/'); }} className={`hover:text-cobalt cursor-pointer transition-colors font-light ${path === '/' ? 'text-cobalt font-semibold' : ''}`}>
-              Home
-            </span>
-            <span onClick={() => { handleReset(); navigate('/smartphones'); }} className={`hover:text-cobalt cursor-pointer transition-colors font-light ${path === '/smartphones' ? 'text-cobalt font-semibold' : ''}`}>
-              Smartphones
-            </span>
-            <span onClick={() => { handleReset(); navigate('/tablets'); }} className={`hover:text-cobalt cursor-pointer transition-colors font-light ${path === '/tablets' ? 'text-cobalt font-semibold' : ''}`}>
-              Tablets/iPads
-            </span>
-            <span onClick={() => { handleReset(); navigate('/smartwatches'); }} className={`hover:text-cobalt cursor-pointer transition-colors font-light ${path === '/smartwatches' ? 'text-cobalt font-semibold' : ''}`}>
-              Smartwatches
-            </span>
-            <span onClick={() => { handleReset(); navigate('/about'); }} className={`hover:text-cobalt cursor-pointer transition-colors font-light ${path === '/about' ? 'text-cobalt font-semibold' : ''}`}>
-              About
-            </span>
-            <span onClick={() => { handleReset(); navigate('/contact'); }} className={`hover:text-cobalt cursor-pointer transition-colors font-light ${path === '/contact' ? 'text-cobalt font-semibold' : ''}`}>
-              Contact
-            </span>
-            <button
-              onClick={() => setIsTrackOpen(true)}
-              className="bg-cobalt/10 hover:bg-cobalt/20 text-cobalt px-3 py-1 rounded-md text-xs font-bold transition-all flex items-center gap-1.5"
-            >
-              <Truck className="w-3.5 h-3.5" />
-              <span>Track Order</span>
-            </button>
-          </div>
-
-          {/* Mobile hamburger */}
-          <button
-            className="md:hidden p-2 rounded-sm border border-ice-border text-ink-slate hover:border-cobalt hover:text-cobalt transition-all"
-            onClick={() => setMobileMenuOpen(o => !o)}
-          >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
-        </div>
-
-        {/* Mobile drop-down menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden border-t border-ice-border bg-canvas-pure px-4 py-3 space-y-2 text-left">
-            <button onClick={() => { setMobileMenuOpen(false); handleReset(); navigate('/'); }} className={`w-full text-left text-sm font-semibold py-2 px-3 rounded-sm hover:bg-ice-gray transition-colors ${path === '/' ? 'text-cobalt bg-cobalt/5' : 'text-ink-slate'}`}>
-              Home
-            </button>
-            <button onClick={() => { setMobileMenuOpen(false); handleReset(); navigate('/smartphones'); }} className={`w-full text-left text-sm font-semibold py-2 px-3 rounded-sm hover:bg-ice-gray transition-colors ${path === '/smartphones' ? 'text-cobalt bg-cobalt/5' : 'text-ink-slate'}`}>
-              Smartphones
-            </button>
-            <button onClick={() => { setMobileMenuOpen(false); handleReset(); navigate('/tablets'); }} className={`w-full text-left text-sm font-semibold py-2 px-3 rounded-sm hover:bg-ice-gray transition-colors ${path === '/tablets' ? 'text-cobalt bg-cobalt/5' : 'text-ink-slate'}`}>
-              Tablets/iPads
-            </button>
-            <button onClick={() => { setMobileMenuOpen(false); handleReset(); navigate('/smartwatches'); }} className={`w-full text-left text-sm font-semibold py-2 px-3 rounded-sm hover:bg-ice-gray transition-colors ${path === '/smartwatches' ? 'text-cobalt bg-cobalt/5' : 'text-ink-slate'}`}>
-              Smartwatches
-            </button>
-            <button onClick={() => { setMobileMenuOpen(false); handleReset(); navigate('/about'); }} className={`w-full text-left text-sm font-semibold py-2 px-3 rounded-sm hover:bg-ice-gray transition-colors ${path === '/about' ? 'text-cobalt bg-cobalt/5' : 'text-ink-slate'}`}>
-              About
-            </button>
-            <button onClick={() => { setMobileMenuOpen(false); handleReset(); navigate('/contact'); }} className={`w-full text-left text-sm font-semibold py-2 px-3 rounded-sm hover:bg-ice-gray transition-colors ${path === '/contact' ? 'text-cobalt bg-cobalt/5' : 'text-ink-slate'}`}>
-              Contact
-            </button>
-            <button
-              onClick={() => { setMobileMenuOpen(false); setIsTrackOpen(true); }}
-              className="w-full flex items-center gap-2 text-sm font-semibold text-cobalt py-2 px-3 rounded-sm bg-cobalt/10 hover:bg-cobalt/20 transition-colors"
-            >
-              <Truck className="w-4 h-4 text-cobalt" /> Track Order
-            </button>
-          </div>
-        )}
-      </header>
-
-      {/* ── Focused Category Sub-Header Bar (Smartphones, Tablets, Smartwatches) ── */}
-      <CategoryBar
+      {/* ── Consolidated Header Navigation ─────────────────────────── */}
+      <HeaderNav
         currentPath={path}
         onNavigate={(p) => { handleReset(); navigate(p); }}
         onSelectBrand={(brandId) => {
