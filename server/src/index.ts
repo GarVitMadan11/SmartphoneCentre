@@ -74,7 +74,7 @@ app.use(compression());
 app.set('trust proxy', process.env.NODE_ENV === 'production' ? 'loopback, linklocal, uniquelocal' : 1);
 
 // ── Parse allowed origins from env ───────────────────────────────────────────
-const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? 'http://localhost:5173,http://localhost:3000')
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? 'http://localhost:5173,http://localhost:3000,https://rephonix.in,https://www.rephonix.in')
   .split(',')
   .map(o => o.trim())
   .filter(Boolean);
@@ -95,7 +95,7 @@ app.use(helmet({
       styleSrcElem: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
       imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
-      connectSrc: ["'self'", 'https://api.emailjs.com', 'http://localhost:4000', 'http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002', 'http://localhost:5173', 'http://localhost:5174'],
+      connectSrc: ["'self'", 'https://api.emailjs.com', 'http://localhost:4000', 'http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002', 'http://localhost:5173', 'http://localhost:5174', 'https://rephonix.in', 'https://www.rephonix.in'],
     },
   },
 }));
