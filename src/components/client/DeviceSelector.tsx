@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { BRANDS as STATIC_BRANDS, MODELS as STATIC_MODELS, Model, Brand, Variant, generateVariantsForModel, getDeviceImage } from '../../data/mockDatabase';
-import { Search, ChevronRight, Smartphone, Layers, ArrowLeft, ArrowRight } from 'lucide-react';
+import { BRANDS as STATIC_BRANDS, MODELS as STATIC_MODELS, Model, Brand, Variant, generateVariantsForModel, getDeviceImage, getModelSupportedRam, getModelSupportedStorage, getVariantPrice, isTabletDevice } from '../../data/mockDatabase';
+import { Search, ChevronRight, Smartphone, Layers, ArrowLeft, ArrowRight, Cpu, Wifi, Radio } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   siApple, siSamsung, siXiaomi, siVivo, siOneplus, siGoogle,
@@ -773,26 +773,85 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
     return generateVariantsForModel(selectedModel);
   }, [selectedModel]);
 
-  // Group variants by storage
+  // Storage Options for selected model
   const storageOptions = useMemo(() => {
-    const storages = new Set<number>();
-    modelVariants.forEach(v => storages.add(v.storageGb));
-    return Array.from(storages).sort((a, b) => a - b);
-  }, [modelVariants]);
+    if (!selectedModel) return [];
+    return getModelSupportedStorage(selectedModel);
+  }, [selectedModel]);
 
-  // Selected storage state
+  // RAM Options for selected model
+  const ramOptions = useMemo(() => {
+    if (!selectedModel) return [];
+    return getModelSupportedRam(selectedModel).filter(r => r > 0);
+  }, [selectedModel]);
+
+  // Selected RAM, Storage & Connectivity state
+  const [selectedRam, setSelectedRam] = useState<number | null>(null);
   const [selectedStorage, setSelectedStorage] = useState<number | null>(null);
+  const [selectedConnectivity, setSelectedConnectivity] = useState<'wifi' | 'cellular'>('cellular');
+
+  const isTablet = useMemo(() => {
+    if (!selectedModel) return false;
+    return isTabletDevice(selectedModel.brandId, selectedModel.name, selectedModel.id);
+  }, [selectedModel]);
 
   const handleModelClick = (model: Model) => {
     setSelectedModel(model);
+    const rams = getModelSupportedRam(model).filter(r => r > 0);
+    setSelectedRam(rams.length > 0 ? rams[0] : null);
     setSelectedStorage(null);
+    setSelectedConnectivity('cellular');
     setTempVariant(null);
+  };
+
+  const handleConnectivitySelect = (conn: 'wifi' | 'cellular') => {
+    setSelectedConnectivity(conn);
+    if (selectedModel && selectedStorage !== null) {
+      const ram = selectedRam ?? (ramOptions.length > 0 ? ramOptions[0] : 0);
+      const baseVar = modelVariants.find(v => v.storageGb === selectedStorage) || modelVariants[0];
+      const baseVal = getVariantPrice(selectedModel, ram, selectedStorage);
+      const price = conn === 'wifi' ? Math.max(1000, Math.round(baseVal * 0.92)) : baseVal;
+      setTempVariant({
+        ...baseVar,
+        ramGb: ram,
+        storageGb: selectedStorage,
+        color: conn === 'cellular' ? 'Wi-Fi + Cellular (SIM)' : 'Wi-Fi Only',
+        basePrice: price,
+      });
+    }
+  };
+
+  const handleRamSelect = (ram: number) => {
+    setSelectedRam(ram);
+    if (selectedModel && selectedStorage !== null) {
+      const baseVar = modelVariants.find(v => v.storageGb === selectedStorage) || modelVariants[0];
+      const baseVal = getVariantPrice(selectedModel, ram, selectedStorage);
+      const price = isTablet && selectedConnectivity === 'wifi' ? Math.max(1000, Math.round(baseVal * 0.92)) : baseVal;
+      setTempVariant({
+        ...baseVar,
+        ramGb: ram,
+        storageGb: selectedStorage,
+        color: isTablet ? (selectedConnectivity === 'cellular' ? 'Wi-Fi + Cellular (SIM)' : 'Wi-Fi Only') : baseVar.color,
+        basePrice: price,
+      });
+    }
   };
 
   const handleStorageSelect = (storage: number) => {
     setSelectedStorage(storage);
-    const matched = modelVariants.find(v => v.storageGb === storage) || null;
-    setTempVariant(matched);
+    if (selectedModel) {
+      const ram = selectedRam ?? (ramOptions.length > 0 ? ramOptions[0] : 0);
+      const baseVar = modelVariants.find(v => v.storageGb === storage) || modelVariants[0];
+      const baseVal = getVariantPrice(selectedModel, ram, storage);
+      const price = isTablet && selectedConnectivity === 'wifi' ? Math.max(1000, Math.round(baseVal * 0.92)) : baseVal;
+      setTempVariant({
+        ...baseVar,
+        ramGb: ram,
+        storageGb: storage,
+        color: isTablet ? (selectedConnectivity === 'cellular' ? 'Wi-Fi + Cellular (SIM)' : 'Wi-Fi Only') : baseVar.color,
+        basePrice: price,
+      });
+    }
   };
 
   const handleConfirm = () => {
@@ -1095,6 +1154,72 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                 </div>
                 <p className="text-xs text-ink-muted mt-2 font-light">Select your device's storage capacity to load the live trade-in value.</p>
               </div>
+
+              {/* Connectivity selection for Tablets (Wi-Fi + Cellular vs Wi-Fi Only) */}
+              {isTablet && (
+                <div className="mb-5">
+                  <label className="text-xs uppercase tracking-wider font-bold text-ink-slate block mb-2.5 flex items-center gap-1.5 font-mono">
+                    <Wifi className="w-3.5 h-3.5 text-cobalt" /> Select Network &amp; Connectivity
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleConnectivitySelect('cellular')}
+                      className={`py-2.5 px-3 rounded-md border text-xs font-bold font-mono transition-all flex items-center justify-center gap-1.5 ${
+                        selectedConnectivity === 'cellular'
+                          ? 'bg-cobalt text-white border-cobalt shadow-[0_3px_10px_rgba(29,78,216,0.25)]'
+                          : 'bg-canvas-white text-ink-navy border-ice-border hover:border-cobalt/30'
+                      }`}
+                    >
+                      <Radio className="w-3.5 h-3.5" />
+                      <span>Wi-Fi + Cellular (SIM)</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleConnectivitySelect('wifi')}
+                      className={`py-2.5 px-3 rounded-md border text-xs font-bold font-mono transition-all flex items-center justify-center gap-1.5 ${
+                        selectedConnectivity === 'wifi'
+                          ? 'bg-cobalt text-white border-cobalt shadow-[0_3px_10px_rgba(29,78,216,0.25)]'
+                          : 'bg-canvas-white text-ink-navy border-ice-border hover:border-cobalt/30'
+                      }`}
+                    >
+                      <Wifi className="w-3.5 h-3.5" />
+                      <span>Wi-Fi Only (No SIM)</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* RAM Selection (Android Smartphones & Android Tablets) */}
+              {ramOptions.length > 0 && (
+                <div className="mb-5">
+                  <label className="text-xs uppercase tracking-wider font-bold text-ink-slate block mb-2.5 flex items-center gap-1.5 font-mono">
+                    <Cpu className="w-3.5 h-3.5 text-cobalt" /> Select RAM Variant
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {ramOptions.map(ram => {
+                      const isSelected = selectedRam === ram;
+                      return (
+                        <motion.button
+                          key={ram}
+                          whileHover={{ y: -1 }}
+                          whileTap={{ scale: 0.97 }}
+                          onClick={() => handleRamSelect(ram)}
+                          className={`px-4 py-2.5 rounded-md border text-xs font-bold font-mono transition-all duration-200 ${
+                            isSelected
+                              ? 'bg-cobalt text-white border-cobalt shadow-[0_3px_10px_rgba(29,78,216,0.25)]'
+                              : 'bg-canvas-white text-ink-navy border-ice-border hover:border-cobalt/30 hover:bg-cobalt-light/5'
+                          }`}
+                          style={{ minHeight: '40px' }}
+                        >
+                          {ram} GB RAM
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* Storage selection */}
               <div className="mb-6">

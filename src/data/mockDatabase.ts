@@ -32,6 +32,7 @@ export interface Variant {
   id: string;
   modelId: string;
   storageGb: number;
+  ramGb?: number;     // RAM capacity in GB (e.g. 4, 6, 8, 12, 16); 0 or undefined for Apple
   color: string;
   basePrice: number; // Calculated base price in INR
 }
@@ -879,8 +880,47 @@ const BASE_MODELS: Model[] = [
   { id: 'goog-6a',  brandId: 'brand-google', name: 'Pixel 6a', category: 'budget',   releaseYear: 2022, basePrice128GB:  6500, series: 'Pixel 6 Series' },
 ];
 
+// ─────────────────────────────────────────────────────────────────────────────
+// DEDICATED TABLET MODELS (Apple iPads & Samsung Galaxy Tabs ONLY)
+// ─────────────────────────────────────────────────────────────────────────────
+export const TABLET_MODELS: Model[] = [
+  // Apple iPads
+  { id: 'apple-ipad-pro-m4-13', brandId: 'brand-apple', name: 'iPad Pro 13" (M4)', category: 'flagship', releaseYear: 2024, basePrice128GB: 78000, series: 'iPad Pro', supportedStorageGb: [256, 512, 1024, 2048], supportedRamGb: [0], imageUrl: 'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-pro-13-select-wifi-spaceblack-202405?wid=940&hei=1112&fmt=p-jpg&qlt=95' },
+  { id: 'apple-ipad-pro-m4-11', brandId: 'brand-apple', name: 'iPad Pro 11" (M4)', category: 'flagship', releaseYear: 2024, basePrice128GB: 64000, series: 'iPad Pro', supportedStorageGb: [256, 512, 1024, 2048], supportedRamGb: [0], imageUrl: 'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-pro-11-select-wifi-spaceblack-202405?wid=940&hei=1112&fmt=p-jpg&qlt=95' },
+  { id: 'apple-ipad-air-m2-13', brandId: 'brand-apple', name: 'iPad Air 13" (M2)', category: 'premium', releaseYear: 2024, basePrice128GB: 48000, series: 'iPad Air', supportedStorageGb: [128, 256, 512, 1024], supportedRamGb: [0], imageUrl: 'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-air-13-select-wifi-blue-202405?wid=940&hei=1112&fmt=p-jpg&qlt=95' },
+  { id: 'apple-ipad-air-m2-11', brandId: 'brand-apple', name: 'iPad Air 11" (M2)', category: 'premium', releaseYear: 2024, basePrice128GB: 39000, series: 'iPad Air', supportedStorageGb: [128, 256, 512, 1024], supportedRamGb: [0], imageUrl: 'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-air-11-select-wifi-starlight-202405?wid=940&hei=1112&fmt=p-jpg&qlt=95' },
+  { id: 'apple-ipad-10gen', brandId: 'brand-apple', name: 'iPad (10th Generation)', category: 'midrange', releaseYear: 2022, basePrice128GB: 22000, series: 'iPad', supportedStorageGb: [64, 256], supportedRamGb: [0], imageUrl: 'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-10th-gen-finish-select-202212-blue?wid=940&hei=1112&fmt=p-jpg&qlt=95' },
+  { id: 'apple-ipad-mini-7', brandId: 'brand-apple', name: 'iPad mini 7 (A17 Pro)', category: 'premium', releaseYear: 2024, basePrice128GB: 34000, series: 'iPad mini', supportedStorageGb: [128, 256, 512], supportedRamGb: [0], imageUrl: 'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-mini-select-wifi-purple-202410?wid=940&hei=1112&fmt=p-jpg&qlt=95' },
+
+  // Samsung Galaxy Tabs
+  { id: 'samsung-tab-s10-ultra', brandId: 'brand-samsung', name: 'Galaxy Tab S10 Ultra', category: 'flagship', releaseYear: 2024, basePrice128GB: 72000, series: 'Galaxy Tab S', supportedStorageGb: [256, 512, 1024], supportedRamGb: [12, 16], imageUrl: 'https://images.samsung.com/is/image/samsung/p6pim/in/sm-x920nzaainu/gallery/in-galaxy-tab-s10-ultra-sm-x920-sm-x920nzaainu-543598501?$650_519_PNG$' },
+  { id: 'samsung-tab-s10-plus', brandId: 'brand-samsung', name: 'Galaxy Tab S10+', category: 'flagship', releaseYear: 2024, basePrice128GB: 58000, series: 'Galaxy Tab S', supportedStorageGb: [256, 512], supportedRamGb: [12], imageUrl: 'https://images.samsung.com/is/image/samsung/p6pim/in/sm-x820nzaainu/gallery/in-galaxy-tab-s10-plus-sm-x820-sm-x820nzaainu-543598462?$650_519_PNG$' },
+  { id: 'samsung-tab-s9-ultra', brandId: 'brand-samsung', name: 'Galaxy Tab S9 Ultra', category: 'flagship', releaseYear: 2023, basePrice128GB: 52000, series: 'Galaxy Tab S', supportedStorageGb: [256, 512, 1024], supportedRamGb: [12, 16], imageUrl: 'https://images.samsung.com/is/image/samsung/p6pim/in/sm-x910nzaainu/gallery/in-galaxy-tab-s9-ultra-sm-x910-sm-x910nzaainu-537466829?$650_519_PNG$' },
+  { id: 'samsung-tab-s9-fe', brandId: 'brand-samsung', name: 'Galaxy Tab S9 FE+', category: 'midrange', releaseYear: 2023, basePrice128GB: 26000, series: 'Galaxy Tab FE', supportedStorageGb: [128, 256], supportedRamGb: [8, 12], imageUrl: 'https://images.samsung.com/is/image/samsung/p6pim/in/sm-x610nzaainu/gallery/in-galaxy-tab-s9-fe-plus-sm-x610-sm-x610nzaainu-538466184?$650_519_PNG$' },
+  { id: 'samsung-tab-a9-plus', brandId: 'brand-samsung', name: 'Galaxy Tab A9+', category: 'budget', releaseYear: 2023, basePrice128GB: 12500, series: 'Galaxy Tab A', supportedStorageGb: [64, 128], supportedRamGb: [4, 8], imageUrl: 'https://images.samsung.com/is/image/samsung/p6pim/in/sm-x210nzaainu/gallery/in-galaxy-tab-a9-plus-sm-x210-sm-x210nzaainu-538622176?$650_519_PNG$' }
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DEDICATED SMARTWATCH MODELS (Apple Watches & Samsung Galaxy Watches ONLY)
+// ─────────────────────────────────────────────────────────────────────────────
+export const SMARTWATCH_MODELS: Model[] = [
+  // Apple Watches
+  { id: 'apple-watch-ultra-2', brandId: 'brand-apple', name: 'Apple Watch Ultra 2', category: 'flagship', releaseYear: 2024, basePrice128GB: 46000, series: 'Apple Watch Ultra', supportedStorageGb: [64], supportedRamGb: [0], imageUrl: 'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ultra-black-titanium-select-202409?wid=940&hei=1112&fmt=p-jpg&qlt=95' },
+  { id: 'apple-watch-series-10', brandId: 'brand-apple', name: 'Apple Watch Series 10', category: 'flagship', releaseYear: 2024, basePrice128GB: 28000, series: 'Apple Watch Series 10', supportedStorageGb: [64], supportedRamGb: [0], imageUrl: 'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/s10-case-unselect-gallery-1-202409?wid=940&hei=1112&fmt=p-jpg&qlt=95' },
+  { id: 'apple-watch-series-9', brandId: 'brand-apple', name: 'Apple Watch Series 9', category: 'premium', releaseYear: 2023, basePrice128GB: 21000, series: 'Apple Watch Series 9', supportedStorageGb: [64], supportedRamGb: [0], imageUrl: 'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/s9-case-unselect-gallery-1-202309?wid=940&hei=1112&fmt=p-jpg&qlt=95' },
+  { id: 'apple-watch-se-2', brandId: 'brand-apple', name: 'Apple Watch SE (2nd Gen)', category: 'midrange', releaseYear: 2023, basePrice128GB: 13500, series: 'Apple Watch SE', supportedStorageGb: [32], supportedRamGb: [0], imageUrl: 'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/se-case-unselect-gallery-1-202309?wid=940&hei=1112&fmt=p-jpg&qlt=95' },
+
+  // Samsung Galaxy Watches
+  { id: 'samsung-watch-ultra', brandId: 'brand-samsung', name: 'Galaxy Watch Ultra', category: 'flagship', releaseYear: 2024, basePrice128GB: 32000, series: 'Galaxy Watch Ultra', supportedStorageGb: [32], supportedRamGb: [2], imageUrl: 'https://images.samsung.com/is/image/samsung/p6pim/in/sm-l705fdaainu/gallery/in-galaxy-watch-ultra-sm-l705-sm-l705fdaainu-542385317?$650_519_PNG$' },
+  { id: 'samsung-watch-7', brandId: 'brand-samsung', name: 'Galaxy Watch 7', category: 'premium', releaseYear: 2024, basePrice128GB: 18500, series: 'Galaxy Watch 7', supportedStorageGb: [32], supportedRamGb: [2], imageUrl: 'https://images.samsung.com/is/image/samsung/p6pim/in/sm-l310nzaainu/gallery/in-galaxy-watch7-l310-sm-l310nzaainu-542385150?$650_519_PNG$' },
+  { id: 'samsung-watch-6-classic', brandId: 'brand-samsung', name: 'Galaxy Watch 6 Classic', category: 'premium', releaseYear: 2023, basePrice128GB: 14500, series: 'Galaxy Watch 6', supportedStorageGb: [16], supportedRamGb: [2], imageUrl: 'https://images.samsung.com/is/image/samsung/p6pim/in/sm-r950nzkainu/gallery/in-galaxy-watch6-classic-r950-sm-r950nzkainu-537424915?$650_519_PNG$' },
+  { id: 'samsung-watch-6', brandId: 'brand-samsung', name: 'Galaxy Watch 6', category: 'midrange', releaseYear: 2023, basePrice128GB: 11000, series: 'Galaxy Watch 6', supportedStorageGb: [16], supportedRamGb: [2], imageUrl: 'https://images.samsung.com/is/image/samsung/p6pim/in/sm-r930nzeainu/gallery/in-galaxy-watch6-r930-sm-r930nzeainu-537424785?$650_519_PNG$' }
+];
+
 export const MODELS: Model[] = [
   ...BASE_MODELS,
+  ...TABLET_MODELS,
+  ...SMARTWATCH_MODELS,
   ...CATALOG_ADDITIONS.filter((addition) => !BASE_MODELS.some((model) =>
     model.brandId === addition.brandId && model.name.toLowerCase() === addition.name.toLowerCase(),
   )),
@@ -1057,12 +1097,70 @@ export function generateVariantsForModel(model: Model): Variant[] {
   return variants;
 }
 
+/** Returns supported RAM options (GB) for a model. Returns [0] for Apple devices */
+export function getModelSupportedRam(model: Model): number[] {
+  if (isAppleDevice(model.brandId, model.name)) {
+    return [0];
+  }
+  if (isSmartwatchDevice(model.brandId, model.name, model.id)) {
+    return [2];
+  }
+  if (model.supportedRamGb && Array.isArray(model.supportedRamGb) && model.supportedRamGb.some(r => r > 0)) {
+    return model.supportedRamGb.filter(r => r > 0);
+  }
+  // Android Smartphones & Android Tablets defaults based on category
+  if (model.category === 'flagship') return [8, 12, 16];
+  if (model.category === 'premium') return [8, 12];
+  if (model.category === 'midrange') return [6, 8, 12];
+  return [2, 4, 6, 8];
+}
+
+/** Returns accurate supported storage options (GB) for a model (eliminates 128GB for Pro Max, Ultra, Fold models) */
+export function getModelSupportedStorage(model: Model): number[] {
+  const nameLower = model.name.toLowerCase();
+  const isProMaxOrUltra = nameLower.includes('pro max') || nameLower.includes('17 pro') || nameLower.includes('17 air') || nameLower.includes('ultra') || nameLower.includes('fold');
+
+  if (model.supportedStorageGb && Array.isArray(model.supportedStorageGb) && model.supportedStorageGb.length > 0) {
+    let list = model.supportedStorageGb;
+    if (isProMaxOrUltra) {
+      list = list.filter(gb => gb >= 256);
+    }
+    if (list.length > 0) return list;
+  }
+
+  if (isProMaxOrUltra) {
+    return nameLower.includes('17') || nameLower.includes('m4') ? [256, 512, 1024, 2048] : [256, 512, 1024];
+  }
+  if (model.category === 'budget') {
+    return [32, 64, 128, 256];
+  }
+  if (model.category === 'midrange') {
+    return [128, 256, 512];
+  }
+  return [128, 256, 512, 1024];
+}
+
 /** Get the admin-defined price for a specific RAM+Storage combo, or best-guess fallback */
-export function getVariantPrice(model: Model, ramGb: number, storageGb: number): number | null {
-  if (!model.variantPrices) return null;
-  const key = `${ramGb}_${storageGb}`;
-  const price = model.variantPrices[key];
-  return price !== undefined ? price : null;
+export function getVariantPrice(model: Model, ramGb: number, storageGb: number): number {
+  if (model.variantPrices) {
+    const key = `${ramGb}_${storageGb}`;
+    if (model.variantPrices[key] !== undefined) {
+      return model.variantPrices[key];
+    }
+  }
+  // Base storage calculation
+  const variants = generateVariantsForModel(model);
+  const baseVar = variants.find(v => v.storageGb === storageGb) || variants[0];
+  const baseStoragePrice = baseVar ? baseVar.basePrice : model.basePrice128GB;
+
+  const ramOptions = getModelSupportedRam(model).filter(r => r > 0);
+  if (ramOptions.length <= 1 || ramGb === 0 || !ramGb) {
+    return baseStoragePrice;
+  }
+  const minRam = Math.min(...ramOptions);
+  const stepCount = (ramGb - minRam) / 2;
+  const ramBonus = Math.max(0, stepCount * 1250);
+  return Math.round(baseStoragePrice + ramBonus);
 }
 
 export function getPhoneImageForBrand(brandId: string): string {
@@ -1129,6 +1227,7 @@ export interface Booking {
   modelId: string;
   modelName: string;
   storageGb: number;
+  ramGb?: number;
   color: string;
   customerName: string;
   customerPhone: string;
@@ -1181,40 +1280,5 @@ export function saveBookings(bookings: Booking[]) {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// DEDICATED TABLET MODELS (Apple iPads & Samsung Galaxy Tabs ONLY)
-// ─────────────────────────────────────────────────────────────────────────────
-export const TABLET_MODELS: Model[] = [
-  // Apple iPads
-  { id: 'apple-ipad-pro-m4-13', brandId: 'brand-apple', name: 'iPad Pro 13" (M4)', category: 'flagship', releaseYear: 2024, basePrice128GB: 78000, series: 'iPad Pro', supportedStorageGb: [256, 512, 1024, 2048], supportedRamGb: [0], imageUrl: 'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-pro-13-select-wifi-spaceblack-202405?wid=940&hei=1112&fmt=p-jpg&qlt=95' },
-  { id: 'apple-ipad-pro-m4-11', brandId: 'brand-apple', name: 'iPad Pro 11" (M4)', category: 'flagship', releaseYear: 2024, basePrice128GB: 64000, series: 'iPad Pro', supportedStorageGb: [256, 512, 1024, 2048], supportedRamGb: [0], imageUrl: 'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-pro-11-select-wifi-spaceblack-202405?wid=940&hei=1112&fmt=p-jpg&qlt=95' },
-  { id: 'apple-ipad-air-m2-13', brandId: 'brand-apple', name: 'iPad Air 13" (M2)', category: 'premium', releaseYear: 2024, basePrice128GB: 48000, series: 'iPad Air', supportedStorageGb: [128, 256, 512, 1024], supportedRamGb: [0], imageUrl: 'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-air-13-select-wifi-blue-202405?wid=940&hei=1112&fmt=p-jpg&qlt=95' },
-  { id: 'apple-ipad-air-m2-11', brandId: 'brand-apple', name: 'iPad Air 11" (M2)', category: 'premium', releaseYear: 2024, basePrice128GB: 39000, series: 'iPad Air', supportedStorageGb: [128, 256, 512, 1024], supportedRamGb: [0], imageUrl: 'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-air-11-select-wifi-starlight-202405?wid=940&hei=1112&fmt=p-jpg&qlt=95' },
-  { id: 'apple-ipad-10gen', brandId: 'brand-apple', name: 'iPad (10th Generation)', category: 'midrange', releaseYear: 2022, basePrice128GB: 22000, series: 'iPad', supportedStorageGb: [64, 256], supportedRamGb: [0], imageUrl: 'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-10th-gen-finish-select-202212-blue?wid=940&hei=1112&fmt=p-jpg&qlt=95' },
-  { id: 'apple-ipad-mini-7', brandId: 'brand-apple', name: 'iPad mini 7 (A17 Pro)', category: 'premium', releaseYear: 2024, basePrice128GB: 34000, series: 'iPad mini', supportedStorageGb: [128, 256, 512], supportedRamGb: [0], imageUrl: 'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-mini-select-wifi-purple-202410?wid=940&hei=1112&fmt=p-jpg&qlt=95' },
 
-  // Samsung Galaxy Tabs
-  { id: 'samsung-tab-s10-ultra', brandId: 'brand-samsung', name: 'Galaxy Tab S10 Ultra', category: 'flagship', releaseYear: 2024, basePrice128GB: 72000, series: 'Galaxy Tab S', supportedStorageGb: [256, 512, 1024], supportedRamGb: [12, 16], imageUrl: 'https://images.samsung.com/is/image/samsung/p6pim/in/sm-x920nzaainu/gallery/in-galaxy-tab-s10-ultra-sm-x920-sm-x920nzaainu-543598501?$650_519_PNG$' },
-  { id: 'samsung-tab-s10-plus', brandId: 'brand-samsung', name: 'Galaxy Tab S10+', category: 'flagship', releaseYear: 2024, basePrice128GB: 58000, series: 'Galaxy Tab S', supportedStorageGb: [256, 512], supportedRamGb: [12], imageUrl: 'https://images.samsung.com/is/image/samsung/p6pim/in/sm-x820nzaainu/gallery/in-galaxy-tab-s10-plus-sm-x820-sm-x820nzaainu-543598462?$650_519_PNG$' },
-  { id: 'samsung-tab-s9-ultra', brandId: 'brand-samsung', name: 'Galaxy Tab S9 Ultra', category: 'flagship', releaseYear: 2023, basePrice128GB: 52000, series: 'Galaxy Tab S', supportedStorageGb: [256, 512, 1024], supportedRamGb: [12, 16], imageUrl: 'https://images.samsung.com/is/image/samsung/p6pim/in/sm-x910nzaainu/gallery/in-galaxy-tab-s9-ultra-sm-x910-sm-x910nzaainu-537466829?$650_519_PNG$' },
-  { id: 'samsung-tab-s9-fe', brandId: 'brand-samsung', name: 'Galaxy Tab S9 FE+', category: 'midrange', releaseYear: 2023, basePrice128GB: 26000, series: 'Galaxy Tab FE', supportedStorageGb: [128, 256], supportedRamGb: [8, 12], imageUrl: 'https://images.samsung.com/is/image/samsung/p6pim/in/sm-x610nzaainu/gallery/in-galaxy-tab-s9-fe-plus-sm-x610-sm-x610nzaainu-538466184?$650_519_PNG$' },
-  { id: 'samsung-tab-a9-plus', brandId: 'brand-samsung', name: 'Galaxy Tab A9+', category: 'budget', releaseYear: 2023, basePrice128GB: 12500, series: 'Galaxy Tab A', supportedStorageGb: [64, 128], supportedRamGb: [4, 8], imageUrl: 'https://images.samsung.com/is/image/samsung/p6pim/in/sm-x210nzaainu/gallery/in-galaxy-tab-a9-plus-sm-x210-sm-x210nzaainu-538622176?$650_519_PNG$' }
-];
-
-// ─────────────────────────────────────────────────────────────────────────────
-// DEDICATED SMARTWATCH MODELS (Apple Watches & Samsung Galaxy Watches ONLY)
-// ─────────────────────────────────────────────────────────────────────────────
-export const SMARTWATCH_MODELS: Model[] = [
-  // Apple Watches
-  { id: 'apple-watch-ultra-2', brandId: 'brand-apple', name: 'Apple Watch Ultra 2', category: 'flagship', releaseYear: 2024, basePrice128GB: 46000, series: 'Apple Watch Ultra', supportedStorageGb: [64], supportedRamGb: [0], imageUrl: 'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ultra-black-titanium-select-202409?wid=940&hei=1112&fmt=p-jpg&qlt=95' },
-  { id: 'apple-watch-series-10', brandId: 'brand-apple', name: 'Apple Watch Series 10', category: 'flagship', releaseYear: 2024, basePrice128GB: 28000, series: 'Apple Watch Series 10', supportedStorageGb: [64], supportedRamGb: [0], imageUrl: 'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/s10-case-unselect-gallery-1-202409?wid=940&hei=1112&fmt=p-jpg&qlt=95' },
-  { id: 'apple-watch-series-9', brandId: 'brand-apple', name: 'Apple Watch Series 9', category: 'premium', releaseYear: 2023, basePrice128GB: 21000, series: 'Apple Watch Series 9', supportedStorageGb: [64], supportedRamGb: [0], imageUrl: 'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/s9-case-unselect-gallery-1-202309?wid=940&hei=1112&fmt=p-jpg&qlt=95' },
-  { id: 'apple-watch-se-2', brandId: 'brand-apple', name: 'Apple Watch SE (2nd Gen)', category: 'midrange', releaseYear: 2023, basePrice128GB: 13500, series: 'Apple Watch SE', supportedStorageGb: [32], supportedRamGb: [0], imageUrl: 'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/se-case-unselect-gallery-1-202309?wid=940&hei=1112&fmt=p-jpg&qlt=95' },
-
-  // Samsung Galaxy Watches
-  { id: 'samsung-watch-ultra', brandId: 'brand-samsung', name: 'Galaxy Watch Ultra', category: 'flagship', releaseYear: 2024, basePrice128GB: 32000, series: 'Galaxy Watch Ultra', supportedStorageGb: [32], supportedRamGb: [2], imageUrl: 'https://images.samsung.com/is/image/samsung/p6pim/in/sm-l705fdaainu/gallery/in-galaxy-watch-ultra-sm-l705-sm-l705fdaainu-542385317?$650_519_PNG$' },
-  { id: 'samsung-watch-7', brandId: 'brand-samsung', name: 'Galaxy Watch 7', category: 'premium', releaseYear: 2024, basePrice128GB: 18500, series: 'Galaxy Watch 7', supportedStorageGb: [32], supportedRamGb: [2], imageUrl: 'https://images.samsung.com/is/image/samsung/p6pim/in/sm-l310nzaainu/gallery/in-galaxy-watch7-l310-sm-l310nzaainu-542385150?$650_519_PNG$' },
-  { id: 'samsung-watch-6-classic', brandId: 'brand-samsung', name: 'Galaxy Watch 6 Classic', category: 'premium', releaseYear: 2023, basePrice128GB: 14500, series: 'Galaxy Watch 6', supportedStorageGb: [16], supportedRamGb: [2], imageUrl: 'https://images.samsung.com/is/image/samsung/p6pim/in/sm-r950nzkainu/gallery/in-galaxy-watch6-classic-r950-sm-r950nzkainu-537424915?$650_519_PNG$' },
-  { id: 'samsung-watch-6', brandId: 'brand-samsung', name: 'Galaxy Watch 6', category: 'midrange', releaseYear: 2023, basePrice128GB: 11000, series: 'Galaxy Watch 6', supportedStorageGb: [16], supportedRamGb: [2], imageUrl: 'https://images.samsung.com/is/image/samsung/p6pim/in/sm-r930nzeainu/gallery/in-galaxy-watch6-r930-sm-r930nzeainu-537424785?$650_519_PNG$' }
-];
 

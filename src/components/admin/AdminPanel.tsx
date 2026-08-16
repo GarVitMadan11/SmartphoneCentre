@@ -1,27 +1,30 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { Booking, Brand, Model, MODELS as STATIC_MODELS, isAppleDevice } from '../../data/mockDatabase';
+import { Booking, Brand, Model, MODELS as STATIC_MODELS, isSmartwatchDevice, isTabletDevice, getModelSupportedRam } from '../../data/mockDatabase';
 import { 
   ArrowLeft, Search, Filter, 
   CheckCircle, XCircle, Clock, CreditCard, 
   ChevronRight, Calendar, MapPin, User,
-  RefreshCw, Plus, Trash2, List,
+  RefreshCw, Plus, Trash2,
   Layers, Check, X,
   MessageSquare, HardDrive, ChevronDown,
-  AlertCircle, Cpu, Grid, Smartphone
+  AlertCircle, Cpu, Grid, Smartphone, Tablet, Watch
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { updateBooking, fetchModels, createModel, updateModel, deleteModel } from '../../utils/api';
 import { SupportInbox } from './SupportInbox';
 
 const ALL_RAM_OPTIONS: { gb: number; label: string }[] = [
+  { gb: 2, label: '2 GB' },
   { gb: 4, label: '4 GB' },
   { gb: 6, label: '6 GB' },
   { gb: 8, label: '8 GB' },
   { gb: 12, label: '12 GB' },
   { gb: 16, label: '16 GB' },
+  { gb: 24, label: '24 GB' },
 ];
 
 const ALL_STORAGE_OPTIONS: { gb: number; label: string }[] = [
+  { gb: 32, label: '32 GB' },
   { gb: 64, label: '64 GB' },
   { gb: 128, label: '128 GB' },
   { gb: 256, label: '256 GB' },
@@ -53,10 +56,23 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   }, [initialBookings]);
 
   // Catalog management states
+  const [catalogDeviceCategory, setCatalogDeviceCategory] = useState<'smartphones' | 'tablets' | 'smartwatches'>('smartphones');
   const [models, setModels] = useState<Model[]>([]);
   const [loadingModels, setLoadingModels] = useState(false);
   const [selectedCatalogBrandId, setSelectedCatalogBrandId] = useState<string>('brand-apple');
   const [isApiOffline, setIsApiOffline] = useState(false);
+
+  const smartphonesCount = useMemo(() => {
+    return models.filter(m => !isSmartwatchDevice(m.brandId, m.name, m.id) && !isTabletDevice(m.brandId, m.name, m.id)).length;
+  }, [models]);
+
+  const tabletsCount = useMemo(() => {
+    return models.filter(m => isTabletDevice(m.brandId, m.name, m.id)).length;
+  }, [models]);
+
+  const smartwatchesCount = useMemo(() => {
+    return models.filter(m => isSmartwatchDevice(m.brandId, m.name, m.id)).length;
+  }, [models]);
   
   // Tree view navigation states
   const [selectedTreeModelId, setSelectedTreeModelId] = useState<string | null>(null);
@@ -356,8 +372,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     setEditBasePrice(model.basePrice128GB);
     setEditImageUrl(model.imageUrl || '');
     setEditStorageGb(model.supportedStorageGb && model.supportedStorageGb.length > 0 ? model.supportedStorageGb : [128, 256, 512]);
-    const isApple = isAppleDevice(model.brandId, model.name);
-    setEditRamGb(model.supportedRamGb && model.supportedRamGb.length > 0 ? model.supportedRamGb : (isApple ? [0] : [8]));
+    const defaultRams = getModelSupportedRam(model);
+    setEditRamGb(model.supportedRamGb && model.supportedRamGb.length > 0 ? model.supportedRamGb : defaultRams);
     setEditVariantPrices(model.variantPrices || {});
     setFormError('');
     setFormSuccess('');
@@ -399,9 +415,20 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     }
   }, []);
 
-  // Computed: filtered catalog models for selected brand
+  // Computed: filtered catalog models for selected brand and device category
   const displayedCatalogModels = useMemo(() => {
-    let list = models.filter(m => m.brandId === selectedCatalogBrandId);
+    let list = models.filter(m => {
+      const isWatch = isSmartwatchDevice(m.brandId, m.name, m.id);
+      const isTab = isTabletDevice(m.brandId, m.name, m.id);
+      if (catalogDeviceCategory === 'smartwatches') return isWatch;
+      if (catalogDeviceCategory === 'tablets') return isTab;
+      return !isWatch && !isTab;
+    });
+
+    if (selectedCatalogBrandId) {
+      list = list.filter(m => m.brandId === selectedCatalogBrandId);
+    }
+
     if (catalogSearch.trim()) {
       const q = catalogSearch.trim().toLowerCase();
       list = list.filter(m =>
@@ -410,15 +437,25 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       );
     }
     return list;
-  }, [models, selectedCatalogBrandId, catalogSearch]);
+  }, [models, catalogDeviceCategory, selectedCatalogBrandId, catalogSearch]);
 
   // Group displayed models for the selected brand by series (Brand → Series → Model hierarchy)
   const brandSeriesMap = useMemo(() => {
-    const brandModels = models.filter(m => m.brandId === selectedCatalogBrandId);
-    let filtered = brandModels;
+    let filtered = models.filter(m => {
+      const isWatch = isSmartwatchDevice(m.brandId, m.name, m.id);
+      const isTab = isTabletDevice(m.brandId, m.name, m.id);
+      if (catalogDeviceCategory === 'smartwatches') return isWatch;
+      if (catalogDeviceCategory === 'tablets') return isTab;
+      return !isWatch && !isTab;
+    });
+
+    if (selectedCatalogBrandId) {
+      filtered = filtered.filter(m => m.brandId === selectedCatalogBrandId);
+    }
+
     if (catalogSearch.trim()) {
       const q = catalogSearch.trim().toLowerCase();
-      filtered = brandModels.filter(m =>
+      filtered = filtered.filter(m =>
         m.name.toLowerCase().includes(q) ||
         (m.series || '').toLowerCase().includes(q)
       );
@@ -438,7 +475,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     });
 
     return map;
-  }, [models, selectedCatalogBrandId, catalogSearch]);
+  }, [models, catalogDeviceCategory, selectedCatalogBrandId, catalogSearch]);
 
 
 
@@ -606,7 +643,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       </div>
 
       {/* Premium Tab Buttons */}
-      <div className="flex border-b border-ice-border/60">
+      <div className="flex flex-wrap border-b border-ice-border/60 gap-1">
         <button
           onClick={() => setActiveTab('ledger')}
           className={`px-4 py-2.5 border-b-2 text-xs font-bold transition-all flex items-center gap-2 ${
@@ -619,15 +656,46 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           Transactions Ledger ({bookings.length})
         </button>
         <button
-          onClick={() => setActiveTab('catalog')}
+          onClick={() => {
+            setActiveTab('catalog');
+            setCatalogDeviceCategory('smartphones');
+          }}
           className={`px-4 py-2.5 border-b-2 text-xs font-bold transition-all flex items-center gap-2 ${
-            activeTab === 'catalog'
-              ? 'border-cobalt text-cobalt'
+            activeTab === 'catalog' && catalogDeviceCategory === 'smartphones'
+              ? 'border-cobalt text-cobalt font-extrabold'
               : 'border-transparent text-ink-slate hover:text-ink-navy'
           }`}
         >
-          <List className="w-3.5 h-3.5" />
-          Catalog Management ({loadingModels ? '...' : models.length})
+          <Smartphone className="w-3.5 h-3.5" />
+          Smartphones ({smartphonesCount})
+        </button>
+        <button
+          onClick={() => {
+            setActiveTab('catalog');
+            setCatalogDeviceCategory('tablets');
+          }}
+          className={`px-4 py-2.5 border-b-2 text-xs font-bold transition-all flex items-center gap-2 ${
+            activeTab === 'catalog' && catalogDeviceCategory === 'tablets'
+              ? 'border-cobalt text-cobalt font-extrabold'
+              : 'border-transparent text-ink-slate hover:text-ink-navy'
+          }`}
+        >
+          <Tablet className="w-3.5 h-3.5 text-purple-600" />
+          Tablets ({tabletsCount})
+        </button>
+        <button
+          onClick={() => {
+            setActiveTab('catalog');
+            setCatalogDeviceCategory('smartwatches');
+          }}
+          className={`px-4 py-2.5 border-b-2 text-xs font-bold transition-all flex items-center gap-2 ${
+            activeTab === 'catalog' && catalogDeviceCategory === 'smartwatches'
+              ? 'border-cobalt text-cobalt font-extrabold'
+              : 'border-transparent text-ink-slate hover:text-ink-navy'
+          }`}
+        >
+          <Watch className="w-3.5 h-3.5 text-amber-600" />
+          Smartwatches ({smartwatchesCount})
         </button>
         <button
           onClick={() => setActiveTab('support')}
@@ -1108,6 +1176,87 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       {activeTab === 'catalog' && (
         /* Catalog Management Tab Workspace */
         <div className="space-y-6">
+          {/* Dedicated Category Panels Selector (Smartphones, Tablets, Smartwatches) */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-canvas-pure border border-ice-border p-2.5 rounded-sm shadow-sm">
+            <button
+              type="button"
+              onClick={() => {
+                setCatalogDeviceCategory('smartphones');
+                setSelectedTreeModelId(null);
+                setEditingModelId(null);
+                setFormError('');
+                setFormSuccess('');
+              }}
+              className={`p-3 rounded-sm border flex items-center justify-between transition-all font-outfit text-sm font-semibold cursor-pointer ${
+                catalogDeviceCategory === 'smartphones'
+                  ? 'bg-cobalt text-white border-cobalt shadow-premium'
+                  : 'bg-canvas-white text-ink-navy border-ice-border hover:border-cobalt/40'
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <Smartphone className="w-4 h-4" />
+                <span>Smartphones Panel</span>
+              </div>
+              <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold ${
+                catalogDeviceCategory === 'smartphones' ? 'bg-white/20 text-white' : 'bg-cobalt/10 text-cobalt'
+              }`}>
+                {smartphonesCount}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setCatalogDeviceCategory('tablets');
+                setSelectedTreeModelId(null);
+                setEditingModelId(null);
+                setFormError('');
+                setFormSuccess('');
+              }}
+              className={`p-3 rounded-sm border flex items-center justify-between transition-all font-outfit text-sm font-semibold cursor-pointer ${
+                catalogDeviceCategory === 'tablets'
+                  ? 'bg-cobalt text-white border-cobalt shadow-premium'
+                  : 'bg-canvas-white text-ink-navy border-ice-border hover:border-cobalt/40'
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <Tablet className="w-4 h-4" />
+                <span>Tablets Panel</span>
+              </div>
+              <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold ${
+                catalogDeviceCategory === 'tablets' ? 'bg-white/20 text-white' : 'bg-cobalt/10 text-cobalt'
+              }`}>
+                {tabletsCount}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setCatalogDeviceCategory('smartwatches');
+                setSelectedTreeModelId(null);
+                setEditingModelId(null);
+                setFormError('');
+                setFormSuccess('');
+              }}
+              className={`p-3 rounded-sm border flex items-center justify-between transition-all font-outfit text-sm font-semibold cursor-pointer ${
+                catalogDeviceCategory === 'smartwatches'
+                  ? 'bg-cobalt text-white border-cobalt shadow-premium'
+                  : 'bg-canvas-white text-ink-navy border-ice-border hover:border-cobalt/40'
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <Watch className="w-4 h-4" />
+                <span>Smartwatches Panel</span>
+              </div>
+              <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold ${
+                catalogDeviceCategory === 'smartwatches' ? 'bg-white/20 text-white' : 'bg-cobalt/10 text-cobalt'
+              }`}>
+                {smartwatchesCount}
+              </span>
+            </button>
+          </div>
+
           {/* Top Brand Filter Bar */}
           <div className="bg-canvas-pure border border-ice-border rounded-sm p-3 shadow-sm flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2">
@@ -1130,14 +1279,20 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         : 'bg-canvas-white border-ice-border text-ink-slate hover:border-cobalt/50 hover:text-cobalt'
                     }`}
                   >
-                    <Smartphone className="w-3.5 h-3.5" />
+                    {catalogDeviceCategory === 'smartwatches' ? (
+                      <Watch className="w-3.5 h-3.5" />
+                    ) : catalogDeviceCategory === 'tablets' ? (
+                      <Tablet className="w-3.5 h-3.5" />
+                    ) : (
+                      <Smartphone className="w-3.5 h-3.5" />
+                    )}
                     {b.name}
                   </button>
                 ))}
               </div>
             </div>
             <span className="text-[11px] font-mono text-zinc-500">
-              {displayedCatalogModels.length} models for {brands.find(b => b.id === selectedCatalogBrandId)?.name || 'Brand'}
+              {displayedCatalogModels.length} models in {catalogDeviceCategory} ({brands.find(b => b.id === selectedCatalogBrandId)?.name || 'Brand'})
             </span>
           </div>
 
@@ -1148,7 +1303,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               <div className="flex items-center justify-between border-b border-ice-border/60 pb-3">
                 <div className="flex items-center gap-2">
                   <Layers className="w-4 h-4 text-cobalt" />
-                  <h3 className="font-outfit text-base font-semibold text-ink-navy">Catalog Navigation</h3>
+                  <h3 className="font-outfit text-base font-semibold text-ink-navy">
+                    {catalogDeviceCategory === 'smartwatches' ? 'Smartwatches Tree' : catalogDeviceCategory === 'tablets' ? 'Tablets Tree' : 'Smartphones Tree'}
+                  </h3>
                 </div>
                 <button
                   type="button"
@@ -1186,7 +1343,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               {loadingModels ? (
                 <div className="py-8 text-center text-zinc-400 font-mono text-xs">Loading device hierarchy...</div>
               ) : brandSeriesMap.size === 0 ? (
-                <div className="py-8 text-center text-zinc-400 font-mono text-xs">No models found for this brand.</div>
+                <div className="py-8 text-center text-zinc-400 font-mono text-xs">No models found for this category and brand.</div>
               ) : (
                 <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1">
                   {Array.from(brandSeriesMap.entries()).map(([seriesName, seriesModels]) => {
@@ -1213,6 +1370,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                           <div className="p-1 space-y-1">
                             {seriesModels.map(m => {
                               const isSelected = selectedTreeModelId === m.id || editingModelId === m.id;
+                              const isWatch = isSmartwatchDevice(m.brandId, m.name, m.id);
+                              const isTab = isTabletDevice(m.brandId, m.name, m.id);
                               return (
                                 <button
                                   key={m.id}
@@ -1226,14 +1385,38 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                 >
                                   <div>
                                     <div className="text-xs font-bold flex items-center gap-1.5">
+                                      {isWatch ? (
+                                        <Watch className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+                                      ) : isTab ? (
+                                        <Tablet className="w-3.5 h-3.5 text-purple-400 flex-shrink-0" />
+                                      ) : (
+                                        <Smartphone className="w-3.5 h-3.5 text-cobalt flex-shrink-0" />
+                                      )}
                                       <span>{m.name}</span>
                                       <span className={`text-[9px] px-1 rounded ${isSelected ? 'bg-white/20 text-white' : 'bg-zinc-100 text-zinc-500'}`}>
                                         {m.releaseYear}
                                       </span>
                                     </div>
-                                    <span className={`text-[10px] ${isSelected ? 'text-white/80' : 'text-zinc-400'}`}>
-                                      {m.id}
-                                    </span>
+                                    <div className="flex items-center gap-2 mt-0.5">
+                                      <span className={`text-[10px] ${isSelected ? 'text-white/80' : 'text-zinc-400'}`}>
+                                        {m.id}
+                                      </span>
+                                      {(() => {
+                                        const rams = getModelSupportedRam(m).filter(r => r > 0);
+                                        if (rams.length > 0) {
+                                          return (
+                                            <span className={`text-[9px] font-bold px-1 rounded ${isSelected ? 'bg-white/20 text-white' : 'bg-cobalt/10 text-cobalt'}`}>
+                                              {rams.join('/')}GB RAM
+                                            </span>
+                                          );
+                                        }
+                                        return (
+                                          <span className={`text-[9px] font-bold px-1 rounded ${isSelected ? 'bg-white/20 text-white' : 'bg-amber-500/10 text-amber-600'}`}>
+                                            No RAM (Apple)
+                                          </span>
+                                        );
+                                      })()}
+                                    </div>
                                   </div>
                                   <div className="text-right">
                                     <span className={`text-[11px] font-bold block ${isSelected ? 'text-white' : 'text-emerald-600'}`}>
