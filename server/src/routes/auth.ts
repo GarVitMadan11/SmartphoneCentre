@@ -1,4 +1,4 @@
-﻿import { Router, Response } from 'express';
+import { Router, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { randomBytes, createHash } from 'node:crypto';
@@ -14,6 +14,13 @@ import {
 } from '../services/email.js';
 
 const router = Router();
+
+// Public auth configuration (e.g. Google Client ID)
+router.get('/config', (_req, res) => {
+  res.json({
+    googleClientId: process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID || '',
+  });
+});
 
 // -- Google OAuth2 client (singleton) --
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);

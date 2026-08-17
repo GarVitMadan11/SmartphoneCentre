@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Eye, EyeOff, Lock, Mail, ArrowLeft, AlertCircle, Loader2 } from 'lucide-react';
-import { customerLogin, googleAuth, ApiUser } from '../../utils/api';
+import { customerLogin, googleAuth, fetchAuthConfig, ApiUser } from '../../utils/api';
 
 declare global {
   interface Window {
@@ -16,7 +16,7 @@ declare global {
   }
 }
 
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
+const STATIC_GOOGLE_CLIENT_ID = (import.meta.env.VITE_GOOGLE_CLIENT_ID || (import.meta.env as any).GOOGLE_CLIENT_ID || '') as string;
 
 interface LoginPageProps {
   onLoginSuccess: (user: ApiUser) => void;
@@ -32,6 +32,7 @@ export default function LoginPage({ onLoginSuccess, onNavigate, redirectParam }:
   const [isLoading, setIsLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [linkingRequired, setLinkingRequired] = useState(false);
+  const [activeClientId, setActiveClientId] = useState<string>(STATIC_GOOGLE_CLIENT_ID);
   const googleBtnRef = useRef<HTMLDivElement>(null);
 
   const handleRedirect = () => {
@@ -42,40 +43,74 @@ export default function LoginPage({ onLoginSuccess, onNavigate, redirectParam }:
     }
   };
 
+  // Fetch client ID from server if static environment variable is not present
+  useEffect(() => {
+    if (!activeClientId) {
+      fetchAuthConfig().then(res => {
+        if (res.googleClientId) {
+          setActiveClientId(res.googleClientId);
+        }
+      });
+    }
+  }, [activeClientId]);
+
   // Load Google Identity Services script and render button
   useEffect(() => {
-    if (!GOOGLE_CLIENT_ID) return;
+    if (!activeClientId) return;
 
-    const initGoogle = () => {
-      if (!window.google?.accounts?.id) return;
-      window.google.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: handleGoogleCredential,
-        auto_select: false,
-        cancel_on_tap_outside: true,
-      });
-      if (googleBtnRef.current) {
+    let isMounted = true;
+
+    const renderGoogleButton = () => {
+      if (!isMounted || !googleBtnRef.current || !window.google?.accounts?.id) return;
+      try {
+        window.google.accounts.id.initialize({
+          client_id: activeClientId,
+          callback: handleGoogleCredential,
+          auto_select: false,
+          cancel_on_tap_outside: true,
+        });
+        const containerWidth = googleBtnRef.current.offsetWidth || 380;
+        const validWidth = Math.min(Math.max(containerWidth, 250), 400);
         window.google.accounts.id.renderButton(googleBtnRef.current, {
           theme: 'outline',
           size: 'large',
-          width: googleBtnRef.current.offsetWidth || 400,
+          width: validWidth,
           text: 'signin_with',
           shape: 'rectangular',
         });
+      } catch (err) {
+        console.warn('Google renderButton warning:', err);
       }
     };
 
     if (window.google?.accounts?.id) {
-      initGoogle();
+      renderGoogleButton();
     } else {
-      const script = document.createElement('script');
-      script.src = 'https://accounts.google.com/gsi/client';
-      script.async = true;
-      script.defer = true;
-      script.onload = initGoogle;
-      document.head.appendChild(script);
+      let script = document.querySelector('script[src="https://accounts.google.com/gsi/client"]') as HTMLScriptElement;
+      if (!script) {
+        script = document.createElement('script');
+        script.src = 'https://accounts.google.com/gsi/client';
+        script.async = true;
+        script.defer = true;
+        document.head.appendChild(script);
+      }
+      script.addEventListener('load', renderGoogleButton);
+
+      // Polling fallback in case script is already loaded or in progress
+      const interval = setInterval(() => {
+        if (window.google?.accounts?.id) {
+          clearInterval(interval);
+          renderGoogleButton();
+        }
+      }, 250);
+
+      return () => {
+        isMounted = false;
+        clearInterval(interval);
+        script.removeEventListener('load', renderGoogleButton);
+      };
     }
-  }, []);
+  }, [activeClientId]);
 
   const handleGoogleCredential = async (response: { credential: string }) => {
     setGoogleLoading(true);
@@ -153,7 +188,7 @@ export default function LoginPage({ onLoginSuccess, onNavigate, redirectParam }:
         )}
 
         {/* Google Sign-In */}
-        {GOOGLE_CLIENT_ID && (
+        {activeClientId && (
           <div className="space-y-3">
             <div className="relative" style={{ minHeight: '44px' }}>
               {googleLoading ? (

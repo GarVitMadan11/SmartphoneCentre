@@ -104,12 +104,13 @@ app.use(helmet({
       defaultSrc: ["'self'"],
       // 'unsafe-inline' intentionally excluded from scriptSrc — all JS is in content-hashed bundles.
       // Google Identity Services (GSI) requires its own origin to be trusted.
-      scriptSrc: ["'self'", 'https://api.emailjs.com', 'https://accounts.google.com'],
-      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
-      styleSrcElem: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      scriptSrc: ["'self'", "'unsafe-inline'", 'https://api.emailjs.com', 'https://accounts.google.com'],
+      frameSrc: ["'self'", 'https://accounts.google.com'],
+      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://accounts.google.com'],
+      styleSrcElem: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://accounts.google.com'],
       fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
       imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
-      connectSrc: ["'self'", 'https://api.emailjs.com', 'http://localhost:4000', 'http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002', 'http://localhost:5173', 'http://localhost:5174', 'https://rephonix.in', 'https://www.rephonix.in'],
+      connectSrc: ["'self'", 'https://api.emailjs.com', 'https://accounts.google.com', 'http://localhost:4000', 'http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002', 'http://localhost:5173', 'http://localhost:5174', 'https://rephonix.in', 'https://www.rephonix.in'],
     },
   },
 }));

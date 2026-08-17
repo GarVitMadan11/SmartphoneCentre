@@ -350,6 +350,10 @@ export function updateCustomerProfile(name: string, phone: string): Promise<{ us
 
 // ── New Authentication API Helpers ───────────────────────────────────────────
 
+export function fetchAuthConfig(): Promise<{ googleClientId: string }> {
+  return apiFetch<{ googleClientId: string }>('/auth/config').catch(() => ({ googleClientId: '' }));
+}
+
 /** Register with email + password (sends verification email, does not log in) */
 export function registerWithEmail(
   name: string,

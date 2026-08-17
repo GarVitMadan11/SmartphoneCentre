@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Eye, EyeOff, Lock, Mail, ArrowLeft, AlertCircle, Phone, User, CheckCircle2, Loader2, RefreshCw } from 'lucide-react';
-import { customerSignup, verifyOtp, registerWithEmail, googleAuth, resendVerification, ApiUser } from '../../utils/api';
+import { customerSignup, verifyOtp, registerWithEmail, googleAuth, fetchAuthConfig, resendVerification, ApiUser } from '../../utils/api';
 
 declare global {
   interface Window {
@@ -16,7 +16,7 @@ declare global {
   }
 }
 
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
+const STATIC_GOOGLE_CLIENT_ID = (import.meta.env.VITE_GOOGLE_CLIENT_ID || (import.meta.env as any).GOOGLE_CLIENT_ID || '') as string;
 
 interface SignupPageProps {
   onSignupSuccess: (user: ApiUser) => void;
@@ -43,6 +43,7 @@ export default function SignupPage({ onSignupSuccess, onNavigate, redirectParam 
   const [resendLoading, setResendLoading] = useState(false);
   const [resendSuccess, setResendSuccess] = useState('');
   const [emailForVerification, setEmailForVerification] = useState('');
+  const [activeClientId, setActiveClientId] = useState<string>(STATIC_GOOGLE_CLIENT_ID);
   const googleBtnRef = useRef<HTMLDivElement>(null);
 
   const handleRedirect = () => {
@@ -54,39 +55,69 @@ export default function SignupPage({ onSignupSuccess, onNavigate, redirectParam 
   };
 
   useEffect(() => {
-    if (!GOOGLE_CLIENT_ID || mode !== 'form') return;
-
-    const initGoogle = () => {
-      if (!window.google?.accounts?.id) return;
-      window.google.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: handleGoogleCredential,
-        auto_select: false,
+    if (!activeClientId) {
+      fetchAuthConfig().then(res => {
+        if (res.googleClientId) {
+          setActiveClientId(res.googleClientId);
+        }
       });
-      if (googleBtnRef.current) {
+    }
+  }, [activeClientId]);
+
+  useEffect(() => {
+    if (!activeClientId || mode !== 'form') return;
+
+    let isMounted = true;
+
+    const renderGoogleButton = () => {
+      if (!isMounted || !googleBtnRef.current || !window.google?.accounts?.id) return;
+      try {
+        window.google.accounts.id.initialize({
+          client_id: activeClientId,
+          callback: handleGoogleCredential,
+          auto_select: false,
+        });
+        const containerWidth = googleBtnRef.current.offsetWidth || 380;
+        const validWidth = Math.min(Math.max(containerWidth, 250), 400);
         window.google.accounts.id.renderButton(googleBtnRef.current, {
           theme: 'outline',
           size: 'large',
-          width: googleBtnRef.current.offsetWidth || 400,
+          width: validWidth,
           text: 'signup_with',
           shape: 'rectangular',
         });
+      } catch (err) {
+        console.warn('Google renderButton warning:', err);
       }
     };
 
     if (window.google?.accounts?.id) {
-      initGoogle();
+      renderGoogleButton();
     } else {
-      const script = document.createElement('script');
-      script.src = 'https://accounts.google.com/gsi/client';
-      script.async = true;
-      script.defer = true;
-      script.onload = initGoogle;
-      if (!document.querySelector('script[src="https://accounts.google.com/gsi/client"]')) {
+      let script = document.querySelector('script[src="https://accounts.google.com/gsi/client"]') as HTMLScriptElement;
+      if (!script) {
+        script = document.createElement('script');
+        script.src = 'https://accounts.google.com/gsi/client';
+        script.async = true;
+        script.defer = true;
         document.head.appendChild(script);
       }
+      script.addEventListener('load', renderGoogleButton);
+
+      const interval = setInterval(() => {
+        if (window.google?.accounts?.id) {
+          clearInterval(interval);
+          renderGoogleButton();
+        }
+      }, 250);
+
+      return () => {
+        isMounted = false;
+        clearInterval(interval);
+        script.removeEventListener('load', renderGoogleButton);
+      };
     }
-  }, [mode]);
+  }, [activeClientId, mode]);
 
   const handleGoogleCredential = async (response: { credential: string }) => {
     setGoogleLoading(true);
@@ -310,7 +341,7 @@ export default function SignupPage({ onSignupSuccess, onNavigate, redirectParam 
         ) : (
           <>
             {/* Google Sign-Up */}
-            {GOOGLE_CLIENT_ID && (
+            {activeClientId && (
               <div className="space-y-3">
                 <div className="relative" style={{ minHeight: '44px' }}>
                   {googleLoading ? (
