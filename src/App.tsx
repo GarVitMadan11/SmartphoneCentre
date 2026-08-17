@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, lazy, Suspense, useCallback } from 'react';
+import { useState, useEffect, useRef, useMemo, lazy, Suspense, useCallback, startTransition } from 'react';
 import { Model, Variant, DefectRule, MODELS as STATIC_MODELS, BRANDS as STATIC_BRANDS, generateVariantsForModel, INITIAL_BOOKINGS, Brand, Booking, TABLET_MODELS, SMARTWATCH_MODELS, getDeviceImage } from './data/mockDatabase';
 import { fetchBrands, fetchModels, fetchBookings as apiFetchBookings, fetchCurrentUser, customerLogout, ApiUser } from './utils/api';
 import { DeviceSelector } from './components/client/DeviceSelector';
@@ -380,9 +380,11 @@ export default function App() {
   };
 
   const navigate = (newPath: string) => {
-    window.history.pushState({}, '', newPath);
-    setPath(newPath);
-    window.scrollTo({ top: 0, behavior: 'instant' });
+    startTransition(() => {
+      window.history.pushState({}, '', newPath);
+      setPath(newPath);
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    });
   };
 
   const getPathForModel = (model: Model): string => {
@@ -437,11 +439,13 @@ export default function App() {
 
   // If path is admin, automatically set activeStage to admin
   useEffect(() => {
-    if (path === '/admin') {
-      setActiveStage('admin');
-    } else if (activeStage === 'admin') {
-      setActiveStage('select');
-    }
+    startTransition(() => {
+      if (path === '/admin') {
+        setActiveStage('admin');
+      } else if (activeStage === 'admin') {
+        setActiveStage('select');
+      }
+    });
   }, [path]);
 
   // ── Dynamic data from API (falls back to static data) ─────────────────────
@@ -570,15 +574,17 @@ export default function App() {
   }, [activeStage, wizardStep]);
 
   const handleVariantSelected = (model: Model, variant: Variant) => {
-    setSelectedModel(model);
-    setSelectedVariant(variant);
-    setSelectedDefects([]);
-    setWizardStep(0);
-    setFinalPrice(variant.basePrice);
-    setActiveStage('diagnose');
-    
-    const targetPath = getPathForModel(model);
-    navigate(targetPath);
+    startTransition(() => {
+      setSelectedModel(model);
+      setSelectedVariant(variant);
+      setSelectedDefects([]);
+      setWizardStep(0);
+      setFinalPrice(variant.basePrice);
+      setActiveStage('diagnose');
+      
+      const targetPath = getPathForModel(model);
+      navigate(targetPath);
+    });
   };
 
   const handleDirectSelectModel = (modelId: string) => {
@@ -592,24 +598,28 @@ export default function App() {
   };
 
   const handleDiagnosticsComplete = (price: number, defects: DefectRule[]) => {
-    setFinalPrice(price);
-    setSelectedDefects(defects);
-    setActiveStage('schedule');
+    startTransition(() => {
+      setFinalPrice(price);
+      setSelectedDefects(defects);
+      setActiveStage('schedule');
+    });
   };
 
   const [selectedTabletBrand, setSelectedTabletBrand] = useState<'all' | 'apple' | 'samsung'>('all');
   const [selectedWatchBrand, setSelectedWatchBrand] = useState<'all' | 'apple' | 'samsung'>('all');
 
   const handleReset = () => {
-    setSelectedModel(null);
-    setSelectedVariant(null);
-    setSelectedDefects([]);
-    setFinalPrice(0);
-    setWizardStep(0);
-    setActiveStage('select');
-    setSelectedTabletBrand('all');
-    setSelectedWatchBrand('all');
-    clearNavState();
+    startTransition(() => {
+      setSelectedModel(null);
+      setSelectedVariant(null);
+      setSelectedDefects([]);
+      setFinalPrice(0);
+      setWizardStep(0);
+      setActiveStage('select');
+      setSelectedTabletBrand('all');
+      setSelectedWatchBrand('all');
+      clearNavState();
+    });
   };
 
   const isWorkflow = (activeStage === 'diagnose' || activeStage === 'schedule') && 
@@ -642,7 +652,7 @@ export default function App() {
           setSelectedWatchBrand(brand);
           navigate('/smartwatches');
         }}
-        onOpenTrackOrder={() => setIsTrackOpen(true)}
+        onOpenTrackOrder={() => startTransition(() => setIsTrackOpen(true))}
         currentUser={currentUser}
         onLogout={handleLogout}
       />
@@ -847,7 +857,13 @@ export default function App() {
 
                 {/* Hero Interactive Phone Panel Graphic */}
                 <div className="lg:col-span-5 flex justify-center">
-                  <SmartphoneMockup onSelect={() => { handleReset(); navigate('/smartphones'); }} />
+                  <Suspense fallback={
+                    <div className="w-full max-w-sm h-96 border border-ice-border rounded-3xl bg-slate-50/50 animate-pulse flex items-center justify-center">
+                      <div className="w-8 h-8 border-2 border-cobalt border-t-transparent rounded-full animate-spin" />
+                    </div>
+                  }>
+                    <SmartphoneMockup onSelect={() => { handleReset(); navigate('/smartphones'); }} />
+                  </Suspense>
                 </div>
               </div>
 

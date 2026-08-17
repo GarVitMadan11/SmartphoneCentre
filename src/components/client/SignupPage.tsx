@@ -77,6 +77,7 @@ export default function SignupPage({ onSignupSuccess, onNavigate, redirectParam 
           client_id: activeClientId,
           callback: handleGoogleCredential,
           auto_select: false,
+          itp_support: true,
         });
         const containerWidth = googleBtnRef.current.offsetWidth || 380;
         const validWidth = Math.min(Math.max(containerWidth, 250), 400);
