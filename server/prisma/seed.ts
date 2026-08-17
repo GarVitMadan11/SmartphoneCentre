@@ -257,10 +257,105 @@ const CASHIFY_BENCHMARKS: Record<string, { supportedStorageGb: number[]; variant
   }
 };
 
+const MODEL_IMAGE_URLS: Record<string, string> = {
+  // OPPO
+  'OPPO A3': 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a3-5g.jpg',
+  'OPPO A3x': 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a3x-5g.jpg',
+  'OPPO A3 Pro': 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a3-pro.jpg',
+  'OPPO A5': 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a3-5g.jpg',
+  'OPPO A5x': 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a3x-5g.jpg',
+  'OPPO A5 Pro': 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a3-pro.jpg',
+  'OPPO A6': 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a3-5g.jpg',
+  'OPPO A6 Pro': 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a3-pro.jpg',
+  'OPPO A6x': 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a3x-5g.jpg',
+  'OPPO F21': 'https://fdn2.gsmarena.com/vv/bigpic/oppo-f25-pro.jpg',
+  'OPPO F21 Pro 5G': 'https://fdn2.gsmarena.com/vv/bigpic/oppo-f25-pro.jpg',
+  'OPPO F23': 'https://fdn2.gsmarena.com/vv/bigpic/oppo-f25-pro.jpg',
+  'OPPO F23 Pro': 'https://fdn2.gsmarena.com/vv/bigpic/oppo-f25-pro.jpg',
+  'OPPO F25': 'https://fdn2.gsmarena.com/vv/bigpic/oppo-f25-pro.jpg',
+  'OPPO F25 Pro': 'https://fdn2.gsmarena.com/vv/bigpic/oppo-f25-pro.jpg',
+  'OPPO F27': 'https://fdn2.gsmarena.com/vv/bigpic/oppo-f27-pro-plus.jpg',
+  'OPPO F27 Pro+': 'https://fdn2.gsmarena.com/vv/bigpic/oppo-f27-pro-plus.jpg',
+  'OPPO F29': 'https://fdn2.gsmarena.com/vv/bigpic/oppo-f27-pro-plus.jpg',
+  'OPPO F29 Pro': 'https://fdn2.gsmarena.com/vv/bigpic/oppo-f27-pro-plus.jpg',
+  'OPPO F31': 'https://fdn2.gsmarena.com/vv/bigpic/oppo-f27-pro-plus.jpg',
+  'OPPO F31 Pro': 'https://fdn2.gsmarena.com/vv/bigpic/oppo-f27-pro-plus.jpg',
+  'OPPO F31 Pro+': 'https://fdn2.gsmarena.com/vv/bigpic/oppo-f27-pro-plus.jpg',
+  'OPPO F33': 'https://fdn2.gsmarena.com/vv/bigpic/oppo-f27-pro-plus.jpg',
+  'OPPO F33 Pro': 'https://fdn2.gsmarena.com/vv/bigpic/oppo-f27-pro-plus.jpg',
+  'OPPO Reno 8': 'https://fdn.gsmarena.com/imgroot/news/24/05/oppo-reno12-series-announced/-1200/gsmarena_001.jpg',
+  'OPPO Reno 8 Pro': 'https://fdn.gsmarena.com/imgroot/news/24/05/oppo-reno12-series-announced/-1200/gsmarena_002.jpg',
+  'OPPO Reno 10': 'https://fdn.gsmarena.com/imgroot/news/24/05/oppo-reno12-series-announced/-1200/gsmarena_001.jpg',
+  'OPPO Reno 10 Pro': 'https://fdn.gsmarena.com/imgroot/news/24/05/oppo-reno12-series-announced/-1200/gsmarena_002.jpg',
+  'OPPO Reno 10 Pro+': 'https://fdn.gsmarena.com/imgroot/news/24/05/oppo-reno12-series-announced/-1200/gsmarena_002.jpg',
+  'OPPO Reno 11': 'https://fdn.gsmarena.com/imgroot/news/24/05/oppo-reno12-series-announced/-1200/gsmarena_001.jpg',
+  'OPPO Reno 11 Pro': 'https://fdn.gsmarena.com/imgroot/news/24/05/oppo-reno12-series-announced/-1200/gsmarena_002.jpg',
+  'OPPO Reno 12': 'https://fdn.gsmarena.com/imgroot/news/24/05/oppo-reno12-series-announced/-1200/gsmarena_001.jpg',
+  'OPPO Reno 12 Pro': 'https://fdn.gsmarena.com/imgroot/news/24/05/oppo-reno12-series-announced/-1200/gsmarena_002.jpg',
+  'OPPO Reno 13': 'https://fdn.gsmarena.com/imgroot/news/24/05/oppo-reno12-series-announced/-1200/gsmarena_001.jpg',
+  'OPPO Reno 13 Pro': 'https://fdn.gsmarena.com/imgroot/news/24/05/oppo-reno12-series-announced/-1200/gsmarena_002.jpg',
+  'OPPO Reno 14': 'https://fdn.gsmarena.com/imgroot/news/24/05/oppo-reno12-series-announced/-1200/gsmarena_001.jpg',
+  'OPPO Reno 14 Pro': 'https://fdn.gsmarena.com/imgroot/news/24/05/oppo-reno12-series-announced/-1200/gsmarena_001.jpg',
+  'OPPO Reno 15c': 'https://fdn.gsmarena.com/imgroot/news/24/05/oppo-reno12-series-announced/-1200/gsmarena_001.jpg',
+  'OPPO Reno 15': 'https://fdn.gsmarena.com/imgroot/news/24/05/oppo-reno12-series-announced/-1200/gsmarena_001.jpg',
+  'OPPO Reno 15 Pro': 'https://fdn.gsmarena.com/imgroot/news/24/05/oppo-reno12-series-announced/-1200/gsmarena_002.jpg',
+  'OPPO Reno 15 Pro Mini': 'https://fdn.gsmarena.com/imgroot/news/24/05/oppo-reno12-series-announced/-1200/gsmarena_001.jpg',
+  'OPPO Reno 16c': 'https://fdn.gsmarena.com/imgroot/news/24/05/oppo-reno12-series-announced/-1200/gsmarena_001.jpg',
+  'OPPO Reno 16': 'https://fdn.gsmarena.com/imgroot/news/24/05/oppo-reno12-series-announced/-1200/gsmarena_001.jpg',
+  'OPPO Find X8': 'https://fdn.gsmarena.com/imgroot/news/24/10/oppo-find-x8-official/-1200/gsmarena_001.jpg',
+  'OPPO Find X8 Pro': 'https://fdn.gsmarena.com/imgroot/news/24/10/oppo-find-x8-official/-1200/gsmarena_002.jpg',
+  'OPPO Find X9': 'https://fdn.gsmarena.com/imgroot/news/24/10/oppo-find-x8-official/-1200/gsmarena_001.jpg',
+  'OPPO Find X9s': 'https://fdn.gsmarena.com/imgroot/news/24/10/oppo-find-x8-official/-1200/gsmarena_001.jpg',
+  'OPPO Find X9 Pro': 'https://fdn.gsmarena.com/imgroot/news/24/10/oppo-find-x8-official/-1200/gsmarena_002.jpg',
+  'OPPO Find X9 Ultra': 'https://fdn.gsmarena.com/imgroot/news/24/10/oppo-find-x8-official/-1200/gsmarena_002.jpg',
+
+  // NOTHING
+  'Nothing Phone 1': 'https://fdn2.gsmarena.com/vv/bigpic/nothing-phone-1.jpg',
+  'Nothing Phone 2': 'https://fdn2.gsmarena.com/vv/bigpic/nothing-phone-2.jpg',
+  'Nothing Phone 2a': 'https://fdn2.gsmarena.com/vv/bigpic/nothing-phone-2a.jpg',
+  'Nothing Phone 2a Pro': 'https://fdn2.gsmarena.com/vv/bigpic/nothing-phone-2a.jpg',
+  'Nothing Phone 3': 'https://fdn2.gsmarena.com/vv/bigpic/nothing-phone-2.jpg',
+  'Nothing Phone 3a': 'https://fdn2.gsmarena.com/vv/bigpic/nothing-phone-2a.jpg',
+  'Nothing Phone 3a Pro': 'https://fdn2.gsmarena.com/vv/bigpic/nothing-phone-2a.jpg',
+  'Nothing Phone 3a Pro+': 'https://fdn2.gsmarena.com/vv/bigpic/nothing-phone-2a.jpg',
+  'Nothing Phone 4a': 'https://fdn2.gsmarena.com/vv/bigpic/nothing-phone-2a.jpg',
+  'Nothing Phone 4a Pro': 'https://fdn2.gsmarena.com/vv/bigpic/nothing-phone-2a.jpg',
+  'CMF Phone 1': 'https://fdn2.gsmarena.com/vv/bigpic/cmf-by-nothing-phone-1.jpg',
+  'CMF Phone 2': 'https://fdn2.gsmarena.com/vv/bigpic/cmf-by-nothing-phone-1.jpg',
+
+  // MOTOROLA
+  'Motorola G04': 'https://fdn2.gsmarena.com/vv/bigpic/motorola-g04.jpg',
+  'Motorola G05': 'https://fdn2.gsmarena.com/vv/bigpic/motorola-g04.jpg',
+  'Motorola G06': 'https://fdn2.gsmarena.com/vv/bigpic/motorola-g04.jpg',
+  'Motorola G36': 'https://fdn2.gsmarena.com/vv/bigpic/motorola-g64.jpg',
+  'Motorola G56': 'https://fdn2.gsmarena.com/vv/bigpic/motorola-g64.jpg',
+  'Motorola G57': 'https://fdn2.gsmarena.com/vv/bigpic/motorola-g64.jpg',
+  'Motorola G60': 'https://fdn2.gsmarena.com/vv/bigpic/motorola-g64.jpg',
+  'Motorola G67': 'https://fdn2.gsmarena.com/vv/bigpic/motorola-g64.jpg',
+  'Motorola Edge 40': 'https://fdn2.gsmarena.com/vv/bigpic/motorola-edge-40.jpg',
+  'Motorola Edge 40 Fusion': 'https://fdn2.gsmarena.com/vv/bigpic/motorola-edge-50-fusion.jpg',
+  'Motorola Edge 50': 'https://fdn2.gsmarena.com/vv/bigpic/motorola-edge-50-pro.jpg',
+  'Motorola Edge 50 Fusion': 'https://fdn2.gsmarena.com/vv/bigpic/motorola-edge-50-fusion.jpg',
+  'Motorola Edge 50 Pro': 'https://fdn2.gsmarena.com/vv/bigpic/motorola-edge-50-pro.jpg',
+  'Motorola Edge 50 Ultra': 'https://fdn2.gsmarena.com/vv/bigpic/motorola-edge-50-ultra.jpg',
+  'Motorola Edge 60': 'https://fdn2.gsmarena.com/vv/bigpic/motorola-edge-50-pro.jpg',
+  'Motorola Edge 60 Fusion': 'https://fdn2.gsmarena.com/vv/bigpic/motorola-edge-50-fusion.jpg',
+  'Motorola Edge 60 Pro': 'https://fdn2.gsmarena.com/vv/bigpic/motorola-edge-50-pro.jpg',
+  'Motorola Edge 70': 'https://fdn2.gsmarena.com/vv/bigpic/motorola-edge-50-pro.jpg',
+  'Motorola Edge 70 Fusion': 'https://fdn2.gsmarena.com/vv/bigpic/motorola-edge-50-fusion.jpg',
+  'Motorola Edge 70 Pro': 'https://fdn2.gsmarena.com/vv/bigpic/motorola-edge-50-pro.jpg',
+  'Motorola Razr 50': 'https://fdn2.gsmarena.com/vv/bigpic/motorola-razr-50.jpg',
+  'Motorola Razr 50 Ultra': 'https://fdn2.gsmarena.com/vv/bigpic/motorola-razr-50-ultra.jpg',
+  'Motorola Razr 60': 'https://fdn2.gsmarena.com/vv/bigpic/motorola-razr-50.jpg',
+  'Motorola Razr 60 Ultra': 'https://fdn2.gsmarena.com/vv/bigpic/motorola-razr-50-ultra.jpg',
+};
+
 const makeCatalogModels = (brandId: string, series: string, releaseYear: number, names: string[]) =>
   names.map((name) => {
     const category = catalogCategory(name);
-    return { id: catalogId(brandId, name), brandId, name, category, releaseYear, basePrice128GB: catalogPrice(brandId, name, category, releaseYear), series };
+    const id = catalogId(brandId, name);
+    const imageUrl = MODEL_IMAGE_URLS[name] || MODEL_IMAGE_URLS[id] || phoneImagesMap[id] || '';
+    return { id, brandId, name, category, releaseYear, basePrice128GB: catalogPrice(brandId, name, category, releaseYear), series, imageUrl };
   });
 
 const CATALOG_ADDITIONS = [
