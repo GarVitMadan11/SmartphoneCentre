@@ -22,6 +22,26 @@ router.get('/config', (_req, res) => {
   });
 });
 
+const signupAttemptsStore = new Map<string, number>();
+
+interface EmailOtpSession {
+  email: string;
+  otp: string;
+  expiresAt: Date;
+  lastSentAt: Date;
+  attempts: number;
+}
+const emailOtpStore = new Map<string, EmailOtpSession>();
+
+interface ForgotPasswordSession {
+  email: string;
+  otp: string;
+  expiresAt: Date;
+  lastSentAt: Date;
+  attempts: number;
+}
+const forgotPasswordOtpStore = new Map<string, ForgotPasswordSession>();
+
 // -- Google OAuth2 client (singleton) --
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -92,7 +112,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // EXISTING ROUTES (preserved for backward compatibility)
 // ============================================================================
 
-// Legacy Phone OTP Signup (Step 1)
+// Email OTP Signup (Step 1)
 router.post('/signup', async (req, res) => {
   try {
     const { name, email, phone, password } = req.body;
@@ -141,11 +161,14 @@ router.post('/signup', async (req, res) => {
       update: { otp, expiresAt },
     });
 
-    const isDev = process.env.NODE_ENV !== 'production';
+    signupAttemptsStore.set(cleanPhone, 0);
+
+    console.log(`🔑 [Email OTP - Signup] Verification code for ${cleanEmail} is: ${otp}`);
+
     res.status(200).json({
       status: 'otp_sent',
       phone: cleanPhone,
-      ...(isDev ? { testOtp: otp } : {}),
+      otp,
     });
   } catch (err) {
     console.error('Signup error:', err);
@@ -153,7 +176,7 @@ router.post('/signup', async (req, res) => {
   }
 });
 
-// Legacy Phone OTP Verify (Step 2)
+// Email OTP Verify (Step 2)
 router.post('/verify-otp', async (req, res) => {
   try {
     const { name, email, phone, password, otp } = req.body;
@@ -185,17 +208,40 @@ router.post('/verify-otp', async (req, res) => {
       return;
     }
 
-    if (otpRecord.otp !== otp.trim()) {
-      res.status(400).json({ error: 'ValidationError', message: 'Invalid verification code.' });
+    // Max attempts check (3 attempts)
+    const currentAttempts = signupAttemptsStore.get(cleanPhone) || 0;
+    if (currentAttempts >= 3) {
+      await prisma.otpVerification.delete({ where: { phone: cleanPhone } }).catch(() => {});
+      signupAttemptsStore.delete(cleanPhone);
+      res.status(400).json({ error: 'ValidationError', message: 'Maximum verification attempts exceeded. Please request a new code.' });
       return;
     }
 
+    // Expiry check
     if (new Date() > otpRecord.expiresAt) {
+      await prisma.otpVerification.delete({ where: { phone: cleanPhone } }).catch(() => {});
+      signupAttemptsStore.delete(cleanPhone);
       res.status(400).json({ error: 'ValidationError', message: 'Verification code has expired. Please request a new one.' });
       return;
     }
 
+    // OTP match check
+    if (otpRecord.otp !== otp.trim()) {
+      const newAttempts = currentAttempts + 1;
+      signupAttemptsStore.set(cleanPhone, newAttempts);
+      if (newAttempts >= 3) {
+        await prisma.otpVerification.delete({ where: { phone: cleanPhone } }).catch(() => {});
+        signupAttemptsStore.delete(cleanPhone);
+        res.status(400).json({ error: 'ValidationError', message: 'Maximum verification attempts exceeded. Please request a new code.' });
+        return;
+      }
+      const remaining = 3 - newAttempts;
+      res.status(400).json({ error: 'ValidationError', message: `Invalid verification code. ${remaining} attempts remaining.` });
+      return;
+    }
+
     await prisma.otpVerification.delete({ where: { phone: cleanPhone } }).catch(() => {});
+    signupAttemptsStore.delete(cleanPhone);
 
     const passwordHash = await bcrypt.hash(password, 12);
 
@@ -205,8 +251,7 @@ router.post('/verify-otp', async (req, res) => {
         email: cleanEmail,
         phone: cleanPhone,
         passwordHash,
-        // Phone OTP verification confirms phone but not email
-        emailVerified: false,
+        emailVerified: true, // Marked verified upon successful signup OTP verification
       },
     });
 
@@ -783,6 +828,270 @@ router.post('/unlink-google', customerAuth, async (req: AuthenticatedCustomerReq
   } catch (err) {
     console.error('Unlink Google error:', err);
     res.status(500).json({ error: 'ServerError', message: 'Failed to unlink Google account.' });
+  }
+});
+
+// Send Email OTP
+router.post('/send-email-otp', customerAuth, async (req: AuthenticatedCustomerRequest, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      res.status(400).json({ error: 'ValidationError', message: 'Email address is required.' });
+      return;
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(cleanEmail)) {
+      res.status(400).json({ error: 'ValidationError', message: 'Invalid email format.' });
+      return;
+    }
+
+    // Check if the email is already registered by another customer
+    const existingEmail = await prisma.user.findFirst({
+      where: {
+        email: cleanEmail,
+        NOT: { id: req.userId },
+      },
+    });
+
+    if (existingEmail) {
+      res.status(400).json({ error: 'ValidationError', message: 'An account with this email already exists.' });
+      return;
+    }
+
+    // Cooldown check (60 seconds)
+    const existingSession = emailOtpStore.get(cleanEmail);
+    if (existingSession) {
+      const secondsSinceLastSent = (Date.now() - existingSession.lastSentAt.getTime()) / 1000;
+      if (secondsSinceLastSent < 60) {
+        const remaining = Math.ceil(60 - secondsSinceLastSent);
+        res.status(429).json({
+          error: 'RateLimitError',
+          message: `Please wait ${remaining} seconds before requesting a new code.`
+        });
+        return;
+      }
+    }
+
+    // Generate random 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
+
+    emailOtpStore.set(cleanEmail, {
+      email: cleanEmail,
+      otp,
+      expiresAt,
+      lastSentAt: new Date(),
+      attempts: 0
+    });
+
+    console.log(`🔑 [Email OTP] Verification code for ${cleanEmail} is: ${otp}`);
+
+    res.status(200).json({
+      success: true,
+      email: cleanEmail,
+      otp
+    });
+  } catch (err) {
+    console.error('Send email OTP error:', err);
+    res.status(500).json({ error: 'ServerError', message: 'Failed to generate verification code.' });
+  }
+});
+
+// Verify Email OTP
+router.post('/verify-email-otp', customerAuth, async (req: AuthenticatedCustomerRequest, res) => {
+  try {
+    const { email, otp } = req.body;
+    if (!email || !otp) {
+      res.status(400).json({ error: 'ValidationError', message: 'Email and verification code are required.' });
+      return;
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanOtp = otp.trim();
+
+    const session = emailOtpStore.get(cleanEmail);
+    if (!session) {
+      res.status(400).json({ error: 'ValidationError', message: 'No verification session found for this email.' });
+      return;
+    }
+
+    // Expiry check
+    if (new Date() > session.expiresAt) {
+      emailOtpStore.delete(cleanEmail);
+      res.status(400).json({ error: 'ValidationError', message: 'Verification code has expired. Please request a new one.' });
+      return;
+    }
+
+    // Max attempts check (3 attempts)
+    session.attempts += 1;
+    if (session.attempts > 3) {
+      emailOtpStore.delete(cleanEmail);
+      res.status(400).json({ error: 'ValidationError', message: 'Maximum verification attempts exceeded. Please request a new code.' });
+      return;
+    }
+
+    // OTP Match check
+    if (session.otp !== cleanOtp) {
+      const remainingAttempts = 3 - session.attempts;
+      emailOtpStore.set(cleanEmail, session); // update attempts count
+      res.status(400).json({
+        error: 'ValidationError',
+        message: `Invalid verification code. ${remainingAttempts} attempts remaining.`
+      });
+      return;
+    }
+
+    // Success! Update user's email and set emailVerified to true
+    const updatedUser = await prisma.user.update({
+      where: { id: req.userId },
+      data: {
+        email: cleanEmail,
+        emailVerified: true
+      }
+    });
+
+    // Invalidate the session
+    emailOtpStore.delete(cleanEmail);
+
+    res.status(200).json({
+      success: true,
+      user: sanitizeUser(updatedUser)
+    });
+  } catch (err) {
+    console.error('Verify email OTP error:', err);
+    res.status(500).json({ error: 'ServerError', message: 'Failed to verify email.' });
+  }
+});
+
+// Forgot Password Request
+router.post('/forgot-password-request', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      res.status(400).json({ error: 'ValidationError', message: 'Email address is required.' });
+      return;
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    if (!EMAIL_RE.test(cleanEmail)) {
+      res.status(400).json({ error: 'ValidationError', message: 'Invalid email format.' });
+      return;
+    }
+
+    // Verify if user exists
+    const user = await prisma.user.findUnique({ where: { email: cleanEmail } });
+    if (!user) {
+      res.status(400).json({ error: 'ValidationError', message: 'No account found with this email address.' });
+      return;
+    }
+
+    // Cooldown check (60 seconds)
+    const existingSession = forgotPasswordOtpStore.get(cleanEmail);
+    if (existingSession) {
+      const secondsSinceLastSent = (Date.now() - existingSession.lastSentAt.getTime()) / 1000;
+      if (secondsSinceLastSent < 60) {
+        const remaining = Math.ceil(60 - secondsSinceLastSent);
+        res.status(429).json({
+          error: 'RateLimitError',
+          message: `Please wait ${remaining} seconds before requesting a new code.`
+        });
+        return;
+      }
+    }
+
+    // Generate random 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
+
+    forgotPasswordOtpStore.set(cleanEmail, {
+      email: cleanEmail,
+      otp,
+      expiresAt,
+      lastSentAt: new Date(),
+      attempts: 0
+    });
+
+    console.log(`🔑 [Forgot Password OTP] Verification code for ${cleanEmail} is: ${otp}`);
+
+    res.status(200).json({
+      success: true,
+      email: cleanEmail,
+      otp
+    });
+  } catch (err) {
+    console.error('Forgot password request error:', err);
+    res.status(500).json({ error: 'ServerError', message: 'Failed to request reset code.' });
+  }
+});
+
+// Forgot Password Reset
+router.post('/forgot-password-reset', async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+    if (!email || !otp || !newPassword) {
+      res.status(400).json({ error: 'ValidationError', message: 'All fields are required.' });
+      return;
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanOtp = otp.trim();
+
+    if (newPassword.length < 6) {
+      res.status(400).json({ error: 'ValidationError', message: 'Password must be at least 6 characters long.' });
+      return;
+    }
+
+    const session = forgotPasswordOtpStore.get(cleanEmail);
+    if (!session) {
+      res.status(400).json({ error: 'ValidationError', message: 'No reset session found for this email.' });
+      return;
+    }
+
+    // Expiry check
+    if (new Date() > session.expiresAt) {
+      forgotPasswordOtpStore.delete(cleanEmail);
+      res.status(400).json({ error: 'ValidationError', message: 'Reset code has expired. Please request a new one.' });
+      return;
+    }
+
+    // Max attempts check (3 attempts)
+    session.attempts += 1;
+    if (session.attempts > 3) {
+      forgotPasswordOtpStore.delete(cleanEmail);
+      res.status(400).json({ error: 'ValidationError', message: 'Maximum reset attempts exceeded. Please request a new code.' });
+      return;
+    }
+
+    // OTP match check
+    if (session.otp !== cleanOtp) {
+      const remainingAttempts = 3 - session.attempts;
+      forgotPasswordOtpStore.set(cleanEmail, session); // update attempts count
+      res.status(400).json({
+        error: 'ValidationError',
+        message: `Invalid verification code. ${remainingAttempts} attempts remaining.`
+      });
+      return;
+    }
+
+    // Success! Hash new password and update database
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+    await prisma.user.update({
+      where: { email: cleanEmail },
+      data: { passwordHash }
+    });
+
+    // Invalidate the session
+    forgotPasswordOtpStore.delete(cleanEmail);
+
+    res.status(200).json({
+      success: true,
+      message: 'Password reset successfully.'
+    });
+  } catch (err) {
+    console.error('Forgot password reset error:', err);
+    res.status(500).json({ error: 'ServerError', message: 'Failed to reset password.' });
   }
 });
 

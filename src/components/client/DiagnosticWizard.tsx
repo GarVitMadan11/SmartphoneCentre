@@ -1,13 +1,16 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { Model, Variant, getDefectRulesForCategory, DefectRule, isAppleDevice, isSmartwatchDevice, isTabletDevice } from '../../data/mockDatabase';
+import { Model, Variant, getDefectRulesForCategory, DefectRule, isAppleDevice, isSmartwatchDevice, isTabletDevice, getDeviceImage } from '../../data/mockDatabase';
 import { calculateValuation } from '../../utils/valuation';
 import { 
   ArrowLeft, Check, ChevronRight, Activity, Sparkles, 
-  Smartphone, Tablet, Box, Zap, Trash2, ShieldCheck, Printer, Watch
+  Smartphone, Tablet, Box, Zap, Trash2, ShieldCheck, Printer, Watch,
+  X, Lock, Eye, EyeOff, AlertCircle, Mail, User
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getIllustration } from './Illustrations';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
+import emailjs from '@emailjs/browser';
+import { checkPhone, customerLogin, customerSignup, verifyOtp, ApiUser } from '../../utils/api';
 
 const getEngineeringLabel = (description: string) => {
   const mapping: { [key: string]: string } = {
@@ -83,6 +86,8 @@ interface DiagnosticWizardProps {
   setSelectedDefects: React.Dispatch<React.SetStateAction<DefectRule[]>>;
   step: number;
   setStep: React.Dispatch<React.SetStateAction<number>>;
+  currentUser?: ApiUser | null;
+  onLoginSuccess?: (user: ApiUser) => void;
 }
 
 export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
@@ -93,7 +98,9 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
   selectedDefects,
   setSelectedDefects,
   step,
-  setStep
+  setStep,
+  currentUser,
+  onLoginSuccess,
 }) => {
   const isApple = useMemo(() => isAppleDevice(model.brandId, model.name), [model]);
   const isWatch = useMemo(() => isSmartwatchDevice(model.brandId, model.name, model.id), [model]);
@@ -247,6 +254,161 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
         setSelectedDefects(next.filter(d => d.id !== 'defect-critical-icloud'));
         setStep(1);
       }
+    }
+  };
+
+  // Phone Check Lock Modal states
+  const [isPriceLocked, setIsPriceLocked] = useState(!currentUser);
+  const [lockModalOpen, setLockModalOpen] = useState(false);
+  const [modalStage, setModalStage] = useState<'phone' | 'password' | 'signup' | 'otp'>('phone');
+  const [phoneInput, setPhoneInput] = useState('');
+  const [passwordInput, setPasswordInput] = useState('');
+  const [nameInput, setNameInput] = useState('');
+  const [emailInput, setEmailInput] = useState('');
+  const [otpInput, setOtpInput] = useState('');
+  const [termsAccepted, setTermsAccepted] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
+  const [modalError, setModalError] = useState('');
+  const [modalLoading, setModalLoading] = useState(false);
+
+  React.useEffect(() => {
+    if (currentUser) {
+      setIsPriceLocked(false);
+    }
+  }, [currentUser]);
+
+  React.useEffect(() => {
+    if (step === 6 && !currentUser) {
+      setLockModalOpen(true);
+    }
+  }, [step, currentUser]);
+
+  const handlePhoneSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (phoneInput.length !== 10) {
+      setModalError('Please enter a valid 10-digit mobile number.');
+      return;
+    }
+    if (!termsAccepted) {
+      setModalError('You must agree to the Terms and Conditions.');
+      return;
+    }
+    setModalError('');
+    setModalLoading(true);
+
+    try {
+      const res = await checkPhone(phoneInput);
+      if (res.exists) {
+        setModalStage('password');
+      } else {
+        setModalStage('signup');
+      }
+    } catch (err: any) {
+      setModalError(err.message || 'Failed to check phone number.');
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!passwordInput) {
+      setModalError('Please enter your password.');
+      return;
+    }
+    setModalError('');
+    setModalLoading(true);
+
+    try {
+      const res = await customerLogin(phoneInput, passwordInput);
+      if (res.user) {
+        if (onLoginSuccess) {
+          onLoginSuccess(res.user);
+        }
+        setIsPriceLocked(false);
+        setLockModalOpen(false);
+      }
+    } catch (err: any) {
+      setModalError('Invalid mobile number or password.');
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  const handleSignupSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!nameInput.trim() || !emailInput.trim() || !passwordInput) {
+      setModalError('Please fill in all fields.');
+      return;
+    }
+    if (passwordInput.length < 6) {
+      setModalError('Password must be at least 6 characters.');
+      return;
+    }
+    setModalError('');
+    setModalLoading(true);
+
+    try {
+      const res = await customerSignup(nameInput.trim(), emailInput.trim(), phoneInput, passwordInput);
+      if (res.status === 'otp_sent') {
+        const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+        const templateId = import.meta.env.VITE_EMAILJS_OTP_TEMPLATE_ID;
+        const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+
+        if (!serviceId || !templateId || !publicKey) {
+          throw new Error('EmailJS environment variables are not configured in the browser.');
+        }
+
+        const templateParams = {
+          email: emailInput.trim(),
+          passcode: res.otp,
+          time: '10 minutes',
+        };
+
+        try {
+          await emailjs.send(serviceId, templateId, templateParams, publicKey);
+        } catch (mailErr: any) {
+          console.error('EmailJS signup send failed:', mailErr);
+          throw new Error('Unable to send verification code. Please try again.');
+        }
+
+        setModalStage('otp');
+      }
+    } catch (err: any) {
+      setModalError(err.message || 'Failed to initiate signup.');
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  const handleOtpVerifySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (otpInput.length !== 6) {
+      setModalError('Please enter the 6-digit verification code.');
+      return;
+    }
+    setModalError('');
+    setModalLoading(true);
+
+    try {
+      const res = await verifyOtp({
+        name: nameInput.trim(),
+        email: emailInput.trim(),
+        phone: phoneInput,
+        password: passwordInput,
+        otp: otpInput,
+      });
+      if (res.user) {
+        if (onLoginSuccess) {
+          onLoginSuccess(res.user);
+        }
+        setIsPriceLocked(false);
+        setLockModalOpen(false);
+      }
+    } catch (err: any) {
+      setModalError(err.message || 'OTP verification failed.');
+    } finally {
+      setModalLoading(false);
     }
   };
 
@@ -1138,6 +1300,23 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   {/* Animated Engineering Receipt */}
                   <div className="mb-6">
                     <div id="printable-quote" className="border border-zinc-700/80 bg-zinc-900 text-zinc-100 rounded-sm p-6 text-sm relative overflow-hidden text-left shadow-2xl">
+                      {/* Price Lock Overlay */}
+                      {isPriceLocked && (
+                        <div className="absolute inset-0 bg-zinc-950/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-20">
+                          <div className="w-14 h-14 rounded-full bg-cobalt/20 text-cobalt flex items-center justify-center mb-4 border border-cobalt/30 animate-bounce">
+                            <Lock className="w-6 h-6 text-sky-400" />
+                          </div>
+                          <h4 className="text-base font-bold text-white font-outfit mb-2">Price is Locked</h4>
+                          <p className="text-[11px] text-zinc-400 max-w-xs mb-5 font-light leading-relaxed">Verify your mobile number to unlock the best doorstep resale valuation of your {model.name}.</p>
+                          <button 
+                            type="button"
+                            onClick={() => setLockModalOpen(true)}
+                            className="px-5 py-2 rounded-sm bg-cobalt hover:bg-cobalt-hover text-white text-[11px] font-bold transition-all shadow-premium"
+                          >
+                            Unlock Best Price
+                          </button>
+                        </div>
+                      )}
                       {/* Watermark/stamp — circular badge */}
                       <div className="absolute -right-5 -top-5 w-24 h-24 rounded-full border-2 border-emerald-400/30 bg-emerald-950/20 flex items-center justify-center rotate-12 select-none pointer-events-none print-stamp">
                         <span className="text-[9px] font-mono text-emerald-400 font-bold uppercase tracking-widest">VERIFIED</span>
@@ -1220,7 +1399,9 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           <span className="text-zinc-400 print-text-muted uppercase block text-xs font-mono font-semibold">TOTAL ESTIMATED PAYOUT</span>
                           <span className="text-xs text-emerald-400 print-text-emerald uppercase tracking-wider block font-mono font-bold mt-0.5">✓ Payout Rate Locked</span>
                         </div>
-                        <span className="text-3xl sm:text-4xl font-extrabold text-emerald-400 print-text-emerald tracking-tight font-mono font-outfit">{formatPrice(valuation.finalPrice)}</span>
+                        <span className="text-3xl sm:text-4xl font-extrabold text-emerald-400 print-text-emerald tracking-tight font-mono font-outfit">
+                          {isPriceLocked ? '₹ XX,XXX' : formatPrice(valuation.finalPrice)}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -1228,7 +1409,13 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
                 <div className="flex gap-3 mt-4">
                   <button
-                    onClick={() => window.print()}
+                    onClick={() => {
+                      if (isPriceLocked) {
+                        setLockModalOpen(true);
+                      } else {
+                        window.print();
+                      }
+                    }}
                     aria-label="Print diagnostic report and quote"
                     className="flex-shrink-0 px-4 py-4 rounded-sm border border-ice-border text-ink-slate hover:border-cobalt hover:text-cobalt transition-all flex items-center gap-2 text-sm font-semibold"
                     style={{ minHeight: '48px' }}
@@ -1236,14 +1423,26 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                     <Printer className="w-4 h-4" aria-hidden="true" />
                     <span className="hidden sm:inline">Print Quote</span>
                   </button>
-                  <button
-                    onClick={() => onComplete(valuation.finalPrice, selectedDefects)}
-                    className="flex-1 bg-cobalt hover:bg-cobalt-hover text-white py-4 rounded-sm font-bold text-center transition-all flex items-center justify-center gap-2 group hover:scale-[1.01]"
-                    style={{ minHeight: '48px' }}
-                  >
-                    Book Instant Doorstep Payout
-                    <ChevronRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
-                  </button>
+                  {isPriceLocked ? (
+                    <button
+                      type="button"
+                      onClick={() => setLockModalOpen(true)}
+                      className="flex-1 bg-cobalt hover:bg-cobalt-hover text-white py-4 rounded-sm font-bold text-center transition-all flex items-center justify-center gap-2 group hover:scale-[1.01]"
+                      style={{ minHeight: '48px' }}
+                    >
+                      <Lock className="w-4 h-4 text-sky-300" />
+                      Unlock Price &amp; Book
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => onComplete(valuation.finalPrice, selectedDefects)}
+                      className="flex-1 bg-cobalt hover:bg-cobalt-hover text-white py-4 rounded-sm font-bold text-center transition-all flex items-center justify-center gap-2 group hover:scale-[1.01]"
+                      style={{ minHeight: '48px' }}
+                    >
+                      Book Instant Doorstep Payout
+                      <ChevronRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
+                    </button>
+                  )}
                 </div>
               </motion.div>
             )}
@@ -1319,11 +1518,13 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                 </svg>
                 <div className="text-center z-10 px-2">
                   <span className="text-[9px] font-mono tracking-[0.1em] text-zinc-500 uppercase block">Live Estimate</span>
-                  <span className="text-2xl font-black text-ink-navy font-outfit">{formatPrice(valuation.finalPrice)}</span>
+                  <span className="text-2xl font-black text-ink-navy font-outfit">
+                    {isPriceLocked ? '₹ XX,XXX' : formatPrice(valuation.finalPrice)}
+                  </span>
                 </div>
               </div>
               <span className="text-xs text-ink-slate font-light mt-3">
-                Base Value: {formatPrice(variant.basePrice)}
+                Base Value: {isPriceLocked ? '₹ XX,XXX' : formatPrice(variant.basePrice)}
               </span>
             </div>
           </div>
@@ -1351,6 +1552,332 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
           )}
         </div>
       </div>
+
+      {/* Cashify-style Price Lock Modal */}
+      {lockModalOpen && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200">
+          <div className="relative max-w-3xl w-full bg-white dark:bg-zinc-900 rounded-xl overflow-hidden shadow-2xl flex flex-col md:flex-row text-left border border-zinc-200 dark:border-zinc-800 animate-in zoom-in-95 duration-150">
+            {/* Close Button */}
+            <button 
+              type="button"
+              onClick={() => setLockModalOpen(false)} 
+              className="absolute top-3 right-3 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 z-10 p-1.5 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            {/* Left Panel: Brand / Illustration (Hidden on mobile) */}
+            <div className="hidden md:flex md:w-5/12 bg-gradient-to-br from-cobalt to-emerald-500 text-white p-8 flex-col justify-between relative overflow-hidden">
+              <div className="z-10">
+                <span className="text-xl font-extrabold tracking-tight">
+                  Re<span className="text-sky-300">phonix</span>
+                </span>
+                <h3 className="text-2xl font-bold font-outfit mt-4 leading-tight">Login / Signup</h3>
+              </div>
+              
+              <div className="my-auto flex flex-col items-center text-center space-y-4 z-10">
+                <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center border border-white/20 shadow-inner">
+                  <Lock className="w-8 h-8 text-white fill-current" />
+                </div>
+                <p className="text-xs font-light opacity-90 leading-relaxed text-center">Verify your mobile number to unlock your diagnostic estimate and book a free doorstep inspection.</p>
+              </div>
+
+              {/* Decorative light effects */}
+              <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-white/5 rounded-full blur-2xl pointer-events-none" />
+              <div className="absolute -right-10 -top-10 w-40 h-40 bg-sky-300/10 rounded-full blur-2xl pointer-events-none" />
+            </div>
+
+            {/* Right Panel: Active Auth Forms */}
+            <div className="w-full md:w-7/12 p-6 sm:p-8 flex flex-col justify-center bg-white dark:bg-zinc-900 font-sans">
+              
+              {/* Product Info Box */}
+              <div className="border border-ice-border dark:border-zinc-800 rounded-lg p-3.5 flex items-center gap-3.5 mb-5 bg-slate-50/50 dark:bg-zinc-900/50">
+                <div className="w-12 h-12 bg-white dark:bg-zinc-800 border border-ice-border dark:border-zinc-800 rounded-md flex items-center justify-center p-1 flex-shrink-0">
+                  <img 
+                    src={getDeviceImage(model.id, model.brandId, variant.color, model.imageUrl)} 
+                    alt={model.name} 
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+                <div>
+                  <h4 className="font-bold text-xs text-ink-navy dark:text-white leading-tight">{model.name}</h4>
+                  <p className="text-[10px] text-ink-muted mt-0.5">{variant.storageGb}GB • {variant.color || 'Standard'}</p>
+                  <div className="flex items-baseline gap-1 mt-1">
+                    <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-wider">Selling Price:</span>
+                    <span className="text-xs font-extrabold text-red-500 font-mono">₹ XX,XXX</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Price Unlock Notice */}
+              <div className="bg-cobalt/5 dark:bg-cobalt/10 border border-cobalt/10 rounded-md p-2.5 flex items-center gap-2 mb-5 text-cobalt dark:text-sky-400 text-xs">
+                <Lock className="w-3.5 h-3.5 flex-shrink-0 animate-pulse" />
+                <span className="font-semibold">Login to unlock the best price</span>
+              </div>
+
+              {/* Error Box */}
+              {modalError && (
+                <div className="mb-4 bg-red-500/10 border border-red-500/20 text-red-500 p-2.5 rounded-sm text-[11px] font-medium flex items-center gap-2">
+                  <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span>{modalError}</span>
+                </div>
+              )}
+
+
+
+              {modalStage === 'phone' && (
+                /* Stage 1: Phone number entry */
+                <form onSubmit={handlePhoneSubmit} className="space-y-4">
+                  <div>
+                    <label htmlFor="modalPhone" className="text-[10px] font-mono tracking-wider text-ink-muted uppercase block mb-1.5">
+                      Enter your phone number
+                    </label>
+                    <div className="relative flex rounded-sm overflow-hidden border border-ice-border dark:border-zinc-800 focus-within:border-cobalt transition-colors">
+                      <span className="bg-slate-100 dark:bg-zinc-800 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-zinc-300 flex items-center border-r border-ice-border dark:border-zinc-800">
+                        +91
+                      </span>
+                      <input
+                        id="modalPhone"
+                        type="tel"
+                        maxLength={10}
+                        required
+                        value={phoneInput}
+                        onChange={(e) => setPhoneInput(e.target.value.replace(/\D/g, ''))}
+                        className="w-full px-3 py-2 bg-canvas-pure text-xs text-ink-navy dark:text-white focus:outline-none"
+                        placeholder="Enter your Mobile"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-start">
+                    <div className="flex items-center h-5">
+                      <input
+                        id="modalTerms"
+                        type="checkbox"
+                        checked={termsAccepted}
+                        onChange={(e) => setTermsAccepted(e.target.checked)}
+                        className="h-4 w-4 text-cobalt focus:ring-cobalt/30 border-ice-border rounded"
+                      />
+                    </div>
+                    <div className="ml-2.5 text-[11px] text-left">
+                      <label htmlFor="modalTerms" className="font-light text-ink-muted">
+                        I agree to the{' '}
+                        <span className="text-cobalt hover:underline cursor-pointer font-medium" onClick={() => alert('Terms of Service: By unlocking your price, you verify device details are correctly declared.')}>
+                          Terms &amp; Conditions
+                        </span>{' '}
+                        &amp; Privacy Policy.
+                      </label>
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={modalLoading}
+                    className="w-full flex justify-center py-2.5 px-4 bg-cobalt hover:bg-cobalt-hover text-white rounded-sm font-bold text-xs transition-all shadow-premium disabled:opacity-50"
+                  >
+                    {modalLoading ? 'Checking...' : 'CONTINUE'}
+                  </button>
+                </form>
+              )}
+
+              {modalStage === 'password' && (
+                /* Stage 2: Password entry (existing account) */
+                <form onSubmit={handlePasswordSubmit} className="space-y-4">
+                  <div className="text-left mb-2">
+                    <h5 className="font-bold text-xs text-ink-navy dark:text-white">Welcome Back!</h5>
+                    <p className="text-[10px] text-ink-muted font-light mt-0.5">An account with +91 {phoneInput} already exists. Please login to unlock your price.</p>
+                  </div>
+
+                  <div>
+                    <label htmlFor="modalPassword" className="text-[10px] font-mono tracking-wider text-ink-muted uppercase block mb-1.5">
+                      Enter Password
+                    </label>
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-ink-muted">
+                        <Lock className="w-3.5 h-3.5" />
+                      </span>
+                      <input
+                        id="modalPassword"
+                        type={showPassword ? 'text' : 'password'}
+                        required
+                        value={passwordInput}
+                        onChange={(e) => setPasswordInput(e.target.value)}
+                        className="w-full pl-9 pr-10 py-2 bg-canvas-pure border border-ice-border dark:border-zinc-800 rounded-sm text-xs text-ink-navy dark:text-white focus:outline-none focus:border-cobalt transition-all"
+                        placeholder="Enter account password"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-ink-muted hover:text-ink-navy"
+                      >
+                        {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center text-[10px] pt-1">
+                    <button 
+                      type="button"
+                      onClick={() => { setModalStage('phone'); setModalError(''); }}
+                      className="text-cobalt hover:underline font-medium"
+                    >
+                      Use different number
+                    </button>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={modalLoading}
+                    className="w-full flex justify-center py-2.5 px-4 bg-cobalt hover:bg-cobalt-hover text-white rounded-sm font-bold text-xs transition-all shadow-premium disabled:opacity-50"
+                  >
+                    {modalLoading ? 'Logging in...' : 'LOGIN & UNLOCK'}
+                  </button>
+                </form>
+              )}
+
+              {modalStage === 'signup' && (
+                /* Stage 3: Signup info fields (new account) */
+                <form onSubmit={handleSignupSubmit} className="space-y-3">
+                  <div className="text-left mb-2">
+                    <h5 className="font-bold text-xs text-ink-navy dark:text-white">Create Account</h5>
+                    <p className="text-[10px] text-ink-muted font-light mt-0.5">Please fill in your details to create an account and unlock the price.</p>
+                  </div>
+
+                  <div>
+                    <label htmlFor="modalName" className="text-[10px] font-mono tracking-wider text-ink-muted uppercase block mb-1">
+                      Full Name
+                    </label>
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-ink-muted">
+                        <User className="w-3.5 h-3.5" />
+                      </span>
+                      <input
+                        id="modalName"
+                        type="text"
+                        required
+                        value={nameInput}
+                        onChange={(e) => setNameInput(e.target.value)}
+                        className="w-full pl-9 pr-3 py-1.5 bg-canvas-pure border border-ice-border dark:border-zinc-800 rounded-sm text-xs text-ink-navy dark:text-white focus:outline-none focus:border-cobalt transition-all"
+                        placeholder="Enter full name"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label htmlFor="modalEmail" className="text-[10px] font-mono tracking-wider text-ink-muted uppercase block mb-1">
+                      Email Address
+                    </label>
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-ink-muted">
+                        <Mail className="w-3.5 h-3.5" />
+                      </span>
+                      <input
+                        id="modalEmail"
+                        type="email"
+                        required
+                        value={emailInput}
+                        onChange={(e) => setEmailInput(e.target.value)}
+                        className="w-full pl-9 pr-3 py-1.5 bg-canvas-pure border border-ice-border dark:border-zinc-800 rounded-sm text-xs text-ink-navy dark:text-white focus:outline-none focus:border-cobalt transition-all"
+                        placeholder="Enter email address"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label htmlFor="modalSignupPassword" className="text-[10px] font-mono tracking-wider text-ink-muted uppercase block mb-1">
+                      Create Password
+                    </label>
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-ink-muted">
+                        <Lock className="w-3.5 h-3.5" />
+                      </span>
+                      <input
+                        id="modalSignupPassword"
+                        type={showPassword ? 'text' : 'password'}
+                        required
+                        value={passwordInput}
+                        onChange={(e) => setPasswordInput(e.target.value)}
+                        className="w-full pl-9 pr-10 py-1.5 bg-canvas-pure border border-ice-border dark:border-zinc-800 rounded-sm text-xs text-ink-navy dark:text-white focus:outline-none focus:border-cobalt transition-all"
+                        placeholder="Min 6 characters"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-ink-muted hover:text-ink-navy"
+                      >
+                        {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center text-[10px] pt-1">
+                    <button 
+                      type="button"
+                      onClick={() => { setModalStage('phone'); setModalError(''); }}
+                      className="text-cobalt hover:underline font-medium"
+                    >
+                      Change phone number
+                    </button>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={modalLoading}
+                    className="w-full flex justify-center py-2 px-4 bg-cobalt hover:bg-cobalt-hover text-white rounded-sm font-bold text-xs transition-all shadow-premium disabled:opacity-50"
+                  >
+                    {modalLoading ? 'Sending OTP...' : 'CONTINUE & SEND OTP'}
+                  </button>
+                </form>
+              )}
+
+              {modalStage === 'otp' && (
+                /* Stage 4: OTP Verification code */
+                <form onSubmit={handleOtpVerifySubmit} className="space-y-4">
+                  <div className="text-left mb-2">
+                    <h5 className="font-bold text-xs text-ink-navy dark:text-white">Verify Phone Number</h5>
+                    <p className="text-[10px] text-ink-muted font-light mt-0.5">Please enter the 6-digit OTP code sent to +91 {phoneInput}.</p>
+                  </div>
+
+                  <div>
+                    <label htmlFor="modalOtp" className="text-[10px] font-mono tracking-wider text-ink-muted uppercase block mb-1.5">
+                      Verification Code
+                    </label>
+                    <input
+                      id="modalOtp"
+                      type="text"
+                      maxLength={6}
+                      required
+                      value={otpInput}
+                      onChange={(e) => setOtpInput(e.target.value.replace(/\D/g, ''))}
+                      className="w-full tracking-[0.5em] text-center font-bold pl-3 py-2 bg-canvas-pure border border-ice-border dark:border-zinc-800 rounded-sm text-sm text-ink-navy dark:text-white focus:outline-none focus:border-cobalt transition-all"
+                      placeholder="000000"
+                    />
+                  </div>
+
+                  <div className="flex justify-between items-center text-[10px] pt-1">
+                    <button 
+                      type="button"
+                      onClick={() => { setModalStage('phone'); setModalError(''); }}
+                      className="text-cobalt hover:underline font-medium"
+                    >
+                      Change phone number
+                    </button>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={modalLoading}
+                    className="w-full flex justify-center py-2.5 px-4 bg-cobalt hover:bg-cobalt-hover text-white rounded-sm font-bold text-xs transition-all shadow-premium disabled:opacity-50"
+                  >
+                    {modalLoading ? 'Verifying OTP...' : 'VERIFY & UNLOCK'}
+                  </button>
+                </form>
+              )}
+
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
