@@ -4,7 +4,6 @@ import { fetchBrands, fetchModels, fetchBookings as apiFetchBookings, fetchCurre
 import { DeviceSelector } from './components/client/DeviceSelector';
 import { DeviceCategoryShowcase } from './components/client/DeviceCategoryShowcase';
 import { SellYourDevice } from './components/client/SellYourDevice';
-import { SupportChatWidget } from './components/client/SupportChatWidget';
 import { HeaderNav } from './components/client/HeaderNav';
 import { TabletsShowcase } from './components/client/TabletsShowcase';
 import { SmartwatchesShowcase } from './components/client/SmartwatchesShowcase';
@@ -1574,8 +1573,6 @@ export default function App() {
         )}
       </main>
 
-      {/* ── Support Chat Widget ── */}
-      <SupportChatWidget />
 
       {/* ── Footer ────────────────────────────────────────────────── */}
       <footer className="bg-canvas-pure border-t border-ice-border mt-8 sm:mt-16 py-8">

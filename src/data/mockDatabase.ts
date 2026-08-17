@@ -1182,9 +1182,62 @@ export function getPhoneImageForBrand(brandId: string): string {
   }
 }
 
+function getRedirectedModelId(modelId: string): string {
+  const cleanId = modelId.replace(/^catalog-/, '');
+  
+  if (!cleanId.startsWith('apple-')) {
+    return modelId;
+  }
+  
+  // Extract number or suffix
+  const match = cleanId.match(/^apple-(\d+)(.*)$/);
+  let isLowerThan15 = false;
+  let isProMax = false;
+  let isPro = false;
+  
+  if (match) {
+    const num = parseInt(match[1], 10);
+    const suffix = match[2];
+    if (num < 15) {
+      isLowerThan15 = true;
+      if (suffix.includes('pm') || suffix.includes('pro-max') || suffix.includes('promax')) {
+        isProMax = true;
+      } else if (suffix.includes('p') || suffix.includes('pro')) {
+        isPro = true;
+      }
+    }
+  } else {
+    // Check for legacy non-numeric models like xr, xs, xsmax, x, se2, se3
+    const legacyModels = ['xr', 'xs', 'xsmax', 'x', 'se2', 'se3'];
+    const part = cleanId.substring('apple-'.length);
+    if (legacyModels.some(m => part.startsWith(m))) {
+      isLowerThan15 = true;
+      if (part.includes('max') || part.includes('xsmax')) {
+        isProMax = true;
+      } else if (part.startsWith('xs')) {
+        isPro = true;
+      }
+    }
+  }
+  
+  if (isLowerThan15) {
+    let target = 'apple-15';
+    if (isProMax) {
+      target = 'apple-15pm';
+    } else if (isPro) {
+      target = 'apple-15p';
+    }
+    return modelId.startsWith('catalog-') ? `catalog-${target}` : target;
+  }
+  
+  return modelId;
+}
+
 export function getDeviceImage(modelId: string, brandId: string, color?: string, customImageUrl?: string): string {
+  const redirectedModelId = getRedirectedModelId(modelId);
+
   if (color) {
-    const colorKey = `${modelId}-${color.toLowerCase().trim().replace(/\s+/g, '-')}`;
+    const colorKey = `${redirectedModelId}-${color.toLowerCase().trim().replace(/\s+/g, '-')}`;
     const colorImg = (phoneImages as Record<string, string>)[colorKey];
     if (colorImg) {
       if (colorImg.startsWith('http')) return colorImg;
@@ -1198,9 +1251,9 @@ export function getDeviceImage(modelId: string, brandId: string, color?: string,
     return customImageUrl.trim();
   }
 
-  const cleanId = modelId.replace(/^catalog-/, '');
+  const cleanId = redirectedModelId.replace(/^catalog-/, '');
   const possibleKeys = [
-    modelId,
+    redirectedModelId,
     cleanId,
     cleanId.replace(/^apple-iphone-/, 'apple-'),
     cleanId.replace(/^apple-iphone-17-/, 'apple-17'),
