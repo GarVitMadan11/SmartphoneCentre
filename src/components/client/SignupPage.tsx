@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Eye, EyeOff, Lock, Mail, ArrowLeft, AlertCircle, Phone, User, CheckCircle2, Loader2, RefreshCw } from 'lucide-react';
+import emailjs from '@emailjs/browser';
 import { customerSignup, verifyOtp, registerWithEmail, googleAuth, fetchAuthConfig, resendVerification, ApiUser } from '../../utils/api';
 
 declare global {
