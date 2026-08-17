@@ -38,6 +38,8 @@ services:
       # ── Auth System ──────────────────────────────────────────────────────────
       - key: GOOGLE_CLIENT_ID
         sync: false       # Google OAuth Client ID (from Google Cloud Console)
+      - key: VITE_GOOGLE_CLIENT_ID
+        sync: false       # Frontend Google OAuth Client ID
       - key: SMTP_HOST
         sync: false       # e.g. smtp.hostinger.com
       - key: SMTP_PORT
