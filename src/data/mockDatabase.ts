@@ -880,11 +880,11 @@ const BASE_MODELS: Model[] = [
   { id: 'goog-6a',  brandId: 'brand-google', name: 'Pixel 6a', category: 'budget',   releaseYear: 2022, basePrice128GB:  6500, series: 'Pixel 6 Series' },
 
   // --- OPPO ---
-  { id: 'catalog-oppo-a3', brandId: 'brand-oppo', name: 'OPPO A3', category: 'budget', releaseYear: 2025, basePrice128GB: 4000, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a3-5g.jpg' },
-  { id: 'catalog-oppo-a3x', brandId: 'brand-oppo', name: 'OPPO A3x', category: 'budget', releaseYear: 2025, basePrice128GB: 4000, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a3x-5g.jpg' },
+  { id: 'catalog-oppo-a3', brandId: 'brand-oppo', name: 'OPPO A3', category: 'budget', releaseYear: 2025, basePrice128GB: 4000, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a3.jpg' },
+  { id: 'catalog-oppo-a3x', brandId: 'brand-oppo', name: 'OPPO A3x', category: 'budget', releaseYear: 2025, basePrice128GB: 4000, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a3x.jpg' },
   { id: 'catalog-oppo-a3-pro', brandId: 'brand-oppo', name: 'OPPO A3 Pro', category: 'flagship', releaseYear: 2025, basePrice128GB: 69500, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a3-pro.jpg' },
   { id: 'catalog-oppo-a5', brandId: 'brand-oppo', name: 'OPPO A5', category: 'budget', releaseYear: 2025, basePrice128GB: 4000, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a5-2020.jpg' },
-  { id: 'catalog-oppo-a5x', brandId: 'brand-oppo', name: 'OPPO A5x', category: 'budget', releaseYear: 2025, basePrice128GB: 4000, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a3x-5g.jpg' },
+  { id: 'catalog-oppo-a5x', brandId: 'brand-oppo', name: 'OPPO A5x', category: 'budget', releaseYear: 2025, basePrice128GB: 4000, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a3x.jpg' },
   { id: 'catalog-oppo-a5-pro', brandId: 'brand-oppo', name: 'OPPO A5 Pro', category: 'flagship', releaseYear: 2025, basePrice128GB: 69500, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a3-pro.jpg' },
   { id: 'catalog-oppo-f25-pro', brandId: 'brand-oppo', name: 'OPPO F25 Pro', category: 'midrange', releaseYear: 2025, basePrice128GB: 12000, series: 'F Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-f25-pro.jpg' },
   { id: 'catalog-oppo-f27-pro', brandId: 'brand-oppo', name: 'OPPO F27 Pro+', category: 'midrange', releaseYear: 2025, basePrice128GB: 14000, series: 'F Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-f25-pro.jpg' },

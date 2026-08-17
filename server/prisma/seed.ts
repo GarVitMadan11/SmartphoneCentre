@@ -259,15 +259,15 @@ const CASHIFY_BENCHMARKS: Record<string, { supportedStorageGb: number[]; variant
 
 const MODEL_IMAGE_URLS: Record<string, string> = {
   // OPPO
-  'OPPO A3': 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a3-5g.jpg',
-  'OPPO A3x': 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a3x-5g.jpg',
+  'OPPO A3': 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a3.jpg',
+  'OPPO A3x': 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a3x.jpg',
   'OPPO A3 Pro': 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a3-pro.jpg',
-  'OPPO A5': 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a3-5g.jpg',
-  'OPPO A5x': 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a3x-5g.jpg',
+  'OPPO A5': 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a5-2020.jpg',
+  'OPPO A5x': 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a3x.jpg',
   'OPPO A5 Pro': 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a3-pro.jpg',
-  'OPPO A6': 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a3-5g.jpg',
+  'OPPO A6': 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a60.jpg',
   'OPPO A6 Pro': 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a3-pro.jpg',
-  'OPPO A6x': 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a3x-5g.jpg',
+  'OPPO A6x': 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a3x.jpg',
   'OPPO F21': 'https://fdn2.gsmarena.com/vv/bigpic/oppo-f25-pro.jpg',
   'OPPO F21 Pro 5G': 'https://fdn2.gsmarena.com/vv/bigpic/oppo-f25-pro.jpg',
   'OPPO F23': 'https://fdn2.gsmarena.com/vv/bigpic/oppo-f25-pro.jpg',
