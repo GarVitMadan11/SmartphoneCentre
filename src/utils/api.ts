@@ -310,6 +310,13 @@ export interface ApiUser {
   updatedAt: string;
 }
 
+export function checkPhone(phone: string): Promise<{ exists: boolean }> {
+  return apiFetch<{ exists: boolean }>('/auth/check-phone', {
+    method: 'POST',
+    body: JSON.stringify({ phone }),
+  });
+}
+
 export function customerLogin(emailOrPhone: string, password: string): Promise<{ user: ApiUser; csrfToken: string }> {
   return apiFetch<{ user: ApiUser; csrfToken: string }>('/auth/login', {
     method: 'POST',
@@ -317,8 +324,8 @@ export function customerLogin(emailOrPhone: string, password: string): Promise<{
   });
 }
 
-export function customerSignup(name: string, email: string, phone: string, password: string): Promise<{ status: string; phone: string; testOtp?: string }> {
-  return apiFetch<{ status: string; phone: string; testOtp?: string }>('/auth/signup', {
+export function customerSignup(name: string, email: string, phone: string, password: string): Promise<{ status: string; phone: string; otp?: string }> {
+  return apiFetch<{ status: string; phone: string; otp?: string }>('/auth/signup', {
     method: 'POST',
     body: JSON.stringify({ name, email, phone, password }),
   });
@@ -430,5 +437,33 @@ export function unlinkGoogleAccount(): Promise<{ success: boolean; user: ApiUser
   return apiFetch<{ success: boolean; user: ApiUser }>('/auth/unlink-google', {
     method: 'POST',
     body: JSON.stringify({}),
+  });
+}
+
+export function sendEmailOtp(email: string): Promise<{ success: boolean; email: string; otp: string }> {
+  return apiFetch<{ success: boolean; email: string; otp: string }>('/auth/send-email-otp', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+}
+
+export function verifyEmailOtp(email: string, otp: string): Promise<{ success: boolean; user: ApiUser }> {
+  return apiFetch<{ success: boolean; user: ApiUser }>('/auth/verify-email-otp', {
+    method: 'POST',
+    body: JSON.stringify({ email, otp }),
+  });
+}
+
+export function requestPasswordResetOtp(email: string): Promise<{ success: boolean; email: string; otp: string }> {
+  return apiFetch<{ success: boolean; email: string; otp: string }>('/auth/forgot-password-request', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+}
+
+export function resetPasswordWithOtp(email: string, otp: string, newPassword: string): Promise<{ success: boolean; message: string }> {
+  return apiFetch<{ success: boolean; message: string }>('/auth/forgot-password-reset', {
+    method: 'POST',
+    body: JSON.stringify({ email, otp, newPassword }),
   });
 }

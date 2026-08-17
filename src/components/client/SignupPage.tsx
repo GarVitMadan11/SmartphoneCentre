@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Eye, EyeOff, Lock, Mail, ArrowLeft, AlertCircle, Phone, User, CheckCircle2, Loader2, RefreshCw } from 'lucide-react';
+import emailjs from '@emailjs/browser';
 import { customerSignup, verifyOtp, registerWithEmail, googleAuth, resendVerification, ApiUser } from '../../utils/api';
 
 declare global {
@@ -39,7 +40,6 @@ export default function SignupPage({ onSignupSuccess, onNavigate, redirectParam 
   const [googleLoading, setGoogleLoading] = useState(false);
   const [mode, setMode] = useState<SignupMode>('form');
   const [otp, setOtp] = useState('');
-  const [testOtpHelper, setTestOtpHelper] = useState('');
   const [resendLoading, setResendLoading] = useState(false);
   const [resendSuccess, setResendSuccess] = useState('');
   const [emailForVerification, setEmailForVerification] = useState('');
@@ -121,8 +121,28 @@ export default function SignupPage({ onSignupSuccess, onNavigate, redirectParam 
     try {
       const response = await customerSignup(name.trim(), email.trim(), phone.trim(), password);
       if (response.status === 'otp_sent') {
+        const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+        const templateId = import.meta.env.VITE_EMAILJS_OTP_TEMPLATE_ID;
+        const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+
+        if (!serviceId || !templateId || !publicKey) {
+          throw new Error('EmailJS environment variables are not configured in the browser.');
+        }
+
+        const templateParams = {
+          email: email.trim(),
+          passcode: response.otp,
+          time: '10 minutes',
+        };
+
+        try {
+          await emailjs.send(serviceId, templateId, templateParams, publicKey);
+        } catch (mailErr: any) {
+          console.error('EmailJS signup send failed:', mailErr);
+          throw new Error('Unable to send verification code. Please try again.');
+        }
+
         setMode('otp');
-        if (response.testOtp) setTestOtpHelper(response.testOtp);
       }
     } catch (err: any) {
       setError(err.message || 'Registration failed.');
@@ -271,13 +291,7 @@ export default function SignupPage({ onSignupSuccess, onNavigate, redirectParam 
           </div>
         )}
 
-        {/* Dev OTP Helper */}
-        {mode === 'otp' && testOtpHelper && (
-          <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 p-3 rounded-sm text-xs font-medium">
-            <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-            <span>[Test Mode] Code: <strong className="font-mono text-sm">{testOtpHelper}</strong></span>
-          </div>
-        )}
+
 
         {/* OTP Form */}
         {mode === 'otp' ? (
