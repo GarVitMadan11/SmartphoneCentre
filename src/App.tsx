@@ -903,6 +903,7 @@ export default function App() {
                             <img
                               src={imgUrl}
                               alt={dev.name}
+                              referrerPolicy="no-referrer"
                               className="max-w-full max-h-full object-contain filter drop-shadow-md"
                               loading="lazy"
                             />

@@ -1108,8 +1108,13 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                               <img
                                 src={getDeviceImage(model.id, model.brandId, undefined, model.imageUrl)}
                                 alt={model.name}
+                                referrerPolicy="no-referrer"
                                 onError={(e) => {
-                                  (e.target as HTMLImageElement).src = getDeviceImage('', model.brandId);
+                                  const img = e.target as HTMLImageElement;
+                                  const fallback = getDeviceImage('', model.brandId);
+                                  if (img.src !== fallback) {
+                                    img.src = fallback;
+                                  }
                                 }}
                                 className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
                                 draggable={false}

@@ -1177,8 +1177,14 @@ export function getPhoneImageForBrand(brandId: string): string {
       return xiaomiPhoneImg;
     case 'brand-vivo':
       return vivoPhoneImg;
+    case 'brand-oppo':
+      return 'https://fdn.gsmarena.com/imgroot/news/24/10/oppo-find-x8-official/-1200/gsmarena_001.jpg';
+    case 'brand-nothing':
+      return 'https://fdn2.gsmarena.com/vv/bigpic/nothing-phone-2a.jpg';
+    case 'brand-motorola':
+      return 'https://fdn2.gsmarena.com/vv/bigpic/motorola-edge-50-pro.jpg';
     default:
-      return '';
+      return 'https://fdn.gsmarena.com/imgroot/news/24/10/oppo-find-x8-official/-1200/gsmarena_001.jpg';
   }
 }
 

@@ -1596,6 +1596,14 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   <img 
                     src={getDeviceImage(model.id, model.brandId, variant.color, model.imageUrl)} 
                     alt={model.name} 
+                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      const img = e.target as HTMLImageElement;
+                      const fallback = getDeviceImage('', model.brandId);
+                      if (img.src !== fallback) {
+                        img.src = fallback;
+                      }
+                    }}
                     className="w-full h-full object-contain"
                   />
                 </div>
