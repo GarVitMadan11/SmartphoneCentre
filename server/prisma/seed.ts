@@ -492,7 +492,7 @@ async function main() {
         basePrice128GB: m.basePrice128GB,
         category: m.category,
         releaseYear: m.releaseYear,
-        imageUrl: modelImageUrl || undefined,
+        imageUrl: modelImageUrl,
         supportedStorageGb: supportedStorageGbStr,
         supportedRamGb: supportedRamGbStr,
         variantPrices: variantPrices ?? undefined,
