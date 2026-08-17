@@ -366,7 +366,17 @@ async function main() {
     const ramArr = isApple ? [0] : isWatch ? [2] : m.category === 'flagship' ? [8, 12, 16] : m.category === 'premium' ? [8, 12] : m.category === 'midrange' ? [6, 8, 12] : [2, 4, 6, 8];
     const supportedRamGbStr = JSON.stringify(ramArr);
 
-    const modelImageUrl = (m as any).imageUrl || phoneImagesMap[m.id] || '';
+    const brandSlug = m.brandId.replace('brand-', '');
+    const cleanId = m.id.replace(/^catalog-/, '');
+    const deDuplicatedId = cleanId.replace(new RegExp(`^${brandSlug}-${brandSlug}-`), `${brandSlug}-`);
+
+    const modelImageUrl =
+      (m as any).imageUrl ||
+      phoneImagesMap[m.id] ||
+      phoneImagesMap[cleanId] ||
+      phoneImagesMap[deDuplicatedId] ||
+      phoneImagesMap[`catalog-${deDuplicatedId}`] ||
+      '';
 
     await prisma.model.upsert({
       where: { legacyId: m.id },

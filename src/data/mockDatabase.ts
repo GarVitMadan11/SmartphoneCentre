@@ -1205,9 +1205,14 @@ export function getDeviceImage(modelId: string, brandId: string, color?: string,
   }
 
   const cleanId = modelId.replace(/^catalog-/, '');
+  const brandSlug = brandId.replace(/^brand-/, '');
+  const deDuplicatedId = cleanId.replace(new RegExp(`^${brandSlug}-${brandSlug}-`), `${brandSlug}-`);
+
   const possibleKeys = [
     modelId,
     cleanId,
+    deDuplicatedId,
+    `catalog-${deDuplicatedId}`,
     cleanId.replace(/^apple-iphone-/, 'apple-'),
     cleanId.replace(/^apple-iphone-17-/, 'apple-17'),
     cleanId.replace(/^apple-iphone-16-/, 'apple-16'),
