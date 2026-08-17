@@ -127,7 +127,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
     if (currentUser) {
       setName(prev => prev || currentUser.name);
       setEmail(prev => prev || currentUser.email);
-      setPhone(prev => prev || currentUser.phone);
+      setPhone(prev => prev || currentUser.phone || '');
     }
   }, [currentUser]);
 

@@ -1,7 +1,6 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Prisma Schema — Rephonix Full-Stack Backend
-// Database: SQLite (development) → PostgreSQL (production via DATABASE_URL)
-// To switch: change provider to "postgresql" and update DATABASE_URL in .env
+// Database: PostgreSQL (production and development via DATABASE_URL)
 // ─────────────────────────────────────────────────────────────────────────────
 
 generator client {
@@ -9,7 +8,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -55,16 +54,60 @@ model Model {
 // ── Customer Accounts & Authentication ────────────────────────────────────────
 
 model User {
-  id            String   @id @default(uuid())
-  name          String
-  email         String   @unique
-  phone         String
-  passwordHash  String
-  emailVerified Boolean  @default(false)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  phone        String?  // nullable — Google-only users may not have a phone
+  passwordHash String?  // nullable — Google-only users have no password
+  googleId     String?  @unique // Google account "sub" identifier
+  picture      String?  // profile image URL from Google or user-uploaded
 
-  bookings     Booking[]
+  // Email verification
+  emailVerified   Boolean   @default(false)
+  emailVerifiedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bookings                Booking[]
+  emailVerificationTokens EmailVerificationToken[]
+  passwordResetTokens     PasswordResetToken[]
+
+  @@index([email])
+  @@index([googleId])
+}
+
+// ── Email Verification Tokens ─────────────────────────────────────────────────
+// Raw token is sent to user via email; only SHA-256 hash is stored here.
+
+model EmailVerificationToken {
+  id        String   @id @default(uuid())
+  userId    String
+  tokenHash String   @unique // SHA-256(rawToken) — never store the raw token
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// ── Password Reset Tokens ─────────────────────────────────────────────────────
+// Raw token is sent to user via email; only SHA-256 hash is stored here.
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  userId    String
+  tokenHash String   @unique // SHA-256(rawToken) — never store the raw token
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 // ── Admin Staff Accounts & RBAC ───────────────────────────────────────────────

@@ -35,3 +35,22 @@ services:
         sync: false
       - key: ALLOWED_ORIGINS
         sync: false
+      # ── Auth System ──────────────────────────────────────────────────────────
+      - key: GOOGLE_CLIENT_ID
+        sync: false       # Google OAuth Client ID (from Google Cloud Console)
+      - key: VITE_GOOGLE_CLIENT_ID
+        sync: false       # Frontend Google OAuth Client ID
+      - key: SMTP_HOST
+        sync: false       # e.g. smtp.hostinger.com
+      - key: SMTP_PORT
+        sync: false       # e.g. 465
+      - key: SMTP_SECURE
+        sync: false       # true for 465, false for 587
+      - key: SMTP_USER
+        sync: false       # e.g. support@rephonix.in
+      - key: SMTP_PASS
+        sync: false       # secret — Hostinger SMTP app password
+      - key: EMAIL_FROM
+        sync: false       # e.g. Rephonix <support@rephonix.in>
+      - key: FRONTEND_URL
+        sync: false       # e.g. https://www.rephonix.in

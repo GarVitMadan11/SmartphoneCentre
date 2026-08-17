@@ -13,6 +13,9 @@ import { ContactPage } from './components/client/ContactPage';
 import LoginPage from './components/client/LoginPage';
 import SignupPage from './components/client/SignupPage';
 import ProfilePage from './components/client/ProfilePage';
+import ForgotPasswordPage from './components/client/ForgotPasswordPage';
+import ResetPasswordPage from './components/client/ResetPasswordPage';
+import VerifyEmailPage from './components/client/VerifyEmailPage';
 import { ToastContainer, ToastMessage } from './components/Toast';
 import { useFocusTrap } from './hooks/useFocusTrap';
 // ── Lazy-loaded heavy components (code splitting — P-1 fix) ───────────────────
@@ -416,6 +419,15 @@ export default function App() {
       case '/signup':
         title = "Create Account | Rephonix";
         break;
+      case '/forgot-password':
+        title = "Forgot Password | Rephonix";
+        break;
+      case '/reset-password':
+        title = "Reset Password | Rephonix";
+        break;
+      case '/verify-email':
+        title = "Verify Email | Rephonix";
+        break;
       case '/profile':
         title = "My Profile | Rephonix";
         break;
@@ -654,6 +666,24 @@ export default function App() {
               onSignupSuccess={(user) => setCurrentUser(user)}
               onNavigate={navigate}
               redirectParam={new URLSearchParams(window.location.search).get('redirect')}
+            />
+          )}
+
+          {path.startsWith('/forgot-password') && (
+            <ForgotPasswordPage onNavigate={navigate} />
+          )}
+
+          {path.startsWith('/reset-password') && (
+            <ResetPasswordPage
+              onNavigate={navigate}
+              tokenParam={new URLSearchParams(window.location.search).get('token')}
+            />
+          )}
+
+          {path.startsWith('/verify-email') && (
+            <VerifyEmailPage
+              onNavigate={navigate}
+              tokenParam={new URLSearchParams(window.location.search).get('token')}
             />
           )}
 

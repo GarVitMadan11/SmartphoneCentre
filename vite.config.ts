@@ -60,6 +60,11 @@ export default defineConfig({
     sourcemap: false,
     // Raise chunk size warning threshold slightly for framer-motion
     chunkSizeWarningLimit: 700,
-  }
+  },
+  define: {
+    'import.meta.env.VITE_GOOGLE_CLIENT_ID': JSON.stringify(
+      process.env.VITE_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID || ''
+    ),
+  },
 })
 
