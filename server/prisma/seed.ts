@@ -2,6 +2,30 @@
 import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const phoneImagesPath = path.resolve(__dirname, '../../src/data/phoneImages.json');
+let phoneImagesMap: Record<string, string> = {};
+try {
+  phoneImagesMap = JSON.parse(fs.readFileSync(phoneImagesPath, 'utf-8'));
+} catch (err) {
+  console.warn('Could not read phoneImages.json in seed script:', err);
+}
+
+const dbUrl = (process.env.DATABASE_URL || '').trim();
+const schemaPath = path.resolve(__dirname, 'schema.prisma');
+if (fs.existsSync(schemaPath) && dbUrl) {
+  const targetProvider = (dbUrl.startsWith('postgres:') || dbUrl.startsWith('postgresql:')) ? 'postgresql' : 'sqlite';
+  let schemaContent = fs.readFileSync(schemaPath, 'utf8');
+  const updatedSchema = schemaContent.replace(/provider\s*=\s*"(sqlite|postgresql)"/, `provider = "${targetProvider}"`);
+  if (schemaContent !== updatedSchema) {
+    fs.writeFileSync(schemaPath, updatedSchema, 'utf8');
+  }
+}
 
 const prisma = new PrismaClient();
 
@@ -342,6 +366,8 @@ async function main() {
     const ramArr = isApple ? [0] : isWatch ? [2] : m.category === 'flagship' ? [8, 12, 16] : m.category === 'premium' ? [8, 12] : m.category === 'midrange' ? [6, 8, 12] : [2, 4, 6, 8];
     const supportedRamGbStr = JSON.stringify(ramArr);
 
+    const modelImageUrl = (m as any).imageUrl || phoneImagesMap[m.id] || '';
+
     await prisma.model.upsert({
       where: { legacyId: m.id },
       create: {
@@ -352,6 +378,7 @@ async function main() {
         releaseYear: m.releaseYear,
         basePrice128GB: m.basePrice128GB,
         series: m.series,
+        imageUrl: modelImageUrl,
         supportedStorageGb: supportedStorageGbStr,
         supportedRamGb: supportedRamGbStr,
         variantPrices: variantPrices ?? '{}',
@@ -360,6 +387,7 @@ async function main() {
         basePrice128GB: m.basePrice128GB,
         category: m.category,
         releaseYear: m.releaseYear,
+        imageUrl: modelImageUrl || undefined,
         supportedStorageGb: supportedStorageGbStr,
         supportedRamGb: supportedRamGbStr,
         variantPrices: variantPrices ?? undefined,
