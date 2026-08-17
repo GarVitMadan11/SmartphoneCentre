@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo, lazy, Suspense, useCallback, startTransition } from 'react';
-import { Model, Variant, DefectRule, MODELS as STATIC_MODELS, BRANDS as STATIC_BRANDS, generateVariantsForModel, INITIAL_BOOKINGS, Brand, Booking, TABLET_MODELS, SMARTWATCH_MODELS, getDeviceImage } from './data/mockDatabase';
-import { fetchBrands, fetchModels, fetchBookings as apiFetchBookings, fetchCurrentUser, customerLogout, ApiUser } from './utils/api';
+import { Model, Variant, DefectRule, MODELS as STATIC_MODELS, SMARTPHONE_MODELS, BRANDS as STATIC_BRANDS, generateVariantsForModel, INITIAL_BOOKINGS, Brand, Booking, TABLET_MODELS, SMARTWATCH_MODELS, getDeviceImage } from './data/mockDatabase';
+import { fetchBrands, fetchModels, fetchBookings as apiFetchBookings, fetchCurrentUser, customerLogout, hasAdminToken, ApiUser } from './utils/api';
 import { DeviceSelector } from './components/client/DeviceSelector';
 import { DeviceCategoryShowcase } from './components/client/DeviceCategoryShowcase';
 import { SellYourDevice } from './components/client/SellYourDevice';
@@ -465,6 +465,7 @@ export default function App() {
   }, []);
 
   const refreshBookings = useCallback(async () => {
+    if (!hasAdminToken()) return;
     try {
       const bookings = await apiFetchBookings();
       if (bookings.length > 0) setApiBookings(bookings as unknown as Booking[]);
@@ -748,7 +749,7 @@ export default function App() {
                 defaultModelId={pendingModelId}
                 onDefaultModelConsumed={() => setPendingModelId(null)}
                 brands={BRANDS}
-                models={MODELS}
+                models={SMARTPHONE_MODELS}
               />
             </div>
           )}

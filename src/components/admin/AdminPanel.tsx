@@ -7,10 +7,18 @@ import {
   RefreshCw, Plus, Trash2,
   Layers, Check, X,
   MessageSquare, HardDrive, ChevronDown,
-  AlertCircle, Cpu, Grid, Smartphone, Tablet, Watch
+  AlertCircle, Cpu, Grid, Smartphone, Tablet, Watch,
+  Shuffle, ArrowUp, ArrowDown, RotateCcw, GripVertical
 } from 'lucide-react';
+import { 
+  saveBrandOrder, resetBrandOrder,
+  saveSeriesOrder, resetSeriesOrder,
+  saveModelOrder, resetModelOrder,
+  applyBrandOrder, applySeriesOrder, applyModelOrder,
+  shuffleArray
+} from '../../utils/ordering';
 import { motion, AnimatePresence } from 'framer-motion';
-import { updateBooking, fetchModels, createModel, updateModel, deleteModel } from '../../utils/api';
+import { updateBooking, fetchBookings, fetchModels, createModel, updateModel, deleteModel } from '../../utils/api';
 import { SupportInbox } from './SupportInbox';
 
 const ALL_RAM_OPTIONS: { gb: number; label: string }[] = [
@@ -108,6 +116,22 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   // Catalog search state
   const [catalogSearch, setCatalogSearch] = useState('');
 
+  // Catalog display view mode & ordering state
+  const [catalogViewMode, setCatalogViewMode] = useState<'manage' | 'ordering'>('manage');
+  const [orderVersion, setOrderVersion] = useState(0);
+  const [orderingSelectedBrandId, setOrderingSelectedBrandId] = useState<string>('brand-apple');
+  const [orderingSelectedSeries, setOrderingSelectedSeries] = useState<string>('');
+
+  // Drag and drop states for reordering
+  const [draggedBrandIndex, setDraggedBrandIndex] = useState<number | null>(null);
+  const [dragOverBrandIndex, setDragOverBrandIndex] = useState<number | null>(null);
+
+  const [draggedSeriesIndex, setDraggedSeriesIndex] = useState<number | null>(null);
+  const [dragOverSeriesIndex, setDragOverSeriesIndex] = useState<number | null>(null);
+
+  const [draggedModelIndex, setDraggedModelIndex] = useState<number | null>(null);
+  const [dragOverModelIndex, setDragOverModelIndex] = useState<number | null>(null);
+
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
 
@@ -131,6 +155,27 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     }
   };
 
+  const [loadingBookings, setLoadingBookings] = useState(false);
+
+  const loadBookings = useCallback(async () => {
+    setLoadingBookings(true);
+    try {
+      const data = await fetchBookings();
+      if (data && Array.isArray(data)) {
+        setBookings(data as unknown as Booking[]);
+        setIsApiOffline(false);
+      }
+    } catch (err) {
+      console.error('Failed to load bookings:', err);
+    } finally {
+      setLoadingBookings(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadBookings();
+  }, [loadBookings]);
+
   useEffect(() => {
     if (activeTab === 'catalog') {
       loadModels();
@@ -145,6 +190,192 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       }
     }
   }, [selectedCatalogBrandId, models, activeTab]);
+
+  // --- ORDERING & SHUFFLING HANDLERS ---
+  const currentOrderedBrands = useMemo(() => {
+    return applyBrandOrder(brands);
+  }, [brands, orderVersion]);
+
+  const handleMoveBrand = (index: number, direction: 'up' | 'down') => {
+    const newBrands = [...currentOrderedBrands];
+    const targetIdx = direction === 'up' ? index - 1 : index + 1;
+    if (targetIdx < 0 || targetIdx >= newBrands.length) return;
+    [newBrands[index], newBrands[targetIdx]] = [newBrands[targetIdx], newBrands[index]];
+    saveBrandOrder(newBrands.map(b => b.id));
+    setOrderVersion(v => v + 1);
+    setFormSuccess(`Updated brand order: ${newBrands[targetIdx].name} swapped with ${newBrands[index].name}`);
+  };
+
+  const handleShuffleBrands = () => {
+    const shuffled = shuffleArray(currentOrderedBrands);
+    saveBrandOrder(shuffled.map(b => b.id));
+    setOrderVersion(v => v + 1);
+    setFormSuccess('Shuffled brand display order successfully! 🎲');
+  };
+
+  const handleResetBrands = () => {
+    resetBrandOrder();
+    setOrderVersion(v => v + 1);
+    setFormSuccess('Reset brand display order to default.');
+  };
+
+  const availableSeriesForOrdering = useMemo(() => {
+    const brandModels = models.filter(m => m.brandId === orderingSelectedBrandId);
+    const seriesSet = new Set<string>();
+    brandModels.forEach(m => {
+      if (m.series) seriesSet.add(m.series);
+    });
+    const defaultList = Array.from(seriesSet);
+    return applySeriesOrder(orderingSelectedBrandId, defaultList);
+  }, [models, orderingSelectedBrandId, orderVersion]);
+
+  useEffect(() => {
+    if (availableSeriesForOrdering.length > 0 && !availableSeriesForOrdering.includes(orderingSelectedSeries)) {
+      setOrderingSelectedSeries(availableSeriesForOrdering[0]);
+    }
+  }, [availableSeriesForOrdering]);
+
+  const handleMoveSeries = (index: number, direction: 'up' | 'down') => {
+    const newSeries = [...availableSeriesForOrdering];
+    const targetIdx = direction === 'up' ? index - 1 : index + 1;
+    if (targetIdx < 0 || targetIdx >= newSeries.length) return;
+    [newSeries[index], newSeries[targetIdx]] = [newSeries[targetIdx], newSeries[index]];
+    saveSeriesOrder(orderingSelectedBrandId, newSeries);
+    setOrderVersion(v => v + 1);
+    setFormSuccess(`Updated series order for ${orderingSelectedBrandId}: ${newSeries[targetIdx]} swapped with ${newSeries[index]}`);
+  };
+
+  const handleShuffleSeries = () => {
+    const shuffled = shuffleArray(availableSeriesForOrdering);
+    saveSeriesOrder(orderingSelectedBrandId, shuffled);
+    setOrderVersion(v => v + 1);
+    setFormSuccess(`Shuffled series order for ${orderingSelectedBrandId}! 🎲`);
+  };
+
+  const handleResetSeries = () => {
+    resetSeriesOrder(orderingSelectedBrandId);
+    setOrderVersion(v => v + 1);
+    setFormSuccess(`Reset series order for ${orderingSelectedBrandId} to default.`);
+  };
+
+  const availableModelsForOrdering = useMemo(() => {
+    const filtered = models.filter(m => m.brandId === orderingSelectedBrandId && (!orderingSelectedSeries || m.series === orderingSelectedSeries));
+    return applyModelOrder(orderingSelectedBrandId, filtered);
+  }, [models, orderingSelectedBrandId, orderingSelectedSeries, orderVersion]);
+
+  const handleMoveModel = (index: number, direction: 'up' | 'down') => {
+    const newModels = [...availableModelsForOrdering];
+    const targetIdx = direction === 'up' ? index - 1 : index + 1;
+    if (targetIdx < 0 || targetIdx >= newModels.length) return;
+    [newModels[index], newModels[targetIdx]] = [newModels[targetIdx], newModels[index]];
+    saveModelOrder(orderingSelectedBrandId, newModels.map(m => m.id));
+    setOrderVersion(v => v + 1);
+    setFormSuccess(`Updated model order: ${newModels[targetIdx].name} swapped with ${newModels[index].name}`);
+  };
+
+  const handleShuffleModels = () => {
+    const shuffled = shuffleArray(availableModelsForOrdering);
+    saveModelOrder(orderingSelectedBrandId, shuffled.map(m => m.id));
+    setOrderVersion(v => v + 1);
+    setFormSuccess(`Shuffled models order for ${orderingSelectedBrandId} / ${orderingSelectedSeries || 'All Series'}! 🎲`);
+  };
+
+  const handleResetModels = () => {
+    resetModelOrder(orderingSelectedBrandId);
+    setOrderVersion(v => v + 1);
+    setFormSuccess(`Reset model order for ${orderingSelectedBrandId} to default.`);
+  };
+
+  // --- DRAG AND DROP HANDLERS ---
+  const handleBrandDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedBrandIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleBrandDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragOverBrandIndex !== index) {
+      setDragOverBrandIndex(index);
+    }
+  };
+
+  const handleBrandDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    if (draggedBrandIndex === null || draggedBrandIndex === dropIndex) {
+      setDraggedBrandIndex(null);
+      setDragOverBrandIndex(null);
+      return;
+    }
+    const newBrands = [...currentOrderedBrands];
+    const [draggedItem] = newBrands.splice(draggedBrandIndex, 1);
+    newBrands.splice(dropIndex, 0, draggedItem);
+    saveBrandOrder(newBrands.map(b => b.id));
+    setOrderVersion(v => v + 1);
+    setDraggedBrandIndex(null);
+    setDragOverBrandIndex(null);
+    setFormSuccess(`Reordered brand: "${draggedItem.name}" placed at position #${dropIndex + 1}`);
+  };
+
+  const handleSeriesDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedSeriesIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleSeriesDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragOverSeriesIndex !== index) {
+      setDragOverSeriesIndex(index);
+    }
+  };
+
+  const handleSeriesDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    if (draggedSeriesIndex === null || draggedSeriesIndex === dropIndex) {
+      setDraggedSeriesIndex(null);
+      setDragOverSeriesIndex(null);
+      return;
+    }
+    const newSeries = [...availableSeriesForOrdering];
+    const [draggedItem] = newSeries.splice(draggedSeriesIndex, 1);
+    newSeries.splice(dropIndex, 0, draggedItem);
+    saveSeriesOrder(orderingSelectedBrandId, newSeries);
+    setOrderVersion(v => v + 1);
+    setDraggedSeriesIndex(null);
+    setDragOverSeriesIndex(null);
+    setFormSuccess(`Reordered series: "${draggedItem}" placed at position #${dropIndex + 1}`);
+  };
+
+  const handleModelDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedModelIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleModelDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragOverModelIndex !== index) {
+      setDragOverModelIndex(index);
+    }
+  };
+
+  const handleModelDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    if (draggedModelIndex === null || draggedModelIndex === dropIndex) {
+      setDraggedModelIndex(null);
+      setDragOverModelIndex(null);
+      return;
+    }
+    const newModels = [...availableModelsForOrdering];
+    const [draggedItem] = newModels.splice(draggedModelIndex, 1);
+    newModels.splice(dropIndex, 0, draggedItem);
+    saveModelOrder(orderingSelectedBrandId, newModels.map(m => m.id));
+    setOrderVersion(v => v + 1);
+    setDraggedModelIndex(null);
+    setDragOverModelIndex(null);
+    setFormSuccess(`Reordered model: "${draggedItem.name}" placed at position #${dropIndex + 1}`);
+  };
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
@@ -206,6 +437,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         inspectionStatus: status,
         payoutStatus: status === 'rejected' ? 'pending' : undefined
       });
+      await loadBookings();
       if (onRefreshBookings) {
         await onRefreshBookings();
       }
@@ -228,6 +460,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       await updateBooking(id, {
         payoutStatus: 'completed'
       });
+      await loadBookings();
       if (onRefreshBookings) {
         await onRefreshBookings();
       }
@@ -631,6 +864,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         </div>
 
         <div className="flex gap-2 self-stretch sm:self-auto">
+          <button
+            onClick={loadBookings}
+            disabled={loadingBookings}
+            className="flex-1 sm:flex-initial px-4 py-2 border border-cobalt/30 text-cobalt hover:bg-cobalt/10 text-xs font-bold rounded-sm transition-all flex items-center justify-center gap-1.5"
+            style={{ minHeight: '38px' }}
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loadingBookings ? 'animate-spin' : ''}`} />
+            Refresh Bookings
+          </button>
           <button
             onClick={handleResetDemoData}
             className="flex-1 sm:flex-initial px-4 py-2 border border-red-500/20 text-red-500 hover:bg-red-500/10 text-xs font-bold rounded-sm transition-all flex items-center justify-center gap-1.5"
@@ -1256,6 +1498,360 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               </span>
             </button>
           </div>
+
+          {/* Mode Switcher: Manage Models vs Shuffle & Display Order */}
+          <div className="flex items-center justify-between bg-canvas-pure border border-ice-border p-3 rounded-sm shadow-sm">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setCatalogViewMode('manage')}
+                className={`px-4 py-2 rounded-sm border text-xs font-bold font-mono transition-all flex items-center gap-2 ${
+                  catalogViewMode === 'manage'
+                    ? 'bg-cobalt border-cobalt text-white shadow-sm'
+                    : 'bg-canvas-white border-ice-border text-ink-slate hover:border-cobalt/50 hover:text-cobalt'
+                }`}
+              >
+                <Layers className="w-3.5 h-3.5" />
+                Catalog Hierarchy &amp; Specs Editor
+              </button>
+              <button
+                type="button"
+                onClick={() => setCatalogViewMode('ordering')}
+                className={`px-4 py-2 rounded-sm border text-xs font-bold font-mono transition-all flex items-center gap-2 ${
+                  catalogViewMode === 'ordering'
+                    ? 'bg-cobalt border-cobalt text-white shadow-sm'
+                    : 'bg-canvas-white border-ice-border text-ink-slate hover:border-cobalt/50 hover:text-cobalt'
+                }`}
+              >
+                <Shuffle className="w-3.5 h-3.5" />
+                Shuffle &amp; Display Order (Brands, Series &amp; Models) 🎲
+              </button>
+            </div>
+            <span className="text-[11px] font-mono text-zinc-500 hidden sm:inline">
+              {catalogViewMode === 'manage' ? 'Manage & edit device specs' : 'Reorder or shuffle storefront display sequence'}
+            </span>
+          </div>
+
+          {catalogViewMode === 'ordering' && (
+            /* Shuffle & Display Order Workspace */
+            <div className="space-y-6 animate-fadeIn">
+              <div className="bg-gradient-to-r from-cobalt/10 via-cobalt/5 to-transparent border border-cobalt/20 rounded-sm p-4 text-left flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2 text-cobalt font-extrabold font-outfit text-base">
+                    <Shuffle className="w-4 h-4" />
+                    Catalog Display Sequence &amp; Shuffle Controls
+                  </div>
+                  <p className="text-xs text-ink-slate font-light mt-1">
+                    Customize the display order or randomly shuffle Brands, Series, and Models. Changes instantly take effect across the storefront catalog and selectors.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+                
+                {/* 1. Brands Ordering Card */}
+                <div className="bg-canvas-pure border border-ice-border rounded-sm p-5 shadow-premium space-y-4 text-left">
+                  <div className="flex items-center justify-between border-b border-ice-border pb-3">
+                    <div className="flex items-center gap-2">
+                      <Smartphone className="w-4 h-4 text-cobalt" />
+                      <h4 className="font-outfit text-sm font-bold text-ink-navy uppercase">1. Smartphone Brands Order</h4>
+                    </div>
+                    <span className="text-[10px] font-mono font-bold bg-cobalt/10 text-cobalt px-2 py-0.5 rounded">
+                      {currentOrderedBrands.length} Brands
+                    </span>
+                  </div>
+
+                  {/* Global Brand Action Buttons */}
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={handleShuffleBrands}
+                      className="flex-1 py-2 px-3 bg-cobalt hover:bg-cobalt-hover text-white text-xs font-bold font-mono rounded-sm transition-all flex items-center justify-center gap-1.5 shadow-xs"
+                    >
+                      <Shuffle className="w-3.5 h-3.5" />
+                      Shuffle Brands 🎲
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleResetBrands}
+                      className="py-2 px-3 bg-canvas-white hover:bg-ice-gray text-ink-slate border border-ice-border text-xs font-mono rounded-sm transition-all flex items-center gap-1"
+                      title="Reset to default brand order"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      Reset
+                    </button>
+                  </div>
+
+                  {/* Brands List with Dragger & Up/Down buttons */}
+                  <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
+                    {currentOrderedBrands.map((brand, idx) => (
+                      <div
+                        key={brand.id}
+                        draggable={true}
+                        onDragStart={(e) => handleBrandDragStart(e, idx)}
+                        onDragOver={(e) => handleBrandDragOver(e, idx)}
+                        onDrop={(e) => handleBrandDrop(e, idx)}
+                        onDragEnd={() => { setDraggedBrandIndex(null); setDragOverBrandIndex(null); }}
+                        className={`flex items-center justify-between p-2.5 bg-canvas-white border rounded-sm shadow-xs group transition-all ${
+                          dragOverBrandIndex === idx ? 'border-cobalt bg-cobalt/5 scale-[1.01]' : 'border-ice-border/80 hover:border-cobalt/40'
+                        } ${draggedBrandIndex === idx ? 'opacity-40' : ''}`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className="cursor-grab active:cursor-grabbing text-zinc-400 hover:text-cobalt transition-colors p-0.5" title="Drag to reorder brand">
+                            <GripVertical className="w-4 h-4" />
+                          </div>
+                          <span className="w-5 h-5 rounded bg-cobalt/10 text-cobalt font-mono text-[10px] font-bold flex items-center justify-center">
+                            #{idx + 1}
+                          </span>
+                          <span className="font-outfit text-xs font-bold text-ink-navy">{brand.name}</span>
+                        </div>
+
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleMoveBrand(idx, 'up')}
+                            disabled={idx === 0}
+                            className="p-1 rounded bg-slate-100 dark:bg-zinc-800 hover:bg-cobalt hover:text-white disabled:opacity-30 disabled:hover:bg-slate-100 disabled:hover:text-current transition-colors"
+                            title="Move Up"
+                          >
+                            <ArrowUp className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleMoveBrand(idx, 'down')}
+                            disabled={idx === currentOrderedBrands.length - 1}
+                            className="p-1 rounded bg-slate-100 dark:bg-zinc-800 hover:bg-cobalt hover:text-white disabled:opacity-30 disabled:hover:bg-slate-100 disabled:hover:text-current transition-colors"
+                            title="Move Down"
+                          >
+                            <ArrowDown className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 2. Series Ordering Card */}
+                <div className="bg-canvas-pure border border-ice-border rounded-sm p-5 shadow-premium space-y-4 text-left">
+                  <div className="flex items-center justify-between border-b border-ice-border pb-3">
+                    <div className="flex items-center gap-2">
+                      <Layers className="w-4 h-4 text-cobalt" />
+                      <h4 className="font-outfit text-sm font-bold text-ink-navy uppercase">2. Series Order</h4>
+                    </div>
+                    <span className="text-[10px] font-mono font-bold bg-cobalt/10 text-cobalt px-2 py-0.5 rounded">
+                      {availableSeriesForOrdering.length} Series
+                    </span>
+                  </div>
+
+                  {/* Brand Selector for Series */}
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-mono text-zinc-500 font-bold uppercase block">Select Target Brand:</label>
+                    <select
+                      value={orderingSelectedBrandId}
+                      onChange={e => setOrderingSelectedBrandId(e.target.value)}
+                      className="w-full p-2 bg-canvas-white border border-ice-border rounded-sm text-xs font-mono text-ink-navy focus:outline-none focus:ring-1 focus:ring-cobalt"
+                    >
+                      {brands.map(b => (
+                        <option key={b.id} value={b.id}>{b.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Global Series Action Buttons */}
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={handleShuffleSeries}
+                      className="flex-1 py-2 px-3 bg-cobalt hover:bg-cobalt-hover text-white text-xs font-bold font-mono rounded-sm transition-all flex items-center justify-center gap-1.5 shadow-xs"
+                    >
+                      <Shuffle className="w-3.5 h-3.5" />
+                      Shuffle Series 🎲
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleResetSeries}
+                      className="py-2 px-3 bg-canvas-white hover:bg-ice-gray text-ink-slate border border-ice-border text-xs font-mono rounded-sm transition-all flex items-center gap-1"
+                      title="Reset series order for selected brand"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      Reset
+                    </button>
+                  </div>
+
+                  {/* Series List with Dragger & Up/Down buttons */}
+                  <div className="space-y-2 max-h-[440px] overflow-y-auto pr-1">
+                    {availableSeriesForOrdering.length === 0 ? (
+                      <div className="py-6 text-center text-xs font-mono text-zinc-400">No series found for this brand.</div>
+                    ) : (
+                      availableSeriesForOrdering.map((seriesName, idx) => (
+                        <div
+                          key={seriesName}
+                          draggable={true}
+                          onDragStart={(e) => handleSeriesDragStart(e, idx)}
+                          onDragOver={(e) => handleSeriesDragOver(e, idx)}
+                          onDrop={(e) => handleSeriesDrop(e, idx)}
+                          onDragEnd={() => { setDraggedSeriesIndex(null); setDragOverSeriesIndex(null); }}
+                          className={`flex items-center justify-between p-2.5 bg-canvas-white border rounded-sm shadow-xs group transition-all ${
+                            dragOverSeriesIndex === idx ? 'border-cobalt bg-cobalt/5 scale-[1.01]' : 'border-ice-border/80 hover:border-cobalt/40'
+                          } ${draggedSeriesIndex === idx ? 'opacity-40' : ''}`}
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className="cursor-grab active:cursor-grabbing text-zinc-400 hover:text-cobalt transition-colors p-0.5 flex-shrink-0" title="Drag to reorder series">
+                              <GripVertical className="w-4 h-4" />
+                            </div>
+                            <span className="w-5 h-5 rounded bg-cobalt/10 text-cobalt font-mono text-[10px] font-bold flex items-center justify-center flex-shrink-0">
+                              #{idx + 1}
+                            </span>
+                            <span className="font-outfit text-xs font-bold text-ink-navy truncate">{seriesName}</span>
+                          </div>
+
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => handleMoveSeries(idx, 'up')}
+                              disabled={idx === 0}
+                              className="p-1 rounded bg-slate-100 dark:bg-zinc-800 hover:bg-cobalt hover:text-white disabled:opacity-30 disabled:hover:bg-slate-100 disabled:hover:text-current transition-colors"
+                              title="Move Up"
+                            >
+                              <ArrowUp className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleMoveSeries(idx, 'down')}
+                              disabled={idx === availableSeriesForOrdering.length - 1}
+                              className="p-1 rounded bg-slate-100 dark:bg-zinc-800 hover:bg-cobalt hover:text-white disabled:opacity-30 disabled:hover:bg-slate-100 disabled:hover:text-current transition-colors"
+                              title="Move Down"
+                            >
+                              <ArrowDown className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                {/* 3. Models Ordering Card */}
+                <div className="bg-canvas-pure border border-ice-border rounded-sm p-5 shadow-premium space-y-4 text-left">
+                  <div className="flex items-center justify-between border-b border-ice-border pb-3">
+                    <div className="flex items-center gap-2">
+                      <Smartphone className="w-4 h-4 text-cobalt" />
+                      <h4 className="font-outfit text-sm font-bold text-ink-navy uppercase">3. Models Order</h4>
+                    </div>
+                    <span className="text-[10px] font-mono font-bold bg-cobalt/10 text-cobalt px-2 py-0.5 rounded">
+                      {availableModelsForOrdering.length} Models
+                    </span>
+                  </div>
+
+                  {/* Brand & Series Selector for Models */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-mono text-zinc-500 font-bold uppercase block">Brand:</label>
+                      <select
+                        value={orderingSelectedBrandId}
+                        onChange={e => setOrderingSelectedBrandId(e.target.value)}
+                        className="w-full p-2 bg-canvas-white border border-ice-border rounded-sm text-xs font-mono text-ink-navy focus:outline-none focus:ring-1 focus:ring-cobalt"
+                      >
+                        {brands.map(b => (
+                          <option key={b.id} value={b.id}>{b.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-mono text-zinc-500 font-bold uppercase block">Series:</label>
+                      <select
+                        value={orderingSelectedSeries}
+                        onChange={e => setOrderingSelectedSeries(e.target.value)}
+                        className="w-full p-2 bg-canvas-white border border-ice-border rounded-sm text-xs font-mono text-ink-navy focus:outline-none focus:ring-1 focus:ring-cobalt"
+                      >
+                        <option value="">-- All Series --</option>
+                        {availableSeriesForOrdering.map(s => (
+                          <option key={s} value={s}>{s}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Global Model Action Buttons */}
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={handleShuffleModels}
+                      className="flex-1 py-2 px-3 bg-cobalt hover:bg-cobalt-hover text-white text-xs font-bold font-mono rounded-sm transition-all flex items-center justify-center gap-1.5 shadow-xs"
+                    >
+                      <Shuffle className="w-3.5 h-3.5" />
+                      Shuffle Models 🎲
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleResetModels}
+                      className="py-2 px-3 bg-canvas-white hover:bg-ice-gray text-ink-slate border border-ice-border text-xs font-mono rounded-sm transition-all flex items-center gap-1"
+                      title="Reset model order for selected brand/series"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      Reset
+                    </button>
+                  </div>
+
+                  {/* Models List with Dragger & Up/Down buttons */}
+                  <div className="space-y-2 max-h-[440px] overflow-y-auto pr-1">
+                    {availableModelsForOrdering.length === 0 ? (
+                      <div className="py-6 text-center text-xs font-mono text-zinc-400">No models found for this filter.</div>
+                    ) : (
+                      availableModelsForOrdering.map((model, idx) => (
+                        <div
+                          key={model.id}
+                          draggable={true}
+                          onDragStart={(e) => handleModelDragStart(e, idx)}
+                          onDragOver={(e) => handleModelDragOver(e, idx)}
+                          onDrop={(e) => handleModelDrop(e, idx)}
+                          onDragEnd={() => { setDraggedModelIndex(null); setDragOverModelIndex(null); }}
+                          className={`flex items-center justify-between p-2 bg-canvas-white border rounded-sm shadow-xs group transition-all ${
+                            dragOverModelIndex === idx ? 'border-cobalt bg-cobalt/5 scale-[1.01]' : 'border-ice-border/80 hover:border-cobalt/40'
+                          } ${draggedModelIndex === idx ? 'opacity-40' : ''}`}
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className="cursor-grab active:cursor-grabbing text-zinc-400 hover:text-cobalt transition-colors p-0.5 flex-shrink-0" title="Drag to reorder model">
+                              <GripVertical className="w-4 h-4" />
+                            </div>
+                            <span className="w-5 h-5 rounded bg-cobalt/10 text-cobalt font-mono text-[10px] font-bold flex items-center justify-center flex-shrink-0">
+                              #{idx + 1}
+                            </span>
+                            <div className="min-w-0">
+                              <span className="font-outfit text-xs font-bold text-ink-navy truncate block">{model.name}</span>
+                              <span className="text-[9px] font-mono text-zinc-500 block truncate">{model.series || 'No series'} · ₹{model.basePrice128GB.toLocaleString('en-IN')}</span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => handleMoveModel(idx, 'up')}
+                              disabled={idx === 0}
+                              className="p-1 rounded bg-slate-100 dark:bg-zinc-800 hover:bg-cobalt hover:text-white disabled:opacity-30 disabled:hover:bg-slate-100 disabled:hover:text-current transition-colors"
+                              title="Move Up"
+                            >
+                              <ArrowUp className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleMoveModel(idx, 'down')}
+                              disabled={idx === availableModelsForOrdering.length - 1}
+                              className="p-1 rounded bg-slate-100 dark:bg-zinc-800 hover:bg-cobalt hover:text-white disabled:opacity-30 disabled:hover:bg-slate-100 disabled:hover:text-current transition-colors"
+                              title="Move Down"
+                            >
+                              <ArrowDown className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          )}
 
           {/* Top Brand Filter Bar */}
           <div className="bg-canvas-pure border border-ice-border rounded-sm p-3 shadow-sm flex flex-wrap items-center justify-between gap-3">

@@ -78,6 +78,8 @@ export default function SignupPage({ onSignupSuccess, onNavigate, redirectParam 
           callback: handleGoogleCredential,
           auto_select: false,
           itp_support: true,
+          ux_mode: 'popup',
+          use_fedcm_for_prompt: false,
         });
         const containerWidth = googleBtnRef.current.offsetWidth || 380;
         const validWidth = Math.min(Math.max(containerWidth, 250), 400);

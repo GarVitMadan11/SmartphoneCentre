@@ -48,6 +48,14 @@ export class ApiRequestError extends Error {
   }
 }
 
+export function hasAdminToken(): boolean {
+  try {
+    return Boolean(sessionStorage.getItem('rex_admin_token'));
+  } catch {
+    return false;
+  }
+}
+
 function getStoredAdminToken(): string | null {
   try {
     return sessionStorage.getItem('rex_admin_token');

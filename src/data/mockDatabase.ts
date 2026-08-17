@@ -945,13 +945,17 @@ export const SMARTWATCH_MODELS: Model[] = [
   { id: 'samsung-watch-6', brandId: 'brand-samsung', name: 'Galaxy Watch 6', category: 'midrange', releaseYear: 2023, basePrice128GB: 11000, series: 'Galaxy Watch 6', supportedStorageGb: [16], supportedRamGb: [2], imageUrl: 'https://images.samsung.com/is/image/samsung/p6pim/in/sm-r930nzeainu/gallery/in-galaxy-watch6-r930-sm-r930nzeainu-537424785?$650_519_PNG$' }
 ];
 
-export const MODELS: Model[] = [
+export const SMARTPHONE_MODELS: Model[] = [
   ...BASE_MODELS,
-  ...TABLET_MODELS,
-  ...SMARTWATCH_MODELS,
   ...CATALOG_ADDITIONS.filter((addition) => !BASE_MODELS.some((model) =>
     model.brandId === addition.brandId && model.name.toLowerCase() === addition.name.toLowerCase(),
   )),
+].filter(m => !isTabletDevice(m.brandId, m.name, m.id) && !isSmartwatchDevice(m.brandId, m.name, m.id));
+
+export const MODELS: Model[] = [
+  ...SMARTPHONE_MODELS,
+  ...TABLET_MODELS,
+  ...SMARTWATCH_MODELS,
 ];
 
 // Helper to get historically accurate colors for a model

@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Smartphone, Tablet, Watch, ChevronDown, Zap, Truck, Menu, X } from 'lucide-react';
 import { ApiUser } from '../../utils/api';
+import { BRANDS as STATIC_BRANDS } from '../../data/mockDatabase';
+import { applyBrandOrder } from '../../utils/ordering';
 
 interface HeaderNavProps {
   currentPath: string;
@@ -112,30 +114,29 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                   <button onClick={() => { setActiveDropdown(null); onNavigate('/smartphones'); }} className="text-cobalt hover:underline text-[10px] lowercase font-normal">view all</button>
                 </div>
                 <div className="grid grid-cols-2 gap-1 mt-1">
-                  <button onClick={() => handleBrandClick('brand-apple')} className="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 hover:text-cobalt text-xs font-medium transition-colors text-left">
-                    <span className="w-2 h-2 rounded-full bg-zinc-800 dark:bg-zinc-200" />
-                    <span>Apple iPhone</span>
-                  </button>
-                  <button onClick={() => handleBrandClick('brand-samsung')} className="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 hover:text-cobalt text-xs font-medium transition-colors text-left">
-                    <span className="w-2 h-2 rounded-full bg-blue-600" />
-                    <span>Samsung Galaxy</span>
-                  </button>
-                  <button onClick={() => handleBrandClick('brand-oneplus')} className="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 hover:text-cobalt text-xs font-medium transition-colors text-left">
-                    <span className="w-2 h-2 rounded-full bg-red-600" />
-                    <span>OnePlus</span>
-                  </button>
-                  <button onClick={() => handleBrandClick('brand-google')} className="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 hover:text-cobalt text-xs font-medium transition-colors text-left">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                    <span>Google Pixel</span>
-                  </button>
-                  <button onClick={() => handleBrandClick('brand-xiaomi')} className="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 hover:text-cobalt text-xs font-medium transition-colors text-left">
-                    <span className="w-2 h-2 rounded-full bg-amber-500" />
-                    <span>Xiaomi / Redmi</span>
-                  </button>
-                  <button onClick={() => handleBrandClick('brand-vivo')} className="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 hover:text-cobalt text-xs font-medium transition-colors text-left">
-                    <span className="w-2 h-2 rounded-full bg-violet-600" />
-                    <span>Vivo / iQOO</span>
-                  </button>
+                  {applyBrandOrder(STATIC_BRANDS).slice(0, 8).map(b => {
+                    const colorMap: Record<string, string> = {
+                      'brand-apple': 'bg-zinc-800 dark:bg-zinc-200',
+                      'brand-samsung': 'bg-blue-600',
+                      'brand-oneplus': 'bg-red-600',
+                      'brand-google': 'bg-emerald-500',
+                      'brand-xiaomi': 'bg-amber-500',
+                      'brand-vivo': 'bg-violet-600',
+                      'brand-oppo': 'bg-emerald-600',
+                      'brand-nothing': 'bg-zinc-900 dark:bg-white',
+                      'brand-motorola': 'bg-blue-800',
+                    };
+                    return (
+                      <button
+                        key={b.id}
+                        onClick={() => handleBrandClick(b.id)}
+                        className="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 hover:text-cobalt text-xs font-medium transition-colors text-left"
+                      >
+                        <span className={`w-2 h-2 rounded-full ${colorMap[b.id] || 'bg-cobalt'}`} />
+                        <span className="truncate">{b.name}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}

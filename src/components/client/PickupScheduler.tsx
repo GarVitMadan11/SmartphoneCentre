@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { 
   Clock, User, MapPin, CreditCard, 
-  CheckCircle, ArrowLeft, ShieldAlert, Award, Smartphone, Info, ShieldCheck, ChevronRight, Shield,
+  CheckCircle, ArrowLeft, ShieldAlert, Award, Smartphone, Info, ChevronRight,
   Landmark, ShoppingBag, ShoppingCart, Tag, Play, Gamepad2, Utensils, ChefHat, Gift
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -9,7 +9,6 @@ import confetti from 'canvas-confetti';
 import emailjs from '@emailjs/browser';
 import { Model, Variant, DefectRule, Booking } from '../../data/mockDatabase';
 import { createBooking, ApiUser } from '../../utils/api';
-import { DigiLockerModal } from './DigiLockerModal';
 import { PhoneBackPreview } from './DeviceSelector';
 
 
@@ -167,13 +166,11 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>('');
   const [paymentMethod, setPaymentMethod] = useState<string>('upi');
   
-  // Verification states
+  // Verification states (reserved for future identity verification)
   const [verificationStatus, setVerificationStatus] = useState<'pending' | 'verified' | 'failed'>('pending');
   const [verifiedName, setVerifiedName] = useState('');
   const [maskedAadhaar, setMaskedAadhaar] = useState('');
   const [verificationDate, setVerificationDate] = useState('');
-  const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
-  const [verificationError, setVerificationError] = useState('');
 
   // Payout states
   const [upiId, setUpiId] = useState('');
@@ -193,7 +190,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
   // Track submission attempts in sessionStorage (persists across re-renders, cleared on tab close)
   const RATE_LIMIT_KEY = 'stc_submit_attempts';
   const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
-  const RATE_LIMIT_MAX = 3;
+  const RATE_LIMIT_MAX = 10;
 
   const getRateLimitData = () => {
     try {
@@ -311,12 +308,10 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
   }, [accountHolderName, accountNumber, ifscCode]);
 
   const isStep3Valid = useMemo(() => {
-    const isKYC = verificationStatus === 'verified';
-    if (!isKYC) return false;
     if (paymentMethod === 'upi') return isUpiValid;
     if (paymentMethod === 'bank') return isBankValid;
     return true; // Gift cards are auto-valid
-  }, [verificationStatus, paymentMethod, isUpiValid, isBankValid]);
+  }, [paymentMethod, isUpiValid, isBankValid]);
 
   const selectedPayoutMethodObj = useMemo(() => {
     return PAYOUT_METHODS.find(m => m.id === paymentMethod) || PAYOUT_METHODS[1];
@@ -446,9 +441,10 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
       bonusPercentage: selectedMethodObj.bonus,
       bonusAmount: bonusAmt,
       finalPayoutAmount: finalPayoutAmt,
-      payoutDetails: (paymentMethod === 'upi' || paymentMethod === 'bank')
+      payoutDetails: paymentMethod === 'upi'
+        ? { upiId: upiId.trim() }
+        : paymentMethod === 'bank'
         ? { 
-            upiId: upiId.trim(),
             accountHolderName: accountHolderName.trim(), 
             accountNumber: accountNumber.trim(), 
             ifscCode: ifscCode.trim() 
@@ -461,9 +457,14 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
 
     try {
       await createBooking(newBooking as any);
+      sessionStorage.removeItem(RATE_LIMIT_KEY);
     } catch (err) {
       isSubmittingRef.current = false;
       setIsSubmitting(false);
+      const data = getRateLimitData();
+      if (data.count > 0) {
+        sessionStorage.setItem(RATE_LIMIT_KEY, JSON.stringify({ ...data, count: data.count - 1 }));
+      }
       setFormError('Failed to submit booking to server: ' + (err as Error).message);
       return;
     }
@@ -891,7 +892,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                       <div className="space-y-4 animate-fadeIn">
                         <div>
                           <h3 className="text-[11px] font-mono tracking-[0.25em] text-cobalt uppercase flex items-center gap-1.5 font-bold mb-1">
-                            <CreditCard className="w-3.5 h-3.5" /> 3.1 Choose Your Payout Method
+                            <CreditCard className="w-3.5 h-3.5" /> 3. Choose Your Payout Method
                           </h3>
                           <p className="text-[11px] text-ink-muted leading-normal font-light mb-4">
                             Select how you want to be paid. Gift card payouts include extra store bonuses!
@@ -1068,75 +1069,6 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                           </div>
                         </div>
                       </div>
-
-                      {/* Identity Verification Section */}
-                      <div className="pt-4 border-t border-white/[0.04]">
-                        <h3 className="text-[11px] font-mono tracking-[0.25em] text-cobalt uppercase flex items-center gap-1.5 font-bold mb-3">
-                          <ShieldCheck className="w-3.5 h-3.5" /> 3.2 Seller Identity Verification
-                        </h3>
-
-                        {verificationError && (
-                          <div className="bg-red-500/10 text-red-400 p-3 rounded-sm border border-red-500/20 text-xs flex items-start gap-2 mb-3">
-                            <ShieldAlert className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                            <span>{verificationError}</span>
-                          </div>
-                        )}
-
-                        {verificationStatus === 'verified' ? (
-                          <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-sm space-y-2 animate-fadeIn">
-                            <div className="flex items-center gap-2 text-emerald-400 text-xs font-bold">
-                              <CheckCircle className="w-4 h-4 fill-emerald-500/10" />
-                              <span>Identity Verified via DigiLocker</span>
-                            </div>
-                            <div className="font-mono text-[10px] text-zinc-400 grid grid-cols-2 gap-2 pt-1 border-t border-white/[0.04]">
-                              <div><strong>Name:</strong> {verifiedName}</div>
-                              <div><strong>Aadhaar:</strong> {maskedAadhaar}</div>
-                              <div className="col-span-2"><strong>Verified On:</strong> {new Date(verificationDate).toLocaleString('en-IN')}</div>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="border border-ice-border rounded-sm p-4 bg-canvas-white space-y-3">
-                            <div className="flex justify-between items-center">
-                              <div className="flex items-center gap-2">
-                                <span className="w-2.5 h-2.5 rounded-full bg-amber-400 live-pulse" />
-                                <span className="text-xs text-ink-navy font-semibold">Verification Status: Pending KYC</span>
-                              </div>
-                              <span className="text-[8px] font-mono text-zinc-500 uppercase">Aadhaar Required</span>
-                            </div>
-                            <p className="text-[11px] text-ink-muted leading-relaxed font-light">
-                              In compliance with secondhand trade regulations, Aadhaar identity verification is mandatory. Complete verification instantly using DigiLocker.
-                            </p>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setVerificationError('');
-                                setIsVerificationModalOpen(true);
-                              }}
-                              className="w-full py-2.5 px-4 bg-cobalt hover:bg-cobalt-hover text-white text-xs font-bold rounded-sm transition-all flex items-center justify-center gap-1.5"
-                            >
-                              <Shield className="w-3.5 h-3.5" />
-                              {verificationStatus === 'failed' ? 'Retry Verification with DigiLocker' : 'Verify Identity with DigiLocker'}
-                            </button>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* DigiLocker Modal rendering */}
-                      <DigiLockerModal
-                        isOpen={isVerificationModalOpen}
-                        onClose={() => setIsVerificationModalOpen(false)}
-                        customerName={name}
-                        onVerifySuccess={(data) => {
-                          setVerificationStatus('verified');
-                          setVerifiedName(data.verifiedName);
-                          setMaskedAadhaar(data.maskedAadhaar);
-                          setVerificationDate(data.verificationDate);
-                        }}
-                        onVerifyFailure={(err) => {
-                          setVerificationStatus('failed');
-                          setVerificationError(err);
-                        }}
-                      />
                     </div>
                   )}
 
@@ -1148,11 +1080,11 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                           <CheckCircle className="w-3.5 h-3.5" /> 4. Final Review &amp; Confirmation
                         </h3>
                         <p className="text-xs text-ink-muted leading-relaxed font-light">
-                          Please verify your pickup coordinates, contact details, identity, and selected payout credentials before submitting.
+                          Please verify your pickup coordinates, contact details, and selected payout credentials before submitting.
                         </p>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         {/* Box 1: Client Specs */}
                         <div className="border border-ice-border rounded-sm p-4 bg-canvas-white space-y-1.5">
                           <span className="text-[8px] font-mono text-zinc-500 uppercase block font-bold">1. Client Contact Details</span>
@@ -1173,19 +1105,9 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                           </div>
                         </div>
 
-                        {/* Box 3: KYC Details */}
+                        {/* Box 3: Payout Target */}
                         <div className="border border-ice-border rounded-sm p-4 bg-canvas-white space-y-1.5">
-                          <span className="text-[8px] font-mono text-zinc-500 uppercase block font-bold">3. Aadhaar KYC Verification</span>
-                          <div className="space-y-1 text-xs font-mono text-ink-navy">
-                            <div><strong>KYC Status:</strong> <span className="text-emerald-500 font-bold uppercase text-[10px]">Verified ✓</span></div>
-                            <div><strong>Verified Name:</strong> {verifiedName}</div>
-                            <div><strong>Masked Aadhaar:</strong> {maskedAadhaar}</div>
-                          </div>
-                        </div>
-
-                        {/* Box 4: Payout Target */}
-                        <div className="border border-ice-border rounded-sm p-4 bg-canvas-white space-y-1.5">
-                          <span className="text-[8px] font-mono text-zinc-500 uppercase block font-bold">4. Selected Payout Details</span>
+                          <span className="text-[8px] font-mono text-zinc-500 uppercase block font-bold">3. Selected Payout Details</span>
                           <div className="space-y-1 text-xs font-mono text-ink-navy">
                             <div><strong>Method:</strong> <span className="text-cobalt font-bold">{selectedPayoutMethodObj.name}</span></div>
                             <div className="truncate">

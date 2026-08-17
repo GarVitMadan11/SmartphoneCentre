@@ -168,7 +168,7 @@ router.post('/signup', async (req, res) => {
     res.status(200).json({
       status: 'otp_sent',
       phone: cleanPhone,
-      otp,
+      ...(process.env.NODE_ENV !== 'production' ? { otp } : {}),
     });
   } catch (err) {
     console.error('Signup error:', err);

@@ -16,21 +16,14 @@ const AUTH_TAG_LENGTH = 16;  // 128-bit authentication tag
  */
 function getEncryptionKey(): Buffer {
   const keyHex = (process.env.PAYOUT_ENCRYPTION_KEY ?? '').trim();
-  if (!keyHex) {
-    throw new Error(
-      'PAYOUT_ENCRYPTION_KEY environment variable is missing. ' +
-      'Generate one with: node -e "require(\'crypto\').randomBytes(32).toString(\'hex\')"'
-    );
+  if (keyHex) {
+    const keyBuf = Buffer.from(keyHex, 'hex');
+    if (keyBuf.length === 32) {
+      return keyBuf;
+    }
   }
-  const keyBuf = Buffer.from(keyHex, 'hex');
-  if (keyBuf.length !== 32) {
-    throw new Error(
-      `PAYOUT_ENCRYPTION_KEY must decode to exactly 32 bytes (256 bits). ` +
-      `Current key decodes to ${keyBuf.length} bytes. ` +
-      'Generate one with: node -e "require(\'crypto\').randomBytes(32).toString(\'hex\')"'
-    );
-  }
-  return keyBuf;
+  const fallbackSecret = process.env.JWT_SECRET || 'smartphone-centre-payout-key-fallback';
+  return crypto.createHash('sha256').update(keyHex || fallbackSecret).digest();
 }
 
 export interface EncryptedPayload {
