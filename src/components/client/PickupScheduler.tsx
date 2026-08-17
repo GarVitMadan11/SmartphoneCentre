@@ -2,7 +2,7 @@ import React, { useState, useMemo, useRef } from 'react';
 import { 
   Clock, User, MapPin, CreditCard, 
   CheckCircle, ArrowLeft, ShieldAlert, Award, Smartphone, Info, ChevronRight,
-  Landmark, ShoppingBag, ShoppingCart, Tag, Play, Gamepad2, Utensils, ChefHat, Gift
+  Landmark, Gamepad2, Utensils, ChefHat, Gift
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
@@ -53,19 +53,82 @@ export const PAYOUT_METHODS: PayoutMethod[] = [
   { id: 'zomato', name: 'Zomato Gift Card', type: 'giftcard', bonus: 0.015, iconName: 'chef-hat' }
 ];
 
-const renderPayoutIcon = (iconName: string) => {
-  switch (iconName) {
-    case 'landmark': return <Landmark className="w-4 h-4 text-cobalt" />;
-    case 'smartphone': return <Smartphone className="w-4 h-4 text-cobalt" />;
-    case 'shopping-bag': return <ShoppingBag className="w-4 h-4 text-cobalt" />;
-    case 'shopping-cart': return <ShoppingCart className="w-4 h-4 text-cobalt" />;
-    case 'tag': return <Tag className="w-4 h-4 text-cobalt" />;
-    case 'play': return <Play className="w-4 h-4 text-cobalt" />;
-    case 'apple': return <svg className="w-4 h-4 text-cobalt" fill="currentColor" viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 4.17c.66-.81 1.11-1.93.99-3.06-1 .04-2.22.67-2.94 1.5-.64.74-1.2 1.88-1.05 2.99 1.12.09 2.26-.57 3-1.43z"/></svg>;
-    case 'gamepad-2': return <Gamepad2 className="w-4 h-4 text-cobalt" />;
-    case 'utensils': return <Utensils className="w-4 h-4 text-cobalt" />;
-    case 'chef-hat': return <ChefHat className="w-4 h-4 text-cobalt" />;
-    default: return <Gift className="w-4 h-4 text-cobalt" />;
+const renderPayoutBrandLogo = (id: string) => {
+  switch (id) {
+    case 'bank':
+      return (
+        <div className="w-full h-full rounded flex items-center justify-center bg-gradient-to-br from-blue-500 to-indigo-600 text-white p-1 shadow-xs">
+          <Landmark className="w-4 h-4 text-white" />
+        </div>
+      );
+    case 'upi':
+      return (
+        <div className="w-full h-full rounded flex items-center justify-center bg-emerald-600 text-white font-mono text-[9px] font-extrabold tracking-tighter p-0.5 shadow-xs">
+          <span className="bg-white text-emerald-700 px-1 py-0.5 rounded-[2px] font-black text-[9px]">UPI</span>
+        </div>
+      );
+    case 'amazon':
+      return (
+        <div className="w-full h-full rounded flex items-center justify-center bg-zinc-900 text-amber-400 font-bold text-xs p-1 shadow-xs relative">
+          <span className="font-serif italic font-black text-white text-[13px] leading-none">a</span>
+          <span className="text-amber-400 font-sans font-bold text-[10px] leading-none ml-0.5">→</span>
+        </div>
+      );
+    case 'flipkart':
+      return (
+        <div className="w-full h-full rounded flex items-center justify-center bg-blue-600 text-yellow-300 font-extrabold text-xs p-1 shadow-xs">
+          <span className="font-sans italic font-black text-yellow-400 text-[13px]">f</span>
+        </div>
+      );
+    case 'myntra':
+      return (
+        <div className="w-full h-full rounded flex items-center justify-center bg-gradient-to-tr from-pink-600 via-rose-500 to-amber-500 text-white font-black text-xs p-1 shadow-xs">
+          <span className="font-outfit font-black text-white text-[12px] tracking-tight">M</span>
+        </div>
+      );
+    case 'googleplay':
+      return (
+        <div className="w-full h-full rounded flex items-center justify-center bg-zinc-800 p-1.5 shadow-xs">
+          <svg className="w-4 h-4" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M3.6 1.8L14.2 12.4 3.6 23c-.3-.3-.6-.8-.6-1.4V2.4c0-.6.3-1.1.6-1.4z" />
+            <path fill="#34A853" d="M17.4 9.2L14.2 12.4 17.4 15.6 21.2 13.4c.7-.4.7-1.1 0-1.5l-3.8-2.7z" />
+            <path fill="#EA4335" d="M3.6 1.8l10.6 10.6 3.2-3.2L5.8.5c-.8-.5-1.7-.1-2.2 1.3z" />
+            <path fill="#FBBC05" d="M17.4 15.6l-3.2-3.2L3.6 23c.5 1.4 1.4 1.8 2.2 1.3l11.6-8.7z" />
+          </svg>
+        </div>
+      );
+    case 'apple':
+      return (
+        <div className="w-full h-full rounded flex items-center justify-center bg-zinc-900 text-white p-1.5 shadow-xs">
+          <svg className="w-4 h-4 fill-current text-white" viewBox="0 0 24 24">
+            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 4.17c.66-.81 1.11-1.93.99-3.06-1 .04-2.22.67-2.94 1.5-.64.74-1.2 1.88-1.05 2.99 1.12.09 2.26-.57 3-1.43z" />
+          </svg>
+        </div>
+      );
+    case 'steam':
+      return (
+        <div className="w-full h-full rounded flex items-center justify-center bg-gradient-to-b from-slate-800 to-sky-900 text-sky-400 p-1 shadow-xs">
+          <Gamepad2 className="w-4 h-4 text-sky-400" />
+        </div>
+      );
+    case 'swiggy':
+      return (
+        <div className="w-full h-full rounded flex items-center justify-center bg-orange-500 text-white font-black text-xs p-1 shadow-xs">
+          <Utensils className="w-4 h-4 text-white" />
+        </div>
+      );
+    case 'zomato':
+      return (
+        <div className="w-full h-full rounded flex items-center justify-center bg-red-600 text-white font-black text-xs p-1 shadow-xs">
+          <ChefHat className="w-4 h-4 text-white" />
+        </div>
+      );
+    default:
+      return (
+        <div className="w-full h-full rounded flex items-center justify-center bg-cobalt text-white p-1.5 shadow-xs">
+          <Gift className="w-4 h-4" />
+        </div>
+      );
   }
 };
 
@@ -908,37 +971,55 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                               <button
                                 key={mode.id}
                                 type="button"
-                                onClick={() => {
-                                  setPaymentMethod(mode.id);
-                                }}
-                                className={`p-4 rounded-sm border text-left flex flex-col justify-between items-start transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt relative overflow-hidden group min-h-[110px] ${
+                                onClick={() => setPaymentMethod(mode.id)}
+                                className={`p-3.5 rounded-sm border text-left flex flex-col justify-between transition-all duration-200 focus:outline-none relative overflow-hidden group cursor-pointer ${
                                   isSelected
-                                    ? 'bg-cobalt-light/45 border-cobalt text-ink-navy scale-[1.01] shadow-sm z-10'
-                                    : 'bg-canvas-white text-ink-slate border-ice-border hover:border-cobalt/40 hover:scale-[1.005]'
+                                    ? 'bg-canvas-white dark:bg-canvas-pure border-cobalt shadow-premium ring-2 ring-cobalt/20 scale-[1.01] z-10'
+                                    : 'bg-canvas-white dark:bg-canvas-pure border-ice-border hover:border-cobalt/40 hover:shadow-xs'
                                 }`}
                               >
-                                {/* Badge indicator */}
-                                {mode.bonus > 0 ? (
-                                  <span className="absolute top-2 right-2 px-1.5 py-0.5 rounded-sm bg-emerald-500/10 text-emerald-400 text-[8px] font-bold uppercase border border-emerald-500/20 tracking-wider">
-                                    Best Value
-                                  </span>
-                                ) : (
-                                  <span className="absolute top-2 right-2 px-1.5 py-0.5 rounded-sm bg-zinc-500/10 text-zinc-500 text-[8px] font-bold uppercase border border-ice-border/40 tracking-wider">
-                                    Cash
-                                  </span>
-                                )}
-
-                                <div className="flex items-center gap-2 mb-2">
-                                  <div className={`p-1.5 rounded-sm flex items-center justify-center ${isSelected ? 'bg-cobalt/10 text-cobalt' : 'bg-ice-gray text-zinc-400'}`}>
-                                    {renderPayoutIcon(mode.iconName)}
+                                {/* Top Header: Logo + Title on left, Badges & Check on right */}
+                                <div className="flex items-start justify-between gap-2 w-full mb-3">
+                                  <div className="flex items-center gap-2.5 min-w-0 pr-1">
+                                    <div className="w-7 h-7 rounded-sm flex items-center justify-center flex-shrink-0 bg-canvas-white border border-ice-border/60 shadow-xs">
+                                      {renderPayoutBrandLogo(mode.id)}
+                                    </div>
+                                    <span className="font-extrabold text-xs font-outfit text-ink-navy leading-tight truncate">
+                                      {mode.name}
+                                    </span>
                                   </div>
-                                  <span className="font-semibold text-xs tracking-tight text-ink-navy leading-none">{mode.name}</span>
+
+                                  <div className="flex items-center gap-1 flex-shrink-0">
+                                    {isSelected && (
+                                      <span className="w-4 h-4 rounded-full bg-cobalt text-white flex items-center justify-center text-[10px] font-bold shadow-xs">
+                                        ✓
+                                      </span>
+                                    )}
+                                    {mode.bonus > 0 ? (
+                                      <span className="px-1.5 py-0.5 rounded-sm text-[8px] font-extrabold uppercase font-mono tracking-wider bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 whitespace-nowrap">
+                                        +{(mode.bonus * 100).toFixed(1).replace('.0', '')}% Bonus
+                                      </span>
+                                    ) : (
+                                      <span className="px-1.5 py-0.5 rounded-sm text-[8px] font-extrabold uppercase font-mono tracking-wider bg-zinc-100 dark:bg-zinc-800 text-zinc-500 border border-ice-border/60 whitespace-nowrap">
+                                        CASH
+                                      </span>
+                                    )}
+                                  </div>
                                 </div>
 
-                                <div className="w-full pt-1.5 border-t border-black/[0.03]">
-                                  <span className="block text-sm font-bold text-ink-navy">{formatPrice(valueWithBonus)}</span>
-                                  <span className="block text-[9px] text-zinc-400 font-mono">
-                                    {mode.bonus > 0 ? `+${mode.bonus * 100}% Store Bonus (+${formatPrice(Math.round(finalPrice * mode.bonus))})` : 'No hidden fees'}
+                                {/* Price Details */}
+                                <div className="w-full pt-2 border-t border-ice-border/40 flex flex-col">
+                                  <span className="text-sm font-extrabold font-outfit text-ink-navy tracking-tight">
+                                    {formatPrice(valueWithBonus)}
+                                  </span>
+                                  <span className="text-[10px] font-mono text-zinc-500 font-medium">
+                                    {mode.bonus > 0 ? (
+                                      <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+                                        +{formatPrice(Math.round(finalPrice * mode.bonus))} store bonus
+                                      </span>
+                                    ) : (
+                                      'Instant payout · No hidden fees'
+                                    )}
                                   </span>
                                 </div>
                               </button>

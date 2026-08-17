@@ -161,6 +161,13 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
   const [accConfirmed, setAccConfirmed] = useState(false);
   const [icloudChecked, setIcloudChecked] = useState<'clear' | 'locked' | null>(null);
 
+  React.useEffect(() => {
+    if (step > 0 && icloudChecked === null) {
+      const hasIcloudLock = selectedDefects.some(d => d.id === 'defect-critical-icloud');
+      setIcloudChecked(hasIcloudLock ? 'locked' : 'clear');
+    }
+  }, [step, icloudChecked, selectedDefects]);
+
   // Critical-failure confirmation modal
   const [criticalModal, setCriticalModal] = useState<{
     visible: boolean;

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo, lazy, Suspense, useCallback, startTransition } from 'react';
-import { Model, Variant, DefectRule, MODELS as STATIC_MODELS, SMARTPHONE_MODELS, BRANDS as STATIC_BRANDS, generateVariantsForModel, INITIAL_BOOKINGS, Brand, Booking, TABLET_MODELS, SMARTWATCH_MODELS, getDeviceImage } from './data/mockDatabase';
+import { Model, Variant, DefectRule, MODELS as STATIC_MODELS, SMARTPHONE_MODELS, BRANDS as STATIC_BRANDS, generateVariantsForModel, INITIAL_BOOKINGS, Brand, Booking, TABLET_MODELS, SMARTWATCH_MODELS, getDeviceImage, getDefectRulesForCategory } from './data/mockDatabase';
 import { fetchBrands, fetchModels, fetchBookings as apiFetchBookings, fetchCurrentUser, customerLogout, hasAdminToken, ApiUser } from './utils/api';
 import { DeviceSelector } from './components/client/DeviceSelector';
 import { DeviceCategoryShowcase } from './components/client/DeviceCategoryShowcase';
@@ -45,6 +45,10 @@ const SESSION_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 interface StoredNavState {
   activeStage: 'select' | 'tablets' | 'smartwatches' | 'diagnose' | 'schedule' | 'admin';
   wizardStep: number;
+  selectedModelId?: string;
+  selectedVariant?: Variant;
+  selectedDefectIds?: string[];
+  finalPrice?: number;
   timestamp: number;
 }
 
@@ -479,11 +483,75 @@ export default function App() {
     refreshBookings();
   }, [refreshCatalog, refreshBookings]);
 
-  // ── Sensitive state — React memory only, never persisted to storage ────────
-  const [selectedModel, setSelectedModel] = useState<Model | null>(null);
-  const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
-  const [finalPrice, setFinalPrice] = useState<number>(0);
-  const [selectedDefects, setSelectedDefects] = useState<DefectRule[]>([]);
+  // ── Sensitive state — persisted across reload with 24h TTL ────────────────────────
+  const [selectedModel, setSelectedModel] = useState<Model | null>(() => {
+    const nav = savedNav.current;
+    if (nav?.selectedModelId) {
+      return STATIC_MODELS.find(m => m.id === nav.selectedModelId) || null;
+    }
+    return null;
+  });
+
+  const [selectedVariant, setSelectedVariant] = useState<Variant | null>(() => {
+    const nav = savedNav.current;
+    if (nav?.selectedVariant) return nav.selectedVariant;
+    if (nav?.selectedModelId) {
+      const model = STATIC_MODELS.find(m => m.id === nav.selectedModelId);
+      if (model) {
+        const variants = generateVariantsForModel(model);
+        return variants[0] || null;
+      }
+    }
+    return null;
+  });
+
+  const [selectedDefects, setSelectedDefects] = useState<DefectRule[]>(() => {
+    const nav = savedNav.current;
+    if (nav?.selectedModelId && nav?.selectedDefectIds && nav.selectedDefectIds.length > 0) {
+      const model = STATIC_MODELS.find(m => m.id === nav.selectedModelId);
+      if (model) {
+        const rules = getDefectRulesForCategory(model.category, model.brandId, model.name, model.id);
+        return rules.filter(r => nav.selectedDefectIds!.includes(r.id));
+      }
+    }
+    return [];
+  });
+
+  const [finalPrice, setFinalPrice] = useState<number>(() => {
+    const nav = savedNav.current;
+    if (typeof nav?.finalPrice === 'number' && nav.finalPrice > 0) return nav.finalPrice;
+    return 0;
+  });
+
+  // Sync API models once catalog loads if model ID is valid
+  useEffect(() => {
+    if (savedNav.current?.selectedModelId && MODELS.length > 0) {
+      const apiModel = MODELS.find(m => m.id === savedNav.current?.selectedModelId);
+      if (apiModel) {
+        setSelectedModel(apiModel);
+      }
+    }
+  }, [MODELS]);
+
+  // Auto-persist active workflow state to localStorage whenever workflow state updates
+  useEffect(() => {
+    if (activeStage === 'diagnose' || activeStage === 'schedule') {
+      if (selectedModel) {
+        saveNavState({
+          activeStage,
+          wizardStep,
+          selectedModelId: selectedModel.id,
+          selectedVariant: selectedVariant || undefined,
+          selectedDefectIds: selectedDefects.map(d => d.id),
+          finalPrice,
+        });
+      }
+    } else if (activeStage === 'admin') {
+      saveNavState({ activeStage: 'admin', wizardStep: 0 });
+    } else {
+      clearNavState();
+    }
+  }, [activeStage, wizardStep, selectedModel, selectedVariant, selectedDefects, finalPrice]);
 
   const [isSpecModalOpen, setIsSpecModalOpen] = useState(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
@@ -624,7 +692,6 @@ export default function App() {
   };
 
   const isWorkflow = (activeStage === 'diagnose' || activeStage === 'schedule') && 
-                     (path === '/smartphones' || path === '/tablets' || path === '/smartwatches') && 
                      selectedModel !== null && selectedVariant !== null;
 
   return (
@@ -1520,7 +1587,6 @@ export default function App() {
               </div>
               <div className="space-y-3 sm:space-y-4">
                 {[
-                  { icon: <Zap className="w-4 h-4" />, bg: 'bg-cobalt-light text-cobalt', label: 'Avg. Agent Arrival', value: '~15 Min', delay: '0s' },
                   { icon: <TrendingUp className="w-4 h-4" />, bg: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20', label: 'Quote Accuracy', value: '99.4%', delay: '0.1s' },
                   { icon: <Award className="w-4 h-4" />, bg: 'bg-blue-500/10 text-blue-400 border border-blue-500/20', label: 'Devices Processed', value: '12,400+', delay: '0.2s' },
                 ].map(s => (
@@ -1617,9 +1683,20 @@ export default function App() {
             </div>
           </div>
 
-          <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-[10px] sm:text-xs text-ink-muted gap-4">
+          <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-[10px] sm:text-xs text-ink-muted gap-4">
             <p>&copy; {new Date().getFullYear()} Rephonix. All rights reserved.</p>
             <p>Built with ❤️ for secure, sustainable device resale.</p>
+          </div>
+
+          {/* Legal & Trademark Disclaimer */}
+          <div className="mt-6 pt-4 border-t border-ice-border/30 text-[10px] text-zinc-400 font-light leading-relaxed text-center sm:text-left">
+            <h4 className="font-semibold text-zinc-500 mb-1.5 uppercase tracking-wider font-mono text-[9px]">TRADEMARK &amp; BRAND RIGHTS DISCLAIMER</h4>
+            <p className="mb-1">
+              Rephonix is an independent marketplace for buying and selling pre-owned electronic devices. All third-party brand names, trademarks, logos, and product names mentioned on this platform belong to their respective owners. Rephonix is not affiliated with, endorsed by, sponsored by, or authorized by any such brand or manufacturer.
+            </p>
+            <p>
+              Brand references are used solely for product identification and do not imply any affiliation or endorsement.
+            </p>
           </div>
         </div>
       </footer>
