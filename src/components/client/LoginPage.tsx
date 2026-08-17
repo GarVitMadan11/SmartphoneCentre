@@ -63,6 +63,7 @@ export default function LoginPage({ onLoginSuccess, onNavigate, redirectParam }:
     const renderGoogleButton = () => {
       if (!isMounted || !googleBtnRef.current || !window.google?.accounts?.id) return;
       try {
+        googleBtnRef.current.innerHTML = '';
         window.google.accounts.id.initialize({
           client_id: activeClientId,
           callback: handleGoogleCredential,
@@ -83,8 +84,14 @@ export default function LoginPage({ onLoginSuccess, onNavigate, redirectParam }:
       }
     };
 
+    const attemptRender = () => {
+      setTimeout(() => {
+        if (isMounted) renderGoogleButton();
+      }, 50);
+    };
+
     if (window.google?.accounts?.id) {
-      renderGoogleButton();
+      attemptRender();
     } else {
       let script = document.querySelector('script[src="https://accounts.google.com/gsi/client"]') as HTMLScriptElement;
       if (!script) {
@@ -94,20 +101,19 @@ export default function LoginPage({ onLoginSuccess, onNavigate, redirectParam }:
         script.defer = true;
         document.head.appendChild(script);
       }
-      script.addEventListener('load', renderGoogleButton);
+      script.addEventListener('load', attemptRender);
 
-      // Polling fallback in case script is already loaded or in progress
       const interval = setInterval(() => {
         if (window.google?.accounts?.id) {
           clearInterval(interval);
-          renderGoogleButton();
+          attemptRender();
         }
       }, 250);
 
       return () => {
         isMounted = false;
         clearInterval(interval);
-        script.removeEventListener('load', renderGoogleButton);
+        script.removeEventListener('load', attemptRender);
       };
     }
   }, [activeClientId]);
@@ -200,7 +206,7 @@ export default function LoginPage({ onLoginSuccess, onNavigate, redirectParam }:
                 <div
                   ref={googleBtnRef}
                   id="google-signin-btn"
-                  className="w-full overflow-hidden"
+                  className="w-full overflow-hidden flex justify-center min-h-[40px]"
                 />
               )}
             </div>
