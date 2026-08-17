@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, Lock, Mail, ArrowLeft, AlertCircle, Phone, User, CheckCircle2 } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, ArrowLeft, AlertCircle, Phone, User } from 'lucide-react';
+import emailjs from '@emailjs/browser';
 import { customerSignup, verifyOtp } from '../../utils/api';
 
 interface SignupPageProps {
@@ -22,7 +23,6 @@ export default function SignupPage({ onSignupSuccess, onNavigate, redirectParam 
   // OTP Verification states
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [otp, setOtp] = useState('');
-  const [testOtpHelper, setTestOtpHelper] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,10 +52,28 @@ export default function SignupPage({ onSignupSuccess, onNavigate, redirectParam 
         password
       );
       if (response.status === 'otp_sent') {
-        setIsOtpSent(true);
-        if (response.testOtp) {
-          setTestOtpHelper(response.testOtp);
+        const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+        const templateId = import.meta.env.VITE_EMAILJS_OTP_TEMPLATE_ID;
+        const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+
+        if (!serviceId || !templateId || !publicKey) {
+          throw new Error('EmailJS environment variables are not configured in the browser.');
         }
+
+        const templateParams = {
+          email: email.trim(),
+          passcode: response.otp,
+          time: '10 minutes',
+        };
+
+        try {
+          await emailjs.send(serviceId, templateId, templateParams, publicKey);
+        } catch (mailErr: any) {
+          console.error('EmailJS signup send failed:', mailErr);
+          throw new Error('Unable to send verification code. Please try again.');
+        }
+
+        setIsOtpSent(true);
       }
     } catch (err: any) {
       setError(err.message || 'Registration failed.');
@@ -137,13 +155,7 @@ export default function SignupPage({ onSignupSuccess, onNavigate, redirectParam 
           </div>
         )}
 
-        {/* Dev OTP Helper Notice */}
-        {isOtpSent && testOtpHelper && (
-          <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 p-3 rounded-sm text-xs font-medium animate-in fade-in duration-200">
-            <CheckCircle2 className="w-4 h-4 flex-shrink-0 text-emerald-500" />
-            <span>[Test Mode] Verification code: <strong className="font-mono text-sm">{testOtpHelper}</strong></span>
-          </div>
-        )}
+
 
         {isOtpSent ? (
           /* OTP Verification Form */

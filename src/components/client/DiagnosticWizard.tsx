@@ -4,11 +4,12 @@ import { calculateValuation } from '../../utils/valuation';
 import { 
   ArrowLeft, Check, ChevronRight, Activity, Sparkles, 
   Smartphone, Tablet, Box, Zap, Trash2, ShieldCheck, Printer, Watch,
-  X, Lock, Eye, EyeOff, CheckCircle2, AlertCircle, Mail, User
+  X, Lock, Eye, EyeOff, AlertCircle, Mail, User
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getIllustration } from './Illustrations';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
+import emailjs from '@emailjs/browser';
 import { checkPhone, customerLogin, customerSignup, verifyOtp, ApiUser } from '../../utils/api';
 
 const getEngineeringLabel = (description: string) => {
@@ -269,7 +270,6 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
   const [showPassword, setShowPassword] = useState(false);
   const [modalError, setModalError] = useState('');
   const [modalLoading, setModalLoading] = useState(false);
-  const [modalTestOtp, setModalTestOtp] = useState('');
 
   React.useEffect(() => {
     if (currentUser) {
@@ -351,10 +351,28 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
     try {
       const res = await customerSignup(nameInput.trim(), emailInput.trim(), phoneInput, passwordInput);
       if (res.status === 'otp_sent') {
-        setModalStage('otp');
-        if (res.testOtp) {
-          setModalTestOtp(res.testOtp);
+        const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+        const templateId = import.meta.env.VITE_EMAILJS_OTP_TEMPLATE_ID;
+        const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+
+        if (!serviceId || !templateId || !publicKey) {
+          throw new Error('EmailJS environment variables are not configured in the browser.');
         }
+
+        const templateParams = {
+          email: emailInput.trim(),
+          passcode: res.otp,
+          time: '10 minutes',
+        };
+
+        try {
+          await emailjs.send(serviceId, templateId, templateParams, publicKey);
+        } catch (mailErr: any) {
+          console.error('EmailJS signup send failed:', mailErr);
+          throw new Error('Unable to send verification code. Please try again.');
+        }
+
+        setModalStage('otp');
       }
     } catch (err: any) {
       setModalError(err.message || 'Failed to initiate signup.');
@@ -1605,13 +1623,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                 </div>
               )}
 
-              {/* Success OTP Banner */}
-              {modalStage === 'otp' && modalTestOtp && (
-                <div className="mb-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 p-2.5 rounded-sm text-[11px] font-medium flex items-center gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0 text-emerald-500" />
-                  <span>[Test Mode] Verification OTP: <strong>{modalTestOtp}</strong></span>
-                </div>
-              )}
+
 
               {modalStage === 'phone' && (
                 /* Stage 1: Phone number entry */
