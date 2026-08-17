@@ -880,31 +880,32 @@ const BASE_MODELS: Model[] = [
   { id: 'goog-6a',  brandId: 'brand-google', name: 'Pixel 6a', category: 'budget',   releaseYear: 2022, basePrice128GB:  6500, series: 'Pixel 6 Series' },
 
   // --- OPPO ---
-  { id: 'catalog-oppo-a3', brandId: 'brand-oppo', name: 'OPPO A3', category: 'budget', releaseYear: 2025, basePrice128GB: 4000, series: 'A Series' },
-  { id: 'catalog-oppo-a3x', brandId: 'brand-oppo', name: 'OPPO A3x', category: 'budget', releaseYear: 2025, basePrice128GB: 4000, series: 'A Series' },
-  { id: 'catalog-oppo-a3-pro', brandId: 'brand-oppo', name: 'OPPO A3 Pro', category: 'flagship', releaseYear: 2025, basePrice128GB: 69500, series: 'A Series' },
-  { id: 'catalog-oppo-a5', brandId: 'brand-oppo', name: 'OPPO A5', category: 'budget', releaseYear: 2025, basePrice128GB: 4000, series: 'A Series' },
-  { id: 'catalog-oppo-a5x', brandId: 'brand-oppo', name: 'OPPO A5x', category: 'budget', releaseYear: 2025, basePrice128GB: 4000, series: 'A Series' },
-  { id: 'catalog-oppo-a5-pro', brandId: 'brand-oppo', name: 'OPPO A5 Pro', category: 'flagship', releaseYear: 2025, basePrice128GB: 69500, series: 'A Series' },
-  { id: 'catalog-oppo-f25-pro', brandId: 'brand-oppo', name: 'OPPO F25 Pro', category: 'midrange', releaseYear: 2025, basePrice128GB: 12000, series: 'F Series' },
-  { id: 'catalog-oppo-f27-pro', brandId: 'brand-oppo', name: 'OPPO F27 Pro+', category: 'midrange', releaseYear: 2025, basePrice128GB: 14000, series: 'F Series' },
-  { id: 'catalog-oppo-reno-12', brandId: 'brand-oppo', name: 'OPPO Reno 12', category: 'premium', releaseYear: 2025, basePrice128GB: 18000, series: 'Reno Series' },
-  { id: 'catalog-oppo-reno-12-pro', brandId: 'brand-oppo', name: 'OPPO Reno 12 Pro', category: 'premium', releaseYear: 2025, basePrice128GB: 22000, series: 'Reno Series' },
-  { id: 'catalog-oppo-find-x8', brandId: 'brand-oppo', name: 'OPPO Find X8', category: 'flagship', releaseYear: 2025, basePrice128GB: 42000, series: 'Find X Series' },
-  { id: 'catalog-oppo-find-x8-pro', brandId: 'brand-oppo', name: 'OPPO Find X8 Pro', category: 'flagship', releaseYear: 2025, basePrice128GB: 52000, series: 'Find X Series' },
+  { id: 'catalog-oppo-a3', brandId: 'brand-oppo', name: 'OPPO A3', category: 'budget', releaseYear: 2025, basePrice128GB: 4000, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a3-5g.jpg' },
+  { id: 'catalog-oppo-a3x', brandId: 'brand-oppo', name: 'OPPO A3x', category: 'budget', releaseYear: 2025, basePrice128GB: 4000, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a3x-5g.jpg' },
+  { id: 'catalog-oppo-a3-pro', brandId: 'brand-oppo', name: 'OPPO A3 Pro', category: 'flagship', releaseYear: 2025, basePrice128GB: 69500, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a3-pro.jpg' },
+  { id: 'catalog-oppo-a5', brandId: 'brand-oppo', name: 'OPPO A5', category: 'budget', releaseYear: 2025, basePrice128GB: 4000, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a5-2020.jpg' },
+  { id: 'catalog-oppo-a5x', brandId: 'brand-oppo', name: 'OPPO A5x', category: 'budget', releaseYear: 2025, basePrice128GB: 4000, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a3x-5g.jpg' },
+  { id: 'catalog-oppo-a5-pro', brandId: 'brand-oppo', name: 'OPPO A5 Pro', category: 'flagship', releaseYear: 2025, basePrice128GB: 69500, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a3-pro.jpg' },
+  { id: 'catalog-oppo-f25-pro', brandId: 'brand-oppo', name: 'OPPO F25 Pro', category: 'midrange', releaseYear: 2025, basePrice128GB: 12000, series: 'F Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-f25-pro.jpg' },
+  { id: 'catalog-oppo-f27-pro', brandId: 'brand-oppo', name: 'OPPO F27 Pro+', category: 'midrange', releaseYear: 2025, basePrice128GB: 14000, series: 'F Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-f25-pro.jpg' },
+  { id: 'catalog-oppo-reno-12', brandId: 'brand-oppo', name: 'OPPO Reno 12', category: 'premium', releaseYear: 2025, basePrice128GB: 18000, series: 'Reno Series', imageUrl: 'https://fdn.gsmarena.com/imgroot/news/24/05/oppo-reno12-series-announced/-1200/gsmarena_001.jpg' },
+  { id: 'catalog-oppo-reno-12-pro', brandId: 'brand-oppo', name: 'OPPO Reno 12 Pro', category: 'premium', releaseYear: 2025, basePrice128GB: 22000, series: 'Reno Series', imageUrl: 'https://fdn.gsmarena.com/imgroot/news/24/05/oppo-reno12-series-announced/-1200/gsmarena_002.jpg' },
+  { id: 'catalog-oppo-find-x8', brandId: 'brand-oppo', name: 'OPPO Find X8', category: 'flagship', releaseYear: 2025, basePrice128GB: 42000, series: 'Find X Series', imageUrl: 'https://fdn.gsmarena.com/imgroot/news/24/10/oppo-find-x8-official/-1200/gsmarena_001.jpg' },
+  { id: 'catalog-oppo-find-x8-pro', brandId: 'brand-oppo', name: 'OPPO Find X8 Pro', category: 'flagship', releaseYear: 2025, basePrice128GB: 52000, series: 'Find X Series', imageUrl: 'https://fdn.gsmarena.com/imgroot/news/24/10/oppo-find-x8-official/-1200/gsmarena_002.jpg' },
 
   // --- NOTHING ---
-  { id: 'catalog-nothing-phone-1', brandId: 'brand-nothing', name: 'Nothing Phone 1', category: 'midrange', releaseYear: 2022, basePrice128GB: 12000, series: 'Phone Series' },
-  { id: 'catalog-nothing-phone-2', brandId: 'brand-nothing', name: 'Nothing Phone 2', category: 'premium', releaseYear: 2023, basePrice128GB: 18000, series: 'Phone Series' },
-  { id: 'catalog-nothing-phone-2a', brandId: 'brand-nothing', name: 'Nothing Phone 2a', category: 'budget', releaseYear: 2024, basePrice128GB: 11000, series: 'Phone Series' },
-  { id: 'catalog-nothing-cmf-phone-1', brandId: 'brand-nothing', name: 'CMF Phone 1', category: 'budget', releaseYear: 2024, basePrice128GB: 8500, series: 'Phone Series' },
+  { id: 'catalog-nothing-phone-1', brandId: 'brand-nothing', name: 'Nothing Phone 1', category: 'midrange', releaseYear: 2022, basePrice128GB: 12000, series: 'Phone Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/nothing-phone-1.jpg' },
+  { id: 'catalog-nothing-phone-2', brandId: 'brand-nothing', name: 'Nothing Phone 2', category: 'premium', releaseYear: 2023, basePrice128GB: 18000, series: 'Phone Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/nothing-phone-1.jpg' },
+  { id: 'catalog-nothing-phone-2a', brandId: 'brand-nothing', name: 'Nothing Phone 2a', category: 'budget', releaseYear: 2024, basePrice128GB: 11000, series: 'Phone Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/nothing-phone-2a.jpg' },
+  { id: 'catalog-nothing-cmf-phone-1', brandId: 'brand-nothing', name: 'CMF Phone 1', category: 'budget', releaseYear: 2024, basePrice128GB: 8500, series: 'Phone Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/nothing-phone-2a.jpg' },
 
   // --- MOTOROLA ---
-  { id: 'catalog-motorola-g04', brandId: 'brand-motorola', name: 'Motorola G04', category: 'budget', releaseYear: 2024, basePrice128GB: 5000, series: 'G Series' },
-  { id: 'catalog-motorola-edge-50-fusion', brandId: 'brand-motorola', name: 'Motorola Edge 50 Fusion', category: 'midrange', releaseYear: 2024, basePrice128GB: 12000, series: 'Edge Series' },
-  { id: 'catalog-motorola-edge-50-pro', brandId: 'brand-motorola', name: 'Motorola Edge 50 Pro', category: 'premium', releaseYear: 2024, basePrice128GB: 18000, series: 'Edge Series' },
-  { id: 'catalog-motorola-edge-50-ultra', brandId: 'brand-motorola', name: 'Motorola Edge 50 Ultra', category: 'flagship', releaseYear: 2024, basePrice128GB: 32000, series: 'Edge Series' },
-  { id: 'catalog-motorola-razr-50-ultra', brandId: 'brand-motorola', name: 'Motorola Razr 50 Ultra', category: 'flagship', releaseYear: 2024, basePrice128GB: 45000, series: 'Razr Series' },
+  { id: 'catalog-motorola-g04', brandId: 'brand-motorola', name: 'Motorola G04', category: 'budget', releaseYear: 2024, basePrice128GB: 5000, series: 'G Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/motorola-g04.jpg' },
+  { id: 'catalog-motorola-g05', brandId: 'brand-motorola', name: 'Motorola G05', category: 'budget', releaseYear: 2025, basePrice128GB: 5500, series: 'G Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/motorola-moto-g24.jpg' },
+  { id: 'catalog-motorola-edge-50-fusion', brandId: 'brand-motorola', name: 'Motorola Edge 50 Fusion', category: 'midrange', releaseYear: 2024, basePrice128GB: 12000, series: 'Edge Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/motorola-edge-50-fusion.jpg' },
+  { id: 'catalog-motorola-edge-50-pro', brandId: 'brand-motorola', name: 'Motorola Edge 50 Pro', category: 'premium', releaseYear: 2024, basePrice128GB: 18000, series: 'Edge Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/motorola-edge-50-pro.jpg' },
+  { id: 'catalog-motorola-edge-50-ultra', brandId: 'brand-motorola', name: 'Motorola Edge 50 Ultra', category: 'flagship', releaseYear: 2024, basePrice128GB: 32000, series: 'Edge Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/motorola-edge-50-ultra.jpg' },
+  { id: 'catalog-motorola-razr-50-ultra', brandId: 'brand-motorola', name: 'Motorola Razr 50 Ultra', category: 'flagship', releaseYear: 2024, basePrice128GB: 45000, series: 'Razr Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/motorola-razr-50-ultra.jpg' },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
