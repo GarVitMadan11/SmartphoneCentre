@@ -105,6 +105,7 @@ app.use(helmet({
       // 'unsafe-inline' intentionally excluded from scriptSrc — all JS is in content-hashed bundles.
       // Google Identity Services (GSI) requires its own origin to be trusted.
       scriptSrc: ["'self'", "'unsafe-inline'", 'https://api.emailjs.com', 'https://accounts.google.com'],
+      scriptSrcElem: ["'self'", "'unsafe-inline'", 'https://api.emailjs.com', 'https://accounts.google.com'],
       frameSrc: ["'self'", 'https://accounts.google.com'],
       styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://accounts.google.com'],
       styleSrcElem: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://accounts.google.com'],
