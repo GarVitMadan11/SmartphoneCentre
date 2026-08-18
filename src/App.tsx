@@ -16,6 +16,7 @@ import ForgotPasswordPage from './components/client/ForgotPasswordPage';
 import ResetPasswordPage from './components/client/ResetPasswordPage';
 import VerifyEmailPage from './components/client/VerifyEmailPage';
 import { ToastContainer, ToastMessage } from './components/Toast';
+import { ComingSoon } from './components/client/ComingSoon';
 import { useFocusTrap } from './hooks/useFocusTrap';
 // ── Lazy-loaded heavy components (code splitting — P-1 fix) ───────────────────
 const DiagnosticWizard = lazy(() => import('./components/client/DiagnosticWizard').then(m => ({ default: m.DiagnosticWizard })));
@@ -614,6 +615,10 @@ export default function App() {
   const isWorkflow = (activeStage === 'diagnose' || activeStage === 'schedule') && 
                      (path === '/smartphones' || path === '/tablets' || path === '/smartwatches') && 
                      selectedModel !== null && selectedVariant !== null;
+
+  if (import.meta.env.VITE_COMING_SOON === 'true') {
+    return <ComingSoon />;
+  }
 
   return (
     <div className="min-h-screen bg-canvas-white text-ink-navy flex flex-col font-sans selection:bg-cobalt selection:text-white">
