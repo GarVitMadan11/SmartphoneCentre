@@ -15,6 +15,13 @@ import {
 
 const router = Router();
 
+// Public auth configuration (e.g. Google Client ID)
+router.get('/config', (_req, res) => {
+  res.json({
+    googleClientId: process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID || '',
+  });
+});
+
 const signupAttemptsStore = new Map<string, number>();
 
 interface EmailOtpSession {
@@ -161,7 +168,7 @@ router.post('/signup', async (req, res) => {
     res.status(200).json({
       status: 'otp_sent',
       phone: cleanPhone,
-      otp,
+      ...(process.env.NODE_ENV !== 'production' ? { otp } : {}),
     });
   } catch (err) {
     console.error('Signup error:', err);

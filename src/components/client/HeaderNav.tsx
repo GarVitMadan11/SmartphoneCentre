@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Smartphone, Tablet, Watch, ChevronDown, Zap, Truck, Menu, X } from 'lucide-react';
+import { Smartphone, Tablet, Watch, ChevronDown, Zap, Truck, Menu, X, User, Package } from 'lucide-react';
 import { ApiUser } from '../../utils/api';
+import { BRANDS as STATIC_BRANDS } from '../../data/mockDatabase';
+import { applyBrandOrder } from '../../utils/ordering';
 
 interface HeaderNavProps {
   currentPath: string;
@@ -112,30 +114,29 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                   <button onClick={() => { setActiveDropdown(null); onNavigate('/smartphones'); }} className="text-cobalt hover:underline text-[10px] lowercase font-normal">view all</button>
                 </div>
                 <div className="grid grid-cols-2 gap-1 mt-1">
-                  <button onClick={() => handleBrandClick('brand-apple')} className="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 hover:text-cobalt text-xs font-medium transition-colors text-left">
-                    <span className="w-2 h-2 rounded-full bg-zinc-800 dark:bg-zinc-200" />
-                    <span>Apple iPhone</span>
-                  </button>
-                  <button onClick={() => handleBrandClick('brand-samsung')} className="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 hover:text-cobalt text-xs font-medium transition-colors text-left">
-                    <span className="w-2 h-2 rounded-full bg-blue-600" />
-                    <span>Samsung Galaxy</span>
-                  </button>
-                  <button onClick={() => handleBrandClick('brand-oneplus')} className="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 hover:text-cobalt text-xs font-medium transition-colors text-left">
-                    <span className="w-2 h-2 rounded-full bg-red-600" />
-                    <span>OnePlus</span>
-                  </button>
-                  <button onClick={() => handleBrandClick('brand-google')} className="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 hover:text-cobalt text-xs font-medium transition-colors text-left">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                    <span>Google Pixel</span>
-                  </button>
-                  <button onClick={() => handleBrandClick('brand-xiaomi')} className="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 hover:text-cobalt text-xs font-medium transition-colors text-left">
-                    <span className="w-2 h-2 rounded-full bg-amber-500" />
-                    <span>Xiaomi / Redmi</span>
-                  </button>
-                  <button onClick={() => handleBrandClick('brand-vivo')} className="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 hover:text-cobalt text-xs font-medium transition-colors text-left">
-                    <span className="w-2 h-2 rounded-full bg-violet-600" />
-                    <span>Vivo / iQOO</span>
-                  </button>
+                  {applyBrandOrder(STATIC_BRANDS).slice(0, 8).map(b => {
+                    const colorMap: Record<string, string> = {
+                      'brand-apple': 'bg-zinc-800 dark:bg-zinc-200',
+                      'brand-samsung': 'bg-blue-600',
+                      'brand-oneplus': 'bg-red-600',
+                      'brand-google': 'bg-emerald-500',
+                      'brand-xiaomi': 'bg-amber-500',
+                      'brand-vivo': 'bg-violet-600',
+                      'brand-oppo': 'bg-emerald-600',
+                      'brand-nothing': 'bg-zinc-900 dark:bg-white',
+                      'brand-motorola': 'bg-blue-800',
+                    };
+                    return (
+                      <button
+                        key={b.id}
+                        onClick={() => handleBrandClick(b.id)}
+                        className="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 hover:text-cobalt text-xs font-medium transition-colors text-left"
+                      >
+                        <span className={`w-2 h-2 rounded-full ${colorMap[b.id] || 'bg-cobalt'}`} />
+                        <span className="truncate">{b.name}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -277,18 +278,35 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
               </button>
 
               {userDropdownOpen && (
-                <div className="absolute right-0 top-full mt-1 w-44 bg-white dark:bg-canvas-pure border border-ice-border rounded-lg shadow-premium p-1.5 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-canvas-pure border border-ice-border rounded-lg shadow-premium p-1.5 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
                   <button
-                    onClick={() => { setUserDropdownOpen(false); onNavigate('/profile'); }}
-                    className="w-full text-left text-xs font-semibold p-2 rounded-md hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 hover:text-cobalt transition-colors"
+                    onClick={() => { 
+                      setUserDropdownOpen(false); 
+                      if (onOpenTrackOrder) {
+                        onOpenTrackOrder();
+                      } else {
+                        onNavigate('/profile');
+                      }
+                    }}
+                    className="w-full text-left text-xs font-semibold p-2 rounded-md hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 hover:text-cobalt transition-colors flex items-center gap-2"
                   >
-                    Profile Settings
+                    <Package className="w-3.5 h-3.5 text-cobalt" />
+                    <span>Your Bookings</span>
                   </button>
                   <button
-                    onClick={() => { setUserDropdownOpen(false); onLogout?.(); }}
-                    className="w-full text-left text-xs font-semibold p-2 rounded-md hover:bg-red-50 text-red-500 transition-colors"
+                    onClick={() => { setUserDropdownOpen(false); onNavigate('/profile'); }}
+                    className="w-full text-left text-xs font-semibold p-2 rounded-md hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 hover:text-cobalt transition-colors flex items-center gap-2"
                   >
-                    Logout
+                    <User className="w-3.5 h-3.5 text-zinc-400" />
+                    <span>Profile Settings</span>
+                  </button>
+                  <div className="my-1 border-t border-ice-border/60" />
+                  <button
+                    onClick={() => { setUserDropdownOpen(false); onLogout?.(); }}
+                    className="w-full text-left text-xs font-semibold p-2 rounded-md hover:bg-red-50 dark:hover:bg-red-950/30 text-red-500 transition-colors flex items-center gap-2"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    <span>Logout</span>
                   </button>
                 </div>
               )}
@@ -436,16 +454,32 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                 Hi, {currentUser.name}
               </div>
               <button
-                onClick={() => { setMobileMenuOpen(false); onNavigate('/profile'); }}
-                className="w-full text-left text-sm font-semibold py-2 px-3 rounded-lg hover:bg-slate-100 text-slate-700 transition-colors"
+                onClick={() => { 
+                  setMobileMenuOpen(false); 
+                  if (onOpenTrackOrder) {
+                    onOpenTrackOrder();
+                  } else {
+                    onNavigate('/profile');
+                  }
+                }}
+                className="w-full text-left text-sm font-semibold py-2 px-3 rounded-lg hover:bg-slate-100 text-slate-700 transition-colors flex items-center gap-2"
               >
-                Profile Settings
+                <Package className="w-4 h-4 text-cobalt" />
+                <span>Your Bookings</span>
+              </button>
+              <button
+                onClick={() => { setMobileMenuOpen(false); onNavigate('/profile'); }}
+                className="w-full text-left text-sm font-semibold py-2 px-3 rounded-lg hover:bg-slate-100 text-slate-700 transition-colors flex items-center gap-2"
+              >
+                <User className="w-4 h-4 text-zinc-400" />
+                <span>Profile Settings</span>
               </button>
               <button
                 onClick={() => { setMobileMenuOpen(false); onLogout?.(); }}
-                className="w-full text-left text-sm font-semibold py-2 px-3 rounded-lg hover:bg-red-50 text-red-500 transition-colors"
+                className="w-full text-left text-sm font-semibold py-2 px-3 rounded-lg hover:bg-red-50 text-red-500 transition-colors flex items-center gap-2"
               >
-                Logout
+                <X className="w-4 h-4" />
+                <span>Logout</span>
               </button>
             </div>
           ) : (

@@ -737,70 +737,70 @@ const BASE_MODELS: Model[] = [
   { id: 'sam-s22',      brandId: 'brand-samsung', name: 'Galaxy S22', category: 'midrange', releaseYear: 2022, basePrice128GB: 12000, series: 'S Series' },
   { id: 'sam-s23',      brandId: 'brand-samsung', name: 'Galaxy S23', category: 'premium',  releaseYear: 2023, basePrice128GB: 17000, series: 'S Series' },
   { id: 'sam-s24',      brandId: 'brand-samsung', name: 'Galaxy S24', category: 'premium',  releaseYear: 2024, basePrice128GB: 25000, series: 'S Series' },
-  { id: 'sam-s25',      brandId: 'brand-samsung', name: 'Galaxy S25', category: 'premium',  releaseYear: 2025, basePrice128GB: 30000, series: 'S Series' },
-  { id: 'sam-s21plus',  brandId: 'brand-samsung', name: 'Galaxy S21 Plus', category: 'midrange', releaseYear: 2021, basePrice128GB: 11000, series: 'S Series' },
-  { id: 'sam-s22plus',  brandId: 'brand-samsung', name: 'Galaxy S22 Plus', category: 'premium',  releaseYear: 2022, basePrice128GB: 15000, series: 'S Series' },
-  { id: 'sam-s23plus',  brandId: 'brand-samsung', name: 'Galaxy S23 Plus', category: 'premium',  releaseYear: 2023, basePrice128GB: 20000, series: 'S Series' },
-  { id: 'sam-s24plus',  brandId: 'brand-samsung', name: 'Galaxy S24 Plus', category: 'premium',  releaseYear: 2024, basePrice128GB: 32000, series: 'S Series' },
-  { id: 'sam-s25plus',  brandId: 'brand-samsung', name: 'Galaxy S25 Plus', category: 'flagship', releaseYear: 2025, basePrice128GB: 35000, series: 'S Series' },
-  { id: 'sam-s21fe',    brandId: 'brand-samsung', name: 'Galaxy S21 FE', category: 'midrange', releaseYear: 2021, basePrice128GB:  8500, series: 'S Series' },
-  { id: 'sam-s23fe',    brandId: 'brand-samsung', name: 'Galaxy S23 FE', category: 'midrange', releaseYear: 2023, basePrice128GB: 13000, series: 'S Series' },
-  { id: 'sam-s24fe',    brandId: 'brand-samsung', name: 'Galaxy S24 FE', category: 'midrange', releaseYear: 2024, basePrice128GB: 18000, series: 'S Series' },
-  { id: 'sam-flip3',    brandId: 'brand-samsung', name: 'Galaxy Z Flip 3', category: 'premium',  releaseYear: 2021, basePrice128GB: 11000, series: 'Z Fold & Z Flip' },
-  { id: 'sam-flip4',    brandId: 'brand-samsung', name: 'Galaxy Z Flip 4', category: 'premium',  releaseYear: 2022, basePrice128GB: 16000, series: 'Z Fold & Z Flip' },
-  { id: 'sam-flip5',    brandId: 'brand-samsung', name: 'Galaxy Z Flip 5', category: 'flagship', releaseYear: 2023, basePrice128GB: 22000, series: 'Z Fold & Z Flip' },
-  { id: 'sam-flip6',    brandId: 'brand-samsung', name: 'Galaxy Z Flip 6', category: 'flagship', releaseYear: 2024, basePrice128GB: 28000, series: 'Z Fold & Z Flip' },
-  { id: 'sam-fold2',    brandId: 'brand-samsung', name: 'Galaxy Z Fold 2', category: 'premium',  releaseYear: 2020, basePrice128GB: 18000, series: 'Z Fold & Z Flip' },
-  { id: 'sam-fold3',    brandId: 'brand-samsung', name: 'Galaxy Z Fold 3', category: 'premium',  releaseYear: 2021, basePrice128GB: 26000, series: 'Z Fold & Z Flip' },
-  { id: 'sam-fold4',    brandId: 'brand-samsung', name: 'Galaxy Z Fold 4', category: 'flagship', releaseYear: 2022, basePrice128GB: 38000, series: 'Z Fold & Z Flip' },
-  { id: 'sam-fold5',    brandId: 'brand-samsung', name: 'Galaxy Z Fold 5', category: 'flagship', releaseYear: 2023, basePrice128GB: 45000, series: 'Z Fold & Z Flip' },
-  { id: 'sam-fold6',    brandId: 'brand-samsung', name: 'Galaxy Z Fold 6', category: 'flagship', releaseYear: 2024, basePrice128GB: 55000, series: 'Z Fold & Z Flip' },
-  { id: 'sam-a13',      brandId: 'brand-samsung', name: 'Galaxy A13', category: 'budget',   releaseYear: 2022, basePrice128GB:  4500, series: 'A Series' },
-  { id: 'sam-a23-4g',   brandId: 'brand-samsung', name: 'Galaxy A23 4G', category: 'budget',   releaseYear: 2022, basePrice128GB:  6000, series: 'A Series' },
-  { id: 'sam-a23-5g',   brandId: 'brand-samsung', name: 'Galaxy A23 5G', category: 'budget',   releaseYear: 2022, basePrice128GB:  6500, series: 'A Series' },
-  { id: 'sam-a33',      brandId: 'brand-samsung', name: 'Galaxy A33', category: 'midrange', releaseYear: 2022, basePrice128GB:  6500, series: 'A Series' },
-  { id: 'sam-a53',      brandId: 'brand-samsung', name: 'Galaxy A53', category: 'midrange', releaseYear: 2022, basePrice128GB:  8000, series: 'A Series' },
-  { id: 'sam-a73',      brandId: 'brand-samsung', name: 'Galaxy A73', category: 'midrange', releaseYear: 2022, basePrice128GB: 11000, series: 'A Series' },
-  { id: 'sam-a14-4g',   brandId: 'brand-samsung', name: 'Galaxy A14 4G', category: 'budget',   releaseYear: 2023, basePrice128GB:  5500, series: 'A Series' },
-  { id: 'sam-a14-5g',   brandId: 'brand-samsung', name: 'Galaxy A14 5G', category: 'budget',   releaseYear: 2023, basePrice128GB:  6000, series: 'A Series' },
-  { id: 'sam-a24',      brandId: 'brand-samsung', name: 'Galaxy A24', category: 'budget',   releaseYear: 2023, basePrice128GB:  7500, series: 'A Series' },
-  { id: 'sam-a34',      brandId: 'brand-samsung', name: 'Galaxy A34', category: 'midrange', releaseYear: 2023, basePrice128GB:  8500, series: 'A Series' },
-  { id: 'sam-a54',      brandId: 'brand-samsung', name: 'Galaxy A54', category: 'midrange', releaseYear: 2023, basePrice128GB: 10000, series: 'A Series' },
-  { id: 'sam-a15-4g',   brandId: 'brand-samsung', name: 'Galaxy A15 4G', category: 'budget',   releaseYear: 2024, basePrice128GB:  6500, series: 'A Series' },
-  { id: 'sam-a15-5g',   brandId: 'brand-samsung', name: 'Galaxy A15 5G', category: 'budget',   releaseYear: 2024, basePrice128GB:  7000, series: 'A Series' },
-  { id: 'sam-a25',      brandId: 'brand-samsung', name: 'Galaxy A25', category: 'midrange', releaseYear: 2024, basePrice128GB:  9000, series: 'A Series' },
-  { id: 'sam-a35',      brandId: 'brand-samsung', name: 'Galaxy A35', category: 'midrange', releaseYear: 2024, basePrice128GB: 11000, series: 'A Series' },
-  { id: 'sam-a55',      brandId: 'brand-samsung', name: 'Galaxy A55', category: 'midrange', releaseYear: 2024, basePrice128GB: 14000, series: 'A Series' },
-  { id: 'sam-a16',      brandId: 'brand-samsung', name: 'Galaxy A16', category: 'budget',   releaseYear: 2025, basePrice128GB:  8500, series: 'A Series' },
-  { id: 'sam-a26',      brandId: 'brand-samsung', name: 'Galaxy A26', category: 'midrange', releaseYear: 2025, basePrice128GB: 11000, series: 'A Series' },
-  { id: 'sam-a36',      brandId: 'brand-samsung', name: 'Galaxy A36', category: 'midrange', releaseYear: 2025, basePrice128GB: 13500, series: 'A Series' },
-  { id: 'sam-a56',      brandId: 'brand-samsung', name: 'Galaxy A56', category: 'midrange', releaseYear: 2025, basePrice128GB: 18000, series: 'A Series' },
-  { id: 'sam-f06',      brandId: 'brand-samsung', name: 'Galaxy F06', category: 'budget',   releaseYear: 2024, basePrice128GB:  4500, series: 'F Series' },
-  { id: 'sam-f16',      brandId: 'brand-samsung', name: 'Galaxy F16', category: 'budget',   releaseYear: 2024, basePrice128GB:  6000, series: 'F Series' },
-  { id: 'sam-f36',      brandId: 'brand-samsung', name: 'Galaxy F36', category: 'budget',   releaseYear: 2024, basePrice128GB:  8000, series: 'F Series' },
-  { id: 'sam-f56',      brandId: 'brand-samsung', name: 'Galaxy F56', category: 'midrange', releaseYear: 2024, basePrice128GB: 11000, series: 'F Series' },
-  { id: 'sam-m06',      brandId: 'brand-samsung', name: 'Galaxy M06', category: 'budget',   releaseYear: 2024, basePrice128GB:  4500, series: 'M Series' },
-  { id: 'sam-m16',      brandId: 'brand-samsung', name: 'Galaxy M16', category: 'budget',   releaseYear: 2024, basePrice128GB:  6000, series: 'M Series' },
-  { id: 'sam-m36',      brandId: 'brand-samsung', name: 'Galaxy M36', category: 'budget',   releaseYear: 2024, basePrice128GB:  8500, series: 'M Series' },
-  { id: 'sam-m56',      brandId: 'brand-samsung', name: 'Galaxy M56', category: 'midrange', releaseYear: 2024, basePrice128GB: 11500, series: 'M Series' },
-  { id: 'sam-m55',      brandId: 'brand-samsung', name: 'Galaxy M55', category: 'midrange', releaseYear: 2024, basePrice128GB: 10500, series: 'M Series' },
-  { id: 'sam-m35',      brandId: 'brand-samsung', name: 'Galaxy M35', category: 'budget',   releaseYear: 2024, basePrice128GB:  8000, series: 'M Series' },
-  { id: 'sam-m33',      brandId: 'brand-samsung', name: 'Galaxy M33', category: 'budget',   releaseYear: 2022, basePrice128GB:  5500, series: 'M Series' },
+  { id: 'sam-s25',      brandId: 'brand-samsung', name: 'Galaxy S25', category: 'premium',  releaseYear: 2025, basePrice128GB: 30000, series: 'S Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-s23-5g.jpg' },
+  { id: 'sam-s21plus',  brandId: 'brand-samsung', name: 'Galaxy S21 Plus', category: 'midrange', releaseYear: 2021, basePrice128GB: 11000, series: 'S Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-s21-plus-5g.jpg' },
+  { id: 'sam-s22plus',  brandId: 'brand-samsung', name: 'Galaxy S22 Plus', category: 'premium',  releaseYear: 2022, basePrice128GB: 15000, series: 'S Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-s22-plus-5g.jpg' },
+  { id: 'sam-s23plus',  brandId: 'brand-samsung', name: 'Galaxy S23 Plus', category: 'premium',  releaseYear: 2023, basePrice128GB: 20000, series: 'S Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-s23-plus-5g.jpg' },
+  { id: 'sam-s24plus',  brandId: 'brand-samsung', name: 'Galaxy S24 Plus', category: 'premium',  releaseYear: 2024, basePrice128GB: 32000, series: 'S Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-s23-plus-5g.jpg' },
+  { id: 'sam-s25plus',  brandId: 'brand-samsung', name: 'Galaxy S25 Plus', category: 'flagship', releaseYear: 2025, basePrice128GB: 35000, series: 'S Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-s23-plus-5g.jpg' },
+  { id: 'sam-s21fe',    brandId: 'brand-samsung', name: 'Galaxy S21 FE', category: 'midrange', releaseYear: 2021, basePrice128GB:  8500, series: 'S Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-s21-fe-5g.jpg' },
+  { id: 'sam-s23fe',    brandId: 'brand-samsung', name: 'Galaxy S23 FE', category: 'midrange', releaseYear: 2023, basePrice128GB: 13000, series: 'S Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-s23-fe.jpg' },
+  { id: 'sam-s24fe',    brandId: 'brand-samsung', name: 'Galaxy S24 FE', category: 'midrange', releaseYear: 2024, basePrice128GB: 18000, series: 'S Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-s23-fe.jpg' },
+  { id: 'sam-flip3',    brandId: 'brand-samsung', name: 'Galaxy Z Flip 3', category: 'premium',  releaseYear: 2021, basePrice128GB: 11000, series: 'Z Fold & Z Flip', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-z-flip3-5g.jpg' },
+  { id: 'sam-flip4',    brandId: 'brand-samsung', name: 'Galaxy Z Flip 4', category: 'premium',  releaseYear: 2022, basePrice128GB: 16000, series: 'Z Fold & Z Flip', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-z-flip4.jpg' },
+  { id: 'sam-flip5',    brandId: 'brand-samsung', name: 'Galaxy Z Flip 5', category: 'flagship', releaseYear: 2023, basePrice128GB: 22000, series: 'Z Fold & Z Flip', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-z-flip5.jpg' },
+  { id: 'sam-flip6',    brandId: 'brand-samsung', name: 'Galaxy Z Flip 6', category: 'flagship', releaseYear: 2024, basePrice128GB: 28000, series: 'Z Fold & Z Flip', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-z-flip6.jpg' },
+  { id: 'sam-fold2',    brandId: 'brand-samsung', name: 'Galaxy Z Fold 2', category: 'premium',  releaseYear: 2020, basePrice128GB: 18000, series: 'Z Fold & Z Flip', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-z-fold2-5g.jpg' },
+  { id: 'sam-fold3',    brandId: 'brand-samsung', name: 'Galaxy Z Fold 3', category: 'premium',  releaseYear: 2021, basePrice128GB: 26000, series: 'Z Fold & Z Flip', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-z-fold3-5g.jpg' },
+  { id: 'sam-fold4',    brandId: 'brand-samsung', name: 'Galaxy Z Fold 4', category: 'flagship', releaseYear: 2022, basePrice128GB: 38000, series: 'Z Fold & Z Flip', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-z-fold4.jpg' },
+  { id: 'sam-fold5',    brandId: 'brand-samsung', name: 'Galaxy Z Fold 5', category: 'flagship', releaseYear: 2023, basePrice128GB: 45000, series: 'Z Fold & Z Flip', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-z-fold5.jpg' },
+  { id: 'sam-fold6',    brandId: 'brand-samsung', name: 'Galaxy Z Fold 6', category: 'flagship', releaseYear: 2024, basePrice128GB: 55000, series: 'Z Fold & Z Flip', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-z-fold6.jpg' },
+  { id: 'sam-a13',      brandId: 'brand-samsung', name: 'Galaxy A13', category: 'budget',   releaseYear: 2022, basePrice128GB:  4500, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-a13.jpg' },
+  { id: 'sam-a23-4g',   brandId: 'brand-samsung', name: 'Galaxy A23 4G', category: 'budget',   releaseYear: 2022, basePrice128GB:  6000, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-a23-4g.jpg' },
+  { id: 'sam-a23-5g',   brandId: 'brand-samsung', name: 'Galaxy A23 5G', category: 'budget',   releaseYear: 2022, basePrice128GB:  6500, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-a23-5g.jpg' },
+  { id: 'sam-a33',      brandId: 'brand-samsung', name: 'Galaxy A33', category: 'midrange', releaseYear: 2022, basePrice128GB:  6500, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-a33-5g.jpg' },
+  { id: 'sam-a53',      brandId: 'brand-samsung', name: 'Galaxy A53', category: 'midrange', releaseYear: 2022, basePrice128GB:  8000, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-a53-5g.jpg' },
+  { id: 'sam-a73',      brandId: 'brand-samsung', name: 'Galaxy A73', category: 'midrange', releaseYear: 2022, basePrice128GB: 11000, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-a73-5g.jpg' },
+  { id: 'sam-a14-4g',   brandId: 'brand-samsung', name: 'Galaxy A14 4G', category: 'budget',   releaseYear: 2023, basePrice128GB:  5500, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-a14.jpg' },
+  { id: 'sam-a14-5g',   brandId: 'brand-samsung', name: 'Galaxy A14 5G', category: 'budget',   releaseYear: 2023, basePrice128GB:  6000, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-a14-5g.jpg' },
+  { id: 'sam-a24',      brandId: 'brand-samsung', name: 'Galaxy A24', category: 'budget',   releaseYear: 2023, basePrice128GB:  7500, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-a24-4g.jpg' },
+  { id: 'sam-a34',      brandId: 'brand-samsung', name: 'Galaxy A34', category: 'midrange', releaseYear: 2023, basePrice128GB:  8500, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-a34-5g.jpg' },
+  { id: 'sam-a54',      brandId: 'brand-samsung', name: 'Galaxy A54', category: 'midrange', releaseYear: 2023, basePrice128GB: 10000, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-a54-5g.jpg' },
+  { id: 'sam-a15-4g',   brandId: 'brand-samsung', name: 'Galaxy A15 4G', category: 'budget',   releaseYear: 2024, basePrice128GB:  6500, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-a15.jpg' },
+  { id: 'sam-a15-5g',   brandId: 'brand-samsung', name: 'Galaxy A15 5G', category: 'budget',   releaseYear: 2024, basePrice128GB:  7000, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-a15-5g.jpg' },
+  { id: 'sam-a25',      brandId: 'brand-samsung', name: 'Galaxy A25', category: 'midrange', releaseYear: 2024, basePrice128GB:  9000, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-a25.jpg' },
+  { id: 'sam-a35',      brandId: 'brand-samsung', name: 'Galaxy A35', category: 'midrange', releaseYear: 2024, basePrice128GB: 11000, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-a35.jpg' },
+  { id: 'sam-a55',      brandId: 'brand-samsung', name: 'Galaxy A55', category: 'midrange', releaseYear: 2024, basePrice128GB: 14000, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-a55.jpg' },
+  { id: 'sam-a16',      brandId: 'brand-samsung', name: 'Galaxy A16', category: 'budget',   releaseYear: 2025, basePrice128GB:  8500, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-a15-5g.jpg' },
+  { id: 'sam-a26',      brandId: 'brand-samsung', name: 'Galaxy A26', category: 'midrange', releaseYear: 2025, basePrice128GB: 11000, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-a25.jpg' },
+  { id: 'sam-a36',      brandId: 'brand-samsung', name: 'Galaxy A36', category: 'midrange', releaseYear: 2025, basePrice128GB: 13500, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-a35.jpg' },
+  { id: 'sam-a56',      brandId: 'brand-samsung', name: 'Galaxy A56', category: 'midrange', releaseYear: 2025, basePrice128GB: 18000, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-a55.jpg' },
+  { id: 'sam-f06',      brandId: 'brand-samsung', name: 'Galaxy F06', category: 'budget',   releaseYear: 2024, basePrice128GB:  4500, series: 'F Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-a25.jpg' },
+  { id: 'sam-f16',      brandId: 'brand-samsung', name: 'Galaxy F16', category: 'budget',   releaseYear: 2024, basePrice128GB:  6000, series: 'F Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-a25.jpg' },
+  { id: 'sam-f36',      brandId: 'brand-samsung', name: 'Galaxy F36', category: 'budget',   releaseYear: 2024, basePrice128GB:  8000, series: 'F Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-a35.jpg' },
+  { id: 'sam-f56',      brandId: 'brand-samsung', name: 'Galaxy F56', category: 'midrange', releaseYear: 2024, basePrice128GB: 11000, series: 'F Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-a55.jpg' },
+  { id: 'sam-m06',      brandId: 'brand-samsung', name: 'Galaxy M06', category: 'budget',   releaseYear: 2024, basePrice128GB:  4500, series: 'M Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-a15-5g.jpg' },
+  { id: 'sam-m16',      brandId: 'brand-samsung', name: 'Galaxy M16', category: 'budget',   releaseYear: 2024, basePrice128GB:  6000, series: 'M Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-a15-5g.jpg' },
+  { id: 'sam-m36',      brandId: 'brand-samsung', name: 'Galaxy M36', category: 'budget',   releaseYear: 2024, basePrice128GB:  8500, series: 'M Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-a35.jpg' },
+  { id: 'sam-m56',      brandId: 'brand-samsung', name: 'Galaxy M56', category: 'midrange', releaseYear: 2024, basePrice128GB: 11500, series: 'M Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-a55.jpg' },
+  { id: 'sam-m55',      brandId: 'brand-samsung', name: 'Galaxy M55', category: 'midrange', releaseYear: 2024, basePrice128GB: 10500, series: 'M Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-a55.jpg' },
+  { id: 'sam-m35',      brandId: 'brand-samsung', name: 'Galaxy M35', category: 'budget',   releaseYear: 2024, basePrice128GB:  8000, series: 'M Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-a35.jpg' },
+  { id: 'sam-m33',      brandId: 'brand-samsung', name: 'Galaxy M33', category: 'budget',   releaseYear: 2022, basePrice128GB:  5500, series: 'M Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-a33-5g.jpg' },
 
   // --- XIAOMI ---
-  { id: 'xi-14u',     brandId: 'brand-xiaomi', name: 'Xiaomi 14 Ultra', category: 'flagship', releaseYear: 2024, basePrice128GB: 28000, series: 'Xiaomi Series' },
-  { id: 'xi-14',      brandId: 'brand-xiaomi', name: 'Xiaomi 14', category: 'flagship', releaseYear: 2024, basePrice128GB: 20000, series: 'Xiaomi Series' },
-  { id: 'xi-13p',     brandId: 'brand-xiaomi', name: 'Xiaomi 13 Pro', category: 'flagship', releaseYear: 2023, basePrice128GB: 18000, series: 'Xiaomi Series' },
-  { id: 'xi-13',      brandId: 'brand-xiaomi', name: 'Xiaomi 13', category: 'premium',  releaseYear: 2023, basePrice128GB: 13000, series: 'Xiaomi Series' },
-  { id: 'xi-12p',     brandId: 'brand-xiaomi', name: 'Xiaomi 12 Pro', category: 'premium',  releaseYear: 2022, basePrice128GB: 11000, series: 'Xiaomi Series' },
-  { id: 'xi-12',      brandId: 'brand-xiaomi', name: 'Xiaomi 12', category: 'midrange', releaseYear: 2022, basePrice128GB:  8000, series: 'Xiaomi Series' },
-  { id: 'xi-n14p',    brandId: 'brand-xiaomi', name: 'Redmi Note 14 Pro+', category: 'midrange', releaseYear: 2024, basePrice128GB: 12000, series: 'Redmi Note Series' },
-  { id: 'xi-n14',     brandId: 'brand-xiaomi', name: 'Redmi Note 14', category: 'midrange', releaseYear: 2024, basePrice128GB:  9000, series: 'Redmi Note Series' },
-  { id: 'xi-n13p',    brandId: 'brand-xiaomi', name: 'Redmi Note 13 Pro+', category: 'midrange', releaseYear: 2023, basePrice128GB: 10000, series: 'Redmi Note Series' },
-  { id: 'xi-n13',     brandId: 'brand-xiaomi', name: 'Redmi Note 13', category: 'budget',   releaseYear: 2023, basePrice128GB:  6500, series: 'Redmi Note Series' },
-  { id: 'xi-poc6p',   brandId: 'brand-xiaomi', name: 'POCO F6 Pro', category: 'premium',  releaseYear: 2024, basePrice128GB: 16000, series: 'POCO Series' },
-  { id: 'xi-poc6',    brandId: 'brand-xiaomi', name: 'POCO F6', category: 'midrange', releaseYear: 2024, basePrice128GB: 11000, series: 'POCO Series' },
-  { id: 'xi-poc5p',   brandId: 'brand-xiaomi', name: 'POCO F5 Pro', category: 'midrange', releaseYear: 2023, basePrice128GB: 10000, series: 'POCO Series' },
+  { id: 'xi-14u',     brandId: 'brand-xiaomi', name: 'Xiaomi 14 Ultra', category: 'flagship', releaseYear: 2024, basePrice128GB: 28000, series: 'Xiaomi Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/xiaomi-14-ultra.jpg' },
+  { id: 'xi-14',      brandId: 'brand-xiaomi', name: 'Xiaomi 14', category: 'flagship', releaseYear: 2024, basePrice128GB: 20000, series: 'Xiaomi Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/xiaomi-14.jpg' },
+  { id: 'xi-13p',     brandId: 'brand-xiaomi', name: 'Xiaomi 13 Pro', category: 'flagship', releaseYear: 2023, basePrice128GB: 18000, series: 'Xiaomi Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/xiaomi-13-pro.jpg' },
+  { id: 'xi-13',      brandId: 'brand-xiaomi', name: 'Xiaomi 13', category: 'premium',  releaseYear: 2023, basePrice128GB: 13000, series: 'Xiaomi Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/xiaomi-13.jpg' },
+  { id: 'xi-12p',     brandId: 'brand-xiaomi', name: 'Xiaomi 12 Pro', category: 'premium',  releaseYear: 2022, basePrice128GB: 11000, series: 'Xiaomi Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/xiaomi-12-pro.jpg' },
+  { id: 'xi-12',      brandId: 'brand-xiaomi', name: 'Xiaomi 12', category: 'midrange', releaseYear: 2022, basePrice128GB:  8000, series: 'Xiaomi Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/xiaomi-12.jpg' },
+  { id: 'xi-n14p',    brandId: 'brand-xiaomi', name: 'Redmi Note 14 Pro+', category: 'midrange', releaseYear: 2024, basePrice128GB: 12000, series: 'Redmi Note Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/xiaomi-redmi-note-13-pro-plus.jpg' },
+  { id: 'xi-n14',     brandId: 'brand-xiaomi', name: 'Redmi Note 14', category: 'midrange', releaseYear: 2024, basePrice128GB:  9000, series: 'Redmi Note Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/xiaomi-redmi-note-13-4g.jpg' },
+  { id: 'xi-n13p',    brandId: 'brand-xiaomi', name: 'Redmi Note 13 Pro+', category: 'midrange', releaseYear: 2023, basePrice128GB: 10000, series: 'Redmi Note Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/xiaomi-redmi-note-13-pro-plus.jpg' },
+  { id: 'xi-n13',     brandId: 'brand-xiaomi', name: 'Redmi Note 13', category: 'budget',   releaseYear: 2023, basePrice128GB:  6500, series: 'Redmi Note Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/xiaomi-redmi-note-13-4g.jpg' },
+  { id: 'xi-poc6p',   brandId: 'brand-xiaomi', name: 'POCO F6 Pro', category: 'premium',  releaseYear: 2024, basePrice128GB: 16000, series: 'POCO Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/xiaomi-poco-x6-pro.jpg' },
+  { id: 'xi-poc6',    brandId: 'brand-xiaomi', name: 'POCO F6', category: 'midrange', releaseYear: 2024, basePrice128GB: 11000, series: 'POCO Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/xiaomi-poco-x6.jpg' },
+  { id: 'xi-poc5p',   brandId: 'brand-xiaomi', name: 'POCO F5 Pro', category: 'midrange', releaseYear: 2023, basePrice128GB: 10000, series: 'POCO Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/xiaomi-poco-x5-pro.jpg' },
 
   // --- VIVO ---
   { id: 'vi-x200p',    brandId: 'brand-vivo', name: 'vivo X200 Pro', category: 'flagship', releaseYear: 2024, basePrice128GB: 38000, series: 'X Series & Folds' },
@@ -878,6 +878,34 @@ const BASE_MODELS: Model[] = [
   { id: 'goog-6p',  brandId: 'brand-google', name: 'Pixel 6 Pro', category: 'midrange', releaseYear: 2021, basePrice128GB:  8500, series: 'Pixel 6 Series' },
   { id: 'goog-6',   brandId: 'brand-google', name: 'Pixel 6', category: 'budget',   releaseYear: 2021, basePrice128GB:  6000, series: 'Pixel 6 Series' },
   { id: 'goog-6a',  brandId: 'brand-google', name: 'Pixel 6a', category: 'budget',   releaseYear: 2022, basePrice128GB:  6500, series: 'Pixel 6 Series' },
+
+  // --- OPPO ---
+  { id: 'catalog-oppo-a3', brandId: 'brand-oppo', name: 'OPPO A3', category: 'budget', releaseYear: 2025, basePrice128GB: 4000, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a3.jpg' },
+  { id: 'catalog-oppo-a3x', brandId: 'brand-oppo', name: 'OPPO A3x', category: 'budget', releaseYear: 2025, basePrice128GB: 4000, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a3x.jpg' },
+  { id: 'catalog-oppo-a3-pro', brandId: 'brand-oppo', name: 'OPPO A3 Pro', category: 'flagship', releaseYear: 2025, basePrice128GB: 69500, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a3-pro.jpg' },
+  { id: 'catalog-oppo-a5', brandId: 'brand-oppo', name: 'OPPO A5', category: 'budget', releaseYear: 2025, basePrice128GB: 4000, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a5-2020.jpg' },
+  { id: 'catalog-oppo-a5x', brandId: 'brand-oppo', name: 'OPPO A5x', category: 'budget', releaseYear: 2025, basePrice128GB: 4000, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a3x.jpg' },
+  { id: 'catalog-oppo-a5-pro', brandId: 'brand-oppo', name: 'OPPO A5 Pro', category: 'flagship', releaseYear: 2025, basePrice128GB: 69500, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a3-pro.jpg' },
+  { id: 'catalog-oppo-f25-pro', brandId: 'brand-oppo', name: 'OPPO F25 Pro', category: 'midrange', releaseYear: 2025, basePrice128GB: 12000, series: 'F Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-f25-pro.jpg' },
+  { id: 'catalog-oppo-f27-pro', brandId: 'brand-oppo', name: 'OPPO F27 Pro+', category: 'midrange', releaseYear: 2025, basePrice128GB: 14000, series: 'F Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-f25-pro.jpg' },
+  { id: 'catalog-oppo-reno-12', brandId: 'brand-oppo', name: 'OPPO Reno 12', category: 'premium', releaseYear: 2025, basePrice128GB: 18000, series: 'Reno Series', imageUrl: 'https://fdn.gsmarena.com/imgroot/news/24/05/oppo-reno12-series-announced/-1200/gsmarena_001.jpg' },
+  { id: 'catalog-oppo-reno-12-pro', brandId: 'brand-oppo', name: 'OPPO Reno 12 Pro', category: 'premium', releaseYear: 2025, basePrice128GB: 22000, series: 'Reno Series', imageUrl: 'https://fdn.gsmarena.com/imgroot/news/24/05/oppo-reno12-series-announced/-1200/gsmarena_002.jpg' },
+  { id: 'catalog-oppo-find-x8', brandId: 'brand-oppo', name: 'OPPO Find X8', category: 'flagship', releaseYear: 2025, basePrice128GB: 42000, series: 'Find X Series', imageUrl: 'https://fdn.gsmarena.com/imgroot/news/24/10/oppo-find-x8-official/-1200/gsmarena_001.jpg' },
+  { id: 'catalog-oppo-find-x8-pro', brandId: 'brand-oppo', name: 'OPPO Find X8 Pro', category: 'flagship', releaseYear: 2025, basePrice128GB: 52000, series: 'Find X Series', imageUrl: 'https://fdn.gsmarena.com/imgroot/news/24/10/oppo-find-x8-official/-1200/gsmarena_002.jpg' },
+
+  // --- NOTHING ---
+  { id: 'catalog-nothing-phone-1', brandId: 'brand-nothing', name: 'Nothing Phone 1', category: 'midrange', releaseYear: 2022, basePrice128GB: 12000, series: 'Phone Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/nothing-phone-1.jpg' },
+  { id: 'catalog-nothing-phone-2', brandId: 'brand-nothing', name: 'Nothing Phone 2', category: 'premium', releaseYear: 2023, basePrice128GB: 18000, series: 'Phone Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/nothing-phone-1.jpg' },
+  { id: 'catalog-nothing-phone-2a', brandId: 'brand-nothing', name: 'Nothing Phone 2a', category: 'budget', releaseYear: 2024, basePrice128GB: 11000, series: 'Phone Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/nothing-phone-2a.jpg' },
+  { id: 'catalog-nothing-cmf-phone-1', brandId: 'brand-nothing', name: 'CMF Phone 1', category: 'budget', releaseYear: 2024, basePrice128GB: 8500, series: 'Phone Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/nothing-phone-2a.jpg' },
+
+  // --- MOTOROLA ---
+  { id: 'catalog-motorola-g04', brandId: 'brand-motorola', name: 'Motorola G04', category: 'budget', releaseYear: 2024, basePrice128GB: 5000, series: 'G Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/motorola-g04.jpg' },
+  { id: 'catalog-motorola-g05', brandId: 'brand-motorola', name: 'Motorola G05', category: 'budget', releaseYear: 2025, basePrice128GB: 5500, series: 'G Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/motorola-moto-g24.jpg' },
+  { id: 'catalog-motorola-edge-50-fusion', brandId: 'brand-motorola', name: 'Motorola Edge 50 Fusion', category: 'midrange', releaseYear: 2024, basePrice128GB: 12000, series: 'Edge Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/motorola-edge-50-fusion.jpg' },
+  { id: 'catalog-motorola-edge-50-pro', brandId: 'brand-motorola', name: 'Motorola Edge 50 Pro', category: 'premium', releaseYear: 2024, basePrice128GB: 18000, series: 'Edge Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/motorola-edge-50-pro.jpg' },
+  { id: 'catalog-motorola-edge-50-ultra', brandId: 'brand-motorola', name: 'Motorola Edge 50 Ultra', category: 'flagship', releaseYear: 2024, basePrice128GB: 32000, series: 'Edge Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/motorola-edge-50-ultra.jpg' },
+  { id: 'catalog-motorola-razr-50-ultra', brandId: 'brand-motorola', name: 'Motorola Razr 50 Ultra', category: 'flagship', releaseYear: 2024, basePrice128GB: 45000, series: 'Razr Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/motorola-razr-50-ultra.jpg' },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -917,13 +945,17 @@ export const SMARTWATCH_MODELS: Model[] = [
   { id: 'samsung-watch-6', brandId: 'brand-samsung', name: 'Galaxy Watch 6', category: 'midrange', releaseYear: 2023, basePrice128GB: 11000, series: 'Galaxy Watch 6', supportedStorageGb: [16], supportedRamGb: [2], imageUrl: 'https://images.samsung.com/is/image/samsung/p6pim/in/sm-r930nzeainu/gallery/in-galaxy-watch6-r930-sm-r930nzeainu-537424785?$650_519_PNG$' }
 ];
 
-export const MODELS: Model[] = [
+export const SMARTPHONE_MODELS: Model[] = [
   ...BASE_MODELS,
-  ...TABLET_MODELS,
-  ...SMARTWATCH_MODELS,
   ...CATALOG_ADDITIONS.filter((addition) => !BASE_MODELS.some((model) =>
     model.brandId === addition.brandId && model.name.toLowerCase() === addition.name.toLowerCase(),
   )),
+].filter(m => !isTabletDevice(m.brandId, m.name, m.id) && !isSmartwatchDevice(m.brandId, m.name, m.id));
+
+export const MODELS: Model[] = [
+  ...SMARTPHONE_MODELS,
+  ...TABLET_MODELS,
+  ...SMARTWATCH_MODELS,
 ];
 
 // Helper to get historically accurate colors for a model
@@ -1177,8 +1209,14 @@ export function getPhoneImageForBrand(brandId: string): string {
       return xiaomiPhoneImg;
     case 'brand-vivo':
       return vivoPhoneImg;
+    case 'brand-oppo':
+      return 'https://fdn.gsmarena.com/imgroot/news/24/10/oppo-find-x8-official/-1200/gsmarena_001.jpg';
+    case 'brand-nothing':
+      return 'https://fdn2.gsmarena.com/vv/bigpic/nothing-phone-2a.jpg';
+    case 'brand-motorola':
+      return 'https://fdn2.gsmarena.com/vv/bigpic/motorola-edge-50-pro.jpg';
     default:
-      return '';
+      return 'https://fdn.gsmarena.com/imgroot/news/24/10/oppo-find-x8-official/-1200/gsmarena_001.jpg';
   }
 }
 
@@ -1250,11 +1288,14 @@ export function getDeviceImage(modelId: string, brandId: string, color?: string,
   if (customImageUrl && customImageUrl.trim().length > 0) {
     return customImageUrl.trim();
   }
-
   const cleanId = redirectedModelId.replace(/^catalog-/, '');
+  const brandSlug = brandId.replace(/^brand-/, '');
+  const deDuplicatedId = cleanId.replace(new RegExp(`^${brandSlug}-${brandSlug}-`), `${brandSlug}-`);
   const possibleKeys = [
     redirectedModelId,
     cleanId,
+    deDuplicatedId,
+    `catalog-${deDuplicatedId}`,
     cleanId.replace(/^apple-iphone-/, 'apple-'),
     cleanId.replace(/^apple-iphone-17-/, 'apple-17'),
     cleanId.replace(/^apple-iphone-16-/, 'apple-16'),

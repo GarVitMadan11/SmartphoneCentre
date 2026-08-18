@@ -48,6 +48,14 @@ export class ApiRequestError extends Error {
   }
 }
 
+export function hasAdminToken(): boolean {
+  try {
+    return Boolean(sessionStorage.getItem('rex_admin_token'));
+  } catch {
+    return false;
+  }
+}
+
 function getStoredAdminToken(): string | null {
   try {
     return sessionStorage.getItem('rex_admin_token');
@@ -356,6 +364,10 @@ export function updateCustomerProfile(name: string, phone: string): Promise<{ us
 }
 
 // ── New Authentication API Helpers ───────────────────────────────────────────
+
+export function fetchAuthConfig(): Promise<{ googleClientId: string }> {
+  return apiFetch<{ googleClientId: string }>('/auth/config').catch(() => ({ googleClientId: '' }));
+}
 
 /** Register with email + password (sends verification email, does not log in) */
 export function registerWithEmail(

@@ -161,6 +161,13 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
   const [accConfirmed, setAccConfirmed] = useState(false);
   const [icloudChecked, setIcloudChecked] = useState<'clear' | 'locked' | null>(null);
 
+  React.useEffect(() => {
+    if (step > 0 && icloudChecked === null) {
+      const hasIcloudLock = selectedDefects.some(d => d.id === 'defect-critical-icloud');
+      setIcloudChecked(hasIcloudLock ? 'locked' : 'clear');
+    }
+  }, [step, icloudChecked, selectedDefects]);
+
   // Critical-failure confirmation modal
   const [criticalModal, setCriticalModal] = useState<{
     visible: boolean;
@@ -1596,6 +1603,14 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   <img 
                     src={getDeviceImage(model.id, model.brandId, variant.color, model.imageUrl)} 
                     alt={model.name} 
+                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      const img = e.target as HTMLImageElement;
+                      const fallback = getDeviceImage('', model.brandId);
+                      if (img.src !== fallback) {
+                        img.src = fallback;
+                      }
+                    }}
                     className="w-full h-full object-contain"
                   />
                 </div>

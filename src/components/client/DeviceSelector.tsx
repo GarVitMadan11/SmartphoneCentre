@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { BRANDS as STATIC_BRANDS, MODELS as STATIC_MODELS, Model, Brand, Variant, generateVariantsForModel, getDeviceImage, getModelSupportedRam, getModelSupportedStorage, getVariantPrice, isTabletDevice } from '../../data/mockDatabase';
+import { BRANDS as STATIC_BRANDS, SMARTPHONE_MODELS as STATIC_SMARTPHONE_MODELS, Model, Brand, Variant, generateVariantsForModel, getDeviceImage, getModelSupportedRam, getModelSupportedStorage, getVariantPrice, isTabletDevice, isSmartwatchDevice } from '../../data/mockDatabase';
+import { applyBrandOrder, applySeriesOrder, applyModelOrder } from '../../utils/ordering';
 import { Search, ChevronRight, Smartphone, Layers, ArrowLeft, ArrowRight, Cpu, Wifi, Radio, X, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -621,8 +622,23 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
   brands: propBrands,
   models: propModels,
 }) => {
-  const BRANDS = propBrands && propBrands.length > 0 ? propBrands : STATIC_BRANDS;
-  const MODELS = propModels && propModels.length > 0 ? propModels : STATIC_MODELS;
+  const [orderVersion, setOrderVersion] = useState(0);
+
+  useEffect(() => {
+    const handleOrderChange = () => setOrderVersion(v => v + 1);
+    window.addEventListener('stc_catalog_order_changed', handleOrderChange);
+    return () => window.removeEventListener('stc_catalog_order_changed', handleOrderChange);
+  }, []);
+
+  const BRANDS = useMemo(() => {
+    const raw = propBrands && propBrands.length > 0 ? propBrands : STATIC_BRANDS;
+    return applyBrandOrder(raw);
+  }, [propBrands, orderVersion]);
+
+  const rawModels = propModels && propModels.length > 0 ? propModels : STATIC_SMARTPHONE_MODELS;
+  const MODELS = useMemo(() => {
+    return rawModels.filter(m => !isTabletDevice(m.brandId, m.name, m.id) && !isSmartwatchDevice(m.brandId, m.name, m.id));
+  }, [rawModels]);
   const [selectedBrandId, setSelectedBrandId] = useState<string>('brand-apple');
   const [selectedSeries, setSelectedSeries] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -680,7 +696,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
     const seriesList = Array.from(seriesSet);
     
     // Sort series list in a smart way (newest/flagship first)
-    return seriesList.sort((a, b) => {
+    const defaultSortedSeries = seriesList.sort((a, b) => {
       const priority = (name: string) => {
         const lower = name.toLowerCase();
         if (lower.includes('17')) return 100;
@@ -704,7 +720,9 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
       };
       return priority(b) - priority(a);
     });
-  }, [selectedBrandId, MODELS]);
+
+    return applySeriesOrder(selectedBrandId, defaultSortedSeries);
+  }, [selectedBrandId, MODELS, orderVersion]);
 
   // Compute the model count and release-year range for each series.
   const seriesStats = useMemo(() => {
@@ -727,7 +745,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
     const isSearching = debouncedSearchQuery.trim() !== '';
     const q = debouncedSearchQuery.toLowerCase().trim();
 
-    return MODELS.filter(model => {
+    const filtered = MODELS.filter(model => {
       const matchesBrand = isSearching ? true : model.brandId === selectedBrandId;
       const matchesSeries = isSearching
         ? true
@@ -766,7 +784,9 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
 
       return matchesBrand && matchesSeries && matchesSearch;
     });
-  }, [selectedBrandId, selectedSeries, debouncedSearchQuery, MODELS, BRANDS]);
+
+    return applyModelOrder(selectedBrandId, filtered);
+  }, [selectedBrandId, selectedSeries, debouncedSearchQuery, MODELS, BRANDS, orderVersion]);
 
   // Generate variants for the selected model
   const modelVariants = useMemo(() => {
@@ -1108,8 +1128,13 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                               <img
                                 src={getDeviceImage(model.id, model.brandId, undefined, model.imageUrl)}
                                 alt={model.name}
+                                referrerPolicy="no-referrer"
                                 onError={(e) => {
-                                  (e.target as HTMLImageElement).src = getDeviceImage('', model.brandId);
+                                  const img = e.target as HTMLImageElement;
+                                  const fallback = getDeviceImage('', model.brandId);
+                                  if (img.src !== fallback) {
+                                    img.src = fallback;
+                                  }
                                 }}
                                 className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
                                 draggable={false}
