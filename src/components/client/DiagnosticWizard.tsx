@@ -3,7 +3,7 @@ import { Model, Variant, getDefectRulesForCategory, DefectRule, isAppleDevice, i
 import { calculateValuation } from '../../utils/valuation';
 import { 
   ArrowLeft, Check, ChevronRight, Activity, Sparkles, 
-  Smartphone, Tablet, Box, Zap, Trash2, ShieldCheck, Printer, Watch,
+  Smartphone, Tablet, Box, Zap, ShieldCheck, Printer, Watch,
   X, Lock, Eye, EyeOff, AlertCircle, Mail, User
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -614,24 +614,12 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
         </div>
       </div>
 
-      {/* On mobile: valuation mini-bar pinned above content */}
-      <div className="lg:hidden bg-canvas-pure border border-ice-border rounded-sm p-3 mb-4 flex items-center justify-between text-left shadow-sm">
-        <div>
-          <span className="text-[9px] font-mono tracking-[0.1em] text-zinc-500 uppercase block">Live Estimate</span>
-          <span className="text-lg font-bold text-cobalt font-outfit">{formatPrice(valuation.finalPrice)}</span>
-        </div>
-        <div className="text-right">
-          <span className="text-[9px] font-mono tracking-[0.1em] text-zinc-500 uppercase block">Base Value</span>
-          <span className="text-xs font-semibold text-ink-slate">{formatPrice(variant.basePrice)}</span>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-8 items-start">
-        {/* Left column: Step Content */}
+      <div className="w-full max-w-4xl mx-auto">
+        {/* Step Content Card */}
         <motion.div 
           layout 
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          className="lg:col-span-7 bg-canvas-pure rounded-sm border border-ice-border p-4 sm:p-6 min-h-[360px] sm:min-h-[420px] flex flex-col justify-between overflow-hidden shadow-premium"
+          className="bg-canvas-pure rounded-sm border border-ice-border p-4 sm:p-6 min-h-[360px] sm:min-h-[420px] flex flex-col justify-between overflow-hidden shadow-premium"
         >
           <AnimatePresence mode="wait">
             {/* STEP 0: Boot & iCloud Check */}
@@ -1662,84 +1650,6 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
             </div>
           )}
         </motion.div>
-
-        {/* Right column: Live price estimator — hidden on mobile (replaced by mini bar) */}
-        <div className="hidden lg:flex lg:col-span-5 bg-canvas-pure rounded-sm border border-ice-border p-6 flex-col justify-between min-h-[300px] shadow-premium">
-          <div>
-            <div className="pb-4 border-b border-white/[0.04] mb-4 text-left">
-              <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-1">Live Valuation</span>
-              <h3 className="text-xl font-light text-ink-navy">
-                Quote Estimator
-              </h3>
-              <p className="text-xs text-ink-muted mt-1 font-light">Your quote updates in real-time as you select your device's condition details.</p>
-            </div>
-
-            {/* Price Ring meter */}
-            <div className="flex flex-col items-center py-6">
-              <div className="relative w-40 h-40 rounded-full flex items-center justify-center">
-                <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 160 160">
-                  {/* Track circle */}
-                  <circle
-                    cx="80"
-                    cy="80"
-                    r="70"
-                    stroke="rgba(59,130,246,0.12)"
-                    strokeWidth="8"
-                    fill="transparent"
-                  />
-                  {/* Progress circle */}
-                  <circle
-                    cx="80"
-                    cy="80"
-                    r="70"
-                    stroke="#3B82F6"
-                    strokeWidth="8"
-                    fill="transparent"
-                    strokeLinecap="round"
-                    strokeDasharray="440"
-                    strokeDashoffset={
-                      valuation.isCritical
-                        ? 440
-                        : 440 - (440 * (valuation.finalPrice / variant.basePrice))
-                    }
-                    className="transition-all duration-700 ease-out"
-                  />
-                </svg>
-                <div className="text-center z-10 px-2">
-                  <span className="text-[9px] font-mono tracking-[0.1em] text-zinc-500 uppercase block">Live Estimate</span>
-                  <span className="text-2xl font-black text-ink-navy font-outfit">
-                    {isPriceLocked ? '₹ XX,XXX' : formatPrice(valuation.finalPrice)}
-                  </span>
-                </div>
-              </div>
-              <span className="text-xs text-ink-slate font-light mt-3">
-                Base Value: {isPriceLocked ? '₹ XX,XXX' : formatPrice(variant.basePrice)}
-              </span>
-            </div>
-          </div>
-
-          {/* Quick list of currently declared issues */}
-          {selectedDefects.length > 0 ? (
-            <div className="border-t border-white/[0.04] pt-4 mt-2 text-left">
-              <span className="text-[10px] font-mono tracking-wider uppercase font-bold text-ink-slate block mb-2">Declared Issues ({selectedDefects.length})</span>
-              <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pr-1">
-                {selectedDefects.map(d => (
-                  <span key={d.id} className="text-[10px] font-semibold bg-red-500/10 text-red-400 px-2 py-0.5 rounded-sm border border-red-500/20 flex items-center gap-1">
-                    <Trash2 
-                      onClick={() => handleToggleDefect(d)}
-                      className="w-2.5 h-2.5 cursor-pointer text-red-400 hover:text-red-500" 
-                    />
-                    {d.description.length > 20 ? d.description.substring(0, 18) + '...' : d.description}
-                  </span>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="text-center py-4 text-xs text-ink-muted border-t border-white/[0.04] border-dashed font-light">
-              No defects declared. Maximum value applicable.
-            </div>
-          )}
-        </div>
       </div>
 
       {/* Cashify-style Price Lock Modal */}

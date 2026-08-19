@@ -28,7 +28,7 @@ const OrderTrackingModal = lazy(() => import('./components/client/OrderTrackingM
 // ─────────────────────────────────────────────────────────────────────────────
 import { 
   Award, ShieldCheck, Zap, Search,
-  TrendingUp, X,
+  X,
   Truck, Lock, CheckCircle2, Sparkles, ArrowRight, Info, Code, GitBranch, Database, Instagram
 } from 'lucide-react';
 
@@ -1578,88 +1578,6 @@ export default function App() {
             </Suspense>
           )}
         </section>
-
-        {/* Right Sidebar (Only during diagnose and schedule workflow) */}
-        {isWorkflow && (
-          <aside className="w-full xl:col-span-3 grid grid-cols-1 sm:grid-cols-3 xl:grid-cols-1 gap-4 xl:gap-6 no-print">
-
-            {/* Live Operations */}
-            <div className="bg-canvas-pure border border-ice-border rounded-sm p-4 sm:p-5 shadow-premium">
-              <div className="border-b border-ice-border/40 pb-2 mb-3 text-left">
-                <span className="text-[10px] font-mono tracking-[0.2em] text-ink-muted uppercase block mb-1">Illustrative / Demo Data</span>
-                <h4 className="font-light text-xl text-ink-navy">Live Operations</h4>
-              </div>
-              <div className="space-y-3 sm:space-y-4">
-                {[
-                  { icon: <TrendingUp className="w-4 h-4" />, bg: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20', label: 'Quote Accuracy', value: '99.4%', delay: '0.1s' },
-                  { icon: <Award className="w-4 h-4" />, bg: 'bg-blue-500/10 text-blue-400 border border-blue-500/20', label: 'Devices Processed', value: '12,400+', delay: '0.2s' },
-                ].map(s => (
-                  <div key={s.label} className="flex items-center gap-3 group text-left">
-                    <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-sm ${s.bg} flex items-center justify-center font-bold group-hover:scale-105 transition-transform flex-shrink-0`}>
-                      {s.icon}
-                    </div>
-                    <div>
-                      <span className="text-[9px] sm:text-[10px] text-ink-muted font-mono tracking-wider uppercase block">{s.label}</span>
-                      <span className="text-xs sm:text-sm font-bold text-ink-navy number-pop" style={{animationDelay: s.delay}}>{s.value}</span>
-                    </div>
-                  </div>
-                ))}
-                <div className="pt-2 border-t border-ice-border/40 text-left">
-                  <div className="flex justify-between text-[9px] text-ink-muted font-mono tracking-wider mb-1.5 uppercase">
-                    <span>Today's Pickups</span>
-                    <span className="font-bold text-cobalt">74%</span>
-                  </div>
-                  <div className="h-1 rounded-full bg-ice-gray overflow-hidden">
-                    <div className="h-full rounded-full bg-cobalt progress-fill" style={{'--progress-width': '74%'} as React.CSSProperties} />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Trade-In Guarantee Card */}
-            <div className="bg-canvas-pure border border-ice-border rounded-sm p-4 sm:p-5 text-xs space-y-2 sm:space-y-3 text-left shadow-premium">
-              <div className="border-b border-ice-border/40 pb-2 mb-2">
-                <span className="text-[10px] font-mono tracking-[0.2em] text-cobalt uppercase block mb-1">Our Promise</span>
-                <h4 className="font-light text-xl text-ink-navy">Trade-In Guarantee</h4>
-              </div>
-              <div className="space-y-3 text-[11px] font-light text-ink-slate leading-relaxed">
-                <div className="flex gap-2 items-start">
-                  <span className="text-emerald-500 font-bold">✓</span>
-                  <div>
-                    <strong className="text-ink-navy block">7-Day Value Lock</strong>
-                    Once you book, your quote is secured for 7 full days.
-                  </div>
-                </div>
-                <div className="flex gap-2 items-start">
-                  <span className="text-emerald-500 font-bold">✓</span>
-                  <div>
-                    <strong className="text-ink-navy block">Doorstep Verification</strong>
-                    Zero hassle. We come to you and complete the deal.
-                  </div>
-                </div>
-                <div className="flex gap-2 items-start">
-                  <span className="text-emerald-500 font-bold">✓</span>
-                  <div>
-                    <strong className="text-ink-navy block">Secure Data Sanitation</strong>
-                    Full compliance military-grade data wipe guarantee.
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Help */}
-            <div className="bg-canvas-pure border border-ice-border rounded-sm p-4 sm:p-5 text-xs flex flex-col justify-between gap-3 text-left shadow-premium">
-              <div>
-                <span className="text-[10px] font-mono tracking-[0.2em] text-ink-muted uppercase block mb-1">Support desk</span>
-                <h4 className="font-light text-xl text-ink-navy">Need Help?</h4>
-                <p className="mt-1 text-ink-muted text-[10px] sm:text-xs leading-relaxed font-light">Corporate trade-in, bulk logistics, or carrier lock valuations?</p>
-              </div>
-              <a href="mailto:support@rephonix.in" className="w-full bg-cobalt hover:bg-cobalt-hover text-white py-2 rounded-sm font-bold text-xs transition-all text-center block">
-                Connect to Helpdesk
-              </a>
-            </div>
-          </aside>
-        )}
       </main>
 
 
