@@ -224,15 +224,6 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
     if (baseVal.isCritical) return baseVal;
 
     let adjustedPrice = baseVal.finalPrice;
-    
-    // Add warranty bonus if under official brand warranty
-    if (warrantyAge === 'under_3m') {
-      adjustedPrice += Math.round(variant.basePrice * 0.10);
-    } else if (warrantyAge === '3_to_6m') {
-      adjustedPrice += Math.round(variant.basePrice * 0.06);
-    } else if (warrantyAge === '6_to_11m') {
-      adjustedPrice += Math.round(variant.basePrice * 0.03);
-    }
 
     // Single SIM adjustment
     if (simType === 'single_sim') {
@@ -243,7 +234,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
       ...baseVal,
       finalPrice: Math.round(adjustedPrice)
     };
-  }, [variant, selectedDefects, warrantyAge, simType]);
+  }, [variant, selectedDefects, simType]);
 
   // Stable receipt reference code — generated once per wizard session
   const receiptRef = useMemo(() => Math.random().toString(36).substr(2, 6).toUpperCase(), []);
@@ -1342,9 +1333,6 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
                           {getIllustration('warranty-under-3m', deviceType)}
                         </div>
-                        <span className="text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-600 px-1.5 py-0.5 rounded-md">
-                          +10% Bonus
-                        </span>
                       </div>
                       <h5 className="font-bold text-xs text-ink-navy">Under 3 Months</h5>
                       <p className="text-[11px] text-ink-muted mt-0.5 font-light">Under official brand warranty with valid bill.</p>
@@ -1362,9 +1350,6 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         <div className="w-10 h-10 rounded-lg bg-cobalt/10 flex items-center justify-center">
                           {getIllustration('warranty-3-to-6m', deviceType)}
                         </div>
-                        <span className="text-[9px] font-mono font-bold bg-cobalt/20 text-cobalt px-1.5 py-0.5 rounded-md">
-                          +6% Bonus
-                        </span>
                       </div>
                       <h5 className="font-bold text-xs text-ink-navy">3 to 6 Months</h5>
                       <p className="text-[11px] text-ink-muted mt-0.5 font-light">Under official brand warranty with valid bill.</p>
@@ -1382,9 +1367,6 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         <div className="w-10 h-10 rounded-lg bg-violet-500/10 flex items-center justify-center">
                           {getIllustration('warranty-6-to-11m', deviceType)}
                         </div>
-                        <span className="text-[9px] font-mono font-bold bg-violet-500/20 text-violet-600 px-1.5 py-0.5 rounded-md">
-                          +3% Bonus
-                        </span>
                       </div>
                       <h5 className="font-bold text-xs text-ink-navy">6 to 11 Months</h5>
                       <p className="text-[11px] text-ink-muted mt-0.5 font-light">Under official brand warranty with valid bill.</p>
@@ -1555,18 +1537,6 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                                 <span className="text-red-400 print-text-red font-bold font-outfit text-xs">-[{formatPrice(d.totalDeducted)}]</span>
                               </motion.div>
                             ))}
-                          </div>
-                        )}
-
-                        {/* Brand Warranty Bonus */}
-                        {warrantyAge !== 'out_of_warranty' && (
-                          <div className="flex justify-between items-center text-emerald-400 border-b border-zinc-800/60 py-1.5 font-mono text-xs">
-                            <span>
-                              Brand Warranty Bonus ({warrantyAge === 'under_3m' ? '<3 Months (+10%)' : warrantyAge === '3_to_6m' ? '3-6 Months (+6%)' : '6-11 Months (+3%)'})
-                            </span>
-                            <span className="font-bold font-outfit">
-                              +{formatPrice(Math.round(variant.basePrice * (warrantyAge === 'under_3m' ? 0.10 : warrantyAge === '3_to_6m' ? 0.06 : 0.03)))}
-                            </span>
                           </div>
                         )}
 
