@@ -248,6 +248,19 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
   // Stable receipt reference code — generated once per wizard session
   const receiptRef = useMemo(() => Math.random().toString(36).substr(2, 6).toUpperCase(), []);
 
+  const handleMarkAllFlawless = () => {
+    setSelectedDefects([]);
+    setIcloudChecked('clear');
+    setScreenConfirmed(true);
+    setBodyConfirmed(true);
+    setFuncConfirmed(true);
+    setConnectConfirmed(true);
+    setAccConfirmed(true);
+    setWarrantyAge('under_3m');
+    setSimType('dual_sim');
+    setStep(6);
+  };
+
   // Toggle selection helper
   const handleToggleDefect = (defect: DefectRule, mutuallyExclusiveId?: string) => {
     setSelectedDefects(prev => {
@@ -564,6 +577,23 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
           </div>
         </div>
 
+        {/* Real-Time Live Payout HUD Badge */}
+        {step < 6 && (
+          <div className="flex items-center gap-3 bg-gradient-to-r from-slate-950 via-zinc-900 to-slate-900 text-white px-4 py-2 rounded-xl border border-zinc-800 shadow-md">
+            <div>
+              <span className="text-[9px] font-mono tracking-widest text-zinc-400 uppercase block">LIVE ESTIMATED PAYOUT</span>
+              <div className="flex items-center gap-2">
+                <span className="text-lg font-black text-emerald-400 font-outfit">
+                  {valuation.isCritical ? '₹ 0 (Locked)' : formatPrice(Math.max(0, valuation.finalPrice - 119))}
+                </span>
+                <span className="text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/30">
+                  {Math.round((valuation.finalPrice / variant.basePrice) * 100)}% Retained
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Stepper Progress Indicator */}
         <div className="flex flex-col gap-1.5">
           {/* Mobile Step Bar */}
@@ -625,7 +655,17 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                 exit={{ opacity: 1, x: 10 }}
               >
                 <div className="mb-6 text-left">
-                  <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-1">Step 1 of 6 // Critical Gates</span>
+                  <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
+                    <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block">Step 1 of 6 // Critical Gates</span>
+                    <button
+                      type="button"
+                      onClick={handleMarkAllFlawless}
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-xs font-bold hover:scale-105 transition-all shadow-xs"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>⚡ Mint Condition Device? Jump to Max Payout</span>
+                    </button>
+                  </div>
                   <h3 className="text-3xl font-light text-ink-navy tracking-tight">
                     {isApple ? 'Boot & iCloud Status' : 'Boot & Account Lock (Factory Reset Protection)'}
                   </h3>
