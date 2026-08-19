@@ -540,73 +540,67 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
       {/* Wizard Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-ice-border pb-4 sm:pb-5 mb-4 sm:mb-8 bg-canvas-pure p-4 sm:p-5 rounded-sm gap-4 text-left">
         <div className="flex items-center gap-3">
-          <button 
-            onClick={handlePrevStep}
-            aria-label="Go back to previous step"
-            className="p-2 sm:p-2.5 rounded-sm border border-ice-border hover:border-cobalt hover:bg-cobalt-light/10 text-ink-slate hover:text-cobalt transition-all flex-shrink-0"
-          >
-            <ArrowLeft className="w-4 h-4" aria-hidden="true" />
-          </button>
-          
-          {/* Device Vector Silhouette Badge */}
-          <div className={`hidden sm:flex w-10 h-10 rounded-sm items-center justify-center flex-shrink-0 shadow-sm border ${
-            isWatch
-              ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400'
-              : isTablet
-              ? 'bg-violet-500/10 border-violet-500/20 text-violet-600 dark:text-violet-400'
-              : 'bg-cobalt-light border-white/[0.06] text-cobalt'
-          }`}>
-            {isWatch ? (
-              <Watch className="w-5 h-5" aria-hidden="true" />
-            ) : isTablet ? (
-              <Tablet className="w-5 h-5" aria-hidden="true" />
-            ) : (
-              <Smartphone className="w-5 h-5" aria-hidden="true" />
-            )}
+          <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-zinc-800 p-1 border border-ice-border flex items-center justify-center flex-shrink-0 shadow-xs">
+            <img 
+              src={getDeviceImage(model.id, deviceType)} 
+              alt={model.name} 
+              className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" 
+            />
           </div>
 
           <div className="min-w-0">
-            <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-0.5">Diagnostic wizard</span>
-            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-              <span className="font-light text-ink-navy text-xl sm:text-2xl tracking-tight truncate">{model.name}</span>
-              <span className="text-[9px] font-mono tracking-wider bg-cobalt-light text-cobalt px-2 py-0.5 rounded-sm border border-white/[0.06] flex-shrink-0 uppercase">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block">Evaluation Wizard</span>
+              <span className="text-[9px] font-mono font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                Up to {formatPrice(variant.basePrice)}
+              </span>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 mt-0.5">
+              <h2 className="font-bold text-ink-navy text-lg sm:text-xl tracking-tight truncate">{model.name}</h2>
+              <span className="text-[10px] font-mono font-bold tracking-wider bg-cobalt/10 text-cobalt px-2 py-0.5 rounded-md border border-cobalt/20 flex-shrink-0">
                 {variant.storageGb >= 1024 ? '1TB' : `${variant.storageGb}GB`}
               </span>
             </div>
           </div>
         </div>
 
-        {/* Mobile: thin progress bar; md+: step dots */}
-        <div className="flex flex-col gap-1.5 sm:gap-0">
-          {/* Mobile progress bar with step titles */}
+        {/* Stepper Progress Indicator */}
+        <div className="flex flex-col gap-1.5">
+          {/* Mobile Step Bar */}
           <div className="flex sm:hidden items-center gap-2">
-            <span className="text-[10px] text-zinc-400 font-mono tracking-wider uppercase flex-shrink-0">
+            <span className="text-[10px] text-zinc-500 font-mono font-bold tracking-wider uppercase flex-shrink-0">
               Step {Math.min(step + 1, 6)}/6: {stepsList[Math.min(step, 5)]?.title}
             </span>
-            <div className="flex-1 h-1.5 rounded-full bg-ice-gray overflow-hidden">
+            <div className="flex-1 h-2 rounded-full bg-ice-gray overflow-hidden">
               <div
-                className="h-full bg-cobalt transition-all duration-500"
-                style={{width: `${Math.min((step / 5) * 100, 100)}%`}}
+                className="h-full bg-gradient-to-r from-cobalt to-emerald-500 transition-all duration-500"
+                style={{width: `${Math.min(((step + 1) / 6) * 100, 100)}%`}}
               />
             </div>
           </div>
-          {/* Desktop step dots */}
-          <div className="hidden sm:flex items-center gap-1.5">
-            {stepsList.map((_s, idx) => (
-              <div key={idx} className="flex items-center">
-                <div 
-                  className={`w-7 h-7 sm:w-8 sm:h-8 rounded-sm flex items-center justify-center font-bold text-xs border transition-all ${
-                    step > idx 
-                      ? 'bg-cobalt border-cobalt text-white' 
-                      : step === idx 
-                      ? 'bg-cobalt-light border-cobalt text-cobalt scale-110 shadow-[0_0_10px_rgba(59,130,246,0.25)]' 
-                      : 'bg-canvas-white border-ice-border text-ink-muted'
-                  }`}
-                >
-                  {step > idx ? <Check className="w-3.5 h-3.5" /> : idx + 1}
+
+          {/* Desktop 6-Step Stepper Dots */}
+          <div className="hidden sm:flex items-center gap-2">
+            {stepsList.map((s, idx) => (
+              <div key={idx} className="flex items-center gap-2">
+                <div className="flex flex-col items-center">
+                  <div 
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs border transition-all ${
+                      step > idx 
+                        ? 'bg-cobalt border-cobalt text-white shadow-sm' 
+                        : step === idx 
+                        ? 'bg-cobalt/15 border-cobalt text-cobalt scale-110 ring-2 ring-cobalt/30 font-extrabold shadow-md' 
+                        : 'bg-canvas-white border-ice-border text-ink-muted'
+                    }`}
+                  >
+                    {step > idx ? <Check className="w-4 h-4" /> : idx + 1}
+                  </div>
+                  <span className={`text-[9px] font-mono uppercase tracking-wider mt-1 ${step === idx ? 'text-cobalt font-bold' : 'text-zinc-400'}`}>
+                    {s.title.split(' ')[0]}
+                  </span>
                 </div>
                 {idx < 5 && (
-                  <div className={`w-4 sm:w-6 h-0.5 transition-all ${step > idx ? 'bg-cobalt' : 'bg-ice-border'}`} />
+                  <div className={`w-5 h-0.5 mb-4 transition-all ${step > idx ? 'bg-cobalt' : 'bg-ice-border'}`} />
                 )}
               </div>
             ))}
@@ -619,7 +613,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
         <motion.div 
           layout 
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          className="bg-canvas-pure rounded-sm border border-ice-border p-4 sm:p-6 min-h-[360px] sm:min-h-[420px] flex flex-col justify-between overflow-hidden shadow-premium"
+          className="bg-canvas-pure rounded-xl border border-ice-border p-5 sm:p-7 min-h-[380px] sm:min-h-[440px] flex flex-col justify-between overflow-hidden shadow-xl"
         >
           <AnimatePresence mode="wait">
             {/* STEP 0: Boot & iCloud Check */}
@@ -1627,24 +1621,30 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
           {/* Navigation panel */}
           {step < 6 && (
-            <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 border-t border-white/[0.04] pt-4 sm:pt-6 mt-4 sm:mt-6">
-              <button
-                onClick={handlePrevStep}
-                className="order-2 sm:order-1 px-5 py-2.5 rounded-sm border border-ice-border hover:bg-ice-gray text-ink-slate font-semibold text-sm transition-all"
-                style={{ minHeight: '48px' }}
-              >
-                Back
-              </button>
+            <div className="flex flex-row justify-between items-center gap-3 border-t border-ice-border/60 pt-5 mt-6">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handlePrevStep}
+                  className="px-4 py-2.5 rounded-lg border border-ice-border hover:bg-slate-100 dark:hover:bg-zinc-800 text-ink-navy font-semibold text-xs transition-all flex items-center gap-1.5 shadow-xs"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>Back</span>
+                </button>
+                <span className="hidden sm:inline-block text-[10px] font-mono text-zinc-400 uppercase tracking-wider pl-2">
+                  Step {step + 1} of 6
+                </span>
+              </div>
 
               <button
+                type="button"
                 onClick={handleNextStep}
                 disabled={!isStepValidated}
-                className={`order-1 sm:order-2 px-6 py-3 sm:py-2.5 bg-cobalt hover:bg-cobalt-hover text-white font-bold rounded-sm text-sm transition-all flex items-center justify-center gap-1.5 ${
-                  !isStepValidated ? 'opacity-40 cursor-not-allowed' : 'hover:scale-[1.01]'
+                className={`px-6 py-2.5 bg-gradient-to-r from-cobalt to-indigo-600 hover:from-cobalt-hover hover:to-indigo-700 text-white font-bold rounded-lg text-xs sm:text-sm transition-all flex items-center justify-center gap-2 shadow-md ${
+                  !isStepValidated ? 'opacity-40 cursor-not-allowed' : 'hover:scale-[1.02] active:scale-[0.98]'
                 }`}
-                style={{ minHeight: '48px' }}
               >
-                {step === 5 ? 'Generate Report' : 'Next Step'}
+                <span>{step === 5 ? 'Calculate Instant Payout' : 'Next Step'}</span>
                 <ChevronRight className="w-4 h-4" />
               </button>
             </div>
