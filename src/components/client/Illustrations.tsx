@@ -904,7 +904,75 @@ export const getIllustration = (
     case 'defect-acc-nodocs':
       return <MissingDocsIllustration />;
 
+    // Warranty & Age
+    case 'warranty-under-3m':
+      return <WarrantyUnder3mIllustration />;
+    case 'warranty-3-to-6m':
+      return <Warranty3to6mIllustration />;
+    case 'warranty-6-to-11m':
+      return <Warranty6to11mIllustration />;
+    case 'warranty-above-11m':
+      return <WarrantyOutIllustration />;
+
+    // SIM Config
+    case 'sim-dual':
+      return <DualSimIllustration />;
+    case 'sim-single':
+      return <SingleSimIllustration />;
+
     default:
       return null;
   }
 };
+
+// ==================== WARRANTY & SIM ILLUSTRATIONS ====================
+
+export const WarrantyUnder3mIllustration: React.FC = () => (
+  <svg viewBox="0 0 64 64" className="w-12 h-12" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M32 10L48 16V30C48 41 41 49 32 54C23 49 16 41 16 30V16L32 10Z" fill="#10B981" fillOpacity="0.2" stroke="#10B981" strokeWidth="2" />
+    <path d="M26 28L30 32L38 22" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+    <text x="32" y="44" textAnchor="middle" fill="#34D399" fontSize="8" fontWeight="bold" fontFamily="sans-serif">&lt;3 Months</text>
+  </svg>
+);
+
+export const Warranty3to6mIllustration: React.FC = () => (
+  <svg viewBox="0 0 64 64" className="w-12 h-12" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M32 10L48 16V30C48 41 41 49 32 54C23 49 16 41 16 30V16L32 10Z" fill="#3B82F6" fillOpacity="0.2" stroke="#3B82F6" strokeWidth="2" />
+    <path d="M26 28L30 32L38 22" stroke="#3B82F6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+    <text x="32" y="44" textAnchor="middle" fill="#60A5FA" fontSize="8" fontWeight="bold" fontFamily="sans-serif">3-6 Months</text>
+  </svg>
+);
+
+export const Warranty6to11mIllustration: React.FC = () => (
+  <svg viewBox="0 0 64 64" className="w-12 h-12" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M32 10L48 16V30C48 41 41 49 32 54C23 49 16 41 16 30V16L32 10Z" fill="#8B5CF6" fillOpacity="0.2" stroke="#8B5CF6" strokeWidth="2" />
+    <path d="M26 28L30 32L38 22" stroke="#8B5CF6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+    <text x="32" y="44" textAnchor="middle" fill="#A78BFA" fontSize="8" fontWeight="bold" fontFamily="sans-serif">6-11 Months</text>
+  </svg>
+);
+
+export const WarrantyOutIllustration: React.FC = () => (
+  <svg viewBox="0 0 64 64" className="w-12 h-12" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M32 10L48 16V30C48 41 41 49 32 54C23 49 16 41 16 30V16L32 10Z" stroke="#71717A" strokeWidth="2" fill="#18181B" />
+    <circle cx="32" cy="28" r="7" stroke="#71717A" strokeWidth="1.5" />
+    <path d="M32 25V28L35 30" stroke="#71717A" strokeWidth="1.5" strokeLinecap="round" />
+    <text x="32" y="45" textAnchor="middle" fill="#71717A" fontSize="7.5" fontWeight="bold" fontFamily="sans-serif">Out of Warranty</text>
+  </svg>
+);
+
+export const DualSimIllustration: React.FC = () => (
+  <svg viewBox="0 0 64 64" className="w-12 h-12" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M16 16H30L36 22V48H16V16Z" fill="#3B82F6" fillOpacity="0.2" stroke="#3B82F6" strokeWidth="2" />
+    <path d="M28 20H42L48 26V52H28V20Z" fill="#10B981" fillOpacity="0.2" stroke="#10B981" strokeWidth="2" />
+    <rect x="20" y="36" width="8" height="6" rx="1" fill="#60A5FA" />
+    <rect x="32" y="40" width="8" height="6" rx="1" fill="#34D399" />
+  </svg>
+);
+
+export const SingleSimIllustration: React.FC = () => (
+  <svg viewBox="0 0 64 64" className="w-12 h-12" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M20 16H38L44 22V48H20V16Z" stroke="#A1A1AA" strokeWidth="2" fill="#18181B" />
+    <rect x="24" y="34" width="10" height="8" rx="1.5" fill="#A1A1AA" />
+  </svg>
+);
+

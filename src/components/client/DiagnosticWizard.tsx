@@ -215,10 +215,35 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
     return true;
   }, [step, icloudChecked, screenConfirmed, bodyConfirmed, funcConfirmed, connectConfirmed, accConfirmed, selectedDefects, rules]);
 
+  const [warrantyAge, setWarrantyAge] = useState<'under_3m' | '3_to_6m' | '6_to_11m' | 'out_of_warranty'>('out_of_warranty');
+  const [simType, setSimType] = useState<'dual_sim' | 'single_sim'>('dual_sim');
+
   // Calculate live valuation
   const valuation = useMemo(() => {
-    return calculateValuation(variant, selectedDefects);
-  }, [variant, selectedDefects]);
+    const baseVal = calculateValuation(variant, selectedDefects);
+    if (baseVal.isCritical) return baseVal;
+
+    let adjustedPrice = baseVal.finalPrice;
+    
+    // Add warranty bonus if under official brand warranty
+    if (warrantyAge === 'under_3m') {
+      adjustedPrice += Math.round(variant.basePrice * 0.10);
+    } else if (warrantyAge === '3_to_6m') {
+      adjustedPrice += Math.round(variant.basePrice * 0.06);
+    } else if (warrantyAge === '6_to_11m') {
+      adjustedPrice += Math.round(variant.basePrice * 0.03);
+    }
+
+    // Single SIM adjustment
+    if (simType === 'single_sim') {
+      adjustedPrice = Math.max(500, adjustedPrice - 500);
+    }
+
+    return {
+      ...baseVal,
+      finalPrice: Math.round(adjustedPrice)
+    };
+  }, [variant, selectedDefects, warrantyAge, simType]);
 
   // Stable receipt reference code — generated once per wizard session
   const receiptRef = useMemo(() => Math.random().toString(36).substr(2, 6).toUpperCase(), []);
@@ -1276,6 +1301,141 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                     );
                   })}
                 </div>
+
+                {/* Device Age & Warranty Status Section */}
+                <div className="mt-8 text-left border-t border-ice-border pt-6">
+                  <h4 className="text-sm font-bold text-ink-navy font-outfit uppercase tracking-wider mb-3">
+                    Brand Warranty & Device Age
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div
+                      onClick={() => setWarrantyAge('under_3m')}
+                      className={`p-3 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
+                        warrantyAge === 'under_3m'
+                          ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/30'
+                          : 'border-ice-border bg-canvas-white hover:border-emerald-500/40'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                          {getIllustration('warranty-under-3m', deviceType)}
+                        </div>
+                        <span className="text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-600 px-1.5 py-0.5 rounded-md">
+                          +10% Bonus
+                        </span>
+                      </div>
+                      <h5 className="font-bold text-xs text-ink-navy">Under 3 Months</h5>
+                      <p className="text-[11px] text-ink-muted mt-0.5 font-light">Under official brand warranty with valid bill.</p>
+                    </div>
+
+                    <div
+                      onClick={() => setWarrantyAge('3_to_6m')}
+                      className={`p-3 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
+                        warrantyAge === '3_to_6m'
+                          ? 'border-cobalt bg-cobalt-light/40 ring-1 ring-cobalt/30'
+                          : 'border-ice-border bg-canvas-white hover:border-cobalt/40'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="w-10 h-10 rounded-lg bg-cobalt/10 flex items-center justify-center">
+                          {getIllustration('warranty-3-to-6m', deviceType)}
+                        </div>
+                        <span className="text-[9px] font-mono font-bold bg-cobalt/20 text-cobalt px-1.5 py-0.5 rounded-md">
+                          +6% Bonus
+                        </span>
+                      </div>
+                      <h5 className="font-bold text-xs text-ink-navy">3 to 6 Months</h5>
+                      <p className="text-[11px] text-ink-muted mt-0.5 font-light">Under official brand warranty with valid bill.</p>
+                    </div>
+
+                    <div
+                      onClick={() => setWarrantyAge('6_to_11m')}
+                      className={`p-3 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
+                        warrantyAge === '6_to_11m'
+                          ? 'border-violet-500 bg-violet-500/10 ring-1 ring-violet-500/30'
+                          : 'border-ice-border bg-canvas-white hover:border-violet-500/40'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="w-10 h-10 rounded-lg bg-violet-500/10 flex items-center justify-center">
+                          {getIllustration('warranty-6-to-11m', deviceType)}
+                        </div>
+                        <span className="text-[9px] font-mono font-bold bg-violet-500/20 text-violet-600 px-1.5 py-0.5 rounded-md">
+                          +3% Bonus
+                        </span>
+                      </div>
+                      <h5 className="font-bold text-xs text-ink-navy">6 to 11 Months</h5>
+                      <p className="text-[11px] text-ink-muted mt-0.5 font-light">Under official brand warranty with valid bill.</p>
+                    </div>
+
+                    <div
+                      onClick={() => setWarrantyAge('out_of_warranty')}
+                      className={`p-3 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
+                        warrantyAge === 'out_of_warranty'
+                          ? 'border-slate-400 bg-slate-100/60 dark:bg-zinc-800 ring-1 ring-slate-400/30'
+                          : 'border-ice-border bg-canvas-white hover:border-slate-400/40'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="w-10 h-10 rounded-lg bg-slate-200 dark:bg-zinc-700 flex items-center justify-center">
+                          {getIllustration('warranty-above-11m', deviceType)}
+                        </div>
+                        <span className="text-[9px] font-mono font-bold bg-slate-200 dark:bg-zinc-700 text-slate-600 dark:text-zinc-300 px-1.5 py-0.5 rounded-md">
+                          Out of Warranty
+                        </span>
+                      </div>
+                      <h5 className="font-bold text-xs text-ink-navy">Above 11 Months</h5>
+                      <p className="text-[11px] text-ink-muted mt-0.5 font-light">Out of warranty or no purchase invoice.</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* SIM Configuration Section */}
+                {!isWatch && (
+                  <div className="mt-6 text-left border-t border-ice-border pt-6">
+                    <h4 className="text-sm font-bold text-ink-navy font-outfit uppercase tracking-wider mb-3">
+                      SIM Slot & Network Support
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div
+                        onClick={() => setSimType('dual_sim')}
+                        className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center gap-3 ${
+                          simType === 'dual_sim'
+                            ? 'border-cobalt bg-cobalt-light/40 ring-1 ring-cobalt/30'
+                            : 'border-ice-border bg-canvas-white hover:border-cobalt/40'
+                        }`}
+                      >
+                        <div className="w-12 h-12 rounded-xl bg-cobalt/10 flex items-center justify-center flex-shrink-0">
+                          {getIllustration('sim-dual', deviceType)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h5 className="font-bold text-xs text-ink-navy">Dual SIM (Physical + eSIM / Dual Physical)</h5>
+                          <p className="text-[11px] text-ink-muted mt-0.5 font-light">Standard Indian retail model supporting 2 network lines.</p>
+                        </div>
+                      </div>
+
+                      <div
+                        onClick={() => setSimType('single_sim')}
+                        className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center gap-3 ${
+                          simType === 'single_sim'
+                            ? 'border-amber-500 bg-amber-500/10 ring-1 ring-amber-500/30'
+                            : 'border-ice-border bg-canvas-white hover:border-amber-500/40'
+                        }`}
+                      >
+                        <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center flex-shrink-0">
+                          {getIllustration('sim-single', deviceType)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1">
+                            <h5 className="font-bold text-xs text-ink-navy">Single SIM Only</h5>
+                            <span className="text-[9px] font-mono font-bold bg-amber-500/20 text-amber-600 px-1.5 py-0.5 rounded-md">-₹500</span>
+                          </div>
+                          <p className="text-[11px] text-ink-muted mt-0.5 font-light">Single SIM slot unit or carrier-locked import model.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </motion.div>
             )}
 
@@ -1373,6 +1533,26 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                                 <span className="text-red-400 print-text-red font-bold font-outfit text-xs">-[{formatPrice(d.totalDeducted)}]</span>
                               </motion.div>
                             ))}
+                          </div>
+                        )}
+
+                        {/* Brand Warranty Bonus */}
+                        {warrantyAge !== 'out_of_warranty' && (
+                          <div className="flex justify-between items-center text-emerald-400 border-b border-zinc-800/60 py-1.5 font-mono text-xs">
+                            <span>
+                              Brand Warranty Bonus ({warrantyAge === 'under_3m' ? '<3 Months (+10%)' : warrantyAge === '3_to_6m' ? '3-6 Months (+6%)' : '6-11 Months (+3%)'})
+                            </span>
+                            <span className="font-bold font-outfit">
+                              +{formatPrice(Math.round(variant.basePrice * (warrantyAge === 'under_3m' ? 0.10 : warrantyAge === '3_to_6m' ? 0.06 : 0.03)))}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Single SIM Variant Adjustment */}
+                        {simType === 'single_sim' && (
+                          <div className="flex justify-between items-center text-amber-400 border-b border-zinc-800/60 py-1.5 font-mono text-xs">
+                            <span>Single SIM Regional Variant Adjustment</span>
+                            <span className="font-bold font-outfit">-₹500</span>
                           </div>
                         )}
 
