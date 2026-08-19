@@ -188,26 +188,17 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
   const [warrantyAge, setWarrantyAge] = useState<'under_3m' | '3_to_6m' | '6_to_11m' | 'out_of_warranty'>('out_of_warranty');
   const [simType, setSimType] = useState<'dual_sim' | 'single_sim'>('dual_sim');
 
-  // Calculate live valuation
+  // Calculate live valuation via Stage 1 Rephonix Pricing Engine
   const valuation = useMemo(() => {
-    const baseVal = calculateValuation(variant, selectedDefects);
-    if (baseVal.isCritical) return baseVal;
-
-    let adjustedPrice = baseVal.finalPrice;
-
-    // Single SIM adjustment
-    if (simType === 'single_sim') {
-      adjustedPrice = Math.max(500, adjustedPrice - 500);
-    }
-
-    const retentionPercentage = Math.max(0, Math.min(100, Math.round((adjustedPrice / variant.basePrice) * 100)));
-
-    return {
-      ...baseVal,
-      finalPrice: Math.round(adjustedPrice),
-      retentionPercentage
-    };
-  }, [variant, selectedDefects, simType]);
+    return calculateValuation(variant, selectedDefects, {
+      modelId: model.id,
+      brandId: model.brandId,
+      modelName: model.name,
+      category: model.category,
+      simType,
+      warrantyAge
+    });
+  }, [variant, selectedDefects, model, simType, warrantyAge]);
 
   // Stable receipt reference code — generated once per wizard session
   const receiptRef = useMemo(() => Math.random().toString(36).substr(2, 6).toUpperCase(), []);
