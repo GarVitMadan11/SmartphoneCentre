@@ -29,7 +29,7 @@ const OrderTrackingModal = lazy(() => import('./components/client/OrderTrackingM
 import { 
   Award, ShieldCheck, Zap, Search,
   TrendingUp, X,
-  Truck, Lock, CheckCircle2, Sparkles, ArrowRight, Info, Code, GitBranch, Database
+  Truck, Lock, CheckCircle2, Sparkles, ArrowRight, Info, Code, GitBranch, Database, Instagram
 } from 'lucide-react';
 
 import applePhoneImg from './assets/apple_phone.png';
@@ -1674,7 +1674,7 @@ export default function App() {
             </div>
 
             {/* Links */}
-            <div className="flex flex-wrap justify-center gap-6 md:gap-8 text-xs font-semibold text-ink-slate">
+            <div className="flex flex-wrap justify-center items-center gap-6 md:gap-8 text-xs font-semibold text-ink-slate">
               <span onClick={() => { handleReset(); navigate('/'); }} className="hover:text-cobalt cursor-pointer transition-colors">Home</span>
               <span onClick={() => { handleReset(); navigate('/smartphones'); }} className="hover:text-cobalt cursor-pointer transition-colors">Smartphones</span>
               <span onClick={() => { handleReset(); navigate('/tablets'); }} className="hover:text-cobalt cursor-pointer transition-colors">Tablets/iPads</span>
@@ -1682,12 +1682,34 @@ export default function App() {
               <span onClick={() => { handleReset(); navigate('/about'); }} className="hover:text-cobalt cursor-pointer transition-colors">About</span>
               <span onClick={() => { handleReset(); navigate('/contact'); }} className="hover:text-cobalt cursor-pointer transition-colors">Contact</span>
               <span onClick={() => setIsSpecModalOpen(true)} className="hover:text-cobalt cursor-pointer transition-colors">System Spec</span>
+              <a 
+                href="https://www.instagram.com/rephonix.in/" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="hover:text-pink-600 cursor-pointer transition-colors flex items-center gap-1.5 text-pink-600 font-bold bg-pink-500/10 px-2.5 py-1 rounded-full border border-pink-500/20"
+                aria-label="Rephonix Instagram"
+              >
+                <Instagram className="w-3.5 h-3.5" />
+                <span>Instagram</span>
+              </a>
             </div>
           </div>
 
           <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-[10px] sm:text-xs text-ink-muted gap-4">
             <p>&copy; {new Date().getFullYear()} Rephonix. All rights reserved.</p>
-            <p>Built with ❤️ for secure, sustainable device resale.</p>
+            <div className="flex items-center gap-3">
+              <a 
+                href="https://www.instagram.com/rephonix.in/" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="flex items-center gap-1.5 text-ink-slate hover:text-pink-600 transition-colors font-medium"
+              >
+                <Instagram className="w-3.5 h-3.5 text-pink-600" />
+                <span>@rephonix.in</span>
+              </a>
+              <span>•</span>
+              <p>Built with ❤️ for secure, sustainable device resale.</p>
+            </div>
           </div>
 
           {/* Legal & Trademark Disclaimer */}

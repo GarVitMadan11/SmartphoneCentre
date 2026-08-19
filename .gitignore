@@ -46,3 +46,12 @@ server/.env.production.local
 dev.db
 **/dev.db
 server/prisma/dev.db
+
+# Scraper scripts & caches
+scripts/fetch_real_cashify_prices.py
+scripts/test_scraper.py
+scripts/cashify_sitemap_urls.json
+scripts/cashify_variants_full.json
+__pycache__/
+*.pyc
+

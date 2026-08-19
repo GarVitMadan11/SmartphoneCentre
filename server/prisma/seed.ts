@@ -218,52 +218,84 @@ const getCashifyBasePrice256GB = (brandId: string, name: string, category: strin
   if (releaseYear >= 2026) yearFactor = 1.30;
   else if (releaseYear === 2025) yearFactor = 1.15;
   else if (releaseYear === 2024) yearFactor = 1.0;
-  else if (releaseYear === 2023) yearFactor = 0.82;
-  else yearFactor = 0.60;
+  else if (releaseYear === 2023) yearFactor = 0.85;
+  else if (releaseYear === 2022) yearFactor = 0.72;
+  else if (releaseYear === 2021) yearFactor = 0.56;
+  else if (releaseYear === 2020) yearFactor = 0.42;
+  else if (releaseYear === 2019) yearFactor = 0.32;
+  else yearFactor = 0.25;
 
   let bonus = 0;
   if (/ultra|pro max|fold/i.test(name)) bonus += 8000;
+  else if (/mini\b|pro mini/i.test(name)) bonus += 1500;
   else if (/pro\b|plus|flip|air/i.test(name)) bonus += 4000;
 
   return Math.round((base256 * brandMult * yearFactor + bonus) / 500) * 500;
 };
 
+const predictCashifyPrice = (brandId: string, name: string, category: string, releaseYear: number, storageGb: number): number => {
+  const base256 = getCashifyBasePrice256GB(brandId, name, category, releaseYear);
+
+  if (storageGb === 256) return base256;
+  if (storageGb === 128) return Math.max(3500, base256 - 6000);
+
+  if (storageGb === 512) {
+    if (/17e/i.test(name)) return base256 + 9200;
+    if (/pro max/i.test(name)) return base256 + 6500;
+    if (/pro\b|air/i.test(name)) return base256 + 5000;
+    return base256 + 5500;
+  }
+
+  if (storageGb === 1024) {
+    const p512 = predictCashifyPrice(brandId, name, category, releaseYear, 512);
+    if (/pro max/i.test(name)) return p512 + 4000;
+    return p512 + 5000;
+  }
+
+  if (storageGb === 2048) {
+    const p1024 = predictCashifyPrice(brandId, name, category, releaseYear, 1024);
+    return p1024 + 5500;
+  }
+
+  return base256;
+};
+
 const catalogPrice = (brandId: string, name: string, category: string, releaseYear: number): number => {
   const cashify256 = getCashifyBasePrice256GB(brandId, name, category, releaseYear);
   const base128 = Math.max(3500, cashify256 - 6000);
-  return Math.round((base128 * 1.02) / 500) * 500;
+  return Math.round((base128 * 1.03) / 500) * 500;
 };
 
 const CASHIFY_BENCHMARKS: Record<string, { supportedStorageGb: number[]; variantPrices: Record<string, number> }> = {
   'iPhone 17 Pro Max': {
     supportedStorageGb: [256, 512, 1024, 2048],
     variantPrices: {
-      '0_256': Math.round(109000 * 1.02),
-      '0_512': Math.round(115500 * 1.02),
-      '0_1024': Math.round(119500 * 1.02),
-      '0_2048': Math.round(125000 * 1.02),
+      '0_256': Math.round(109000 * 1.03),
+      '0_512': Math.round(115500 * 1.03),
+      '0_1024': Math.round(119500 * 1.03),
+      '0_2048': Math.round(125000 * 1.03),
     }
   },
   'iPhone 17 Pro': {
     supportedStorageGb: [256, 512, 1024],
     variantPrices: {
-      '0_256': Math.round(101000 * 1.02),
-      '0_512': Math.round(106000 * 1.02),
-      '0_1024': Math.round(111000 * 1.02),
+      '0_256': Math.round(101000 * 1.03),
+      '0_512': Math.round(106000 * 1.03),
+      '0_1024': Math.round(111000 * 1.03),
     }
   },
   'iPhone 17e': {
     supportedStorageGb: [256, 512],
     variantPrices: {
-      '0_256': Math.round(43000 * 1.02),
-      '0_512': Math.round(52200 * 1.02),
+      '0_256': Math.round(43000 * 1.03),
+      '0_512': Math.round(52200 * 1.03),
     }
   },
   'iPhone 17': {
     supportedStorageGb: [256, 512],
     variantPrices: {
-      '0_256': Math.round(59000 * 1.02),
-      '0_512': Math.round(64500 * 1.02),
+      '0_256': Math.round(59000 * 1.03),
+      '0_512': Math.round(64500 * 1.03),
     }
   }
 };
@@ -511,6 +543,33 @@ const DEFAULT_ADMIN_USERS = [
   { username: 'catalog_mgr', email: 'catalog@smartphonecentre.com', passwordHash: DEFAULT_ADMIN_PASSWORD_HASH, role: 'CATALOG_EDITOR', active: true },
 ];
 
+const buildSeedVariantPrices = (model: any, ramArr: number[], storageArr: number[]): Record<string, number> => {
+  const benchmarkKey = Object.keys(CASHIFY_BENCHMARKS).find(key => model.name === key);
+  const benchmark = benchmarkKey ? CASHIFY_BENCHMARKS[benchmarkKey] : undefined;
+  if (benchmark && benchmark.variantPrices) {
+    return benchmark.variantPrices;
+  }
+
+  const isApple = model.brandId === 'brand-apple' || model.name.toLowerCase().includes('iphone') || model.name.toLowerCase().includes('ipad');
+  const minRam = Math.min(...ramArr.filter(r => r > 0));
+
+  const map: Record<string, number> = {};
+  for (const r of ramArr) {
+    for (const s of storageArr) {
+      let baseCashify = predictCashifyPrice(model.brandId, model.name, model.category, model.releaseYear, s);
+      if (!isApple && r > 0 && ramArr.length > 1 && !isNaN(minRam) && isFinite(minRam)) {
+        const stepCount = (r - minRam) / 2;
+        if (stepCount > 0) {
+          baseCashify += Math.round(stepCount * 1200);
+        }
+      }
+      const pricePlus3Pct = Math.round(baseCashify * 1.03);
+      map[`${r}_${s}`] = pricePlus3Pct;
+    }
+  }
+  return map;
+};
+
 async function main() {
   console.log('🌱 Syncing database brands, catalog models & admin accounts...');
 
@@ -535,12 +594,15 @@ async function main() {
       storageArr = storageArr.filter(gb => gb >= 256);
     }
     const supportedStorageGbStr = JSON.stringify(storageArr);
-    const variantPrices = benchmark ? JSON.stringify(benchmark.variantPrices) : undefined;
 
     const isApple = m.brandId === 'brand-apple' || m.name.toLowerCase().includes('iphone') || m.name.toLowerCase().includes('ipad');
     const isWatch = m.name.toLowerCase().includes('watch');
     const ramArr = isApple ? [0] : isWatch ? [2] : m.category === 'flagship' ? [8, 12, 16] : m.category === 'premium' ? [8, 12] : m.category === 'midrange' ? [6, 8, 12] : [2, 4, 6, 8];
     const supportedRamGbStr = JSON.stringify(ramArr);
+
+    const calculatedVariantPrices = buildSeedVariantPrices(m, ramArr, storageArr);
+    const variantPricesStr = JSON.stringify(calculatedVariantPrices);
+    const maxVariantPrice = Object.values(calculatedVariantPrices).length > 0 ? Math.max(...Object.values(calculatedVariantPrices)) : m.basePrice128GB;
 
     const brandSlug = m.brandId.replace('brand-', '');
     const cleanId = m.id.replace(/^catalog-/, '');
@@ -562,21 +624,21 @@ async function main() {
         name: m.name,
         category: m.category,
         releaseYear: m.releaseYear,
-        basePrice128GB: m.basePrice128GB,
+        basePrice128GB: maxVariantPrice,
         series: m.series,
         imageUrl: modelImageUrl,
         supportedStorageGb: supportedStorageGbStr,
         supportedRamGb: supportedRamGbStr,
-        variantPrices: variantPrices ?? '{}',
+        variantPrices: variantPricesStr,
       },
       update: {
-        basePrice128GB: m.basePrice128GB,
+        basePrice128GB: maxVariantPrice,
         category: m.category,
         releaseYear: m.releaseYear,
         imageUrl: modelImageUrl,
         supportedStorageGb: supportedStorageGbStr,
         supportedRamGb: supportedRamGbStr,
-        variantPrices: variantPrices ?? undefined,
+        variantPrices: variantPricesStr,
       },
     });
   }

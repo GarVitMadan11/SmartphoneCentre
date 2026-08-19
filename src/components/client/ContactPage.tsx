@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, Phone, MapPin, Sparkles, Send } from 'lucide-react';
+import { Mail, Phone, MapPin, Sparkles, Send, Instagram } from 'lucide-react';
 
 interface ContactPageProps {
   onShowToast: (message: string, type: 'success' | 'error' | 'info') => void;
@@ -71,6 +71,23 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onShowToast }) => {
               <div>
                 <span className="text-[10px] font-mono tracking-wider text-ink-muted uppercase block">Call Support</span>
                 <a href="tel:+919876543210" className="text-sm font-semibold text-ink-navy hover:text-cobalt transition-colors">+91 98765 43210</a>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-4">
+              <div className="w-9 h-9 rounded-lg bg-pink-500/10 flex items-center justify-center text-pink-600 flex-shrink-0 mt-0.5">
+                <Instagram className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="text-[10px] font-mono tracking-wider text-ink-muted uppercase block">Instagram</span>
+                <a 
+                  href="https://www.instagram.com/rephonix.in/" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-sm font-semibold text-ink-navy hover:text-pink-600 transition-colors"
+                >
+                  @rephonix.in
+                </a>
               </div>
             </div>
 

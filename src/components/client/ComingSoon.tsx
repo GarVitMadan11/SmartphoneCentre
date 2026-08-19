@@ -1,4 +1,4 @@
-import { Sparkles, ShieldCheck, Zap, ArrowRight } from 'lucide-react';
+import { Sparkles, ShieldCheck, Zap, ArrowRight, Instagram } from 'lucide-react';
 
 export function ComingSoon() {
   return (
@@ -69,7 +69,17 @@ export function ComingSoon() {
         <div>
           &copy; {new Date().getFullYear()} Rephonix. All rights reserved.
         </div>
-        <div className="flex gap-4">
+        <div className="flex items-center gap-4">
+          <a
+            href="https://www.instagram.com/rephonix.in/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 text-pink-500 hover:text-pink-400 font-semibold transition-colors"
+          >
+            <Instagram className="w-3.5 h-3.5" />
+            <span>@rephonix.in</span>
+          </a>
+          <span>•</span>
           <span className="text-[#22c55e]">Smarter Device Lifecycle</span>
         </div>
       </footer>

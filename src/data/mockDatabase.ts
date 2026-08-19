@@ -559,11 +559,16 @@ const getCashifyBasePrice256GB = (brandId: string, name: string, category: Devic
   if (releaseYear >= 2026) yearFactor = 1.30;
   else if (releaseYear === 2025) yearFactor = 1.15;
   else if (releaseYear === 2024) yearFactor = 1.0;
-  else if (releaseYear === 2023) yearFactor = 0.82;
-  else yearFactor = 0.60;
+  else if (releaseYear === 2023) yearFactor = 0.85;
+  else if (releaseYear === 2022) yearFactor = 0.72;
+  else if (releaseYear === 2021) yearFactor = 0.56;
+  else if (releaseYear === 2020) yearFactor = 0.42;
+  else if (releaseYear === 2019) yearFactor = 0.32;
+  else yearFactor = 0.25;
 
   let bonus = 0;
   if (/ultra|pro max|fold/i.test(name)) bonus += 8000;
+  else if (/mini\b|pro mini/i.test(name)) bonus += 1500;
   else if (/pro\b|plus|flip|air/i.test(name)) bonus += 4000;
 
   return Math.round((base256 * brandMult * yearFactor + bonus) / 500) * 500;
@@ -597,43 +602,43 @@ export const predictCashifyPrice = (brandId: string, name: string, category: Dev
   return base256;
 };
 
-// Our Competitive Quote (+2% higher than Cashify prediction)
+// Our Competitive Quote (+3% higher than Cashify prediction)
 const catalogPrice = (brandId: string, name: string, category: DeviceCategory, releaseYear: number): number => {
   const cashify256 = getCashifyBasePrice256GB(brandId, name, category, releaseYear);
   const base128 = Math.max(3500, cashify256 - 6000);
-  return Math.round((base128 * 1.02) / 500) * 500;
+  return Math.round((base128 * 1.03) / 500) * 500;
 };
 
 const CASHIFY_BENCHMARKS: Record<string, { supportedStorageGb: number[]; variantPrices: Record<string, number> }> = {
   'iPhone 17 Pro Max': {
     supportedStorageGb: [256, 512, 1024, 2048],
     variantPrices: {
-      '0_256': Math.round(109000 * 1.02),
-      '0_512': Math.round(115500 * 1.02),
-      '0_1024': Math.round(119500 * 1.02),
-      '0_2048': Math.round(125000 * 1.02),
+      '0_256': Math.round(109000 * 1.03),
+      '0_512': Math.round(115500 * 1.03),
+      '0_1024': Math.round(119500 * 1.03),
+      '0_2048': Math.round(125000 * 1.03),
     }
   },
   'iPhone 17 Pro': {
     supportedStorageGb: [256, 512, 1024],
     variantPrices: {
-      '0_256': Math.round(101000 * 1.02),
-      '0_512': Math.round(106000 * 1.02),
-      '0_1024': Math.round(111000 * 1.02),
+      '0_256': Math.round(101000 * 1.03),
+      '0_512': Math.round(106000 * 1.03),
+      '0_1024': Math.round(111000 * 1.03),
     }
   },
   'iPhone 17e': {
     supportedStorageGb: [256, 512],
     variantPrices: {
-      '0_256': Math.round(43000 * 1.02),
-      '0_512': Math.round(52200 * 1.02),
+      '0_256': Math.round(43000 * 1.03),
+      '0_512': Math.round(52200 * 1.03),
     }
   },
   'iPhone 17': {
     supportedStorageGb: [256, 512],
     variantPrices: {
-      '0_256': Math.round(59000 * 1.02),
-      '0_512': Math.round(64500 * 1.02),
+      '0_256': Math.round(59000 * 1.03),
+      '0_512': Math.round(64500 * 1.03),
     }
   }
 };
@@ -803,9 +808,9 @@ const BASE_MODELS: Model[] = [
   { id: 'xi-poc5p',   brandId: 'brand-xiaomi', name: 'POCO F5 Pro', category: 'midrange', releaseYear: 2023, basePrice128GB: 10000, series: 'POCO Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/xiaomi-poco-x5-pro.jpg' },
 
   // --- VIVO ---
-  { id: 'vi-x200p',    brandId: 'brand-vivo', name: 'vivo X200 Pro', category: 'flagship', releaseYear: 2024, basePrice128GB: 38000, series: 'X Series & Folds' },
-  { id: 'vi-x200',     brandId: 'brand-vivo', name: 'vivo X200', category: 'flagship', releaseYear: 2024, basePrice128GB: 32000, series: 'X Series & Folds' },
-  { id: 'vi-x200t',    brandId: 'brand-vivo', name: 'vivo X200 Pro Mini', category: 'flagship', releaseYear: 2024, basePrice128GB: 30000, series: 'X Series & Folds' },
+  { id: 'vi-x200p',    brandId: 'brand-vivo', name: 'vivo X200 Pro', category: 'flagship', releaseYear: 2024, basePrice128GB: 38000, series: 'X Series & Folds', supportedStorageGb: [256, 512, 1024], supportedRamGb: [12, 16] },
+  { id: 'vi-x200',     brandId: 'brand-vivo', name: 'vivo X200', category: 'flagship', releaseYear: 2024, basePrice128GB: 32000, series: 'X Series & Folds', supportedStorageGb: [128, 256, 512], supportedRamGb: [8, 12, 16] },
+  { id: 'vi-x200t',    brandId: 'brand-vivo', name: 'vivo X200 Pro Mini', category: 'flagship', releaseYear: 2024, basePrice128GB: 30000, series: 'X Series & Folds', supportedStorageGb: [128, 256, 512], supportedRamGb: [8, 12] },
   { id: 'vi-x200fe',   brandId: 'brand-vivo', name: 'vivo X200 FE', category: 'premium',  releaseYear: 2024, basePrice128GB: 22000, series: 'X Series & Folds' },
   { id: 'vi-x100',     brandId: 'brand-vivo', name: 'vivo X100', category: 'flagship', releaseYear: 2024, basePrice128GB: 20000, series: 'X Series & Folds' },
   { id: 'vi-x100p',    brandId: 'brand-vivo', name: 'vivo X100 Pro', category: 'flagship', releaseYear: 2024, basePrice128GB: 27000, series: 'X Series & Folds' },
@@ -945,17 +950,47 @@ export const SMARTWATCH_MODELS: Model[] = [
   { id: 'samsung-watch-6', brandId: 'brand-samsung', name: 'Galaxy Watch 6', category: 'midrange', releaseYear: 2023, basePrice128GB: 11000, series: 'Galaxy Watch 6', supportedStorageGb: [16], supportedRamGb: [2], imageUrl: 'https://images.samsung.com/is/image/samsung/p6pim/in/sm-r930nzeainu/gallery/in-galaxy-watch6-r930-sm-r930nzeainu-537424785?$650_519_PNG$' }
 ];
 
-export const SMARTPHONE_MODELS: Model[] = [
+const RAW_SMARTPHONE_MODELS: Model[] = [
   ...BASE_MODELS,
   ...CATALOG_ADDITIONS.filter((addition) => !BASE_MODELS.some((model) =>
     model.brandId === addition.brandId && model.name.toLowerCase() === addition.name.toLowerCase(),
   )),
 ].filter(m => !isTabletDevice(m.brandId, m.name, m.id) && !isSmartwatchDevice(m.brandId, m.name, m.id));
 
+export const SMARTPHONE_MODELS: Model[] = RAW_SMARTPHONE_MODELS.map(m => {
+  const vp = buildVariantPricesForModel(m);
+  const maxPrice = Object.values(vp).length > 0 ? Math.max(...Object.values(vp)) : m.basePrice128GB;
+  return {
+    ...m,
+    basePrice128GB: maxPrice,
+    variantPrices: vp
+  };
+});
+
+export const TABLET_MODELS_WITH_PRICES: Model[] = TABLET_MODELS.map(m => {
+  const vp = buildVariantPricesForModel(m);
+  const maxPrice = Object.values(vp).length > 0 ? Math.max(...Object.values(vp)) : m.basePrice128GB;
+  return {
+    ...m,
+    basePrice128GB: maxPrice,
+    variantPrices: vp
+  };
+});
+
+export const SMARTWATCH_MODELS_WITH_PRICES: Model[] = SMARTWATCH_MODELS.map(m => {
+  const vp = buildVariantPricesForModel(m);
+  const maxPrice = Object.values(vp).length > 0 ? Math.max(...Object.values(vp)) : m.basePrice128GB;
+  return {
+    ...m,
+    basePrice128GB: maxPrice,
+    variantPrices: vp
+  };
+});
+
 export const MODELS: Model[] = [
   ...SMARTPHONE_MODELS,
-  ...TABLET_MODELS,
-  ...SMARTWATCH_MODELS,
+  ...TABLET_MODELS_WITH_PRICES,
+  ...SMARTWATCH_MODELS_WITH_PRICES,
 ];
 
 // Helper to get historically accurate colors for a model
@@ -1170,6 +1205,43 @@ export function getModelSupportedStorage(model: Model): number[] {
     return [128, 256, 512];
   }
   return [128, 256, 512, 1024];
+}
+
+/** Generates the full record of +3% Cashify prices for all supported RAM and storage variants of a model */
+export function buildVariantPricesForModel(model: Model): Record<string, number> {
+  if (model.variantPrices && Object.keys(model.variantPrices).length > 0) {
+    return model.variantPrices;
+  }
+  const rams = getModelSupportedRam(model);
+  const storages = getModelSupportedStorage(model);
+  const isApple = isAppleDevice(model.brandId, model.name);
+  const minRam = Math.min(...rams.filter(r => r > 0));
+
+  const map: Record<string, number> = {};
+  for (const r of rams) {
+    for (const s of storages) {
+      let baseCashify = predictCashifyPrice(model.brandId, model.name, model.category, model.releaseYear, s);
+      if (!isApple && r > 0 && rams.length > 1 && !isNaN(minRam) && isFinite(minRam)) {
+        const stepCount = (r - minRam) / 2;
+        if (stepCount > 0) {
+          baseCashify += Math.round(stepCount * 1200);
+        }
+      }
+      const pricePlus3Pct = Math.round(baseCashify * 1.03);
+      map[`${r}_${s}`] = pricePlus3Pct;
+    }
+  }
+  return map;
+}
+
+/** Returns the maximum variant price (Max RAM + Max Storage at +3%) for a model */
+export function getMaxVariantPrice(model: Model): number {
+  const vp = model.variantPrices || buildVariantPricesForModel(model);
+  const prices = Object.values(vp);
+  if (prices.length > 0) {
+    return Math.max(...prices);
+  }
+  return model.basePrice128GB;
 }
 
 /** Get the admin-defined price for a specific RAM+Storage combo, or best-guess fallback */

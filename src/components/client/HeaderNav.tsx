@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Smartphone, Tablet, Watch, ChevronDown, Zap, Truck, Menu, X, User, Package } from 'lucide-react';
+import { Smartphone, Tablet, Watch, ChevronDown, Zap, Truck, Menu, X, User, Package, Instagram } from 'lucide-react';
 import { ApiUser } from '../../utils/api';
 import { BRANDS as STATIC_BRANDS } from '../../data/mockDatabase';
 import { applyBrandOrder } from '../../utils/ordering';
@@ -263,6 +263,17 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
             </button>
           )}
 
+          <a
+            href="https://www.instagram.com/rephonix.in/"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Follow us on Instagram (@rephonix.in)"
+            aria-label="Instagram"
+            className="p-1.5 rounded-lg bg-pink-500/10 hover:bg-pink-500/20 text-pink-600 transition-all border border-pink-500/20 flex items-center justify-center"
+          >
+            <Instagram className="w-4 h-4" />
+          </a>
+
           {/* Customer Auth Session Controls */}
           {currentUser ? (
             <div className="relative">
@@ -446,6 +457,16 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
               <span>Track Order</span>
             </button>
           )}
+
+          <a
+            href="https://www.instagram.com/rephonix.in/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full flex items-center gap-2 text-sm font-semibold text-pink-600 py-2 px-3 rounded-lg bg-pink-500/10 hover:bg-pink-500/20 transition-colors border border-pink-500/20"
+          >
+            <Instagram className="w-4 h-4 text-pink-600" />
+            <span>Instagram (@rephonix.in)</span>
+          </a>
 
           {/* Mobile User Session controls */}
           {currentUser ? (
