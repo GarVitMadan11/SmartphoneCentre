@@ -1373,6 +1373,11 @@ export function getDeviceImage(modelId: string, brandId: string, color?: string,
     cleanId.replace(/^apple-iphone-16-/, 'apple-16'),
     cleanId.replace(/^apple-iphone-15-/, 'apple-15'),
     cleanId.replace(/^samsung-galaxy-/, 'sam-'),
+    deDuplicatedId.replace(/^oneplus-/, 'op-'),
+    deDuplicatedId.replace(/^oneplus-nord-/, 'op-nord'),
+    deDuplicatedId.replace(/^oneplus-nord-/, 'op-nord').replace(/-/g, ''),
+    cleanId.replace(/^oneplus-oneplus-/, 'oneplus-'),
+    cleanId.replace(/^oneplus-oneplus-/, 'op-'),
   ];
 
   for (const key of possibleKeys) {

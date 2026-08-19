@@ -39,6 +39,26 @@ export interface RepairCostConfig {
   speakerRepairCost: number;
 }
 
+export type AgeFactorKey = 
+  | 'under_3m'
+  | '3_to_6m'
+  | '6_to_12m'
+  | '1_to_2y'
+  | '2_to_3y'
+  | '3_to_4y'
+  | 'above_4y';
+
+export type MarketDemandKey = 
+  | 'high'
+  | 'normal'
+  | 'weak';
+
+export type VariantFactorKey = 
+  | 'indian'
+  | 'imported_unlocked'
+  | 'imported_esim_only'
+  | 'carrier_locked';
+
 export interface PricingRulesConfig {
   vendorThreshold: number; // ₹50,000
   vendorLowMultiplier: number; // 1.02 (+2%)
@@ -46,6 +66,10 @@ export interface PricingRulesConfig {
   ruleVersion: string;
   segments: Record<DeviceSegment, SegmentConfig>;
   repairCosts: Record<DeviceSegment, RepairCostConfig>;
+  ageFactors: Record<AgeFactorKey, number>;
+  marketDemandFactors: Record<MarketDemandKey, number>;
+  variantFactors: Record<VariantFactorKey, number>;
+  accessoryMaxCapPercent: number; // e.g. 0.10 (10% of base benchmark)
   simRegionAdjustments: {
     preferredIndianConfig: number; // ₹0
     importedConfig: number; // -₹1,500
@@ -70,8 +94,32 @@ export const DEFAULT_PRICING_RULES_CONFIG: PricingRulesConfig = {
   vendorThreshold: 50000,
   vendorLowMultiplier: 1.02,  // +2% for <= ₹50,000
   vendorHighMultiplier: 1.03, // +3% for > ₹50,000
-  ruleVersion: '1.0.0-stage1',
+  ruleVersion: '2.0.0-stage1-multiplicative',
   roundingStrategy: 'clean_50',
+  accessoryMaxCapPercent: 0.10, // Cap total accessory deductions to 10% of B_market
+
+  ageFactors: {
+    under_3m: 1.00,
+    '3_to_6m': 0.97,
+    '6_to_12m': 0.94,
+    '1_to_2y': 0.88,
+    '2_to_3y': 0.80,
+    '3_to_4y': 0.70,
+    above_4y: 0.60,
+  },
+
+  marketDemandFactors: {
+    high: 1.00,
+    normal: 0.97,
+    weak: 0.92,
+  },
+
+  variantFactors: {
+    indian: 1.00,
+    imported_unlocked: 0.95,
+    imported_esim_only: 0.88,
+    carrier_locked: 0.75,
+  },
   
   simRegionAdjustments: {
     preferredIndianConfig: 0,

@@ -24,11 +24,29 @@ function getApiBaseUrl(): string {
   return '/api';
 }
 
-function csrfToken(): string | undefined {
+function csrfToken(path?: string, withAuth?: boolean): string | undefined {
+  if (typeof document === 'undefined') return undefined;
   const cookies = document.cookie.split('; ');
+  const adminToken = cookies.find(cookie => cookie.startsWith('rex_admin_csrf='))?.split('=').slice(1).join('=');
   const customerToken = cookies.find(cookie => cookie.startsWith('rex_csrf='))?.split('=').slice(1).join('=');
-  if (customerToken) return customerToken;
-  return cookies.find(cookie => cookie.startsWith('rex_admin_csrf='))?.split('=').slice(1).join('=');
+
+  const isAdminPath = Boolean(
+    withAuth ||
+    hasAdminToken() ||
+    (path && (
+      path.startsWith('/admin') ||
+      path.startsWith('/models') ||
+      path.startsWith('/bookings') ||
+      path.startsWith('/analytics') ||
+      path.startsWith('/support')
+    ))
+  );
+
+  if (isAdminPath) {
+    return adminToken || customerToken;
+  }
+
+  return customerToken || adminToken;
 }
 
 interface ApiError {
@@ -76,7 +94,7 @@ async function apiFetch<T>(path: string, options?: RequestInit, withAuth = false
   }
 
   if (options?.method && !['GET', 'HEAD'].includes(options.method.toUpperCase())) {
-    const token = csrfToken();
+    const token = csrfToken(path, withAuth);
     if (token) headers['X-CSRF-Token'] = token;
   }
 

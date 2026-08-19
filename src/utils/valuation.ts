@@ -1,5 +1,6 @@
 import { Variant, DefectRule } from '../data/mockDatabase';
 import { calculateStage1Valuation, Stage1ValuationResult, PricingAuditTrail } from './pricingEngine';
+import { AgeFactorKey, MarketDemandKey, VariantFactorKey } from '../data/pricingRulesConfig';
 
 export interface ValuationDeduction {
   ruleId?: string;
@@ -30,8 +31,8 @@ export interface ValuationBreakdown {
 
 /**
  * Wrapper for Stage 1 Rephonix Pricing Engine.
- * Calculates trade-in value applying segment condition bands, Type A/B/C deductions,
- * repair economics, vendor +2%/+3% rule, and rounding strategy.
+ * Calculates trade-in value applying multiplicative condition factors, severity groups,
+ * age & market demand factors, variant adjustment, capped accessory deductions, and vendor premium rule.
  */
 export function calculateValuation(
   variant: Variant,
@@ -44,6 +45,9 @@ export function calculateValuation(
     simType?: 'dual_sim' | 'single_sim';
     regionConfig?: 'indian' | 'imported';
     warrantyAge?: 'under_3m' | '3_to_6m' | '6_to_11m' | 'out_of_warranty';
+    deviceAge?: AgeFactorKey;
+    marketDemand?: MarketDemandKey;
+    variantType?: VariantFactorKey;
   }
 ): ValuationBreakdown {
   const result: Stage1ValuationResult = calculateStage1Valuation({
@@ -55,7 +59,10 @@ export function calculateValuation(
     selectedDefects,
     simType: options?.simType || 'dual_sim',
     regionConfig: options?.regionConfig || 'indian',
-    warrantyAge: options?.warrantyAge || 'out_of_warranty'
+    warrantyAge: options?.warrantyAge || 'out_of_warranty',
+    deviceAge: options?.deviceAge,
+    marketDemand: options?.marketDemand,
+    variantType: options?.variantType
   });
 
   const deductions: ValuationDeduction[] = result.auditTrail.adjustments.map(adj => ({

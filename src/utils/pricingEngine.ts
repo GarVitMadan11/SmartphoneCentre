@@ -1,9 +1,12 @@
-import type { Variant, DefectRule } from '../data/mockDatabase';
+import type { Variant, DefectRule } from '../data/mockDatabase.ts';
 import { 
   DeviceSegment, 
   DEFAULT_PRICING_RULES_CONFIG, 
-  PricingRulesConfig 
-} from '../data/pricingRulesConfig';
+  PricingRulesConfig,
+  AgeFactorKey,
+  MarketDemandKey,
+  VariantFactorKey
+} from '../data/pricingRulesConfig.ts';
 
 export function isAppleBrand(brandId: string, modelName: string): boolean {
   if (brandId === 'brand-apple' || brandId.toLowerCase().includes('apple')) return true;
@@ -21,6 +24,9 @@ export interface PricingInput {
   simType?: 'dual_sim' | 'single_sim';
   regionConfig?: 'indian' | 'imported';
   warrantyAge?: 'under_3m' | '3_to_6m' | '6_to_11m' | 'out_of_warranty';
+  deviceAge?: AgeFactorKey;
+  marketDemand?: MarketDemandKey;
+  variantType?: VariantFactorKey;
   configOverride?: Partial<PricingRulesConfig>;
 }
 
@@ -28,7 +34,7 @@ export interface AdjustmentDetail {
   id: string;
   name: string;
   category: string;
-  type: 'TYPE_A_PERCENT' | 'TYPE_B_FIXED' | 'TYPE_C_REPAIR_COST' | 'WARRANTY_BONUS';
+  type: 'TYPE_A_PERCENT' | 'TYPE_B_FIXED' | 'TYPE_C_REPAIR_COST' | 'WARRANTY_BONUS' | 'FACTOR_MULTIPLICATIVE';
   rateOrValue: number;
   impactAmount: number; // Negative for deductions, positive for bonuses
 }
@@ -43,6 +49,17 @@ export interface PricingAuditTrail {
   region: string;
   simConfig: string;
   baseCashifyBenchmark: number;
+  fAge: number;
+  fMarket: number;
+  fCosmetic: number;
+  fDisplay: number;
+  fFunctional: number;
+  fBattery: number;
+  fCondition: number;
+  fVariant: number;
+  preAccessoryValue: number;
+  dAccessories: number;
+  dAccessoriesCapped: number;
   adjustments: AdjustmentDetail[];
   totalFixedAdjustments: number;
   totalWarrantyBonus: number;
@@ -113,20 +130,21 @@ export function roundToCleanIndianPrice(amount: number, strategy: 'clean_50' | '
   if (amount <= 0) return 0;
 
   if (strategy === 'clean_50') {
-    // Round to nearest 50 (e.g. ₹61,964 -> ₹61,950)
     return Math.round(amount / 50) * 50;
   } else if (strategy === 'clean_99') {
-    // Round to xx99 (e.g. ₹61,964 -> ₹61,999)
     const baseHundred = Math.floor(amount / 100) * 100;
     return baseHundred + 99;
   } else {
-    // Nearest 100 (e.g. ₹61,964 -> ₹62,000)
     return Math.round(amount / 100) * 100;
   }
 }
 
 /**
- * Evaluates a smartphone trade-in through Stage 1 of the Rephonix Dynamic Pricing Engine.
+ * Evaluates a smartphone trade-in through Stage 1 of the Rephonix Dynamic Pricing Engine
+ * using the Multiplicative Condition & Severity Group Valuation Model:
+ *
+ *   V_S1 = (B_market * F_age * F_market * F_condition * F_variant) - D_accessories
+ *   where F_condition = F_cosmetic * F_display * F_functional * F_battery
  */
 export function calculateStage1Valuation(input: PricingInput): Stage1ValuationResult {
   const config: PricingRulesConfig = {
@@ -136,15 +154,12 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
 
   const isApple = isAppleBrand(input.brandId, input.modelName);
   const segment = determineDeviceSegment(input.brandId, input.modelName, input.category);
-  const segmentConfig = config.segments[segment];
-  const repairConfig = config.repairCosts[segment];
-
-  const basePrice = input.variant.basePrice;
+  const basePrice = input.variant.basePrice; // Current Market Benchmark B_market
   const adjustments: AdjustmentDetail[] = [];
 
-  // Critical Gate Check (iCloud Locked, Boot Failure)
-  const criticalDefect = input.selectedDefects.find(d => d.isCriticalFailure);
-  if (criticalDefect) {
+  // Critical Gate Check (iCloud Locked, Boot Failure) -> Immediate Reject / Salvage
+  const criticalDefect = input.selectedDefects.find(d => d.isCriticalFailure || d.id === 'defect-critical-power' || d.id === 'defect-critical-security');
+  if (criticalDefect && (criticalDefect.isCriticalFailure || criticalDefect.id === 'defect-critical-power')) {
     const auditTrail: PricingAuditTrail = {
       deviceId: input.modelId,
       modelName: input.modelName,
@@ -155,6 +170,17 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
       region: input.regionConfig || 'indian',
       simConfig: input.simType || 'dual_sim',
       baseCashifyBenchmark: basePrice,
+      fAge: 1.0,
+      fMarket: 1.0,
+      fCosmetic: 1.0,
+      fDisplay: 1.0,
+      fFunctional: 0.0,
+      fBattery: 1.0,
+      fCondition: 0.0,
+      fVariant: 1.0,
+      preAccessoryValue: 0,
+      dAccessories: 0,
+      dAccessoriesCapped: 0,
       adjustments: [{
         id: criticalDefect.id,
         name: criticalDefect.description,
@@ -194,166 +220,118 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
     };
   }
 
-  // 1. TYPE B: Fixed Configuration Adjustments (Region, SIM, Accessories)
-  let totalFixedAdjustments = 0;
-
-  // SIM Configuration
-  if (input.simType === 'single_sim') {
-    const simDeduction = config.simRegionAdjustments.singleSimConfig; // -₹500
-    adjustments.push({
-      id: 'config-single-sim',
-      name: 'Single SIM Configuration Adjustment',
-      category: 'configuration',
-      type: 'TYPE_B_FIXED',
-      rateOrValue: simDeduction,
-      impactAmount: simDeduction
-    });
-    totalFixedAdjustments += simDeduction;
+  // 1. Age Factor F_age
+  let ageKey: AgeFactorKey = input.deviceAge || '6_to_12m';
+  if (!input.deviceAge && input.warrantyAge) {
+    if (input.warrantyAge === 'under_3m') ageKey = 'under_3m';
+    else if (input.warrantyAge === '3_to_6m') ageKey = '3_to_6m';
+    else if (input.warrantyAge === '6_to_11m') ageKey = '6_to_12m';
+    else ageKey = '1_to_2y';
   }
+  const fAge = config.ageFactors[ageKey] ?? 1.00;
 
-  // Region Configuration
-  if (input.regionConfig === 'imported') {
-    const importedDeduction = config.simRegionAdjustments.importedConfig; // -₹1500
-    adjustments.push({
-      id: 'config-imported',
-      name: 'Imported Regional Model Adjustment',
-      category: 'configuration',
-      type: 'TYPE_B_FIXED',
-      rateOrValue: importedDeduction,
-      impactAmount: importedDeduction
-    });
-    totalFixedAdjustments += importedDeduction;
+  // 2. Market Demand Factor F_market
+  const marketKey: MarketDemandKey = input.marketDemand || 'high';
+  const fMarket = config.marketDemandFactors[marketKey] ?? 1.00;
+
+  // 3. Variant Factor F_variant
+  let variantKey: VariantFactorKey = input.variantType || 'indian';
+  if (!input.variantType) {
+    if (input.regionConfig === 'imported' && input.simType === 'single_sim') {
+      variantKey = 'imported_esim_only';
+    } else if (input.regionConfig === 'imported') {
+      variantKey = 'imported_unlocked';
+    } else {
+      variantKey = 'indian';
+    }
   }
+  const fVariant = config.variantFactors[variantKey] ?? 1.00;
 
-  // Accessories (Missing Box, Charger, Bill)
-  let accessoryDeductionsSum = 0;
+  // 4. Severity Grouping for Condition Factor F_condition = F_cosmetic * F_display * F_functional * F_battery
+  
+  // Group A — Cosmetic (Body scratches, dents, back glass)
+  // Deduplicate within Group A by selecting the lowest cosmetic factor (highest penalty)
+  const cosmeticDefects = input.selectedDefects.filter(d => d.category === 'body');
+  let fCosmetic = 1.00;
+
+  cosmeticDefects.forEach(defect => {
+    const penalty = defect.deductionPercentage || (defect.deductionFixed > 0 ? defect.deductionFixed / basePrice : 0);
+    const factor = Math.max(0, 1.0 - penalty);
+    if (factor < fCosmetic) {
+      fCosmetic = factor;
+    }
+  });
+
+  // Group B — Display (Scratches, cracks, touch, OLED/LCD, non-OEM display)
+  // Deduplicate within Group B by selecting the single worst display factor
+  const displayDefects = input.selectedDefects.filter(d => d.category === 'screen');
+  let fDisplay = 1.00;
+
+  displayDefects.forEach(defect => {
+    let penalty = defect.deductionPercentage || 0;
+    if (defect.id === 'defect-screen-cracked' && penalty === 0) {
+      penalty = 0.28; // Standard ~28% display panel deduction
+    }
+    const factor = Math.max(0, 1.0 - penalty);
+    if (factor < fDisplay) {
+      fDisplay = factor;
+    }
+  });
+
+  // Group C — Functional (Camera, speaker, mic, charging port, biometrics)
+  // Multiplicative stacking across distinct functional components (excluding battery)
+  const functionalDefects = input.selectedDefects.filter(d => 
+    (d.category === 'camera' || d.category === 'functionality' || d.category === 'connectivity') &&
+    !d.id.includes('battery')
+  );
+  let fFunctional = 1.00;
+
+  functionalDefects.forEach(defect => {
+    let penalty = defect.deductionPercentage || 0;
+    if (penalty === 0 && defect.deductionFixed > 0) {
+      penalty = Math.min(0.25, defect.deductionFixed / basePrice);
+    }
+    const factor = Math.max(0, 1.0 - penalty);
+    fFunctional *= factor;
+  });
+
+  // Group D — Battery (Health degradation, service warning)
+  const batteryDefects = input.selectedDefects.filter(d => d.id.includes('battery'));
+  let fBattery = 1.00;
+  batteryDefects.forEach(defect => {
+    const penalty = defect.deductionPercentage || 0.05;
+    fBattery *= Math.max(0, 1.0 - penalty);
+  });
+
+  // Total Multiplicative Condition Score
+  const fCondition = fCosmetic * fDisplay * fFunctional * fBattery;
+
+  // Calculate Pre-Accessory Valuation
+  const preAccessoryValue = Math.round(basePrice * fAge * fMarket * fCondition * fVariant);
+
+  // Group E — Accessories (Box, Charger, Cable, Invoice) -> Fixed Economic Deductions
+  let dAccessoriesRaw = 0;
   input.selectedDefects.filter(d => d.category === 'accessories').forEach(defect => {
-    const amount = -Math.abs(defect.deductionFixed || Math.round(basePrice * (defect.deductionPercentage || 0)));
+    const fixedAmount = Math.abs(defect.deductionFixed || Math.round(basePrice * (defect.deductionPercentage || 0)));
+    dAccessoriesRaw += fixedAmount;
     adjustments.push({
       id: defect.id,
       name: defect.description,
       category: 'accessories',
       type: 'TYPE_B_FIXED',
-      rateOrValue: amount,
-      impactAmount: amount
+      rateOrValue: -fixedAmount,
+      impactAmount: -fixedAmount
     });
-    accessoryDeductionsSum += amount;
-  });
-  totalFixedAdjustments += accessoryDeductionsSum;
-
-  // 2. Warranty Premium (+1% to +4%)
-  let totalWarrantyBonus = 0;
-  if (input.warrantyAge === 'under_3m') {
-    totalWarrantyBonus = Math.round(basePrice * config.warrantyBonus.under3mPercent);
-  } else if (input.warrantyAge === '3_to_6m') {
-    totalWarrantyBonus = Math.round(basePrice * config.warrantyBonus.months3to6Percent);
-  } else if (input.warrantyAge === '6_to_11m') {
-    totalWarrantyBonus = Math.round(basePrice * config.warrantyBonus.months6to12Percent);
-  }
-  // Clamp warranty bonus to max configured percentage
-  const maxAllowedBonus = Math.round(basePrice * config.warrantyBonus.maxBonusPercent);
-  totalWarrantyBonus = Math.min(totalWarrantyBonus, maxAllowedBonus);
-
-  if (totalWarrantyBonus > 0) {
-    adjustments.push({
-      id: 'bonus-warranty',
-      name: 'Official Brand Warranty Premium',
-      category: 'warranty',
-      type: 'WARRANTY_BONUS',
-      rateOrValue: totalWarrantyBonus,
-      impactAmount: totalWarrantyBonus
-    });
-  }
-
-  // 3. TYPE C: Repair-Cost Adjustments (Display, Camera, Major Hardware)
-  let totalRepairCostDeductions = 0;
-  const hasCrackedScreen = input.selectedDefects.some(d => d.id === 'defect-screen-cracked');
-  const hasNonGenuineDisplay = input.selectedDefects.some(d => d.id === 'defect-display-nongenuine');
-
-  if (hasCrackedScreen) {
-    // Expected repair cost + risk/marketability adjustment
-    const displayDeduction = repairConfig.displayRepairCost + repairConfig.displayRiskAdjustment;
-    adjustments.push({
-      id: 'repair-display-cracked',
-      name: 'Display Panel Assembly Repair & Risk Adjustment',
-      category: 'screen',
-      type: 'TYPE_C_REPAIR_COST',
-      rateOrValue: -displayDeduction,
-      impactAmount: -displayDeduction
-    });
-    totalRepairCostDeductions += displayDeduction;
-  }
-
-  const hasFaultyCamera = input.selectedDefects.some(d => d.id === 'defect-camera-faulty');
-  if (hasFaultyCamera) {
-    const cameraDeduction = repairConfig.cameraRepairCost;
-    adjustments.push({
-      id: 'repair-camera-module',
-      name: 'Camera Optical Assembly Replacement',
-      category: 'camera',
-      type: 'TYPE_C_REPAIR_COST',
-      rateOrValue: -cameraDeduction,
-      impactAmount: -cameraDeduction
-    });
-    totalRepairCostDeductions += cameraDeduction;
-  }
-
-  // 4. TYPE A: Percentage-Based Adjustments (Body wear, minor screen, battery, biometrics)
-  let totalConditionDeductions = 0;
-  
-  // Controlled combined rule: If screen is cracked (repair cost applied), ignore generic screen scratch %
-  const defectsForPercentTypeA = input.selectedDefects.filter(d => {
-    if (d.category === 'accessories') return false;
-    if (hasCrackedScreen && (d.id === 'defect-screen-scratches' || d.id === 'defect-screen-cracked')) return false;
-    if (hasFaultyCamera && d.id === 'defect-camera-faulty') return false;
-    if (hasNonGenuineDisplay && hasCrackedScreen && d.id === 'defect-display-nongenuine') return false; // Prevent double deduct
-    return true;
   });
 
-  defectsForPercentTypeA.forEach(defect => {
-    let pct = defect.deductionPercentage || 0;
-    if (pct === 0 && defect.deductionFixed > 0) {
-      // Fixed defect outside accessories -> convert to equivalent rupee reduction
-      const amount = Math.round(defect.deductionFixed);
-      adjustments.push({
-        id: defect.id,
-        name: defect.description,
-        category: defect.category,
-        type: 'TYPE_B_FIXED',
-        rateOrValue: -amount,
-        impactAmount: -amount
-      });
-      totalConditionDeductions += amount;
-      return;
-    }
+  // Cap total accessory deduction to config max percentage (default 10% of B_market)
+  const maxAccessoryCap = Math.round(basePrice * config.accessoryMaxCapPercent);
+  const dAccessoriesCapped = Math.min(dAccessoriesRaw, maxAccessoryCap);
 
-    const amount = Math.round(basePrice * pct);
-    adjustments.push({
-      id: defect.id,
-      name: defect.description,
-      category: defect.category,
-      type: 'TYPE_A_PERCENT',
-      rateOrValue: pct,
-      impactAmount: -amount
-    });
-    totalConditionDeductions += amount;
-  });
+  // Calculate Pre-Vendor Adjusted Benchmark
+  let adjustedBenchmark = preAccessoryValue - dAccessoriesCapped;
 
-  // 5. Condition Caps & Special Repair Category Determination
-  const totalDeductionRatio = (totalConditionDeductions + totalRepairCostDeductions) / basePrice;
-  const isSpecialPartsCategory = totalDeductionRatio > segmentConfig.normalConditionCap || 
-                                  input.selectedDefects.some(d => d.id === 'defect-func-restart' || d.id === 'defect-critical-power');
-
-  let cappedConditionDeductions = totalConditionDeductions;
-  if (!isSpecialPartsCategory && totalDeductionRatio > segmentConfig.normalConditionCap) {
-    cappedConditionDeductions = Math.round(basePrice * segmentConfig.normalConditionCap) - totalRepairCostDeductions;
-    cappedConditionDeductions = Math.max(0, cappedConditionDeductions);
-  }
-
-  // 6. Calculate Adjusted Benchmark
-  let adjustedBenchmark = basePrice + totalFixedAdjustments + totalWarrantyBonus - (cappedConditionDeductions + totalRepairCostDeductions);
-  
-  // Floor clamp: minimum recycle floor (8% of base or ₹500)
+  // Minimum Valuation / Salvage Floor Check
   const minimumRecycleFloor = Math.max(500, Math.round(basePrice * 0.08));
   if (adjustedBenchmark < minimumRecycleFloor) {
     adjustedBenchmark = minimumRecycleFloor;
@@ -369,6 +347,8 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
   // 8. Customer-Facing Rounding Strategy
   const finalRephonixPrice = roundToCleanIndianPrice(rawCalculatedPrice, config.roundingStrategy);
 
+  const isSpecialPartsCategory = fCondition < 0.55;
+
   // Construct Audit Trail
   const auditTrail: PricingAuditTrail = {
     deviceId: input.modelId,
@@ -380,11 +360,22 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
     region: input.regionConfig || 'indian',
     simConfig: input.simType || 'dual_sim',
     baseCashifyBenchmark: basePrice,
+    fAge,
+    fMarket,
+    fCosmetic,
+    fDisplay,
+    fFunctional,
+    fBattery,
+    fCondition,
+    fVariant,
+    preAccessoryValue,
+    dAccessories: dAccessoriesRaw,
+    dAccessoriesCapped,
     adjustments,
-    totalFixedAdjustments,
-    totalWarrantyBonus,
-    totalConditionDeductions: cappedConditionDeductions,
-    totalRepairCostDeductions,
+    totalFixedAdjustments: -dAccessoriesCapped,
+    totalWarrantyBonus: 0,
+    totalConditionDeductions: basePrice - preAccessoryValue,
+    totalRepairCostDeductions: 0,
     adjustedBenchmark,
     vendorMultiplier,
     vendorMultiplierPercentage,
@@ -404,9 +395,10 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
     auditTrail,
     customerSummary: {
       baseDeviceValue: basePrice,
-      configurationAdjustments: totalFixedAdjustments + totalWarrantyBonus,
-      conditionAdjustments: -(cappedConditionDeductions + totalRepairCostDeductions),
+      configurationAdjustments: Math.round(preAccessoryValue - basePrice),
+      conditionAdjustments: -dAccessoriesCapped,
       finalOffer: finalRephonixPrice
     }
   };
 }
+

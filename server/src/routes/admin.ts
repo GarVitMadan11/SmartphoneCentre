@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { randomBytes } from 'node:crypto';
 import prisma from '../db.js';
-import { adminAuth, getJwtSecret, JWT_ISSUER, JWT_AUDIENCE, AuthenticatedRequest } from '../middleware/adminAuth.js';
+import { adminAuth, getJwtSecret, JWT_ISSUER, JWT_AUDIENCE, parseCookies, AuthenticatedRequest } from '../middleware/adminAuth.js';
 
 const router = Router();
 
@@ -203,6 +203,17 @@ router.post('/logout', (_req: Request, res: Response): void => {
  * Returns current authenticated admin profile and role.
  */
 router.get('/me', adminAuth, (req: AuthenticatedRequest, res: Response): void => {
+  const cookies = parseCookies(req);
+  if (!cookies['rex_admin_csrf']) {
+    const isProd = process.env.NODE_ENV === 'production';
+    res.cookie('rex_admin_csrf', randomBytes(32).toString('base64url'), {
+      httpOnly: false,
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
+      maxAge: 4 * 60 * 60 * 1000,
+      path: '/',
+    });
+  }
   res.json({
     id: req.user?.sub,
     username: req.user?.username,
