@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { BRANDS as STATIC_BRANDS, SMARTPHONE_MODELS as STATIC_SMARTPHONE_MODELS, Model, Brand, Variant, generateVariantsForModel, getDeviceImage, getModelSupportedRam, getModelSupportedStorage, getVariantPrice, isTabletDevice, isSmartwatchDevice } from '../../data/mockDatabase';
+import { BRANDS as STATIC_BRANDS, SMARTPHONE_MODELS as STATIC_SMARTPHONE_MODELS, Model, Brand, Variant, generateVariantsForModel, getDeviceImage, getModelSupportedRam, getModelSupportedStorage, getVariantPrice, isTabletDevice, isSmartwatchDevice, sortModelsByLaunchDesc } from '../../data/mockDatabase';
 import { applyBrandOrder, applySeriesOrder, applyModelOrder } from '../../utils/ordering';
 import { Search, ChevronRight, Smartphone, Layers, ArrowLeft, ArrowRight, Cpu, Wifi, Radio, X, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -695,30 +695,19 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
     });
     const seriesList = Array.from(seriesSet);
     
-    // Sort series list in a smart way (newest/flagship first)
+    // Sort series list by max launch year descending (newest launch series first)
     const defaultSortedSeries = seriesList.sort((a, b) => {
-      const priority = (name: string) => {
-        const lower = name.toLowerCase();
-        if (lower.includes('17')) return 100;
-        if (lower.includes('16')) return 99;
-        if (lower.includes('15')) return 98;
-        if (lower.includes('14')) return 97;
-        if (lower.includes('13')) return 96;
-        if (lower.includes('12')) return 95;
-        if (lower.includes('s series')) return 100;
-        if (lower.includes('fold')) return 95;
-        if (lower.includes('numbered')) return 100; // OnePlus Numbered
-        if (lower.includes('pixel 8')) return 100;
-        if (lower.includes('pixel 7')) return 99;
-        if (lower.includes('pixel 6')) return 98;
-        if (lower.includes('xiaomi series')) return 100;
-        if (lower.includes('note')) return 90;
-        if (lower.includes('poco')) return 80;
-        if (lower.includes('v series')) return 90;
-        if (lower.includes('legacy') || lower.includes('se')) return 10;
-        return 50;
-      };
-      return priority(b) - priority(a);
+      const modelsA = brandModels.filter(m => m.series === a);
+      const modelsB = brandModels.filter(m => m.series === b);
+      const maxYearA = modelsA.length > 0 ? Math.max(...modelsA.map(m => m.releaseYear)) : 0;
+      const maxYearB = modelsB.length > 0 ? Math.max(...modelsB.map(m => m.releaseYear)) : 0;
+      if (maxYearB !== maxYearA) return maxYearB - maxYearA;
+
+      const maxPriceA = modelsA.length > 0 ? Math.max(...modelsA.map(m => m.basePrice128GB)) : 0;
+      const maxPriceB = modelsB.length > 0 ? Math.max(...modelsB.map(m => m.basePrice128GB)) : 0;
+      if (maxPriceB !== maxPriceA) return maxPriceB - maxPriceA;
+
+      return a.localeCompare(b);
     });
 
     return applySeriesOrder(selectedBrandId, defaultSortedSeries);
@@ -785,7 +774,8 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
       return matchesBrand && matchesSeries && matchesSearch;
     });
 
-    return applyModelOrder(selectedBrandId, filtered);
+    const sortedByLaunch = sortModelsByLaunchDesc(filtered);
+    return applyModelOrder(selectedBrandId, sortedByLaunch);
   }, [selectedBrandId, selectedSeries, debouncedSearchQuery, MODELS, BRANDS, orderVersion]);
 
   // Generate variants for the selected model

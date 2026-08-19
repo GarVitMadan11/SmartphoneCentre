@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { TABLET_MODELS, Model, Variant, getModelSupportedRam, getModelSupportedStorage, getVariantPrice } from '../../data/mockDatabase';
+import { TABLET_MODELS, Model, Variant, getModelSupportedRam, getModelSupportedStorage, getVariantPrice, sortModelsByLaunchDesc } from '../../data/mockDatabase';
 import { Tablet, Sparkles, ArrowRight, Search, X, Cpu, HardDrive, CheckCircle2, Wifi, Radio } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -30,17 +30,21 @@ export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
     }
   }, [defaultBrand]);
 
-  const filteredModels = TABLET_MODELS.filter(m => {
-    const matchesBrand =
-      selectedBrand === 'all' ||
-      (selectedBrand === 'apple' && m.brandId === 'brand-apple') ||
-      (selectedBrand === 'samsung' && m.brandId === 'brand-samsung');
+  const filteredModels = useMemo(() => {
+    const list = TABLET_MODELS.filter(m => {
+      const matchesBrand =
+        selectedBrand === 'all' ||
+        (selectedBrand === 'apple' && m.brandId === 'brand-apple') ||
+        (selectedBrand === 'samsung' && m.brandId === 'brand-samsung');
 
-    const q = searchQuery.toLowerCase().trim();
-    const matchesSearch = !q || m.name.toLowerCase().includes(q) || (m.series && m.series.toLowerCase().includes(q));
+      const q = searchQuery.toLowerCase().trim();
+      const matchesSearch = !q || m.name.toLowerCase().includes(q) || (m.series && m.series.toLowerCase().includes(q));
 
-    return matchesBrand && matchesSearch;
-  });
+      return matchesBrand && matchesSearch;
+    });
+
+    return sortModelsByLaunchDesc(list);
+  }, [selectedBrand, searchQuery]);
 
   const ramOptions = useMemo(() => {
     if (!selectedModelForSpec) return [];

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { SMARTWATCH_MODELS, Model, Variant, getVariantPrice } from '../../data/mockDatabase';
+import { SMARTWATCH_MODELS, Model, Variant, getVariantPrice, sortModelsByLaunchDesc } from '../../data/mockDatabase';
 import { Watch, Sparkles, ArrowRight, Search, X, HardDrive, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -28,17 +28,21 @@ export const SmartwatchesShowcase: React.FC<SmartwatchesShowcaseProps> = ({
     }
   }, [defaultBrand]);
 
-  const filteredModels = SMARTWATCH_MODELS.filter(m => {
-    const matchesBrand =
-      selectedBrand === 'all' ||
-      (selectedBrand === 'apple' && m.brandId === 'brand-apple') ||
-      (selectedBrand === 'samsung' && m.brandId === 'brand-samsung');
+  const filteredModels = useMemo(() => {
+    const list = SMARTWATCH_MODELS.filter(m => {
+      const matchesBrand =
+        selectedBrand === 'all' ||
+        (selectedBrand === 'apple' && m.brandId === 'brand-apple') ||
+        (selectedBrand === 'samsung' && m.brandId === 'brand-samsung');
 
-    const q = searchQuery.toLowerCase().trim();
-    const matchesSearch = !q || m.name.toLowerCase().includes(q) || (m.series && m.series.toLowerCase().includes(q));
+      const q = searchQuery.toLowerCase().trim();
+      const matchesSearch = !q || m.name.toLowerCase().includes(q) || (m.series && m.series.toLowerCase().includes(q));
 
-    return matchesBrand && matchesSearch;
-  });
+      return matchesBrand && matchesSearch;
+    });
+
+    return sortModelsByLaunchDesc(list);
+  }, [selectedBrand, searchQuery]);
 
   const storageOptions = useMemo(() => {
     if (!selectedModelForSpec) return [16, 32, 64];

@@ -337,7 +337,14 @@ app.get('/api/models', async (req, res) => {
     const where: Record<string, unknown> = {};
     if (brandId && typeof brandId === 'string') where.brandId = brandId;
 
-    const models = await prisma.model.findMany({ where, orderBy: { releaseYear: 'desc' } });
+    const models = await prisma.model.findMany({
+      where,
+      orderBy: [
+        { releaseYear: 'desc' },
+        { basePrice128GB: 'desc' },
+        { name: 'asc' },
+      ],
+    });
     res.json(models.map(m => {
       let parsedStorageGb: number[] | undefined;
       let parsedRamGb: number[] | undefined;

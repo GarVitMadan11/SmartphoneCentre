@@ -950,14 +950,26 @@ export const SMARTWATCH_MODELS: Model[] = [
   { id: 'samsung-watch-6', brandId: 'brand-samsung', name: 'Galaxy Watch 6', category: 'midrange', releaseYear: 2023, basePrice128GB: 11000, series: 'Galaxy Watch 6', supportedStorageGb: [16], supportedRamGb: [2], imageUrl: 'https://images.samsung.com/is/image/samsung/p6pim/in/sm-r930nzeainu/gallery/in-galaxy-watch6-r930-sm-r930nzeainu-537424785?$650_519_PNG$' }
 ];
 
-const RAW_SMARTPHONE_MODELS: Model[] = [
+export function sortModelsByLaunchDesc(modelsList: Model[]): Model[] {
+  return [...modelsList].sort((a, b) => {
+    if (b.releaseYear !== a.releaseYear) {
+      return b.releaseYear - a.releaseYear;
+    }
+    if (b.basePrice128GB !== a.basePrice128GB) {
+      return b.basePrice128GB - a.basePrice128GB;
+    }
+    return a.name.localeCompare(b.name);
+  });
+}
+
+const RAW_SMARTPHONE_MODELS: Model[] = sortModelsByLaunchDesc([
   ...BASE_MODELS,
   ...CATALOG_ADDITIONS.filter((addition) => !BASE_MODELS.some((model) =>
     model.brandId === addition.brandId && model.name.toLowerCase() === addition.name.toLowerCase(),
   )),
-].filter(m => !isTabletDevice(m.brandId, m.name, m.id) && !isSmartwatchDevice(m.brandId, m.name, m.id));
+].filter(m => !isTabletDevice(m.brandId, m.name, m.id) && !isSmartwatchDevice(m.brandId, m.name, m.id)));
 
-export const SMARTPHONE_MODELS: Model[] = RAW_SMARTPHONE_MODELS.map(m => {
+export const SMARTPHONE_MODELS: Model[] = sortModelsByLaunchDesc(RAW_SMARTPHONE_MODELS.map(m => {
   const vp = buildVariantPricesForModel(m);
   const maxPrice = Object.values(vp).length > 0 ? Math.max(...Object.values(vp)) : m.basePrice128GB;
   return {
@@ -965,9 +977,9 @@ export const SMARTPHONE_MODELS: Model[] = RAW_SMARTPHONE_MODELS.map(m => {
     basePrice128GB: maxPrice,
     variantPrices: vp
   };
-});
+}));
 
-export const TABLET_MODELS_WITH_PRICES: Model[] = TABLET_MODELS.map(m => {
+export const TABLET_MODELS_WITH_PRICES: Model[] = sortModelsByLaunchDesc(TABLET_MODELS.map(m => {
   const vp = buildVariantPricesForModel(m);
   const maxPrice = Object.values(vp).length > 0 ? Math.max(...Object.values(vp)) : m.basePrice128GB;
   return {
@@ -975,9 +987,9 @@ export const TABLET_MODELS_WITH_PRICES: Model[] = TABLET_MODELS.map(m => {
     basePrice128GB: maxPrice,
     variantPrices: vp
   };
-});
+}));
 
-export const SMARTWATCH_MODELS_WITH_PRICES: Model[] = SMARTWATCH_MODELS.map(m => {
+export const SMARTWATCH_MODELS_WITH_PRICES: Model[] = sortModelsByLaunchDesc(SMARTWATCH_MODELS.map(m => {
   const vp = buildVariantPricesForModel(m);
   const maxPrice = Object.values(vp).length > 0 ? Math.max(...Object.values(vp)) : m.basePrice128GB;
   return {
@@ -985,13 +997,13 @@ export const SMARTWATCH_MODELS_WITH_PRICES: Model[] = SMARTWATCH_MODELS.map(m =>
     basePrice128GB: maxPrice,
     variantPrices: vp
   };
-});
+}));
 
-export const MODELS: Model[] = [
+export const MODELS: Model[] = sortModelsByLaunchDesc([
   ...SMARTPHONE_MODELS,
   ...TABLET_MODELS_WITH_PRICES,
   ...SMARTWATCH_MODELS_WITH_PRICES,
-];
+]);
 
 // Helper to get historically accurate colors for a model
 function getColorsForModel(model: Model): string[] {
