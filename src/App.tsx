@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, lazy, Suspense, useCallback, startTransition } from 'react';
+import { useState, useEffect, useRef, useMemo, Suspense, useCallback, startTransition } from 'react';
 import { Model, Variant, DefectRule, MODELS as STATIC_MODELS, SMARTPHONE_MODELS, BRANDS as STATIC_BRANDS, generateVariantsForModel, INITIAL_BOOKINGS, Brand, Booking, TABLET_MODELS, SMARTWATCH_MODELS, getDeviceImage, getDefectRulesForCategory } from './data/mockDatabase';
 import { fetchBrands, fetchModels, fetchBookings as apiFetchBookings, fetchCurrentUser, customerLogout, hasAdminToken, ApiUser } from './utils/api';
 import { DeviceSelector } from './components/client/DeviceSelector';
@@ -18,13 +18,15 @@ import VerifyEmailPage from './components/client/VerifyEmailPage';
 import { ToastContainer, ToastMessage } from './components/Toast';
 import { ComingSoon } from './components/client/ComingSoon';
 import { useFocusTrap } from './hooks/useFocusTrap';
-// ── Lazy-loaded heavy components (code splitting — P-1 fix) ───────────────────
-const DiagnosticWizard = lazy(() => import('./components/client/DiagnosticWizard').then(m => ({ default: m.DiagnosticWizard })));
-const PickupScheduler  = lazy(() => import('./components/client/PickupScheduler').then(m => ({ default: m.PickupScheduler })));
-const AdminPanel       = lazy(() => import('./components/admin/AdminPanel').then(m => ({ default: m.AdminPanel })));
-const AdminPinGate     = lazy(() => import('./components/admin/AdminPinGate').then(m => ({ default: m.AdminPinGate })));
-const SmartphoneMockup = lazy(() => import('./components/client/SmartphoneMockup').then(m => ({ default: m.SmartphoneMockup })));
-const OrderTrackingModal = lazy(() => import('./components/client/OrderTrackingModal').then(m => ({ default: m.OrderTrackingModal })));
+import { safeLazy } from './utils/safeLazy';
+
+// ── Lazy-loaded heavy components (code splitting with chunk auto-retry) ──────
+const DiagnosticWizard   = safeLazy(() => import('./components/client/DiagnosticWizard'), 'DiagnosticWizard');
+const PickupScheduler    = safeLazy(() => import('./components/client/PickupScheduler'), 'PickupScheduler');
+const AdminPanel         = safeLazy(() => import('./components/admin/AdminPanel'), 'AdminPanel');
+const AdminPinGate       = safeLazy(() => import('./components/admin/AdminPinGate'), 'AdminPinGate');
+const SmartphoneMockup   = safeLazy(() => import('./components/client/SmartphoneMockup'), 'SmartphoneMockup');
+const OrderTrackingModal = safeLazy(() => import('./components/client/OrderTrackingModal'), 'OrderTrackingModal');
 // ─────────────────────────────────────────────────────────────────────────────
 import { 
   Award, ShieldCheck, Zap, Search,
@@ -1535,7 +1537,7 @@ export default function App() {
                 step={wizardStep}
                 setStep={setWizardStep}
                 currentUser={currentUser}
-                onLoginSuccess={(user) => setCurrentUser(user)}
+                onLoginSuccess={(user: ApiUser) => setCurrentUser(user)}
               />
             </Suspense>
           )}
