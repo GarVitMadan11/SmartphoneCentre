@@ -733,7 +733,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   <p className="text-xs text-ink-muted mt-2 font-light">Examine the front screen glass and the back panel glass carefully.</p>
                 </div>
 
-                <div className="space-y-3 mt-6 text-left">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-6 text-left">
                   {/* Flawless Option */}
                   {(() => {
                     const isAnyScreenSelected = selectedDefects.some(d => d.category === 'screen');
@@ -751,26 +751,25 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           setSelectedDefects(prev => prev.filter(d => d.category !== 'screen'));
                           setScreenConfirmed(true);
                         }}
-                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-3 text-left focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt ${
+                        className={`p-3.5 rounded-xl border cursor-pointer transition-all duration-300 flex items-start gap-3.5 text-left focus:outline-none focus:ring-2 focus:ring-cobalt ${
                           isSelected
-                            ? 'border-cobalt bg-cobalt-light scale-[1.01] opacity-100 z-10 shadow-premium'
+                            ? 'border-cobalt bg-cobalt-light/40 shadow-sm ring-1 ring-cobalt/30 scale-[1.01]'
                             : !screenConfirmed
-                            ? 'border-ice-border bg-canvas-white hover:border-cobalt/30 hover:scale-[1.005]'
-                            : 'border-ice-border bg-canvas-white opacity-40 hover:opacity-75 hover:scale-[1.005]'
+                            ? 'border-ice-border bg-canvas-white hover:border-cobalt/40 hover:bg-slate-50/60'
+                            : 'border-ice-border bg-canvas-white opacity-50 hover:opacity-80'
                         }`}
-                        style={{ minHeight: '72px' }}
                       >
-                        <div className="w-14 h-14 flex-shrink-0 rounded-sm bg-ice-gray border border-ice-border flex items-center justify-center overflow-hidden">
+                        <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-gradient-to-br from-emerald-500/15 to-teal-500/10 border border-emerald-500/25 flex items-center justify-center overflow-hidden shadow-xs">
                           {getIllustration('screen-flawless', deviceType)}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-sm text-ink-navy">Flawless Display</h4>
-                          <p className="text-xs text-ink-muted mt-0.5 font-light">No scratches, micro-abrasions, cracks, or screen bleeding.</p>
+                          <h4 className="font-bold text-sm text-ink-navy">Flawless Display</h4>
+                          <p className="text-xs text-ink-muted mt-1 font-light leading-snug">No scratches, micro-abrasions, cracks, or screen bleeding.</p>
                         </div>
-                        <div className={`w-5 h-5 rounded-sm border flex items-center justify-center flex-shrink-0 ${
-                          isSelected ? 'bg-cobalt border-cobalt text-white' : 'border-ice-border'
+                        <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                          isSelected ? 'bg-cobalt border-cobalt text-white' : 'border-ice-border bg-white'
                         }`}>
-                          {isSelected && <Check className="w-3 h-3" />}
+                          {isSelected && <Check className="w-3.5 h-3.5" />}
                         </div>
                       </div>
                     );
@@ -807,31 +806,30 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           );
                           setScreenConfirmed(true);
                         }}
-                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-3 text-left focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt ${
+                        className={`p-3.5 rounded-xl border cursor-pointer transition-all duration-300 flex items-start gap-3.5 text-left focus:outline-none focus:ring-2 focus:ring-cobalt ${
                           isSelected
-                            ? 'border-cobalt bg-cobalt-light scale-[1.01] opacity-100 z-10 shadow-premium'
+                            ? 'border-cobalt bg-cobalt-light/40 shadow-sm ring-1 ring-cobalt/30 scale-[1.01]'
                             : !screenConfirmed
-                            ? 'border-ice-border bg-canvas-white hover:border-cobalt/30 hover:scale-[1.005]'
-                            : 'border-ice-border bg-canvas-white opacity-40 hover:opacity-75 hover:scale-[1.005]'
+                            ? 'border-ice-border bg-canvas-white hover:border-cobalt/40 hover:bg-slate-50/60'
+                            : 'border-ice-border bg-canvas-white opacity-50 hover:opacity-80'
                         }`}
-                        style={{ minHeight: '72px' }}
                       >
-                        <div className="w-14 h-14 flex-shrink-0 rounded-sm bg-ice-gray border border-ice-border flex items-center justify-center overflow-hidden">
+                        <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-gradient-to-br from-rose-500/15 to-amber-500/10 border border-rose-500/20 flex items-center justify-center overflow-hidden shadow-xs">
                           {getIllustration(defect.id, deviceType)}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <h4 className="font-semibold text-sm text-ink-navy">{defect.description}</h4>
-                            <span className="text-[9px] font-mono bg-red-500/10 text-red-400 px-1.5 py-0.5 rounded-sm border border-red-500/20">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <h4 className="font-bold text-sm text-ink-navy">{defect.description}</h4>
+                            <span className="text-[9px] font-mono font-bold bg-rose-500/10 text-rose-600 px-1.5 py-0.5 rounded-md border border-rose-500/20">
                               {defect.deductionPercentage > 0 ? `-${parseFloat((defect.deductionPercentage * 100).toFixed(1))}%` : `-${formatPrice(defect.deductionFixed)}`}
                             </span>
                           </div>
-                          <p className="text-xs text-ink-muted mt-0.5 font-light">{defect.subText}</p>
+                          <p className="text-xs text-ink-muted mt-1 font-light leading-snug">{defect.subText}</p>
                         </div>
-                        <div className={`w-5 h-5 rounded-sm border flex items-center justify-center flex-shrink-0 ${
-                          isSelected ? 'bg-cobalt border-cobalt text-white' : 'border-ice-border'
+                        <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                          isSelected ? 'bg-cobalt border-cobalt text-white' : 'border-ice-border bg-white'
                         }`}>
-                          {isSelected && <Check className="w-3 h-3" />}
+                          {isSelected && <Check className="w-3.5 h-3.5" />}
                         </div>
                       </div>
                     );
@@ -854,7 +852,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   <p className="text-xs text-ink-muted mt-2 font-light">Check the frame, side buttons, bottom screws, and waterproof seal integrity.</p>
                 </div>
 
-                <div className="space-y-3 mt-6 text-left">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-6 text-left">
                   {/* Flawless Option */}
                   {(() => {
                     const isAnyBodySelected = selectedDefects.some(d => d.category === 'body');
@@ -872,26 +870,25 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           setSelectedDefects(prev => prev.filter(d => d.category !== 'body'));
                           setBodyConfirmed(true);
                         }}
-                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-3 text-left focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt ${
+                        className={`p-3.5 rounded-xl border cursor-pointer transition-all duration-300 flex items-start gap-3.5 text-left focus:outline-none focus:ring-2 focus:ring-cobalt ${
                           isSelected
-                            ? 'border-cobalt bg-cobalt-light scale-[1.01] opacity-100 z-10 shadow-premium'
+                            ? 'border-cobalt bg-cobalt-light/40 shadow-sm ring-1 ring-cobalt/30 scale-[1.01]'
                             : !bodyConfirmed
-                            ? 'border-ice-border bg-canvas-white hover:border-cobalt/30 hover:scale-[1.005]'
-                            : 'border-ice-border bg-canvas-white opacity-40 hover:opacity-75 hover:scale-[1.005]'
+                            ? 'border-ice-border bg-canvas-white hover:border-cobalt/40 hover:bg-slate-50/60'
+                            : 'border-ice-border bg-canvas-white opacity-50 hover:opacity-80'
                         }`}
-                        style={{ minHeight: '72px' }}
                       >
-                        <div className="w-14 h-14 flex-shrink-0 rounded-sm bg-ice-gray border border-ice-border flex items-center justify-center overflow-hidden">
+                        <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-gradient-to-br from-emerald-500/15 to-teal-500/10 border border-emerald-500/25 flex items-center justify-center overflow-hidden shadow-xs">
                           {getIllustration('body-flawless', deviceType)}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-sm text-ink-navy">Flawless Frame</h4>
-                          <p className="text-xs text-ink-muted mt-0.5 font-light">No dents, bends, or paint scuffs. Device looks brand new.</p>
+                          <h4 className="font-bold text-sm text-ink-navy">Flawless Frame</h4>
+                          <p className="text-xs text-ink-muted mt-1 font-light leading-snug">No dents, bends, or paint scuffs. Device looks brand new.</p>
                         </div>
-                        <div className={`w-5 h-5 rounded-sm border flex items-center justify-center flex-shrink-0 ${
-                          isSelected ? 'bg-cobalt border-cobalt text-white' : 'border-ice-border'
+                        <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                          isSelected ? 'bg-cobalt border-cobalt text-white' : 'border-ice-border bg-white'
                         }`}>
-                          {isSelected && <Check className="w-3 h-3" />}
+                          {isSelected && <Check className="w-3.5 h-3.5" />}
                         </div>
                       </div>
                     );
@@ -928,31 +925,30 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           );
                           setBodyConfirmed(true);
                         }}
-                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-3 text-left focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt ${
+                        className={`p-3.5 rounded-xl border cursor-pointer transition-all duration-300 flex items-start gap-3.5 text-left focus:outline-none focus:ring-2 focus:ring-cobalt ${
                           isSelected
-                            ? 'border-cobalt bg-cobalt-light scale-[1.01] opacity-100 z-10 shadow-premium'
+                            ? 'border-cobalt bg-cobalt-light/40 shadow-sm ring-1 ring-cobalt/30 scale-[1.01]'
                             : !bodyConfirmed
-                            ? 'border-ice-border bg-canvas-white hover:border-cobalt/30 hover:scale-[1.005]'
-                            : 'border-ice-border bg-canvas-white opacity-40 hover:opacity-75 hover:scale-[1.005]'
+                            ? 'border-ice-border bg-canvas-white hover:border-cobalt/40 hover:bg-slate-50/60'
+                            : 'border-ice-border bg-canvas-white opacity-50 hover:opacity-80'
                         }`}
-                        style={{ minHeight: '72px' }}
                       >
-                        <div className="w-14 h-14 flex-shrink-0 rounded-sm bg-ice-gray border border-ice-border flex items-center justify-center overflow-hidden">
+                        <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-gradient-to-br from-amber-500/15 to-orange-500/10 border border-amber-500/20 flex items-center justify-center overflow-hidden shadow-xs">
                           {getIllustration(defect.id, deviceType)}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <h4 className="font-semibold text-sm text-ink-navy">{defect.description}</h4>
-                            <span className="text-[9px] font-mono bg-red-500/10 text-red-400 px-1.5 py-0.5 rounded-sm border border-red-500/20">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <h4 className="font-bold text-sm text-ink-navy">{defect.description}</h4>
+                            <span className="text-[9px] font-mono font-bold bg-rose-500/10 text-rose-600 px-1.5 py-0.5 rounded-md border border-rose-500/20">
                               {defect.deductionPercentage > 0 ? `-${parseFloat((defect.deductionPercentage * 100).toFixed(1))}%` : `-${formatPrice(defect.deductionFixed)}`}
                             </span>
                           </div>
-                          <p className="text-xs text-ink-muted mt-0.5 font-light">{defect.subText}</p>
+                          <p className="text-xs text-ink-muted mt-1 font-light leading-snug">{defect.subText}</p>
                         </div>
-                        <div className={`w-5 h-5 rounded-sm border flex items-center justify-center flex-shrink-0 ${
-                          isSelected ? 'bg-cobalt border-cobalt text-white' : 'border-ice-border'
+                        <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                          isSelected ? 'bg-cobalt border-cobalt text-white' : 'border-ice-border bg-white'
                         }`}>
-                          {isSelected && <Check className="w-3 h-3" />}
+                          {isSelected && <Check className="w-3.5 h-3.5" />}
                         </div>
                       </div>
                     );
@@ -975,7 +971,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   <p className="text-xs text-ink-muted mt-2 font-light">Select any failing camera, biometric, audio, or system stability issues that apply.</p>
                 </div>
 
-                <div className="space-y-3 mt-6 text-left">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-6 text-left">
                   {/* Affirmative option */}
                   {(() => {
                     const ids = rules.filter(r => ['camera', 'functionality'].includes(r.category)).map(r => r.id);
@@ -994,28 +990,27 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           setSelectedDefects(prev => prev.filter(d => !ids.includes(d.id)));
                           setFuncConfirmed(true);
                         }}
-                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-3 text-left focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt ${
+                        className={`p-3.5 rounded-xl border cursor-pointer transition-all duration-300 flex items-start gap-3.5 text-left focus:outline-none focus:ring-2 focus:ring-cobalt ${
                           isSelected
-                            ? 'border-cobalt bg-cobalt-light scale-[1.01] opacity-100 z-10 shadow-premium'
+                            ? 'border-cobalt bg-cobalt-light/40 shadow-sm ring-1 ring-cobalt/30 scale-[1.01]'
                             : !funcConfirmed
-                            ? 'border-ice-border bg-canvas-white hover:border-cobalt/30 hover:scale-[1.005]'
-                            : 'border-ice-border bg-canvas-white opacity-40 hover:opacity-75 hover:scale-[1.005]'
+                            ? 'border-ice-border bg-canvas-white hover:border-cobalt/40 hover:bg-slate-50/60'
+                            : 'border-ice-border bg-canvas-white opacity-50 hover:opacity-80'
                         }`}
-                        style={{ minHeight: '72px' }}
                       >
-                        <div className="w-14 h-14 flex-shrink-0 rounded-sm bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-                          <ShieldCheck className="w-7 h-7 text-emerald-500" />
+                        <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-gradient-to-br from-emerald-500/15 to-teal-500/10 border border-emerald-500/25 flex items-center justify-center overflow-hidden shadow-xs">
+                          <ShieldCheck className="w-7 h-7 text-emerald-600" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-sm text-ink-navy">Hardware Works Perfectly</h4>
-                          <p className="text-xs text-ink-muted mt-0.5 font-light">
+                          <h4 className="font-bold text-sm text-ink-navy">Hardware Works Perfectly</h4>
+                          <p className="text-xs text-ink-muted mt-1 font-light leading-snug">
                             Front/rear cameras, {isApple ? 'Face ID' : 'biometrics'}, speaker/mic, and system stability are flawless.
                           </p>
                         </div>
-                        <div className={`w-5 h-5 rounded-sm border flex items-center justify-center flex-shrink-0 ${
-                          isSelected ? 'bg-cobalt border-cobalt text-white' : 'border-ice-border'
+                        <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                          isSelected ? 'bg-cobalt border-cobalt text-white' : 'border-ice-border bg-white'
                         }`}>
-                          {isSelected && <Check className="w-3 h-3" />}
+                          {isSelected && <Check className="w-3.5 h-3.5" />}
                         </div>
                       </div>
                     );
@@ -1038,31 +1033,30 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           handleToggleDefect(defect);
                           setFuncConfirmed(true);
                         }}
-                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-3 text-left focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt ${
+                        className={`p-3.5 rounded-xl border cursor-pointer transition-all duration-300 flex items-start gap-3.5 text-left focus:outline-none focus:ring-2 focus:ring-cobalt ${
                           isSelected
-                            ? 'border-cobalt bg-cobalt-light scale-[1.01] opacity-100 z-10 shadow-premium'
+                            ? 'border-cobalt bg-cobalt-light/40 shadow-sm ring-1 ring-cobalt/30 scale-[1.01]'
                             : !funcConfirmed
-                            ? 'border-ice-border bg-canvas-white hover:border-cobalt/30 hover:scale-[1.005]'
-                            : 'border-ice-border bg-canvas-white opacity-40 hover:opacity-75 hover:scale-[1.005]'
+                            ? 'border-ice-border bg-canvas-white hover:border-cobalt/40 hover:bg-slate-50/60'
+                            : 'border-ice-border bg-canvas-white opacity-50 hover:opacity-80'
                         }`}
-                        style={{ minHeight: '72px' }}
                       >
-                        <div className="w-14 h-14 flex-shrink-0 rounded-sm bg-ice-gray border border-ice-border flex items-center justify-center overflow-hidden">
+                        <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-gradient-to-br from-blue-500/15 to-indigo-500/10 border border-blue-500/20 flex items-center justify-center overflow-hidden shadow-xs">
                           {getIllustration(defect.id, deviceType)}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <h4 className="font-semibold text-sm text-ink-navy">{defect.description}</h4>
-                            <span className="text-[9px] font-mono bg-red-500/10 text-red-400 px-1.5 py-0.5 rounded-sm border border-red-500/20">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <h4 className="font-bold text-sm text-ink-navy">{defect.description}</h4>
+                            <span className="text-[9px] font-mono font-bold bg-rose-500/10 text-rose-600 px-1.5 py-0.5 rounded-md border border-rose-500/20">
                               {defect.deductionPercentage > 0 ? `-${parseFloat((defect.deductionPercentage * 100).toFixed(1))}%` : `-${formatPrice(defect.deductionFixed)}`}
                             </span>
                           </div>
-                          <p className="text-xs text-ink-muted mt-0.5 font-light">{defect.subText}</p>
+                          <p className="text-xs text-ink-muted mt-1 font-light leading-snug">{defect.subText}</p>
                         </div>
-                        <div className={`w-5 h-5 rounded-sm border flex items-center justify-center flex-shrink-0 ${
-                          isSelected ? 'bg-cobalt border-cobalt text-white' : 'border-ice-border'
+                        <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                          isSelected ? 'bg-cobalt border-cobalt text-white' : 'border-ice-border bg-white'
                         }`}>
-                          {isSelected && <Check className="w-3 h-3" />}
+                          {isSelected && <Check className="w-3.5 h-3.5" />}
                         </div>
                       </div>
                     );
@@ -1085,7 +1079,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   <p className="text-xs text-ink-muted mt-2 font-light">Verify battery condition, cellular/Wi-Fi antennas, and motherboard serial mappings.</p>
                 </div>
 
-                <div className="space-y-3 mt-6 text-left">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-6 text-left">
                   {/* Affirmative option */}
                   {(() => {
                     const ids = rules.filter(r => r.category === 'connectivity').map(r => r.id);
@@ -1104,28 +1098,27 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           setSelectedDefects(prev => prev.filter(d => !ids.includes(d.id)));
                           setConnectConfirmed(true);
                         }}
-                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-3 text-left focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt ${
+                        className={`p-3.5 rounded-xl border cursor-pointer transition-all duration-300 flex items-start gap-3.5 text-left focus:outline-none focus:ring-2 focus:ring-cobalt ${
                           isSelected
-                            ? 'border-cobalt bg-cobalt-light scale-[1.01] opacity-100 z-10 shadow-premium'
+                            ? 'border-cobalt bg-cobalt-light/40 shadow-sm ring-1 ring-cobalt/30 scale-[1.01]'
                             : !connectConfirmed
-                            ? 'border-ice-border bg-canvas-white hover:border-cobalt/30 hover:scale-[1.005]'
-                            : 'border-ice-border bg-canvas-white opacity-40 hover:opacity-75 hover:scale-[1.005]'
+                            ? 'border-ice-border bg-canvas-white hover:border-cobalt/40 hover:bg-slate-50/60'
+                            : 'border-ice-border bg-canvas-white opacity-50 hover:opacity-80'
                         }`}
-                        style={{ minHeight: '72px' }}
                       >
-                        <div className="w-14 h-14 flex-shrink-0 rounded-sm bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-                          <ShieldCheck className="w-7 h-7 text-emerald-500" />
+                        <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-gradient-to-br from-emerald-500/15 to-teal-500/10 border border-emerald-500/25 flex items-center justify-center stroke-emerald-600">
+                          <ShieldCheck className="w-7 h-7 text-emerald-600" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-sm text-ink-navy">Connectivity & Battery Healthy</h4>
-                          <p className="text-xs text-ink-muted mt-0.5 font-light">
+                          <h4 className="font-bold text-sm text-ink-navy">Connectivity & Battery Healthy</h4>
+                          <p className="text-xs text-ink-muted mt-1 font-light leading-snug">
                             Battery is original/above 80%, cellular/Wi-Fi antennas are strong, and {isApple ? '3uTools checks pass' : 'hardware diagnostic checks pass'}.
                           </p>
                         </div>
-                        <div className={`w-5 h-5 rounded-sm border flex items-center justify-center flex-shrink-0 ${
-                          isSelected ? 'bg-cobalt border-cobalt text-white' : 'border-ice-border'
+                        <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                          isSelected ? 'bg-cobalt border-cobalt text-white' : 'border-ice-border bg-white'
                         }`}>
-                          {isSelected && <Check className="w-3 h-3" />}
+                          {isSelected && <Check className="w-3.5 h-3.5" />}
                         </div>
                       </div>
                     );
@@ -1148,31 +1141,30 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           handleToggleDefect(defect);
                           setConnectConfirmed(true);
                         }}
-                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-3 text-left focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt ${
+                        className={`p-3.5 rounded-xl border cursor-pointer transition-all duration-300 flex items-start gap-3.5 text-left focus:outline-none focus:ring-2 focus:ring-cobalt ${
                           isSelected
-                            ? 'border-cobalt bg-cobalt-light scale-[1.01] opacity-100 z-10 shadow-premium'
+                            ? 'border-cobalt bg-cobalt-light/40 shadow-sm ring-1 ring-cobalt/30 scale-[1.01]'
                             : !connectConfirmed
-                            ? 'border-ice-border bg-canvas-white hover:border-cobalt/30 hover:scale-[1.005]'
-                            : 'border-ice-border bg-canvas-white opacity-40 hover:opacity-75 hover:scale-[1.005]'
+                            ? 'border-ice-border bg-canvas-white hover:border-cobalt/40 hover:bg-slate-50/60'
+                            : 'border-ice-border bg-canvas-white opacity-50 hover:opacity-80'
                         }`}
-                        style={{ minHeight: '72px' }}
                       >
-                        <div className="w-14 h-14 flex-shrink-0 rounded-sm bg-ice-gray border border-ice-border flex items-center justify-center overflow-hidden">
+                        <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-gradient-to-br from-violet-500/15 to-purple-500/10 border border-violet-500/20 flex items-center justify-center overflow-hidden shadow-xs">
                           {getIllustration(defect.id, deviceType)}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <h4 className="font-semibold text-sm text-ink-navy">{defect.description}</h4>
-                            <span className="text-[9px] font-mono bg-red-500/10 text-red-400 px-1.5 py-0.5 rounded-sm border border-red-500/20">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <h4 className="font-bold text-sm text-ink-navy">{defect.description}</h4>
+                            <span className="text-[9px] font-mono font-bold bg-rose-500/10 text-rose-600 px-1.5 py-0.5 rounded-md border border-rose-500/20">
                               {defect.deductionPercentage > 0 ? `-${parseFloat((defect.deductionPercentage * 100).toFixed(1))}%` : `-${formatPrice(defect.deductionFixed)}`}
                             </span>
                           </div>
-                          <p className="text-xs text-ink-muted mt-0.5 font-light">{defect.subText}</p>
+                          <p className="text-xs text-ink-muted mt-1 font-light leading-snug">{defect.subText}</p>
                         </div>
-                        <div className={`w-5 h-5 rounded-sm border flex items-center justify-center flex-shrink-0 ${
-                          isSelected ? 'bg-cobalt border-cobalt text-white' : 'border-ice-border'
+                        <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                          isSelected ? 'bg-cobalt border-cobalt text-white' : 'border-ice-border bg-white'
                         }`}>
-                          {isSelected && <Check className="w-3 h-3" />}
+                          {isSelected && <Check className="w-3.5 h-3.5" />}
                         </div>
                       </div>
                     );
@@ -1195,7 +1187,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   <p className="text-xs text-ink-muted mt-2 font-light">Confirm if the original retail box, OEM charging accessories, and invoice are present.</p>
                 </div>
 
-                <div className="space-y-3 mt-6 text-left">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-6 text-left">
                   {/* Affirmative option */}
                   {(() => {
                     const ids = rules.filter(r => r.category === 'accessories' && !r.isCriticalFailure).map(r => r.id);
@@ -1214,26 +1206,25 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           setSelectedDefects(prev => prev.filter(d => !ids.includes(d.id)));
                           setAccConfirmed(true);
                         }}
-                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-3 text-left focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt ${
+                        className={`p-3.5 rounded-xl border cursor-pointer transition-all duration-300 flex items-start gap-3.5 text-left focus:outline-none focus:ring-2 focus:ring-cobalt ${
                           isSelected
-                            ? 'border-cobalt bg-cobalt-light scale-[1.01] opacity-100 z-10 shadow-premium'
+                            ? 'border-cobalt bg-cobalt-light/40 shadow-sm ring-1 ring-cobalt/30 scale-[1.01]'
                             : !accConfirmed
-                            ? 'border-ice-border bg-canvas-white hover:border-cobalt/30 hover:scale-[1.005]'
-                            : 'border-ice-border bg-canvas-white opacity-40 hover:opacity-75 hover:scale-[1.005]'
+                            ? 'border-ice-border bg-canvas-white hover:border-cobalt/40 hover:bg-slate-50/60'
+                            : 'border-ice-border bg-canvas-white opacity-50 hover:opacity-80'
                         }`}
-                        style={{ minHeight: '72px' }}
                       >
-                        <div className="w-14 h-14 flex-shrink-0 rounded-sm bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-                          <Box className="w-7 h-7 text-emerald-500" />
+                        <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-gradient-to-br from-emerald-500/15 to-teal-500/10 border border-emerald-500/25 flex items-center justify-center stroke-emerald-600">
+                          <Box className="w-7 h-7 text-emerald-600" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-sm text-ink-navy">All Accessories Included</h4>
-                          <p className="text-xs text-ink-muted mt-0.5 font-light">Original box with matching IMEI, OEM charger/cable, and purchasing receipt are present.</p>
+                          <h4 className="font-bold text-sm text-ink-navy">All Accessories Included</h4>
+                          <p className="text-xs text-ink-muted mt-1 font-light leading-snug">Original box with matching IMEI, OEM charger/cable, and purchasing receipt are present.</p>
                         </div>
-                        <div className={`w-5 h-5 rounded-sm border flex items-center justify-center flex-shrink-0 ${
-                          isSelected ? 'bg-cobalt border-cobalt text-white' : 'border-ice-border'
+                        <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                          isSelected ? 'bg-cobalt border-cobalt text-white' : 'border-ice-border bg-white'
                         }`}>
-                          {isSelected && <Check className="w-3 h-3" />}
+                          {isSelected && <Check className="w-3.5 h-3.5" />}
                         </div>
                       </div>
                     );
@@ -1256,31 +1247,30 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           handleToggleDefect(defect);
                           setAccConfirmed(true);
                         }}
-                        className={`p-3 rounded-sm border cursor-pointer transition-all duration-300 flex items-center gap-3 text-left focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt ${
+                        className={`p-3.5 rounded-xl border cursor-pointer transition-all duration-300 flex items-start gap-3.5 text-left focus:outline-none focus:ring-2 focus:ring-cobalt ${
                           isSelected
-                            ? 'border-cobalt bg-cobalt-light scale-[1.01] opacity-100 z-10 shadow-premium'
+                            ? 'border-cobalt bg-cobalt-light/40 shadow-sm ring-1 ring-cobalt/30 scale-[1.01]'
                             : !accConfirmed
-                            ? 'border-ice-border bg-canvas-white hover:border-cobalt/30 hover:scale-[1.005]'
-                            : 'border-ice-border bg-canvas-white opacity-40 hover:opacity-75 hover:scale-[1.005]'
+                            ? 'border-ice-border bg-canvas-white hover:border-cobalt/40 hover:bg-slate-50/60'
+                            : 'border-ice-border bg-canvas-white opacity-50 hover:opacity-80'
                         }`}
-                        style={{ minHeight: '72px' }}
                       >
-                        <div className="w-14 h-14 flex-shrink-0 rounded-sm bg-ice-gray border border-ice-border flex items-center justify-center overflow-hidden">
+                        <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-gradient-to-br from-amber-500/15 to-orange-500/10 border border-amber-500/20 flex items-center justify-center overflow-hidden shadow-xs">
                           {getIllustration(defect.id, deviceType)}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <h4 className="font-semibold text-sm text-ink-navy">{defect.description}</h4>
-                            <span className="text-[9px] font-mono bg-red-500/10 text-red-400 px-1.5 py-0.5 rounded-sm border border-red-500/20">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <h4 className="font-bold text-sm text-ink-navy">{defect.description}</h4>
+                            <span className="text-[9px] font-mono font-bold bg-rose-500/10 text-rose-600 px-1.5 py-0.5 rounded-md border border-rose-500/20">
                               Deduct: {formatPrice(defect.deductionFixed)}
                             </span>
                           </div>
-                          <p className="text-xs text-ink-muted mt-0.5 font-light">{defect.subText}</p>
+                          <p className="text-xs text-ink-muted mt-1 font-light leading-snug">{defect.subText}</p>
                         </div>
-                        <div className={`w-5 h-5 rounded-sm border flex items-center justify-center flex-shrink-0 ${
-                          isSelected ? 'bg-cobalt border-cobalt text-white' : 'border-ice-border'
+                        <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                          isSelected ? 'bg-cobalt border-cobalt text-white' : 'border-ice-border bg-white'
                         }`}>
-                          {isSelected && <Check className="w-3 h-3" />}
+                          {isSelected && <Check className="w-3.5 h-3.5" />}
                         </div>
                       </div>
                     );
@@ -1306,7 +1296,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
                   {/* Animated Engineering Receipt */}
                   <div className="mb-6">
-                    <div id="printable-quote" className="border border-zinc-700/80 bg-zinc-900 text-zinc-100 rounded-sm p-6 text-sm relative overflow-hidden text-left shadow-2xl">
+                    <div id="printable-quote" className="border border-zinc-700/80 bg-zinc-900 text-zinc-100 rounded-xl p-6 text-sm relative overflow-hidden text-left shadow-2xl">
                       {/* Price Lock Overlay */}
                       {isPriceLocked && (
                         <div className="absolute inset-0 bg-zinc-950/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-20">
@@ -1318,7 +1308,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           <button 
                             type="button"
                             onClick={() => setLockModalOpen(true)}
-                            className="px-5 py-2 rounded-sm bg-cobalt hover:bg-cobalt-hover text-white text-[11px] font-bold transition-all shadow-premium"
+                            className="px-5 py-2 rounded-lg bg-cobalt hover:bg-cobalt-hover text-white text-[11px] font-bold transition-all shadow-premium"
                           >
                             Unlock Best Price
                           </button>
@@ -1385,6 +1375,18 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                             ))}
                           </div>
                         )}
+
+                        {/* Cashify-Style Standard Platform Fees */}
+                        <div className="pt-2 border-t border-zinc-800/60 space-y-1.5 text-zinc-400">
+                          <div className="flex justify-between items-center text-[11px]">
+                            <span>Doorstep Processing Fee</span>
+                            <span className="text-zinc-400 font-semibold">-₹99</span>
+                          </div>
+                          <div className="flex justify-between items-center text-[11px]">
+                            <span>Sanchar Saathi IMEI Verification Fee</span>
+                            <span className="text-zinc-400 font-semibold">-₹20</span>
+                          </div>
+                        </div>
                       </div>
 
                       {/* Visual Valuation Retention Bar */}
@@ -1407,7 +1409,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           <span className="text-xs text-emerald-400 print-text-emerald uppercase tracking-wider block font-mono font-bold mt-0.5">✓ Payout Rate Locked</span>
                         </div>
                         <span className="text-3xl sm:text-4xl font-extrabold text-emerald-400 print-text-emerald tracking-tight font-mono font-outfit">
-                          {isPriceLocked ? '₹ XX,XXX' : formatPrice(valuation.finalPrice)}
+                          {isPriceLocked ? '₹ XX,XXX' : formatPrice(Math.max(0, valuation.finalPrice - 119))}
                         </span>
                       </div>
                     </div>
