@@ -263,16 +263,6 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
             </button>
           )}
 
-          <a
-            href="https://www.instagram.com/rephonix.in/"
-            target="_blank"
-            rel="noopener noreferrer"
-            title="Follow us on Instagram (@rephonix.in)"
-            aria-label="Instagram"
-            className="p-1.5 rounded-lg bg-pink-500/10 hover:bg-pink-500/20 text-pink-600 transition-all border border-pink-500/20 flex items-center justify-center"
-          >
-            <Instagram className="w-4 h-4" />
-          </a>
 
           {/* Customer Auth Session Controls */}
           {currentUser ? (
