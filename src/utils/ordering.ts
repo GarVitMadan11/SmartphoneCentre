@@ -1,4 +1,64 @@
-import { Brand, Model } from '../data/mockDatabase';
+import { Brand, Model, sortModelsByLaunchDesc } from '../data/mockDatabase';
+
+export const DEFAULT_SERIES_ORDER: Record<string, string[]> = {
+  'brand-apple': [
+    'iPhone 17 Series',
+    'iPhone 16 Series',
+    'iPhone 15 Series',
+    'iPhone 14 Series',
+    'iPhone 13 Series',
+    'iPhone 12 Series',
+    'iPhone 11 Series',
+    'iPhone X / XS Series',
+    'iPhone SE Series'
+  ],
+  'brand-samsung': [
+    'S Series',
+    'Z Fold & Z Flip',
+    'A Series',
+    'M Series',
+    'F Series'
+  ],
+  'brand-oneplus': [
+    'Numbered Series',
+    'Nord Series'
+  ],
+  'brand-xiaomi': [
+    'Xiaomi Series',
+    'Redmi Note Series',
+    'Redmi Series',
+    'POCO F Series',
+    'POCO X Series',
+    'POCO M Series'
+  ],
+  'brand-vivo': [
+    'X Series & Folds',
+    'V Series',
+    'T Series',
+    'Y Series',
+    'S Series'
+  ],
+  'brand-oppo': [
+    'Find X Series',
+    'Reno Series',
+    'F Series',
+    'A Series'
+  ],
+  'brand-motorola': [
+    'Razr Series',
+    'Edge Series',
+    'G Series'
+  ],
+  'brand-google': [
+    'Pixel 9 Series',
+    'Pixel 8 Series',
+    'Pixel 7 Series',
+    'Pixel 6 Series'
+  ],
+  'brand-nothing': [
+    'Phone Series'
+  ]
+};
 
 export function getSavedBrandOrder(): string[] {
   try {
@@ -98,10 +158,14 @@ export function applyBrandOrder(brandsList: Brand[]): Brand[] {
 // Utility to apply series order to an array of series strings
 export function applySeriesOrder(brandId: string, seriesList: string[]): string[] {
   const customOrder = getSavedSeriesOrder(brandId);
-  if (!customOrder || customOrder.length === 0) return seriesList;
+  const defaultOrder = DEFAULT_SERIES_ORDER[brandId] || [];
+  const activeOrder = customOrder && customOrder.length > 0 ? customOrder : defaultOrder;
+
+  if (activeOrder.length === 0) return seriesList;
+
   return [...seriesList].sort((a, b) => {
-    const idxA = customOrder.indexOf(a);
-    const idxB = customOrder.indexOf(b);
+    const idxA = activeOrder.indexOf(a);
+    const idxB = activeOrder.indexOf(b);
     if (idxA !== -1 && idxB !== -1) return idxA - idxB;
     if (idxA !== -1) return -1;
     if (idxB !== -1) return 1;
@@ -112,7 +176,9 @@ export function applySeriesOrder(brandId: string, seriesList: string[]): string[
 // Utility to apply model order to an array of Model objects
 export function applyModelOrder(brandId: string, modelsList: Model[]): Model[] {
   const customOrder = getSavedModelOrder(brandId);
-  if (!customOrder || customOrder.length === 0) return modelsList;
+  if (!customOrder || customOrder.length === 0) {
+    return sortModelsByLaunchDesc(modelsList);
+  }
   return [...modelsList].sort((a, b) => {
     const idxA = customOrder.indexOf(a.id);
     const idxB = customOrder.indexOf(b.id);
