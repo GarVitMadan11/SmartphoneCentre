@@ -28,10 +28,66 @@ function getTransporter() {
   });
 }
 
+async function sendViaEmailJS(event: SecurityEventData, recipient: string): Promise<boolean> {
+  const serviceId = process.env.EMAILJS_SERVICE_ID || process.env.VITE_EMAILJS_SERVICE_ID;
+  const templateId = process.env.EMAILJS_SECURITY_TEMPLATE_ID || process.env.EMAILJS_TEMPLATE_ID || process.env.VITE_EMAILJS_TEMPLATE_ID || process.env.VITE_EMAILJS_OTP_TEMPLATE_ID;
+  const publicKey = process.env.EMAILJS_PUBLIC_KEY || process.env.VITE_EMAILJS_PUBLIC_KEY;
+  const privateKey = process.env.EMAILJS_PRIVATE_KEY;
+
+  if (!serviceId || !templateId || !publicKey) {
+    return false;
+  }
+
+  try {
+    const payload = {
+      service_id: serviceId,
+      template_id: templateId,
+      user_id: publicKey,
+      ...(privateKey ? { accessToken: privateKey } : {}),
+      template_params: {
+        to_email: recipient,
+        email: recipient,
+        recipient_email: recipient,
+        subject: event.type === 'LOCKDOWN_TRIGGERED' ? '🚨 [EMERGENCY LOCKDOWN] Admin Panel Suspended' : `[SECURITY ALERT] Admin Panel: ${event.type}`,
+        event_type: event.type,
+        timestamp: event.timestamp,
+        ip_address: event.ipAddress,
+        user_agent: event.userAgent,
+        username: event.username || 'Admin User',
+        details: event.details || '',
+        passcode: event.masterUnlockKey || '',
+        master_unlock_key: event.masterUnlockKey || '',
+      },
+    };
+
+    const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    if (response.ok) {
+      console.log(`[EmailJS Security Alert] Successfully sent alert to ${recipient} via EmailJS REST API!`);
+      return true;
+    } else {
+      const errText = await response.text();
+      console.warn(`[EmailJS API Warning] Status ${response.status}: ${errText}`);
+      return false;
+    }
+  } catch (err) {
+    console.error('[EmailJS API Error] Failed to contact EmailJS service:', err);
+    return false;
+  }
+}
+
 export async function sendAdminSecurityAlertEmail(event: SecurityEventData): Promise<boolean> {
-  const transporter = getTransporter();
   const alertRecipient = process.env.ADMIN_ALERT_EMAIL || 'garvitmadan511@gmail.com';
 
+  // 1. Try sending via EmailJS REST API if EmailJS credentials exist
+  const sentViaEmailJS = await sendViaEmailJS(event, alertRecipient);
+  if (sentViaEmailJS) return true;
+
+  const transporter = getTransporter();
   let subject = '';
   let badgeColor = '#3b82f6';
   let badgeText = '';
