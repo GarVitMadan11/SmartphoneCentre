@@ -944,10 +944,25 @@ export const SMARTWATCH_MODELS: Model[] = [
   { id: 'samsung-watch-6', brandId: 'brand-samsung', name: 'Galaxy Watch 6', category: 'midrange', releaseYear: 2023, basePrice128GB: 11000, series: 'Galaxy Watch 6', supportedStorageGb: [16], supportedRamGb: [2], imageUrl: 'https://images.samsung.com/is/image/samsung/p6pim/in/sm-r930nzeainu/gallery/in-galaxy-watch6-r930-sm-r930nzeainu-537424785?$650_519_PNG$' }
 ];
 
+export function getModelTierWeight(model: Model): number {
+  const name = model.name.toLowerCase();
+  if (name.includes('pro max') || name.includes('ultra') || name.includes('fold')) return 100;
+  if (name.includes('pro') || name.includes('flip')) return 90;
+  if (name.includes('plus') || name.includes('air') || name.includes('edge')) return 80;
+  if (name.includes('mini')) return 65;
+  if (name.includes('fe') || name.includes('lite') || name.includes('se') || /\b\d+e\b/.test(name) || /\b\d+c\b/.test(name) || name.includes('a3x')) return 50;
+  return 70; // standard base model
+}
+
 export function sortModelsByLaunchDesc(modelsList: Model[]): Model[] {
   return [...modelsList].sort((a, b) => {
     if (b.releaseYear !== a.releaseYear) {
       return b.releaseYear - a.releaseYear;
+    }
+    const weightA = getModelTierWeight(a);
+    const weightB = getModelTierWeight(b);
+    if (weightB !== weightA) {
+      return weightB - weightA;
     }
     if (b.basePrice128GB !== a.basePrice128GB) {
       return b.basePrice128GB - a.basePrice128GB;

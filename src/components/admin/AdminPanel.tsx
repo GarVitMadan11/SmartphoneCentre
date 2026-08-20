@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { Booking, Brand, Model, MODELS as STATIC_MODELS, isSmartwatchDevice, isTabletDevice, getModelSupportedRam } from '../../data/mockDatabase';
+import { Booking, Brand, Model, MODELS as STATIC_MODELS, isSmartwatchDevice, isTabletDevice, getModelSupportedRam, sortModelsByLaunchDesc } from '../../data/mockDatabase';
 import { 
   ArrowLeft, Search, Filter, 
   CheckCircle, XCircle, Clock, CreditCard, 
@@ -722,7 +722,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         (m.series || '').toLowerCase().includes(q)
       );
     }
-    return list;
+    const sorted = sortModelsByLaunchDesc(list);
+    return applyModelOrder(selectedCatalogBrandId, sorted);
   }, [models, catalogDeviceCategory, selectedCatalogBrandId, catalogSearch]);
 
   // Group displayed models for the selected brand by series (Brand → Series → Model hierarchy)
@@ -756,8 +757,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       map.get(seriesName)!.push(m);
     });
 
-    map.forEach((modelList) => {
-      modelList.sort((a, b) => b.releaseYear - a.releaseYear || a.name.localeCompare(b.name));
+    map.forEach((modelList, seriesName) => {
+      const sorted = sortModelsByLaunchDesc(modelList);
+      map.set(seriesName, applyModelOrder(selectedCatalogBrandId, sorted));
     });
 
     return map;
