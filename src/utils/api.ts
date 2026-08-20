@@ -32,13 +32,14 @@ function csrfToken(path?: string, withAuth?: boolean): string | undefined {
 
   const isAdminPath = Boolean(
     withAuth ||
-    hasAdminToken() ||
     (path && (
       path.startsWith('/admin') ||
-      path.startsWith('/models') ||
-      path.startsWith('/bookings') ||
-      path.startsWith('/analytics') ||
-      path.startsWith('/support')
+      (hasAdminToken() && (
+        path.startsWith('/models') ||
+        path.startsWith('/bookings') ||
+        path.startsWith('/analytics') ||
+        path.startsWith('/support')
+      ))
     ))
   );
 
