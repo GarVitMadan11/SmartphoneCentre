@@ -352,6 +352,19 @@ app.get('/api/models', async (req, res) => {
       try { parsedStorageGb = JSON.parse(m.supportedStorageGb); } catch { parsedStorageGb = [128, 256, 512]; }
       try { parsedRamGb = JSON.parse((m as any).supportedRamGb ?? '[0]'); } catch { parsedRamGb = [0]; }
       try { parsedVariantPrices = JSON.parse((m as any).variantPrices ?? '{}'); } catch { parsedVariantPrices = {}; }
+
+      let resolvedSeries = m.series || '';
+      if (m.brandId === 'brand-xiaomi') {
+        const lower = m.name.toLowerCase();
+        if (lower.includes('poco f')) resolvedSeries = 'POCO F Series';
+        else if (lower.includes('poco x')) resolvedSeries = 'POCO X Series';
+        else if (lower.includes('poco m')) resolvedSeries = 'POCO M Series';
+        else if (lower.includes('poco c')) resolvedSeries = 'POCO C Series';
+        else if (lower.includes('redmi note')) resolvedSeries = 'Redmi Note Series';
+        else if (lower.includes('redmi')) resolvedSeries = 'Redmi Series';
+        else if (lower.includes('xiaomi') || lower.includes('mi')) resolvedSeries = 'Xiaomi Series';
+      }
+
       return {
         id: m.legacyId,
         brandId: m.brandId,
@@ -359,7 +372,7 @@ app.get('/api/models', async (req, res) => {
         category: m.category,
         releaseYear: m.releaseYear,
         basePrice128GB: m.basePrice128GB,
-        series: m.series || '',
+        series: resolvedSeries,
         imageUrl: m.imageUrl || undefined,
         supportedStorageGb: parsedStorageGb,
         supportedRamGb: parsedRamGb,

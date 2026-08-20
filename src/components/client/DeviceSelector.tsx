@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { BRANDS as STATIC_BRANDS, SMARTPHONE_MODELS as STATIC_SMARTPHONE_MODELS, Model, Brand, Variant, generateVariantsForModel, getDeviceImage, getModelSupportedRam, getModelSupportedStorage, getVariantPrice, isTabletDevice, isSmartwatchDevice, sortModelsByLaunchDesc } from '../../data/mockDatabase';
-import { applyBrandOrder, applySeriesOrder, applyModelOrder } from '../../utils/ordering';
+import { applyBrandOrder, applySeriesOrder, applyModelOrder, sortSeriesByHierarchy } from '../../utils/ordering';
 import { Search, ChevronRight, Smartphone, Layers, ArrowLeft, ArrowRight, Cpu, Wifi, Radio, X, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -637,7 +637,20 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
 
   const rawModels = propModels && propModels.length > 0 ? propModels : STATIC_SMARTPHONE_MODELS;
   const MODELS = useMemo(() => {
-    return rawModels.filter(m => !isTabletDevice(m.brandId, m.name, m.id) && !isSmartwatchDevice(m.brandId, m.name, m.id));
+    return rawModels.map(m => {
+      let resolvedSeries = m.series || '';
+      if (m.brandId === 'brand-xiaomi') {
+        const lower = m.name.toLowerCase();
+        if (lower.includes('poco f')) resolvedSeries = 'POCO F Series';
+        else if (lower.includes('poco x')) resolvedSeries = 'POCO X Series';
+        else if (lower.includes('poco m')) resolvedSeries = 'POCO M Series';
+        else if (lower.includes('poco c')) resolvedSeries = 'POCO C Series';
+        else if (lower.includes('redmi note')) resolvedSeries = 'Redmi Note Series';
+        else if (lower.includes('redmi')) resolvedSeries = 'Redmi Series';
+        else if (lower.includes('xiaomi') || lower.includes('mi')) resolvedSeries = 'Xiaomi Series';
+      }
+      return { ...m, series: resolvedSeries };
+    }).filter(m => !isTabletDevice(m.brandId, m.name, m.id) && !isSmartwatchDevice(m.brandId, m.name, m.id));
   }, [rawModels]);
   const [selectedBrandId, setSelectedBrandId] = useState<string>('brand-apple');
   const [selectedSeries, setSelectedSeries] = useState<string | null>(null);
@@ -694,22 +707,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
       }
     });
     const seriesList = Array.from(seriesSet);
-    
-    // Sort series list by max launch year descending (newest launch series first)
-    const defaultSortedSeries = seriesList.sort((a, b) => {
-      const modelsA = brandModels.filter(m => m.series === a);
-      const modelsB = brandModels.filter(m => m.series === b);
-      const maxYearA = modelsA.length > 0 ? Math.max(...modelsA.map(m => m.releaseYear)) : 0;
-      const maxYearB = modelsB.length > 0 ? Math.max(...modelsB.map(m => m.releaseYear)) : 0;
-      if (maxYearB !== maxYearA) return maxYearB - maxYearA;
-
-      const maxPriceA = modelsA.length > 0 ? Math.max(...modelsA.map(m => m.basePrice128GB)) : 0;
-      const maxPriceB = modelsB.length > 0 ? Math.max(...modelsB.map(m => m.basePrice128GB)) : 0;
-      if (maxPriceB !== maxPriceA) return maxPriceB - maxPriceA;
-
-      return a.localeCompare(b);
-    });
-
+    const defaultSortedSeries = sortSeriesByHierarchy(selectedBrandId, seriesList);
     return applySeriesOrder(selectedBrandId, defaultSortedSeries);
   }, [selectedBrandId, MODELS, orderVersion]);
 
