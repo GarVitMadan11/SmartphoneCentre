@@ -1390,6 +1390,10 @@ export function getDeviceImage(
   const bId = brandId || (typeof modelOrId === 'object' ? modelOrId?.brandId : '') || '';
   const cUrl = customImageUrl || (typeof modelOrId === 'object' ? modelOrId?.imageUrl : undefined);
 
+  if (cUrl && cUrl.trim().length > 0) {
+    return cUrl.trim();
+  }
+
   const redirectedModelId = getRedirectedModelId(modelId);
 
   if (color) {
@@ -1401,10 +1405,6 @@ export function getDeviceImage(
         return new URL(`../../assets/phones/${colorImg}`, import.meta.url).href;
       } catch { /* fallback */ }
     }
-  }
-
-  if (cUrl && cUrl.trim().length > 0) {
-    return cUrl.trim();
   }
   const cleanId = redirectedModelId.replace(/^catalog-/, '');
   const brandSlug = bId.replace(/^brand-/, '');

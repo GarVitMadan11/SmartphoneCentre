@@ -1,17 +1,19 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { SMARTWATCH_MODELS, Model, Variant, getVariantPrice, sortModelsByLaunchDesc } from '../../data/mockDatabase';
+import { SMARTWATCH_MODELS, Model, Variant, getVariantPrice, sortModelsByLaunchDesc, isSmartwatchDevice } from '../../data/mockDatabase';
 import { applyModelOrder } from '../../utils/ordering';
 import { Watch, Sparkles, ArrowRight, Search, X, HardDrive, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface SmartwatchesShowcaseProps {
+  models?: Model[];
   onSelectVariant: (model: Model, variant: Variant) => void;
   onBackToHome: () => void;
   defaultBrand?: 'all' | 'apple' | 'samsung';
 }
 
 export const SmartwatchesShowcase: React.FC<SmartwatchesShowcaseProps> = ({
+  models: propModels,
   onSelectVariant,
   onBackToHome,
   defaultBrand,
@@ -29,8 +31,16 @@ export const SmartwatchesShowcase: React.FC<SmartwatchesShowcaseProps> = ({
     }
   }, [defaultBrand]);
 
+  const watchModelsList = useMemo(() => {
+    if (propModels && propModels.length > 0) {
+      const fromProps = propModels.filter(m => isSmartwatchDevice(m.brandId, m.name, m.id));
+      if (fromProps.length > 0) return fromProps;
+    }
+    return SMARTWATCH_MODELS;
+  }, [propModels]);
+
   const filteredModels = useMemo(() => {
-    const list = SMARTWATCH_MODELS.filter(m => {
+    const list = watchModelsList.filter(m => {
       const matchesBrand =
         selectedBrand === 'all' ||
         (selectedBrand === 'apple' && m.brandId === 'brand-apple') ||
@@ -45,7 +55,7 @@ export const SmartwatchesShowcase: React.FC<SmartwatchesShowcaseProps> = ({
     const sorted = sortModelsByLaunchDesc(list);
     const targetBrand = selectedBrand === 'apple' ? 'brand-apple' : selectedBrand === 'samsung' ? 'brand-samsung' : 'brand-apple';
     return applyModelOrder(targetBrand, sorted);
-  }, [selectedBrand, searchQuery]);
+  }, [selectedBrand, searchQuery, watchModelsList]);
 
   const storageOptions = useMemo(() => {
     if (!selectedModelForSpec) return [16, 32, 64];

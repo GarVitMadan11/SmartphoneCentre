@@ -514,7 +514,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-zinc-800 p-1 border border-ice-border flex items-center justify-center flex-shrink-0 shadow-xs">
             <img 
-              src={getDeviceImage(model.id, deviceType)} 
+              src={getDeviceImage(model.id, model.brandId, variant?.color, model.imageUrl)} 
               alt={model.name} 
               className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" 
             />

@@ -818,6 +818,7 @@ export default function App() {
 
           {path === '/tablets' && !isWorkflow && (
             <TabletsShowcase
+              models={MODELS}
               onSelectVariant={handleVariantSelected}
               onBackToHome={() => { handleReset(); navigate('/'); }}
               defaultBrand={selectedTabletBrand}
@@ -826,6 +827,7 @@ export default function App() {
 
           {path === '/smartwatches' && !isWorkflow && (
             <SmartwatchesShowcase
+              models={MODELS}
               onSelectVariant={handleVariantSelected}
               onBackToHome={() => { handleReset(); navigate('/'); }}
               defaultBrand={selectedWatchBrand}
@@ -847,7 +849,7 @@ export default function App() {
                 defaultModelId={pendingModelId}
                 onDefaultModelConsumed={() => setPendingModelId(null)}
                 brands={BRANDS}
-                models={SMARTPHONE_MODELS}
+                models={MODELS}
               />
             </div>
           )}

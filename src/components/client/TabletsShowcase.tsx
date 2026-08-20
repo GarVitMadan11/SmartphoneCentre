@@ -1,17 +1,19 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { TABLET_MODELS, Model, Variant, getModelSupportedRam, getModelSupportedStorage, getVariantPrice, sortModelsByLaunchDesc } from '../../data/mockDatabase';
+import { TABLET_MODELS, Model, Variant, getModelSupportedRam, getModelSupportedStorage, getVariantPrice, sortModelsByLaunchDesc, isTabletDevice } from '../../data/mockDatabase';
 import { applyModelOrder } from '../../utils/ordering';
 import { Tablet, Sparkles, ArrowRight, Search, X, Cpu, HardDrive, CheckCircle2, Wifi, Radio } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface TabletsShowcaseProps {
+  models?: Model[];
   onSelectVariant: (model: Model, variant: Variant) => void;
   onBackToHome: () => void;
   defaultBrand?: 'all' | 'apple' | 'samsung';
 }
 
 export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
+  models: propModels,
   onSelectVariant,
   onBackToHome,
   defaultBrand,
@@ -31,8 +33,16 @@ export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
     }
   }, [defaultBrand]);
 
+  const tabletModelsList = useMemo(() => {
+    if (propModels && propModels.length > 0) {
+      const fromProps = propModels.filter(m => isTabletDevice(m.brandId, m.name, m.id));
+      if (fromProps.length > 0) return fromProps;
+    }
+    return TABLET_MODELS;
+  }, [propModels]);
+
   const filteredModels = useMemo(() => {
-    const list = TABLET_MODELS.filter(m => {
+    const list = tabletModelsList.filter(m => {
       const matchesBrand =
         selectedBrand === 'all' ||
         (selectedBrand === 'apple' && m.brandId === 'brand-apple') ||
@@ -47,7 +57,7 @@ export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
     const sorted = sortModelsByLaunchDesc(list);
     const targetBrand = selectedBrand === 'apple' ? 'brand-apple' : selectedBrand === 'samsung' ? 'brand-samsung' : 'brand-apple';
     return applyModelOrder(targetBrand, sorted);
-  }, [selectedBrand, searchQuery]);
+  }, [selectedBrand, searchQuery, tabletModelsList]);
 
   const ramOptions = useMemo(() => {
     if (!selectedModelForSpec) return [];
