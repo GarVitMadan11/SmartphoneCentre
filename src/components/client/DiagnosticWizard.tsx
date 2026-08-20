@@ -112,10 +112,10 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
   // Additional separated state variables
   const [deviceAge, setDeviceAge] = useState<'under_3m' | '3_to_6m' | '6_to_12m' | '1_to_2y' | '2y_plus'>(
-    model.releaseYear >= 2026 ? 'under_3m' : '1_to_2y'
+    model.releaseYear >= 2025 ? 'under_3m' : '1_to_2y'
   );
   const [warrantyStatus, setWarrantyStatus] = useState<'active' | 'expiring_soon' | 'expired' | 'unverified'>(
-    model.releaseYear >= 2026 ? 'active' : 'expired'
+    model.releaseYear >= 2025 ? 'active' : 'expired'
   );
 
   const stepsList = useMemo(() => [
@@ -215,7 +215,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
     setFuncConfirmed(true);
     setConnectConfirmed(true);
     setAccConfirmed(true);
-    if (model.releaseYear >= 2026) {
+    if (model.releaseYear >= 2025) {
       setWarrantyAge('under_3m');
       setDeviceAge('under_3m');
       setWarrantyStatus('active');
@@ -1301,7 +1301,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                 </div>
 
                 {/* Device Age & Warranty Status Section */}
-                {model.releaseYear >= 2026 && (
+                {model.releaseYear >= 2025 && (
                   <div className="mt-8 text-left border-t border-ice-border pt-6">
                     <h4 className="text-sm font-bold text-ink-navy font-outfit uppercase tracking-wider mb-3">
                       Brand Warranty & Device Age
