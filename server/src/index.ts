@@ -144,10 +144,9 @@ app.use(cors({
 }));
 
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
-// 50kb is generous for all standard API payloads (bookings, quotes, model updates).
-// The previous 4mb limit enabled memory-exhaustion DoS with a single large request.
-app.use(express.json({ limit: '50kb' }));
-app.use(express.urlencoded({ extended: false, limit: '50kb' }));
+// 10mb limit for standard API payloads and base64 image uploads in admin panel
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 
 // ── Serve frontend static assets in production ────────────────────────────────
 const distPath = path.resolve(__dirname, '../../dist');
@@ -243,7 +242,24 @@ export function isValidImageUrl(url?: string): boolean {
   if (!url || typeof url !== 'string') return true;
   const trimmed = url.trim();
   if (trimmed === '') return true;
-  return /^https?:\/\//i.test(trimmed) || /^data:image\//i.test(trimmed);
+  if (/^data:image\//i.test(trimmed)) return true;
+  if (/^https?:\/\//i.test(trimmed)) return true;
+  if (/^\/\//.test(trimmed)) return true;
+  if (/^[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+\//.test(trimmed)) return true;
+  return false;
+}
+
+export function formatImageUrl(url?: string): string {
+  if (!url || typeof url !== 'string') return '';
+  let trimmed = url.trim();
+  if (trimmed === '') return '';
+  if (trimmed.startsWith('//')) return `https:${trimmed}`;
+  if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://') && !trimmed.startsWith('data:')) {
+    if (/^[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+\//.test(trimmed)) {
+      return `https://${trimmed}`;
+    }
+  }
+  return trimmed;
 }
 
 export function validateBookingBody(b: Record<string, unknown>): string[] {
@@ -517,7 +533,7 @@ app.patch('/api/models/:legacyId', adminAuth, requireRole(['SUPER_ADMIN', 'CATAL
         res.status(400).json({ error: 'BadRequest', message: 'imageUrl must be a valid http(s) URL or base64 Data URL.' });
         return;
       }
-      data.imageUrl = (updates.imageUrl as string).trim();
+      data.imageUrl = formatImageUrl(updates.imageUrl);
     }
     if (updates.supportedStorageGb !== undefined && Array.isArray(updates.supportedStorageGb)) {
       data.supportedStorageGb = JSON.stringify(updates.supportedStorageGb);
@@ -541,7 +557,46 @@ app.patch('/api/models/:legacyId', adminAuth, requireRole(['SUPER_ADMIN', 'CATAL
     });
 
     if (!existing) {
-      res.status(404).json({ error: 'NotFound', message: `Model '${legacyId}' not found in database.` });
+      let brandId = (updates.brandId as string) || '';
+      if (!brandId) {
+        if (legacyId.startsWith('apple-') || legacyId.startsWith('iphone-')) brandId = 'brand-apple';
+        else if (legacyId.startsWith('sam-') || legacyId.startsWith('samsung-')) brandId = 'brand-samsung';
+        else if (legacyId.startsWith('op-') || legacyId.startsWith('oneplus-')) brandId = 'brand-oneplus';
+        else if (legacyId.startsWith('vi-') || legacyId.startsWith('vivo-')) brandId = 'brand-vivo';
+        else if (legacyId.startsWith('xi-') || legacyId.startsWith('xiaomi-') || legacyId.startsWith('redmi-') || legacyId.startsWith('poco-')) brandId = 'brand-xiaomi';
+        else brandId = 'brand-apple';
+      }
+
+      const brandExists = await prisma.brand.findUnique({ where: { id: brandId } });
+      if (!brandExists) {
+        await prisma.brand.create({
+          data: { id: brandId, name: brandId.replace('brand-', '').toUpperCase(), logo: '/logo.svg' }
+        });
+      }
+
+      const created = await prisma.model.create({
+        data: {
+          legacyId,
+          brandId,
+          name: (data.name as string) || (updates.name as string) || legacyId,
+          category: (data.category as string) || (updates.category as string) || 'midrange',
+          releaseYear: Number(data.releaseYear) || Number(updates.releaseYear) || new Date().getFullYear(),
+          basePrice128GB: Number(data.basePrice128GB) || Number(updates.basePrice128GB) || 10000,
+          series: (data.series as string) || (updates.series as string) || '',
+          imageUrl: (data.imageUrl as string) || '',
+          supportedStorageGb: data.supportedStorageGb ? String(data.supportedStorageGb) : '[128,256,512]',
+          supportedRamGb: (data as any).supportedRamGb ? String((data as any).supportedRamGb) : '[0]',
+          variantPrices: (data as any).variantPrices ? String((data as any).variantPrices) : '{}',
+        }
+      });
+
+      res.json({
+        ...created,
+        id: created.legacyId,
+        supportedStorageGb: created.supportedStorageGb ? JSON.parse(created.supportedStorageGb) : [128, 256, 512],
+        supportedRamGb: (created as any).supportedRamGb ? JSON.parse((created as any).supportedRamGb) : [0],
+        variantPrices: (created as any).variantPrices ? JSON.parse((created as any).variantPrices) : {},
+      });
       return;
     }
 

@@ -843,7 +843,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       finalSeries = editSeriesOption.trim();
     }
 
-    const imageUrlValue = editImageUrl.trim() || undefined;
+    const imageUrlValue = editImageUrl.trim();
 
     try {
       await updateModel(editingModelId, {

@@ -71,18 +71,7 @@ async function main() {
         supportedRamGb: JSON.stringify(ramArr),
         variantPrices: JSON.stringify(variantPricesObj),
       },
-      update: {
-        brandId: m.brandId,
-        name: m.name,
-        category: m.category,
-        releaseYear: m.releaseYear,
-        basePrice128GB: m.basePrice128GB,
-        series: m.series || '',
-        imageUrl: modelImageUrl,
-        supportedStorageGb: JSON.stringify(storageArr),
-        supportedRamGb: JSON.stringify(ramArr),
-        variantPrices: JSON.stringify(variantPricesObj),
-      },
+      update: {}, // Preserve live admin edits in PostgreSQL database
     });
   }
   console.log(`  ✓ ${MODELS.length} catalog models synced`);
