@@ -364,6 +364,13 @@ export interface ApiUser {
   updatedAt: string;
 }
 
+export function checkEmail(email: string): Promise<{ exists: boolean }> {
+  return apiFetch<{ exists: boolean }>('/auth/check-email', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+}
+
 export function checkPhone(phone: string): Promise<{ exists: boolean }> {
   return apiFetch<{ exists: boolean }>('/auth/check-phone', {
     method: 'POST',

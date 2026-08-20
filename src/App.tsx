@@ -1,12 +1,11 @@
 import { useState, useEffect, useRef, useMemo, Suspense, useCallback, startTransition } from 'react';
-import { Model, Variant, DefectRule, MODELS as STATIC_MODELS, BRANDS as STATIC_BRANDS, generateVariantsForModel, INITIAL_BOOKINGS, Brand, Booking, TABLET_MODELS, SMARTWATCH_MODELS, getDeviceImage, getDefectRulesForCategory } from './data/mockDatabase';
+import { Model, Variant, DefectRule, MODELS as STATIC_MODELS, BRANDS as STATIC_BRANDS, generateVariantsForModel, INITIAL_BOOKINGS, Brand, Booking, TABLET_MODELS, getDeviceImage, getDefectRulesForCategory } from './data/mockDatabase';
 import { fetchBrands, fetchModels, fetchBookings as apiFetchBookings, fetchCurrentUser, customerLogout, hasAdminToken, ApiUser } from './utils/api';
 import { DeviceSelector } from './components/client/DeviceSelector';
 import { DeviceCategoryShowcase } from './components/client/DeviceCategoryShowcase';
 import { SellYourDevice } from './components/client/SellYourDevice';
 import { HeaderNav } from './components/client/HeaderNav';
 import { TabletsShowcase } from './components/client/TabletsShowcase';
-import { SmartwatchesShowcase } from './components/client/SmartwatchesShowcase';
 import { AboutPage } from './components/client/AboutPage';
 import { ContactPage } from './components/client/ContactPage';
 import LoginPage from './components/client/LoginPage';
@@ -47,7 +46,7 @@ import oneplusPhoneImg from './assets/oneplus_phone.png';
 const SESSION_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 interface StoredNavState {
-  activeStage: 'select' | 'tablets' | 'smartwatches' | 'diagnose' | 'schedule' | 'admin';
+  activeStage: 'select' | 'tablets' | 'diagnose' | 'schedule' | 'admin';
   wizardStep: number;
   selectedModelId?: string;
   selectedVariant?: Variant;
@@ -64,7 +63,7 @@ function loadNavState(): StoredNavState | null {
     // Validate shape and TTL
     if (
       typeof parsed !== 'object' || parsed === null ||
-      !['select', 'tablets', 'smartwatches', 'diagnose', 'schedule', 'admin'].includes(parsed.activeStage) ||
+      !['select', 'tablets', 'diagnose', 'schedule', 'admin'].includes(parsed.activeStage) ||
       typeof parsed.wizardStep !== 'number' ||
       typeof parsed.timestamp !== 'number' ||
       Date.now() - parsed.timestamp > SESSION_TTL_MS
@@ -313,7 +312,7 @@ function FaqSection() {
 export default function App() {
   // ── Navigation state — persisted in localStorage with TTL (non-sensitive) ──
   const savedNav = useRef(loadNavState());
-  const [activeStage, setActiveStage] = useState<'select' | 'tablets' | 'smartwatches' | 'diagnose' | 'schedule' | 'admin'>(
+  const [activeStage, setActiveStage] = useState<'select' | 'tablets' | 'diagnose' | 'schedule' | 'admin'>(
     (window.location.pathname === SECRET_ADMIN_PATH || window.location.pathname === '/admin')
       ? 'admin'
       : (savedNav.current?.activeStage === 'admin' ? 'select' : savedNav.current?.activeStage ?? 'select')
@@ -420,7 +419,6 @@ export default function App() {
 
   const getPathForModel = (model: Model): string => {
     if (TABLET_MODELS.some(m => m.id === model.id)) return '/tablets';
-    if (SMARTWATCH_MODELS.some(m => m.id === model.id)) return '/smartwatches';
     return '/smartphones';
   };
 
@@ -433,9 +431,6 @@ export default function App() {
         break;
       case '/tablets':
         title = "Sell Tablets & iPads | Rephonix";
-        break;
-      case '/smartwatches':
-        title = "Sell Smartwatches | Rephonix";
         break;
       case '/about':
         title = "About Rephonix";
@@ -702,7 +697,6 @@ export default function App() {
   };
 
   const [selectedTabletBrand, setSelectedTabletBrand] = useState<'all' | 'apple' | 'samsung'>('all');
-  const [selectedWatchBrand, setSelectedWatchBrand] = useState<'all' | 'apple' | 'samsung'>('all');
 
   const handleReset = () => {
     startTransition(() => {
@@ -713,7 +707,6 @@ export default function App() {
       setWizardStep(0);
       setActiveStage('select');
       setSelectedTabletBrand('all');
-      setSelectedWatchBrand('all');
       clearNavState();
     });
   };
@@ -746,11 +739,7 @@ export default function App() {
           setSelectedTabletBrand(brand);
           navigate('/tablets');
         }}
-        onSelectWatchBrand={(brand) => {
-          handleReset();
-          setSelectedWatchBrand(brand);
-          navigate('/smartwatches');
-        }}
+
         onOpenTrackOrder={() => startTransition(() => setIsTrackOpen(true))}
         currentUser={currentUser}
         onLogout={handleLogout}
@@ -825,14 +814,7 @@ export default function App() {
             />
           )}
 
-          {path === '/smartwatches' && !isWorkflow && (
-            <SmartwatchesShowcase
-              models={MODELS}
-              onSelectVariant={handleVariantSelected}
-              onBackToHome={() => { handleReset(); navigate('/'); }}
-              defaultBrand={selectedWatchBrand}
-            />
-          )}
+
 
           {path === '/smartphones' && !isWorkflow && (
             <div className="bg-canvas-pure border border-ice-border/60 rounded-xl p-5 sm:p-8 shadow-3d-card scroll-mt-24 mb-12">
@@ -974,9 +956,6 @@ export default function App() {
                   if (cat === 'tablets') {
                     handleReset();
                     navigate('/tablets');
-                  } else if (cat === 'smartwatches') {
-                    handleReset();
-                    navigate('/smartwatches');
                   } else {
                     handleReset();
                     navigate('/smartphones');
@@ -1625,7 +1604,6 @@ export default function App() {
               <span onClick={() => { handleReset(); navigate('/'); }} className="hover:text-cobalt cursor-pointer transition-colors">Home</span>
               <span onClick={() => { handleReset(); navigate('/smartphones'); }} className="hover:text-cobalt cursor-pointer transition-colors">Smartphones</span>
               <span onClick={() => { handleReset(); navigate('/tablets'); }} className="hover:text-cobalt cursor-pointer transition-colors">Tablets/iPads</span>
-              <span onClick={() => { handleReset(); navigate('/smartwatches'); }} className="hover:text-cobalt cursor-pointer transition-colors">Smartwatches</span>
               <span onClick={() => { handleReset(); navigate('/about'); }} className="hover:text-cobalt cursor-pointer transition-colors">About</span>
               <span onClick={() => { handleReset(); navigate('/contact'); }} className="hover:text-cobalt cursor-pointer transition-colors">Contact</span>
               <span onClick={() => setIsSpecModalOpen(true)} className="hover:text-cobalt cursor-pointer transition-colors">System Spec</span>

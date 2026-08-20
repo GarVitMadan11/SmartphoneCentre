@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowRight, Smartphone, Tablet, Watch, ShieldCheck, Zap, Truck } from 'lucide-react';
+import { ArrowRight, Smartphone, Tablet, ShieldCheck, Zap, Truck } from 'lucide-react';
 
 /* ─────────────────────────────────────────────
    Floating Device Composition
@@ -78,34 +78,6 @@ const FloatingComposition: React.FC = () => {
           </div>
         </div>
 
-        {/* ── SMARTWATCH — centre ── */}
-        <div
-          className="absolute"
-          style={{
-            left: '50%',
-            top: '50%',
-            transform: 'translate(-50%, -50%) translateZ(15px)',
-            transformStyle: 'preserve-3d',
-            animation: 'syd-floatB 5.5s ease-in-out infinite 0.8s',
-          }}
-        >
-          <div className="w-11 h-5 bg-gradient-to-b from-[#2c2c2e] to-[#1c1c1e] rounded-t-lg mx-auto" />
-          <div className="w-[76px] h-[86px] sm:w-[88px] sm:h-[100px] rounded-[20px] bg-gradient-to-br from-[#3a3a3c] to-[#1a1a1a] border-[2.5px] border-black/15 p-1.5">
-            <div className="w-full h-full rounded-[14px] bg-white overflow-hidden flex flex-col items-center justify-center gap-1.5 border border-black/5">
-              <div className="relative w-10 h-10 sm:w-11 sm:h-11">
-                <svg viewBox="0 0 44 44" className="w-full h-full -rotate-90">
-                  <circle cx="22" cy="22" r="16" fill="none" stroke="rgba(0,0,0,0.06)" strokeWidth="3.5" />
-                  <circle cx="22" cy="22" r="16" fill="none" stroke="#006e2f" strokeWidth="3.5" strokeDasharray="72 29" strokeLinecap="round" />
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Watch className="w-4 h-4 text-secondary" strokeWidth={1.8} />
-                </div>
-              </div>
-              <div className="text-[8px] font-bold text-secondary font-mono">&#8377;28K</div>
-            </div>
-          </div>
-          <div className="w-11 h-5 bg-gradient-to-t from-[#2c2c2e] to-[#1c1c1e] rounded-b-lg mx-auto" />
-        </div>
 
         {/* ── SMARTPHONE — right, front layer ── */}
         <div
@@ -295,14 +267,13 @@ export const SellYourDevice: React.FC<{ onGetValuation?: () => void }> = ({ onGe
 
             {/* Sub-copy */}
             <p className="text-ink-slate text-base sm:text-lg font-light leading-relaxed mb-8 max-w-lg">
-              Sell your smartphone, tablet, or smartwatch to Rephonix. Get an instant valuation, free doorstep pickup, and immediate payment. No hidden deductions, guaranteed.
+              Sell your smartphone or tablet to Rephonix. Get an instant valuation, free doorstep pickup, and immediate payment. No hidden deductions, guaranteed.
             </p>
 
             {/* Device type pills */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
               <DeviceTypePill icon={<Smartphone />} label="SMARTPHONES" value="Up to &#8377;1,10,000" />
               <DeviceTypePill icon={<Tablet />} label="TABLETS & iPADS" value="Up to &#8377;80,000" />
-              <DeviceTypePill icon={<Watch />} label="SMARTWATCHES" value="Up to &#8377;35,000" />
             </div>
 
             {/* CTA */}
@@ -357,7 +328,7 @@ export const SellYourDevice: React.FC<{ onGetValuation?: () => void }> = ({ onGe
             <ProcessStep
               number="01"
               title="Select Your Device"
-              description="Choose your smartphone, tablet, or smartwatch and pick your brand and model."
+              description="Choose your smartphone or tablet and pick your brand and model."
               icon={<Smartphone strokeWidth={1.8} />}
               delay={0}
             />

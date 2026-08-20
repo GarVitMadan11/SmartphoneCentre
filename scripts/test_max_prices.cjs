@@ -7,6 +7,8 @@ let content = fs.readFileSync(path.join(__dirname, '../src/data/mockDatabase.ts'
 // Replace png imports with dummy string exports
 content = content.replace(/import\s+(\w+)PhoneImg\s+from\s+'\.\.\/assets\/[^']+\.png';/g, 'const $1PhoneImg = "";');
 content = content.replace(/import\s+phoneImages\s+from\s+'\.\/phoneImages\.json';/g, "import phoneImages from '../src/data/phoneImages.json' with { type: 'json' };");
+content = content.replace(/import\s+actualPrices\s+from\s+'\.\/actualPrices\.json';/g, "import actualPrices from '../src/data/actualPrices.json' with { type: 'json' };");
+
 
 fs.writeFileSync(path.join(__dirname, 'temp_mock.ts'), content);
 

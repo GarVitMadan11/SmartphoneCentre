@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { Smartphone, Tablet, Watch, ChevronDown, Zap, Truck, Menu, X, User, Package, Instagram } from 'lucide-react';
+import { Smartphone, Tablet, ChevronDown, Zap, Truck, Menu, X, User, Package, Instagram } from 'lucide-react';
 import { ApiUser } from '../../utils/api';
 import { BRANDS as STATIC_BRANDS } from '../../data/mockDatabase';
 import { applyBrandOrder } from '../../utils/ordering';
@@ -9,7 +9,6 @@ interface HeaderNavProps {
   onNavigate: (path: string) => void;
   onSelectBrand?: (brandId: string) => void;
   onSelectTabletBrand?: (brand: 'apple' | 'samsung') => void;
-  onSelectWatchBrand?: (brand: 'apple' | 'samsung') => void;
   onOpenTrackOrder?: () => void;
   currentUser?: ApiUser | null;
   onLogout?: () => void;
@@ -20,14 +19,13 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
   onNavigate,
   onSelectBrand,
   onSelectTabletBrand,
-  onSelectWatchBrand,
   onOpenTrackOrder,
   currentUser,
   onLogout,
 }) => {
-  const [activeDropdown, setActiveDropdown] = useState<'phones' | 'tablets' | 'watches' | null>(null);
+  const [activeDropdown, setActiveDropdown] = useState<'phones' | 'tablets' | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [mobileSubMenu, setMobileSubMenu] = useState<'phones' | 'tablets' | 'watches' | null>(null);
+  const [mobileSubMenu, setMobileSubMenu] = useState<'phones' | 'tablets' | null>(null);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const navRef = useRef<HTMLDivElement>(null);
 
@@ -85,12 +83,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
     if (onSelectTabletBrand) onSelectTabletBrand(brand);
   };
 
-  const handleWatchBrandClick = (brand: 'apple' | 'samsung') => {
-    setActiveDropdown(null);
-    setMobileMenuOpen(false);
-    onNavigate('/smartwatches');
-    if (onSelectWatchBrand) onSelectWatchBrand(brand);
-  };
+
 
   return (
     <header className="sticky top-0 z-40 bg-white/90 dark:bg-canvas-pure/90 backdrop-blur-md border-b border-ice-border shadow-xs">
@@ -208,43 +201,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
             )}
           </div>
 
-          {/* Smartwatches Dropdown */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setActiveDropdown(prev => prev === 'watches' ? null : 'watches')}
-              className={`px-3 py-2 rounded-lg flex items-center gap-1.5 transition-colors ${
-                currentPath === '/smartwatches' || activeDropdown === 'watches'
-                  ? 'text-emerald-600 font-semibold bg-emerald-50'
-                  : 'hover:text-emerald-600 hover:bg-slate-100/60'
-              }`}
-            >
-              <Watch className="w-4 h-4 text-emerald-600" />
-              <span>Smartwatches</span>
-              <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${activeDropdown === 'watches' ? 'rotate-180 text-emerald-600' : 'text-slate-400'}`} />
-            </button>
 
-            {activeDropdown === 'watches' && (
-              <div 
-                className="absolute top-full left-0 mt-1 w-60 bg-white dark:bg-canvas-pure border border-ice-border rounded-xl shadow-premium p-2.5 z-50 animate-in fade-in slide-in-from-top-2 duration-150"
-              >
-                <div className="flex items-center justify-between px-2.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest font-outfit">
-                  <span>Top Watch Brands</span>
-                  <button onClick={() => { setActiveDropdown(null); onNavigate('/smartwatches'); }} className="text-emerald-600 hover:underline text-[10px] lowercase font-normal">view all</button>
-                </div>
-                <div className="grid grid-cols-2 gap-1 mt-1">
-                  <button onClick={() => handleWatchBrandClick('apple')} className="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 hover:text-emerald-600 text-xs font-medium transition-colors text-left">
-                    <span className="w-2 h-2 rounded-full bg-zinc-800 dark:bg-zinc-200" />
-                    <span>Apple Watch</span>
-                  </button>
-                  <button onClick={() => handleWatchBrandClick('samsung')} className="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 hover:text-emerald-600 text-xs font-medium transition-colors text-left">
-                    <span className="w-2 h-2 rounded-full bg-blue-600" />
-                    <span>Galaxy Watch</span>
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
 
           {/* About */}
           <button
@@ -430,27 +387,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
             )}
           </div>
 
-          {/* Mobile Smartwatches */}
-          <div>
-            <div 
-              onClick={() => setMobileSubMenu(prev => prev === 'watches' ? null : 'watches')}
-              className={`w-full flex items-center justify-between text-sm font-semibold py-2 px-3 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors ${currentPath === '/smartwatches' ? 'text-emerald-600 bg-emerald-50' : 'text-slate-700'}`}
-            >
-              <div className="flex items-center gap-2">
-                <Watch className="w-4 h-4 text-emerald-600" />
-                <span>Smartwatches</span>
-              </div>
-              <ChevronDown className={`w-4 h-4 transition-transform ${mobileSubMenu === 'watches' ? 'rotate-180' : ''}`} />
-            </div>
 
-            {mobileSubMenu === 'watches' && (
-              <div className="pl-6 pr-2 py-1 space-y-1 bg-slate-50 dark:bg-zinc-900/40 rounded-lg my-1">
-                <button onClick={() => { setMobileMenuOpen(false); onNavigate('/smartwatches'); }} className="w-full text-left text-xs font-semibold py-1.5 px-2 text-emerald-600">All Smartwatches →</button>
-                <button onClick={() => handleWatchBrandClick('apple')} className="w-full text-left text-xs text-slate-600 py-1 px-2 hover:text-emerald-600">Apple Watch</button>
-                <button onClick={() => handleWatchBrandClick('samsung')} className="w-full text-left text-xs text-slate-600 py-1 px-2 hover:text-emerald-600">Galaxy Watch</button>
-              </div>
-            )}
-          </div>
 
           <button
             onClick={() => { setMobileMenuOpen(false); onNavigate('/about'); }}

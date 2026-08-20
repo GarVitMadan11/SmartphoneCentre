@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { getIllustration } from './Illustrations';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import emailjs from '@emailjs/browser';
-import { checkPhone, customerLogin, customerSignup, verifyOtp, ApiUser } from '../../utils/api';
+import { checkEmail, customerLogin, customerSignup, verifyOtp, ApiUser } from '../../utils/api';
 
 const getEngineeringLabel = (description: string) => {
   const mapping: { [key: string]: string } = {
@@ -262,7 +262,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
   // Phone Check Lock Modal states
   const [isPriceLocked, setIsPriceLocked] = useState(!currentUser);
   const [lockModalOpen, setLockModalOpen] = useState(false);
-  const [modalStage, setModalStage] = useState<'phone' | 'password' | 'signup' | 'otp'>('phone');
+  const [modalStage, setModalStage] = useState<'email' | 'password' | 'signup' | 'otp'>('email');
   const [phoneInput, setPhoneInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
   const [nameInput, setNameInput] = useState('');
@@ -285,10 +285,15 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
     }
   }, [step, currentUser]);
 
-  const handlePhoneSubmit = async (e: React.FormEvent) => {
+  const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (phoneInput.length !== 10) {
-      setModalError('Please enter a valid 10-digit mobile number.');
+    const cleanEmail = emailInput.trim().toLowerCase();
+    if (!cleanEmail) {
+      setModalError('Please enter your email address.');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      setModalError('Please enter a valid email address.');
       return;
     }
     if (!termsAccepted) {
@@ -299,14 +304,14 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
     setModalLoading(true);
 
     try {
-      const res = await checkPhone(phoneInput);
+      const res = await checkEmail(cleanEmail);
       if (res.exists) {
         setModalStage('password');
       } else {
         setModalStage('signup');
       }
     } catch (err: any) {
-      setModalError(err.message || 'Failed to check phone number.');
+      setModalError(err.message || 'Failed to check email address.');
     } finally {
       setModalLoading(false);
     }
@@ -322,7 +327,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
     setModalLoading(true);
 
     try {
-      const res = await customerLogin(phoneInput, passwordInput);
+      const res = await customerLogin(emailInput.trim().toLowerCase(), passwordInput);
       if (res.user) {
         if (onLoginSuccess) {
           onLoginSuccess(res.user);
@@ -331,7 +336,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
         setLockModalOpen(false);
       }
     } catch (err: any) {
-      setModalError('Invalid mobile number or password.');
+      setModalError('Invalid email address or password.');
     } finally {
       setModalLoading(false);
     }
@@ -353,25 +358,27 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
     try {
       const res = await customerSignup(nameInput.trim(), emailInput.trim(), phoneInput, passwordInput);
       if (res.status === 'otp_sent') {
-        const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
-        const templateId = import.meta.env.VITE_EMAILJS_OTP_TEMPLATE_ID;
-        const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+        if (res.otp) {
+          const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+          const templateId = import.meta.env.VITE_EMAILJS_OTP_TEMPLATE_ID;
+          const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
 
-        if (!serviceId || !templateId || !publicKey) {
-          throw new Error('EmailJS environment variables are not configured in the browser.');
-        }
+          if (!serviceId || !templateId || !publicKey) {
+            throw new Error('EmailJS environment variables are not configured in the browser.');
+          }
 
-        const templateParams = {
-          email: emailInput.trim(),
-          passcode: res.otp,
-          time: '10 minutes',
-        };
+          const templateParams = {
+            email: emailInput.trim(),
+            passcode: res.otp,
+            time: '10 minutes',
+          };
 
-        try {
-          await emailjs.send(serviceId, templateId, templateParams, publicKey);
-        } catch (mailErr: any) {
-          console.error('EmailJS signup send failed:', mailErr);
-          throw new Error('Unable to send verification code. Please try again.');
+          try {
+            await emailjs.send(serviceId, templateId, templateParams, publicKey);
+          } catch (mailErr: any) {
+            console.error('EmailJS signup send failed:', mailErr);
+            throw new Error('Unable to send verification code. Please try again.');
+          }
         }
 
         setModalStage('otp');
@@ -1879,26 +1886,25 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
 
 
-              {modalStage === 'phone' && (
-                /* Stage 1: Phone number entry */
-                <form onSubmit={handlePhoneSubmit} className="space-y-4">
+              {modalStage === 'email' && (
+                /* Stage 1: Email address entry */
+                <form onSubmit={handleEmailSubmit} className="space-y-4">
                   <div>
-                    <label htmlFor="modalPhone" className="text-[10px] font-mono tracking-wider text-ink-muted uppercase block mb-1.5">
-                      Enter your phone number
+                    <label htmlFor="modalEmail" className="text-[10px] font-mono tracking-wider text-ink-muted uppercase block mb-1.5">
+                      Enter your email address
                     </label>
                     <div className="relative flex rounded-sm overflow-hidden border border-ice-border dark:border-zinc-800 focus-within:border-cobalt transition-colors">
                       <span className="bg-slate-100 dark:bg-zinc-800 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-zinc-300 flex items-center border-r border-ice-border dark:border-zinc-800">
-                        +91
+                        <Mail className="w-3.5 h-3.5" />
                       </span>
                       <input
-                        id="modalPhone"
-                        type="tel"
-                        maxLength={10}
+                        id="modalEmail"
+                        type="email"
                         required
-                        value={phoneInput}
-                        onChange={(e) => setPhoneInput(e.target.value.replace(/\D/g, ''))}
+                        value={emailInput}
+                        onChange={(e) => setEmailInput(e.target.value)}
                         className="w-full px-3 py-2 bg-canvas-pure text-xs text-ink-navy dark:text-white focus:outline-none"
-                        placeholder="Enter your Mobile"
+                        placeholder="Enter your Email"
                       />
                     </div>
                   </div>
@@ -1939,7 +1945,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                 <form onSubmit={handlePasswordSubmit} className="space-y-4">
                   <div className="text-left mb-2">
                     <h5 className="font-bold text-xs text-ink-navy dark:text-white">Welcome Back!</h5>
-                    <p className="text-[10px] text-ink-muted font-light mt-0.5">An account with +91 {phoneInput} already exists. Please login to unlock your price.</p>
+                    <p className="text-[10px] text-ink-muted font-light mt-0.5">An account with {emailInput} already exists. Please login to unlock your price.</p>
                   </div>
 
                   <div>
@@ -1972,10 +1978,10 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   <div className="flex justify-between items-center text-[10px] pt-1">
                     <button 
                       type="button"
-                      onClick={() => { setModalStage('phone'); setModalError(''); }}
+                      onClick={() => { setModalStage('email'); setModalError(''); }}
                       className="text-cobalt hover:underline font-medium"
                     >
-                      Use different number
+                      Use different email
                     </button>
                   </div>
 
@@ -2018,21 +2024,22 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   </div>
 
                   <div>
-                    <label htmlFor="modalEmail" className="text-[10px] font-mono tracking-wider text-ink-muted uppercase block mb-1">
-                      Email Address
+                    <label htmlFor="modalPhone" className="text-[10px] font-mono tracking-wider text-ink-muted uppercase block mb-1">
+                      Mobile Number
                     </label>
-                    <div className="relative">
-                      <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-ink-muted">
-                        <Mail className="w-3.5 h-3.5" />
+                    <div className="relative flex rounded-sm overflow-hidden border border-ice-border dark:border-zinc-800 focus-within:border-cobalt transition-colors">
+                      <span className="bg-slate-100 dark:bg-zinc-800 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-zinc-300 flex items-center border-r border-ice-border dark:border-zinc-800">
+                        +91
                       </span>
                       <input
-                        id="modalEmail"
-                        type="email"
+                        id="modalPhone"
+                        type="tel"
+                        maxLength={10}
                         required
-                        value={emailInput}
-                        onChange={(e) => setEmailInput(e.target.value)}
-                        className="w-full pl-9 pr-3 py-1.5 bg-canvas-pure border border-ice-border dark:border-zinc-800 rounded-sm text-xs text-ink-navy dark:text-white focus:outline-none focus:border-cobalt transition-all"
-                        placeholder="Enter email address"
+                        value={phoneInput}
+                        onChange={(e) => setPhoneInput(e.target.value.replace(/\D/g, ''))}
+                        className="w-full px-3 py-1.5 bg-canvas-pure text-xs text-ink-navy dark:text-white focus:outline-none"
+                        placeholder="Enter Mobile"
                       />
                     </div>
                   </div>
@@ -2067,10 +2074,10 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   <div className="flex justify-between items-center text-[10px] pt-1">
                     <button 
                       type="button"
-                      onClick={() => { setModalStage('phone'); setModalError(''); }}
+                      onClick={() => { setModalStage('email'); setModalError(''); }}
                       className="text-cobalt hover:underline font-medium"
                     >
-                      Change phone number
+                      Change email address
                     </button>
                   </div>
 
@@ -2088,8 +2095,8 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                 /* Stage 4: OTP Verification code */
                 <form onSubmit={handleOtpVerifySubmit} className="space-y-4">
                   <div className="text-left mb-2">
-                    <h5 className="font-bold text-xs text-ink-navy dark:text-white">Verify Phone Number</h5>
-                    <p className="text-[10px] text-ink-muted font-light mt-0.5">Please enter the 6-digit OTP code sent to +91 {phoneInput}.</p>
+                    <h5 className="font-bold text-xs text-ink-navy dark:text-white">Verify Email Address</h5>
+                    <p className="text-[10px] text-ink-muted font-light mt-0.5">Please enter the 6-digit OTP code sent to {emailInput}.</p>
                   </div>
 
                   <div>
@@ -2111,10 +2118,10 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   <div className="flex justify-between items-center text-[10px] pt-1">
                     <button 
                       type="button"
-                      onClick={() => { setModalStage('phone'); setModalError(''); }}
+                      onClick={() => { setModalStage('email'); setModalError(''); }}
                       className="text-cobalt hover:underline font-medium"
                     >
-                      Change phone number
+                      Change email address
                     </button>
                   </div>
 

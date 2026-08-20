@@ -2,7 +2,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { BRANDS as STATIC_BRANDS, SMARTPHONE_MODELS as STATIC_SMARTPHONE_MODELS, Model, Brand, Variant, generateVariantsForModel, getDeviceImage, getModelSupportedRam, getModelSupportedStorage, getVariantPrice, isTabletDevice, isSmartwatchDevice, sortModelsByLaunchDesc } from '../../data/mockDatabase';
 import { applyBrandOrder, applySeriesOrder, applyModelOrder, sortSeriesByHierarchy } from '../../utils/ordering';
-import { Search, ChevronRight, Smartphone, Layers, ArrowLeft, ArrowRight, Cpu, Wifi, Radio, X, CheckCircle2 } from 'lucide-react';
+import { Search, ChevronRight, Smartphone, Layers, ArrowLeft, ArrowRight, Cpu, Wifi, Radio, X, CheckCircle2, Palette } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   siApple, siSamsung, siXiaomi, siVivo, siOneplus, siGoogle,
@@ -776,11 +776,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
     return applyModelOrder(selectedBrandId, sortedByLaunch);
   }, [selectedBrandId, selectedSeries, debouncedSearchQuery, MODELS, BRANDS, orderVersion]);
 
-  // Generate variants for the selected model
-  const modelVariants = useMemo(() => {
-    if (!selectedModel) return [];
-    return generateVariantsForModel(selectedModel);
-  }, [selectedModel]);
+
 
   // Storage Options for selected model
   const storageOptions = useMemo(() => {
@@ -798,11 +794,23 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
   const [selectedRam, setSelectedRam] = useState<number | null>(null);
   const [selectedStorage, setSelectedStorage] = useState<number | null>(null);
   const [selectedConnectivity, setSelectedConnectivity] = useState<'wifi' | 'cellular'>('cellular');
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
 
   const isTablet = useMemo(() => {
     if (!selectedModel) return false;
     return isTabletDevice(selectedModel.brandId, selectedModel.name, selectedModel.id);
   }, [selectedModel]);
+
+  // Available colors for the selected model and storageGb
+  const availableColors = useMemo(() => {
+    if (!selectedModel || selectedStorage === null || isTablet) return [];
+    const vars = generateVariantsForModel(selectedModel);
+    const colors = vars
+      .filter(v => v.storageGb === selectedStorage)
+      .map(v => v.color)
+      .filter((value, index, self) => self.indexOf(value) === index);
+    return colors;
+  }, [selectedModel, selectedStorage, isTablet]);
 
   const handleModelClick = (model: Model) => {
     setSelectedModel(model);
@@ -814,12 +822,18 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
     setSelectedStorage(defaultStorage);
     setSelectedConnectivity('cellular');
 
-    const baseVar = generateVariantsForModel(model)[0];
+    const vars = generateVariantsForModel(model);
+    const modelIsTablet = isTabletDevice(model.brandId, model.name, model.id);
+    const defaultColor = modelIsTablet ? 'Wi-Fi + Cellular (SIM)' : (vars.find(v => v.storageGb === defaultStorage)?.color || 'Standard');
+    setSelectedColor(defaultColor);
+
+    const baseVar = vars.find(v => v.storageGb === defaultStorage && v.color === defaultColor) || vars[0];
     const baseVal = getVariantPrice(model, defaultRam || 0, defaultStorage);
     setTempVariant({
       ...baseVar,
       ramGb: defaultRam || undefined,
       storageGb: defaultStorage,
+      color: defaultColor,
       basePrice: baseVal,
     });
   };
@@ -828,7 +842,8 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
     setSelectedConnectivity(conn);
     if (selectedModel && selectedStorage !== null) {
       const ram = selectedRam ?? (ramOptions.length > 0 ? ramOptions[0] : 0);
-      const baseVar = modelVariants.find(v => v.storageGb === selectedStorage) || modelVariants[0];
+      const vars = generateVariantsForModel(selectedModel);
+      const baseVar = vars.find(v => v.storageGb === selectedStorage) || vars[0];
       const baseVal = getVariantPrice(selectedModel, ram, selectedStorage);
       const price = conn === 'wifi' ? Math.max(1000, Math.round(baseVal * 0.92)) : baseVal;
       setTempVariant({
@@ -844,14 +859,16 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
   const handleRamSelect = (ram: number) => {
     setSelectedRam(ram);
     if (selectedModel && selectedStorage !== null) {
-      const baseVar = modelVariants.find(v => v.storageGb === selectedStorage) || modelVariants[0];
+      const vars = generateVariantsForModel(selectedModel);
+      const activeColor = isTablet ? (selectedConnectivity === 'cellular' ? 'Wi-Fi + Cellular (SIM)' : 'Wi-Fi Only') : (selectedColor || 'Standard');
+      const baseVar = vars.find(v => v.storageGb === selectedStorage && v.color === activeColor) || vars[0];
       const baseVal = getVariantPrice(selectedModel, ram, selectedStorage);
       const price = isTablet && selectedConnectivity === 'wifi' ? Math.max(1000, Math.round(baseVal * 0.92)) : baseVal;
       setTempVariant({
         ...baseVar,
         ramGb: ram,
         storageGb: selectedStorage,
-        color: isTablet ? (selectedConnectivity === 'cellular' ? 'Wi-Fi + Cellular (SIM)' : 'Wi-Fi Only') : baseVar.color,
+        color: activeColor,
         basePrice: price,
       });
     }
@@ -861,15 +878,43 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
     setSelectedStorage(storage);
     if (selectedModel) {
       const ram = selectedRam ?? (ramOptions.length > 0 ? ramOptions[0] : 0);
-      const baseVar = modelVariants.find(v => v.storageGb === storage) || modelVariants[0];
+      const vars = generateVariantsForModel(selectedModel);
+      
+      const activeColor = isTablet 
+        ? (selectedConnectivity === 'cellular' ? 'Wi-Fi + Cellular (SIM)' : 'Wi-Fi Only')
+        : (() => {
+            const availColors = vars.filter(v => v.storageGb === storage).map(v => v.color);
+            const preservedColor = (selectedColor && availColors.includes(selectedColor)) ? selectedColor : (availColors[0] || 'Standard');
+            setSelectedColor(preservedColor);
+            return preservedColor;
+          })();
+
+      const baseVar = vars.find(v => v.storageGb === storage && v.color === activeColor) || vars[0];
       const baseVal = getVariantPrice(selectedModel, ram, storage);
       const price = isTablet && selectedConnectivity === 'wifi' ? Math.max(1000, Math.round(baseVal * 0.92)) : baseVal;
       setTempVariant({
         ...baseVar,
         ramGb: ram,
         storageGb: storage,
-        color: isTablet ? (selectedConnectivity === 'cellular' ? 'Wi-Fi + Cellular (SIM)' : 'Wi-Fi Only') : baseVar.color,
+        color: activeColor,
         basePrice: price,
+      });
+    }
+  };
+
+  const handleColorSelect = (color: string) => {
+    setSelectedColor(color);
+    if (selectedModel && selectedStorage !== null) {
+      const ram = selectedRam ?? (ramOptions.length > 0 ? ramOptions[0] : 0);
+      const vars = generateVariantsForModel(selectedModel);
+      const baseVar = vars.find(v => v.storageGb === selectedStorage && v.color === color) || vars[0];
+      const baseVal = getVariantPrice(selectedModel, ram, selectedStorage);
+      setTempVariant({
+        ...baseVar,
+        ramGb: ram,
+        storageGb: selectedStorage,
+        color: color,
+        basePrice: baseVal,
       });
     }
   };
@@ -1303,6 +1348,35 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                     </div>
                   </div>
 
+                  {/* Color selection */}
+                  {!isTablet && availableColors.length > 0 && (
+                    <div>
+                      <div className="flex items-center justify-between mb-2.5">
+                        <span className="text-xs font-mono font-bold text-ink-navy uppercase tracking-wider flex items-center gap-1.5">
+                          <Palette className="w-4 h-4 text-emerald-500" /> Select Device Color
+                        </span>
+                        <span className="text-[10px] text-zinc-400 font-mono">Appearance</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {availableColors.map(color => (
+                          <button
+                            key={color}
+                            type="button"
+                            onClick={() => handleColorSelect(color)}
+                            className={`px-4 py-2.5 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                              selectedColor === color
+                                ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-600/20'
+                                : 'bg-canvas-white text-ink-slate border-ice-border hover:border-emerald-400'
+                            }`}
+                          >
+                            <span>{color}</span>
+                            {selectedColor === color && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Live Estimated Payout Banner */}
                   <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200/80 rounded-xl p-4 flex items-center justify-between">
                     <div>
@@ -1311,6 +1385,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                       </span>
                       <span className="text-xs font-mono text-emerald-700">
                         Spec: {isTablet ? (selectedConnectivity === 'cellular' ? 'Wi-Fi + Cellular · ' : 'Wi-Fi Only · ') : ''}
+                        {!isTablet && selectedColor ? `${selectedColor} · ` : ''}
                         {ramOptions.length > 0 && selectedRam ? `${selectedRam}GB RAM / ` : ''}
                         {selectedStorage ? (selectedStorage >= 1024 ? `${selectedStorage / 1024}TB` : `${selectedStorage}GB`) : ''}
                       </span>

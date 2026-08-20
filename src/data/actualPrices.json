@@ -1,0 +1,1702 @@
+{
+  "apple-16p": {
+    "modelName": "iPhone 16 Pro",
+    "cashifyPrices": {
+      "0_128": 73160,
+      "0_256": 76450,
+      "0_512": 78570,
+      "0_1024": 79540
+    },
+    "ourPrices": {
+      "0_128": 75355,
+      "0_256": 78744,
+      "0_512": 80927,
+      "0_1024": 81926
+    }
+  },
+  "apple-17air": {
+    "modelName": "iPhone 17 Air",
+    "cashifyPrices": {
+      "0_256": 67100,
+      "0_512": 76000,
+      "0_1024": 86000
+    },
+    "ourPrices": {
+      "0_256": 69113,
+      "0_512": 78280,
+      "0_1024": 88580
+    }
+  },
+  "apple-17": {
+    "modelName": "iPhone 17",
+    "cashifyPrices": {
+      "0_256": 58900,
+      "0_512": 64500
+    },
+    "ourPrices": {
+      "0_256": 60667,
+      "0_512": 66435
+    }
+  },
+  "apple-17p": {
+    "modelName": "iPhone 17 Pro",
+    "cashifyPrices": {
+      "0_256": 104000,
+      "0_512": 106000,
+      "0_1024": 112000
+    },
+    "ourPrices": {
+      "0_256": 107120,
+      "0_512": 109180,
+      "0_1024": 115360
+    }
+  },
+  "apple-17pm": {
+    "modelName": "iPhone 17 Pro Max",
+    "cashifyPrices": {
+      "0_256": 113800,
+      "0_512": 116500,
+      "0_1024": 118500,
+      "0_2048": 125000
+    },
+    "ourPrices": {
+      "0_256": 117214,
+      "0_512": 119995,
+      "0_1024": 122055,
+      "0_2048": 128750
+    }
+  },
+  "apple-16pm": {
+    "modelName": "iPhone 16 Pro Max",
+    "cashifyPrices": {
+      "0_256": 85360,
+      "0_512": 86820,
+      "0_1024": 90210
+    },
+    "ourPrices": {
+      "0_256": 87921,
+      "0_512": 89425,
+      "0_1024": 92916
+    }
+  },
+  "apple-15p": {
+    "modelName": "iPhone 15 Pro",
+    "cashifyPrices": {
+      "0_128": 59810,
+      "0_256": 65090,
+      "0_512": 67200,
+      "0_1024": 68830
+    },
+    "ourPrices": {
+      "0_128": 61604,
+      "0_256": 67043,
+      "0_512": 69216,
+      "0_1024": 70895
+    }
+  },
+  "apple-16": {
+    "modelName": "iPhone 16",
+    "cashifyPrices": {
+      "0_128": 47520,
+      "0_256": 51890,
+      "0_512": 52320
+    },
+    "ourPrices": {
+      "0_128": 48946,
+      "0_256": 53447,
+      "0_512": 53890
+    }
+  },
+  "apple-16plus": {
+    "modelName": "iPhone 16 Plus",
+    "cashifyPrices": {
+      "0_128": 51170,
+      "0_256": 51460,
+      "0_512": 52420
+    },
+    "ourPrices": {
+      "0_128": 52705,
+      "0_256": 53004,
+      "0_512": 53993
+    }
+  },
+  "apple-15": {
+    "modelName": "iPhone 15",
+    "cashifyPrices": {
+      "0_128": 39940,
+      "0_256": 43270,
+      "0_512": 46260
+    },
+    "ourPrices": {
+      "0_128": 41138,
+      "0_256": 44568,
+      "0_512": 47648
+    }
+  },
+  "apple-15pm": {
+    "modelName": "iPhone 15 Pro Max",
+    "cashifyPrices": {
+      "0_256": 70270,
+      "0_512": 73150,
+      "0_1024": 77090
+    },
+    "ourPrices": {
+      "0_256": 72378,
+      "0_512": 75344,
+      "0_1024": 79403
+    }
+  },
+  "apple-15plus": {
+    "modelName": "iPhone 15 Plus",
+    "cashifyPrices": {
+      "0_128": 44160,
+      "0_256": 45600,
+      "0_512": 48410
+    },
+    "ourPrices": {
+      "0_128": 45485,
+      "0_256": 46968,
+      "0_512": 49862
+    }
+  },
+  "apple-13pm": {
+    "modelName": "iPhone 13 Pro Max",
+    "cashifyPrices": {
+      "0_128": 34030,
+      "0_256": 35570,
+      "0_512": 38000,
+      "0_1024": 39050
+    },
+    "ourPrices": {
+      "0_128": 35051,
+      "0_256": 36637,
+      "0_512": 39140,
+      "0_1024": 40222
+    }
+  },
+  "apple-14": {
+    "modelName": "iPhone 14",
+    "cashifyPrices": {
+      "0_128": 26920,
+      "0_256": 27620,
+      "0_512": 28430
+    },
+    "ourPrices": {
+      "0_128": 27728,
+      "0_256": 28449,
+      "0_512": 29283
+    }
+  },
+  "apple-14plus": {
+    "modelName": "iPhone 14 Plus",
+    "cashifyPrices": {
+      "0_128": 28190,
+      "0_256": 29990,
+      "0_512": 30460
+    },
+    "ourPrices": {
+      "0_128": 29036,
+      "0_256": 30890,
+      "0_512": 31374
+    }
+  },
+  "apple-14pm": {
+    "modelName": "iPhone 14 Pro Max",
+    "cashifyPrices": {
+      "0_128": 42440,
+      "0_256": 44670,
+      "0_512": 47590,
+      "0_1024": 48070
+    },
+    "ourPrices": {
+      "0_128": 43713,
+      "0_256": 46010,
+      "0_512": 49018,
+      "0_1024": 49512
+    }
+  },
+  "apple-13p": {
+    "modelName": "iPhone 13 Pro",
+    "cashifyPrices": {
+      "0_128": 32540,
+      "0_256": 33670,
+      "0_512": 35780,
+      "0_1024": 36420
+    },
+    "ourPrices": {
+      "0_128": 33516,
+      "0_256": 34680,
+      "0_512": 36853,
+      "0_1024": 37513
+    }
+  },
+  "apple-14p": {
+    "modelName": "iPhone 14 Pro",
+    "cashifyPrices": {
+      "0_128": 40860,
+      "0_256": 42660,
+      "0_512": 44510,
+      "0_1024": 45530
+    },
+    "ourPrices": {
+      "0_128": 42086,
+      "0_256": 43940,
+      "0_512": 45845,
+      "0_1024": 46896
+    }
+  },
+  "apple-12m": {
+    "modelName": "iPhone 12 mini",
+    "cashifyPrices": {
+      "0_64": 14300,
+      "0_128": 16210,
+      "0_256": 16620
+    },
+    "ourPrices": {
+      "0_64": 14729,
+      "0_128": 16696,
+      "0_256": 17119
+    }
+  },
+  "apple-12pm": {
+    "modelName": "iPhone 12 Pro Max",
+    "cashifyPrices": {
+      "0_128": 24640,
+      "0_256": 25600,
+      "0_512": 27380
+    },
+    "ourPrices": {
+      "0_128": 25379,
+      "0_256": 26368,
+      "0_512": 28201
+    }
+  },
+  "apple-12": {
+    "modelName": "iPhone 12",
+    "cashifyPrices": {
+      "0_64": 16450,
+      "0_128": 17420,
+      "0_256": 19240
+    },
+    "ourPrices": {
+      "0_64": 16944,
+      "0_128": 17943,
+      "0_256": 19817
+    }
+  },
+  "apple-13": {
+    "modelName": "iPhone 13",
+    "cashifyPrices": {
+      "0_128": 23220,
+      "0_256": 24520,
+      "0_512": 24930
+    },
+    "ourPrices": {
+      "0_128": 23917,
+      "0_256": 25256,
+      "0_512": 25678
+    }
+  },
+  "apple-12p": {
+    "modelName": "iPhone 12 Pro",
+    "cashifyPrices": {
+      "0_128": 22910,
+      "0_256": 24550,
+      "0_512": 26610
+    },
+    "ourPrices": {
+      "0_128": 23597,
+      "0_256": 25286,
+      "0_512": 27408
+    }
+  },
+  "apple-13m": {
+    "modelName": "iPhone 13 mini",
+    "cashifyPrices": {
+      "0_128": 21350,
+      "0_256": 21870,
+      "0_512": 22440
+    },
+    "ourPrices": {
+      "0_128": 21990,
+      "0_256": 22526,
+      "0_512": 23113
+    }
+  },
+  "apple-11pm": {
+    "modelName": "iPhone 11 Pro Max",
+    "cashifyPrices": {
+      "0_64": 17120,
+      "0_256": 18900,
+      "0_512": 19420
+    },
+    "ourPrices": {
+      "0_64": 17634,
+      "0_256": 19467,
+      "0_512": 20003
+    }
+  },
+  "apple-16e": {
+    "modelName": "iPhone 16e",
+    "cashifyPrices": {
+      "0_128": 35440,
+      "0_256": 36470,
+      "0_512": 39870
+    },
+    "ourPrices": {
+      "0_128": 36503,
+      "0_256": 37564,
+      "0_512": 41066
+    }
+  },
+  "apple-11": {
+    "modelName": "iPhone 11",
+    "cashifyPrices": {
+      "0_64": 12570,
+      "0_128": 14070,
+      "0_256": 14680
+    },
+    "ourPrices": {
+      "0_64": 12947,
+      "0_128": 14492,
+      "0_256": 15120
+    }
+  },
+  "apple-11p": {
+    "modelName": "iPhone 11 Pro",
+    "cashifyPrices": {
+      "0_64": 15050,
+      "0_256": 16920,
+      "0_512": 18310
+    },
+    "ourPrices": {
+      "0_64": 15502,
+      "0_256": 17428,
+      "0_512": 18859
+    }
+  },
+  "apple-xs": {
+    "modelName": "iPhone XS",
+    "cashifyPrices": {
+      "0_64": 28870,
+      "0_256": 32920,
+      "0_512": 33870
+    },
+    "ourPrices": {
+      "0_64": 29736,
+      "0_256": 33908,
+      "0_512": 34886
+    }
+  },
+  "apple-xsmax": {
+    "modelName": "iPhone XS Max",
+    "cashifyPrices": {
+      "0_64": 34200,
+      "0_256": 36910,
+      "0_512": 39080
+    },
+    "ourPrices": {
+      "0_64": 35226,
+      "0_256": 38017,
+      "0_512": 40252
+    }
+  },
+  "apple-x": {
+    "modelName": "iPhone X",
+    "cashifyPrices": {
+      "0_64": 25730,
+      "0_256": 27770
+    },
+    "ourPrices": {
+      "0_64": 26502,
+      "0_256": 28603
+    }
+  },
+  "apple-xr": {
+    "modelName": "iPhone XR",
+    "cashifyPrices": {
+      "0_64": 22930,
+      "0_128": 26650,
+      "0_256": 28460
+    },
+    "ourPrices": {
+      "0_64": 23618,
+      "0_128": 27450,
+      "0_256": 29314
+    }
+  },
+  "sam-s20u": {
+    "modelName": "Galaxy S20 Ultra",
+    "cashifyPrices": {
+      "12_128": 13030
+    },
+    "ourPrices": {
+      "12_128": 13421
+    }
+  },
+  "sam-s24u": {
+    "modelName": "Galaxy S24 Ultra",
+    "cashifyPrices": {
+      "12_256": 59630,
+      "12_512": 60440,
+      "12_1024": 60530
+    },
+    "ourPrices": {
+      "12_256": 61419,
+      "12_512": 62253,
+      "12_1024": 62346
+    }
+  },
+  "sam-s25u": {
+    "modelName": "Galaxy S25 Ultra",
+    "cashifyPrices": {
+      "12_256": 61760,
+      "12_512": 66400,
+      "12_1024": 69110
+    },
+    "ourPrices": {
+      "12_256": 63613,
+      "12_512": 68392,
+      "12_1024": 71183
+    }
+  },
+  "sam-s22u": {
+    "modelName": "Galaxy S22 Ultra",
+    "cashifyPrices": {
+      "12_256": 24180,
+      "12_512": 26030,
+      "12_1024": 26720
+    },
+    "ourPrices": {
+      "12_256": 24905,
+      "12_512": 26811,
+      "12_1024": 27522
+    }
+  },
+  "sam-s22": {
+    "modelName": "Galaxy S22",
+    "cashifyPrices": {
+      "8_128": 15270,
+      "8_256": 16320
+    },
+    "ourPrices": {
+      "8_128": 15728,
+      "8_256": 16810
+    }
+  },
+  "sam-s25": {
+    "modelName": "Galaxy S25",
+    "cashifyPrices": {
+      "12_128": 39750,
+      "12_256": 40380,
+      "12_512": 42010
+    },
+    "ourPrices": {
+      "12_128": 40943,
+      "12_256": 41591,
+      "12_512": 43270
+    }
+  },
+  "sam-s22plus": {
+    "modelName": "Galaxy S22 Plus",
+    "cashifyPrices": {
+      "8_128": 15960,
+      "8_256": 17420
+    },
+    "ourPrices": {
+      "8_128": 16439,
+      "8_256": 17943
+    }
+  },
+  "sam-s24fe": {
+    "modelName": "Galaxy S24 FE",
+    "cashifyPrices": {
+      "8_128": 22160,
+      "8_256": 23620
+    },
+    "ourPrices": {
+      "8_128": 22825,
+      "8_256": 24329
+    }
+  },
+  "sam-s25plus": {
+    "modelName": "Galaxy S25 Plus",
+    "cashifyPrices": {
+      "12_256": 46550,
+      "12_512": 49240
+    },
+    "ourPrices": {
+      "12_256": 47947,
+      "12_512": 50717
+    }
+  },
+  "sam-s21fe": {
+    "modelName": "Galaxy S21 FE",
+    "cashifyPrices": {
+      "8_128": 10860,
+      "8_256": 11660
+    },
+    "ourPrices": {
+      "8_128": 11186,
+      "8_256": 12010
+    }
+  },
+  "sam-flip5": {
+    "modelName": "Galaxy Z Flip 5",
+    "cashifyPrices": {
+      "8_256": 27210,
+      "8_512": 28360
+    },
+    "ourPrices": {
+      "8_256": 28026,
+      "8_512": 29211
+    }
+  },
+  "sam-a13": {
+    "modelName": "Galaxy A13",
+    "cashifyPrices": {
+      "4_64": 3710,
+      "4_128": 4030,
+      "6_128": 4570
+    },
+    "ourPrices": {
+      "4_64": 3821,
+      "4_128": 4151,
+      "6_128": 4707
+    }
+  },
+  "sam-fold5": {
+    "modelName": "Galaxy Z Fold 5",
+    "cashifyPrices": {
+      "12_256": 49600,
+      "12_512": 48640,
+      "12_1024": 50620
+    },
+    "ourPrices": {
+      "12_256": 51088,
+      "12_512": 50099,
+      "12_1024": 52139
+    }
+  },
+  "sam-a23-5g": {
+    "modelName": "Galaxy A23 5G",
+    "cashifyPrices": {
+      "6_128": 8350,
+      "8_128": 8710
+    },
+    "ourPrices": {
+      "6_128": 8601,
+      "8_128": 8971
+    }
+  },
+  "sam-a14-5g": {
+    "modelName": "Galaxy A14 5G",
+    "cashifyPrices": {
+      "4_64": 6980,
+      "4_128": 7650,
+      "6_128": 8020,
+      "8_128": 8520
+    },
+    "ourPrices": {
+      "4_64": 7189,
+      "4_128": 7880,
+      "6_128": 8261,
+      "8_128": 8776
+    }
+  },
+  "sam-a34": {
+    "modelName": "Galaxy A34",
+    "cashifyPrices": {
+      "6_128": 9310,
+      "8_128": 9910,
+      "8_256": 11090
+    },
+    "ourPrices": {
+      "6_128": 9589,
+      "8_128": 10207,
+      "8_256": 11423
+    }
+  },
+  "sam-a35": {
+    "modelName": "Galaxy A35",
+    "cashifyPrices": {
+      "8_128": 12300,
+      "8_256": 12660
+    },
+    "ourPrices": {
+      "8_128": 12669,
+      "8_256": 13040
+    }
+  },
+  "sam-a15-5g": {
+    "modelName": "Galaxy A15 5G",
+    "cashifyPrices": {
+      "6_128": 8740,
+      "8_128": 9200,
+      "8_256": 9450
+    },
+    "ourPrices": {
+      "6_128": 9002,
+      "8_128": 9476,
+      "8_256": 9734
+    }
+  },
+  "sam-a55": {
+    "modelName": "Galaxy A55",
+    "cashifyPrices": {
+      "8_128": 16250,
+      "8_256": 16740,
+      "12_256": 17950
+    },
+    "ourPrices": {
+      "8_128": 16738,
+      "8_256": 17242,
+      "12_256": 18489
+    }
+  },
+  "sam-a56": {
+    "modelName": "Galaxy A56",
+    "cashifyPrices": {
+      "8_128": 20970,
+      "8_256": 23090,
+      "12_256": 24750
+    },
+    "ourPrices": {
+      "8_128": 21599,
+      "8_256": 23783,
+      "12_256": 25493
+    }
+  },
+  "xi-14u": {
+    "modelName": "Xiaomi 14 Ultra",
+    "cashifyPrices": {
+      "16_512": 37780
+    },
+    "ourPrices": {
+      "16_512": 38913
+    }
+  },
+  "xi-14": {
+    "modelName": "Xiaomi 14",
+    "cashifyPrices": {
+      "12_512": 27210
+    },
+    "ourPrices": {
+      "12_512": 28026
+    }
+  },
+  "xi-n14p": {
+    "modelName": "Redmi Note 14 Pro+",
+    "cashifyPrices": {
+      "8_128": 14680,
+      "8_256": 15180
+    },
+    "ourPrices": {
+      "8_128": 15120,
+      "8_256": 15635
+    }
+  },
+  "xi-n14": {
+    "modelName": "Redmi Note 14",
+    "cashifyPrices": {
+      "6_128": 10490,
+      "8_128": 10890,
+      "8_256": 12020
+    },
+    "ourPrices": {
+      "6_128": 10805,
+      "8_128": 11217,
+      "8_256": 12381
+    }
+  },
+  "xi-n13": {
+    "modelName": "Redmi Note 13",
+    "cashifyPrices": {
+      "6_128": 9550,
+      "8_256": 9960,
+      "12_256": 10360
+    },
+    "ourPrices": {
+      "6_128": 9837,
+      "8_256": 10259,
+      "12_256": 10671
+    }
+  },
+  "xi-n13p": {
+    "modelName": "Redmi Note 13 Pro+",
+    "cashifyPrices": {
+      "8_128": 11990,
+      "8_256": 13000,
+      "12_256": 13370
+    },
+    "ourPrices": {
+      "8_128": 12350,
+      "8_256": 13390,
+      "12_256": 13771
+    }
+  },
+  "vi-x200": {
+    "modelName": "vivo X200",
+    "cashifyPrices": {
+      "12_256": 31350,
+      "16_512": 33730
+    },
+    "ourPrices": {
+      "12_256": 32291,
+      "16_512": 34742
+    }
+  },
+  "vi-x200p": {
+    "modelName": "vivo X200 Pro",
+    "cashifyPrices": {
+      "16_512": 48500
+    },
+    "ourPrices": {
+      "16_512": 49955
+    }
+  },
+  "vi-v40p": {
+    "modelName": "vivo V40 Pro",
+    "cashifyPrices": {
+      "8_256": 25490,
+      "12_512": 25700
+    },
+    "ourPrices": {
+      "8_256": 26255,
+      "12_512": 26471
+    }
+  },
+  "vi-v30": {
+    "modelName": "vivo V30",
+    "cashifyPrices": {
+      "8_128": 19210,
+      "8_256": 18780,
+      "12_256": 18970
+    },
+    "ourPrices": {
+      "8_128": 19786,
+      "8_256": 19343,
+      "12_256": 19539
+    }
+  },
+  "vi-v30p": {
+    "modelName": "vivo V30 Pro",
+    "cashifyPrices": {
+      "8_256": 20220,
+      "12_512": 21500
+    },
+    "ourPrices": {
+      "8_256": 20827,
+      "12_512": 22145
+    }
+  },
+  "vi-x100": {
+    "modelName": "vivo X100",
+    "cashifyPrices": {
+      "12_256": 25790,
+      "16_512": 26530
+    },
+    "ourPrices": {
+      "12_256": 26564,
+      "16_512": 27326
+    }
+  },
+  "vi-v40": {
+    "modelName": "vivo V40",
+    "cashifyPrices": {
+      "8_128": 19090,
+      "8_256": 20390,
+      "12_512": 20740
+    },
+    "ourPrices": {
+      "8_128": 19663,
+      "8_256": 21002,
+      "12_512": 21362
+    }
+  },
+  "op-12": {
+    "modelName": "OnePlus 12",
+    "cashifyPrices": {
+      "12_256": 32330,
+      "16_512": 36320
+    },
+    "ourPrices": {
+      "12_256": 33300,
+      "16_512": 37410
+    }
+  },
+  "op-11": {
+    "modelName": "OnePlus 11",
+    "cashifyPrices": {
+      "8_128": 21310,
+      "16_256": 23740
+    },
+    "ourPrices": {
+      "8_128": 21949,
+      "16_256": 24452
+    }
+  },
+  "op-nord4": {
+    "modelName": "OnePlus Nord 4",
+    "cashifyPrices": {
+      "8_128": 17030,
+      "8_256": 18970,
+      "12_256": 19700
+    },
+    "ourPrices": {
+      "8_128": 17541,
+      "8_256": 19539,
+      "12_256": 20291
+    }
+  },
+  "op-11r": {
+    "modelName": "OnePlus 11R",
+    "cashifyPrices": {
+      "8_128": 19720,
+      "16_256": 20100,
+      "18_512": 21140
+    },
+    "ourPrices": {
+      "8_128": 20312,
+      "16_256": 20703,
+      "18_512": 21774
+    }
+  },
+  "op-12r": {
+    "modelName": "OnePlus 12R",
+    "cashifyPrices": {
+      "8_128": 23560,
+      "8_256": 25480,
+      "16_256": 25610
+    },
+    "ourPrices": {
+      "8_128": 24267,
+      "8_256": 26244,
+      "16_256": 26378
+    }
+  },
+  "goog-8": {
+    "modelName": "Pixel 8",
+    "cashifyPrices": {
+      "8_128": 24120,
+      "8_256": 24390
+    },
+    "ourPrices": {
+      "8_128": 24844,
+      "8_256": 25122
+    }
+  },
+  "goog-8p": {
+    "modelName": "Pixel 8 Pro",
+    "cashifyPrices": {
+      "12_128": 29910,
+      "12_256": 31190,
+      "12_512": 31460
+    },
+    "ourPrices": {
+      "12_128": 30807,
+      "12_256": 32126,
+      "12_512": 32404
+    }
+  },
+  "goog-8a": {
+    "modelName": "Pixel 8a",
+    "cashifyPrices": {
+      "8_128": 23000,
+      "8_256": 23280
+    },
+    "ourPrices": {
+      "8_128": 23690,
+      "8_256": 23978
+    }
+  },
+  "goog-7a": {
+    "modelName": "Pixel 7a",
+    "cashifyPrices": {
+      "8_128": 18330
+    },
+    "ourPrices": {
+      "8_128": 18880
+    }
+  },
+  "catalog-oppo-f25-pro": {
+    "modelName": "OPPO F25 Pro",
+    "cashifyPrices": {
+      "8_128": 12650,
+      "8_256": 12960
+    },
+    "ourPrices": {
+      "8_128": 13030,
+      "8_256": 13349
+    }
+  },
+  "catalog-oppo-a3x": {
+    "modelName": "OPPO A3x",
+    "cashifyPrices": {
+      "4_64": 7920,
+      "4_128": 8670
+    },
+    "ourPrices": {
+      "4_64": 8158,
+      "4_128": 8930
+    }
+  },
+  "catalog-apple-iphone-17e": {
+    "modelName": "iPhone 17e",
+    "cashifyPrices": {
+      "0_256": 43000,
+      "0_512": 52200
+    },
+    "ourPrices": {
+      "0_256": 44290,
+      "0_512": 53766
+    }
+  },
+  "catalog-samsung-galaxy-s26-ultra": {
+    "modelName": "Galaxy S26 Ultra",
+    "cashifyPrices": {
+      "12_256": 78850,
+      "12_512": 83600,
+      "16_1024": 98800
+    },
+    "ourPrices": {
+      "12_256": 81216,
+      "12_512": 86108,
+      "16_1024": 101764
+    }
+  },
+  "catalog-samsung-galaxy-s25-fe": {
+    "modelName": "Galaxy S25 FE",
+    "cashifyPrices": {
+      "8_128": 29930,
+      "8_256": 33730,
+      "8_512": 37050
+    },
+    "ourPrices": {
+      "8_128": 30828,
+      "8_256": 34742,
+      "8_512": 38162
+    }
+  },
+  "catalog-samsung-galaxy-z-flip-7": {
+    "modelName": "Galaxy Z Flip 7",
+    "cashifyPrices": {
+      "12_256": 53680,
+      "12_512": 54440
+    },
+    "ourPrices": {
+      "12_256": 55290,
+      "12_512": 56073
+    }
+  },
+  "catalog-samsung-galaxy-s26": {
+    "modelName": "Galaxy S26",
+    "cashifyPrices": {
+      "12_256": 49400,
+      "12_512": 58190
+    },
+    "ourPrices": {
+      "12_256": 50882,
+      "12_512": 59936
+    }
+  },
+  "catalog-samsung-galaxy-s26-plus": {
+    "modelName": "Galaxy S26 Plus",
+    "cashifyPrices": {
+      "12_256": 59380,
+      "12_512": 67930
+    },
+    "ourPrices": {
+      "12_256": 61161,
+      "12_512": 69968
+    }
+  },
+  "catalog-samsung-galaxy-s25-edge": {
+    "modelName": "Galaxy S25 Edge",
+    "cashifyPrices": {
+      "12_256": 41560,
+      "12_512": 47880
+    },
+    "ourPrices": {
+      "12_256": 42807,
+      "12_512": 49316
+    }
+  },
+  "catalog-samsung-galaxy-z-fold-7": {
+    "modelName": "Galaxy Z Fold 7",
+    "cashifyPrices": {
+      "12_256": 89300,
+      "12_512": 90630,
+      "16_1024": 93290
+    },
+    "ourPrices": {
+      "12_256": 91979,
+      "12_512": 93349,
+      "16_1024": 96089
+    }
+  },
+  "catalog-samsung-galaxy-z-flip-7-fe": {
+    "modelName": "Galaxy Z Flip 7 FE",
+    "cashifyPrices": {
+      "8_128": 47880,
+      "8_256": 48860
+    },
+    "ourPrices": {
+      "8_128": 49316,
+      "8_256": 50326
+    }
+  },
+  "catalog-samsung-galaxy-z-fold-8-ultra": {
+    "modelName": "Galaxy Z Fold 8 Ultra",
+    "cashifyPrices": {
+      "12_256": 114000,
+      "12_512": 120650,
+      "16_1024": 133000
+    },
+    "ourPrices": {
+      "12_256": 117420,
+      "12_512": 124270,
+      "16_1024": 136990
+    }
+  },
+  "catalog-vivo-vivo-x300-fe": {
+    "modelName": "vivo X300 FE",
+    "cashifyPrices": {
+      "12_256": 46270,
+      "12_512": 51020
+    },
+    "ourPrices": {
+      "12_256": 47658,
+      "12_512": 52551
+    }
+  },
+  "catalog-vivo-vivo-x300": {
+    "modelName": "vivo X300",
+    "cashifyPrices": {
+      "12_256": 43420,
+      "12_512": 44180,
+      "16_512": 46550
+    },
+    "ourPrices": {
+      "12_256": 44723,
+      "12_512": 45505,
+      "16_512": 47947
+    }
+  },
+  "catalog-vivo-vivo-x300-pro": {
+    "modelName": "vivo X300 Pro",
+    "cashifyPrices": {
+      "16_512": 62500
+    },
+    "ourPrices": {
+      "16_512": 64375
+    }
+  },
+  "catalog-vivo-vivo-x300-ultra": {
+    "modelName": "vivo X300 Ultra",
+    "cashifyPrices": {
+      "16_512": 79000
+    },
+    "ourPrices": {
+      "16_512": 81370
+    }
+  },
+  "catalog-vivo-vivo-t4": {
+    "modelName": "vivo T4",
+    "cashifyPrices": {
+      "8_128": 15200,
+      "8_256": 16480,
+      "12_256": 16720
+    },
+    "ourPrices": {
+      "8_128": 15656,
+      "8_256": 16974,
+      "12_256": 17222
+    }
+  },
+  "catalog-vivo-vivo-v60e": {
+    "modelName": "vivo V60e",
+    "cashifyPrices": {
+      "8_128": 19000,
+      "8_256": 20460,
+      "12_256": 22340
+    },
+    "ourPrices": {
+      "8_128": 19570,
+      "8_256": 21074,
+      "12_256": 23010
+    }
+  },
+  "catalog-vivo-vivo-v70-fe": {
+    "modelName": "vivo V70 FE",
+    "cashifyPrices": {
+      "8_128": 23400,
+      "8_256": 24420,
+      "12_256": 27600
+    },
+    "ourPrices": {
+      "8_128": 24102,
+      "8_256": 25153,
+      "12_256": 28428
+    }
+  },
+  "catalog-vivo-vivo-v70": {
+    "modelName": "vivo V70",
+    "cashifyPrices": {
+      "8_256": 32100,
+      "12_256": 35000
+    },
+    "ourPrices": {
+      "8_256": 33063,
+      "12_256": 36050
+    }
+  },
+  "catalog-vivo-vivo-v60": {
+    "modelName": "vivo V60",
+    "cashifyPrices": {
+      "8_128": 22800,
+      "8_256": 22710,
+      "12_256": 25370,
+      "16_512": 26860
+    },
+    "ourPrices": {
+      "8_128": 23484,
+      "8_256": 23391,
+      "12_256": 26131,
+      "16_512": 27666
+    }
+  },
+  "catalog-vivo-vivo-t4x": {
+    "modelName": "vivo T4x",
+    "cashifyPrices": {
+      "6_128": 9980,
+      "8_128": 11220,
+      "8_256": 10970
+    },
+    "ourPrices": {
+      "6_128": 10279,
+      "8_128": 11557,
+      "8_256": 11299
+    }
+  },
+  "catalog-oppo-oppo-a5x": {
+    "modelName": "OPPO A5x",
+    "cashifyPrices": {
+      "4_64": 5610,
+      "4_128": 6030
+    },
+    "ourPrices": {
+      "4_64": 5778,
+      "4_128": 6211
+    }
+  },
+  "catalog-oppo-oppo-a5": {
+    "modelName": "OPPO A5",
+    "cashifyPrices": {
+      "4_32": 5940,
+      "4_64": 6240
+    },
+    "ourPrices": {
+      "4_32": 6118,
+      "4_64": 6427
+    }
+  },
+  "catalog-vivo-vivo-y400-pro": {
+    "modelName": "vivo Y400 Pro",
+    "cashifyPrices": {
+      "8_128": 16220,
+      "8_256": 16530
+    },
+    "ourPrices": {
+      "8_128": 16707,
+      "8_256": 17026
+    }
+  },
+  "catalog-oppo-oppo-f21-pro-5g": {
+    "modelName": "OPPO F21 Pro 5G",
+    "cashifyPrices": {
+      "8_128": 8150
+    },
+    "ourPrices": {
+      "8_128": 8395
+    }
+  },
+  "catalog-oppo-oppo-f29-pro": {
+    "modelName": "OPPO F29 Pro",
+    "cashifyPrices": {
+      "8_128": 15390,
+      "8_256": 15820,
+      "12_256": 17390
+    },
+    "ourPrices": {
+      "8_128": 15852,
+      "8_256": 16295,
+      "12_256": 17912
+    }
+  },
+  "catalog-oppo-oppo-reno-15c": {
+    "modelName": "OPPO Reno 15c",
+    "cashifyPrices": {
+      "8_256": 21420,
+      "12_256": 21570
+    },
+    "ourPrices": {
+      "8_256": 22063,
+      "12_256": 22217
+    }
+  },
+  "catalog-oppo-oppo-find-x9s": {
+    "modelName": "OPPO Find X9s",
+    "cashifyPrices": {
+      "12_256": 39430,
+      "12_512": 42280
+    },
+    "ourPrices": {
+      "12_256": 40613,
+      "12_512": 43548
+    }
+  },
+  "catalog-oppo-oppo-find-x9-ultra": {
+    "modelName": "OPPO Find X9 Ultra",
+    "cashifyPrices": {
+      "12_512": 79000
+    },
+    "ourPrices": {
+      "12_512": 81370
+    }
+  },
+  "catalog-oppo-oppo-find-x9-pro": {
+    "modelName": "OPPO Find X9 Pro",
+    "cashifyPrices": {
+      "16_512": 62000
+    },
+    "ourPrices": {
+      "16_512": 63860
+    }
+  },
+  "catalog-nothing-nothing-phone-2a": {
+    "modelName": "Nothing Phone 2a",
+    "cashifyPrices": {
+      "8_128": 15570,
+      "8_256": 16220,
+      "12_256": 16820
+    },
+    "ourPrices": {
+      "8_128": 16037,
+      "8_256": 16707,
+      "12_256": 17325
+    }
+  },
+  "catalog-nothing-nothing-phone-3": {
+    "modelName": "Nothing Phone 3",
+    "cashifyPrices": {
+      "12_256": 28980,
+      "16_512": 30920
+    },
+    "ourPrices": {
+      "12_256": 29849,
+      "16_512": 31848
+    }
+  },
+  "catalog-nothing-nothing-phone-3a": {
+    "modelName": "Nothing Phone 3a",
+    "cashifyPrices": {
+      "8_128": 18230,
+      "8_256": 19770
+    },
+    "ourPrices": {
+      "8_128": 18777,
+      "8_256": 20363
+    }
+  },
+  "catalog-nothing-nothing-phone-1": {
+    "modelName": "Nothing Phone 1",
+    "cashifyPrices": {
+      "8_128": 12170,
+      "8_256": 12810,
+      "12_256": 13200
+    },
+    "ourPrices": {
+      "8_128": 12535,
+      "8_256": 13194,
+      "12_256": 13596
+    }
+  },
+  "catalog-nothing-nothing-phone-2": {
+    "modelName": "Nothing Phone 2",
+    "cashifyPrices": {
+      "8_128": 18300,
+      "12_256": 19520,
+      "12_512": 19700
+    },
+    "ourPrices": {
+      "8_128": 18849,
+      "12_256": 20106,
+      "12_512": 20291
+    }
+  },
+  "catalog-nothing-nothing-phone-4a": {
+    "modelName": "Nothing Phone 4a",
+    "cashifyPrices": {
+      "8_128": 23280,
+      "8_256": 24790,
+      "12_256": 25650
+    },
+    "ourPrices": {
+      "8_128": 23978,
+      "8_256": 25534,
+      "12_256": 26420
+    }
+  },
+  "catalog-nothing-nothing-phone-3a-pro": {
+    "modelName": "Nothing Phone 3a Pro",
+    "cashifyPrices": {
+      "8_128": 19030,
+      "8_256": 21140,
+      "12_256": 21580
+    },
+    "ourPrices": {
+      "8_128": 19601,
+      "8_256": 21774,
+      "12_256": 22227
+    }
+  },
+  "catalog-nothing-nothing-phone-4a-pro": {
+    "modelName": "Nothing Phone 4a Pro",
+    "cashifyPrices": {
+      "8_128": 27080,
+      "8_256": 28980,
+      "12_256": 30880
+    },
+    "ourPrices": {
+      "8_128": 27892,
+      "8_256": 29849,
+      "12_256": 31806
+    }
+  },
+  "catalog-oneplus-oneplus-8-pro": {
+    "modelName": "OnePlus 8 Pro",
+    "cashifyPrices": {
+      "12_256": 35780,
+      "8_128": 31840
+    },
+    "ourPrices": {
+      "12_256": 36853,
+      "8_128": 32795
+    }
+  },
+  "catalog-oneplus-oneplus-8t": {
+    "modelName": "OnePlus 8T",
+    "cashifyPrices": {
+      "8_128": 23750,
+      "12_256": 24960
+    },
+    "ourPrices": {
+      "8_128": 24463,
+      "12_256": 25709
+    }
+  },
+  "catalog-oneplus-oneplus-9": {
+    "modelName": "OnePlus 9",
+    "cashifyPrices": {
+      "8_128": 27260,
+      "12_256": 30110
+    },
+    "ourPrices": {
+      "8_128": 28078,
+      "12_256": 31013
+    }
+  },
+  "catalog-oneplus-oneplus-8": {
+    "modelName": "OnePlus 8",
+    "cashifyPrices": {
+      "6_128": 24110,
+      "8_128": 26050,
+      "12_256": 26930
+    },
+    "ourPrices": {
+      "6_128": 24833,
+      "8_128": 26832,
+      "12_256": 27738
+    }
+  },
+  "catalog-oneplus-oneplus-10-pro": {
+    "modelName": "OnePlus 10 Pro",
+    "cashifyPrices": {
+      "8_128": 12410,
+      "12_256": 14380
+    },
+    "ourPrices": {
+      "8_128": 12782,
+      "12_256": 14811
+    }
+  },
+  "catalog-oneplus-oneplus-13r": {
+    "modelName": "OnePlus 13R",
+    "cashifyPrices": {
+      "12_256": 28710,
+      "16_512": 29070
+    },
+    "ourPrices": {
+      "12_256": 29571,
+      "16_512": 29942
+    }
+  },
+  "catalog-oneplus-oneplus-15r": {
+    "modelName": "OnePlus 15R",
+    "cashifyPrices": {
+      "12_256": 32710,
+      "12_512": 34490
+    },
+    "ourPrices": {
+      "12_256": 33691,
+      "12_512": 35525
+    }
+  },
+  "catalog-oneplus-oneplus-13": {
+    "modelName": "OnePlus 13",
+    "cashifyPrices": {
+      "12_256": 39360,
+      "16_512": 41800,
+      "32_1024": 47980
+    },
+    "ourPrices": {
+      "12_256": 40541,
+      "16_512": 43054,
+      "32_1024": 49419
+    }
+  },
+  "catalog-oneplus-oneplus-13s": {
+    "modelName": "OnePlus 13s",
+    "cashifyPrices": {
+      "12_256": 34200,
+      "12_512": 35630
+    },
+    "ourPrices": {
+      "12_256": 35226,
+      "12_512": 36699
+    }
+  },
+  "catalog-oneplus-oneplus-15": {
+    "modelName": "OnePlus 15",
+    "cashifyPrices": {
+      "12_256": 53190,
+      "16_512": 54630
+    },
+    "ourPrices": {
+      "12_256": 54786,
+      "16_512": 56269
+    }
+  },
+  "catalog-oneplus-oneplus-nord-2t": {
+    "modelName": "OnePlus Nord 2T",
+    "cashifyPrices": {
+      "8_128": 8990,
+      "12_256": 9780
+    },
+    "ourPrices": {
+      "8_128": 9260,
+      "12_256": 10073
+    }
+  },
+  "catalog-oneplus-oneplus-nord-5": {
+    "modelName": "OnePlus Nord 5",
+    "cashifyPrices": {
+      "8_256": 22140,
+      "12_256": 23060,
+      "12_512": 24700
+    },
+    "ourPrices": {
+      "8_256": 22804,
+      "12_256": 23752,
+      "12_512": 25441
+    }
+  },
+  "catalog-xiaomi-redmi-note-10-pro": {
+    "modelName": "Redmi Note 10 Pro+",
+    "cashifyPrices": {
+      "6_64": 9360,
+      "6_128": 9790,
+      "8_128": 10840
+    },
+    "ourPrices": {
+      "6_64": 9641,
+      "6_128": 10084,
+      "8_128": 11165
+    }
+  },
+  "catalog-xiaomi-redmi-10": {
+    "modelName": "Redmi 10",
+    "cashifyPrices": {
+      "4_64": 3970,
+      "6_128": 4400
+    },
+    "ourPrices": {
+      "4_64": 4089,
+      "6_128": 4532
+    }
+  },
+  "catalog-xiaomi-redmi-10a": {
+    "modelName": "Redmi 10A",
+    "cashifyPrices": {
+      "3_32": 2880,
+      "4_64": 3550
+    },
+    "ourPrices": {
+      "3_32": 2966,
+      "4_64": 3657
+    }
+  },
+  "catalog-xiaomi-redmi-note-10": {
+    "modelName": "Redmi Note 10",
+    "cashifyPrices": {
+      "4_64": 8270,
+      "6_128": 9310
+    },
+    "ourPrices": {
+      "4_64": 8518,
+      "6_128": 9589
+    }
+  },
+  "catalog-xiaomi-redmi-12": {
+    "modelName": "Redmi 12",
+    "cashifyPrices": {
+      "4_128": 5620,
+      "6_128": 6360
+    },
+    "ourPrices": {
+      "4_128": 5789,
+      "6_128": 6551
+    }
+  },
+  "catalog-xiaomi-redmi-note-11s": {
+    "modelName": "Redmi Note 11s",
+    "cashifyPrices": {
+      "6_64": 4800,
+      "6_128": 5090,
+      "8_128": 5210
+    },
+    "ourPrices": {
+      "6_64": 4944,
+      "6_128": 5243,
+      "8_128": 5366
+    }
+  },
+  "catalog-xiaomi-redmi-note-11-pro": {
+    "modelName": "Redmi Note 11 Pro",
+    "cashifyPrices": {
+      "8_128": 6180
+    },
+    "ourPrices": {
+      "8_128": 6365
+    }
+  },
+  "catalog-xiaomi-redmi-13c": {
+    "modelName": "Redmi 13c",
+    "cashifyPrices": {
+      "4_128": 5540,
+      "6_128": 5710,
+      "8_256": 5940
+    },
+    "ourPrices": {
+      "4_128": 5706,
+      "6_128": 5881,
+      "8_256": 6118
+    }
+  },
+  "catalog-xiaomi-redmi-note-12": {
+    "modelName": "Redmi Note 12",
+    "cashifyPrices": {
+      "4_128": 8280,
+      "6_128": 8790,
+      "8_256": 9190
+    },
+    "ourPrices": {
+      "4_128": 8528,
+      "6_128": 9054,
+      "8_256": 9466
+    }
+  },
+  "catalog-xiaomi-redmi-note-15": {
+    "modelName": "Redmi Note 15",
+    "cashifyPrices": {
+      "8_128": 15470,
+      "8_256": 17580
+    },
+    "ourPrices": {
+      "8_128": 15934,
+      "8_256": 18107
+    }
+  },
+  "catalog-xiaomi-redmi-note-15-pro": {
+    "modelName": "Redmi Note 15 Pro",
+    "cashifyPrices": {
+      "8_128": 20330,
+      "8_256": 21380
+    },
+    "ourPrices": {
+      "8_128": 20940,
+      "8_256": 22021
+    }
+  },
+  "catalog-xiaomi-xiaomi-14-civi": {
+    "modelName": "Xiaomi 14 Civi",
+    "cashifyPrices": {
+      "8_256": 17860,
+      "12_512": 18480
+    },
+    "ourPrices": {
+      "8_256": 18396,
+      "12_512": 19034
+    }
+  },
+  "catalog-xiaomi-xiaomi-15": {
+    "modelName": "Xiaomi 15",
+    "cashifyPrices": {
+      "12_512": 37700
+    },
+    "ourPrices": {
+      "12_512": 38831
+    }
+  },
+  "catalog-xiaomi-xiaomi-15-ultra": {
+    "modelName": "Xiaomi 15 Ultra",
+    "cashifyPrices": {
+      "16_512": 60550
+    },
+    "ourPrices": {
+      "16_512": 62367
+    }
+  },
+  "catalog-xiaomi-xiaomi-17": {
+    "modelName": "Xiaomi 17",
+    "cashifyPrices": {
+      "12_256": 51870,
+      "12_512": 55100
+    },
+    "ourPrices": {
+      "12_256": 53426,
+      "12_512": 56753
+    }
+  },
+  "catalog-xiaomi-xiaomi-17t": {
+    "modelName": "Xiaomi 17T",
+    "cashifyPrices": {
+      "12_256": 34680,
+      "12_512": 38000
+    },
+    "ourPrices": {
+      "12_256": 35720,
+      "12_512": 39140
+    }
+  },
+  "catalog-xiaomi-xiaomi-17-ultra": {
+    "modelName": "Xiaomi 17 Ultra",
+    "cashifyPrices": {
+      "16_512": 76600
+    },
+    "ourPrices": {
+      "16_512": 78898
+    }
+  }
+}

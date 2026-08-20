@@ -1,4 +1,6 @@
 import phoneImages from './phoneImages.json';
+import actualPrices from './actualPrices.json';
+
 
 export interface Brand {
   id: string;
@@ -1257,14 +1259,20 @@ export function buildVariantPricesForModel(model: Model): Record<string, number>
   const map: Record<string, number> = {};
   for (const r of rams) {
     for (const s of storages) {
-      let baseCashify = predictCashifyPrice(model.brandId, model.name, model.category, model.releaseYear, s);
-      if (!isApple && r > 0 && rams.length > 1 && !isNaN(minRam) && isFinite(minRam)) {
-        const stepCount = (r - minRam) / 2;
-        if (stepCount > 0) {
-          baseCashify += Math.round(stepCount * 1200);
+      let pricePlus3Pct = 0;
+      const modelPrices = (actualPrices as Record<string, any>)[model.id];
+      if (modelPrices && modelPrices.ourPrices && modelPrices.ourPrices[`${r}_${s}`]) {
+        pricePlus3Pct = modelPrices.ourPrices[`${r}_${s}`];
+      } else {
+        let baseCashify = predictCashifyPrice(model.brandId, model.name, model.category, model.releaseYear, s);
+        if (!isApple && r > 0 && rams.length > 1 && !isNaN(minRam) && isFinite(minRam)) {
+          const stepCount = (r - minRam) / 2;
+          if (stepCount > 0) {
+            baseCashify += Math.round(stepCount * 1200);
+          }
         }
+        pricePlus3Pct = Math.round(baseCashify * 1.03);
       }
-      const pricePlus3Pct = Math.round(baseCashify * 1.03);
       map[`${r}_${s}`] = pricePlus3Pct;
     }
   }

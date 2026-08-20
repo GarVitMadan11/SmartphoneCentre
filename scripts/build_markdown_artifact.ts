@@ -15,13 +15,14 @@ interface RecordItem {
 
 const records: RecordItem[] = JSON.parse(fs.readFileSync('./scripts/cashify_variants_full.json', 'utf8'));
 
-const artifactPath = `C:\\Users\\user\\.gemini\\antigravity-ide\\brain\\ba31eda3-d90e-4330-8371-c5ffe4c6a1c5\\cashify_variant_prices_report.md`;
+const artifactPath = `/Users/dhruvmehta/.gemini/antigravity-ide/brain/09f77e64-1de2-4307-9597-757af9066934/cashify_variant_prices_report.md`;
 
 let mdContent = `# Cashify & Our (+3%) Price Comparison Master Table
 
 > [!NOTE]
 > This master dataset contains **Cashify Buyback Prices**, **Our Price (+3%)**, and **Direct Cashify Links** for **all 4,119 RAM & Storage variants** across **402 models** listed on the website.
-> Full raw dataset is saved at [public/cashify_variant_prices.csv](file:///f:/SmartphoneCentre/public/cashify_variant_prices.csv).
+> Full raw dataset is saved at [public/cashify_variant_prices.csv](file:///Users/dhruvmehta/Desktop/startup/SmartphoneCentre/public/cashify_variant_prices.csv).
+
 
 ---
 

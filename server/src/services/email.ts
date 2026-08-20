@@ -100,3 +100,15 @@ export async function sendSecurityEmail(to: string, name: string, action: string
   const text = 'Hi ' + name + ',\n\n' + msg.desc + '\n\nIf you did not do this, contact us at support@rephonix.in\n\n-- The Rephonix Team';
   await transporter.sendMail({ from: FROM_ADDRESS, to, subject: 'Security Alert: ' + msg.title, html, text });
 }
+
+export async function sendOtpEmail(to: string, name: string, otp: string): Promise<void> {
+  const body = '<p class="greeting">Hi ' + escapeHtml(name) + ',</p>'
+    + '<p class="text">Here is your verification code to complete your security check and proceed:</p>'
+    + '<div class="btn-wrap"><span class="btn" style="font-size: 24px; letter-spacing: 4px; padding: 12px 24px; color: #fff;">' + escapeHtml(otp) + '</span></div>'
+    + '<p class="text">This code is valid for <strong>10 minutes</strong>. Do not share this code with anyone.</p>'
+    + '<hr class="divider" />'
+    + '<p class="note">If you did not request this code, you can safely ignore this email.</p>';
+  const html = buildEmailHtml('Your Rephonix Verification Code', body);
+  const text = 'Hi ' + name + ',\n\nYour verification code is: ' + otp + '\n\nValid for 10 minutes.\n\n-- The Rephonix Team';
+  await transporter.sendMail({ from: FROM_ADDRESS, to, subject: 'Your Rephonix Verification Code', html, text });
+}

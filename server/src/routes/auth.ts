@@ -11,6 +11,7 @@ import {
   sendPasswordResetEmail,
   sendWelcomeEmail,
   sendSecurityEmail,
+  sendOtpEmail,
 } from '../services/email.js';
 
 const router = Router();
@@ -112,6 +113,44 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // EXISTING ROUTES (preserved for backward compatibility)
 // ============================================================================
 
+// Check if email exists
+router.post('/check-email', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      res.status(400).json({ error: 'ValidationError', message: 'Email address is required.' });
+      return;
+    }
+    const cleanEmail = email.trim().toLowerCase();
+    const existingEmail = await prisma.user.findUnique({
+      where: { email: cleanEmail },
+    });
+    res.status(200).json({ exists: Boolean(existingEmail) });
+  } catch (err) {
+    console.error('Check email error:', err);
+    res.status(500).json({ error: 'ServerError', message: 'Failed to verify email address.' });
+  }
+});
+
+// Check if mobile number exists
+router.post('/check-phone', async (req, res) => {
+  try {
+    const { phone } = req.body;
+    if (!phone) {
+      res.status(400).json({ error: 'ValidationError', message: 'Phone number is required.' });
+      return;
+    }
+    const cleanPhone = phone.trim();
+    const existingPhone = await prisma.user.findFirst({
+      where: { phone: cleanPhone },
+    });
+    res.status(200).json({ exists: Boolean(existingPhone) });
+  } catch (err) {
+    console.error('Check phone error:', err);
+    res.status(500).json({ error: 'ServerError', message: 'Failed to verify phone number.' });
+  }
+});
+
 // Email OTP Signup (Step 1)
 router.post('/signup', async (req, res) => {
   try {
@@ -163,12 +202,14 @@ router.post('/signup', async (req, res) => {
 
     signupAttemptsStore.set(cleanPhone, 0);
 
-    console.log(`🔑 [Email OTP - Signup] Verification code for ${cleanEmail} is: ${otp}`);
+    // Securely dispatch verification code using the backend email service
+    sendOtpEmail(cleanEmail, name.trim(), otp).catch(err => {
+      console.error('Failed to send signup OTP email:', err);
+    });
 
     res.status(200).json({
       status: 'otp_sent',
       phone: cleanPhone,
-      ...(process.env.NODE_ENV !== 'production' ? { otp } : {}),
     });
   } catch (err) {
     console.error('Signup error:', err);
@@ -886,12 +927,14 @@ router.post('/send-email-otp', customerAuth, async (req: AuthenticatedCustomerRe
       attempts: 0
     });
 
-    console.log(`🔑 [Email OTP] Verification code for ${cleanEmail} is: ${otp}`);
+    // Send the verification code to the customer email address
+    sendOtpEmail(cleanEmail, req.customer?.name || 'Customer', otp).catch(err => {
+      console.error('Failed to send email OTP:', err);
+    });
 
     res.status(200).json({
       success: true,
       email: cleanEmail,
-      otp
     });
   } catch (err) {
     console.error('Send email OTP error:', err);
@@ -1013,12 +1056,14 @@ router.post('/forgot-password-request', async (req, res) => {
       attempts: 0
     });
 
-    console.log(`🔑 [Forgot Password OTP] Verification code for ${cleanEmail} is: ${otp}`);
+    // Send the verification code to the customer email address
+    sendOtpEmail(cleanEmail, user.name || 'Customer', otp).catch(err => {
+      console.error('Failed to send forgot password OTP email:', err);
+    });
 
     res.status(200).json({
       success: true,
       email: cleanEmail,
-      otp
     });
   } catch (err) {
     console.error('Forgot password request error:', err);

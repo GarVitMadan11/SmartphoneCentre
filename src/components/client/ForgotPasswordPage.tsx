@@ -44,25 +44,27 @@ export default function ForgotPasswordPage({ onNavigate }: ForgotPasswordPagePro
 
     try {
       const response = await requestPasswordResetOtp(cleanEmail);
-      const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
-      const templateId = import.meta.env.VITE_EMAILJS_OTP_TEMPLATE_ID;
-      const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+      if (response.otp) {
+        const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+        const templateId = import.meta.env.VITE_EMAILJS_OTP_TEMPLATE_ID;
+        const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
 
-      if (!serviceId || !templateId || !publicKey) {
-        throw new Error('EmailJS environment variables are not configured in the browser.');
-      }
+        if (!serviceId || !templateId || !publicKey) {
+          throw new Error('EmailJS environment variables are not configured in the browser.');
+        }
 
-      const templateParams = {
-        email: cleanEmail,
-        passcode: response.otp,
-        time: '10 minutes',
-      };
+        const templateParams = {
+          email: cleanEmail,
+          passcode: response.otp,
+          time: '10 minutes',
+        };
 
-      try {
-        await emailjs.send(serviceId, templateId, templateParams, publicKey);
-      } catch (mailErr: any) {
-        console.error('EmailJS forgot password send failed:', mailErr);
-        throw new Error('Unable to send verification code. Please try again.');
+        try {
+          await emailjs.send(serviceId, templateId, templateParams, publicKey);
+        } catch (mailErr: any) {
+          console.error('EmailJS forgot password send failed:', mailErr);
+          throw new Error('Unable to send verification code. Please try again.');
+        }
       }
 
       setSuccess('Verification code sent successfully to your email.');

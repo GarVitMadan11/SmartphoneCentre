@@ -10,6 +10,17 @@ import { BRANDS, MODELS, getDeviceImage } from '../../src/data/mockDatabase';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+let actualPricesMap: Record<string, any> = {};
+try {
+  const actualPricesPath = path.resolve(__dirname, '../../src/data/actualPrices.json');
+  if (fs.existsSync(actualPricesPath)) {
+    actualPricesMap = JSON.parse(fs.readFileSync(actualPricesPath, 'utf8'));
+  }
+} catch (err) {
+  console.warn('Could not read actualPrices.json in seed script:', err);
+}
+
+
 const dbUrl = (process.env.DATABASE_URL || '').trim();
 const schemaPath = path.resolve(__dirname, 'schema.prisma');
 if (fs.existsSync(schemaPath) && dbUrl) {
@@ -71,7 +82,17 @@ async function main() {
         supportedRamGb: JSON.stringify(ramArr),
         variantPrices: JSON.stringify(variantPricesObj),
       },
-      update: {}, // Preserve live admin edits in PostgreSQL database
+      update: {
+        name: m.name,
+        category: m.category,
+        releaseYear: m.releaseYear,
+        basePrice128GB: m.basePrice128GB,
+        series: m.series || '',
+        imageUrl: modelImageUrl,
+        supportedStorageGb: JSON.stringify(storageArr),
+        supportedRamGb: JSON.stringify(ramArr),
+        variantPrices: JSON.stringify(variantPricesObj),
+      },
     });
   }
   console.log(`  ✓ ${MODELS.length} catalog models synced`);

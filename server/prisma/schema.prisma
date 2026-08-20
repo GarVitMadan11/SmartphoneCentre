@@ -1,8 +1,3 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// Prisma Schema — Rephonix Full-Stack Backend
-// Database: PostgreSQL (production and development via DATABASE_URL)
-// ─────────────────────────────────────────────────────────────────────────────
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -12,38 +7,32 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ── Master Catalog ────────────────────────────────────────────────────────────
-
 model Brand {
-  id     String  @id @default(uuid())
-  name   String
-  logo   String
-  active Boolean @default(true)
-
-  models Model[]
-
+  id        String   @id @default(uuid())
+  name      String
+  logo      String
+  active    Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  models    Model[]
 }
 
 model Model {
-  id             String @id @default(uuid())
-  legacyId       String @unique // e.g. "apple-16pm" — maps to frontend IDs
-  brandId        String
-  name           String
-  category       String // flagship | premium | midrange | budget
-  releaseYear    Int
-  basePrice128GB Int    // Anchor price in INR
-  series         String @default("")
-  imageUrl       String @default("") // optional external image URL
-  supportedStorageGb String @default("[128,256,512]") // JSON array of storage sizes in GB
-  supportedRamGb     String @default("[0]")           // JSON array of RAM sizes in GB; [0] = no RAM variant (Apple-style)
-  variantPrices      String @default("{}")            // JSON: { "ramGb_storageGb": priceINR } e.g. {"8_128":75000}
-
-  brand Brand @relation(fields: [brandId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                 String   @id @default(uuid())
+  legacyId           String   @unique
+  brandId            String
+  name               String
+  category           String
+  releaseYear        Int
+  basePrice128GB     Int
+  series             String   @default("")
+  imageUrl           String   @default("")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  supportedRamGb     String   @default("[0]")
+  supportedStorageGb String   @default("[128,256,512]")
+  variantPrices      String   @default("{}")
+  brand              Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
 
   @@index([brandId])
   @@index([category])
@@ -51,24 +40,18 @@ model Model {
   @@index([releaseYear])
 }
 
-// ── Customer Accounts & Authentication ────────────────────────────────────────
-
 model User {
-  id           String   @id @default(uuid())
-  name         String
-  email        String   @unique
-  phone        String?  // nullable — Google-only users may not have a phone
-  passwordHash String?  // nullable — Google-only users have no password
-  googleId     String?  @unique // Google account "sub" identifier
-  picture      String?  // profile image URL from Google or user-uploaded
-
-  // Email verification
-  emailVerified   Boolean   @default(false)
-  emailVerifiedAt DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  id                      String                   @id @default(uuid())
+  name                    String
+  email                   String                   @unique
+  phone                   String?
+  passwordHash            String?
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+  emailVerified           Boolean                  @default(false)
+  emailVerifiedAt         DateTime?
+  googleId                String?                  @unique
+  picture                 String?
   bookings                Booking[]
   emailVerificationTokens EmailVerificationToken[]
   passwordResetTokens     PasswordResetToken[]
@@ -77,116 +60,94 @@ model User {
   @@index([googleId])
 }
 
-// ── Email Verification Tokens ─────────────────────────────────────────────────
-// Raw token is sent to user via email; only SHA-256 hash is stored here.
-
 model EmailVerificationToken {
   id        String   @id @default(uuid())
   userId    String
-  tokenHash String   @unique // SHA-256(rawToken) — never store the raw token
+  tokenHash String   @unique
   expiresAt DateTime
   createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([expiresAt])
 }
-
-// ── Password Reset Tokens ─────────────────────────────────────────────────────
-// Raw token is sent to user via email; only SHA-256 hash is stored here.
 
 model PasswordResetToken {
   id        String   @id @default(uuid())
   userId    String
-  tokenHash String   @unique // SHA-256(rawToken) — never store the raw token
+  tokenHash String   @unique
   expiresAt DateTime
   used      Boolean  @default(false)
   createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([expiresAt])
 }
 
-// ── Admin Staff Accounts & RBAC ───────────────────────────────────────────────
-
 model AdminUser {
-  id           String   @id @default(uuid())
-  username     String   @unique
-  email        String   @unique
-  passwordHash String
-  role         String   @default("OPERATIONS_AGENT") // SUPER_ADMIN | FINANCE_APPROVER | OPERATIONS_AGENT | CATALOG_EDITOR
-  active       Boolean  @default(true)
-
-  // Brute-force protection
-  failedLoginAttempts Int      @default(0)
-  lockedUntil         DateTime?
+  id                  String    @id @default(uuid())
+  username            String    @unique
+  email               String    @unique
+  passwordHash        String
+  role                String    @default("OPERATIONS_AGENT")
+  active              Boolean   @default(true)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  failedLoginAttempts Int       @default(0)
   lastLoginAt         DateTime?
-
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  lockedUntil         DateTime?
 }
 
-// ── Versioned Server Quotes ───────────────────────────────────────────────────
-
 model Quote {
-  id             String   @id @default(uuid())
-  modelLegacyId  String
-  storageGb      Int
-  defectIdsJson  String   @default("[]")
+  id              String   @id @default(uuid())
+  modelLegacyId   String
+  storageGb       Int
+  defectIdsJson   String   @default("[]")
   calculatedPrice Int
-  expiresAt      DateTime
-  version        String   @default("v1.1.0")
-  signature      String
-  createdAt      DateTime @default(now())
+  expiresAt       DateTime
+  version         String   @default("v1.1.0")
+  signature       String
+  createdAt       DateTime @default(now())
 
   @@index([modelLegacyId])
   @@index([expiresAt])
 }
 
-// ── Trade-In Bookings ─────────────────────────────────────────────────────────
-
 model Booking {
-  id                     String  @id // server-generated: "STC-XXXXXXXX"
-  modelLegacyId          String // references Model.legacyId
-  modelName              String
-  storageGb              Int
-  color                  String
-  customerName           String
-  customerPhone          String
-  customerEmail          String
-  address                String
-  pickupDate             String
-  pickupTimeSlot         String
-  finalPrice             Int
-  verificationStatus     String  @default("pending") // pending | verified | failed
-  isVerifiedProvider     Boolean @default(false)     // true ONLY when verified via authentic provider callback
-  verificationProofHash  String  @default("")        // cryptographic hash of verification payload
-  verifiedName           String  @default("")
-  maskedAadhaar          String  @default("")
-  verificationDate       String  @default("")
-  payoutMethod           String
-  payoutMethodName       String
-  bonusPercentage        Float   @default(0)
-  bonusAmount            Int     @default(0)
-  finalPayoutAmount      Int
-  inspectionStatus       String  @default("pending") // pending | approved | rejected
-  payoutStatus           String  @default("pending") // pending | completed
-  dateCreated            String
-  adminNotes             String  @default("")        // internal admin notes
-
-  // Payout details stored as AES-256-GCM encrypted JSON string
-  payoutDetailsJson String @default("{}")
-
-  userId String?
-  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
-
-  events BookingEvent[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                    String         @id
+  modelLegacyId         String
+  modelName             String
+  storageGb             Int
+  color                 String
+  customerName          String
+  customerPhone         String
+  customerEmail         String
+  address               String
+  pickupDate            String
+  pickupTimeSlot        String
+  finalPrice            Int
+  verificationStatus    String         @default("pending")
+  isVerifiedProvider    Boolean        @default(false)
+  verificationProofHash String         @default("")
+  verifiedName          String         @default("")
+  maskedAadhaar         String         @default("")
+  verificationDate      String         @default("")
+  payoutMethod          String
+  payoutMethodName      String
+  bonusPercentage       Float          @default(0)
+  bonusAmount           Int            @default(0)
+  finalPayoutAmount     Int
+  inspectionStatus      String         @default("pending")
+  payoutStatus          String         @default("pending")
+  dateCreated           String
+  adminNotes            String         @default("")
+  payoutDetailsJson     String         @default("{}")
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+  userId                String?
+  user                  User?          @relation(fields: [userId], references: [id])
+  events                BookingEvent[]
 
   @@index([inspectionStatus])
   @@index([payoutStatus])
@@ -195,81 +156,64 @@ model Booking {
   @@index([userId])
 }
 
-// ── Booking Lifecycle Events ──────────────────────────────────────────────────
-// Append-only log: one record per status change or admin action on a booking.
-
 model BookingEvent {
-  id        String @id @default(uuid())
+  id        String   @id @default(uuid())
   bookingId String
-  eventType String // status_change | admin_note | created | verified
-  fromValue String @default("")
-  toValue   String @default("")
-  note      String @default("")
-
-  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-
+  eventType String
+  fromValue String   @default("")
+  toValue   String   @default("")
+  note      String   @default("")
   createdAt DateTime @default(now())
+  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 
   @@index([bookingId])
   @@index([createdAt])
 }
 
-// ── Admin Audit Log ───────────────────────────────────────────────────────────
-// Immutable record of all admin actions for accountability.
-
 model AdminAuditLog {
   id          String   @id @default(uuid())
-  adminUserId String   @default("") // ID or username of acting staff member
-  action      String   // create_model | delete_model | update_booking_status | etc.
-  targetType  String   // "booking" | "model" | "brand"
-  targetId    String   // the affected record's ID
-  payload     String   @default("{}") // JSON: what changed
+  adminUserId String   @default("")
+  action      String
+  targetType  String
+  targetId    String
+  payload     String   @default("{}")
   ipAddress   String   @default("")
   userAgent   String   @default("")
-
-  createdAt DateTime @default(now())
+  createdAt   DateTime @default(now())
 
   @@index([targetType, targetId])
   @@index([createdAt])
 }
 
-// ── AI Support Agent & Human Handoff ──────────────────────────────────────────
-
 model SupportConversation {
-  id              String   @id @default(uuid())
-  customerId      String?
-  customerName    String?
-  customerEmail   String?
-  detectedIntent  String?
-  status          String   @default("AI_ACTIVE") // AI_ACTIVE | WAITING_FOR_CUSTOMER | WAITING_FOR_HUMAN | HUMAN_ACTIVE | RESOLVED | CLOSED
-  handoffReason   String?
-  summary         String?
-  collectedInfo   String   @default("{}") // JSON
-
-  messages        SupportMessage[]
-
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id             String           @id @default(uuid())
+  customerId     String?
+  customerName   String?
+  customerEmail  String?
+  detectedIntent String?
+  status         String           @default("AI_ACTIVE")
+  handoffReason  String?
+  summary        String?
+  collectedInfo  String           @default("{}")
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  messages       SupportMessage[]
 
   @@index([status])
   @@index([createdAt])
 }
 
 model SupportMessage {
-  id              String   @id @default(uuid())
-  conversationId  String
-  role            String   // system | ai | user | human_agent
-  content         String
-  
-  conversation    SupportConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-
-  createdAt       DateTime @default(now())
+  id             String              @id @default(uuid())
+  conversationId String
+  role           String
+  content        String
+  createdAt      DateTime            @default(now())
+  conversation   SupportConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
   @@index([conversationId])
   @@index([createdAt])
 }
-
-// ── Customer OTP Verification ────────────────────────────────────────────────
 
 model OtpVerification {
   id        String   @id @default(uuid())

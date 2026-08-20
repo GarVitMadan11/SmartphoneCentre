@@ -55,26 +55,28 @@ export default function ProfilePage({ user, onLogout, onUpdateUser, onNavigate }
       // 1. Get OTP from backend
       const response = await sendEmailOtp(newEmail.trim());
       
-      // 2. Send email via EmailJS browser SDK
-      const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
-      const templateId = import.meta.env.VITE_EMAILJS_OTP_TEMPLATE_ID;
-      const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+      // 2. Send email via EmailJS browser SDK (fallback if OTP is returned)
+      if (response.otp) {
+        const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+        const templateId = import.meta.env.VITE_EMAILJS_OTP_TEMPLATE_ID;
+        const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
 
-      if (!serviceId || !templateId || !publicKey) {
-        throw new Error('EmailJS environment variables are not configured in the browser.');
-      }
+        if (!serviceId || !templateId || !publicKey) {
+          throw new Error('EmailJS environment variables are not configured in the browser.');
+        }
 
-      const templateParams = {
-        email: newEmail.trim(),
-        passcode: response.otp,
-        time: '10 minutes',
-      };
+        const templateParams = {
+          email: newEmail.trim(),
+          passcode: response.otp,
+          time: '10 minutes',
+        };
 
-      try {
-        await emailjs.send(serviceId, templateId, templateParams, publicKey);
-      } catch (mailErr: any) {
-        console.error('EmailJS profile send failed:', mailErr);
-        throw new Error('Unable to send verification code. Please try again.');
+        try {
+          await emailjs.send(serviceId, templateId, templateParams, publicKey);
+        } catch (mailErr: any) {
+          console.error('EmailJS profile send failed:', mailErr);
+          throw new Error('Unable to send verification code. Please try again.');
+        }
       }
 
       setVerificationSuccess('Verification code sent successfully to your email.');
