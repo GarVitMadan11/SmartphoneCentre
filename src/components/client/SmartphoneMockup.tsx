@@ -47,7 +47,7 @@ export const SmartphoneMockup: React.FC<SmartphoneMockupProps> = ({ onSelect }) 
     apple: {
       gradient: 'from-[#fdfdfd] via-[#f5f5f7] to-[#e8e8ed]',
       title: 'iPhone 17 Pro Max',
-      maxPrice: '₹85,000',
+      maxPrice: 'Max Value',
       accentClass: 'text-gradient-green',
       barGradient: 'from-emerald-600 to-emerald-400 shadow-[0_4px_12px_rgba(16,185,129,0.3)]',
       progressWidth: 'w-[94%]',
@@ -57,7 +57,7 @@ export const SmartphoneMockup: React.FC<SmartphoneMockupProps> = ({ onSelect }) 
     samsung: {
       gradient: 'from-[#fafaff] via-[#f0f4ff] to-[#e6eeff]',
       title: 'Galaxy S26 Ultra',
-      maxPrice: '₹50,000',
+      maxPrice: 'Best Price',
       accentClass: 'text-gradient-cobalt',
       barGradient: 'from-blue-600 to-blue-400 shadow-[0_4px_12px_rgba(59,130,246,0.3)]',
       progressWidth: 'w-[88%]',
@@ -67,7 +67,7 @@ export const SmartphoneMockup: React.FC<SmartphoneMockupProps> = ({ onSelect }) 
     google: {
       gradient: 'from-[#fbfbfb] via-[#f7f7f8] to-[#edf0f5]',
       title: 'Pixel 8 Pro',
-      maxPrice: '₹27,000',
+      maxPrice: 'Top Payout',
       accentClass: 'text-gradient-green',
       barGradient: 'from-emerald-600 to-emerald-400 shadow-[0_4px_12px_rgba(16,185,129,0.3)]',
       progressWidth: 'w-[78%]',
