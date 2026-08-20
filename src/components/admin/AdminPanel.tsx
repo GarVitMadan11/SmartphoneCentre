@@ -8,12 +8,12 @@ import {
   Layers, Check, X,
   MessageSquare, HardDrive, ChevronDown,
   AlertCircle, Cpu, Grid, Smartphone, Tablet, Watch,
-  Shuffle, ArrowUp, ArrowDown, RotateCcw, GripVertical
+  Shuffle, ArrowUp, ArrowDown, RotateCcw, GripVertical, BookmarkCheck
 } from 'lucide-react';
 import { 
-  saveBrandOrder, resetBrandOrder,
-  saveSeriesOrder, resetSeriesOrder,
-  saveModelOrder, getSavedModelOrder, resetModelOrder,
+  saveBrandOrder, resetBrandOrder, saveBrandDefaultOrder,
+  saveSeriesOrder, resetSeriesOrder, saveSeriesDefaultOrder,
+  saveModelOrder, getSavedModelOrder, resetModelOrder, saveModelDefaultOrder,
   applyBrandOrder, applySeriesOrder, applyModelOrder,
   shuffleArray
 } from '../../utils/ordering';
@@ -220,6 +220,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     setFormSuccess('Reset brand display order to default.');
   };
 
+  const handleSetDefaultBrands = () => {
+    saveBrandDefaultOrder(currentOrderedBrands.map(b => b.id));
+    setOrderVersion(v => v + 1);
+    setFormSuccess('Saved current Brand order as system default baseline! 📌');
+  };
+
   const availableSeriesForOrdering = useMemo(() => {
     const brandModels = models.filter(m => {
       if (m.brandId !== orderingSelectedBrandId) return false;
@@ -271,6 +277,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     setFormSuccess(`Reset series order for ${orderingSelectedBrandId} to default.`);
   };
 
+  const handleSetDefaultSeries = () => {
+    saveSeriesDefaultOrder(orderingSelectedBrandId, availableSeriesForOrdering);
+    setOrderVersion(v => v + 1);
+    setFormSuccess(`Saved current Series display order for ${orderingSelectedBrandId} as system default baseline! 📌`);
+  };
+
   const availableModelsForOrdering = useMemo(() => {
     const filtered = models.filter(m => {
       if (m.brandId !== orderingSelectedBrandId) return false;
@@ -314,6 +326,34 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     setOrderVersion(v => v + 1);
   };
 
+  const updateModelDefaultOrderPreservingOtherCategories = (newCategoryModels: Model[]) => {
+    const categoryIds = newCategoryModels.map(m => m.id);
+    const allBrandModels = models.filter(m => m.brandId === orderingSelectedBrandId);
+    const existingOrderIds = getSavedModelOrder(orderingSelectedBrandId);
+
+    const baseOrderedIds = existingOrderIds.length > 0
+      ? existingOrderIds.filter((id: string) => allBrandModels.some(m => m.id === id))
+      : allBrandModels.map(m => m.id);
+
+    allBrandModels.forEach(m => {
+      if (!baseOrderedIds.includes(m.id)) baseOrderedIds.push(m.id);
+    });
+
+    let catIdx = 0;
+    const finalOrderIds = baseOrderedIds.map((id: string) => {
+      const isTarget = newCategoryModels.some(m => m.id === id);
+      if (isTarget && catIdx < categoryIds.length) {
+        const nextId = categoryIds[catIdx];
+        catIdx++;
+        return nextId;
+      }
+      return id;
+    });
+
+    saveModelDefaultOrder(orderingSelectedBrandId, finalOrderIds);
+    setOrderVersion(v => v + 1);
+  };
+
   const handleMoveModel = (index: number, direction: 'up' | 'down') => {
     const newModels = [...availableModelsForOrdering];
     const targetIdx = direction === 'up' ? index - 1 : index + 1;
@@ -337,7 +377,25 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const handleResetModels = () => {
     resetModelOrder(orderingSelectedBrandId);
     setOrderVersion(v => v + 1);
-    setFormSuccess(`Reset model order for ${orderingSelectedBrandId} to default.`);
+    setFormSuccess(`Reset model order for ${orderingSelectedBrandId} to saved default baseline.`);
+  };
+
+  const handleSetDefaultModels = () => {
+    updateModelDefaultOrderPreservingOtherCategories(availableModelsForOrdering);
+    setFormSuccess(`Saved current Model display order for ${orderingSelectedBrandId} as system default baseline! 📌`);
+  };
+
+  const handleSetAllDefault = () => {
+    saveBrandDefaultOrder(currentOrderedBrands.map(b => b.id));
+    if (orderingSelectedBrandId && availableSeriesForOrdering.length > 0) {
+      saveSeriesDefaultOrder(orderingSelectedBrandId, availableSeriesForOrdering);
+    }
+    if (availableModelsForOrdering.length > 0) {
+      updateModelDefaultOrderPreservingOtherCategories(availableModelsForOrdering);
+    } else {
+      setOrderVersion(v => v + 1);
+    }
+    setFormSuccess('Set all current brand, series & model arrangements as System Default Baseline! 📌');
   };
 
   // --- DRAG AND DROP HANDLERS ---
@@ -1597,9 +1655,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     Catalog Display Sequence &amp; Shuffle Controls
                   </div>
                   <p className="text-xs text-ink-slate font-light mt-1">
-                    Customize the display order or randomly shuffle Brands, Series, and Models. Changes instantly take effect across the storefront catalog and selectors.
+                    Customize the display order or randomly shuffle Brands, Series, and Models. Save your custom layout as default or reset at any time.
                   </p>
                 </div>
+
+                <button
+                  type="button"
+                  onClick={handleSetAllDefault}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold font-mono rounded-sm transition-all flex items-center justify-center gap-1.5 shadow-sm flex-shrink-0"
+                  title="Save current brand, series, and model arrangement as system default"
+                >
+                  <BookmarkCheck className="w-4 h-4" />
+                  Set All As Default 📌
+                </button>
               </div>
 
               {/* Device Category Scope Selector */}
@@ -1677,19 +1745,28 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   </div>
 
                   {/* Global Brand Action Buttons */}
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-1.5">
                     <button
                       type="button"
                       onClick={handleShuffleBrands}
-                      className="flex-1 py-2 px-3 bg-cobalt hover:bg-cobalt-hover text-white text-xs font-bold font-mono rounded-sm transition-all flex items-center justify-center gap-1.5 shadow-xs"
+                      className="flex-1 py-1.5 px-2.5 bg-cobalt hover:bg-cobalt-hover text-white text-[11px] font-bold font-mono rounded-sm transition-all flex items-center justify-center gap-1 shadow-xs"
                     >
                       <Shuffle className="w-3.5 h-3.5" />
-                      Shuffle Brands 🎲
+                      Shuffle 🎲
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSetDefaultBrands}
+                      className="py-1.5 px-2.5 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 text-[11px] font-mono font-bold rounded-sm transition-all flex items-center gap-1"
+                      title="Set current brand order as default"
+                    >
+                      <BookmarkCheck className="w-3.5 h-3.5" />
+                      Set Default 📌
                     </button>
                     <button
                       type="button"
                       onClick={handleResetBrands}
-                      className="py-2 px-3 bg-canvas-white hover:bg-ice-gray text-ink-slate border border-ice-border text-xs font-mono rounded-sm transition-all flex items-center gap-1"
+                      className="py-1.5 px-2 bg-canvas-white hover:bg-ice-gray text-ink-slate border border-ice-border text-[11px] font-mono rounded-sm transition-all flex items-center gap-1"
                       title="Reset to default brand order"
                     >
                       <RotateCcw className="w-3.5 h-3.5" />
@@ -1773,19 +1850,28 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   </div>
 
                   {/* Global Series Action Buttons */}
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-1.5">
                     <button
                       type="button"
                       onClick={handleShuffleSeries}
-                      className="flex-1 py-2 px-3 bg-cobalt hover:bg-cobalt-hover text-white text-xs font-bold font-mono rounded-sm transition-all flex items-center justify-center gap-1.5 shadow-xs"
+                      className="flex-1 py-1.5 px-2.5 bg-cobalt hover:bg-cobalt-hover text-white text-[11px] font-bold font-mono rounded-sm transition-all flex items-center justify-center gap-1 shadow-xs"
                     >
                       <Shuffle className="w-3.5 h-3.5" />
-                      Shuffle Series 🎲
+                      Shuffle 🎲
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSetDefaultSeries}
+                      className="py-1.5 px-2.5 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 text-[11px] font-mono font-bold rounded-sm transition-all flex items-center gap-1"
+                      title="Set current series order as default"
+                    >
+                      <BookmarkCheck className="w-3.5 h-3.5" />
+                      Set Default 📌
                     </button>
                     <button
                       type="button"
                       onClick={handleResetSeries}
-                      className="py-2 px-3 bg-canvas-white hover:bg-ice-gray text-ink-slate border border-ice-border text-xs font-mono rounded-sm transition-all flex items-center gap-1"
+                      className="py-1.5 px-2 bg-canvas-white hover:bg-ice-gray text-ink-slate border border-ice-border text-[11px] font-mono rounded-sm transition-all flex items-center gap-1"
                       title="Reset series order for selected brand"
                     >
                       <RotateCcw className="w-3.5 h-3.5" />
@@ -1888,19 +1974,28 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   </div>
 
                   {/* Global Model Action Buttons */}
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-1.5">
                     <button
                       type="button"
                       onClick={handleShuffleModels}
-                      className="flex-1 py-2 px-3 bg-cobalt hover:bg-cobalt-hover text-white text-xs font-bold font-mono rounded-sm transition-all flex items-center justify-center gap-1.5 shadow-xs"
+                      className="flex-1 py-1.5 px-2.5 bg-cobalt hover:bg-cobalt-hover text-white text-[11px] font-bold font-mono rounded-sm transition-all flex items-center justify-center gap-1 shadow-xs"
                     >
                       <Shuffle className="w-3.5 h-3.5" />
-                      Shuffle Models 🎲
+                      Shuffle 🎲
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSetDefaultModels}
+                      className="py-1.5 px-2.5 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 text-[11px] font-mono font-bold rounded-sm transition-all flex items-center gap-1"
+                      title="Set current model order as default"
+                    >
+                      <BookmarkCheck className="w-3.5 h-3.5" />
+                      Set Default 📌
                     </button>
                     <button
                       type="button"
                       onClick={handleResetModels}
-                      className="py-2 px-3 bg-canvas-white hover:bg-ice-gray text-ink-slate border border-ice-border text-xs font-mono rounded-sm transition-all flex items-center gap-1"
+                      className="py-1.5 px-2 bg-canvas-white hover:bg-ice-gray text-ink-slate border border-ice-border text-[11px] font-mono rounded-sm transition-all flex items-center gap-1"
                       title="Reset model order for selected brand/series"
                     >
                       <RotateCcw className="w-3.5 h-3.5" />

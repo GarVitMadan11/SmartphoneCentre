@@ -78,9 +78,24 @@ export function saveBrandOrder(order: string[]): void {
   }
 }
 
+export function saveBrandDefaultOrder(order: string[]): void {
+  try {
+    localStorage.setItem('stc_default_brand_order', JSON.stringify(order));
+    localStorage.setItem('stc_brand_order', JSON.stringify(order));
+    window.dispatchEvent(new Event('stc_catalog_order_changed'));
+  } catch (e) {
+    console.error('Failed to save default brand order:', e);
+  }
+}
+
 export function resetBrandOrder(): void {
   try {
-    localStorage.removeItem('stc_brand_order');
+    const customDefault = localStorage.getItem('stc_default_brand_order');
+    if (customDefault) {
+      localStorage.setItem('stc_brand_order', customDefault);
+    } else {
+      localStorage.removeItem('stc_brand_order');
+    }
     window.dispatchEvent(new Event('stc_catalog_order_changed'));
   } catch (e) {
     console.error('Failed to reset brand order:', e);
@@ -105,9 +120,24 @@ export function saveSeriesOrder(brandId: string, order: string[]): void {
   }
 }
 
+export function saveSeriesDefaultOrder(brandId: string, order: string[]): void {
+  try {
+    localStorage.setItem(`stc_default_series_order_${brandId}`, JSON.stringify(order));
+    localStorage.setItem(`stc_series_order_${brandId}`, JSON.stringify(order));
+    window.dispatchEvent(new Event('stc_catalog_order_changed'));
+  } catch (e) {
+    console.error('Failed to save default series order:', e);
+  }
+}
+
 export function resetSeriesOrder(brandId: string): void {
   try {
-    localStorage.removeItem(`stc_series_order_${brandId}`);
+    const customDefault = localStorage.getItem(`stc_default_series_order_${brandId}`);
+    if (customDefault) {
+      localStorage.setItem(`stc_series_order_${brandId}`, customDefault);
+    } else {
+      localStorage.removeItem(`stc_series_order_${brandId}`);
+    }
     window.dispatchEvent(new Event('stc_catalog_order_changed'));
   } catch (e) {
     console.error('Failed to reset series order:', e);
@@ -132,12 +162,49 @@ export function saveModelOrder(brandId: string, order: string[]): void {
   }
 }
 
+export function saveModelDefaultOrder(brandId: string, order: string[]): void {
+  try {
+    localStorage.setItem(`stc_default_model_order_${brandId}`, JSON.stringify(order));
+    localStorage.setItem(`stc_model_order_${brandId}`, JSON.stringify(order));
+    window.dispatchEvent(new Event('stc_catalog_order_changed'));
+  } catch (e) {
+    console.error('Failed to save default model order:', e);
+  }
+}
+
 export function resetModelOrder(brandId: string): void {
   try {
-    localStorage.removeItem(`stc_model_order_${brandId}`);
+    const customDefault = localStorage.getItem(`stc_default_model_order_${brandId}`);
+    if (customDefault) {
+      localStorage.setItem(`stc_model_order_${brandId}`, customDefault);
+    } else {
+      localStorage.removeItem(`stc_model_order_${brandId}`);
+    }
     window.dispatchEvent(new Event('stc_catalog_order_changed'));
   } catch (e) {
     console.error('Failed to reset model order:', e);
+  }
+}
+
+export function clearCustomDefaults(brandId?: string): void {
+  try {
+    if (brandId) {
+      localStorage.removeItem(`stc_default_series_order_${brandId}`);
+      localStorage.removeItem(`stc_default_model_order_${brandId}`);
+      localStorage.removeItem(`stc_series_order_${brandId}`);
+      localStorage.removeItem(`stc_model_order_${brandId}`);
+    } else {
+      localStorage.removeItem('stc_default_brand_order');
+      localStorage.removeItem('stc_brand_order');
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('stc_default_') || key.startsWith('stc_series_order_') || key.startsWith('stc_model_order_')) {
+          localStorage.removeItem(key);
+        }
+      });
+    }
+    window.dispatchEvent(new Event('stc_catalog_order_changed'));
+  } catch (e) {
+    console.error('Failed to clear custom defaults:', e);
   }
 }
 
