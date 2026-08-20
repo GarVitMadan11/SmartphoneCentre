@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Smartphone, Tablet, Watch, ChevronDown, Zap, Truck, Menu, X, User, Package, Instagram } from 'lucide-react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { Smartphone, Tablet, Watch, ChevronDown, Zap, Truck, Menu, X, User, Package, Instagram, Calendar, Clock, Timer } from 'lucide-react';
 import { ApiUser } from '../../utils/api';
 import { BRANDS as STATIC_BRANDS } from '../../data/mockDatabase';
 import { applyBrandOrder } from '../../utils/ordering';
@@ -30,6 +30,34 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
   const [mobileSubMenu, setMobileSubMenu] = useState<'phones' | 'tablets' | 'watches' | null>(null);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const navRef = useRef<HTMLDivElement>(null);
+
+  // Live Launch Countdown Timer State (Target: August 22, 2026 12:00 AM IST)
+  const TARGET_LAUNCH_TIME = useMemo(() => new Date('2026-08-22T00:00:00+05:30').getTime(), []);
+  const [timeLeft, setTimeLeft] = useState(() => {
+    const diff = Math.max(0, new Date('2026-08-22T00:00:00+05:30').getTime() - Date.now());
+    return {
+      days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+      hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+      minutes: Math.floor((diff / (1000 * 60)) % 60),
+      seconds: Math.floor((diff / 1000) % 60),
+      isLive: diff <= 0,
+    };
+  });
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const diff = Math.max(0, TARGET_LAUNCH_TIME - Date.now());
+      setTimeLeft({
+        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+        minutes: Math.floor((diff / (1000 * 60)) % 60),
+        seconds: Math.floor((diff / 1000) % 60),
+        isLive: diff <= 0,
+      });
+      if (diff <= 0) clearInterval(timer);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [TARGET_LAUNCH_TIME]);
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -503,6 +531,58 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
           )}
         </div>
       )}
+
+      {/* Launch Announcement Strip with Live Countdown Timer */}
+      <div className="bg-gradient-to-r from-slate-950 via-cobalt-dark to-slate-950 border-t border-b border-cobalt/40 text-white py-2 px-4 shadow-md text-xs font-outfit">
+        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2.5 text-center sm:text-left">
+          <div className="flex items-center justify-center sm:justify-start gap-2.5 min-w-0 w-full lg:w-auto">
+            <span className="flex-shrink-0 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-400/20 border border-amber-400/40 text-amber-300 text-[10px] font-mono font-extrabold uppercase tracking-wider">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping inline-block" />
+              Official Launch
+            </span>
+            <span className="font-semibold text-slate-100 truncate text-[11px] sm:text-xs tracking-wide">
+              Rephonix Platform Grand Opening
+            </span>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center lg:justify-end gap-3 sm:gap-4 text-[11px] sm:text-xs font-mono w-full lg:w-auto">
+            <div className="flex items-center gap-3">
+              <span className="flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-amber-400" />
+                <span className="text-slate-400 font-normal">Date:</span>
+                <strong className="text-slate-100">August 22, 2026</strong>
+              </span>
+              <span className="text-slate-600">•</span>
+              <span className="flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-cyan-400" />
+                <span className="text-slate-400 font-normal">Time:</span>
+                <strong className="text-slate-100">12:00 AM IST</strong>
+              </span>
+            </div>
+
+            {/* Live Countdown Clock */}
+            <div className="flex items-center gap-1.5 bg-black/60 border border-amber-400/40 px-3 py-0.5 rounded-full shadow-inner text-amber-300">
+              <Timer className="w-3.5 h-3.5 text-amber-400 animate-spin-slow" />
+              <span className="text-[10px] uppercase font-sans font-bold text-slate-300 mr-0.5">Countdown:</span>
+              {timeLeft.isLive ? (
+                <span className="text-emerald-400 font-bold tracking-widest animate-pulse">
+                  🎉 WE ARE LIVE NOW!
+                </span>
+              ) : (
+                <div className="flex items-center gap-1 font-mono font-bold text-amber-300 text-xs">
+                  <span>{String(timeLeft.days).padStart(2, '0')}<span className="text-[9px] font-sans text-slate-400 font-normal">d</span></span>
+                  <span className="text-slate-500">:</span>
+                  <span>{String(timeLeft.hours).padStart(2, '0')}<span className="text-[9px] font-sans text-slate-400 font-normal">h</span></span>
+                  <span className="text-slate-500">:</span>
+                  <span>{String(timeLeft.minutes).padStart(2, '0')}<span className="text-[9px] font-sans text-slate-400 font-normal">m</span></span>
+                  <span className="text-slate-500">:</span>
+                  <span className="text-cyan-300">{String(timeLeft.seconds).padStart(2, '0')}<span className="text-[9px] font-sans text-slate-400 font-normal">s</span></span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
     </header>
   );
 };
