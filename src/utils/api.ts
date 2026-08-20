@@ -169,6 +169,34 @@ export function getCurrentAdminUser(): Promise<AdminUserSession> {
   return apiFetch<AdminUserSession>('/admin/me', undefined, true);
 }
 
+export interface AdminSecurityStatus {
+  isLockedDown: boolean;
+  reason?: string;
+  lockedAt?: string | null;
+}
+
+export async function fetchAdminSecurityStatus(): Promise<AdminSecurityStatus> {
+  try {
+    return await apiFetch<AdminSecurityStatus>('/admin/security-status');
+  } catch {
+    return { isLockedDown: false };
+  }
+}
+
+export async function triggerAdminLockdown(reason?: string): Promise<{ success: boolean; masterUnlockKey: string }> {
+  return apiFetch<{ success: boolean; masterUnlockKey: string }>('/admin/lockdown', {
+    method: 'POST',
+    body: JSON.stringify({ reason }),
+  }, true);
+}
+
+export async function unlockAdminPanel(masterKey: string): Promise<{ success: boolean; message: string }> {
+  return apiFetch<{ success: boolean; message: string }>('/admin/unlock', {
+    method: 'POST',
+    body: JSON.stringify({ masterKey }),
+  });
+}
+
 // ── Brands & Models ───────────────────────────────────────────────────────
 
 export interface ApiBrand {

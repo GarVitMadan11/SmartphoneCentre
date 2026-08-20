@@ -1,17 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldAlert, Lock, Eye, EyeOff, LogOut, AlertCircle, Clock } from 'lucide-react';
-import { adminLogin, adminLogout, getCurrentAdminUser } from '../../utils/api';
+import { ShieldAlert, Lock, Eye, EyeOff, LogOut, AlertCircle, Clock, Key, ShieldX, Unlock } from 'lucide-react';
+import { adminLogin, adminLogout, getCurrentAdminUser, fetchAdminSecurityStatus, unlockAdminPanel, AdminSecurityStatus } from '../../utils/api';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// AdminPinGate — server-authenticated PIN gate
-//
-// Authentication flow:
-//   1. User enters PIN → POST /api/admin/auth (rate-limited: 10 attempts / 15 min)
-//   2. Server validates PIN against bcrypt hash → returns signed JWT (4h expiry)
-//   3. JWT stored in sessionStorage (cleared on tab close)
-//   4. All subsequent admin API calls include Bearer <jwt> header automatically
-//
-// The PIN is never stored or logged on the frontend.
+// AdminPinGate — server-authenticated PIN gate & Emergency Security Shield
 // ─────────────────────────────────────────────────────────────────────────────
 
 const MAX_LOCAL_ATTEMPTS = 5; // client-side guard (server also enforces 10/15min)
@@ -31,10 +23,38 @@ export const AdminPinGate: React.FC<AdminPinGateProps> = ({ children, onExit }) 
   const [isLocked, setIsLocked] = useState(false);
   const [sessionExpiry, setSessionExpiry] = useState<number | null>(null);
 
-  // Re-check the HttpOnly cookie session on mount (handles page refresh).
+  // Security Lockdown Shield States
+  const [securityStatus, setSecurityStatus] = useState<AdminSecurityStatus>({ isLockedDown: false });
+  const [masterKeyInput, setMasterKeyInput] = useState('');
+  const [unlockError, setUnlockError] = useState('');
+  const [isUnlocking, setIsUnlocking] = useState(false);
+
+  // Re-check security status and HttpOnly session on mount
   useEffect(() => {
+    fetchAdminSecurityStatus().then(status => setSecurityStatus(status));
     getCurrentAdminUser().then(() => setIsAuthenticated(true)).catch(() => setIsAuthenticated(false));
   }, []);
+
+  const handleUnlockSystem = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!masterKeyInput.trim() || isUnlocking) return;
+
+    setIsUnlocking(true);
+    setUnlockError('');
+
+    try {
+      const res = await unlockAdminPanel(masterKeyInput.trim());
+      if (res.success) {
+        setMasterKeyInput('');
+        setSecurityStatus({ isLockedDown: false });
+        setError('');
+      }
+    } catch (err: any) {
+      setUnlockError(err.message || 'Invalid Master Emergency Unlock Key.');
+    } finally {
+      setIsUnlocking(false);
+    }
+  };
 
   // Countdown display for session expiry
   useEffect(() => {
@@ -68,6 +88,13 @@ export const AdminPinGate: React.FC<AdminPinGateProps> = ({ children, onExit }) 
       setIsAuthenticated(true);
       setSessionExpiry(session.expiresAt);
     } catch (err: unknown) {
+      const message = (err as Error).message ?? '';
+      if (message.includes('suspended') || message.includes('Lockdown')) {
+        setSecurityStatus({ isLockedDown: true });
+        setError('Admin Panel access is currently suspended due to an Emergency Lockdown.');
+        return;
+      }
+
       // Fallback for PIN 2024 if backend API is offline or failing
       if (pin.trim() === '2024') {
         setPin('');
@@ -85,8 +112,6 @@ export const AdminPinGate: React.FC<AdminPinGateProps> = ({ children, onExit }) 
         setError('Too many failed attempts. Please refresh the page to try again.');
       } else {
         const remaining = MAX_LOCAL_ATTEMPTS - newAttempts;
-        // Check if the server rate-limited us
-        const message = (err as Error).message ?? '';
         if (message.toLowerCase().includes('too many')) {
           setIsLocked(true);
           setError('Too many login attempts. Please wait 15 minutes before trying again.');
@@ -116,6 +141,95 @@ export const AdminPinGate: React.FC<AdminPinGateProps> = ({ children, onExit }) 
     if (mins < 60) return `~${mins}m remaining`;
     return `~${Math.round(mins / 60)}h remaining`;
   };
+
+  // RENDER 1: Emergency Security Shield (when locked down)
+  if (securityStatus.isLockedDown) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[65vh] py-16 px-4">
+        <div className="w-full max-w-md bg-gradient-to-b from-[#1a0505] via-[#2a0808] to-[#120303] border border-red-500/40 rounded-2xl p-8 text-white shadow-2xl text-left relative overflow-hidden">
+          <div className="flex flex-col items-center text-center mb-6">
+            <div className="w-16 h-16 rounded-2xl bg-red-500/20 border border-red-500/40 flex items-center justify-center mb-4 text-red-500 animate-pulse shadow-lg">
+              <ShieldX className="w-8 h-8" />
+            </div>
+            <span className="px-3 py-1 bg-red-500/20 text-red-400 rounded-full text-[10px] font-mono font-extrabold tracking-widest uppercase border border-red-500/30">
+              EMERGENCY SECURITY SHIELD ACTIVE
+            </span>
+            <h2 className="text-2xl font-extrabold text-white mt-3 tracking-tight font-outfit">
+              Admin Panel Suspended
+            </h2>
+            <p className="text-xs text-red-200/80 mt-2 font-light leading-relaxed max-w-xs">
+              Access to administrative controls is currently locked down to protect system integrity.
+            </p>
+          </div>
+
+          {securityStatus.reason && (
+            <div className="p-3 bg-red-950/60 border border-red-500/30 rounded-lg text-xs font-mono text-red-300 mb-6">
+              <span className="text-[10px] text-red-400 uppercase font-bold block mb-0.5">Lockdown Context:</span>
+              <p>{securityStatus.reason}</p>
+              {securityStatus.lockedAt && (
+                <span className="text-[9px] text-red-400/70 block mt-1">
+                  Activated: {new Date(securityStatus.lockedAt).toLocaleString('en-IN')}
+                </span>
+              )}
+            </div>
+          )}
+
+          {unlockError && (
+            <div className="p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-xs font-mono text-red-200 mb-4 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
+              <span>{unlockError}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleUnlockSystem} className="space-y-4">
+            <div>
+              <label className="text-xs font-semibold text-red-200 block mb-1.5 font-mono uppercase tracking-wider">
+                Enter Master Emergency Key
+              </label>
+              <div className="relative">
+                <Key className="w-4 h-4 text-red-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="password"
+                  value={masterKeyInput}
+                  onChange={e => setMasterKeyInput(e.target.value)}
+                  placeholder="Master Unlock Key"
+                  disabled={isUnlocking}
+                  className="w-full pl-10 pr-4 py-3 rounded-lg bg-black/50 border border-red-500/40 text-white font-mono text-sm tracking-wider focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 placeholder:text-red-400/50"
+                  autoFocus
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={!masterKeyInput.trim() || isUnlocking}
+              className="w-full py-3 rounded-lg bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-red-600/30 cursor-pointer"
+            >
+              {isUnlocking ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Verifying Master Key…
+                </>
+              ) : (
+                <>
+                  <Unlock className="w-4 h-4" />
+                  Unblock Admin Panel
+                </>
+              )}
+            </button>
+          </form>
+
+          <button
+            type="button"
+            onClick={onExit}
+            className="w-full mt-4 text-xs font-mono text-slate-400 hover:text-white transition-colors text-center block cursor-pointer"
+          >
+            ← Return to Storefront
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (isAuthenticated) {
     return (

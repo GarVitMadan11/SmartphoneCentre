@@ -8,7 +8,7 @@ import {
   Layers, Check, X,
   MessageSquare, HardDrive, ChevronDown,
   AlertCircle, Cpu, Grid, Smartphone, Tablet, Watch,
-  Shuffle, ArrowUp, ArrowDown, RotateCcw, GripVertical, BookmarkCheck
+  Shuffle, ArrowUp, ArrowDown, RotateCcw, GripVertical, BookmarkCheck, ShieldAlert
 } from 'lucide-react';
 import { 
   saveBrandOrder, resetBrandOrder, saveBrandDefaultOrder,
@@ -18,7 +18,7 @@ import {
   shuffleArray
 } from '../../utils/ordering';
 import { motion, AnimatePresence } from 'framer-motion';
-import { updateBooking, fetchBookings, fetchModels, createModel, updateModel, deleteModel } from '../../utils/api';
+import { updateBooking, fetchBookings, fetchModels, createModel, updateModel, deleteModel, triggerAdminLockdown } from '../../utils/api';
 import { SupportInbox } from './SupportInbox';
 
 const ALL_RAM_OPTIONS: { gb: number; label: string }[] = [
@@ -976,23 +976,45 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           </div>
         </div>
 
-        <div className="flex gap-2 self-stretch sm:self-auto">
+        <div className="flex flex-wrap gap-2 self-stretch sm:self-auto">
           <button
             onClick={loadBookings}
             disabled={loadingBookings}
-            className="flex-1 sm:flex-initial px-4 py-2 border border-cobalt/30 text-cobalt hover:bg-cobalt/10 text-xs font-bold rounded-sm transition-all flex items-center justify-center gap-1.5"
+            className="flex-1 sm:flex-initial px-3.5 py-2 border border-cobalt/30 text-cobalt hover:bg-cobalt/10 text-xs font-bold rounded-sm transition-all flex items-center justify-center gap-1.5"
             style={{ minHeight: '38px' }}
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loadingBookings ? 'animate-spin' : ''}`} />
-            Refresh Bookings
+            Refresh
           </button>
           <button
             onClick={handleResetDemoData}
-            className="flex-1 sm:flex-initial px-4 py-2 border border-red-500/20 text-red-500 hover:bg-red-500/10 text-xs font-bold rounded-sm transition-all flex items-center justify-center gap-1.5"
+            className="flex-1 sm:flex-initial px-3.5 py-2 border border-ice-border text-ink-slate hover:bg-ice-gray text-xs font-bold rounded-sm transition-all flex items-center justify-center gap-1.5"
             style={{ minHeight: '38px' }}
           >
             <RefreshCw className="w-3.5 h-3.5" />
-            Reset Ledger Data
+            Reset Ledger
+          </button>
+          <button
+            onClick={async () => {
+              const confirmLock = window.confirm(
+                '🚨 EMERGENCY LOCKDOWN ACTIVATION\n\nAre you sure you want to trigger an immediate Admin Panel Lockdown?\n\n• All Admin Panel access will be SUSPENDED immediately.\n• Active admin sessions will be terminated.\n• An alert email with the Master Emergency Unlock Key will be dispatched.'
+              );
+              if (!confirmLock) return;
+
+              try {
+                const res = await triggerAdminLockdown('Manual emergency kill switch triggered by admin user.');
+                alert(`🚨 EMERGENCY LOCKDOWN ACTIVATED!\n\nMaster Emergency Unlock Key:\n${res.masterUnlockKey}\n\n(Save this key to unblock access on the lockdown shield page).`);
+                onBack();
+              } catch (err: any) {
+                alert('Failed to trigger lockdown: ' + (err.message || err));
+              }
+            }}
+            className="flex-1 sm:flex-initial px-3.5 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-sm transition-all flex items-center justify-center gap-1.5 shadow-sm"
+            title="Emergency Kill Switch: Suspends all admin access immediately"
+            style={{ minHeight: '38px' }}
+          >
+            <ShieldAlert className="w-4 h-4" />
+            Lock Admin Panel 🚨
           </button>
         </div>
       </div>

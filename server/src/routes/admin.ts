@@ -4,8 +4,58 @@ import jwt from 'jsonwebtoken';
 import { randomBytes } from 'node:crypto';
 import prisma from '../db.js';
 import { adminAuth, getJwtSecret, JWT_ISSUER, JWT_AUDIENCE, parseCookies, AuthenticatedRequest } from '../middleware/adminAuth.js';
+import { getLockdownState, triggerEmergencyLockdown, unlockEmergencyLockdown } from '../services/lockdownService.js';
+import { sendAdminSecurityAlertEmail } from '../services/securityMailer.js';
 
 const router = Router();
+
+/**
+ * GET /api/admin/security-status
+ * Returns public security lockdown status for Admin PIN Gate.
+ */
+router.get('/security-status', (_req: Request, res: Response): void => {
+  res.json(getLockdownState());
+});
+
+/**
+ * POST /api/admin/unlock
+ * Unlocks Admin Panel using Master Emergency Unlock Key.
+ */
+router.post('/unlock', async (req: Request, res: Response): Promise<void> => {
+  const { masterKey } = req.body;
+  const ipAddress = String(req.headers['x-forwarded-for'] || req.ip || 'Unknown');
+  const userAgent = String(req.headers['user-agent'] || 'Unknown');
+
+  const result = await unlockEmergencyLockdown(masterKey, ipAddress, userAgent);
+
+  if (!result.success) {
+    res.status(401).json({ error: 'InvalidKey', message: result.message });
+    return;
+  }
+
+  res.json({ success: true, message: result.message });
+});
+
+/**
+ * POST /api/admin/lockdown
+ * Emergency Kill Switch: Immediately locks down Admin Panel access.
+ */
+router.post('/lockdown', adminAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  const reason = (req.body.reason as string) || 'Manual emergency kill switch triggered from Admin Control Panel.';
+  const ipAddress = String(req.headers['x-forwarded-for'] || req.ip || 'Unknown');
+  const userAgent = String(req.headers['user-agent'] || 'Unknown');
+
+  const result = await triggerEmergencyLockdown(reason, ipAddress, userAgent, req.user?.username);
+
+  res.clearCookie('rex_admin_token', { path: '/' });
+  res.clearCookie('rex_admin_csrf', { path: '/' });
+
+  res.json({
+    success: true,
+    message: 'Emergency Admin Panel Lockdown Activated! Access suspended.',
+    masterUnlockKey: result.masterUnlockKey,
+  });
+});
 
 // Maximum consecutive failed login attempts before account is temporarily locked
 const MAX_FAILED_ATTEMPTS = 5;
@@ -54,7 +104,22 @@ function setAdminCookie(res: Response, token: string): void {
  * - JWT secret fetched at runtime; fatal error if not configured
  */
 router.post('/auth', async (req: Request, res: Response): Promise<void> => {
+  // Check if Admin Panel is locked down
+  const lockdownState = getLockdownState();
+  if (lockdownState.isLockedDown) {
+    res.status(423).json({
+      error: 'SystemLocked',
+      message: 'Admin Panel is currently suspended under Emergency Security Lockdown.',
+      reason: lockdownState.reason,
+      lockedAt: lockdownState.lockedAt,
+    });
+    return;
+  }
+
   const { pin, username, password } = req.body;
+  const ipAddress = String(req.headers['x-forwarded-for'] || req.ip || 'Unknown');
+  const userAgent = String(req.headers['user-agent'] || 'Unknown');
+  const formattedTime = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) + ' IST';
 
   let sub = 'admin';
   let userUsername = 'admin';
@@ -68,6 +133,15 @@ router.post('/auth', async (req: Request, res: Response): Promise<void> => {
     const invalidCredsResponse = { error: 'InvalidCredentials', message: 'Invalid username or password.' };
 
     if (!user || !user.active) {
+      sendAdminSecurityAlertEmail({
+        type: 'LOGIN_FAILED',
+        username: username,
+        ipAddress,
+        userAgent,
+        timestamp: formattedTime,
+        details: 'Attempted login with non-existent or inactive username.',
+      }).catch(err => console.error('Alert email error:', err));
+
       res.status(401).json(invalidCredsResponse);
       return;
     }
@@ -112,6 +186,15 @@ router.post('/auth', async (req: Request, res: Response): Promise<void> => {
         },
       });
 
+      sendAdminSecurityAlertEmail({
+        type: 'LOGIN_FAILED',
+        username: user.username,
+        ipAddress,
+        userAgent,
+        timestamp: formattedTime,
+        details: `Incorrect password. Fail count: ${newFailCount}/${MAX_FAILED_ATTEMPTS}`,
+      }).catch(err => console.error('Alert email error:', err));
+
       res.status(401).json(invalidCredsResponse);
       return;
     }
@@ -128,9 +211,6 @@ router.post('/auth', async (req: Request, res: Response): Promise<void> => {
 
   } else if (typeof pin === 'string' && pin.trim().length > 0) {
     // ── PIN authentication ──────────────────────────────────────────────────
-    // NOTE: PIN auth always uses bcrypt.compare. The plain-text '2024' bypass
-    // has been removed. If ADMIN_PIN_HASH is not configured, PIN auth is
-    // disabled and the admin must use a named user account instead.
     const pinHashToUse = getAdminPinHash();
     if (!pinHashToUse) {
       res.status(400).json({
@@ -148,6 +228,15 @@ router.post('/auth', async (req: Request, res: Response): Promise<void> => {
     }
 
     if (!isValid) {
+      sendAdminSecurityAlertEmail({
+        type: 'LOGIN_FAILED',
+        username: 'PIN_AUTH_USER',
+        ipAddress,
+        userAgent,
+        timestamp: formattedTime,
+        details: 'Incorrect Admin PIN entered.',
+      }).catch(err => console.error('Alert email error:', err));
+
       res.status(401).json({ error: 'InvalidCredentials', message: 'Incorrect PIN.' });
       return;
     }
@@ -159,6 +248,16 @@ router.post('/auth', async (req: Request, res: Response): Promise<void> => {
     res.status(400).json({ error: 'BadRequest', message: 'Provide PIN or username/password.' });
     return;
   }
+
+  // Dispatch login success alert email
+  sendAdminSecurityAlertEmail({
+    type: 'LOGIN_SUCCESS',
+    username: userUsername,
+    ipAddress,
+    userAgent,
+    timestamp: formattedTime,
+    details: `Role: ${role}`,
+  }).catch(err => console.error('Alert email error:', err));
 
   // Issue JWT with explicit issuer, audience, and algorithm
   const token = jwt.sign(
@@ -179,9 +278,6 @@ router.post('/auth', async (req: Request, res: Response): Promise<void> => {
   // Set HttpOnly SameSite cookie
   setAdminCookie(res, token);
 
-  // Return user info and expiry — but NOT the raw token.
-  // The HttpOnly cookie is the secure transport; exposing the token in the
-  // JSON body makes it readable by JavaScript and negates the cookie's purpose.
   res.json({
     expiresAt: expiresAtMs,
     user: { id: sub, username: userUsername, role },
