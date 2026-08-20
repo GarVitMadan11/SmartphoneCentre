@@ -12,7 +12,8 @@
     "db:generate": "npx prisma generate",
     "db:migrate": "npx prisma migrate dev --name init",
     "db:seed": "npx tsx prisma/seed.ts",
-    "db:setup": "npx prisma migrate dev --name init && npx tsx prisma/seed.ts"
+    "db:setup": "npx prisma migrate dev --name init && npx tsx prisma/seed.ts",
+    "test:smtp": "npx tsx scripts/test-smtp.ts"
   },
   "dependencies": {
     "@google/genai": "^2.17.1",

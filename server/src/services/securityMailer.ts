@@ -11,10 +11,10 @@ export interface SecurityEventData {
 }
 
 function getTransporter() {
-  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
-  const port = parseInt(process.env.SMTP_PORT || '587', 10);
-  const user = process.env.SMTP_USER || process.env.EMAIL_USER;
-  const pass = process.env.SMTP_PASS || process.env.EMAIL_PASS;
+  const host = process.env.SECURITY_SMTP_HOST || process.env.SMTP_HOST || 'smtp.gmail.com';
+  const port = parseInt(process.env.SECURITY_SMTP_PORT || process.env.SMTP_PORT || '587', 10);
+  const user = process.env.SECURITY_SMTP_USER || process.env.SECURITY_EMAIL_USER || process.env.SMTP_USER || process.env.EMAIL_USER || process.env.SMTP_USERNAME || process.env.MAIL_USER || process.env.ADMIN_ALERT_EMAIL || 'garvitmadan511@gmail.com';
+  const pass = process.env.SECURITY_SMTP_PASS || process.env.SECURITY_EMAIL_PASS || process.env.SMTP_PASS || process.env.EMAIL_PASS || process.env.SMTP_PASSWORD || process.env.MAIL_PASS || process.env.EMAIL_PASSWORD;
 
   if (!user || !pass) {
     return null;
