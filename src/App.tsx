@@ -23,6 +23,8 @@ import { safeLazy } from './utils/safeLazy';
 // ── Lazy-loaded heavy components (code splitting with chunk auto-retry) ──────
 const DiagnosticWizard   = safeLazy(() => import('./components/client/DiagnosticWizard'), 'DiagnosticWizard');
 const PickupScheduler    = safeLazy(() => import('./components/client/PickupScheduler'), 'PickupScheduler');
+import { SECRET_ADMIN_PATH, DECOY_ADMIN_PATHS } from './constants/routes';
+
 const AdminPanel         = safeLazy(() => import('./components/admin/AdminPanel'), 'AdminPanel');
 const AdminPinGate       = safeLazy(() => import('./components/admin/AdminPinGate'), 'AdminPinGate');
 const SmartphoneMockup   = safeLazy(() => import('./components/client/SmartphoneMockup'), 'SmartphoneMockup');
@@ -312,11 +314,34 @@ export default function App() {
   // ── Navigation state — persisted in localStorage with TTL (non-sensitive) ──
   const savedNav = useRef(loadNavState());
   const [activeStage, setActiveStage] = useState<'select' | 'tablets' | 'smartwatches' | 'diagnose' | 'schedule' | 'admin'>(
-    savedNav.current?.activeStage ?? 'select'
+    (window.location.pathname === SECRET_ADMIN_PATH || window.location.pathname === '/admin')
+      ? 'admin'
+      : (savedNav.current?.activeStage === 'admin' ? 'select' : savedNav.current?.activeStage ?? 'select')
   );
   const [wizardStep, setWizardStep] = useState<number>(savedNav.current?.wizardStep ?? 0);
   const [isTrackOpen, setIsTrackOpen] = useState(false);
   const [path, setPath] = useState(window.location.pathname);
+
+  // Decoy admin route trap: Redirect probes like /admin, /wp-admin to homepage
+  useEffect(() => {
+    const cleanP = path.split('?')[0].toLowerCase();
+    if (DECOY_ADMIN_PATHS.includes(cleanP)) {
+      console.warn(`[Security Alert] Decoy admin path probe blocked: ${path}`);
+      navigate('/');
+    }
+  }, [path]);
+
+  // Secret Hotkey (Ctrl + Shift + A) to open secret admin portal for staff
+  useEffect(() => {
+    const handleAdminHotkey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'a') {
+        e.preventDefault();
+        navigate(SECRET_ADMIN_PATH);
+      }
+    };
+    window.addEventListener('keydown', handleAdminHotkey);
+    return () => window.removeEventListener('keydown', handleAdminHotkey);
+  }, []);
 
   // Customer Session states
   const [currentUser, setCurrentUser] = useState<ApiUser | null>(null);
@@ -418,8 +443,8 @@ export default function App() {
       case '/contact':
         title = "Contact Rephonix";
         break;
-      case '/admin':
-        title = "Admin Console | Rephonix";
+      case SECRET_ADMIN_PATH:
+        title = "Control Center | Rephonix";
         break;
       case '/login':
         title = "Login | Rephonix";
@@ -443,16 +468,16 @@ export default function App() {
     document.title = title;
   }, [path]);
 
-  // If path is admin, automatically set activeStage to admin
+  // Sync activeStage with secret admin path
   useEffect(() => {
     startTransition(() => {
-      if (path === '/admin') {
+      if (path === SECRET_ADMIN_PATH) {
         setActiveStage('admin');
       } else if (activeStage === 'admin') {
         setActiveStage('select');
       }
     });
-  }, [path]);
+  }, [path, activeStage]);
 
   // ── Dynamic data from API (falls back to static data) ─────────────────────
   const [BRANDS, setBrands] = useState<Brand[]>(STATIC_BRANDS);
@@ -1562,7 +1587,7 @@ export default function App() {
             </Suspense>
           )}
 
-          {(path === '/admin' || activeStage === 'admin') && (
+          {path === SECRET_ADMIN_PATH && (
             <Suspense fallback={
               <div className="flex items-center justify-center min-h-[400px]" aria-label="Loading admin panel" role="status">
                 <div className="w-8 h-8 border-2 border-cobalt border-t-transparent rounded-full animate-spin" aria-hidden="true" />
