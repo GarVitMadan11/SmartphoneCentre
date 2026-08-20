@@ -13,7 +13,7 @@ import {
 import { 
   saveBrandOrder, resetBrandOrder,
   saveSeriesOrder, resetSeriesOrder,
-  saveModelOrder, resetModelOrder,
+  saveModelOrder, getSavedModelOrder, resetModelOrder,
   applyBrandOrder, applySeriesOrder, applyModelOrder,
   shuffleArray
 } from '../../utils/ordering';
@@ -121,6 +121,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [orderVersion, setOrderVersion] = useState(0);
   const [orderingSelectedBrandId, setOrderingSelectedBrandId] = useState<string>('brand-apple');
   const [orderingSelectedSeries, setOrderingSelectedSeries] = useState<string>('');
+  const [orderingCategoryFilter, setOrderingCategoryFilter] = useState<'smartphones' | 'tablets' | 'smartwatches' | 'all'>('smartphones');
 
   // Drag and drop states for reordering
   const [draggedBrandIndex, setDraggedBrandIndex] = useState<number | null>(null);
@@ -220,18 +221,26 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   };
 
   const availableSeriesForOrdering = useMemo(() => {
-    const brandModels = models.filter(m => m.brandId === orderingSelectedBrandId);
+    const brandModels = models.filter(m => {
+      if (m.brandId !== orderingSelectedBrandId) return false;
+      const isTab = isTabletDevice(m.brandId, m.name, m.id);
+      const isWatch = isSmartwatchDevice(m.brandId, m.name, m.id);
+      if (orderingCategoryFilter === 'smartphones') return !isTab && !isWatch;
+      if (orderingCategoryFilter === 'tablets') return isTab;
+      if (orderingCategoryFilter === 'smartwatches') return isWatch;
+      return true;
+    });
     const seriesSet = new Set<string>();
     brandModels.forEach(m => {
       if (m.series) seriesSet.add(m.series);
     });
     const defaultList = Array.from(seriesSet);
     return applySeriesOrder(orderingSelectedBrandId, defaultList);
-  }, [models, orderingSelectedBrandId, orderVersion]);
+  }, [models, orderingSelectedBrandId, orderingCategoryFilter, orderVersion]);
 
   useEffect(() => {
     if (availableSeriesForOrdering.length > 0 && !availableSeriesForOrdering.includes(orderingSelectedSeries)) {
-      setOrderingSelectedSeries(availableSeriesForOrdering[0]);
+      setOrderingSelectedSeries('');
     }
   }, [availableSeriesForOrdering]);
 
@@ -246,6 +255,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   };
 
   const handleShuffleSeries = () => {
+    if (availableSeriesForOrdering.length <= 1) {
+      setFormSuccess(`Not enough series to shuffle for ${orderingSelectedBrandId}!`);
+      return;
+    }
     const shuffled = shuffleArray(availableSeriesForOrdering);
     saveSeriesOrder(orderingSelectedBrandId, shuffled);
     setOrderVersion(v => v + 1);
@@ -259,25 +272,66 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   };
 
   const availableModelsForOrdering = useMemo(() => {
-    const filtered = models.filter(m => m.brandId === orderingSelectedBrandId && (!orderingSelectedSeries || m.series === orderingSelectedSeries));
+    const filtered = models.filter(m => {
+      if (m.brandId !== orderingSelectedBrandId) return false;
+      if (orderingSelectedSeries && m.series !== orderingSelectedSeries) return false;
+      const isTab = isTabletDevice(m.brandId, m.name, m.id);
+      const isWatch = isSmartwatchDevice(m.brandId, m.name, m.id);
+      if (orderingCategoryFilter === 'smartphones') return !isTab && !isWatch;
+      if (orderingCategoryFilter === 'tablets') return isTab;
+      if (orderingCategoryFilter === 'smartwatches') return isWatch;
+      return true;
+    });
+
     return applyModelOrder(orderingSelectedBrandId, filtered);
-  }, [models, orderingSelectedBrandId, orderingSelectedSeries, orderVersion]);
+  }, [models, orderingSelectedBrandId, orderingSelectedSeries, orderingCategoryFilter, orderVersion]);
+
+  const updateModelOrderPreservingOtherCategories = (newCategoryModels: Model[]) => {
+    const categoryIds = newCategoryModels.map(m => m.id);
+    const allBrandModels = models.filter(m => m.brandId === orderingSelectedBrandId);
+    const existingOrderIds = getSavedModelOrder(orderingSelectedBrandId);
+
+    const baseOrderedIds = existingOrderIds.length > 0
+      ? existingOrderIds.filter((id: string) => allBrandModels.some(m => m.id === id))
+      : allBrandModels.map(m => m.id);
+
+    allBrandModels.forEach(m => {
+      if (!baseOrderedIds.includes(m.id)) baseOrderedIds.push(m.id);
+    });
+
+    let catIdx = 0;
+    const finalOrderIds = baseOrderedIds.map((id: string) => {
+      const isTarget = newCategoryModels.some(m => m.id === id);
+      if (isTarget && catIdx < categoryIds.length) {
+        const nextId = categoryIds[catIdx];
+        catIdx++;
+        return nextId;
+      }
+      return id;
+    });
+
+    saveModelOrder(orderingSelectedBrandId, finalOrderIds);
+    setOrderVersion(v => v + 1);
+  };
 
   const handleMoveModel = (index: number, direction: 'up' | 'down') => {
     const newModels = [...availableModelsForOrdering];
     const targetIdx = direction === 'up' ? index - 1 : index + 1;
     if (targetIdx < 0 || targetIdx >= newModels.length) return;
     [newModels[index], newModels[targetIdx]] = [newModels[targetIdx], newModels[index]];
-    saveModelOrder(orderingSelectedBrandId, newModels.map(m => m.id));
-    setOrderVersion(v => v + 1);
+    updateModelOrderPreservingOtherCategories(newModels);
     setFormSuccess(`Updated model order: ${newModels[targetIdx].name} swapped with ${newModels[index].name}`);
   };
 
   const handleShuffleModels = () => {
+    if (availableModelsForOrdering.length <= 1) {
+      setFormSuccess(`Not enough models to shuffle for ${orderingSelectedBrandId}!`);
+      return;
+    }
     const shuffled = shuffleArray(availableModelsForOrdering);
-    saveModelOrder(orderingSelectedBrandId, shuffled.map(m => m.id));
-    setOrderVersion(v => v + 1);
-    setFormSuccess(`Shuffled models order for ${orderingSelectedBrandId} / ${orderingSelectedSeries || 'All Series'}! 🎲`);
+    updateModelOrderPreservingOtherCategories(shuffled);
+    const catLabel = orderingCategoryFilter === 'smartphones' ? 'smartphones' : orderingCategoryFilter === 'tablets' ? 'tablets' : orderingCategoryFilter === 'smartwatches' ? 'smartwatches' : 'models';
+    setFormSuccess(`Shuffled ${catLabel} order for ${orderingSelectedBrandId} / ${orderingSelectedSeries || 'All Series'}! 🎲`);
   };
 
   const handleResetModels = () => {
@@ -370,8 +424,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     const newModels = [...availableModelsForOrdering];
     const [draggedItem] = newModels.splice(draggedModelIndex, 1);
     newModels.splice(dropIndex, 0, draggedItem);
-    saveModelOrder(orderingSelectedBrandId, newModels.map(m => m.id));
-    setOrderVersion(v => v + 1);
+    updateModelOrderPreservingOtherCategories(newModels);
     setDraggedModelIndex(null);
     setDragOverModelIndex(null);
     setFormSuccess(`Reordered model: "${draggedItem.name}" placed at position #${dropIndex + 1}`);
@@ -1547,6 +1600,66 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 </div>
               </div>
 
+              {/* Device Category Scope Selector */}
+              <div className="flex flex-wrap items-center justify-between gap-3 bg-canvas-pure border border-ice-border p-3.5 rounded-sm shadow-sm">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-500">Target Category Scope:</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => { setOrderingCategoryFilter('smartphones'); setOrderingSelectedSeries(''); }}
+                      className={`px-3 py-1.5 rounded-sm border text-xs font-bold font-mono transition-all flex items-center gap-1.5 ${
+                        orderingCategoryFilter === 'smartphones'
+                          ? 'bg-cobalt border-cobalt text-white shadow-xs'
+                          : 'bg-canvas-white border-ice-border text-ink-slate hover:border-cobalt/50 hover:text-cobalt'
+                      }`}
+                    >
+                      <Smartphone className="w-3.5 h-3.5" />
+                      Smartphones 📱
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setOrderingCategoryFilter('tablets'); setOrderingSelectedSeries(''); }}
+                      className={`px-3 py-1.5 rounded-sm border text-xs font-bold font-mono transition-all flex items-center gap-1.5 ${
+                        orderingCategoryFilter === 'tablets'
+                          ? 'bg-cobalt border-cobalt text-white shadow-xs'
+                          : 'bg-canvas-white border-ice-border text-ink-slate hover:border-cobalt/50 hover:text-cobalt'
+                      }`}
+                    >
+                      <Tablet className="w-3.5 h-3.5" />
+                      Tablets 📱💻
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setOrderingCategoryFilter('smartwatches'); setOrderingSelectedSeries(''); }}
+                      className={`px-3 py-1.5 rounded-sm border text-xs font-bold font-mono transition-all flex items-center gap-1.5 ${
+                        orderingCategoryFilter === 'smartwatches'
+                          ? 'bg-cobalt border-cobalt text-white shadow-xs'
+                          : 'bg-canvas-white border-ice-border text-ink-slate hover:border-cobalt/50 hover:text-cobalt'
+                      }`}
+                    >
+                      <Watch className="w-3.5 h-3.5" />
+                      Smartwatches ⌚
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setOrderingCategoryFilter('all'); setOrderingSelectedSeries(''); }}
+                      className={`px-3 py-1.5 rounded-sm border text-xs font-bold font-mono transition-all flex items-center gap-1.5 ${
+                        orderingCategoryFilter === 'all'
+                          ? 'bg-cobalt border-cobalt text-white shadow-xs'
+                          : 'bg-canvas-white border-ice-border text-ink-slate hover:border-cobalt/50 hover:text-cobalt'
+                      }`}
+                    >
+                      <Layers className="w-3.5 h-3.5" />
+                      All Devices 🌐
+                    </button>
+                  </div>
+                </div>
+                <span className="text-[11px] font-mono text-zinc-500">
+                  Category Mode: <strong className="text-cobalt font-bold capitalize">{orderingCategoryFilter}</strong>
+                </span>
+              </div>
+
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
                 
                 {/* 1. Brands Ordering Card */}
@@ -1554,7 +1667,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   <div className="flex items-center justify-between border-b border-ice-border pb-3">
                     <div className="flex items-center gap-2">
                       <Smartphone className="w-4 h-4 text-cobalt" />
-                      <h4 className="font-outfit text-sm font-bold text-ink-navy uppercase">1. Smartphone Brands Order</h4>
+                      <h4 className="font-outfit text-sm font-bold text-ink-navy uppercase">1. Brand Display Order</h4>
                     </div>
                     <span className="text-[10px] font-mono font-bold bg-cobalt/10 text-cobalt px-2 py-0.5 rounded">
                       {currentOrderedBrands.length} Brands
@@ -1636,7 +1749,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   <div className="flex items-center justify-between border-b border-ice-border pb-3">
                     <div className="flex items-center gap-2">
                       <Layers className="w-4 h-4 text-cobalt" />
-                      <h4 className="font-outfit text-sm font-bold text-ink-navy uppercase">2. Series Order</h4>
+                      <h4 className="font-outfit text-sm font-bold text-ink-navy uppercase">2. Series Order ({orderingCategoryFilter})</h4>
                     </div>
                     <span className="text-[10px] font-mono font-bold bg-cobalt/10 text-cobalt px-2 py-0.5 rounded">
                       {availableSeriesForOrdering.length} Series
@@ -1681,7 +1794,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   {/* Series List with Dragger & Up/Down buttons */}
                   <div className="space-y-2 max-h-[440px] overflow-y-auto pr-1">
                     {availableSeriesForOrdering.length === 0 ? (
-                      <div className="py-6 text-center text-xs font-mono text-zinc-400">No series found for this brand.</div>
+                      <div className="py-6 text-center text-xs font-mono text-zinc-400">No series found for this brand &amp; category.</div>
                     ) : (
                       availableSeriesForOrdering.map((seriesName, idx) => (
                         <div
@@ -1736,7 +1849,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   <div className="flex items-center justify-between border-b border-ice-border pb-3">
                     <div className="flex items-center gap-2">
                       <Smartphone className="w-4 h-4 text-cobalt" />
-                      <h4 className="font-outfit text-sm font-bold text-ink-navy uppercase">3. Models Order</h4>
+                      <h4 className="font-outfit text-sm font-bold text-ink-navy uppercase">3. Models Order ({orderingCategoryFilter})</h4>
                     </div>
                     <span className="text-[10px] font-mono font-bold bg-cobalt/10 text-cobalt px-2 py-0.5 rounded">
                       {availableModelsForOrdering.length} Models

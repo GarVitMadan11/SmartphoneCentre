@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { TABLET_MODELS, Model, Variant, getModelSupportedRam, getModelSupportedStorage, getVariantPrice, sortModelsByLaunchDesc } from '../../data/mockDatabase';
+import { applyModelOrder } from '../../utils/ordering';
 import { Tablet, Sparkles, ArrowRight, Search, X, Cpu, HardDrive, CheckCircle2, Wifi, Radio } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -43,7 +44,9 @@ export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
       return matchesBrand && matchesSearch;
     });
 
-    return sortModelsByLaunchDesc(list);
+    const sorted = sortModelsByLaunchDesc(list);
+    const targetBrand = selectedBrand === 'apple' ? 'brand-apple' : selectedBrand === 'samsung' ? 'brand-samsung' : 'brand-apple';
+    return applyModelOrder(targetBrand, sorted);
   }, [selectedBrand, searchQuery]);
 
   const ramOptions = useMemo(() => {

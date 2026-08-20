@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { SMARTWATCH_MODELS, Model, Variant, getVariantPrice, sortModelsByLaunchDesc } from '../../data/mockDatabase';
+import { applyModelOrder } from '../../utils/ordering';
 import { Watch, Sparkles, ArrowRight, Search, X, HardDrive, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -41,7 +42,9 @@ export const SmartwatchesShowcase: React.FC<SmartwatchesShowcaseProps> = ({
       return matchesBrand && matchesSearch;
     });
 
-    return sortModelsByLaunchDesc(list);
+    const sorted = sortModelsByLaunchDesc(list);
+    const targetBrand = selectedBrand === 'apple' ? 'brand-apple' : selectedBrand === 'samsung' ? 'brand-samsung' : 'brand-apple';
+    return applyModelOrder(targetBrand, sorted);
   }, [selectedBrand, searchQuery]);
 
   const storageOptions = useMemo(() => {
