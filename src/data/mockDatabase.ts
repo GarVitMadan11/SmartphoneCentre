@@ -923,9 +923,15 @@ const BASE_MODELS: Model[] = [
 
   // --- NOTHING ---
   { id: 'catalog-nothing-phone-1', brandId: 'brand-nothing', name: 'Nothing Phone 1', category: 'midrange', releaseYear: 2022, basePrice128GB: 12000, series: 'Phone Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/nothing-phone-1.jpg' },
-  { id: 'catalog-nothing-phone-2', brandId: 'brand-nothing', name: 'Nothing Phone 2', category: 'premium', releaseYear: 2023, basePrice128GB: 18000, series: 'Phone Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/nothing-phone-1.jpg' },
+  { id: 'catalog-nothing-phone-2', brandId: 'brand-nothing', name: 'Nothing Phone 2', category: 'premium',  releaseYear: 2023, basePrice128GB: 18000, series: 'Phone Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/nothing-phone-2.jpg' },
   { id: 'catalog-nothing-phone-2a', brandId: 'brand-nothing', name: 'Nothing Phone 2a', category: 'budget', releaseYear: 2024, basePrice128GB: 11000, series: 'Phone Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/nothing-phone-2a.jpg' },
-  { id: 'catalog-nothing-cmf-phone-1', brandId: 'brand-nothing', name: 'CMF Phone 1', category: 'budget', releaseYear: 2024, basePrice128GB: 8500, series: 'Phone Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/nothing-phone-2a.jpg' },
+  { id: 'catalog-nothing-cmf-phone-1', brandId: 'brand-nothing', name: 'CMF Phone 1', category: 'budget',  releaseYear: 2024, basePrice128GB: 8500,  series: 'Phone Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/cmf-phone-1.jpg' },
+  { id: 'catalog-nothing-cmf-phone-2-pro', brandId: 'brand-nothing', name: 'CMF Phone 2 Pro', category: 'midrange', releaseYear: 2025, basePrice128GB: 11000, series: 'Phone Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/cmf-phone-2-pro.jpg' },
+  { id: 'catalog-nothing-phone-3', brandId: 'brand-nothing', name: 'Nothing Phone (3)', category: 'flagship', releaseYear: 2025, basePrice128GB: 32000, series: 'Phone Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/nothing-phone-3.jpg' },
+  { id: 'catalog-nothing-phone-3a', brandId: 'brand-nothing', name: 'Nothing Phone (3a)', category: 'midrange', releaseYear: 2025, basePrice128GB: 13000, series: 'Phone Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/nothing-phone-3a.jpg' },
+  { id: 'catalog-nothing-phone-3a-pro', brandId: 'brand-nothing', name: 'Nothing Phone (3a) Pro', category: 'premium', releaseYear: 2025, basePrice128GB: 17000, series: 'Phone Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/nothing-phone-3a-pro.jpg' },
+  { id: 'catalog-nothing-phone-4a', brandId: 'brand-nothing', name: 'Nothing Phone (4a)', category: 'midrange', releaseYear: 2026, basePrice128GB: 14000, series: 'Phone Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/nothing-phone-4a.jpg' },
+  { id: 'catalog-nothing-phone-4a-pro', brandId: 'brand-nothing', name: 'Nothing Phone (4a) Pro', category: 'premium', releaseYear: 2026, basePrice128GB: 18000, series: 'Phone Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/nothing-phone-4a-pro.jpg' },
 
   // --- MOTOROLA ---
   { id: 'catalog-motorola-g04', brandId: 'brand-motorola', name: 'Motorola G04', category: 'budget', releaseYear: 2024, basePrice128GB: 5000, series: 'G Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/motorola-g04.jpg' },
