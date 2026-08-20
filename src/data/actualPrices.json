@@ -1698,5 +1698,31 @@
     "ourPrices": {
       "16_512": 78898
     }
+  },
+  "apple-17e": {
+    "modelName": "iPhone 17e",
+    "cashifyPrices": {},
+    "ourPrices": {
+      "0_256": 44290,
+      "0_512": 53766
+    }
+  },
+  "apple-13mini": {
+    "modelName": "iPhone 13 mini",
+    "cashifyPrices": {},
+    "ourPrices": {
+      "0_128": 21990,
+      "0_256": 22526,
+      "0_512": 23113
+    }
+  },
+  "apple-12mini": {
+    "modelName": "iPhone 12 mini",
+    "cashifyPrices": {},
+    "ourPrices": {
+      "0_64": 14729,
+      "0_128": 16696,
+      "0_256": 17119
+    }
   }
 }
