@@ -14,16 +14,51 @@ const AUTH_TAG_LENGTH = 16;  // 128-bit authentication tag
  * Generate a suitable key with:
  *   node -e "require('crypto').randomBytes(32).toString('hex')"
  */
-function getEncryptionKey(): Buffer {
-  const keyHex = (process.env.PAYOUT_ENCRYPTION_KEY ?? '').trim();
-  if (keyHex) {
-    const keyBuf = Buffer.from(keyHex, 'hex');
-    if (keyBuf.length === 32) {
-      return keyBuf;
-    }
+/**
+ * Helper to derive a 32-byte key from any string or hex.
+ */
+function deriveKeyFromSecret(secretStr: string): Buffer {
+  const trimmed = secretStr.trim();
+  if (/^[0-9a-fA-F]{64}$/.test(trimmed)) {
+    return Buffer.from(trimmed, 'hex');
   }
-  const fallbackSecret = process.env.JWT_SECRET || 'smartphone-centre-payout-key-fallback';
-  return crypto.createHash('sha256').update(keyHex || fallbackSecret).digest();
+  return crypto.createHash('sha256').update(trimmed).digest();
+}
+
+/**
+ * Returns the primary AES-256-GCM encryption key from the environment.
+ */
+function getEncryptionKey(): Buffer {
+  const envKey = (process.env.PAYOUT_ENCRYPTION_KEY || '').trim();
+  if (envKey) {
+    return deriveKeyFromSecret(envKey);
+  }
+  const fallbackSecret = (process.env.JWT_SECRET || 'smartphone-centre-payout-key-fallback').trim();
+  return deriveKeyFromSecret(fallbackSecret);
+}
+
+/**
+ * Returns candidate keys to attempt decryption when environment keys rotate or differ.
+ */
+function getCandidateDecryptionKeys(): Buffer[] {
+  const keys: Buffer[] = [];
+  const primary = getEncryptionKey();
+  keys.push(primary);
+
+  if (process.env.PAYOUT_ENCRYPTION_KEY) {
+    const rawKey = deriveKeyFromSecret(process.env.PAYOUT_ENCRYPTION_KEY);
+    if (!keys.some(k => k.equals(rawKey))) keys.push(rawKey);
+  }
+
+  if (process.env.JWT_SECRET) {
+    const jwtKey = deriveKeyFromSecret(process.env.JWT_SECRET);
+    if (!keys.some(k => k.equals(jwtKey))) keys.push(jwtKey);
+  }
+
+  const defaultKey = deriveKeyFromSecret('smartphone-centre-payout-key-fallback');
+  if (!keys.some(k => k.equals(defaultKey))) keys.push(defaultKey);
+
+  return keys;
 }
 
 export interface EncryptedPayload {
@@ -55,15 +90,23 @@ export function encryptField(plainText: string): EncryptedPayload {
  * Decrypts an AES-256-GCM encrypted payload back to plaintext string.
  */
 export function decryptField(payload: EncryptedPayload): string {
-  const key = getEncryptionKey();
+  const candidateKeys = getCandidateDecryptionKeys();
   const iv = Buffer.from(payload.iv, 'base64');
   const authTag = Buffer.from(payload.authTag, 'base64');
-  const decipher = crypto.createDecipheriv(ALGORITHM, key, iv, { authTagLength: AUTH_TAG_LENGTH });
-  decipher.setAuthTag(authTag);
 
-  let decrypted = decipher.update(payload.ciphertext, 'base64', 'utf8');
-  decrypted += decipher.final('utf8');
-  return decrypted;
+  for (const key of candidateKeys) {
+    try {
+      const decipher = crypto.createDecipheriv(ALGORITHM, key, iv, { authTagLength: AUTH_TAG_LENGTH });
+      decipher.setAuthTag(authTag);
+      let decrypted = decipher.update(payload.ciphertext, 'base64', 'utf8');
+      decrypted += decipher.final('utf8');
+      return decrypted;
+    } catch {
+      // Try next key
+    }
+  }
+
+  throw new Error('Unsupported state or unable to authenticate data with candidate keys');
 }
 
 /**
@@ -82,17 +125,22 @@ export function decryptPayoutDetails(detailsJson: string): Record<string, unknow
   if (!detailsJson || detailsJson === '{}') return {};
   try {
     const parsed = JSON.parse(detailsJson);
-    if (parsed && typeof parsed === 'object' && parsed.__enc === true) {
-      const decryptedStr = decryptField({
-        iv: parsed.iv,
-        ciphertext: parsed.ciphertext,
-        authTag: parsed.authTag,
-      });
-      return JSON.parse(decryptedStr);
+    if (parsed && typeof parsed === 'object' && parsed.__enc === true && parsed.iv && parsed.ciphertext && parsed.authTag) {
+      try {
+        const decryptedStr = decryptField({
+          iv: parsed.iv,
+          ciphertext: parsed.ciphertext,
+          authTag: parsed.authTag,
+        });
+        return JSON.parse(decryptedStr);
+      } catch (err) {
+        console.warn('Payout details decryption failed across candidate keys. Returning empty details.');
+        return {};
+      }
     }
-    return parsed;
+    return typeof parsed === 'object' && parsed !== null ? parsed : {};
   } catch (err) {
-    console.error('Failed to decrypt payout details:', err);
+    console.error('Failed to parse payout details JSON:', err);
     return {};
   }
 }
