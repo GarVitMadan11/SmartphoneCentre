@@ -9,7 +9,6 @@ import confetti from 'canvas-confetti';
 import emailjs from '@emailjs/browser';
 import { Model, Variant, DefectRule, Booking } from '../../data/mockDatabase';
 import { createBooking, ApiUser } from '../../utils/api';
-import { PhoneBackPreview } from './DeviceSelector';
 
 
 interface PickupSchedulerProps {
@@ -1398,7 +1397,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
 
             {/* Receipt Details with declared defects summary & Side-by-side Phone Preview */}
             <div className="w-full grid grid-cols-1 md:grid-cols-12 gap-6 items-start my-6">
-              <div className="md:col-span-8 bg-zinc-950/40 border border-dashed border-white/[0.12] rounded-sm p-5 text-xs space-y-2.5 font-mono text-left shadow-inner">
+              <div className="md:col-span-12 bg-zinc-950/40 border border-dashed border-white/[0.12] rounded-sm p-5 text-xs space-y-2.5 font-mono text-left shadow-inner">
                 <div className="flex justify-between font-bold border-b border-white/[0.06] pb-2 mb-2 text-ink-navy">
                   <span>Confirmation ID</span>
                   <span className="text-cobalt">#{confirmationId}</span>
@@ -1464,17 +1463,6 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                   <span>Final Locked Payout</span>
                   <span className="text-cobalt font-light tracking-tight text-base font-outfit">{formatPrice(totalPayoutVal)}</span>
                 </div>
-              </div>
-
-              <div className="md:col-span-4 flex flex-col items-center bg-white dark:bg-zinc-950 p-4 rounded-sm border border-ice-border shadow-sm">
-                <span className="text-xs font-mono font-bold tracking-wider text-ink-slate uppercase mb-3 block text-center">Confirmed Color</span>
-                <PhoneBackPreview 
-                  brandId={selectedModel.brandId} 
-                  modelName={selectedModel.name} 
-                  colorName={selectedVariant.color} 
-                  modelId={selectedModel.id}
-                  customImageUrl={selectedModel.imageUrl}
-                />
               </div>
             </div>
 
