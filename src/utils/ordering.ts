@@ -155,22 +155,64 @@ export function applyBrandOrder(brandsList: Brand[]): Brand[] {
   });
 }
 
+export function getSeriesHierarchyWeight(seriesName: string): number {
+  const name = seriesName.toLowerCase();
+  
+  // Extract generation / series number if present (e.g. "iPhone 17 Series" -> 17, "Pixel 9 Series" -> 9)
+  const matchNum = name.match(/(\d+)/);
+  const numBonus = matchNum ? parseInt(matchNum[1], 10) * 10 : 0;
+
+  let baseWeight = 70;
+
+  if (name.includes('ultra') || name.includes('fold') || name.includes('flip') || name.includes('find x') || name.includes('xiaomi series') || name.includes('razr')) {
+    baseWeight = 100;
+  } else if (name.includes('pro') || name.includes('s series') || name.includes('x series') || name.includes('numbered series')) {
+    baseWeight = 95;
+  } else if (name.includes('reno') || name.includes('v series') || name.includes('nord') || name.includes('redmi note') || name.includes('poco f') || name.includes('edge')) {
+    baseWeight = 85;
+  } else if (name.includes('a series') || name.includes('poco x') || name.includes('g series') || name.includes('t series')) {
+    baseWeight = 75;
+  } else if (name.includes('y series') || name.includes('f series') || name.includes('m series') || name.includes('poco m') || name.includes('redmi series') || name.includes('se series')) {
+    baseWeight = 60;
+  } else if (name.includes('poco c')) {
+    baseWeight = 40;
+  }
+
+  return baseWeight * 100 + numBonus;
+}
+
+export function sortSeriesByHierarchy(brandId: string, seriesList: string[]): string[] {
+  const defaultList = DEFAULT_SERIES_ORDER[brandId];
+  return [...seriesList].sort((a, b) => {
+    if (defaultList) {
+      const idxA = defaultList.indexOf(a);
+      const idxB = defaultList.indexOf(b);
+      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+      if (idxA !== -1) return -1;
+      if (idxB !== -1) return 1;
+    }
+    const weightA = getSeriesHierarchyWeight(a);
+    const weightB = getSeriesHierarchyWeight(b);
+    if (weightB !== weightA) return weightB - weightA;
+    return a.localeCompare(b);
+  });
+}
+
 // Utility to apply series order to an array of series strings
 export function applySeriesOrder(brandId: string, seriesList: string[]): string[] {
   const customOrder = getSavedSeriesOrder(brandId);
-  const defaultOrder = DEFAULT_SERIES_ORDER[brandId] || [];
-  const activeOrder = customOrder && customOrder.length > 0 ? customOrder : defaultOrder;
+  if (customOrder && customOrder.length > 0) {
+    return [...seriesList].sort((a, b) => {
+      const idxA = customOrder.indexOf(a);
+      const idxB = customOrder.indexOf(b);
+      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+      if (idxA !== -1) return -1;
+      if (idxB !== -1) return 1;
+      return 0;
+    });
+  }
 
-  if (activeOrder.length === 0) return seriesList;
-
-  return [...seriesList].sort((a, b) => {
-    const idxA = activeOrder.indexOf(a);
-    const idxB = activeOrder.indexOf(b);
-    if (idxA !== -1 && idxB !== -1) return idxA - idxB;
-    if (idxA !== -1) return -1;
-    if (idxB !== -1) return 1;
-    return 0;
-  });
+  return sortSeriesByHierarchy(brandId, seriesList);
 }
 
 // Utility to apply model order to an array of Model objects
