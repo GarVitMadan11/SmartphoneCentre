@@ -1276,17 +1276,17 @@ export function getVariantPrice(model: Model, ramGb: number, storageGb: number):
 export function getPhoneImageForBrand(brandId: string): string {
   switch (brandId) {
     case 'brand-apple':
-      return applePhoneImg;
+      return 'https://m.media-amazon.com/images/I/71MXmswILHL.jpg';
     case 'brand-samsung':
-      return samsungPhoneImg;
+      return 'https://images.samsung.com/is/image/samsung/p6pim/in/sm-s928bzkginu/gallery/in-galaxy-s24-s928-sm-s928bzkginu-539573030?$650_519_PNG$';
     case 'brand-oneplus':
-      return oneplusPhoneImg;
+      return 'https://fdn2.gsmarena.com/vv/bigpic/oneplus-12.jpg';
     case 'brand-google':
-      return googlePhoneImg;
+      return 'https://fdn2.gsmarena.com/vv/bigpic/google-pixel-8-pro.jpg';
     case 'brand-xiaomi':
-      return xiaomiPhoneImg;
+      return 'https://fdn2.gsmarena.com/vv/bigpic/xiaomi-14-civi.jpg';
     case 'brand-vivo':
-      return vivoPhoneImg;
+      return 'https://fdn2.gsmarena.com/vv/bigpic/vivo-x100-pro.jpg';
     case 'brand-oppo':
       return 'https://fdn.gsmarena.com/imgroot/news/24/10/oppo-find-x8-official/-1200/gsmarena_001.jpg';
     case 'brand-nothing':
@@ -1349,7 +1349,16 @@ function getRedirectedModelId(modelId: string): string {
   return modelId;
 }
 
-export function getDeviceImage(modelId: string, brandId: string, color?: string, customImageUrl?: string): string {
+export function getDeviceImage(
+  modelOrId: string | Model,
+  brandId?: string,
+  color?: string,
+  customImageUrl?: string
+): string {
+  const modelId = typeof modelOrId === 'string' ? modelOrId : modelOrId?.id || '';
+  const bId = brandId || (typeof modelOrId === 'object' ? modelOrId?.brandId : '') || '';
+  const cUrl = customImageUrl || (typeof modelOrId === 'object' ? modelOrId?.imageUrl : undefined);
+
   const redirectedModelId = getRedirectedModelId(modelId);
 
   if (color) {
@@ -1363,11 +1372,11 @@ export function getDeviceImage(modelId: string, brandId: string, color?: string,
     }
   }
 
-  if (customImageUrl && customImageUrl.trim().length > 0) {
-    return customImageUrl.trim();
+  if (cUrl && cUrl.trim().length > 0) {
+    return cUrl.trim();
   }
   const cleanId = redirectedModelId.replace(/^catalog-/, '');
-  const brandSlug = brandId.replace(/^brand-/, '');
+  const brandSlug = bId.replace(/^brand-/, '');
   const deDuplicatedId = cleanId.replace(new RegExp(`^${brandSlug}-${brandSlug}-`), `${brandSlug}-`);
   const possibleKeys = [
     redirectedModelId,
@@ -1396,7 +1405,7 @@ export function getDeviceImage(modelId: string, brandId: string, color?: string,
     }
   }
 
-  return getPhoneImageForBrand(brandId);
+  return getPhoneImageForBrand(bId || 'brand-apple');
 }
 
 export interface Booking {
