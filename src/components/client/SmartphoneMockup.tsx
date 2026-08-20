@@ -219,7 +219,7 @@ export const SmartphoneMockup: React.FC<SmartphoneMockupProps> = ({ onSelect }) 
               <div>
                 <p className="text-[8px] text-ink-muted font-mono tracking-widest uppercase">Rephonix</p>
                 <h3 className="text-xs sm:text-sm font-bold mt-0.5 leading-tight text-ink-navy">
-                  Get up to<br />
+                  Current Value<br />
                   <span className={`text-xl sm:text-2xl font-black ${previewData.accentClass} transition-colors duration-300 block mt-0.5`}>
                     {previewData.maxPrice}
                   </span>
