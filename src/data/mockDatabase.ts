@@ -1763,54 +1763,7 @@ export function getPhoneImageForBrand(brandId: string): string {
   }
 }
 
-function getRedirectedModelId(modelId: string): string {
-  const cleanId = modelId.replace(/^catalog-/, '');
-  
-  if (!cleanId.startsWith('apple-')) {
-    return modelId;
-  }
-  
-  // Extract number or suffix
-  const match = cleanId.match(/^apple-(\d+)(.*)$/);
-  let isLowerThan15 = false;
-  let isProMax = false;
-  let isPro = false;
-  
-  if (match) {
-    const num = parseInt(match[1], 10);
-    const suffix = match[2];
-    if (num < 15) {
-      isLowerThan15 = true;
-      if (suffix.includes('pm') || suffix.includes('pro-max') || suffix.includes('promax')) {
-        isProMax = true;
-      } else if (suffix.includes('p') || suffix.includes('pro')) {
-        isPro = true;
-      }
-    }
-  } else {
-    // Check for legacy non-numeric models like xr, xs, xsmax, x, se2, se3
-    const legacyModels = ['xr', 'xs', 'xsmax', 'x', 'se2', 'se3'];
-    const part = cleanId.substring('apple-'.length);
-    if (legacyModels.some(m => part.startsWith(m))) {
-      isLowerThan15 = true;
-      if (part.includes('max') || part.includes('xsmax')) {
-        isProMax = true;
-      } else if (part.startsWith('xs')) {
-        isPro = true;
-      }
-    }
-  }
-  
-  if (isLowerThan15) {
-    let target = 'apple-15';
-    if (isProMax) {
-      target = 'apple-15pm';
-    } else if (isPro) {
-      target = 'apple-15p';
-    }
-    return modelId.startsWith('catalog-') ? `catalog-${target}` : target;
-  }
-  
+export function getRedirectedModelId(modelId: string): string {
   return modelId;
 }
 
@@ -1823,6 +1776,7 @@ export function getDeviceImage(
   const modelId = typeof modelOrId === 'string' ? modelOrId : modelOrId?.id || '';
   const bId = brandId || (typeof modelOrId === 'object' ? modelOrId?.brandId : '') || '';
   const cUrl = customImageUrl || (typeof modelOrId === 'object' ? modelOrId?.imageUrl : undefined);
+  const mName = typeof modelOrId === 'object' ? modelOrId?.name : '';
 
   if (cUrl && cUrl.trim().length > 0 && !cUrl.trim().toLowerCase().startsWith('file:') && !cUrl.trim().startsWith('/opt/render')) {
     const trimmed = cUrl.trim();
@@ -1844,13 +1798,10 @@ export function getDeviceImage(
         }
         return colorImg;
       }
-      try {
-        return new URL(`../../assets/phones/${colorImg}`, import.meta.url).href;
-      } catch { /* fallback */ }
     }
   }
   const cleanId = redirectedModelId.replace(/^catalog-/, '');
-  const brandSlug = bId.replace(/^brand-/, '');
+  const brandSlug = bId.replace(/^brand-/, '').toLowerCase();
   const deDuplicatedId = cleanId.replace(new RegExp(`^${brandSlug}-${brandSlug}-`), `${brandSlug}-`);
   const possibleKeys = [
     redirectedModelId,
@@ -1858,33 +1809,31 @@ export function getDeviceImage(
     deDuplicatedId,
     `catalog-${deDuplicatedId}`,
     cleanId.replace(/^apple-iphone-/, 'apple-'),
-    cleanId.replace(/^apple-iphone-17-/, 'apple-17'),
-    cleanId.replace(/^apple-iphone-16-/, 'apple-16'),
-    cleanId.replace(/^apple-iphone-15-/, 'apple-15'),
     cleanId.replace(/^samsung-galaxy-/, 'sam-'),
     deDuplicatedId.replace(/^oneplus-/, 'op-'),
-    deDuplicatedId.replace(/^oneplus-nord-/, 'op-nord'),
-    deDuplicatedId.replace(/^oneplus-nord-/, 'op-nord').replace(/-/g, ''),
-    cleanId.replace(/^oneplus-oneplus-/, 'oneplus-'),
-    cleanId.replace(/^oneplus-oneplus-/, 'op-'),
   ];
 
   for (const key of possibleKeys) {
     const modelImg = (phoneImages as Record<string, string>)[key];
-    if (modelImg) {
-      if (modelImg.startsWith('http')) {
-        if (modelImg.includes('gsmarena.com') && !modelImg.startsWith('https://wsrv.nl')) {
-          return `https://wsrv.nl/?url=${encodeURIComponent(modelImg)}`;
-        }
-        return modelImg;
+    if (modelImg && modelImg.startsWith('http')) {
+      if (modelImg.includes('gsmarena.com') && !modelImg.startsWith('https://wsrv.nl')) {
+        return `https://wsrv.nl/?url=${encodeURIComponent(modelImg)}`;
       }
-      try {
-        return new URL(`../../assets/phones/${modelImg}`, import.meta.url).href;
-      } catch { /* fallback */ }
+      return modelImg;
     }
   }
 
-  return getPhoneImageForBrand(bId || 'brand-apple');
+  // Smart fallback to dynamic GSMArena CDN URL
+  const namePart = (mName || cleanId)
+    .toLowerCase()
+    .replace(/^apple\s+|^samsung\s+|^google\s+|^oneplus\s+/, '')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-');
+  
+  const gsmSlug = brandSlug ? `${brandSlug}-${namePart}` : namePart;
+  const rawGsmUrl = `https://fdn2.gsmarena.com/vv/bigpic/${gsmSlug}.jpg`;
+  return `https://wsrv.nl/?url=${encodeURIComponent(rawGsmUrl)}`;
 }
 
 export interface Booking {
