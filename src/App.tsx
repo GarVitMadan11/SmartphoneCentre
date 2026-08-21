@@ -17,7 +17,9 @@ import VerifyEmailPage from './components/client/VerifyEmailPage';
 import { ToastContainer, ToastMessage } from './components/Toast';
 import { ComingSoon } from './components/client/ComingSoon';
 import { PilotModeBanner } from './components/client/PilotModeBanner';
+import { PilotFeedbackSection } from './components/client/PilotFeedbackSection';
 import { FeedbackModal } from './components/client/FeedbackModal';
+import { PILOT_MODE_ENABLED } from './config/pilotMode';
 import { useFocusTrap } from './hooks/useFocusTrap';
 import { safeLazy } from './utils/safeLazy';
 
@@ -729,7 +731,7 @@ export default function App() {
     <div className="min-h-screen bg-canvas-white text-ink-navy flex flex-col font-sans selection:bg-cobalt selection:text-white">
 
       {/* ── Pilot Mode Announcement Ticker Marquee ──────────────────── */}
-      <PilotModeBanner onOpenFeedback={() => setIsFeedbackModalOpen(true)} />
+      {PILOT_MODE_ENABLED && <PilotModeBanner onOpenFeedback={() => setIsFeedbackModalOpen(true)} />}
 
       {/* ── Consolidated Header Navigation ─────────────────────────── */}
       <HeaderNav
@@ -1607,6 +1609,11 @@ export default function App() {
               </AdminPinGate>
             </Suspense>
           )}
+
+          {/* ── In-Page Pilot Mode Feedback Section ── */}
+          {PILOT_MODE_ENABLED && !isWorkflow && path === '/' && (
+            <PilotFeedbackSection currentUser={currentUser} onNavigate={navigate} />
+          )}
         </section>
       </main>
 
@@ -1674,7 +1681,9 @@ export default function App() {
 
       {/* Specs Modal */}
       <SpecsModal isOpen={isSpecModalOpen} onClose={() => setIsSpecModalOpen(false)} />
-      <FeedbackModal isOpen={isFeedbackModalOpen} onClose={() => setIsFeedbackModalOpen(false)} currentUser={currentUser} onNavigate={navigate} />
+      {PILOT_MODE_ENABLED && (
+        <FeedbackModal isOpen={isFeedbackModalOpen} onClose={() => setIsFeedbackModalOpen(false)} currentUser={currentUser} onNavigate={navigate} />
+      )}
       <Suspense fallback={null}>
         <OrderTrackingModal isOpen={isTrackOpen} onClose={() => setIsTrackOpen(false)} currentUser={currentUser} models={MODELS} />
       </Suspense>
