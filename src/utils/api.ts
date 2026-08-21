@@ -222,6 +222,7 @@ export interface ApiModel {
   supportedStorageGb?: number[];
   supportedRamGb?: number[];              // [0] = Apple-style (no RAM variants)
   variantPrices?: Record<string, number>; // { "ramGb_storageGb": priceINR }
+  hidden?: boolean;
 }
 
 export function fetchModels(brandId?: string): Promise<ApiModel[]> {
@@ -241,6 +242,7 @@ export function createModel(data: {
   supportedStorageGb?: number[];
   supportedRamGb?: number[];
   variantPrices?: Record<string, number>;
+  hidden?: boolean;
 }): Promise<ApiModel> {
   return apiFetch<ApiModel>('/models', { method: 'POST', body: JSON.stringify(data) }, true);
 }

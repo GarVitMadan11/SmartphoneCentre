@@ -650,7 +650,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
         else if (lower.includes('xiaomi') || lower.includes('mi')) resolvedSeries = 'Xiaomi Series';
       }
       return { ...m, series: resolvedSeries };
-    }).filter(m => !isTabletDevice(m.brandId, m.name, m.id) && !isSmartwatchDevice(m.brandId, m.name, m.id));
+    }).filter(m => !m.hidden && !isTabletDevice(m.brandId, m.name, m.id) && !isSmartwatchDevice(m.brandId, m.name, m.id));
   }, [rawModels]);
   const [selectedBrandId, setSelectedBrandId] = useState<string>('brand-apple');
   const [selectedSeries, setSelectedSeries] = useState<string | null>(null);

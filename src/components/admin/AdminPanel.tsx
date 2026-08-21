@@ -8,7 +8,8 @@ import {
   Layers, Check, X,
   MessageSquare, HardDrive, ChevronDown,
   AlertCircle, Cpu, Grid, Smartphone, Tablet, Watch,
-  Shuffle, ArrowUp, ArrowDown, RotateCcw, GripVertical, BookmarkCheck, ShieldAlert
+  Shuffle, ArrowUp, ArrowDown, RotateCcw, GripVertical, BookmarkCheck, ShieldAlert,
+  Eye, EyeOff, CheckSquare, Square
 } from 'lucide-react';
 import { 
   saveBrandOrder, resetBrandOrder, saveBrandDefaultOrder,
@@ -18,7 +19,7 @@ import {
   shuffleArray
 } from '../../utils/ordering';
 import { motion, AnimatePresence } from 'framer-motion';
-import { updateBooking, fetchBookings, fetchModels, createModel, updateModel, deleteModel, triggerAdminLockdown } from '../../utils/api';
+import { updateBooking, fetchBookings, fetchModels, createModel, updateModel, bulkUpdateModels, deleteModel, triggerAdminLockdown } from '../../utils/api';
 import { SupportInbox } from './SupportInbox';
 
 const ALL_RAM_OPTIONS: { gb: number; label: string }[] = [
@@ -112,6 +113,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [editStorageGb, setEditStorageGb] = useState<number[]>([128, 256, 512]);
   const [editRamGb, setEditRamGb] = useState<number[]>([0]);
   const [editVariantPrices, setEditVariantPrices] = useState<Record<string, number>>({});
+
+  // Hidden & Multi-Select Bulk Action States
+  const [newModelHidden, setNewModelHidden] = useState<boolean>(false);
+  const [editHidden, setEditHidden] = useState<boolean>(false);
+  const [catalogVisibilityFilter, setCatalogVisibilityFilter] = useState<'all' | 'visible' | 'hidden'>('all');
+  const [selectedModelIds, setSelectedModelIds] = useState<string[]>([]);
+  const [isBulkProcessing, setIsBulkProcessing] = useState<boolean>(false);
 
   // Catalog search state
   const [catalogSearch, setCatalogSearch] = useState('');
@@ -715,6 +723,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     setEditYear(model.releaseYear);
     setEditBasePrice(model.basePrice128GB);
     setEditImageUrl(model.imageUrl || '');
+    setEditHidden(Boolean(model.hidden));
     setEditStorageGb(model.supportedStorageGb && model.supportedStorageGb.length > 0 ? model.supportedStorageGb : [128, 256, 512]);
     const defaultRams = getModelSupportedRam(model);
     setEditRamGb(model.supportedRamGb && model.supportedRamGb.length > 0 ? model.supportedRamGb : defaultRams);
@@ -737,6 +746,111 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const handleCancelEdit = () => {
     setEditingModelId(null);
     setFormError('');
+  };
+
+  // --- MULTI-SELECT & BULK ACTION HANDLERS ---
+  const handleToggleSelectModel = (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setSelectedModelIds(prev =>
+      prev.includes(id) ? prev.filter(mId => mId !== id) : [...prev, id]
+    );
+  };
+
+  const handleToggleSelectSeries = (seriesModels: Model[], e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const seriesIds = seriesModels.map(m => m.id);
+    const allSelected = seriesIds.every(id => selectedModelIds.includes(id));
+    if (allSelected) {
+      setSelectedModelIds(prev => prev.filter(id => !seriesIds.includes(id)));
+    } else {
+      setSelectedModelIds(prev => Array.from(new Set([...prev, ...seriesIds])));
+    }
+  };
+
+  const handleSelectAllCategoryModels = () => {
+    const allIds = displayedCatalogModels.map(m => m.id);
+    const allSelected = allIds.every(id => selectedModelIds.includes(id));
+    if (allSelected) {
+      setSelectedModelIds([]);
+    } else {
+      setSelectedModelIds(allIds);
+    }
+  };
+
+  const handleClearSelection = () => {
+    setSelectedModelIds([]);
+  };
+
+  const handleBulkToggleHidden = async (targetHiddenStatus: boolean) => {
+    if (selectedModelIds.length === 0) return;
+    setIsBulkProcessing(true);
+    setFormError('');
+    setFormSuccess('');
+    try {
+      const updates = selectedModelIds.map(id => ({
+        id,
+        changes: { hidden: targetHiddenStatus }
+      }));
+      const res = await bulkUpdateModels(updates);
+      setFormSuccess(`Successfully ${targetHiddenStatus ? 'hidden' : 'unhidden'} ${res.updatedCount || selectedModelIds.length} models in the frontend!`);
+      setSelectedModelIds([]);
+      setIsApiOffline(false);
+      await loadModels();
+      if (onRefreshCatalog) {
+        await onRefreshCatalog();
+      }
+    } catch (err) {
+      console.error('Bulk hide/unhide error:', err);
+      setFormError('Failed bulk updating models: ' + (err as Error).message);
+    } finally {
+      setIsBulkProcessing(false);
+    }
+  };
+
+  const handleBulkDeleteModels = async () => {
+    if (selectedModelIds.length === 0) return;
+    if (!window.confirm(`Are you sure you want to PERMANENTLY delete ${selectedModelIds.length} selected models?`)) {
+      return;
+    }
+    setIsBulkProcessing(true);
+    setFormError('');
+    setFormSuccess('');
+    try {
+      for (const legacyId of selectedModelIds) {
+        await deleteModel(legacyId);
+      }
+      setFormSuccess(`Successfully deleted ${selectedModelIds.length} models.`);
+      setSelectedModelIds([]);
+      setIsApiOffline(false);
+      await loadModels();
+      if (onRefreshCatalog) {
+        await onRefreshCatalog();
+      }
+    } catch (err) {
+      console.error('Bulk delete error:', err);
+      setFormError('Failed bulk deleting models: ' + (err as Error).message);
+    } finally {
+      setIsBulkProcessing(false);
+    }
+  };
+
+  const handleSingleToggleHidden = async (model: Model, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setFormError('');
+    setFormSuccess('');
+    const nextHidden = !model.hidden;
+    try {
+      await updateModel(model.id, { hidden: nextHidden });
+      setFormSuccess(`"${model.name}" is now ${nextHidden ? 'hidden' : 'visible'} on the frontend.`);
+      setIsApiOffline(false);
+      await loadModels();
+      if (onRefreshCatalog) {
+        await onRefreshCatalog();
+      }
+    } catch (err) {
+      console.error('Failed to toggle model visibility:', err);
+      setFormError('Failed to toggle visibility: ' + (err as Error).message);
+    }
   };
 
   // Toggle a storage option in an array
@@ -773,6 +887,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       list = list.filter(m => m.brandId === selectedCatalogBrandId);
     }
 
+    if (catalogVisibilityFilter === 'visible') {
+      list = list.filter(m => !m.hidden);
+    } else if (catalogVisibilityFilter === 'hidden') {
+      list = list.filter(m => m.hidden);
+    }
+
     if (catalogSearch.trim()) {
       const q = catalogSearch.trim().toLowerCase();
       list = list.filter(m =>
@@ -782,7 +902,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     }
     const sorted = sortModelsByLaunchDesc(list);
     return applyModelOrder(selectedCatalogBrandId, sorted);
-  }, [models, catalogDeviceCategory, selectedCatalogBrandId, catalogSearch]);
+  }, [models, catalogDeviceCategory, selectedCatalogBrandId, catalogVisibilityFilter, catalogSearch]);
 
   // Group displayed models for the selected brand by series (Brand → Series → Model hierarchy)
   const brandSeriesMap = useMemo(() => {
@@ -796,6 +916,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
     if (selectedCatalogBrandId) {
       filtered = filtered.filter(m => m.brandId === selectedCatalogBrandId);
+    }
+
+    if (catalogVisibilityFilter === 'visible') {
+      filtered = filtered.filter(m => !m.hidden);
+    } else if (catalogVisibilityFilter === 'hidden') {
+      filtered = filtered.filter(m => m.hidden);
     }
 
     if (catalogSearch.trim()) {
@@ -821,7 +947,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     });
 
     return map;
-  }, [models, catalogDeviceCategory, selectedCatalogBrandId, catalogSearch]);
+  }, [models, catalogDeviceCategory, selectedCatalogBrandId, catalogVisibilityFilter, catalogSearch]);
 
 
 
@@ -856,6 +982,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         supportedStorageGb: editStorageGb,
         supportedRamGb: editRamGb,
         variantPrices: editVariantPrices,
+        hidden: editHidden,
       });
 
       setFormSuccess(`Successfully saved changes to "${editName}"!`);
@@ -909,6 +1036,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         supportedStorageGb: newModelStorageGb,
         supportedRamGb: newModelRamGb,
         variantPrices: newVariantPrices,
+        hidden: newModelHidden,
       });
       
       setFormSuccess(`Successfully added model "${newModelName}" to database!`);
@@ -918,6 +1046,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       setNewModelStorageGb([128, 256, 512]);
       setNewModelRamGb([0]);
       setNewVariantPrices({});
+      setNewModelHidden(false);
       setIsApiOffline(false);
       
       // Refresh catalog lists
@@ -2150,6 +2279,118 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 </button>
               </div>
 
+              {/* Visibility Filter Tabs & Multi-Select Controls */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between gap-1 text-[11px] font-mono flex-wrap">
+                  <div className="flex items-center gap-1 bg-slate-100 dark:bg-zinc-800 p-0.5 rounded-sm">
+                    <button
+                      type="button"
+                      onClick={() => setCatalogVisibilityFilter('all')}
+                      className={`px-2 py-1 rounded-sm font-bold transition-all ${
+                        catalogVisibilityFilter === 'all'
+                          ? 'bg-white dark:bg-zinc-700 text-cobalt shadow-xs'
+                          : 'text-zinc-500 hover:text-zinc-700'
+                      }`}
+                    >
+                      All ({displayedCatalogModels.length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCatalogVisibilityFilter('visible')}
+                      className={`px-2 py-1 rounded-sm font-bold transition-all flex items-center gap-1 ${
+                        catalogVisibilityFilter === 'visible'
+                          ? 'bg-white dark:bg-zinc-700 text-emerald-600 shadow-xs'
+                          : 'text-zinc-500 hover:text-zinc-700'
+                      }`}
+                    >
+                      <Eye className="w-3 h-3" />
+                      Visible
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCatalogVisibilityFilter('hidden')}
+                      className={`px-2 py-1 rounded-sm font-bold transition-all flex items-center gap-1 ${
+                        catalogVisibilityFilter === 'hidden'
+                          ? 'bg-white dark:bg-zinc-700 text-rose-600 shadow-xs'
+                          : 'text-zinc-500 hover:text-zinc-700'
+                      }`}
+                    >
+                      <EyeOff className="w-3 h-3" />
+                      Hidden
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleSelectAllCategoryModels}
+                    className="px-2 py-1 text-[10px] font-bold font-mono border border-ice-border hover:border-cobalt text-zinc-600 rounded hover:bg-cobalt/5 transition-all flex items-center gap-1"
+                  >
+                    {displayedCatalogModels.length > 0 && displayedCatalogModels.every(m => selectedModelIds.includes(m.id)) ? (
+                      <>
+                        <CheckSquare className="w-3 h-3 text-cobalt" />
+                        Deselect All
+                      </>
+                    ) : (
+                      <>
+                        <Square className="w-3 h-3 text-zinc-400" />
+                        Select All
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {/* Sticky/Floating Bulk Action Bar when models are selected */}
+                {selectedModelIds.length > 0 && (
+                  <div className="p-2.5 bg-cobalt text-white rounded-sm shadow-md flex items-center justify-between gap-2 animate-in fade-in">
+                    <div className="flex items-center gap-1.5">
+                      <CheckSquare className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+                      <span className="font-outfit text-xs font-bold whitespace-nowrap">
+                        {selectedModelIds.length} selected
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        disabled={isBulkProcessing}
+                        onClick={() => handleBulkToggleHidden(true)}
+                        className="px-2 py-1 bg-rose-500 hover:bg-rose-600 text-white rounded text-[10px] font-bold font-mono transition-all flex items-center gap-1"
+                        title="Hide selected models from frontend"
+                      >
+                        <EyeOff className="w-3 h-3" />
+                        Hide
+                      </button>
+                      <button
+                        type="button"
+                        disabled={isBulkProcessing}
+                        onClick={() => handleBulkToggleHidden(false)}
+                        className="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[10px] font-bold font-mono transition-all flex items-center gap-1"
+                        title="Show selected models on frontend"
+                      >
+                        <Eye className="w-3 h-3" />
+                        Unhide
+                      </button>
+                      <button
+                        type="button"
+                        disabled={isBulkProcessing}
+                        onClick={handleBulkDeleteModels}
+                        className="px-2 py-1 bg-red-700 hover:bg-red-800 text-white rounded text-[10px] font-bold font-mono transition-all flex items-center gap-1"
+                        title="Delete selected models"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleClearSelection}
+                        className="p-1 hover:bg-white/20 rounded text-white/80 hover:text-white"
+                        title="Clear selection"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Tree Search Filter */}
               <div className="relative">
                 <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
@@ -2171,90 +2412,137 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               {loadingModels ? (
                 <div className="py-8 text-center text-zinc-400 font-mono text-xs">Loading device hierarchy...</div>
               ) : brandSeriesMap.size === 0 ? (
-                <div className="py-8 text-center text-zinc-400 font-mono text-xs">No models found for this category and brand.</div>
+                <div className="py-8 text-center text-zinc-400 font-mono text-xs">No models found for this filter.</div>
               ) : (
                 <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1">
                   {Array.from(brandSeriesMap.entries()).map(([seriesName, seriesModels]) => {
                     const isCollapsed = expandedSeries[seriesName] === false;
+                    const allSeriesSelected = seriesModels.length > 0 && seriesModels.every(m => selectedModelIds.includes(m.id));
                     return (
                       <div key={seriesName} className="border border-ice-border/60 rounded-sm overflow-hidden bg-canvas-white">
                         {/* Series Node Header */}
-                        <button
-                          type="button"
-                          onClick={() => setExpandedSeries(prev => ({ ...prev, [seriesName]: !isCollapsed }))}
-                          className="w-full px-3 py-2 bg-slate-50 dark:bg-zinc-800/40 hover:bg-slate-100 dark:hover:bg-zinc-800 border-b border-ice-border/40 flex items-center justify-between text-left transition-all"
-                        >
-                          <div className="flex items-center gap-2">
+                        <div className="w-full px-3 py-2 bg-slate-50 dark:bg-zinc-800/40 hover:bg-slate-100 dark:hover:bg-zinc-800 border-b border-ice-border/40 flex items-center justify-between text-left transition-all">
+                          <div className="flex items-center gap-2 flex-1 cursor-pointer" onClick={() => setExpandedSeries(prev => ({ ...prev, [seriesName]: !isCollapsed }))}>
                             {isCollapsed ? <ChevronRight className="w-3.5 h-3.5 text-zinc-400" /> : <ChevronDown className="w-3.5 h-3.5 text-cobalt" />}
                             <span className="font-outfit text-xs font-bold text-ink-navy">{seriesName}</span>
                           </div>
-                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-200/60 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300">
-                            {seriesModels.length}
-                          </span>
-                        </button>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={(e) => handleToggleSelectSeries(seriesModels, e)}
+                              className="text-zinc-400 hover:text-cobalt transition-colors p-0.5"
+                              title={allSeriesSelected ? "Deselect Series" : "Select Series"}
+                            >
+                              {allSeriesSelected ? (
+                                <CheckSquare className="w-3.5 h-3.5 text-cobalt" />
+                              ) : (
+                                <Square className="w-3.5 h-3.5 text-zinc-400" />
+                              )}
+                            </button>
+                            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-200/60 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300">
+                              {seriesModels.length}
+                            </span>
+                          </div>
+                        </div>
 
                         {/* Series Models Children */}
                         {!isCollapsed && (
                           <div className="p-1 space-y-1">
                             {seriesModels.map(m => {
                               const isSelected = selectedTreeModelId === m.id || editingModelId === m.id;
+                              const isChecked = selectedModelIds.includes(m.id);
                               const isWatch = isSmartwatchDevice(m.brandId, m.name, m.id);
                               const isTab = isTabletDevice(m.brandId, m.name, m.id);
                               return (
-                                <button
+                                <div
                                   key={m.id}
-                                  type="button"
                                   onClick={() => handleStartEditModel(m)}
-                                  className={`w-full p-2 rounded-sm text-left font-mono transition-all flex items-center justify-between ${
+                                  className={`w-full p-2 rounded-sm text-left font-mono transition-all flex items-center justify-between cursor-pointer border ${
                                     isSelected
-                                      ? 'bg-cobalt text-white shadow-sm'
-                                      : 'hover:bg-cobalt/5 text-ink-slate hover:text-cobalt'
+                                      ? 'bg-cobalt text-white shadow-sm border-cobalt'
+                                      : isChecked
+                                      ? 'bg-cobalt/10 border-cobalt/40 text-ink-slate'
+                                      : m.hidden
+                                      ? 'bg-rose-500/5 hover:bg-rose-500/10 border-rose-500/20 text-ink-slate'
+                                      : 'hover:bg-cobalt/5 border-transparent text-ink-slate hover:text-cobalt'
                                   }`}
                                 >
-                                  <div>
-                                    <div className="text-xs font-bold flex items-center gap-1.5">
-                                      {isWatch ? (
-                                        <Watch className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
-                                      ) : isTab ? (
-                                        <Tablet className="w-3.5 h-3.5 text-purple-400 flex-shrink-0" />
-                                      ) : (
-                                        <Smartphone className="w-3.5 h-3.5 text-cobalt flex-shrink-0" />
-                                      )}
-                                      <span>{m.name}</span>
-                                      <span className={`text-[9px] px-1 rounded ${isSelected ? 'bg-white/20 text-white' : 'bg-zinc-100 text-zinc-500'}`}>
-                                        {m.releaseYear}
-                                      </span>
-                                    </div>
-                                    <div className="flex items-center gap-2 mt-0.5">
-                                      <span className={`text-[10px] ${isSelected ? 'text-white/80' : 'text-zinc-400'}`}>
-                                        {m.id}
-                                      </span>
-                                      {(() => {
-                                        const rams = getModelSupportedRam(m).filter(r => r > 0);
-                                        if (rams.length > 0) {
+                                  <div className="flex items-center gap-2">
+                                    <input
+                                      type="checkbox"
+                                      checked={isChecked}
+                                      onChange={(e) => handleToggleSelectModel(m.id, e as any)}
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="rounded border-zinc-300 text-cobalt focus:ring-cobalt accent-cobalt cursor-pointer"
+                                    />
+                                    <div>
+                                      <div className="text-xs font-bold flex items-center gap-1.5 flex-wrap">
+                                        {isWatch ? (
+                                          <Watch className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+                                        ) : isTab ? (
+                                          <Tablet className="w-3.5 h-3.5 text-purple-400 flex-shrink-0" />
+                                        ) : (
+                                          <Smartphone className="w-3.5 h-3.5 text-cobalt flex-shrink-0" />
+                                        )}
+                                        <span>{m.name}</span>
+                                        <span className={`text-[9px] px-1 rounded ${isSelected ? 'bg-white/20 text-white' : 'bg-zinc-100 text-zinc-500'}`}>
+                                          {m.releaseYear}
+                                        </span>
+                                        {m.hidden && (
+                                          <span className={`text-[9px] font-bold px-1 rounded flex items-center gap-0.5 ${
+                                            isSelected ? 'bg-rose-500 text-white' : 'bg-rose-500/15 text-rose-600 border border-rose-500/30'
+                                          }`}>
+                                            <EyeOff className="w-2.5 h-2.5" /> HIDDEN
+                                          </span>
+                                        )}
+                                      </div>
+                                      <div className="flex items-center gap-2 mt-0.5">
+                                        <span className={`text-[10px] ${isSelected ? 'text-white/80' : 'text-zinc-400'}`}>
+                                          {m.id}
+                                        </span>
+                                        {(() => {
+                                          const rams = getModelSupportedRam(m).filter(r => r > 0);
+                                          if (rams.length > 0) {
+                                            return (
+                                              <span className={`text-[9px] font-bold px-1 rounded ${isSelected ? 'bg-white/20 text-white' : 'bg-cobalt/10 text-cobalt'}`}>
+                                                {rams.join('/')}GB RAM
+                                              </span>
+                                            );
+                                          }
                                           return (
-                                            <span className={`text-[9px] font-bold px-1 rounded ${isSelected ? 'bg-white/20 text-white' : 'bg-cobalt/10 text-cobalt'}`}>
-                                              {rams.join('/')}GB RAM
+                                            <span className={`text-[9px] font-bold px-1 rounded ${isSelected ? 'bg-white/20 text-white' : 'bg-amber-500/10 text-amber-600'}`}>
+                                              No RAM (Apple)
                                             </span>
                                           );
-                                        }
-                                        return (
-                                          <span className={`text-[9px] font-bold px-1 rounded ${isSelected ? 'bg-white/20 text-white' : 'bg-amber-500/10 text-amber-600'}`}>
-                                            No RAM (Apple)
-                                          </span>
-                                        );
-                                      })()}
+                                        })()}
+                                      </div>
                                     </div>
                                   </div>
-                                  <div className="text-right">
-                                    <span className={`text-[11px] font-bold block ${isSelected ? 'text-white' : 'text-emerald-600'}`}>
-                                      {formatPrice(m.basePrice128GB)}
-                                    </span>
-                                    <span className={`text-[9px] uppercase font-bold ${isSelected ? 'text-white/70' : 'text-zinc-400'}`}>
-                                      {m.category}
-                                    </span>
+                                  <div className="flex items-center gap-2">
+                                    <div className="text-right">
+                                      <span className={`text-[11px] font-bold block ${isSelected ? 'text-white' : 'text-emerald-600'}`}>
+                                        {formatPrice(m.basePrice128GB)}
+                                      </span>
+                                      <span className={`text-[9px] uppercase font-bold ${isSelected ? 'text-white/70' : 'text-zinc-400'}`}>
+                                        {m.category}
+                                      </span>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={(e) => handleSingleToggleHidden(m, e)}
+                                      className={`p-1 rounded transition-colors ${
+                                        isSelected
+                                          ? 'hover:bg-white/20 text-white'
+                                          : m.hidden
+                                          ? 'text-rose-500 hover:bg-rose-500/10'
+                                          : 'text-zinc-400 hover:text-cobalt hover:bg-cobalt/10'
+                                      }`}
+                                      title={m.hidden ? "Unhide in Frontend" : "Hide in Frontend"}
+                                    >
+                                      {m.hidden ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                                    </button>
                                   </div>
-                                </button>
+                                </div>
                               );
                             })}
                           </div>
@@ -2306,6 +2594,32 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         Delete
                       </button>
                     </div>
+                  </div>
+
+                  {/* Visibility / Hide in Frontend Toggle */}
+                  <div className="p-3 bg-amber-500/5 border border-amber-500/20 rounded-sm flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {editHidden ? <EyeOff className="w-4 h-4 text-rose-500 shrink-0" /> : <Eye className="w-4 h-4 text-emerald-500 shrink-0" />}
+                      <div>
+                        <span className="text-xs font-mono font-bold text-ink-navy block">
+                          {editHidden ? 'Hidden in Frontend (Selling Disabled)' : 'Visible in Frontend (Active)'}
+                        </span>
+                        <span className="text-[10px] text-zinc-500 block">
+                          {editHidden
+                            ? 'Hidden from customers on storefront, search, and trade-in valuation wizard.'
+                            : 'Customers can view, search, and calculate trade-in quotes for this model.'}
+                        </span>
+                      </div>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                      <input
+                        type="checkbox"
+                        checked={editHidden}
+                        onChange={e => setEditHidden(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-zinc-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-500"></div>
+                    </label>
                   </div>
 
                   {/* Basic Specifications */}
@@ -2544,6 +2858,32 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   <div className="border-b border-ice-border/60 pb-3">
                     <span className="text-[10px] font-mono uppercase tracking-wider text-cobalt font-bold">Catalog Creator</span>
                     <h3 className="font-outfit text-xl font-bold text-ink-navy">Add New Model to Catalog</h3>
+                  </div>
+
+                  {/* Visibility / Hide in Frontend Toggle */}
+                  <div className="p-3 bg-amber-500/5 border border-amber-500/20 rounded-sm flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {newModelHidden ? <EyeOff className="w-4 h-4 text-rose-500 shrink-0" /> : <Eye className="w-4 h-4 text-emerald-500 shrink-0" />}
+                      <div>
+                        <span className="text-xs font-mono font-bold text-ink-navy block">
+                          {newModelHidden ? 'Create as Hidden in Frontend' : 'Create as Visible in Frontend'}
+                        </span>
+                        <span className="text-[10px] text-zinc-500 block">
+                          {newModelHidden
+                            ? 'Hidden from customers on storefront until unhidden.'
+                            : 'Visible to customers immediately upon creation.'}
+                        </span>
+                      </div>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                      <input
+                        type="checkbox"
+                        checked={newModelHidden}
+                        onChange={e => setNewModelHidden(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-zinc-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-500"></div>
+                    </label>
                   </div>
 
                   {/* Basic Specifications */}

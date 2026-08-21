@@ -22,6 +22,7 @@ export interface Model {
   supportedStorageGb?: number[]; // Storage tiers e.g. [128, 256, 512, 1024]
   supportedRamGb?: number[];     // RAM tiers e.g. [6, 8, 12]; [0] = no RAM variants (Apple)
   variantPrices?: Record<string, number>; // key: "ramGb_storageGb" e.g. "8_256" → 84900
+  hidden?: boolean;                       // If true, hidden from frontend (disable selling)
 }
 
 export interface Variant {

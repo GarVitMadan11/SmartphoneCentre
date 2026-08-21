@@ -32,6 +32,7 @@ model Model {
   supportedRamGb     String   @default("[0]")
   supportedStorageGb String   @default("[128,256,512]")
   variantPrices      String   @default("{}")
+  hidden             Boolean  @default(false)
   brand              Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
 
   @@index([brandId])

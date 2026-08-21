@@ -16,7 +16,7 @@ async function callGeminiRestApi(
   userMessage: string
 ): Promise<AiResponse | null> {
   try {
-    const dbModels = await prisma.model.findMany({ select: { name: true, basePrice128GB: true, category: true } });
+    const dbModels = await prisma.model.findMany({ where: { hidden: false }, select: { name: true, basePrice128GB: true, category: true } });
     const catalogSummary = dbModels.map(m => {
       const is256Base = m.category === 'flagship' || m.name.includes('15 Pro Max') || m.name.includes('16 Pro') || m.name.includes('17');
       const minGb = is256Base ? 256 : 128;
@@ -122,7 +122,7 @@ async function generateAiResponse(
   // 3. Device Price Lookup in Database (matches CURRENT userMessage, handling "17 pro", "17 pro max", etc.)
   if (!response) {
     try {
-      const models = await prisma.model.findMany({ include: { brand: true } });
+      const models = await prisma.model.findMany({ where: { hidden: false }, include: { brand: true } });
       const msgClean = lowerMsg.replace(/^for\s+/, '').trim();
       
       const matchedModel = models.find(m => {

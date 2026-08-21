@@ -353,14 +353,26 @@ app.get('/api/models', async (req, res) => {
     const where: Record<string, unknown> = {};
     if (brandId && typeof brandId === 'string') where.brandId = brandId;
 
-    const models = await prisma.model.findMany({
-      where,
-      orderBy: [
-        { releaseYear: 'desc' },
-        { basePrice128GB: 'desc' },
-        { name: 'asc' },
-      ],
-    });
+    let models: any[] = [];
+    try {
+      models = await prisma.model.findMany({
+        where,
+        orderBy: [
+          { releaseYear: 'desc' },
+          { basePrice128GB: 'desc' },
+          { name: 'asc' },
+        ],
+      });
+    } catch (dbErr) {
+      console.warn('GET /api/models DB query warning (falling back to simple query):', dbErr);
+      try {
+        models = await prisma.model.findMany({ where });
+      } catch (innerErr) {
+        console.error('GET /api/models DB connection error:', innerErr);
+        models = [];
+      }
+    }
+
     res.json(models.map(m => {
       let parsedStorageGb: number[] | undefined;
       let parsedRamGb: number[] | undefined;
@@ -393,6 +405,7 @@ app.get('/api/models', async (req, res) => {
         supportedStorageGb: parsedStorageGb,
         supportedRamGb: parsedRamGb,
         variantPrices: parsedVariantPrices,
+        hidden: Boolean((m as any).hidden ?? false),
       };
     }));
   } catch (err) {
@@ -405,7 +418,7 @@ app.get('/api/models', async (req, res) => {
 app.post('/api/models', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITOR']), async (req, res) => {
   try {
     const { legacyId, brandId, name, category, releaseYear, basePrice128GB,
-            series, imageUrl, supportedStorageGb, supportedRamGb, variantPrices } = req.body;
+            series, imageUrl, supportedStorageGb, supportedRamGb, variantPrices, hidden } = req.body;
     if (!legacyId || !brandId || !name || !category || !releaseYear || !basePrice128GB) {
       res.status(400).json({ error: 'BadRequest', message: 'Missing required fields' });
       return;
@@ -433,6 +446,7 @@ app.post('/api/models', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITOR']
         series: series ? String(series).trim() : '',
         imageUrl: imageUrl ? String(imageUrl).trim() : '',
         supportedStorageGb: storageStr,
+        hidden: Boolean(hidden),
         ...(({ supportedRamGb: ramStr, variantPrices: JSON.stringify(pricesObj) }) as any),
       },
     });
@@ -464,10 +478,10 @@ app.post('/api/models/bulk-update', adminAuth, requireRole(['SUPER_ADMIN', 'CATA
       const { id, changes } = item;
       if (!id || !changes || typeof changes !== 'object') continue;
 
+      const legacyId = String(id);
       const existing = await prisma.model.findFirst({
-        where: { OR: [{ legacyId: String(id) }, { id: String(id) }] }
+        where: { OR: [{ legacyId }, { id: legacyId }] }
       });
-      if (!existing) continue;
 
       const data: Record<string, unknown> = {};
       for (const field of ['name', 'category', 'series']) {
@@ -486,17 +500,56 @@ app.post('/api/models/bulk-update', adminAuth, requireRole(['SUPER_ADMIN', 'CATA
       if (changes.supportedStorageGb !== undefined && Array.isArray(changes.supportedStorageGb)) {
         data.supportedStorageGb = JSON.stringify(changes.supportedStorageGb);
       }
+      if (changes.hidden !== undefined) {
+        data.hidden = Boolean(changes.hidden);
+      }
       if (changes.supportedRamGb !== undefined && Array.isArray(changes.supportedRamGb)) {
         (data as any).supportedRamGb = JSON.stringify(changes.supportedRamGb);
       }
       if (changes.variantPrices !== undefined && typeof changes.variantPrices === 'object' && !Array.isArray(changes.variantPrices)) {
         (data as any).variantPrices = JSON.stringify(changes.variantPrices);
-        // Auto-update basePrice128GB from minimum variant price
         const prices = Object.values(changes.variantPrices as Record<string, number>).filter((v): v is number => typeof v === 'number' && v > 0);
         if (prices.length > 0) data.basePrice128GB = Math.min(...prices);
       }
 
-      if (Object.keys(data).length > 0) {
+      if (!existing) {
+        let brandId = (changes.brandId as string) || '';
+        if (!brandId) {
+          if (legacyId.startsWith('apple-') || legacyId.startsWith('iphone-')) brandId = 'brand-apple';
+          else if (legacyId.startsWith('sam-') || legacyId.startsWith('samsung-')) brandId = 'brand-samsung';
+          else if (legacyId.startsWith('op-') || legacyId.startsWith('oneplus-')) brandId = 'brand-oneplus';
+          else if (legacyId.startsWith('vi-') || legacyId.startsWith('vivo-')) brandId = 'brand-vivo';
+          else if (legacyId.startsWith('xi-') || legacyId.startsWith('xiaomi-') || legacyId.startsWith('redmi-') || legacyId.startsWith('poco-')) brandId = 'brand-xiaomi';
+          else brandId = 'brand-apple';
+        }
+
+        const brandExists = await prisma.brand.findUnique({ where: { id: brandId } });
+        if (!brandExists) {
+          await prisma.brand.create({
+            data: { id: brandId, name: brandId.replace('brand-', '').toUpperCase(), logo: '/logo.svg' }
+          });
+        }
+
+        await prisma.model.create({
+          data: {
+            legacyId,
+            brandId,
+            name: (data.name as string) || (changes.name as string) || legacyId,
+            category: (data.category as string) || (changes.category as string) || 'midrange',
+            releaseYear: Number(data.releaseYear) || Number(changes.releaseYear) || new Date().getFullYear(),
+            basePrice128GB: Number(data.basePrice128GB) || Number(changes.basePrice128GB) || 10000,
+            series: (data.series as string) || (changes.series as string) || '',
+            imageUrl: (data.imageUrl as string) || '',
+            supportedStorageGb: data.supportedStorageGb ? String(data.supportedStorageGb) : '[128,256,512]',
+            hidden: Boolean(data.hidden ?? changes.hidden ?? false),
+            ...(({
+              supportedRamGb: (data as any).supportedRamGb ? String((data as any).supportedRamGb) : '[0]',
+              variantPrices: (data as any).variantPrices ? String((data as any).variantPrices) : '{}',
+            }) as any),
+          }
+        });
+        updatedCount++;
+      } else if (Object.keys(data).length > 0) {
         await prisma.model.update({ where: { id: existing.id }, data });
         updatedCount++;
       }
@@ -537,6 +590,9 @@ app.patch('/api/models/:legacyId', adminAuth, requireRole(['SUPER_ADMIN', 'CATAL
     }
     if (updates.supportedStorageGb !== undefined && Array.isArray(updates.supportedStorageGb)) {
       data.supportedStorageGb = JSON.stringify(updates.supportedStorageGb);
+    }
+    if (updates.hidden !== undefined) {
+      data.hidden = Boolean(updates.hidden);
     }
     if (updates.supportedRamGb !== undefined && Array.isArray(updates.supportedRamGb)) {
       (data as any).supportedRamGb = JSON.stringify(updates.supportedRamGb);
@@ -585,8 +641,11 @@ app.patch('/api/models/:legacyId', adminAuth, requireRole(['SUPER_ADMIN', 'CATAL
           series: (data.series as string) || (updates.series as string) || '',
           imageUrl: (data.imageUrl as string) || '',
           supportedStorageGb: data.supportedStorageGb ? String(data.supportedStorageGb) : '[128,256,512]',
-          supportedRamGb: (data as any).supportedRamGb ? String((data as any).supportedRamGb) : '[0]',
-          variantPrices: (data as any).variantPrices ? String((data as any).variantPrices) : '{}',
+          hidden: Boolean(data.hidden ?? updates.hidden ?? false),
+          ...(({
+            supportedRamGb: (data as any).supportedRamGb ? String((data as any).supportedRamGb) : '[0]',
+            variantPrices: (data as any).variantPrices ? String((data as any).variantPrices) : '{}',
+          }) as any),
         }
       });
 
@@ -652,8 +711,8 @@ app.post('/api/quotes', async (req, res) => {
     }
 
     const model = await prisma.model.findUnique({ where: { legacyId: modelId } });
-    if (!model) {
-      res.status(404).json({ error: 'NotFound', message: 'Model not found in catalog.' });
+    if (!model || model.hidden) {
+      res.status(404).json({ error: 'NotFound', message: 'Model not found in catalog or is unavailable for trade-in.' });
       return;
     }
 
@@ -821,7 +880,7 @@ app.post('/api/bookings', bookingLimiter, customerAuth, async (req: Authenticate
 
     const modelLegacyId = String(b.modelId ?? b.modelLegacyId);
     const model = await prisma.model.findUnique({ where: { legacyId: modelLegacyId } });
-    if (!model) {
+    if (!model || model.hidden) {
       res.status(400).json({ error: 'ValidationError', message: 'The selected device is no longer available for trade-in.' });
       return;
     }

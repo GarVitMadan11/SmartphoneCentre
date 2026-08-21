@@ -548,9 +548,13 @@ export default function App() {
   // Sync API models once catalog loads if model ID is valid
   useEffect(() => {
     if (savedNav.current?.selectedModelId && MODELS.length > 0) {
-      const apiModel = MODELS.find(m => m.id === savedNav.current?.selectedModelId);
+      const apiModel = MODELS.find(m => m.id === savedNav.current?.selectedModelId && !m.hidden);
       if (apiModel) {
         setSelectedModel(apiModel);
+      } else if (MODELS.some(m => m.id === savedNav.current?.selectedModelId && m.hidden)) {
+        setSelectedModel(null);
+        setSelectedVariant(null);
+        setActiveStage('select');
       }
     }
   }, [MODELS]);
@@ -679,7 +683,7 @@ export default function App() {
   };
 
   const handleDirectSelectModel = (modelId: string) => {
-    const model = MODELS.find(m => m.id === modelId);
+    const model = MODELS.find(m => m.id === modelId && !m.hidden);
     if (model) {
       const variants = generateVariantsForModel(model);
       if (variants && variants.length > 0) {
@@ -726,7 +730,7 @@ export default function App() {
         currentPath={path}
         onNavigate={(p) => { handleReset(); navigate(p); }}
         onSelectBrand={(brandId) => {
-          const firstModelOfBrand = MODELS.find(m => m.brandId === brandId);
+          const firstModelOfBrand = MODELS.find(m => m.brandId === brandId && !m.hidden);
           if (firstModelOfBrand) {
             setPendingModelId(firstModelOfBrand.id);
           }

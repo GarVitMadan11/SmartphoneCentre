@@ -35,10 +35,10 @@ export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
 
   const tabletModelsList = useMemo(() => {
     if (propModels && propModels.length > 0) {
-      const fromProps = propModels.filter(m => isTabletDevice(m.brandId, m.name, m.id));
+      const fromProps = propModels.filter(m => !m.hidden && isTabletDevice(m.brandId, m.name, m.id));
       if (fromProps.length > 0) return fromProps;
     }
-    return TABLET_MODELS;
+    return TABLET_MODELS.filter(m => !m.hidden);
   }, [propModels]);
 
   const filteredModels = useMemo(() => {
