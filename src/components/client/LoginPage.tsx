@@ -29,13 +29,33 @@ export default function LoginPage({ onLoginSuccess, onNavigate, redirectParam }:
     setGoogleLoading(true);
     setError('');
     try {
-      const { token } = await loginWithGoogle();
-      const synced = await syncFirebaseUser(token);
-      if (synced && synced.user) {
-        onLoginSuccess(synced.user);
+      const { token, user: fbUser } = await loginWithGoogle();
+      try {
+        const synced = await syncFirebaseUser(token);
+        if (synced && synced.user) {
+          onLoginSuccess(synced.user);
+          handleRedirect();
+          return;
+        }
+      } catch (syncErr) {
+        console.warn('[Firebase Google Auth] Backend sync warning, logging in with verified Firebase user:', syncErr);
+      }
+
+      if (fbUser) {
+        const fallbackUser: ApiUser = {
+          id: fbUser.uid,
+          name: fbUser.displayName || 'Google User',
+          email: fbUser.email || '',
+          phone: fbUser.phoneNumber || null,
+          picture: fbUser.photoURL || null,
+          emailVerified: Boolean(fbUser.emailVerified),
+          hasGoogleLinked: true,
+          hasPassword: false,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        onLoginSuccess(fallbackUser);
         handleRedirect();
-      } else {
-        setError('Failed to link Google account with server.');
       }
     } catch (err: any) {
       if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {

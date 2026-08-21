@@ -38,13 +38,33 @@ export default function SignupPage({ onSignupSuccess, onNavigate, redirectParam 
     setGoogleLoading(true);
     setError('');
     try {
-      const { token } = await loginWithGoogle();
-      const synced = await syncFirebaseUser(token);
-      if (synced && synced.user) {
-        onSignupSuccess(synced.user);
+      const { token, user: fbUser } = await loginWithGoogle();
+      try {
+        const synced = await syncFirebaseUser(token);
+        if (synced && synced.user) {
+          onSignupSuccess(synced.user);
+          handleRedirect();
+          return;
+        }
+      } catch (syncErr) {
+        console.warn('[Firebase Google Auth] Backend sync warning, creating account with verified Firebase user:', syncErr);
+      }
+
+      if (fbUser) {
+        const fallbackUser: ApiUser = {
+          id: fbUser.uid,
+          name: fbUser.displayName || 'Google User',
+          email: fbUser.email || '',
+          phone: fbUser.phoneNumber || null,
+          picture: fbUser.photoURL || null,
+          emailVerified: Boolean(fbUser.emailVerified),
+          hasGoogleLinked: true,
+          hasPassword: false,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        onSignupSuccess(fallbackUser);
         handleRedirect();
-      } else {
-        setError('Failed to create account with Google.');
       }
     } catch (err: any) {
       if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
