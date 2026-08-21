@@ -24,6 +24,7 @@
     "@vitejs/plugin-react": "^6.0.3",
     "autoprefixer": "^10.4.19",
     "canvas-confetti": "^1.9.3",
+    "firebase": "^12.18.0",
     "framer-motion": "^11.2.10",
     "lucide-react": "^0.395.0",
     "postcss": "^8.4.38",

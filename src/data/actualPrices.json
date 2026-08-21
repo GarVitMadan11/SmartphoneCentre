@@ -544,12 +544,12 @@
   "sam-flip5": {
     "modelName": "Galaxy Z Flip 5",
     "cashifyPrices": {
-      "8_256": 27210,
-      "8_512": 28360
+      "8_256": 27410,
+      "8_512": 27970
     },
     "ourPrices": {
-      "8_256": 28026,
-      "8_512": 29211
+      "8_256": 28232,
+      "8_512": 28809
     }
   },
   "sam-a13": {
@@ -566,14 +566,14 @@
   "sam-fold5": {
     "modelName": "Galaxy Z Fold 5",
     "cashifyPrices": {
-      "12_256": 49600,
-      "12_512": 48640,
-      "12_1024": 50620
+      "12_256": 57410,
+      "12_512": 54620,
+      "12_1024": 60500
     },
     "ourPrices": {
-      "12_256": 51088,
-      "12_512": 50099,
-      "12_1024": 52139
+      "12_256": 59132,
+      "12_512": 56259,
+      "12_1024": 62315
     }
   },
   "sam-a23-5g": {
@@ -979,12 +979,12 @@
   "catalog-samsung-galaxy-z-flip-7": {
     "modelName": "Galaxy Z Flip 7",
     "cashifyPrices": {
-      "12_256": 53680,
-      "12_512": 54440
+      "12_256": 62500,
+      "12_512": 66130
     },
     "ourPrices": {
-      "12_256": 55290,
-      "12_512": 56073
+      "12_256": 64375,
+      "12_512": 68114
     }
   },
   "catalog-samsung-galaxy-s26": {
@@ -1023,25 +1023,21 @@
   "catalog-samsung-galaxy-z-fold-7": {
     "modelName": "Galaxy Z Fold 7",
     "cashifyPrices": {
-      "12_256": 89300,
-      "12_512": 90630,
-      "16_1024": 93290
+      "12_256": 95000
     },
     "ourPrices": {
-      "12_256": 91979,
-      "12_512": 93349,
-      "16_1024": 96089
+      "12_256": 97850
     }
   },
   "catalog-samsung-galaxy-z-flip-7-fe": {
     "modelName": "Galaxy Z Flip 7 FE",
     "cashifyPrices": {
       "8_128": 50400,
-      "8_256": 51430
+      "8_256": 54340
     },
     "ourPrices": {
       "8_128": 51912,
-      "8_256": 52973
+      "8_256": 55970
     }
   },
   "catalog-samsung-galaxy-z-fold-8-ultra": {
@@ -1996,51 +1992,51 @@
   "sam-fold6": {
     "modelName": "Galaxy Z Fold 6",
     "cashifyPrices": {
-      "12_256": 68100,
-      "12_512": 69500,
-      "12_1024": 71710
+      "12_256": 69600,
+      "12_512": 71770,
+      "12_1024": 74400
     },
     "ourPrices": {
-      "12_256": 70143,
-      "12_512": 71585,
-      "12_1024": 73861
+      "12_256": 71688,
+      "12_512": 73923,
+      "12_1024": 76632
     }
   },
   "catalog-samsung-galaxy-z-fold6-5g": {
     "modelName": "Galaxy Z Fold 6",
     "cashifyPrices": {
-      "12_256": 68100,
-      "12_512": 69500,
-      "12_1024": 71710
+      "12_256": 69600,
+      "12_512": 71770,
+      "12_1024": 74400
     },
     "ourPrices": {
-      "12_256": 70143,
-      "12_512": 71585,
-      "12_1024": 73861
+      "12_256": 71688,
+      "12_512": 73923,
+      "12_1024": 76632
     }
   },
   "catalog-samsung-galaxy-z-fold-6": {
     "modelName": "Galaxy Z Fold 6",
     "cashifyPrices": {
-      "12_256": 68100,
-      "12_512": 69500,
-      "12_1024": 71710
+      "12_256": 69600,
+      "12_512": 71770,
+      "12_1024": 74400
     },
     "ourPrices": {
-      "12_256": 70143,
-      "12_512": 71585,
-      "12_1024": 73861
+      "12_256": 71688,
+      "12_512": 73923,
+      "12_1024": 76632
     }
   },
   "catalog-samsung-galaxy-z-flip7-fe": {
     "modelName": "Galaxy Z Flip 7 FE",
     "cashifyPrices": {
       "8_128": 50400,
-      "8_256": 51430
+      "8_256": 54340
     },
     "ourPrices": {
       "8_128": 51912,
-      "8_256": 52973
+      "8_256": 55970
     }
   },
   "catalog-samsung-galaxy-a57": {
@@ -2516,6 +2512,414 @@
     },
     "ourPrices": {
       "8_128": 5346
+    }
+  },
+  "catalog-samsung-galaxy-z-fold7": {
+    "modelName": "Galaxy Z Fold 7",
+    "cashifyPrices": {
+      "12_256": 95000
+    },
+    "ourPrices": {
+      "12_256": 97850
+    }
+  },
+  "sam-fold7": {
+    "modelName": "Galaxy Z Fold 7",
+    "cashifyPrices": {
+      "12_256": 95000
+    },
+    "ourPrices": {
+      "12_256": 97850
+    }
+  },
+  "catalog-samsung-galaxy-z-flip7": {
+    "modelName": "Galaxy Z Flip 7",
+    "cashifyPrices": {
+      "12_256": 62500,
+      "12_512": 66130
+    },
+    "ourPrices": {
+      "12_256": 64375,
+      "12_512": 68114
+    }
+  },
+  "sam-flip7": {
+    "modelName": "Galaxy Z Flip 7",
+    "cashifyPrices": {
+      "12_256": 62500,
+      "12_512": 66130
+    },
+    "ourPrices": {
+      "12_256": 64375,
+      "12_512": 68114
+    }
+  },
+  "sam-flip7fe": {
+    "modelName": "Galaxy Z Flip 7 FE",
+    "cashifyPrices": {
+      "8_128": 50400,
+      "8_256": 54340
+    },
+    "ourPrices": {
+      "8_128": 51912,
+      "8_256": 55970
+    }
+  },
+  "catalog-samsung-galaxy-z-fold6": {
+    "modelName": "Galaxy Z Fold 6",
+    "cashifyPrices": {
+      "12_256": 69600,
+      "12_512": 71770,
+      "12_1024": 74400
+    },
+    "ourPrices": {
+      "12_256": 71688,
+      "12_512": 73923,
+      "12_1024": 76632
+    }
+  },
+  "sam-flip6": {
+    "modelName": "Galaxy Z Flip 6",
+    "cashifyPrices": {
+      "12_256": 39720,
+      "12_512": 42000
+    },
+    "ourPrices": {
+      "12_256": 40912,
+      "12_512": 43260
+    }
+  },
+  "catalog-samsung-galaxy-z-flip-6": {
+    "modelName": "Galaxy Z Flip 6",
+    "cashifyPrices": {
+      "12_256": 39720,
+      "12_512": 42000
+    },
+    "ourPrices": {
+      "12_256": 40912,
+      "12_512": 43260
+    }
+  },
+  "catalog-samsung-galaxy-z-flip6-5g": {
+    "modelName": "Galaxy Z Flip 6",
+    "cashifyPrices": {
+      "12_256": 39720,
+      "12_512": 42000
+    },
+    "ourPrices": {
+      "12_256": 40912,
+      "12_512": 43260
+    }
+  },
+  "catalog-samsung-galaxy-z-flip6": {
+    "modelName": "Galaxy Z Flip 6",
+    "cashifyPrices": {
+      "12_256": 39720,
+      "12_512": 42000
+    },
+    "ourPrices": {
+      "12_256": 40912,
+      "12_512": 43260
+    }
+  },
+  "catalog-samsung-galaxy-z-fold-5": {
+    "modelName": "Galaxy Z Fold 5",
+    "cashifyPrices": {
+      "12_256": 57410,
+      "12_512": 54620,
+      "12_1024": 60500
+    },
+    "ourPrices": {
+      "12_256": 59132,
+      "12_512": 56259,
+      "12_1024": 62315
+    }
+  },
+  "catalog-samsung-galaxy-z-fold5-5g": {
+    "modelName": "Galaxy Z Fold 5",
+    "cashifyPrices": {
+      "12_256": 57410,
+      "12_512": 54620,
+      "12_1024": 60500
+    },
+    "ourPrices": {
+      "12_256": 59132,
+      "12_512": 56259,
+      "12_1024": 62315
+    }
+  },
+  "catalog-samsung-galaxy-z-fold5": {
+    "modelName": "Galaxy Z Fold 5",
+    "cashifyPrices": {
+      "12_256": 57410,
+      "12_512": 54620,
+      "12_1024": 60500
+    },
+    "ourPrices": {
+      "12_256": 59132,
+      "12_512": 56259,
+      "12_1024": 62315
+    }
+  },
+  "catalog-samsung-galaxy-z-flip-5": {
+    "modelName": "Galaxy Z Flip 5",
+    "cashifyPrices": {
+      "8_256": 27410,
+      "8_512": 27970
+    },
+    "ourPrices": {
+      "8_256": 28232,
+      "8_512": 28809
+    }
+  },
+  "catalog-samsung-galaxy-z-flip5-5g": {
+    "modelName": "Galaxy Z Flip 5",
+    "cashifyPrices": {
+      "8_256": 27410,
+      "8_512": 27970
+    },
+    "ourPrices": {
+      "8_256": 28232,
+      "8_512": 28809
+    }
+  },
+  "catalog-samsung-galaxy-z-flip5": {
+    "modelName": "Galaxy Z Flip 5",
+    "cashifyPrices": {
+      "8_256": 27410,
+      "8_512": 27970
+    },
+    "ourPrices": {
+      "8_256": 28232,
+      "8_512": 28809
+    }
+  },
+  "sam-fold4": {
+    "modelName": "Galaxy Z Fold 4",
+    "cashifyPrices": {
+      "12_256": 40890,
+      "12_512": 43500
+    },
+    "ourPrices": {
+      "12_256": 42117,
+      "12_512": 44805
+    }
+  },
+  "catalog-samsung-galaxy-z-fold-4": {
+    "modelName": "Galaxy Z Fold 4",
+    "cashifyPrices": {
+      "12_256": 40890,
+      "12_512": 43500
+    },
+    "ourPrices": {
+      "12_256": 42117,
+      "12_512": 44805
+    }
+  },
+  "catalog-samsung-galaxy-z-fold4-5g": {
+    "modelName": "Galaxy Z Fold 4",
+    "cashifyPrices": {
+      "12_256": 40890,
+      "12_512": 43500
+    },
+    "ourPrices": {
+      "12_256": 42117,
+      "12_512": 44805
+    }
+  },
+  "catalog-samsung-galaxy-z-fold4": {
+    "modelName": "Galaxy Z Fold 4",
+    "cashifyPrices": {
+      "12_256": 40890,
+      "12_512": 43500
+    },
+    "ourPrices": {
+      "12_256": 42117,
+      "12_512": 44805
+    }
+  },
+  "sam-flip4": {
+    "modelName": "Galaxy Z Flip 4",
+    "cashifyPrices": {
+      "8_128": 19680,
+      "8_256": 15720,
+      "8_512": 20060
+    },
+    "ourPrices": {
+      "8_128": 20270,
+      "8_256": 16192,
+      "8_512": 20662
+    }
+  },
+  "catalog-samsung-galaxy-z-flip-4": {
+    "modelName": "Galaxy Z Flip 4",
+    "cashifyPrices": {
+      "8_128": 19680,
+      "8_256": 15720,
+      "8_512": 20060
+    },
+    "ourPrices": {
+      "8_128": 20270,
+      "8_256": 16192,
+      "8_512": 20662
+    }
+  },
+  "catalog-samsung-galaxy-z-flip4-5g": {
+    "modelName": "Galaxy Z Flip 4",
+    "cashifyPrices": {
+      "8_128": 19680,
+      "8_256": 15720,
+      "8_512": 20060
+    },
+    "ourPrices": {
+      "8_128": 20270,
+      "8_256": 16192,
+      "8_512": 20662
+    }
+  },
+  "catalog-samsung-galaxy-z-flip4": {
+    "modelName": "Galaxy Z Flip 4",
+    "cashifyPrices": {
+      "8_128": 19680,
+      "8_256": 15720,
+      "8_512": 20060
+    },
+    "ourPrices": {
+      "8_128": 20270,
+      "8_256": 16192,
+      "8_512": 20662
+    }
+  },
+  "sam-fold3": {
+    "modelName": "Galaxy Z Fold 3",
+    "cashifyPrices": {
+      "12_256": 21530,
+      "12_512": 86020
+    },
+    "ourPrices": {
+      "12_256": 22176,
+      "12_512": 88601
+    }
+  },
+  "catalog-samsung-galaxy-z-fold-3": {
+    "modelName": "Galaxy Z Fold 3",
+    "cashifyPrices": {
+      "12_256": 21530,
+      "12_512": 86020
+    },
+    "ourPrices": {
+      "12_256": 22176,
+      "12_512": 88601
+    }
+  },
+  "catalog-samsung-galaxy-z-fold3-5g": {
+    "modelName": "Galaxy Z Fold 3",
+    "cashifyPrices": {
+      "12_256": 21530,
+      "12_512": 86020
+    },
+    "ourPrices": {
+      "12_256": 22176,
+      "12_512": 88601
+    }
+  },
+  "catalog-samsung-galaxy-z-fold3": {
+    "modelName": "Galaxy Z Fold 3",
+    "cashifyPrices": {
+      "12_256": 21530,
+      "12_512": 86020
+    },
+    "ourPrices": {
+      "12_256": 22176,
+      "12_512": 88601
+    }
+  },
+  "sam-flip3": {
+    "modelName": "Galaxy Z Flip 3",
+    "cashifyPrices": {
+      "8_128": 12740,
+      "8_256": 13390
+    },
+    "ourPrices": {
+      "8_128": 13122,
+      "8_256": 13792
+    }
+  },
+  "catalog-samsung-galaxy-z-flip-3": {
+    "modelName": "Galaxy Z Flip 3",
+    "cashifyPrices": {
+      "8_128": 12740,
+      "8_256": 13390
+    },
+    "ourPrices": {
+      "8_128": 13122,
+      "8_256": 13792
+    }
+  },
+  "catalog-samsung-galaxy-z-flip3-5g": {
+    "modelName": "Galaxy Z Flip 3",
+    "cashifyPrices": {
+      "8_128": 12740,
+      "8_256": 13390
+    },
+    "ourPrices": {
+      "8_128": 13122,
+      "8_256": 13792
+    }
+  },
+  "catalog-samsung-galaxy-z-flip3": {
+    "modelName": "Galaxy Z Flip 3",
+    "cashifyPrices": {
+      "8_128": 12740,
+      "8_256": 13390
+    },
+    "ourPrices": {
+      "8_128": 13122,
+      "8_256": 13792
+    }
+  },
+  "sam-fold2": {
+    "modelName": "Galaxy Z Fold 2",
+    "cashifyPrices": {
+      "12_256": 17440,
+      "12_512": 18500
+    },
+    "ourPrices": {
+      "12_256": 17963,
+      "12_512": 19055
+    }
+  },
+  "catalog-samsung-galaxy-z-fold-2": {
+    "modelName": "Galaxy Z Fold 2",
+    "cashifyPrices": {
+      "12_256": 17440,
+      "12_512": 18500
+    },
+    "ourPrices": {
+      "12_256": 17963,
+      "12_512": 19055
+    }
+  },
+  "catalog-samsung-galaxy-z-fold2-5g": {
+    "modelName": "Galaxy Z Fold 2",
+    "cashifyPrices": {
+      "12_256": 17440,
+      "12_512": 18500
+    },
+    "ourPrices": {
+      "12_256": 17963,
+      "12_512": 19055
+    }
+  },
+  "catalog-samsung-galaxy-z-fold2": {
+    "modelName": "Galaxy Z Fold 2",
+    "cashifyPrices": {
+      "12_256": 17440,
+      "12_512": 18500
+    },
+    "ourPrices": {
+      "12_256": 17963,
+      "12_512": 19055
     }
   }
 }

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Smartphone, Tablet, ChevronDown, Zap, Truck, Menu, X, User, Package, Instagram } from 'lucide-react';
 import { ApiUser } from '../../utils/api';
 import { BRANDS as STATIC_BRANDS } from '../../data/mockDatabase';
@@ -29,33 +29,6 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const navRef = useRef<HTMLDivElement>(null);
 
-  // Live Launch Countdown Timer State (Target: August 22, 2026 12:00 AM IST)
-  const TARGET_LAUNCH_TIME = useMemo(() => new Date('2026-08-22T00:00:00+05:30').getTime(), []);
-  const [timeLeft, setTimeLeft] = useState(() => {
-    const diff = Math.max(0, new Date('2026-08-22T00:00:00+05:30').getTime() - Date.now());
-    return {
-      days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-      hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
-      minutes: Math.floor((diff / (1000 * 60)) % 60),
-      seconds: Math.floor((diff / 1000) % 60),
-      isLive: diff <= 0,
-    };
-  });
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      const diff = Math.max(0, TARGET_LAUNCH_TIME - Date.now());
-      setTimeLeft({
-        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-        hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
-        minutes: Math.floor((diff / (1000 * 60)) % 60),
-        seconds: Math.floor((diff / 1000) % 60),
-        isLive: diff <= 0,
-      });
-      if (diff <= 0) clearInterval(timer);
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [TARGET_LAUNCH_TIME]);
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -469,57 +442,6 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
         </div>
       )}
 
-      {/* Launch Announcement Strip (Rephonix Design System) */}
-      <div className="bg-slate-900 text-white border-t border-b border-white/10 py-3 px-4 sm:px-6 shadow-md font-outfit">
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3 sm:gap-4 text-center sm:text-left">
-          {/* Left: Clean Tag & Launch Date Announcement */}
-          <div className="flex items-center justify-center sm:justify-start gap-3 min-w-0 w-full lg:w-auto">
-            <span className="flex-shrink-0 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/40 text-blue-300 text-xs font-semibold tracking-wide shadow-xs">
-              <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
-              Grand Opening
-            </span>
-            <span className="font-semibold text-slate-100 truncate text-xs sm:text-sm md:text-base tracking-wide">
-              Rephonix Platform Launches <span className="text-white font-bold underline decoration-blue-400 decoration-2 underline-offset-4">August 22, 2026</span> at <span className="text-blue-300 font-bold">12:00 AM IST</span>
-            </span>
-          </div>
-
-          {/* Right: Clean Live Countdown Clock */}
-          <div className="flex items-center justify-center lg:justify-end gap-3 text-xs sm:text-sm w-full lg:w-auto">
-            <span className="text-slate-300 text-xs font-medium hidden sm:inline tracking-wide">Launch Countdown:</span>
-            
-            {timeLeft.isLive ? (
-              <span className="text-emerald-400 font-bold text-sm px-3.5 py-1.5 rounded-md bg-emerald-500/15 border border-emerald-400/40">
-                🎉 WE ARE LIVE NOW!
-              </span>
-            ) : (
-              <div className="flex items-center gap-1.5 font-mono text-sm sm:text-base">
-                <div className="flex items-center gap-1 bg-white/10 dark:bg-slate-800 px-2.5 py-1 rounded-md border border-white/15 text-white font-bold shadow-xs">
-                  <span>{String(timeLeft.days).padStart(2, '0')}</span>
-                  <span className="text-xs text-slate-400 font-sans font-medium uppercase">d</span>
-                </div>
-                <span className="text-slate-500 font-bold text-sm sm:text-base">:</span>
-                
-                <div className="flex items-center gap-1 bg-white/10 dark:bg-slate-800 px-2.5 py-1 rounded-md border border-white/15 text-white font-bold shadow-xs">
-                  <span>{String(timeLeft.hours).padStart(2, '0')}</span>
-                  <span className="text-xs text-slate-400 font-sans font-medium uppercase">h</span>
-                </div>
-                <span className="text-slate-500 font-bold text-sm sm:text-base">:</span>
-                
-                <div className="flex items-center gap-1 bg-white/10 dark:bg-slate-800 px-2.5 py-1 rounded-md border border-white/15 text-white font-bold shadow-xs">
-                  <span>{String(timeLeft.minutes).padStart(2, '0')}</span>
-                  <span className="text-xs text-slate-400 font-sans font-medium uppercase">m</span>
-                </div>
-                <span className="text-slate-500 font-bold text-sm sm:text-base">:</span>
-                
-                <div className="flex items-center gap-1 bg-blue-600/30 border border-blue-400/50 px-2.5 py-1 rounded-md text-blue-300 font-bold shadow-xs">
-                  <span>{String(timeLeft.seconds).padStart(2, '0')}</span>
-                  <span className="text-xs text-blue-300/80 font-sans font-medium uppercase">s</span>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
     </header>
   );
 };
