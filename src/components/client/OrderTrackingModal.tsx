@@ -1,3 +1,5 @@
+import React, { useState, useEffect } from 'react';
+import { X, Search, CheckCircle2, Clock, AlertCircle, Package, Calendar, MapPin, Copy, Check } from 'lucide-react';
 import { trackBookingOrder, fetchMyBookings, downloadBookingPdf, ApiTrackBooking, ApiBooking, ApiUser } from '../../utils/api';
 import { getDeviceImage, Model } from '../../data/mockDatabase';
 
@@ -298,14 +300,13 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                         </div>
 
                         <div className="flex justify-end pt-1">
-                          <a
-                            href={`/api/bookings/${b.id}/pdf`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 text-xs font-semibold text-cobalt hover:text-cobalt-hover hover:underline bg-cobalt/10 px-3 py-1.5 rounded-md border border-cobalt/20 transition-all"
+                          <button
+                            type="button"
+                            onClick={() => downloadBookingPdf(b.id)}
+                            className="inline-flex items-center gap-1.5 text-xs font-semibold text-cobalt hover:text-cobalt-hover hover:underline bg-cobalt/10 px-3 py-1.5 rounded-md border border-cobalt/20 transition-all cursor-pointer"
                           >
                             📄 Download PDF Quotation
-                          </a>
+                          </button>
                         </div>
 
                         {/* Status Progression Stepper */}

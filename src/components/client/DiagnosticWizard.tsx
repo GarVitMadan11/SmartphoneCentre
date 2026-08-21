@@ -504,90 +504,103 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
         )}
       </AnimatePresence>
 
-      {/* Wizard Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-ice-border pb-4 sm:pb-5 mb-4 sm:mb-8 bg-canvas-pure p-4 sm:p-5 rounded-sm gap-4 text-left">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-zinc-800 p-1 border border-ice-border flex items-center justify-center flex-shrink-0 shadow-xs">
-            <img 
-              src={getDeviceImage(model.id, model.brandId, variant?.color, model.imageUrl)} 
-              alt={model.name} 
-              className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" 
-            />
-          </div>
-
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block">Evaluation Wizard</span>
-              <span className="text-[9px] font-mono font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                Up to {formatPrice(variant.basePrice)}
-              </span>
+      {/* Premium Evaluation Wizard Header */}
+      <div className="bg-canvas-pure border border-ice-border rounded-xl p-4 sm:p-5 mb-6 shadow-sm space-y-4 text-left">
+        {/* Top Header Row: Device Info + Live Payout HUD */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-ice-border/60">
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="w-14 h-14 rounded-xl bg-slate-50 dark:bg-zinc-800/80 p-1.5 border border-ice-border flex items-center justify-center flex-shrink-0 shadow-xs">
+              <img 
+                src={getDeviceImage(model.id, model.brandId, variant?.color, model.imageUrl)} 
+                alt={model.name} 
+                className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" 
+              />
             </div>
-            <div className="flex flex-wrap items-center gap-2 mt-0.5">
-              <h2 className="font-bold text-ink-navy text-lg sm:text-xl tracking-tight truncate">{model.name}</h2>
-              <span className="text-[10px] font-mono font-bold tracking-wider bg-cobalt/10 text-cobalt px-2 py-0.5 rounded-md border border-cobalt/20 flex-shrink-0">
-                {variant.storageGb >= 1024 ? '1TB' : `${variant.storageGb}GB`}
-              </span>
-            </div>
-          </div>
-        </div>
 
-        {/* Real-Time Live Payout HUD Badge */}
-        {step < 6 && (
-          <div className="flex items-center gap-3 bg-gradient-to-r from-slate-950 via-zinc-900 to-slate-900 text-white px-4 py-2 rounded-xl border border-zinc-800 shadow-md">
-            <div>
-              <span className="text-[9px] font-mono tracking-widest text-zinc-400 uppercase block">LIVE ESTIMATED PAYOUT</span>
+            <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <span className="text-lg font-black text-emerald-400 font-outfit">
-                  {valuation.isCritical ? '₹ 0 (Locked)' : formatPrice(Math.max(0, valuation.finalPrice - 119))}
+                <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase font-semibold">Evaluation Wizard</span>
+                <span className="text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                  Up to {formatPrice(variant.basePrice)}
                 </span>
-                <span className="text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/30">
-                  {Math.round((valuation.finalPrice / variant.basePrice) * 100)}% Retained
+              </div>
+              <div className="flex flex-wrap items-center gap-2 mt-0.5">
+                <h2 className="font-bold text-ink-navy text-xl sm:text-2xl tracking-tight truncate">{model.name}</h2>
+                <span className="text-[10px] font-mono font-bold tracking-wider bg-cobalt/10 text-cobalt px-2.5 py-0.5 rounded-md border border-cobalt/20 flex-shrink-0">
+                  {variant.storageGb >= 1024 ? '1TB' : `${variant.storageGb}GB`}
                 </span>
               </div>
             </div>
           </div>
-        )}
 
-        {/* Stepper Progress Indicator */}
-        <div className="flex flex-col gap-1.5">
-          {/* Mobile Step Bar */}
-          <div className="flex sm:hidden items-center gap-2">
-            <span className="text-[10px] text-zinc-500 font-mono font-bold tracking-wider uppercase flex-shrink-0">
+          {/* Real-Time Live Payout HUD Badge */}
+          {step < 6 && (
+            <div className="flex items-center gap-3 bg-gradient-to-r from-slate-900 via-zinc-900 to-slate-950 text-white px-4 py-2.5 rounded-xl border border-zinc-800 shadow-md flex-shrink-0">
+              <div>
+                <span className="text-[9px] font-mono tracking-widest text-zinc-400 uppercase block font-semibold">LIVE ESTIMATED PAYOUT</span>
+                <div className="flex items-center gap-2.5 mt-0.5">
+                  <span className="text-xl sm:text-2xl font-black text-emerald-400 font-mono tracking-tight">
+                    {valuation.isCritical ? '₹ 0 (Locked)' : formatPrice(Math.max(0, valuation.finalPrice - 119))}
+                  </span>
+                  <span className="text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-md border border-emerald-500/30">
+                    {Math.round((valuation.finalPrice / variant.basePrice) * 100)}% Retained
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Bottom Row: Stepper Progress Indicator */}
+        <div className="w-full">
+          {/* Mobile Stepper Progress Bar */}
+          <div className="flex sm:hidden items-center gap-3">
+            <span className="text-[11px] text-ink-navy font-mono font-bold tracking-wider uppercase flex-shrink-0">
               Step {Math.min(step + 1, 7)}/7: {stepsList[Math.min(step, 6)]?.title}
             </span>
-            <div className="flex-1 h-2 rounded-full bg-ice-gray overflow-hidden">
+            <div className="flex-1 h-2.5 rounded-full bg-ice-gray overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-cobalt via-indigo-600 to-emerald-500 transition-all duration-500"
-                style={{width: `${Math.min(((step + 1) / 7) * 100, 100)}%`}}
+                className="h-full bg-gradient-to-r from-cobalt via-indigo-600 to-emerald-500 transition-all duration-500 rounded-full"
+                style={{ width: `${Math.min(((step + 1) / 7) * 100, 100)}%` }}
               />
             </div>
           </div>
 
-          {/* Desktop 7-Step Stepper Dots */}
-          <div className="hidden sm:flex items-center gap-2">
-            {stepsList.map((s, idx) => (
-              <div key={idx} className="flex items-center gap-2">
-                <div className="flex flex-col items-center">
+          {/* Desktop 7-Step Horizontal Stepper with Connecting Bar */}
+          <div className="hidden sm:flex items-center justify-between relative w-full pt-1">
+            {/* Connecting Track Line */}
+            <div className="absolute top-5 left-6 right-6 h-1 bg-zinc-200 dark:bg-zinc-800 -z-0 rounded-full">
+              <div 
+                className="h-full bg-gradient-to-r from-cobalt via-emerald-500 to-emerald-600 transition-all duration-500 rounded-full"
+                style={{ width: `${(Math.min(step, 6) / 6) * 100}%` }}
+              />
+            </div>
+
+            {stepsList.map((s, idx) => {
+              const isCompleted = step > idx;
+              const isActive = step === idx;
+
+              return (
+                <div key={idx} className="relative z-10 flex flex-col items-center group cursor-pointer" onClick={() => isCompleted && setStep(idx)}>
                   <div 
-                    className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs border transition-all ${
-                      step > idx 
-                        ? 'bg-emerald-500 border-emerald-500 text-white shadow-xs' 
-                        : step === idx 
-                        ? 'bg-cobalt/15 border-cobalt text-cobalt scale-110 ring-2 ring-cobalt/30 font-extrabold shadow-md' 
-                        : 'bg-canvas-white border-ice-border text-ink-muted'
+                    className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs transition-all duration-300 ${
+                      isCompleted 
+                        ? 'bg-emerald-500 text-white shadow-sm ring-2 ring-emerald-500/20' 
+                        : isActive 
+                        ? 'bg-cobalt text-white scale-110 ring-4 ring-cobalt/20 font-extrabold shadow-md' 
+                        : 'bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-zinc-500'
                     }`}
                   >
-                    {step > idx ? <Check className="w-4 h-4" /> : idx + 1}
+                    {isCompleted ? <Check className="w-4 h-4 stroke-[3]" /> : idx + 1}
                   </div>
-                  <span className={`text-[9px] font-mono uppercase tracking-wider mt-1 ${step === idx ? 'text-cobalt font-bold' : step > idx ? 'text-emerald-600 font-semibold' : 'text-zinc-400'}`}>
+                  <span className={`text-[10px] font-mono uppercase tracking-wider mt-1.5 font-bold transition-colors ${
+                    isActive ? 'text-cobalt' : isCompleted ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-400'
+                  }`}>
                     {s.title.split(' ')[0]}
                   </span>
                 </div>
-                {idx < 6 && (
-                  <div className={`w-4 h-0.5 mb-4 transition-all ${step > idx ? 'bg-emerald-500' : 'bg-ice-border'}`} />
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
