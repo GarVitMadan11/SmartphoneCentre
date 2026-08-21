@@ -1028,7 +1028,7 @@ app.get('/api/bookings/:id/pdf', async (req, res) => {
 
     let defectDescriptions: string[] = [];
     try {
-      const ids: string[] = JSON.parse(booking.defectIdsJson || '[]');
+      const ids: string[] = JSON.parse((booking as any).defectIdsJson || '[]');
       defectDescriptions = ids;
     } catch (_) {}
 
