@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo, Suspense, useCallback, startTransition } from 'react';
 import { Model, Variant, DefectRule, MODELS as STATIC_MODELS, BRANDS as STATIC_BRANDS, generateVariantsForModel, INITIAL_BOOKINGS, Brand, Booking, TABLET_MODELS, getDeviceImage, getDefectRulesForCategory, getMaxVariantPrice } from './data/mockDatabase';
-import { fetchBrands, fetchModels, fetchBookings as apiFetchBookings, fetchCurrentUser, customerLogout, hasAdminToken, ApiUser } from './utils/api';
+import { fetchBrands, fetchModels, fetchBookings as apiFetchBookings, fetchCurrentUser, customerLogout, hasAdminToken, syncFirebaseUser, ApiUser } from './utils/api';
+import { subscribeToFirebaseAuth, checkRedirectAuthResult } from './services/firebaseAuth';
 import { DeviceSelector } from './components/client/DeviceSelector';
 import { DeviceCategoryShowcase } from './components/client/DeviceCategoryShowcase';
 import { SellYourDevice } from './components/client/SellYourDevice';
@@ -357,7 +358,7 @@ export default function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  // Fetch customer session on startup
+  // Fetch customer session on startup & Listen for Firebase Auth state changes
   useEffect(() => {
     fetchCurrentUser()
       .then(res => {
@@ -366,7 +367,51 @@ export default function App() {
         }
       })
       .catch(err => console.warn('Customer session fetch error:', err));
+
+    checkRedirectAuthResult().catch(() => {});
+
+    const unsubscribe = subscribeToFirebaseAuth(async (fbUser) => {
+      if (fbUser) {
+        try {
+          const token = await fbUser.getIdToken();
+          const synced = await syncFirebaseUser(token);
+          if (synced && synced.user) {
+            setCurrentUser(synced.user);
+            return;
+          }
+        } catch (syncErr) {
+          console.warn('[Firebase Auth] Background sync warning:', syncErr);
+        }
+
+        setCurrentUser({
+          id: fbUser.uid,
+          name: fbUser.displayName || 'Google User',
+          email: fbUser.email || '',
+          phone: fbUser.phoneNumber || null,
+          picture: fbUser.photoURL || null,
+          emailVerified: Boolean(fbUser.emailVerified),
+          hasGoogleLinked: true,
+          hasPassword: false,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
+
+  // Automatically redirect if user logs in while on /login or /signup
+  useEffect(() => {
+    if (currentUser && (path.startsWith('/login') || path.startsWith('/signup'))) {
+      const redirect = new URLSearchParams(window.location.search).get('redirect');
+      if (redirect === 'booking') {
+        navigate('/smartphones');
+      } else {
+        navigate('/');
+      }
+    }
+  }, [currentUser, path]);
 
   // Restore pending booking flow if user logs in
   useEffect(() => {
