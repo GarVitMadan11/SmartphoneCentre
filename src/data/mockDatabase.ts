@@ -1626,6 +1626,13 @@ export function getModelSupportedRam(model: Model): number[] {
   if (isSmartwatchDevice(model.brandId, model.name, model.id)) {
     return [2];
   }
+  const modelPrices = (actualPrices as Record<string, any>)[model.id];
+  if (modelPrices && modelPrices.ourPrices && Object.keys(modelPrices.ourPrices).length > 0) {
+    const rams = Array.from(new Set(
+      Object.keys(modelPrices.ourPrices).map(k => Number(k.split('_')[0])).filter(r => !isNaN(r))
+    )).sort((a, b) => a - b);
+    if (rams.length > 0) return rams;
+  }
   if (model.supportedRamGb && Array.isArray(model.supportedRamGb) && model.supportedRamGb.some(r => r > 0)) {
     return model.supportedRamGb.filter(r => r > 0);
   }
@@ -1638,6 +1645,14 @@ export function getModelSupportedRam(model: Model): number[] {
 
 /** Returns accurate supported storage options (GB) for a model (eliminates 128GB for Pro Max, Ultra, Fold models) */
 export function getModelSupportedStorage(model: Model): number[] {
+  const modelPrices = (actualPrices as Record<string, any>)[model.id];
+  if (modelPrices && modelPrices.ourPrices && Object.keys(modelPrices.ourPrices).length > 0) {
+    const storages = Array.from(new Set(
+      Object.keys(modelPrices.ourPrices).map(k => Number(k.split('_')[1])).filter(s => !isNaN(s) && s > 0)
+    )).sort((a, b) => a - b);
+    if (storages.length > 0) return storages;
+  }
+
   const nameLower = model.name.toLowerCase();
   const isProMaxOrUltra = nameLower.includes('pro max') || nameLower.includes('17 pro') || nameLower.includes('17 air') || nameLower.includes('ultra') || nameLower.includes('fold');
 
@@ -1655,10 +1670,7 @@ export function getModelSupportedStorage(model: Model): number[] {
   if (model.category === 'budget') {
     return [32, 64, 128, 256];
   }
-  if (model.category === 'midrange') {
-    return [128, 256, 512];
-  }
-  return [128, 256, 512, 1024];
+  return [128, 256, 512];
 }
 
 /** Generates the full record of +3% Cashify prices for all supported RAM and storage variants of a model */
@@ -1666,6 +1678,11 @@ export function buildVariantPricesForModel(model: Model): Record<string, number>
   if (model.variantPrices && Object.keys(model.variantPrices).length > 0) {
     return model.variantPrices;
   }
+  const modelPrices = (actualPrices as Record<string, any>)[model.id];
+  if (modelPrices && modelPrices.ourPrices && Object.keys(modelPrices.ourPrices).length > 0) {
+    return { ...modelPrices.ourPrices };
+  }
+
   const rams = getModelSupportedRam(model);
   const storages = getModelSupportedStorage(model);
   const isApple = isAppleDevice(model.brandId, model.name);
@@ -1674,21 +1691,14 @@ export function buildVariantPricesForModel(model: Model): Record<string, number>
   const map: Record<string, number> = {};
   for (const r of rams) {
     for (const s of storages) {
-      let pricePlus3Pct = 0;
-      const modelPrices = (actualPrices as Record<string, any>)[model.id];
-      if (modelPrices && modelPrices.ourPrices && modelPrices.ourPrices[`${r}_${s}`]) {
-        pricePlus3Pct = modelPrices.ourPrices[`${r}_${s}`];
-      } else {
-        let baseCashify = predictCashifyPrice(model.brandId, model.name, model.category, model.releaseYear, s);
-        if (!isApple && r > 0 && rams.length > 1 && !isNaN(minRam) && isFinite(minRam)) {
-          const stepCount = (r - minRam) / 2;
-          if (stepCount > 0) {
-            baseCashify += Math.round(stepCount * 1200);
-          }
+      let baseCashify = predictCashifyPrice(model.brandId, model.name, model.category, model.releaseYear, s);
+      if (!isApple && r > 0 && rams.length > 1 && !isNaN(minRam) && isFinite(minRam)) {
+        const stepCount = (r - minRam) / 2;
+        if (stepCount > 0) {
+          baseCashify += Math.round(stepCount * 1200);
         }
-        pricePlus3Pct = Math.round(baseCashify * 1.03);
       }
-      map[`${r}_${s}`] = pricePlus3Pct;
+      map[`${r}_${s}`] = Math.round(baseCashify * 1.03);
     }
   }
   return map;
