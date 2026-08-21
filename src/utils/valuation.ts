@@ -48,6 +48,7 @@ export function calculateValuation(
     deviceAge?: AgeFactorKey;
     marketDemand?: MarketDemandKey;
     variantType?: VariantFactorKey;
+    dualEsim?: boolean;
   }
 ): ValuationBreakdown {
   const result: Stage1ValuationResult = calculateStage1Valuation({
@@ -62,7 +63,8 @@ export function calculateValuation(
     warrantyAge: options?.warrantyAge || 'out_of_warranty',
     deviceAge: options?.deviceAge,
     marketDemand: options?.marketDemand,
-    variantType: options?.variantType
+    variantType: options?.variantType,
+    dualEsim: options?.dualEsim
   });
 
   const deductions: ValuationDeduction[] = result.auditTrail.adjustments.map(adj => ({

@@ -28,6 +28,8 @@ export interface PricingInput {
   marketDemand?: MarketDemandKey;
   variantType?: VariantFactorKey;
   configOverride?: Partial<PricingRulesConfig>;
+  /** Dual eSIM question answer — only relevant for Apple Pro/Pro Max iPhone 14+ */
+  dualEsim?: boolean;
 }
 
 export interface AdjustmentDetail {
@@ -309,6 +311,42 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
   // Calculate Pre-Accessory Valuation
   const preAccessoryValue = Math.round(basePrice * fAge * fMarket * fCondition * fVariant);
 
+  // Dual eSIM Deduction — Apple Pro / Pro Max iPhone 14 and above only
+  // iPhone 14/15/16 Pro/Pro Max: -5% | iPhone 17 Pro/Pro Max: -8%
+  const nameLowerEsim = input.modelName.toLowerCase();
+  const isAppleProOrProMax = isApple && (nameLowerEsim.includes('pro max') || nameLowerEsim.includes(' pro'));
+  const isIphone17ProSeries = isAppleProOrProMax && nameLowerEsim.includes('iphone 17');
+  const isIphone14to16ProSeries = isAppleProOrProMax && (
+    nameLowerEsim.includes('iphone 14') ||
+    nameLowerEsim.includes('iphone 15') ||
+    nameLowerEsim.includes('iphone 16')
+  );
+
+  let dualEsimDeduction = 0;
+  if (input.dualEsim === true) {
+    if (isIphone17ProSeries) {
+      dualEsimDeduction = Math.round(preAccessoryValue * 0.08);
+      adjustments.push({
+        id: 'dual-esim-deduction-17',
+        name: 'Dual eSIM Configuration Deduction (iPhone 17 Pro Series)',
+        category: 'configuration',
+        type: 'TYPE_A_PERCENT',
+        rateOrValue: -0.08,
+        impactAmount: -dualEsimDeduction
+      });
+    } else if (isIphone14to16ProSeries) {
+      dualEsimDeduction = Math.round(preAccessoryValue * 0.05);
+      adjustments.push({
+        id: 'dual-esim-deduction-14-16',
+        name: 'Dual eSIM Configuration Deduction (iPhone 14–16 Pro Series)',
+        category: 'configuration',
+        type: 'TYPE_A_PERCENT',
+        rateOrValue: -0.05,
+        impactAmount: -dualEsimDeduction
+      });
+    }
+  }
+
   // Group E — Accessories (Box, Charger, Cable, Invoice) -> Fixed Economic Deductions
   let dAccessoriesRaw = 0;
   input.selectedDefects.filter(d => d.category === 'accessories').forEach(defect => {
@@ -328,8 +366,8 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
   const maxAccessoryCap = Math.round(basePrice * config.accessoryMaxCapPercent);
   const dAccessoriesCapped = Math.min(dAccessoriesRaw, maxAccessoryCap);
 
-  // Calculate Pre-Vendor Adjusted Benchmark
-  let adjustedBenchmark = preAccessoryValue - dAccessoriesCapped;
+  // Calculate Pre-Vendor Adjusted Benchmark (includes dual eSIM deduction)
+  let adjustedBenchmark = preAccessoryValue - dualEsimDeduction - dAccessoriesCapped;
 
   // Minimum Valuation / Salvage Floor Check
   const minimumRecycleFloor = Math.max(500, Math.round(basePrice * 0.08));

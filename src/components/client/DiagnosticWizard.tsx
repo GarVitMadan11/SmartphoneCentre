@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { Model, Variant, getDefectRulesForCategory, DefectRule, isAppleDevice, isSmartwatchDevice, isTabletDevice, getDeviceImage } from '../../data/mockDatabase';
 import { calculateValuation } from '../../utils/valuation';
+import type { AgeFactorKey } from '../../data/pricingRulesConfig';
 import { 
   ArrowLeft, Check, ChevronRight, Activity, Sparkles, 
   Smartphone, Box, Zap, ShieldCheck, Printer, Receipt,
@@ -188,6 +189,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
   const [warrantyAge, setWarrantyAge] = useState<'under_3m' | '3_to_6m' | '6_to_11m' | 'out_of_warranty'>('out_of_warranty');
   const [simType, setSimType] = useState<'dual_sim' | 'single_sim'>('dual_sim');
+  const [dualEsim, setDualEsim] = useState<boolean | null>(null);
 
   // Calculate live valuation via Stage 1 Rephonix Pricing Engine
   const valuation = useMemo(() => {
@@ -198,9 +200,10 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
       category: model.category,
       simType,
       warrantyAge,
-      deviceAge
+      deviceAge,
+      dualEsim: dualEsim === true
     });
-  }, [variant, selectedDefects, model, simType, warrantyAge, deviceAge]);
+  }, [variant, selectedDefects, model, simType, warrantyAge, deviceAge, dualEsim]);
 
   // Stable receipt reference code — generated once per wizard session
   const receiptRef = useMemo(() => Math.random().toString(36).substr(2, 6).toUpperCase(), []);
@@ -1432,6 +1435,75 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                     </div>
                   </div>
                 )}
+
+                {/* Dual eSIM Question — Apple Pro / Pro Max iPhone 14+ only */}
+                {(() => {
+                  const nm = model.name.toLowerCase();
+                  const isProOrProMax = nm.includes('pro max') || nm.includes(' pro');
+                  const isEligible = model.brandId === 'brand-apple' && isProOrProMax && (
+                    nm.includes('iphone 14') || nm.includes('iphone 15') ||
+                    nm.includes('iphone 16') || nm.includes('iphone 17')
+                  );
+                  const is17Series = nm.includes('iphone 17');
+                  if (!isEligible) return null;
+                  return (
+                    <div className="mt-6 text-left border-t border-ice-border pt-6">
+                      <h4 className="text-sm font-bold text-ink-navy font-outfit uppercase tracking-wider mb-1">
+                        How many eSIMs does your device support?
+                      </h4>
+                      <p className="text-[11px] text-ink-muted mb-3 font-light">
+                        Please select &quot;Dual eSIM&quot; if your device supports dual eSIMs. Otherwise, select &quot;Single eSIM&quot;.
+                      </p>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div
+                          onClick={() => setDualEsim(false)}
+                          className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center gap-3 ${
+                            dualEsim === false
+                              ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/30'
+                              : 'border-ice-border bg-canvas-white hover:border-emerald-500/40'
+                          }`}
+                        >
+                          <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+                            <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <rect x="5" y="2" width="14" height="20" rx="2" strokeWidth="2"/>
+                              <line x1="12" y1="18" x2="12" y2="18.01" strokeWidth="2" strokeLinecap="round"/>
+                            </svg>
+                          </div>
+                          <div>
+                            <h5 className="font-bold text-xs text-ink-navy">Single eSIM</h5>
+                            <p className="text-[11px] text-ink-muted mt-0.5 font-light">Supports one eSIM line.</p>
+                          </div>
+                        </div>
+
+                        <div
+                          onClick={() => setDualEsim(true)}
+                          className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center gap-3 ${
+                            dualEsim === true
+                              ? 'border-rose-500 bg-rose-500/10 ring-1 ring-rose-500/30'
+                              : 'border-ice-border bg-canvas-white hover:border-rose-500/40'
+                          }`}
+                        >
+                          <div className="w-8 h-8 rounded-lg bg-rose-500/10 flex items-center justify-center flex-shrink-0">
+                            <svg className="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <rect x="3" y="2" width="8" height="13" rx="1.5" strokeWidth="2"/>
+                              <rect x="13" y="2" width="8" height="13" rx="1.5" strokeWidth="2"/>
+                              <line x1="7" y1="18" x2="17" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                            </svg>
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <h5 className="font-bold text-xs text-ink-navy">Dual eSIM</h5>
+                              <span className="text-[9px] font-mono font-bold bg-rose-500/20 text-rose-600 px-1.5 py-0.5 rounded-md">
+                                -{is17Series ? '8' : '5'}%
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-ink-muted mt-0.5 font-light">Supports two eSIM lines simultaneously.</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
               </motion.div>
             )}
 
