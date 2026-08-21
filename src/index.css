@@ -296,13 +296,7 @@
   display: flex;
   width: max-content;
   will-change: transform;
-  animation: tickerSlide 45s linear infinite;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .ticker-container:hover .animate-pilot-ticker {
-    animation-play-state: paused;
-  }
+  animation: tickerSlide 38s linear infinite !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -312,6 +306,7 @@
     overflow-x: auto;
   }
 }
+
 
 
 
