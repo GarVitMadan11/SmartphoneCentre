@@ -1874,7 +1874,11 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                 </div>
                 <div>
                   <h4 className="font-bold text-xs text-ink-navy dark:text-white leading-tight">{model.name}</h4>
-                  <p className="text-[10px] text-ink-muted mt-0.5">{variant.storageGb}GB • {variant.color || 'Standard'}</p>
+                  <p className="text-[10px] text-ink-muted mt-0.5">
+                    {variant.storageGb ? (variant.storageGb >= 1024 ? `${variant.storageGb / 1024}TB` : `${variant.storageGb}GB`) : ''}
+                    {variant.ramGb ? ` • ${variant.ramGb}GB RAM` : ''}
+                    {variant.color && (variant.color.includes('Wi-Fi') || variant.color.includes('Cellular')) ? ` • ${variant.color}` : ''}
+                  </p>
                   <div className="flex items-baseline gap-1 mt-1">
                     <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-wider">Selling Price:</span>
                     <span className="text-xs font-extrabold text-red-500 font-mono">₹ XX,XXX</span>

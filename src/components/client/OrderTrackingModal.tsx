@@ -134,7 +134,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({ isOpen, 
                     Device for Trade-In
                   </span>
                   <h4 className="font-bold text-base text-ink-navy mt-0.5">
-                    {trackingResult.modelName} ({trackingResult.storageGb}GB - {trackingResult.color})
+                    {trackingResult.modelName} ({trackingResult.storageGb >= 1024 ? `${trackingResult.storageGb / 1024}TB` : `${trackingResult.storageGb}GB`}{trackingResult.color && trackingResult.color !== 'Standard' && (trackingResult.color.includes('Wi-Fi') || trackingResult.color.includes('Cellular')) ? ` - ${trackingResult.color}` : ''})
                   </h4>
                   <p className="text-xs text-ink-muted mt-1">
                     Scheduled Pickup: <span className="font-medium text-ink-navy">{trackingResult.pickupDate}</span> ({trackingResult.pickupTimeSlot})
