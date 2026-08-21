@@ -437,64 +437,64 @@
   "sam-s24u": {
     "modelName": "Galaxy S24 Ultra",
     "cashifyPrices": {
-      "12_256": 59630,
-      "12_512": 60440,
-      "12_1024": 60530
+      "12_256": 62770,
+      "12_512": 63620,
+      "12_1024": 63720
     },
     "ourPrices": {
-      "12_256": 61419,
-      "12_512": 62253,
-      "12_1024": 62346
+      "12_256": 64653,
+      "12_512": 65529,
+      "12_1024": 65632
     }
   },
   "sam-s25u": {
     "modelName": "Galaxy S25 Ultra",
     "cashifyPrices": {
-      "12_256": 61760,
-      "12_512": 66400,
-      "12_1024": 69110
+      "12_256": 65010,
+      "12_512": 69900,
+      "12_1024": 72750
     },
     "ourPrices": {
-      "12_256": 63613,
-      "12_512": 68392,
-      "12_1024": 71183
+      "12_256": 66960,
+      "12_512": 71997,
+      "12_1024": 74932
     }
   },
   "sam-s22u": {
     "modelName": "Galaxy S22 Ultra",
     "cashifyPrices": {
-      "12_256": 24180,
-      "12_512": 26030,
-      "12_1024": 26720
+      "12_256": 25550,
+      "12_512": 27490,
+      "12_1024": 28220
     },
     "ourPrices": {
-      "12_256": 24905,
-      "12_512": 26811,
-      "12_1024": 27522
+      "12_256": 26316,
+      "12_512": 28315,
+      "12_1024": 29067
     }
   },
   "sam-s22": {
     "modelName": "Galaxy S22",
     "cashifyPrices": {
-      "8_128": 15270,
-      "8_256": 16320
+      "8_128": 16130,
+      "8_256": 17240
     },
     "ourPrices": {
-      "8_128": 15728,
-      "8_256": 16810
+      "8_128": 16614,
+      "8_256": 17757
     }
   },
   "sam-s25": {
     "modelName": "Galaxy S25",
     "cashifyPrices": {
-      "12_128": 39750,
-      "12_256": 40380,
-      "12_512": 42010
+      "12_128": 41360,
+      "12_256": 42510,
+      "12_512": 44220
     },
     "ourPrices": {
-      "12_128": 40943,
-      "12_256": 41591,
-      "12_512": 43270
+      "12_128": 42601,
+      "12_256": 43785,
+      "12_512": 45547
     }
   },
   "sam-s22plus": {
@@ -533,12 +533,12 @@
   "sam-s21fe": {
     "modelName": "Galaxy S21 FE",
     "cashifyPrices": {
-      "8_128": 10860,
-      "8_256": 11660
+      "8_128": 11480,
+      "8_256": 12310
     },
     "ourPrices": {
-      "8_128": 11186,
-      "8_256": 12010
+      "8_128": 11824,
+      "8_256": 12679
     }
   },
   "sam-flip5": {
@@ -555,14 +555,12 @@
   "sam-a13": {
     "modelName": "Galaxy A13",
     "cashifyPrices": {
-      "4_64": 3710,
-      "4_128": 4030,
-      "6_128": 4570
+      "4_128": 4240,
+      "6_128": 4810
     },
     "ourPrices": {
-      "4_64": 3821,
-      "4_128": 4151,
-      "6_128": 4707
+      "4_128": 4367,
+      "6_128": 4954
     }
   },
   "sam-fold5": {
@@ -581,12 +579,12 @@
   "sam-a23-5g": {
     "modelName": "Galaxy A23 5G",
     "cashifyPrices": {
-      "6_128": 8350,
-      "8_128": 8710
+      "6_128": 8790,
+      "8_128": 9170
     },
     "ourPrices": {
-      "6_128": 8601,
-      "8_128": 8971
+      "6_128": 9054,
+      "8_128": 9445
     }
   },
   "sam-a14-5g": {
@@ -644,27 +642,27 @@
   "sam-a55": {
     "modelName": "Galaxy A55",
     "cashifyPrices": {
-      "8_128": 16250,
-      "8_256": 16740,
-      "12_256": 17950
+      "8_128": 17110,
+      "8_256": 17620,
+      "12_256": 18890
     },
     "ourPrices": {
-      "8_128": 16738,
-      "8_256": 17242,
-      "12_256": 18489
+      "8_128": 17623,
+      "8_256": 18149,
+      "12_256": 19457
     }
   },
   "sam-a56": {
     "modelName": "Galaxy A56",
     "cashifyPrices": {
-      "8_128": 20970,
-      "8_256": 23090,
-      "12_256": 24750
+      "8_128": 22080,
+      "8_256": 24300,
+      "12_256": 26050
     },
     "ourPrices": {
-      "8_128": 21599,
-      "8_256": 23783,
-      "12_256": 25493
+      "8_128": 22742,
+      "8_256": 25029,
+      "12_256": 26832
     }
   },
   "xi-14u": {
@@ -955,14 +953,14 @@
   "catalog-samsung-galaxy-s26-ultra": {
     "modelName": "Galaxy S26 Ultra",
     "cashifyPrices": {
-      "12_256": 78850,
-      "12_512": 83600,
-      "16_1024": 98800
+      "12_256": 83000,
+      "12_512": 88000,
+      "16_1024": 104000
     },
     "ourPrices": {
-      "12_256": 81216,
-      "12_512": 86108,
-      "16_1024": 101764
+      "12_256": 85490,
+      "12_512": 90640,
+      "16_1024": 107120
     }
   },
   "catalog-samsung-galaxy-s25-fe": {
@@ -992,12 +990,12 @@
   "catalog-samsung-galaxy-s26": {
     "modelName": "Galaxy S26",
     "cashifyPrices": {
-      "12_256": 49400,
-      "12_512": 58190
+      "12_256": 52000,
+      "12_512": 61250
     },
     "ourPrices": {
-      "12_256": 50882,
-      "12_512": 59936
+      "12_256": 53560,
+      "12_512": 63088
     }
   },
   "catalog-samsung-galaxy-s26-plus": {
@@ -1038,12 +1036,12 @@
   "catalog-samsung-galaxy-z-flip-7-fe": {
     "modelName": "Galaxy Z Flip 7 FE",
     "cashifyPrices": {
-      "8_128": 47880,
-      "8_256": 48860
+      "8_128": 50400,
+      "8_256": 51430
     },
     "ourPrices": {
-      "8_128": 49316,
-      "8_256": 50326
+      "8_128": 51912,
+      "8_256": 52973
     }
   },
   "catalog-samsung-galaxy-z-fold-8-ultra": {
@@ -1723,6 +1721,801 @@
       "0_64": 14729,
       "0_128": 16696,
       "0_256": 17119
+    }
+  },
+  "sam-s26u": {
+    "modelName": "Galaxy S26 Ultra",
+    "cashifyPrices": {
+      "12_256": 83000,
+      "12_512": 88000,
+      "16_1024": 104000
+    },
+    "ourPrices": {
+      "12_256": 85490,
+      "12_512": 90640,
+      "16_1024": 107120
+    }
+  },
+  "sam-s26": {
+    "modelName": "Galaxy S26",
+    "cashifyPrices": {
+      "12_256": 52000,
+      "12_512": 61250
+    },
+    "ourPrices": {
+      "12_256": 53560,
+      "12_512": 63088
+    }
+  },
+  "catalog-samsung-galaxy-s25-ultra": {
+    "modelName": "Galaxy S25 Ultra",
+    "cashifyPrices": {
+      "12_256": 65010,
+      "12_512": 69900,
+      "12_1024": 72750
+    },
+    "ourPrices": {
+      "12_256": 66960,
+      "12_512": 71997,
+      "12_1024": 74932
+    }
+  },
+  "catalog-samsung-galaxy-s25-ultra-5g": {
+    "modelName": "Galaxy S25 Ultra",
+    "cashifyPrices": {
+      "12_256": 65010,
+      "12_512": 69900,
+      "12_1024": 72750
+    },
+    "ourPrices": {
+      "12_256": 66960,
+      "12_512": 71997,
+      "12_1024": 74932
+    }
+  },
+  "catalog-samsung-galaxy-s25": {
+    "modelName": "Galaxy S25",
+    "cashifyPrices": {
+      "12_128": 41360,
+      "12_256": 42510,
+      "12_512": 44220
+    },
+    "ourPrices": {
+      "12_128": 42601,
+      "12_256": 43785,
+      "12_512": 45547
+    }
+  },
+  "catalog-samsung-galaxy-s25-5g": {
+    "modelName": "Galaxy S25",
+    "cashifyPrices": {
+      "12_128": 41360,
+      "12_256": 42510,
+      "12_512": 44220
+    },
+    "ourPrices": {
+      "12_128": 42601,
+      "12_256": 43785,
+      "12_512": 45547
+    }
+  },
+  "catalog-samsung-galaxy-s24-ultra": {
+    "modelName": "Galaxy S24 Ultra",
+    "cashifyPrices": {
+      "12_256": 62770,
+      "12_512": 63620,
+      "12_1024": 63720
+    },
+    "ourPrices": {
+      "12_256": 64653,
+      "12_512": 65529,
+      "12_1024": 65632
+    }
+  },
+  "catalog-samsung-galaxy-s24-ultra-5g": {
+    "modelName": "Galaxy S24 Ultra",
+    "cashifyPrices": {
+      "12_256": 62770,
+      "12_512": 63620,
+      "12_1024": 63720
+    },
+    "ourPrices": {
+      "12_256": 64653,
+      "12_512": 65529,
+      "12_1024": 65632
+    }
+  },
+  "sam-s24": {
+    "modelName": "Galaxy S24",
+    "cashifyPrices": {
+      "8_128": 32790,
+      "8_256": 34910,
+      "8_512": 36330
+    },
+    "ourPrices": {
+      "8_128": 33774,
+      "8_256": 35957,
+      "8_512": 37420
+    }
+  },
+  "catalog-samsung-galaxy-s24": {
+    "modelName": "Galaxy S24",
+    "cashifyPrices": {
+      "8_128": 32790,
+      "8_256": 34910,
+      "8_512": 36330
+    },
+    "ourPrices": {
+      "8_128": 33774,
+      "8_256": 35957,
+      "8_512": 37420
+    }
+  },
+  "catalog-samsung-galaxy-s24-5g": {
+    "modelName": "Galaxy S24",
+    "cashifyPrices": {
+      "8_128": 32790,
+      "8_256": 34910,
+      "8_512": 36330
+    },
+    "ourPrices": {
+      "8_128": 33774,
+      "8_256": 35957,
+      "8_512": 37420
+    }
+  },
+  "sam-s23u": {
+    "modelName": "Galaxy S23 Ultra",
+    "cashifyPrices": {
+      "12_256": 35080,
+      "12_512": 36050,
+      "12_1024": 39370
+    },
+    "ourPrices": {
+      "12_256": 36132,
+      "12_512": 37132,
+      "12_1024": 40551
+    }
+  },
+  "catalog-samsung-galaxy-s23-ultra": {
+    "modelName": "Galaxy S23 Ultra",
+    "cashifyPrices": {
+      "12_256": 35080,
+      "12_512": 36050,
+      "12_1024": 39370
+    },
+    "ourPrices": {
+      "12_256": 36132,
+      "12_512": 37132,
+      "12_1024": 40551
+    }
+  },
+  "catalog-samsung-galaxy-s23-ultra-5g": {
+    "modelName": "Galaxy S23 Ultra",
+    "cashifyPrices": {
+      "12_256": 35080,
+      "12_512": 36050,
+      "12_1024": 39370
+    },
+    "ourPrices": {
+      "12_256": 36132,
+      "12_512": 37132,
+      "12_1024": 40551
+    }
+  },
+  "sam-s23": {
+    "modelName": "Galaxy S23",
+    "cashifyPrices": {
+      "8_128": 22690,
+      "8_256": 24310
+    },
+    "ourPrices": {
+      "8_128": 23371,
+      "8_256": 25039
+    }
+  },
+  "catalog-samsung-galaxy-s23": {
+    "modelName": "Galaxy S23",
+    "cashifyPrices": {
+      "8_128": 22690,
+      "8_256": 24310
+    },
+    "ourPrices": {
+      "8_128": 23371,
+      "8_256": 25039
+    }
+  },
+  "catalog-samsung-galaxy-s23-5g": {
+    "modelName": "Galaxy S23",
+    "cashifyPrices": {
+      "8_128": 22690,
+      "8_256": 24310
+    },
+    "ourPrices": {
+      "8_128": 23371,
+      "8_256": 25039
+    }
+  },
+  "catalog-samsung-galaxy-s22-ultra-5g": {
+    "modelName": "Galaxy S22 Ultra",
+    "cashifyPrices": {
+      "12_256": 25550,
+      "12_512": 27490,
+      "12_1024": 28220
+    },
+    "ourPrices": {
+      "12_256": 26316,
+      "12_512": 28315,
+      "12_1024": 29067
+    }
+  },
+  "catalog-samsung-galaxy-s22-5g": {
+    "modelName": "Galaxy S22",
+    "cashifyPrices": {
+      "8_128": 16130,
+      "8_256": 17240
+    },
+    "ourPrices": {
+      "8_128": 16614,
+      "8_256": 17757
+    }
+  },
+  "sam-s21": {
+    "modelName": "Galaxy S21",
+    "cashifyPrices": {
+      "8_128": 12700,
+      "8_256": 13370
+    },
+    "ourPrices": {
+      "8_128": 13081,
+      "8_256": 13771
+    }
+  },
+  "catalog-samsung-galaxy-s21-5g": {
+    "modelName": "Galaxy S21",
+    "cashifyPrices": {
+      "8_128": 12700,
+      "8_256": 13370
+    },
+    "ourPrices": {
+      "8_128": 13081,
+      "8_256": 13771
+    }
+  },
+  "catalog-samsung-galaxy-s21-fe-5g": {
+    "modelName": "Galaxy S21 FE",
+    "cashifyPrices": {
+      "8_128": 11480,
+      "8_256": 12310
+    },
+    "ourPrices": {
+      "8_128": 11824,
+      "8_256": 12679
+    }
+  },
+  "sam-fold6": {
+    "modelName": "Galaxy Z Fold 6",
+    "cashifyPrices": {
+      "12_256": 68100,
+      "12_512": 69500,
+      "12_1024": 71710
+    },
+    "ourPrices": {
+      "12_256": 70143,
+      "12_512": 71585,
+      "12_1024": 73861
+    }
+  },
+  "catalog-samsung-galaxy-z-fold6-5g": {
+    "modelName": "Galaxy Z Fold 6",
+    "cashifyPrices": {
+      "12_256": 68100,
+      "12_512": 69500,
+      "12_1024": 71710
+    },
+    "ourPrices": {
+      "12_256": 70143,
+      "12_512": 71585,
+      "12_1024": 73861
+    }
+  },
+  "catalog-samsung-galaxy-z-fold-6": {
+    "modelName": "Galaxy Z Fold 6",
+    "cashifyPrices": {
+      "12_256": 68100,
+      "12_512": 69500,
+      "12_1024": 71710
+    },
+    "ourPrices": {
+      "12_256": 70143,
+      "12_512": 71585,
+      "12_1024": 73861
+    }
+  },
+  "catalog-samsung-galaxy-z-flip7-fe": {
+    "modelName": "Galaxy Z Flip 7 FE",
+    "cashifyPrices": {
+      "8_128": 50400,
+      "8_256": 51430
+    },
+    "ourPrices": {
+      "8_128": 51912,
+      "8_256": 52973
+    }
+  },
+  "catalog-samsung-galaxy-a57": {
+    "modelName": "Galaxy A57",
+    "cashifyPrices": {
+      "12_256": 34100
+    },
+    "ourPrices": {
+      "12_256": 35123
+    }
+  },
+  "catalog-samsung-galaxy-a57-5g": {
+    "modelName": "Galaxy A57",
+    "cashifyPrices": {
+      "12_256": 34100
+    },
+    "ourPrices": {
+      "12_256": 35123
+    }
+  },
+  "catalog-samsung-galaxy-a56-5g": {
+    "modelName": "Galaxy A56",
+    "cashifyPrices": {
+      "8_128": 22080,
+      "8_256": 24300,
+      "12_256": 26050
+    },
+    "ourPrices": {
+      "8_128": 22742,
+      "8_256": 25029,
+      "12_256": 26832
+    }
+  },
+  "sam-a36": {
+    "modelName": "Galaxy A36",
+    "cashifyPrices": {
+      "8_128": 17900,
+      "8_256": 18800,
+      "12_256": 19840
+    },
+    "ourPrices": {
+      "8_128": 18437,
+      "8_256": 19364,
+      "12_256": 20435
+    }
+  },
+  "catalog-samsung-galaxy-a36-5g": {
+    "modelName": "Galaxy A36",
+    "cashifyPrices": {
+      "8_128": 17900,
+      "8_256": 18800,
+      "12_256": 19840
+    },
+    "ourPrices": {
+      "8_128": 18437,
+      "8_256": 19364,
+      "12_256": 20435
+    }
+  },
+  "sam-a26": {
+    "modelName": "Galaxy A26",
+    "cashifyPrices": {
+      "6_128": 11490,
+      "8_128": 12200,
+      "8_256": 13400
+    },
+    "ourPrices": {
+      "6_128": 11835,
+      "8_128": 12566,
+      "8_256": 13802
+    }
+  },
+  "catalog-samsung-galaxy-a26-5g": {
+    "modelName": "Galaxy A26",
+    "cashifyPrices": {
+      "6_128": 11490,
+      "8_128": 12200,
+      "8_256": 13400
+    },
+    "ourPrices": {
+      "6_128": 11835,
+      "8_128": 12566,
+      "8_256": 13802
+    }
+  },
+  "sam-a25": {
+    "modelName": "Galaxy A25",
+    "cashifyPrices": {
+      "6_128": 10290,
+      "8_128": 11450,
+      "8_256": 11910
+    },
+    "ourPrices": {
+      "6_128": 10599,
+      "8_128": 11794,
+      "8_256": 12267
+    }
+  },
+  "catalog-samsung-galaxy-a25-5g": {
+    "modelName": "Galaxy A25",
+    "cashifyPrices": {
+      "6_128": 10290,
+      "8_128": 11450,
+      "8_256": 11910
+    },
+    "ourPrices": {
+      "6_128": 10599,
+      "8_128": 11794,
+      "8_256": 12267
+    }
+  },
+  "catalog-samsung-galaxy-a17": {
+    "modelName": "Galaxy A17",
+    "cashifyPrices": {
+      "6_128": 11570,
+      "8_128": 12730,
+      "8_256": 13550
+    },
+    "ourPrices": {
+      "6_128": 11917,
+      "8_128": 13112,
+      "8_256": 13956
+    }
+  },
+  "catalog-samsung-galaxy-a17-5g": {
+    "modelName": "Galaxy A17",
+    "cashifyPrices": {
+      "6_128": 11570,
+      "8_128": 12730,
+      "8_256": 13550
+    },
+    "ourPrices": {
+      "6_128": 11917,
+      "8_128": 13112,
+      "8_256": 13956
+    }
+  },
+  "sam-a16": {
+    "modelName": "Galaxy A16",
+    "cashifyPrices": {
+      "6_128": 10100,
+      "8_128": 10750,
+      "8_256": 11100
+    },
+    "ourPrices": {
+      "6_128": 10403,
+      "8_128": 11072,
+      "8_256": 11433
+    }
+  },
+  "catalog-samsung-galaxy-a16-5g": {
+    "modelName": "Galaxy A16",
+    "cashifyPrices": {
+      "6_128": 10100,
+      "8_128": 10750,
+      "8_256": 11100
+    },
+    "ourPrices": {
+      "6_128": 10403,
+      "8_128": 11072,
+      "8_256": 11433
+    }
+  },
+  "catalog-samsung-galaxy-a16-4g": {
+    "modelName": "Galaxy A16",
+    "cashifyPrices": {
+      "6_128": 10100,
+      "8_128": 10750,
+      "8_256": 11100
+    },
+    "ourPrices": {
+      "6_128": 10403,
+      "8_128": 11072,
+      "8_256": 11433
+    }
+  },
+  "sam-a14-4g": {
+    "modelName": "Galaxy A14",
+    "cashifyPrices": {
+      "4_64": 5770
+    },
+    "ourPrices": {
+      "4_64": 5943
+    }
+  },
+  "catalog-samsung-galaxy-a14": {
+    "modelName": "Galaxy A14",
+    "cashifyPrices": {
+      "4_64": 5770
+    },
+    "ourPrices": {
+      "4_64": 5943
+    }
+  },
+  "catalog-samsung-galaxy-a13": {
+    "modelName": "Galaxy A13",
+    "cashifyPrices": {
+      "4_128": 4240,
+      "6_128": 4810
+    },
+    "ourPrices": {
+      "4_128": 4367,
+      "6_128": 4954
+    }
+  },
+  "catalog-samsung-galaxy-a13-5g": {
+    "modelName": "Galaxy A13",
+    "cashifyPrices": {
+      "4_128": 4240,
+      "6_128": 4810
+    },
+    "ourPrices": {
+      "4_128": 4367,
+      "6_128": 4954
+    }
+  },
+  "catalog-samsung-galaxy-a12": {
+    "modelName": "Galaxy A12",
+    "cashifyPrices": {
+      "4_64": 3570,
+      "4_128": 4070,
+      "6_128": 4260
+    },
+    "ourPrices": {
+      "4_64": 3677,
+      "4_128": 4192,
+      "6_128": 4388
+    }
+  },
+  "sam-a12": {
+    "modelName": "Galaxy A12",
+    "cashifyPrices": {
+      "4_64": 3570,
+      "4_128": 4070,
+      "6_128": 4260
+    },
+    "ourPrices": {
+      "4_64": 3677,
+      "4_128": 4192,
+      "6_128": 4388
+    }
+  },
+  "catalog-samsung-galaxy-a22": {
+    "modelName": "Galaxy A22",
+    "cashifyPrices": {
+      "4_128": 3920,
+      "6_128": 4350
+    },
+    "ourPrices": {
+      "4_128": 4038,
+      "6_128": 4480
+    }
+  },
+  "sam-a22": {
+    "modelName": "Galaxy A22",
+    "cashifyPrices": {
+      "4_128": 3920,
+      "6_128": 4350
+    },
+    "ourPrices": {
+      "4_128": 4038,
+      "6_128": 4480
+    }
+  },
+  "catalog-samsung-galaxy-a22-5g": {
+    "modelName": "Galaxy A22 5G",
+    "cashifyPrices": {
+      "6_128": 6210,
+      "8_128": 6700
+    },
+    "ourPrices": {
+      "6_128": 6396,
+      "8_128": 6901
+    }
+  },
+  "sam-a22-5g": {
+    "modelName": "Galaxy A22 5G",
+    "cashifyPrices": {
+      "6_128": 6210,
+      "8_128": 6700
+    },
+    "ourPrices": {
+      "6_128": 6396,
+      "8_128": 6901
+    }
+  },
+  "sam-a23-4g": {
+    "modelName": "Galaxy A23",
+    "cashifyPrices": {
+      "6_128": 4580,
+      "8_128": 5190
+    },
+    "ourPrices": {
+      "6_128": 4717,
+      "8_128": 5346
+    }
+  },
+  "catalog-samsung-galaxy-a23": {
+    "modelName": "Galaxy A23",
+    "cashifyPrices": {
+      "6_128": 4580,
+      "8_128": 5190
+    },
+    "ourPrices": {
+      "6_128": 4717,
+      "8_128": 5346
+    }
+  },
+  "catalog-samsung-galaxy-a23-5g": {
+    "modelName": "Galaxy A23 5G",
+    "cashifyPrices": {
+      "6_128": 8790,
+      "8_128": 9170
+    },
+    "ourPrices": {
+      "6_128": 9054,
+      "8_128": 9445
+    }
+  },
+  "catalog-samsung-galaxy-a05": {
+    "modelName": "Galaxy A05",
+    "cashifyPrices": {
+      "6_128": 5430
+    },
+    "ourPrices": {
+      "6_128": 5593
+    }
+  },
+  "catalog-samsung-galaxy-a55-5g": {
+    "modelName": "Galaxy A55",
+    "cashifyPrices": {
+      "8_128": 17110,
+      "8_256": 17620,
+      "12_256": 18890
+    },
+    "ourPrices": {
+      "8_128": 17623,
+      "8_256": 18149,
+      "12_256": 19457
+    }
+  },
+  "sam-m55": {
+    "modelName": "Galaxy M55",
+    "cashifyPrices": {
+      "8_128": 12840,
+      "8_256": 14020,
+      "12_256": 15020
+    },
+    "ourPrices": {
+      "8_128": 13225,
+      "8_256": 14441,
+      "12_256": 15471
+    }
+  },
+  "catalog-samsung-galaxy-m55-5g": {
+    "modelName": "Galaxy M55",
+    "cashifyPrices": {
+      "8_128": 12840,
+      "8_256": 14020,
+      "12_256": 15020
+    },
+    "ourPrices": {
+      "8_128": 13225,
+      "8_256": 14441,
+      "12_256": 15471
+    }
+  },
+  "catalog-samsung-galaxy-m55s-5g": {
+    "modelName": "Galaxy M55s 5G",
+    "cashifyPrices": {
+      "8_256": 12530
+    },
+    "ourPrices": {
+      "8_256": 12906
+    }
+  },
+  "sam-m35": {
+    "modelName": "Galaxy M35",
+    "cashifyPrices": {
+      "6_128": 9800,
+      "8_128": 10000,
+      "8_256": 10290
+    },
+    "ourPrices": {
+      "6_128": 10094,
+      "8_128": 10300,
+      "8_256": 10599
+    }
+  },
+  "catalog-samsung-galaxy-m35-5g": {
+    "modelName": "Galaxy M35",
+    "cashifyPrices": {
+      "6_128": 9800,
+      "8_128": 10000,
+      "8_256": 10290
+    },
+    "ourPrices": {
+      "6_128": 10094,
+      "8_128": 10300,
+      "8_256": 10599
+    }
+  },
+  "catalog-samsung-galaxy-m34-5g": {
+    "modelName": "Galaxy M34",
+    "cashifyPrices": {
+      "6_128": 9020,
+      "8_128": 8990,
+      "8_256": 9510
+    },
+    "ourPrices": {
+      "6_128": 9291,
+      "8_128": 9260,
+      "8_256": 9795
+    }
+  },
+  "catalog-samsung-galaxy-m15-5g": {
+    "modelName": "Galaxy M15 5G",
+    "cashifyPrices": {
+      "6_128": 8040
+    },
+    "ourPrices": {
+      "6_128": 8281
+    }
+  },
+  "catalog-samsung-galaxy-m13-5g": {
+    "modelName": "Galaxy M13 5G",
+    "cashifyPrices": {
+      "6_128": 6580
+    },
+    "ourPrices": {
+      "6_128": 6777
+    }
+  },
+  "catalog-samsung-galaxy-m12": {
+    "modelName": "Galaxy M12",
+    "cashifyPrices": {
+      "6_128": 4220
+    },
+    "ourPrices": {
+      "6_128": 4347
+    }
+  },
+  "catalog-samsung-galaxy-f55-5g": {
+    "modelName": "Galaxy F55 5G",
+    "cashifyPrices": {
+      "8_128": 11270,
+      "8_256": 12100,
+      "12_256": 13330
+    },
+    "ourPrices": {
+      "8_128": 11608,
+      "8_256": 12463,
+      "12_256": 13730
+    }
+  },
+  "sam-f55": {
+    "modelName": "Galaxy F55 5G",
+    "cashifyPrices": {
+      "8_128": 11270,
+      "8_256": 12100,
+      "12_256": 13330
+    },
+    "ourPrices": {
+      "8_128": 11608,
+      "8_256": 12463,
+      "12_256": 13730
+    }
+  },
+  "catalog-samsung-galaxy-f62": {
+    "modelName": "Galaxy F62",
+    "cashifyPrices": {
+      "8_128": 5190
+    },
+    "ourPrices": {
+      "8_128": 5346
     }
   }
 }
