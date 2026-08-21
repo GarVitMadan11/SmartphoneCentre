@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { SMARTWATCH_MODELS, Model, Variant, getVariantPrice, sortModelsByLaunchDesc, isSmartwatchDevice } from '../../data/mockDatabase';
+import { SMARTWATCH_MODELS, Model, Variant, getVariantPrice, sortModelsByLaunchDesc, isSmartwatchDevice, getMaxVariantPrice } from '../../data/mockDatabase';
 import { applyModelOrder } from '../../utils/ordering';
 import { Watch, Sparkles, ArrowRight, Search, X, HardDrive, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -223,7 +223,7 @@ export const SmartwatchesShowcase: React.FC<SmartwatchesShowcaseProps> = ({
               <div>
                 <span className="text-[10px] text-zinc-400 uppercase font-mono block">Up to Get</span>
                 <span className="text-lg font-extrabold text-emerald-600 font-mono">
-                  {formatPrice(model.basePrice128GB)}
+                  {formatPrice(getMaxVariantPrice(model))}
                 </span>
               </div>
               <button

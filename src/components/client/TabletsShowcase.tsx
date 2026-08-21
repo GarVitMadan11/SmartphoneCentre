@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { TABLET_MODELS, Model, Variant, getModelSupportedRam, getModelSupportedStorage, getVariantPrice, sortModelsByLaunchDesc, isTabletDevice } from '../../data/mockDatabase';
+import { TABLET_MODELS, Model, Variant, getModelSupportedRam, getModelSupportedStorage, getVariantPrice, sortModelsByLaunchDesc, isTabletDevice, getMaxVariantPrice } from '../../data/mockDatabase';
 import { applyModelOrder } from '../../utils/ordering';
 import { Tablet, Sparkles, ArrowRight, Search, X, Cpu, HardDrive, CheckCircle2, Wifi, Radio } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -242,7 +242,7 @@ export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
               <div>
                 <span className="text-[10px] text-zinc-400 uppercase font-mono block">Up to Get</span>
                 <span className="text-lg font-extrabold text-emerald-600 font-mono">
-                  {formatPrice(model.basePrice128GB)}
+                  {formatPrice(getMaxVariantPrice(model))}
                 </span>
               </div>
               <button
