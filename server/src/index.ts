@@ -401,7 +401,7 @@ app.get('/api/models', async (req, res) => {
         releaseYear: m.releaseYear,
         basePrice128GB: m.basePrice128GB,
         series: resolvedSeries,
-        imageUrl: m.imageUrl || undefined,
+        imageUrl: (m.imageUrl && !m.imageUrl.toLowerCase().startsWith('file:') && !m.imageUrl.startsWith('/opt/render')) ? m.imageUrl : undefined,
         supportedStorageGb: parsedStorageGb,
         supportedRamGb: parsedRamGb,
         variantPrices: parsedVariantPrices,

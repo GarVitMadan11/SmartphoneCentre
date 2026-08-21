@@ -1824,8 +1824,12 @@ export function getDeviceImage(
   const bId = brandId || (typeof modelOrId === 'object' ? modelOrId?.brandId : '') || '';
   const cUrl = customImageUrl || (typeof modelOrId === 'object' ? modelOrId?.imageUrl : undefined);
 
-  if (cUrl && cUrl.trim().length > 0) {
-    return cUrl.trim();
+  if (cUrl && cUrl.trim().length > 0 && !cUrl.trim().toLowerCase().startsWith('file:') && !cUrl.trim().startsWith('/opt/render')) {
+    const trimmed = cUrl.trim();
+    if (trimmed.includes('gsmarena.com') && !trimmed.startsWith('https://wsrv.nl')) {
+      return `https://wsrv.nl/?url=${encodeURIComponent(trimmed)}`;
+    }
+    return trimmed;
   }
 
   const redirectedModelId = getRedirectedModelId(modelId);
@@ -1834,7 +1838,12 @@ export function getDeviceImage(
     const colorKey = `${redirectedModelId}-${color.toLowerCase().trim().replace(/\s+/g, '-')}`;
     const colorImg = (phoneImages as Record<string, string>)[colorKey];
     if (colorImg) {
-      if (colorImg.startsWith('http')) return colorImg;
+      if (colorImg.startsWith('http')) {
+        if (colorImg.includes('gsmarena.com') && !colorImg.startsWith('https://wsrv.nl')) {
+          return `https://wsrv.nl/?url=${encodeURIComponent(colorImg)}`;
+        }
+        return colorImg;
+      }
       try {
         return new URL(`../../assets/phones/${colorImg}`, import.meta.url).href;
       } catch { /* fallback */ }
@@ -1863,7 +1872,12 @@ export function getDeviceImage(
   for (const key of possibleKeys) {
     const modelImg = (phoneImages as Record<string, string>)[key];
     if (modelImg) {
-      if (modelImg.startsWith('http')) return modelImg;
+      if (modelImg.startsWith('http')) {
+        if (modelImg.includes('gsmarena.com') && !modelImg.startsWith('https://wsrv.nl')) {
+          return `https://wsrv.nl/?url=${encodeURIComponent(modelImg)}`;
+        }
+        return modelImg;
+      }
       try {
         return new URL(`../../assets/phones/${modelImg}`, import.meta.url).href;
       } catch { /* fallback */ }
