@@ -522,7 +522,11 @@ const catalogId = (brandId: string, name: string) =>
   `catalog-${brandId.replace('brand-', '')}-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}`;
 
 const catalogCategory = (name: string): DeviceCategory => {
-  if (/ultra|pro max|fold|flip|\bpro\b|x300|x200 pro|x100 pro|find x9|find x8|s26 ultra|s25 ultra/i.test(name)) return 'flagship';
+  if (/ultra|pro max|fold|flip|x300|x200 pro|x100 pro|find x|s26 ultra|s25 ultra/i.test(name)) return 'flagship';
+  if (/\bpro\b/i.test(name)) {
+    if (/oppo (a|f|k)|vivo (y|t)|galaxy (a|f|m)|redmi|poco|realme/i.test(name)) return 'midrange';
+    return 'flagship';
+  }
   if (/\bplus\b|edge|air|reno|razr|v\d+ elite|\biphone 17\b|\biphone 16\b|\bgalaxy s2\d\b/i.test(name)) return 'premium';
   if (/\b(a|y|m|f|g)\d|lite|ce|cmf|\b\d+e\b|\b\d+c\b/i.test(name)) return 'budget';
   return 'midrange';
@@ -909,18 +913,7 @@ const BASE_MODELS: Model[] = [
   { id: 'goog-10a',      brandId: 'brand-google', name: 'Pixel 10a',        category: 'midrange', releaseYear: 2026, basePrice128GB: 22000, series: 'Pixel 10 Series',   imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/google-pixel-10a.jpg' },
 
   // --- OPPO ---
-  { id: 'catalog-oppo-a3', brandId: 'brand-oppo', name: 'OPPO A3', category: 'budget', releaseYear: 2025, basePrice128GB: 4000, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a3.jpg' },
-  { id: 'catalog-oppo-a3x', brandId: 'brand-oppo', name: 'OPPO A3x', category: 'budget', releaseYear: 2025, basePrice128GB: 4000, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a3x.jpg' },
-  { id: 'catalog-oppo-a3-pro', brandId: 'brand-oppo', name: 'OPPO A3 Pro', category: 'flagship', releaseYear: 2025, basePrice128GB: 69500, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a3-pro.jpg' },
-  { id: 'catalog-oppo-a5', brandId: 'brand-oppo', name: 'OPPO A5', category: 'budget', releaseYear: 2025, basePrice128GB: 4000, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a5.jpg' },
-  { id: 'catalog-oppo-a5x', brandId: 'brand-oppo', name: 'OPPO A5x', category: 'budget', releaseYear: 2025, basePrice128GB: 4000, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a5x.jpg' },
-  { id: 'catalog-oppo-a5-pro', brandId: 'brand-oppo', name: 'OPPO A5 Pro', category: 'flagship', releaseYear: 2025, basePrice128GB: 69500, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a5-pro.jpg' },
-  { id: 'catalog-oppo-f25-pro', brandId: 'brand-oppo', name: 'OPPO F25 Pro', category: 'midrange', releaseYear: 2025, basePrice128GB: 12000, series: 'F Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-f25-pro.jpg' },
-  { id: 'catalog-oppo-f27-pro', brandId: 'brand-oppo', name: 'OPPO F27 Pro+', category: 'midrange', releaseYear: 2025, basePrice128GB: 14000, series: 'F Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-f27-pro-plus.jpg' },
-  { id: 'catalog-oppo-reno-12', brandId: 'brand-oppo', name: 'OPPO Reno 12', category: 'premium', releaseYear: 2025, basePrice128GB: 18000, series: 'Reno Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-reno-12.jpg' },
-  { id: 'catalog-oppo-reno-12-pro', brandId: 'brand-oppo', name: 'OPPO Reno 12 Pro', category: 'premium', releaseYear: 2025, basePrice128GB: 22000, series: 'Reno Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-reno-12-pro.jpg' },
-  { id: 'catalog-oppo-find-x8', brandId: 'brand-oppo', name: 'OPPO Find X8', category: 'flagship', releaseYear: 2025, basePrice128GB: 42000, series: 'Find X Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-find-x8.jpg' },
-  { id: 'catalog-oppo-find-x8-pro', brandId: 'brand-oppo', name: 'OPPO Find X8 Pro', category: 'flagship', releaseYear: 2025, basePrice128GB: 52000, series: 'Find X Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-find-x8-pro.jpg' },
+  // (OPPO models dynamically populated via CATALOG_ADDITIONS)
 
   // --- NOTHING ---
   { id: 'catalog-nothing-phone-1', brandId: 'brand-nothing', name: 'Nothing Phone 1', category: 'midrange', releaseYear: 2022, basePrice128GB: 12000, series: 'Phone Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/nothing-phone-1.jpg' },
@@ -1046,6 +1039,7 @@ const BASE_MODELS: Model[] = [
   { id: 'catalog-samsung-galaxy-a03s', brandId: 'brand-samsung', name: 'Galaxy A03s', category: 'budget', releaseYear: 2021, basePrice128GB: 4000, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-a03s.jpg' },
   { id: 'catalog-samsung-galaxy-a12', brandId: 'brand-samsung', name: 'Galaxy A12', category: 'budget', releaseYear: 2021, basePrice128GB: 5000, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-a12.jpg' },
   { id: 'catalog-samsung-galaxy-a22', brandId: 'brand-samsung', name: 'Galaxy A22', category: 'budget', releaseYear: 2021, basePrice128GB: 6500, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-a22.jpg' },
+  { id: 'catalog-samsung-galaxy-a22-5g', brandId: 'brand-samsung', name: 'Galaxy A22 5G', category: 'budget', releaseYear: 2021, basePrice128GB: 6500, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-a22-5g.jpg' },
   { id: 'catalog-samsung-galaxy-a32', brandId: 'brand-samsung', name: 'Galaxy A32', category: 'midrange', releaseYear: 2021, basePrice128GB: 7000, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-a32.jpg' },
   { id: 'catalog-samsung-galaxy-a52', brandId: 'brand-samsung', name: 'Galaxy A52', category: 'midrange', releaseYear: 2021, basePrice128GB: 8000, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-a52.jpg' },
   { id: 'catalog-samsung-galaxy-a52s-5g', brandId: 'brand-samsung', name: 'Galaxy A52s 5G', category: 'midrange', releaseYear: 2021, basePrice128GB: 9000, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-a52s-5g.jpg' },
@@ -1265,7 +1259,7 @@ const BASE_MODELS: Model[] = [
   { id: 'catalog-oppo-reno5-pro', brandId: 'brand-oppo', name: 'OPPO Reno5 Pro', category: 'premium', releaseYear: 2021, basePrice128GB: 28000, series: 'Reno Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-reno5-pro.jpg' },
   { id: 'catalog-oppo-reno6', brandId: 'brand-oppo', name: 'OPPO Reno6', category: 'midrange', releaseYear: 2021, basePrice128GB: 18000, series: 'Reno Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-reno6.jpg' },
   { id: 'catalog-oppo-reno6-pro-5g', brandId: 'brand-oppo', name: 'OPPO Reno6 Pro 5G', category: 'premium', releaseYear: 2021, basePrice128GB: 28000, series: 'Reno Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-reno6-pro-5g.jpg' },
-  { id: 'catalog-oppo-reno6-pro-5g', brandId: 'brand-oppo', name: 'OPPO Reno6 Pro+ 5G', category: 'premium', releaseYear: 2021, basePrice128GB: 28000, series: 'Reno Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-reno6-pro-plus-5g.jpg' },
+  { id: 'catalog-oppo-reno6-pro-plus-5g', brandId: 'brand-oppo', name: 'OPPO Reno6 Pro+ 5G', category: 'premium', releaseYear: 2021, basePrice128GB: 28000, series: 'Reno Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-reno6-pro-plus-5g.jpg' },
   { id: 'catalog-oppo-find-x5-pro', brandId: 'brand-oppo', name: 'OPPO Find X5 Pro', category: 'flagship', releaseYear: 2022, basePrice128GB: 48000, series: 'Find X Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-find-x5-pro.jpg' },
   { id: 'catalog-oppo-find-x5', brandId: 'brand-oppo', name: 'OPPO Find X5', category: 'flagship', releaseYear: 2022, basePrice128GB: 48000, series: 'Find X Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-find-x5.jpg' },
   { id: 'catalog-oppo-f21-pro', brandId: 'brand-oppo', name: 'OPPO F21 Pro', category: 'midrange', releaseYear: 2022, basePrice128GB: 14000, series: 'F Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-f21-pro.jpg' },
@@ -1279,7 +1273,6 @@ const BASE_MODELS: Model[] = [
   { id: 'catalog-oppo-a17', brandId: 'brand-oppo', name: 'OPPO A17', category: 'budget', releaseYear: 2022, basePrice128GB: 5500, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a17.jpg' },
   { id: 'catalog-oppo-a17k', brandId: 'brand-oppo', name: 'OPPO A17k', category: 'budget', releaseYear: 2022, basePrice128GB: 5500, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a17k.jpg' },
   { id: 'catalog-oppo-a55s', brandId: 'brand-oppo', name: 'OPPO A55s', category: 'budget', releaseYear: 2022, basePrice128GB: 5500, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a55s.jpg' },
-  { id: 'catalog-oppo-a95', brandId: 'brand-oppo', name: 'OPPO A95', category: 'budget', releaseYear: 2022, basePrice128GB: 5500, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a95.jpg' },
   { id: 'catalog-oppo-reno7', brandId: 'brand-oppo', name: 'OPPO Reno7', category: 'midrange', releaseYear: 2022, basePrice128GB: 18000, series: 'Reno Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-reno7.jpg' },
   { id: 'catalog-oppo-reno7-pro-5g', brandId: 'brand-oppo', name: 'OPPO Reno7 Pro 5G', category: 'premium', releaseYear: 2022, basePrice128GB: 28000, series: 'Reno Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-reno7-pro-5g.jpg' },
   { id: 'catalog-oppo-reno8', brandId: 'brand-oppo', name: 'OPPO Reno8', category: 'midrange', releaseYear: 2022, basePrice128GB: 18000, series: 'Reno Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-reno-8.jpg' },
@@ -1293,11 +1286,11 @@ const BASE_MODELS: Model[] = [
   { id: 'catalog-oppo-a18', brandId: 'brand-oppo', name: 'OPPO A18', category: 'budget', releaseYear: 2023, basePrice128GB: 5500, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a18.jpg' },
   { id: 'catalog-oppo-a79', brandId: 'brand-oppo', name: 'OPPO A79', category: 'budget', releaseYear: 2023, basePrice128GB: 5500, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a79.jpg' },
   { id: 'catalog-oppo-a59', brandId: 'brand-oppo', name: 'OPPO A59', category: 'budget', releaseYear: 2023, basePrice128GB: 5500, series: 'A Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-a59.jpg' },
-  { id: 'catalog-oppo-find-x6-pro', brandId: 'brand-oppo', name: 'OPPO Find X6 Pro', category: 'flagship', releaseYear: 2023, basePrice128GB: 48000, series: 'Find X Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-find-x6-pro.jpg' },
+  { id: 'catalog-oppo-find-x6-pro', brandId: 'brand-oppo', name: 'OPPO Find X6 Pro', category: 'flagship', releaseYear: 2023, basePrice128GB: 48000, series: 'Find X Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-find-x7-ultra.jpg' },
   { id: 'catalog-oppo-find-x7-ultra', brandId: 'brand-oppo', name: 'OPPO Find X7 Ultra', category: 'flagship', releaseYear: 2023, basePrice128GB: 48000, series: 'Find X Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-find-x7-ultra.jpg' },
   { id: 'catalog-oppo-reno10', brandId: 'brand-oppo', name: 'OPPO Reno10', category: 'midrange', releaseYear: 2023, basePrice128GB: 18000, series: 'Reno Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-reno-10.jpg' },
   { id: 'catalog-oppo-reno10-pro', brandId: 'brand-oppo', name: 'OPPO Reno10 Pro', category: 'premium', releaseYear: 2023, basePrice128GB: 28000, series: 'Reno Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-reno10-pro-international.jpg' },
-  { id: 'catalog-oppo-reno10-pro', brandId: 'brand-oppo', name: 'OPPO Reno10 Pro+', category: 'premium', releaseYear: 2023, basePrice128GB: 28000, series: 'Reno Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-reno-10-pro-plus.jpg' },
+  { id: 'catalog-oppo-reno10-pro-plus', brandId: 'brand-oppo', name: 'OPPO Reno10 Pro+', category: 'premium', releaseYear: 2023, basePrice128GB: 28000, series: 'Reno Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-reno-10-pro-plus.jpg' },
   { id: 'catalog-oppo-reno11-pro', brandId: 'brand-oppo', name: 'OPPO Reno11 Pro', category: 'premium', releaseYear: 2023, basePrice128GB: 28000, series: 'Reno Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-reno-11-pro.jpg' },
   { id: 'catalog-oppo-reno11', brandId: 'brand-oppo', name: 'OPPO Reno11', category: 'midrange', releaseYear: 2023, basePrice128GB: 18000, series: 'Reno Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-reno-11.jpg' },
   { id: 'catalog-oppo-reno11-f', brandId: 'brand-oppo', name: 'OPPO Reno11 F', category: 'midrange', releaseYear: 2023, basePrice128GB: 18000, series: 'Reno Series', imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oppo-reno11-f.jpg' },
@@ -1803,11 +1796,23 @@ export function getDeviceImage(
   const cleanId = redirectedModelId.replace(/^catalog-/, '');
   const brandSlug = bId.replace(/^brand-/, '').toLowerCase();
   const deDuplicatedId = cleanId.replace(new RegExp(`^${brandSlug}-${brandSlug}-`), `${brandSlug}-`);
+  const appleShortId = cleanId.replace(/^apple-iphone-/, 'apple-');
+  const appleAbbrId = appleShortId
+    .replace(/-pro-max$/, 'pm')
+    .replace(/-pro$/, 'p')
+    .replace(/-plus$/, 'plus')
+    .replace(/-mini$/, 'm');
+
   const possibleKeys = [
     redirectedModelId,
     cleanId,
     deDuplicatedId,
     `catalog-${deDuplicatedId}`,
+    appleShortId,
+    appleAbbrId,
+    cleanId.replace(/^apple-iphone-17-/, 'apple-17'),
+    cleanId.replace(/^apple-iphone-16-/, 'apple-16'),
+    cleanId.replace(/^apple-iphone-15-/, 'apple-15'),
     cleanId.replace(/^apple-iphone-/, 'apple-'),
     cleanId.replace(/^samsung-galaxy-/, 'sam-'),
     deDuplicatedId.replace(/^oneplus-/, 'op-'),

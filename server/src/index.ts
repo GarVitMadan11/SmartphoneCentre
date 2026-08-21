@@ -978,6 +978,7 @@ app.post('/api/bookings', bookingLimiter, customerAuth, async (req: Authenticate
         payoutStatus: 'pending',
         dateCreated: new Date().toISOString(),
         payoutDetailsJson: encryptedPayoutJson,
+        defectIdsJson: JSON.stringify(defectIds),
       },
     });
 

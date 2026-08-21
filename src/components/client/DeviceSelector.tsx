@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { BRANDS as STATIC_BRANDS, SMARTPHONE_MODELS as STATIC_SMARTPHONE_MODELS, Model, Brand, Variant, generateVariantsForModel, getDeviceImage, getModelSupportedRam, getModelSupportedStorage, getVariantPrice, isTabletDevice, isSmartwatchDevice, sortModelsByLaunchDesc } from '../../data/mockDatabase';
+import { BRANDS as STATIC_BRANDS, SMARTPHONE_MODELS as STATIC_SMARTPHONE_MODELS, Model, Brand, Variant, generateVariantsForModel, getDeviceImage, getModelSupportedRam, getModelSupportedStorage, getVariantPrice, isTabletDevice, isSmartwatchDevice, sortModelsByLaunchDesc, getMaxVariantPrice } from '../../data/mockDatabase';
 import { applyBrandOrder, applySeriesOrder, applyModelOrder, sortSeriesByHierarchy } from '../../utils/ordering';
 import { Search, ChevronRight, Smartphone, Layers, ArrowLeft, ArrowRight, Cpu, Wifi, Radio, X, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -1146,7 +1146,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                             <div className="text-left">
                               <span className="text-[10px] text-zinc-400 uppercase font-mono block">Up to Get</span>
                               <span className="text-lg font-extrabold text-emerald-600 font-mono">
-                                {formatPrice(model.basePrice128GB)}
+                                {formatPrice(getMaxVariantPrice(model))}
                               </span>
                             </div>
                             <button
@@ -1328,7 +1328,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                       </span>
                     </div>
                     <span className="text-2xl font-black text-emerald-700 font-mono">
-                      {formatPrice(tempVariant?.basePrice || selectedModel.basePrice128GB)}
+                      {formatPrice(tempVariant?.basePrice || getMaxVariantPrice(selectedModel))}
                     </span>
                   </div>
 
