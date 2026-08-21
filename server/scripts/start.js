@@ -6,14 +6,10 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const DEFAULT_POSTGRES_URL = 'postgresql://database_fplv_user:mhFh1bnyfLV4jpId5R0D8t7osV0Nlx0T@dpg-d9v6fa67bikc73bsvnhg-a/database_fplv';
-
 let dbUrl = (process.env.DATABASE_URL ?? '').trim().replace(/^['"]|['"]$/g, '');
 const isRenderEnv = Boolean(process.env.RENDER || process.env.RENDER_SERVICE_ID);
 
-if (isRenderEnv) {
-  dbUrl = dbUrl || DEFAULT_POSTGRES_URL;
-} else if (!dbUrl || dbUrl.includes('dpg-d9v6fa67bikc73bsvnhg-a') || dbUrl.startsWith('file:')) {
+if (!dbUrl) {
   let localDbPath = path.resolve(__dirname, '../prisma/dev.db');
   if (!fs.existsSync(localDbPath)) {
     localDbPath = path.resolve(__dirname, '../dev.db');
@@ -22,7 +18,7 @@ if (isRenderEnv) {
 }
 
 process.env.DATABASE_URL = dbUrl;
-console.log(`🚀 Starting server with DATABASE_URL: ${process.env.DATABASE_URL} (Render: ${isRenderEnv})`);
+console.log(`🚀 Starting server (Render: ${isRenderEnv}, Provider: ${dbUrl.startsWith('file:') ? 'sqlite' : 'postgresql'})`);
 
 // Dynamically sync schema.prisma provider to match DATABASE_URL
 const schemaPath = path.resolve(__dirname, '../prisma/schema.prisma');

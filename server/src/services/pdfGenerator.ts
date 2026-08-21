@@ -24,7 +24,7 @@ export function generateBookingQuotationPDF(booking: PDFBookingData): Promise<Bu
 
       doc.on('data', (chunk: Buffer) => buffers.push(chunk));
       doc.on('end', () => resolve(Buffer.concat(buffers)));
-      doc.on('error', (err) => reject(err));
+      doc.on('error', (err: Error) => reject(err));
 
       // Brand Header
       doc
@@ -183,7 +183,7 @@ export function generateBookingQuotationPDF(booking: PDFBookingData): Promise<Bu
         .text(`Locked Valuation Quote (${booking.modelName})`, 50, y + 6)
         .font('Helvetica-Bold')
         .fillColor('#0F172A')
-        .text(`₹${booking.finalPrice.toLocaleString('en-IN')}`, 440, y + 6, { align: 'right' });
+        .text(formatPrice(booking.finalPrice), 440, y + 6, { align: 'right' });
 
       y += 22;
 
@@ -232,7 +232,7 @@ export function generateBookingQuotationPDF(booking: PDFBookingData): Promise<Bu
         .font('Helvetica-Bold')
         .text('INSTANT DOORSIDE PAYOUT:', 50, y + 10)
         .fontSize(14)
-        .text(`₹${booking.finalPrice.toLocaleString('en-IN')}`, 430, y + 8, { align: 'right' });
+        .text(formatPrice(booking.finalPrice), 430, y + 8, { align: 'right' });
 
       y += 50;
 
