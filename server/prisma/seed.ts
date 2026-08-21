@@ -83,7 +83,7 @@ async function main() {
         variantPrices: JSON.stringify(variantPricesObj),
       },
       update: {
-        // Do not overwrite existing models in DB — preserves custom admin edits
+        imageUrl: modelImageUrl, // Sync latest GSMArena image URL
       },
     });
   }

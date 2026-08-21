@@ -99,13 +99,13 @@ export const DEFAULT_PRICING_RULES_CONFIG: PricingRulesConfig = {
   accessoryMaxCapPercent: 0.10, // Cap total accessory deductions to 10% of B_market
 
   ageFactors: {
-    under_3m: 1.00,
-    '3_to_6m': 0.97,
-    '6_to_12m': 0.94,
-    '1_to_2y': 0.88,
-    '2_to_3y': 0.80,
-    '3_to_4y': 0.70,
-    above_4y: 0.60,
+    under_3m: 1.00,  // 0% reduction (price remains same)
+    '3_to_6m': 0.85, // 15% reduction
+    '6_to_12m': 0.80, // 20% reduction (6 to 11 months)
+    '1_to_2y': 0.75, // 25% reduction (above 11 months / out of warranty)
+    '2_to_3y': 0.75, // 25% reduction
+    '3_to_4y': 0.75, // 25% reduction
+    above_4y: 0.75,  // 25% reduction
   },
 
   marketDemandFactors: {
