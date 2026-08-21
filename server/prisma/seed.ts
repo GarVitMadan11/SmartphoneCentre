@@ -83,15 +83,7 @@ async function main() {
         variantPrices: JSON.stringify(variantPricesObj),
       },
       update: {
-        name: m.name,
-        category: m.category,
-        releaseYear: m.releaseYear,
-        basePrice128GB: m.basePrice128GB,
-        series: m.series || '',
-        imageUrl: modelImageUrl,
-        supportedStorageGb: JSON.stringify(storageArr),
-        supportedRamGb: JSON.stringify(ramArr),
-        variantPrices: JSON.stringify(variantPricesObj),
+        // Do not overwrite existing models in DB — preserves custom admin edits
       },
     });
   }
