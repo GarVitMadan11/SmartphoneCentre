@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, Lock, Mail, ArrowLeft, AlertCircle, Loader2 } from 'lucide-react';
 import { customerLogin, syncFirebaseUser, ApiUser } from '../../utils/api';
-import { loginWithGoogle } from '../../services/firebaseAuth';
+import { loginWithGoogle, loginWithEmail, signupWithEmail } from '../../services/firebaseAuth';
 
 interface LoginPageProps {
   onLoginSuccess: (user: ApiUser) => void;
@@ -60,6 +60,18 @@ export default function LoginPage({ onLoginSuccess, onNavigate, redirectParam }:
 
     try {
       const response = await customerLogin(emailOrPhone.trim(), password);
+      
+      // If user logs in with email, ensure they exist in Firebase Auth so they appear in Firebase Console
+      if (response.user.email) {
+        try {
+          await loginWithEmail(response.user.email, password);
+        } catch (fbErr: any) {
+          if (fbErr.code === 'auth/user-not-found' || fbErr.code === 'auth/invalid-credential') {
+            await signupWithEmail(response.user.email, password, response.user.name).catch(() => {});
+          }
+        }
+      }
+
       onLoginSuccess(response.user);
       handleRedirect();
     } catch (err: any) {

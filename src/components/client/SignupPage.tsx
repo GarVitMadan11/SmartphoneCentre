@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Eye, EyeOff, Lock, Mail, ArrowLeft, AlertCircle, Phone, User, Loader2 } from 'lucide-react';
 import emailjs from '@emailjs/browser';
 import { customerSignup, verifyOtp, syncFirebaseUser, ApiUser } from '../../utils/api';
-import { loginWithGoogle } from '../../services/firebaseAuth';
+import { loginWithGoogle, signupWithEmail, loginWithEmail } from '../../services/firebaseAuth';
 
 interface SignupPageProps {
   onSignupSuccess: (user: ApiUser) => void;
@@ -110,7 +110,18 @@ export default function SignupPage({ onSignupSuccess, onNavigate, redirectParam 
     setError('');
     setIsLoading(true);
     try {
+      // 1. Verify OTP and create user in PostgreSQL
       const response = await verifyOtp({ name: name.trim(), email: email.trim(), phone: phone.trim(), password, otp: otp.trim() });
+      
+      // 2. Create the user in Firebase Auth so they appear in Firebase Console -> Users
+      try {
+        await signupWithEmail(email.trim(), password, name.trim());
+      } catch (fbErr: any) {
+        if (fbErr.code === 'auth/email-already-in-use') {
+          await loginWithEmail(email.trim(), password).catch(() => {});
+        }
+      }
+
       onSignupSuccess(response.user);
       handleRedirect();
     } catch (err: any) {

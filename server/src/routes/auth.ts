@@ -13,6 +13,7 @@ import {
   sendSecurityEmail,
   sendOtpEmail,
 } from '../services/email.js';
+import { getAdminAuth } from '../config/firebaseAdmin.js';
 
 const router = Router();
 
@@ -296,6 +297,22 @@ router.post('/verify-otp', async (req, res) => {
       },
     });
 
+    // Also register in Firebase Authentication so user appears in Firebase Console
+    const adminAuth = getAdminAuth();
+    if (adminAuth) {
+      adminAuth.createUser({
+        uid: user.id,
+        email: user.email,
+        displayName: user.name,
+        emailVerified: true,
+        password,
+      }).then(() => {
+        console.log(`🔥 [Firebase Auth] Created user in Firebase: ${user.email} (${user.id})`);
+      }).catch(fbErr => {
+        console.info('[Firebase Auth] User already exists or admin registration skipped:', fbErr.message);
+      });
+    }
+
     const token = issueJwt(user.id, user.email);
     const csrf = setCustomerCookie(res, token);
     res.status(201).json({ user: sanitizeUser(user), csrfToken: csrf });
@@ -335,6 +352,22 @@ router.post('/login', async (req, res) => {
     if (!isMatch) {
       res.status(401).json({ error: 'Unauthorized', message: 'Invalid credentials.' });
       return;
+    }
+
+    // Ensure existing user is registered in Firebase Auth so they appear in Firebase Console
+    const adminAuth = getAdminAuth();
+    if (adminAuth && user.email) {
+      adminAuth.getUserByEmail(user.email).catch(() => {
+        return adminAuth.createUser({
+          uid: user.id,
+          email: user.email,
+          displayName: user.name,
+          emailVerified: user.emailVerified,
+          password: password,
+        });
+      }).catch(fbErr => {
+        console.info('[Firebase Auth] Sync on login skipped:', fbErr.message);
+      });
     }
 
     const token = issueJwt(user.id, user.email);
