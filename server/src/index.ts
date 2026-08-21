@@ -32,6 +32,8 @@ import {
   decryptPayoutDetails,
   maskPayoutDetails,
 } from './utils/encryption.js';
+import { generateBookingQuotationPDF } from './services/pdfGenerator.js';
+import { sendBookingConfirmationEmail } from './services/bookingMailer.js';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // STARTUP ENVIRONMENT VALIDATION
@@ -223,8 +225,10 @@ app.use(globalLimiter);
 const PHONE_RE = /^[6-9]\d{9}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const ALLOWED_STORAGE_GB = new Set([64, 128, 256, 512, 1024]);
-const ALLOWED_PAYOUT_METHODS = new Set(['upi', 'bank', 'amazon', 'flipkart', 'myntra', 'googleplay', 'apple', 'steam', 'swiggy', 'zomato']);
+const ALLOWED_PAYOUT_METHODS = new Set(['doorstep', 'upi', 'bank', 'amazon', 'flipkart', 'myntra', 'googleplay', 'apple', 'steam', 'swiggy', 'zomato']);
 const ALLOWED_PICKUP_SLOTS = new Set([
+  'Morning (09:00 AM - 01:00 PM)',
+  'Evening (03:00 PM - 07:00 PM)',
   '09:00 AM - 12:00 PM (Morning)',
   '12:00 PM - 03:00 PM (Afternoon)',
   '03:00 PM - 06:00 PM (Evening)',
@@ -867,6 +871,45 @@ app.get('/api/bookings', adminAuth, async (req: AuthenticatedRequest, res) => {
   }
 });
 
+// Get current customer's bookings — AUTHENTICATED CUSTOMER ONLY
+app.get('/api/bookings/my', customerAuth, async (req: AuthenticatedCustomerRequest, res) => {
+  try {
+    if (!req.userId && !req.customer?.email && !req.customer?.phone) {
+      res.json([]);
+      return;
+    }
+
+    const conditions: Array<Record<string, unknown>> = [];
+    if (req.userId) conditions.push({ userId: req.userId });
+    if (req.customer?.email) conditions.push({ customerEmail: req.customer.email });
+    if (req.customer?.phone) conditions.push({ customerPhone: req.customer.phone });
+
+    const bookings = await prisma.booking.findMany({
+      where: { OR: conditions },
+      include: {
+        events: {
+          orderBy: { createdAt: 'desc' }
+        }
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const mapped = bookings.map(b => ({
+      ...mapBooking(b, false),
+      events: b.events.map(e => ({
+        eventType: e.eventType,
+        note: e.note,
+        createdAt: e.createdAt,
+      }))
+    }));
+
+    res.json(mapped);
+  } catch (err) {
+    console.error('GET /api/bookings/my error:', err);
+    res.status(500).json({ error: 'ServerError', message: 'Failed to fetch customer bookings' });
+  }
+});
+
 // Create booking — Public & Server-Authoritative
 app.post('/api/bookings', bookingLimiter, customerAuth, async (req: AuthenticatedCustomerRequest, res) => {
   try {
@@ -947,10 +990,69 @@ app.post('/api/bookings', bookingLimiter, customerAuth, async (req: Authenticate
       },
     });
 
+    // Send confirmation email with PDF quotation link/attachment
+    const protocol = req.protocol || 'http';
+    const host = req.get('host') || 'localhost:4000';
+    const baseUrl = `${protocol}://${host}`;
+
+    sendBookingConfirmationEmail({
+      id: booking.id,
+      modelName: booking.modelName,
+      storageGb: booking.storageGb,
+      customerName: booking.customerName,
+      customerPhone: booking.customerPhone,
+      customerEmail: booking.customerEmail,
+      address: booking.address,
+      pickupDate: booking.pickupDate,
+      pickupTimeSlot: booking.pickupTimeSlot,
+      finalPrice: booking.finalPrice,
+      defectDescriptions: defectIds,
+      dateCreated: booking.dateCreated,
+    }, baseUrl).catch(err => console.error('[POST /api/bookings] Failed to dispatch quotation email:', err));
+
     res.status(201).json({ success: true, id: booking.id });
   } catch (err) {
     console.error('POST /api/bookings error:', err);
     res.status(500).json({ error: 'ServerError', message: 'Failed to create booking' });
+  }
+});
+
+// Download Official PDF Quotation Document
+app.get('/api/bookings/:id/pdf', async (req, res) => {
+  try {
+    const booking = await prisma.booking.findUnique({ where: { id: req.params.id } });
+    if (!booking) {
+      res.status(404).json({ error: 'NotFound', message: 'Booking record not found' });
+      return;
+    }
+
+    let defectDescriptions: string[] = [];
+    try {
+      const ids: string[] = JSON.parse(booking.defectIdsJson || '[]');
+      defectDescriptions = ids;
+    } catch (_) {}
+
+    const pdfBuffer = await generateBookingQuotationPDF({
+      id: booking.id,
+      modelName: booking.modelName,
+      storageGb: booking.storageGb,
+      customerName: booking.customerName,
+      customerPhone: booking.customerPhone,
+      customerEmail: booking.customerEmail,
+      address: booking.address,
+      pickupDate: booking.pickupDate,
+      pickupTimeSlot: booking.pickupTimeSlot,
+      finalPrice: booking.finalPrice,
+      defectDescriptions,
+      dateCreated: booking.dateCreated,
+    });
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="Quotation-${booking.id}.pdf"`);
+    res.send(pdfBuffer);
+  } catch (err) {
+    console.error('GET /api/bookings/:id/pdf error:', err);
+    res.status(500).json({ error: 'ServerError', message: 'Failed to generate PDF quotation.' });
   }
 });
 

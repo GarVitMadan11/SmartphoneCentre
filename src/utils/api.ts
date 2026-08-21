@@ -338,8 +338,33 @@ export function fetchBookings(): Promise<ApiBooking[]> {
   return apiFetch<ApiBooking[]>('/bookings', undefined, true);
 }
 
+export function fetchMyBookings(): Promise<ApiBooking[]> {
+  return apiFetch<ApiBooking[]>('/bookings/my').catch(() => []);
+}
+
 export function createBooking(data: Record<string, unknown>): Promise<{ success: boolean; id: string }> {
   return apiFetch<{ success: boolean; id: string }>('/bookings', { method: 'POST', body: JSON.stringify(data) });
+}
+
+export async function downloadBookingPdf(bookingId: string): Promise<void> {
+  const baseUrl = getApiBaseUrl();
+  const url = `${baseUrl}/bookings/${encodeURIComponent(bookingId)}/pdf`;
+  try {
+    const res = await fetch(url, { mode: 'cors' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const blob = await res.blob();
+    const blobUrl = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = `Quotation-${bookingId}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => window.URL.revokeObjectURL(blobUrl), 10000);
+  } catch (err) {
+    console.warn('Blob PDF download failed, falling back to new window:', err);
+    window.open(url, '_blank');
+  }
 }
 
 export function updateBooking(

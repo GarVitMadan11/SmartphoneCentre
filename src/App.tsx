@@ -1660,7 +1660,7 @@ export default function App() {
       {/* Specs Modal */}
       <SpecsModal isOpen={isSpecModalOpen} onClose={() => setIsSpecModalOpen(false)} />
       <Suspense fallback={null}>
-        <OrderTrackingModal isOpen={isTrackOpen} onClose={() => setIsTrackOpen(false)} />
+        <OrderTrackingModal isOpen={isTrackOpen} onClose={() => setIsTrackOpen(false)} currentUser={currentUser} models={MODELS} />
       </Suspense>
 
       {/* Toast notifications */}

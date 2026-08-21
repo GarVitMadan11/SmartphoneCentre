@@ -1,14 +1,11 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { 
-  Clock, User, MapPin, CreditCard, 
-  CheckCircle, ArrowLeft, ShieldAlert, Award, Smartphone, Info, ChevronRight,
-  Landmark, Gamepad2, Utensils, ChefHat, Gift
+  Clock, User, MapPin, 
+  CheckCircle, ArrowLeft, ChevronRight, ShieldCheck
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import emailjs from '@emailjs/browser';
-import { Model, Variant, DefectRule, Booking } from '../../data/mockDatabase';
-import { createBooking, ApiUser } from '../../utils/api';
+import { createBooking, downloadBookingPdf, ApiUser } from '../../utils/api';
 
 
 interface PickupSchedulerProps {
@@ -31,105 +28,90 @@ const AGENTS = [
   { name: 'Priya Patel', rating: 5.0, reviews: 189, avatar: '👤', phone: '+91 XXXXX XXXXX' }
 ];
 
-export interface PayoutMethod {
-  id: string;
-  name: string;
-  type: 'cash' | 'giftcard';
-  bonus: number;
-  iconName: string;
-}
-
-export const PAYOUT_METHODS: PayoutMethod[] = [
-  { id: 'bank', name: 'Bank Transfer', type: 'cash', bonus: 0, iconName: 'landmark' },
-  { id: 'upi', name: 'UPI Transfer', type: 'cash', bonus: 0, iconName: 'smartphone' },
-  { id: 'amazon', name: 'Amazon Gift Card', type: 'giftcard', bonus: 0.03, iconName: 'shopping-bag' },
-  { id: 'flipkart', name: 'Flipkart Gift Card', type: 'giftcard', bonus: 0.025, iconName: 'shopping-cart' },
-  { id: 'myntra', name: 'Myntra Gift Card', type: 'giftcard', bonus: 0.02, iconName: 'tag' },
-  { id: 'googleplay', name: 'Google Play Gift Card', type: 'giftcard', bonus: 0.015, iconName: 'play' },
-  { id: 'apple', name: 'Apple Gift Card', type: 'giftcard', bonus: 0.025, iconName: 'apple' },
-  { id: 'steam', name: 'Steam Gift Card', type: 'giftcard', bonus: 0.02, iconName: 'gamepad-2' },
-  { id: 'swiggy', name: 'Swiggy Gift Card', type: 'giftcard', bonus: 0.015, iconName: 'utensils' },
-  { id: 'zomato', name: 'Zomato Gift Card', type: 'giftcard', bonus: 0.015, iconName: 'chef-hat' }
-];
-
-const renderPayoutBrandLogo = (id: string) => {
-  switch (id) {
-    case 'bank':
-      return (
-        <div className="w-full h-full rounded flex items-center justify-center bg-gradient-to-br from-blue-500 to-indigo-600 text-white p-1 shadow-xs">
-          <Landmark className="w-4 h-4 text-white" />
-        </div>
-      );
-    case 'upi':
-      return (
-        <div className="w-full h-full rounded flex items-center justify-center bg-emerald-600 text-white font-mono text-[9px] font-extrabold tracking-tighter p-0.5 shadow-xs">
-          <span className="bg-white text-emerald-700 px-1 py-0.5 rounded-[2px] font-black text-[9px]">UPI</span>
-        </div>
-      );
-    case 'amazon':
-      return (
-        <div className="w-full h-full rounded flex items-center justify-center bg-zinc-900 text-amber-400 font-bold text-xs p-1 shadow-xs relative">
-          <span className="font-serif italic font-black text-white text-[13px] leading-none">a</span>
-          <span className="text-amber-400 font-sans font-bold text-[10px] leading-none ml-0.5">→</span>
-        </div>
-      );
-    case 'flipkart':
-      return (
-        <div className="w-full h-full rounded flex items-center justify-center bg-blue-600 text-yellow-300 font-extrabold text-xs p-1 shadow-xs">
-          <span className="font-sans italic font-black text-yellow-400 text-[13px]">f</span>
-        </div>
-      );
-    case 'myntra':
-      return (
-        <div className="w-full h-full rounded flex items-center justify-center bg-gradient-to-tr from-pink-600 via-rose-500 to-amber-500 text-white font-black text-xs p-1 shadow-xs">
-          <span className="font-outfit font-black text-white text-[12px] tracking-tight">M</span>
-        </div>
-      );
-    case 'googleplay':
-      return (
-        <div className="w-full h-full rounded flex items-center justify-center bg-zinc-800 p-1.5 shadow-xs">
-          <svg className="w-4 h-4" viewBox="0 0 24 24">
-            <path fill="#4285F4" d="M3.6 1.8L14.2 12.4 3.6 23c-.3-.3-.6-.8-.6-1.4V2.4c0-.6.3-1.1.6-1.4z" />
-            <path fill="#34A853" d="M17.4 9.2L14.2 12.4 17.4 15.6 21.2 13.4c.7-.4.7-1.1 0-1.5l-3.8-2.7z" />
-            <path fill="#EA4335" d="M3.6 1.8l10.6 10.6 3.2-3.2L5.8.5c-.8-.5-1.7-.1-2.2 1.3z" />
-            <path fill="#FBBC05" d="M17.4 15.6l-3.2-3.2L3.6 23c.5 1.4 1.4 1.8 2.2 1.3l11.6-8.7z" />
-          </svg>
-        </div>
-      );
-    case 'apple':
-      return (
-        <div className="w-full h-full rounded flex items-center justify-center bg-zinc-900 text-white p-1.5 shadow-xs">
-          <svg className="w-4 h-4 fill-current text-white" viewBox="0 0 24 24">
-            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 4.17c.66-.81 1.11-1.93.99-3.06-1 .04-2.22.67-2.94 1.5-.64.74-1.2 1.88-1.05 2.99 1.12.09 2.26-.57 3-1.43z" />
-          </svg>
-        </div>
-      );
-    case 'steam':
-      return (
-        <div className="w-full h-full rounded flex items-center justify-center bg-gradient-to-b from-slate-800 to-sky-900 text-sky-400 p-1 shadow-xs">
-          <Gamepad2 className="w-4 h-4 text-sky-400" />
-        </div>
-      );
-    case 'swiggy':
-      return (
-        <div className="w-full h-full rounded flex items-center justify-center bg-orange-500 text-white font-black text-xs p-1 shadow-xs">
-          <Utensils className="w-4 h-4 text-white" />
-        </div>
-      );
-    case 'zomato':
-      return (
-        <div className="w-full h-full rounded flex items-center justify-center bg-red-600 text-white font-black text-xs p-1 shadow-xs">
-          <ChefHat className="w-4 h-4 text-white" />
-        </div>
-      );
-    default:
-      return (
-        <div className="w-full h-full rounded flex items-center justify-center bg-cobalt text-white p-1.5 shadow-xs">
-          <Gift className="w-4 h-4" />
-        </div>
-      );
-  }
+const DELHI_PINCODES: Record<string, string> = {
+  '110001': 'Connaught Place, Mandi House, Gole Market',
+  '110002': 'Daryaganj, Delhi Gate, ITI',
+  '110003': 'Golf Links, Nizamuddin West, Pragati Maidan',
+  '110004': 'Rashtrapati Bhawan Estate',
+  '110005': 'Karol Bagh, Anand Parbat, Dev Nagar',
+  '110006': 'Chandni Chowk, Jama Masjid, Red Fort',
+  '110007': 'Kamla Nagar, DU North Campus, Civil Lines',
+  '110008': 'Patel Nagar, Shadipur, West Patel Nagar',
+  '110009': 'GTB Nagar, Model Town, Mukherjee Nagar',
+  '110010': 'Delhi Cantt, Dhaula Kuan, Subroto Park',
+  '110011': 'South Avenue, Nirman Bhawan',
+  '110012': 'Inderpuri, Pusa Institute',
+  '110013': 'Nizamuddin East, Jangpura, CGO Complex',
+  '110014': 'Sunlight Colony, Hari Nagar Ashram',
+  '110015': 'Kirti Nagar, Ramesh Nagar, Bali Nagar',
+  '110016': 'Hauz Khas, Green Park, IIT Delhi',
+  '110017': 'Malviya Nagar, Saket, Sarvodya Enclave',
+  '110018': 'Tilak Nagar, Vikas Puri, Khyala',
+  '110019': 'Nehru Place, Kalkaji, Chittaranjan Park (CR Park)',
+  '110020': 'Okhla Industrial Area, Govindpuri',
+  '110021': 'Moti Bagh, Chanakyapuri, Anand Niketan',
+  '110022': 'R.K. Puram, Vasant Vihar Sector 1',
+  '110023': 'Sarojini Nagar, Kidwai Nagar',
+  '110024': 'Defence Colony, Lajpat Nagar I',
+  '110025': 'Jamia Nagar, Okhla, New Friends Colony',
+  '110026': 'Punjabi Bagh, Madipur, Shivaji Park',
+  '110027': 'Rajouri Garden, Tagore Garden, Subhash Nagar',
+  '110028': 'Naraina, Naraina Vihar',
+  '110029': 'Safdarjung Enclave, AIIMS, Green Park Extension',
+  '110030': 'Mehrauli, Sultanpur, Chhatarpur',
+  '110031': 'Geeta Colony, Nirman Vihar, Shastri Nagar',
+  '110032': 'Shahdara, Vishwas Nagar',
+  '110033': 'Azadpur, Jahangirpuri',
+  '110034': 'Pitampura, Saraswati Vihar, Kohat Enclave',
+  '110035': 'Tri Nagar, Inderlok',
+  '110036': 'Alipur, Narela Sector',
+  '110037': 'Mahipalpur, IGIA Airport',
+  '110038': 'Rajokri, Aerocity, Kapashera',
+  '110039': 'Bawana Industrial Area',
+  '110041': 'Nangloi, Mundka',
+  '110042': 'Samaypur Badli, Rohini Sector 18',
+  '110043': 'Najafgarh',
+  '110044': 'Badarpur, Mohan Cooperative',
+  '110045': 'Palam, Palam Colony, Sadh Nagar',
+  '110046': 'Sagarpur, Dashrathpuri',
+  '110048': 'Greater Kailash I & II (GK 1 / GK 2), Kailash Colony',
+  '110049': 'South Extension (South Ext I & II), Andrews Ganj',
+  '110051': 'Krishna Nagar, East Delhi',
+  '110052': 'Ashok Vihar, Wazirpur Industrial Area',
+  '110053': 'Seelampur, Bhajanpura, Yamuna Vihar',
+  '110054': 'Civil Lines, Timarpur',
+  '110055': 'Pahar Ganj, New Delhi Station',
+  '110056': 'Shakurbasti',
+  '110057': 'Vasant Vihar, Paschimi Marg',
+  '110058': 'Janakpuri, Posangipur',
+  '110059': 'Uttam Nagar, Nawada',
+  '110060': 'Rajendra Nagar, Old Rajinder Nagar',
+  '110061': 'Dhool Siras, Dwarka Sector 24',
+  '110062': 'Khanpur, Devli, Sangam Vihar',
+  '110063': 'Paschim Vihar, Madipur',
+  '110064': 'Mayapuri, Hari Nagar',
+  '110065': 'Lajpat Nagar II, III & IV, East of Kailash',
+  '110066': 'Bhikaji Cama Place',
+  '110067': 'JNU Campus, Munirka, Vasant Kunj',
+  '110068': 'Vasant Kunj Sectors A, B, C & D',
+  '110070': 'Vasant Kunj Institutional Area',
+  '110075': 'Dwarka Sector 1 to 12',
+  '110077': 'Dwarka Sector 13 to 23, Matiala',
+  '110078': 'Dwarka Mor, Kakrola',
+  '110085': 'Rohini Sectors 1 to 15',
+  '110086': 'Rohini Sectors 16 to 25',
+  '110087': 'Paschim Vihar West',
+  '110088': 'Shalimar Bagh',
+  '110089': 'Rohini Sectors 9, 11 & 13',
+  '110091': 'Mayur Vihar Phase 1, Trilokpuri',
+  '110092': 'Laxmi Nagar, Anand Vihar, Nirman Vihar, Preet Vihar',
+  '110093': 'Nand Nagri, Dilshad Garden',
+  '110094': 'Karawal Nagar, Sonia Vihar',
+  '110095': 'Vivek Vihar, Jwala Nagar',
+  '110096': 'Mayur Vihar Phase 3, Vasundhara Enclave',
 };
+
+
 
 const getEngineeringLabel = (description: string) => {
   const mapping: { [key: string]: string } = {
@@ -202,15 +184,22 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
         if (fields.email) setEmail(fields.email);
         if (fields.phone) setPhone(fields.phone);
         if (fields.imei) setImei(fields.imei);
-        if (fields.address) setAddress(fields.address);
+        if (fields.flatNo) setFlatNo(fields.flatNo);
+        if (fields.buildingName) setBuildingName(fields.buildingName);
+        if (fields.locality) setLocality(fields.locality);
+        else if (fields.streetAddress) setLocality(fields.streetAddress);
+        if (fields.landmark) setLandmark(fields.landmark);
+        if (fields.address && (!fields.flatNo || !fields.buildingName || !fields.locality)) {
+          const parts = fields.address.split(', ');
+          if (parts.length >= 3) {
+            setFlatNo(parts[0] || '');
+            setBuildingName(parts[1] || '');
+            setLocality(parts[2] || '');
+          }
+        }
         if (fields.pincode) setPincode(fields.pincode);
         if (fields.selectedDate) setSelectedDate(fields.selectedDate);
         if (fields.selectedTimeSlot) setSelectedTimeSlot(fields.selectedTimeSlot);
-        if (fields.paymentMethod) setPaymentMethod(fields.paymentMethod);
-        if (fields.upiId) setUpiId(fields.upiId);
-        if (fields.accountHolderName) setAccountHolderName(fields.accountHolderName);
-        if (fields.accountNumber) setAccountNumber(fields.accountNumber);
-        if (fields.ifscCode) setIfscCode(fields.ifscCode);
         if (fields.verificationStatus) setVerificationStatus(fields.verificationStatus);
         if (fields.verifiedName) setVerifiedName(fields.verifiedName);
         if (fields.maskedAadhaar) setMaskedAadhaar(fields.maskedAadhaar);
@@ -222,27 +211,21 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
       }
     }
   }, []);
-  const [address, setAddress] = useState('');
+  const [flatNo, setFlatNo] = useState('');
+  const [buildingName, setBuildingName] = useState('');
+  const [locality, setLocality] = useState('');
+  const [landmark, setLandmark] = useState('');
   const [pincode, setPincode] = useState('');
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>('');
-  const [paymentMethod, setPaymentMethod] = useState<string>('upi');
-  
   // Verification states (reserved for future identity verification)
   const [verificationStatus, setVerificationStatus] = useState<'pending' | 'verified' | 'failed'>('pending');
   const [verifiedName, setVerifiedName] = useState('');
   const [maskedAadhaar, setMaskedAadhaar] = useState('');
   const [verificationDate, setVerificationDate] = useState('');
 
-  // Payout states
-  const [upiId, setUpiId] = useState('');
-  const [accountHolderName, setAccountHolderName] = useState('');
-  const [accountNumber, setAccountNumber] = useState('');
-  const [ifscCode, setIfscCode] = useState('');
-
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
-  const [showTooltip, setShowTooltip] = useState(false);
   // DPDP consent — must be checked before form can proceed
   const [hasConsented, setHasConsented] = useState(false);
   // Inline form error (replaces window.alert)
@@ -299,10 +282,10 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
     return `${yyyy}-${mm}-${dd}`;
   };
 
-  // Generate next 5 dates using LOCAL date components (not UTC)
+  // Generate next 5 dates starting 3 days afterwards (e.g. if today is 21st, start from 24th)
   const dates = Array.from({ length: 5 }).map((_, i) => {
     const d = new Date();
-    d.setDate(d.getDate() + i);
+    d.setDate(d.getDate() + i + 3);
     return {
       raw: getLocalDateString(d),
       dayName: d.toLocaleDateString('en-IN', { weekday: 'short' }),
@@ -312,10 +295,8 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
   });
 
   const timeSlots = [
-    '09:00 AM - 12:00 PM (Morning)',
-    '12:00 PM - 03:00 PM (Afternoon)',
-    '03:00 PM - 06:00 PM (Evening)',
-    '06:00 PM - 09:00 PM (Night)'
+    'Morning (09:00 AM - 01:00 PM)',
+    'Evening (03:00 PM - 07:00 PM)'
   ];
 
   // Assign a random agent for the pickup
@@ -350,49 +331,43 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
     const maxStr = getLocalDateString(maxDate);
     return selectedDate >= todayStr && selectedDate <= maxStr;
   }, [selectedDate]);
-  const isAddressValid = useMemo(() => address.trim().length >= 10 && address.trim().length <= 500, [address]);
+
+  const address = useMemo(() => {
+    const parts = [
+      flatNo.trim(),
+      buildingName.trim(),
+      locality.trim(),
+      landmark.trim() ? `Landmark: ${landmark.trim()}` : ''
+    ].filter(Boolean);
+    return parts.join(', ');
+  }, [flatNo, buildingName, locality, landmark]);
+
+  const isAddressValid = useMemo(() => {
+    return flatNo.trim().length >= 1 && buildingName.trim().length >= 2 && locality.trim().length >= 2;
+  }, [flatNo, buildingName, locality]);
+
   const isDelhiPincodeValid = useMemo(() => /^110\d{3}$/.test(pincode.trim()), [pincode]);
+
+  const pincodeLocality = useMemo(() => {
+    const clean = pincode.trim();
+    if (clean.length === 6 && clean.startsWith('110')) {
+      return DELHI_PINCODES[clean] || 'Central / Greater Delhi NCT Region';
+    }
+    return null;
+  }, [pincode]);
+
   const isStep2Valid = useMemo(() => {
     return isAddressValid && isDelhiPincodeValid && isDateInRange && selectedTimeSlot !== '';
   }, [isAddressValid, isDelhiPincodeValid, isDateInRange, selectedTimeSlot]);
 
-  // Step 3 Validation
-  const isUpiValid = useMemo(() => {
-    const trimmed = upiId.trim();
-    return trimmed.length >= 3 && trimmed.includes('@');
-  }, [upiId]);
-
-  const isBankValid = useMemo(() => {
-    const nameValid = accountHolderName.trim().length >= 2;
-    const accValid = /^\d{9,18}$/.test(accountNumber.trim());
-    const ifscValid = /^[A-Z]{4}0[A-Z0-9]{6}$/i.test(ifscCode.trim());
-    return nameValid && accValid && ifscValid;
-  }, [accountHolderName, accountNumber, ifscCode]);
-
-  const isStep3Valid = useMemo(() => {
-    if (paymentMethod === 'upi') return isUpiValid;
-    if (paymentMethod === 'bank') return isBankValid;
-    return true; // Gift cards are auto-valid
-  }, [paymentMethod, isUpiValid, isBankValid]);
-
-  const selectedPayoutMethodObj = useMemo(() => {
-    return PAYOUT_METHODS.find(m => m.id === paymentMethod) || PAYOUT_METHODS[1];
-  }, [paymentMethod]);
-
-  const payoutBonusAmt = useMemo(() => {
-    return Math.round(finalPrice * selectedPayoutMethodObj.bonus);
-  }, [finalPrice, selectedPayoutMethodObj]);
-
-  const totalPayoutVal = useMemo(() => {
-    return finalPrice + payoutBonusAmt;
-  }, [finalPrice, payoutBonusAmt]);
+  const totalPayoutVal = finalPrice;
 
   const isSubmittingRef = useRef(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmittingRef.current || isSubmitting) return;
-    if (!isStep1Valid || !isStep2Valid || !isStep3Valid) {
+    if (!isStep1Valid || !isStep2Valid) {
       setFormError('Please complete all required steps and fields before submitting.');
       return;
     }
@@ -415,15 +390,14 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
         email,
         phone,
         imei,
+        flatNo,
+        buildingName,
+        locality,
+        landmark,
         address,
         pincode,
         selectedDate,
         selectedTimeSlot,
-        paymentMethod,
-        upiId,
-        accountHolderName,
-        accountNumber,
-        ifscCode,
         verificationStatus,
         verifiedName,
         maskedAadhaar,
@@ -450,18 +424,8 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
     setIsSubmitting(true);
     recordSubmitAttempt();
 
-    const selectedMethodObj = PAYOUT_METHODS.find(m => m.id === paymentMethod) || PAYOUT_METHODS[1];
-    const bonusAmt = Math.round(finalPrice * selectedMethodObj.bonus);
-    const finalPayoutAmt = finalPrice + bonusAmt;
-
-    let payoutInfoStr = '';
-    if (paymentMethod === 'upi') {
-      payoutInfoStr = `UPI ID: ${upiId.trim()}`;
-    } else if (paymentMethod === 'bank') {
-      payoutInfoStr = `Holder: ${accountHolderName.trim()}, A/C: ${accountNumber.trim()}, IFSC: ${ifscCode.trim()}`;
-    } else {
-      payoutInfoStr = `Store Voucher sent to: Email ${email.trim()} / SMS +91 ${phone.trim()}`;
-    }
+    const finalPayoutAmt = finalPrice;
+    const payoutInfoStr = 'Instant Doorside Transfer via UPI / Bank Transfer upon physical inspection';
 
     // Build template parameters for EmailJS
     const templateParams = {
@@ -472,7 +436,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
       address: `${address.trim().slice(0, 500)} (Pincode: ${pincode.trim()})`,
       pickup_date: selectedDate,
       time_slot: selectedTimeSlot,
-      payment_method: selectedMethodObj.name.toUpperCase(),
+      payment_method: 'INSTANT DOORSIDE PAYOUT',
       payment_details: payoutInfoStr,
       payout_amount: new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(finalPayoutAmt),
       agent_name: assignedAgent.name,
@@ -498,20 +462,12 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
       verifiedName: verifiedName,
       maskedAadhaar: maskedAadhaar,
       verificationDate: verificationDate,
-      payoutMethod: paymentMethod,
-      payoutMethodName: selectedMethodObj.name,
-      bonusPercentage: selectedMethodObj.bonus,
-      bonusAmount: bonusAmt,
-      finalPayoutAmount: finalPayoutAmt,
-      payoutDetails: paymentMethod === 'upi'
-        ? { upiId: upiId.trim() }
-        : paymentMethod === 'bank'
-        ? { 
-            accountHolderName: accountHolderName.trim(), 
-            accountNumber: accountNumber.trim(), 
-            ifscCode: ifscCode.trim() 
-          }
-        : {},
+      payoutMethod: 'doorstep',
+      payoutMethodName: 'Instant Doorside Payout',
+      bonusPercentage: 0,
+      bonusAmount: 0,
+      finalPayoutAmount: finalPrice,
+      payoutDetails: {},
       inspectionStatus: 'pending',
       payoutStatus: 'pending',
       dateCreated: new Date().toISOString()
@@ -561,15 +517,11 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
       setSchedulerStep(2);
     } else if (schedulerStep === 2 && isStep2Valid) {
       setSchedulerStep(3);
-    } else if (schedulerStep === 3 && isStep3Valid) {
-      setSchedulerStep(4);
     }
   };
 
   const handlePrevStep = () => {
-    if (schedulerStep === 4) {
-      setSchedulerStep(3);
-    } else if (schedulerStep === 3) {
+    if (schedulerStep === 3) {
       setSchedulerStep(2);
     } else if (schedulerStep === 2) {
       setSchedulerStep(1);
@@ -611,14 +563,13 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
 
                 {/* Progress bar info */}
                 <div className="flex items-center justify-between mb-6 bg-canvas-white/40 p-2.5 rounded-sm border border-white/[0.04] text-[10px] font-mono tracking-wider text-zinc-400">
-                  <span className="uppercase">Step {schedulerStep} of 4: {
+                  <span className="uppercase">Step {schedulerStep} of 3: {
                     schedulerStep === 1 ? 'Contact & Device Info' : 
-                    schedulerStep === 2 ? 'Pickup Details' : 
-                    schedulerStep === 3 ? 'Choose Your Payout' :
-                    'Final Confirmation'
+                    schedulerStep === 2 ? 'Address & Schedule' : 
+                    'Final Review & Doorside Payout'
                   }</span>
                   <div className="flex gap-1">
-                    {[1, 2, 3, 4].map(s => (
+                    {[1, 2, 3].map(s => (
                       <span key={s} className={`w-2 h-2 rounded-full ${s <= schedulerStep ? 'bg-cobalt' : 'bg-ice-border'}`} />
                     ))}
                   </div>
@@ -744,62 +695,6 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                           <span className="text-[10px] text-emerald-400 mt-1 block">✓ Valid Indian mobile number.</span>
                         )}
                       </div>
-
-                      {/* IMEI Input with Luhn Checksum validation and dial instructions */}
-                      <div>
-                        <div className="flex items-center justify-between mb-1 relative">
-                          <label className="text-xs font-semibold text-ink-slate flex items-center gap-1.5">
-                            <Smartphone className="w-3.5 h-3.5 text-cobalt" />
-                            Device IMEI
-                            <span className="text-zinc-500 font-mono text-[9px] font-normal">(optional)</span>
-                          </label>
-                          
-                          {/* Info Tooltip */}
-                          <div className="relative">
-                            <button
-                              type="button"
-                              onClick={() => setShowTooltip(!showTooltip)}
-                              onMouseEnter={() => setShowTooltip(true)}
-                              onMouseLeave={() => setShowTooltip(false)}
-                              className="p-1 rounded-full text-zinc-500 hover:text-cobalt transition-colors"
-                              title="How to retrieve IMEI"
-                            >
-                              <Info className="w-3.5 h-3.5" />
-                            </button>
-                            <AnimatePresence>
-                              {showTooltip && (
-                                <motion.div 
-                                  initial={{ opacity: 0, y: 5 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  exit={{ opacity: 0, y: 5 }}
-                                  className="absolute right-0 bottom-6 z-20 w-52 p-3 bg-zinc-950 border border-white/[0.08] text-white text-[10px] rounded-sm shadow-premium leading-normal font-light"
-                                >
-                                  Dial <strong className="text-cobalt font-mono">*#06#</strong> on your phone's dial pad to display your 15-digit IMEI number instantly.
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
-                          </div>
-                        </div>
-
-                        <input
-                          type="text"
-                          autoComplete="off"
-                          inputMode="numeric"
-                          value={imei}
-                          onChange={e => setImei(e.target.value.replace(/\D/g, '').slice(0, 15))}
-                          placeholder="e.g. 352999061234567"
-                          maxLength={15}
-                          className="w-full p-3 rounded-sm border border-ice-border bg-canvas-white text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all font-light font-mono tracking-wide"
-                          style={{ minHeight: '48px' }}
-                        />
-                        {imei && imei.length > 0 && !isImeiValid && (
-                          <span className="text-[10px] text-red-400 mt-1 block">Invalid 15-digit IMEI (Luhn verification failed).</span>
-                        )}
-                        {imei && isImeiValid && imei.length === 15 && (
-                          <span className="text-[10px] text-emerald-400 mt-1 block">✓ Valid 15-digit IMEI checked via Luhn checksum.</span>
-                        )}
-                        <p className="text-[10px] text-ink-muted mt-1 font-light">Dialing *#06# helps verify hardware specifications instantly doorside.</p>
-                      </div>
                     </div>
                   )}
 
@@ -810,31 +705,85 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                         <MapPin className="w-3.5 h-3.5" /> 2. Address & Time slots
                       </h3>
 
-                      <div>
-                        <label className="text-xs font-semibold text-ink-slate block mb-1">Complete Address Details *</label>
-                        <div className="relative">
-                          <textarea
+                      {/* Segregated Address Input Fields */}
+                      <div className="space-y-3 bg-canvas-white p-4 rounded-sm border border-ice-border">
+                        <label className="text-xs font-semibold text-ink-slate block mb-1">
+                          Complete Doorstep Address Details *
+                        </label>
+
+                        {/* Field 1: Flat / House / Floor No */}
+                        <div>
+                          <label className="text-[11px] text-zinc-500 font-medium block mb-1">Flat / House No., Floor, Door *</label>
+                          <input
+                            type="text"
                             required
-                            rows={3}
-                            maxLength={500}
-                            autoComplete="street-address"
-                            value={address}
-                            onChange={e => setAddress(e.target.value)}
-                            placeholder="Flat No, Building Name, Street Address, City, Pincode"
-                            className={`w-full p-3 rounded-sm border bg-canvas-white text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all resize-none font-light ${
-                              address && isAddressValid ? 'border-emerald-400' : address && !isAddressValid ? 'border-red-400' : 'border-ice-border'
+                            value={flatNo}
+                            onChange={e => setFlatNo(e.target.value)}
+                            placeholder="e.g. Flat 402, 4th Floor / House No. B-12"
+                            className={`w-full p-3 rounded-sm border bg-canvas-pure text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all font-light ${
+                              flatNo.trim() ? 'border-emerald-400' : 'border-ice-border'
                             }`}
+                            style={{ minHeight: '44px' }}
                           />
                         </div>
-                        {address && !isAddressValid && (
-                          <span className="text-[10px] text-red-400 mt-1 block">Please enter a complete address (at least 10 characters).</span>
-                        )}
+
+                        {/* Field 2: Building / Apartment / Society Name */}
+                        <div>
+                          <label className="text-[11px] text-zinc-500 font-medium block mb-1">Building / Apartment / Society / Colony Name *</label>
+                          <input
+                            type="text"
+                            required
+                            value={buildingName}
+                            onChange={e => setBuildingName(e.target.value)}
+                            placeholder="e.g. Shanti Heights / DDA Pocket A Apartments"
+                            className={`w-full p-3 rounded-sm border bg-canvas-pure text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all font-light ${
+                              buildingName.trim() ? 'border-emerald-400' : 'border-ice-border'
+                            }`}
+                            style={{ minHeight: '44px' }}
+                          />
+                        </div>
+
+                        {/* Field 3: Locality / Sector / Area Name */}
+                        <div>
+                          <label className="text-[11px] text-zinc-500 font-medium block mb-1">Locality, Sector & Area Name *</label>
+                          <input
+                            type="text"
+                            required
+                            value={locality}
+                            onChange={e => setLocality(e.target.value)}
+                            placeholder="e.g. Tilak Nagar / Sector 14 / Janakpuri Block B"
+                            className={`w-full p-3 rounded-sm border bg-canvas-pure text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all font-light ${
+                              locality.trim() ? 'border-emerald-400' : 'border-ice-border'
+                            }`}
+                            style={{ minHeight: '44px' }}
+                          />
+                        </div>
+
+                        {/* Field 4: Nearby Landmark */}
+                        <div>
+                          <label className="text-[11px] text-zinc-500 font-medium block mb-1">
+                            Nearby Landmark <span className="text-zinc-400 font-normal">(Optional)</span>
+                          </label>
+                          <input
+                            type="text"
+                            value={landmark}
+                            onChange={e => setLandmark(e.target.value)}
+                            placeholder="e.g. Near AS Coaching Centre / Opposite Metro Pillar 450"
+                            className={`w-full p-3 rounded-sm border bg-canvas-pure text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all font-light ${
+                              landmark.trim() ? 'border-emerald-400' : 'border-ice-border'
+                            }`}
+                            style={{ minHeight: '44px' }}
+                          />
+                        </div>
+
                         {address && isAddressValid && (
-                          <span className="text-[10px] text-emerald-400 mt-1 block">✓ Address looks good.</span>
+                          <span className="text-[10px] text-emerald-500 mt-1 flex items-center gap-1 font-semibold">
+                            ✓ Formatted Address: <span className="text-ink-navy font-normal">{address}</span>
+                          </span>
                         )}
                       </div>
 
-                      {/* Delhi Pincode Validator */}
+                      {/* Delhi Pincode Input & Live Verification with Locality Tick */}
                       <div>
                         <div className="flex items-center justify-between mb-1">
                           <label className="text-xs font-semibold text-ink-slate flex items-center gap-1.5">
@@ -853,38 +802,57 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                             maxLength={6}
                             value={pincode}
                             onChange={e => setPincode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                            placeholder="e.g. 110001 (Connaught Place) or 110016 (Hauz Khas)"
-                            className={`w-full p-3 pr-9 rounded-sm border bg-canvas-white text-ink-navy text-sm font-mono focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all ${
+                            placeholder="Type 6-digit Pincode (e.g. 110001, 110016, 110092)"
+                            className={`w-full p-3 pr-10 rounded-sm border bg-canvas-white text-ink-navy text-sm font-mono focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all ${
                               pincode && isDelhiPincodeValid
-                                ? 'border-emerald-400'
-                                : pincode && !isDelhiPincodeValid
-                                ? 'border-red-400'
+                                ? 'border-emerald-500 ring-1 ring-emerald-500/30'
+                                : pincode && pincode.length === 6 && !isDelhiPincodeValid
+                                ? 'border-red-400 ring-1 ring-red-400/30'
                                 : 'border-ice-border'
                             }`}
                             style={{ minHeight: '48px' }}
                           />
-                          {pincode && (
-                            <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-sm ${
-                              isDelhiPincodeValid ? 'text-emerald-400' : 'text-red-400'
+                          {pincode && pincode.length === 6 && (
+                            <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-base font-bold ${
+                              isDelhiPincodeValid ? 'text-emerald-500' : 'text-red-500'
                             }`}>
                               {isDelhiPincodeValid ? '✓' : '✗'}
                             </span>
                           )}
                         </div>
 
-                        {pincode && !isDelhiPincodeValid && pincode.length === 6 && (
-                          <div className="mt-1.5 p-2 bg-amber-500/10 border border-amber-500/20 rounded text-[11px] text-amber-700 flex items-start gap-1.5">
-                            <ShieldAlert className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                            <span>
-                              Doorstep pickup is currently exclusive to <strong>Delhi NCT (Pincodes starting with 110)</strong>. Please enter a valid 110xxx Delhi pincode.
-                            </span>
+                        {/* Live Delhi Locality Match Banner with Green Checkmark */}
+                        {pincode && isDelhiPincodeValid && pincodeLocality && (
+                          <div className="mt-2 p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-sm text-xs text-emerald-700 dark:text-emerald-300 flex items-center gap-2.5 animate-fadeIn">
+                            <div className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-bold flex-shrink-0 shadow-sm">
+                              ✓
+                            </div>
+                            <div>
+                              <span className="font-bold text-emerald-800 dark:text-emerald-200 block text-[11px] uppercase font-mono tracking-wider">
+                                Verified Delhi Service Area (Pincode {pincode})
+                              </span>
+                              <span className="text-[11px] font-normal text-emerald-700 dark:text-emerald-300 block mt-0.5">
+                                📍 Locality: <strong>{pincodeLocality}</strong>, Delhi NCT
+                              </span>
+                            </div>
                           </div>
                         )}
 
-                        {pincode && isDelhiPincodeValid && (
-                          <span className="text-[10px] text-emerald-500 font-semibold mt-1 block">
-                            ✓ Verified Delhi Service Area (110xxx)
-                          </span>
+                        {/* Non-Delhi Pincode Warning Banner */}
+                        {pincode && pincode.length === 6 && !isDelhiPincodeValid && (
+                          <div className="mt-2 p-3 bg-red-500/10 border border-red-500/30 rounded-sm text-xs text-red-700 dark:text-red-300 flex items-start gap-2.5 animate-fadeIn">
+                            <div className="w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
+                              ✗
+                            </div>
+                            <div>
+                              <strong className="block text-[11px] uppercase font-mono tracking-wider text-red-800 dark:text-red-200">
+                                Service Unavailable for Pincode {pincode}
+                              </strong>
+                              <span className="text-[11px] font-light leading-relaxed block mt-0.5">
+                                Doorstep pickup is currently exclusive to <strong>Delhi NCR (110xxx pincodes)</strong>. Please enter a valid 6-digit Delhi pincode starting with 110.
+                              </span>
+                            </div>
+                          </div>
                         )}
                       </div>
 
@@ -947,227 +915,33 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                     </div>
                   )}
 
-                  {/* STEP 3: Choose Your Payout Page (Payout selector + Identity Verification) */}
+                  {/* STEP 3: Final Review & Confirmation Screen */}
                   {schedulerStep === 3 && (
-                    <div className="space-y-5 animate-fadeIn">
-                      {/* Choose Your Payout Section */}
-                      <div className="space-y-4 animate-fadeIn">
-                        <div>
-                          <h3 className="text-[11px] font-mono tracking-[0.25em] text-cobalt uppercase flex items-center gap-1.5 font-bold mb-1">
-                            <CreditCard className="w-3.5 h-3.5" /> 3. Choose Your Payout Method
-                          </h3>
-                          <p className="text-[11px] text-ink-muted leading-normal font-light mb-4">
-                            Select how you want to be paid. Gift card payouts include extra store bonuses!
-                          </p>
-                        </div>
-
-                        {/* Payout Grid cards */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                          {PAYOUT_METHODS.map(mode => {
-                            const isSelected = paymentMethod === mode.id;
-                            const valueWithBonus = finalPrice + Math.round(finalPrice * mode.bonus);
-                            return (
-                              <button
-                                key={mode.id}
-                                type="button"
-                                onClick={() => setPaymentMethod(mode.id)}
-                                className={`p-3.5 rounded-sm border text-left flex flex-col justify-between transition-all duration-200 focus:outline-none relative overflow-hidden group cursor-pointer ${
-                                  isSelected
-                                    ? 'bg-canvas-white dark:bg-canvas-pure border-cobalt shadow-premium ring-2 ring-cobalt/20 scale-[1.01] z-10'
-                                    : 'bg-canvas-white dark:bg-canvas-pure border-ice-border hover:border-cobalt/40 hover:shadow-xs'
-                                }`}
-                              >
-                                {/* Top Header: Logo + Title on left, Badges & Check on right */}
-                                <div className="flex items-start justify-between gap-2 w-full mb-3">
-                                  <div className="flex items-center gap-2.5 min-w-0 pr-1">
-                                    <div className="w-7 h-7 rounded-sm flex items-center justify-center flex-shrink-0 bg-canvas-white border border-ice-border/60 shadow-xs">
-                                      {renderPayoutBrandLogo(mode.id)}
-                                    </div>
-                                    <span className="font-extrabold text-xs font-outfit text-ink-navy leading-tight truncate">
-                                      {mode.name}
-                                    </span>
-                                  </div>
-
-                                  <div className="flex items-center gap-1 flex-shrink-0">
-                                    {isSelected && (
-                                      <span className="w-4 h-4 rounded-full bg-cobalt text-white flex items-center justify-center text-[10px] font-bold shadow-xs">
-                                        ✓
-                                      </span>
-                                    )}
-                                    {mode.bonus > 0 ? (
-                                      <span className="px-1.5 py-0.5 rounded-sm text-[8px] font-extrabold uppercase font-mono tracking-wider bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 whitespace-nowrap">
-                                        +{(mode.bonus * 100).toFixed(1).replace('.0', '')}% Bonus
-                                      </span>
-                                    ) : (
-                                      <span className="px-1.5 py-0.5 rounded-sm text-[8px] font-extrabold uppercase font-mono tracking-wider bg-zinc-100 dark:bg-zinc-800 text-zinc-500 border border-ice-border/60 whitespace-nowrap">
-                                        CASH
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-
-                                {/* Price Details */}
-                                <div className="w-full pt-2 border-t border-ice-border/40 flex flex-col">
-                                  <span className="text-sm font-extrabold font-outfit text-ink-navy tracking-tight">
-                                    {formatPrice(valueWithBonus)}
-                                  </span>
-                                  <span className="text-[10px] font-mono text-zinc-500 font-medium">
-                                    {mode.bonus > 0 ? (
-                                      <span className="text-emerald-600 dark:text-emerald-400 font-bold">
-                                        +{formatPrice(Math.round(finalPrice * mode.bonus))} store bonus
-                                      </span>
-                                    ) : (
-                                      'Instant payout · No hidden fees'
-                                    )}
-                                  </span>
-                                </div>
-                              </button>
-                            );
-                          })}
-                        </div>
-
-                        {/* Payout Input Details */}
-                        <div className="bg-canvas-white/60 p-4 rounded-sm border border-ice-border space-y-3 mt-4 animate-fadeIn">
-                          {paymentMethod === 'upi' && (
-                            <div>
-                              <label className="text-xs font-semibold text-ink-slate block mb-1">Enter UPI ID *</label>
-                              <input
-                                type="text"
-                                required
-                                autoComplete="off"
-                                value={upiId}
-                                onChange={e => setUpiId(e.target.value)}
-                                placeholder="e.g. name@okhdfc"
-                                className={`w-full p-3 rounded-sm border bg-canvas-white text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all font-light ${
-                                  upiId && !isUpiValid ? 'border-red-400' : upiId && isUpiValid ? 'border-emerald-400' : 'border-ice-border'
-                                }`}
-                                style={{ minHeight: '48px' }}
-                              />
-                              {upiId && !isUpiValid && (
-                                <span className="text-[10px] text-red-400 mt-1 block font-mono">Invalid UPI ID format. Should contain '@'.</span>
-                              )}
-                            </div>
-                          )}
-
-                          {paymentMethod === 'bank' && (
-                            <div className="space-y-3">
-                              <div>
-                                <label className="text-xs font-semibold text-ink-slate block mb-1">Account Holder Name *</label>
-                                <input
-                                  type="text"
-                                  required
-                                  autoComplete="off"
-                                  value={accountHolderName}
-                                  onChange={e => setAccountHolderName(e.target.value)}
-                                  placeholder="e.g. Vikramaditya Singh"
-                                  className={`w-full p-3 rounded-sm border bg-canvas-white text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all font-light ${
-                                    accountHolderName && accountHolderName.trim().length < 2 ? 'border-red-400' : accountHolderName ? 'border-emerald-400' : 'border-ice-border'
-                                  }`}
-                                  style={{ minHeight: '48px' }}
-                                />
-                              </div>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <div>
-                                  <label className="text-xs font-semibold text-ink-slate block mb-1">Account Number *</label>
-                                  <input
-                                    type="text"
-                                    required
-                                    autoComplete="off"
-                                    inputMode="numeric"
-                                    value={accountNumber}
-                                    onChange={e => setAccountNumber(e.target.value.replace(/\D/g, ''))}
-                                    placeholder="e.g. 918273645012"
-                                    className={`w-full p-3 rounded-sm border bg-canvas-white text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all font-light ${
-                                      accountNumber && !/^\d{9,18}$/.test(accountNumber.trim()) ? 'border-red-400' : accountNumber ? 'border-emerald-400' : 'border-ice-border'
-                                    }`}
-                                    style={{ minHeight: '48px' }}
-                                  />
-                                  {accountNumber && !/^\d{9,18}$/.test(accountNumber.trim()) && (
-                                    <span className="text-[10px] text-red-400 mt-1 block font-mono">Must be 9–18 digits.</span>
-                                  )}
-                                </div>
-                                <div>
-                                  <label className="text-xs font-semibold text-ink-slate block mb-1">IFSC Code *</label>
-                                  <input
-                                    type="text"
-                                    required
-                                    autoComplete="off"
-                                    value={ifscCode}
-                                    onChange={e => setIfscCode(e.target.value.toUpperCase())}
-                                    placeholder="e.g. HDFC0000104"
-                                    className={`w-full p-3 rounded-sm border bg-canvas-white text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all font-light ${
-                                      ifscCode && !/^[A-Z]{4}0[A-Z0-9]{6}$/i.test(ifscCode.trim()) ? 'border-red-400' : ifscCode ? 'border-emerald-400' : 'border-ice-border'
-                                    }`}
-                                    style={{ minHeight: '48px' }}
-                                  />
-                                  {ifscCode && !/^[A-Z]{4}0[A-Z0-9]{6}$/i.test(ifscCode.trim()) && (
-                                    <span className="text-[10px] text-red-400 mt-1 block font-mono">Invalid IFSC format (e.g. HDFC0000104).</span>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          )}
-
-                          {paymentMethod !== 'upi' && paymentMethod !== 'bank' && (
-                            <div className="p-3 bg-emerald-500/10 text-emerald-400 rounded-sm border border-emerald-500/20 text-xs flex items-start gap-2.5 animate-fadeIn">
-                              <Award className="w-4 h-4 mt-0.5 text-emerald-400 flex-shrink-0" />
-                              <span className="font-light leading-normal">
-                                <strong>Voucher Dispatch Target:</strong> Your verified digital voucher worth <strong>{formatPrice(totalPayoutVal)}</strong> will be dispatched to your registered email (<strong>{email}</strong>) and text details sent to (<strong>+91 {phone}</strong>) instantly after physical handset handover.
-                              </span>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Payout Comparison Table */}
-                        <div className="bg-canvas-white border border-ice-border rounded-sm p-4 mt-4 shadow-sm">
-                          <span className="text-[10px] font-mono tracking-wider uppercase text-zinc-500 block mb-2 font-bold">Payout Options Comparison</span>
-                          <div className="overflow-x-auto">
-                            <table className="w-full text-left font-mono text-[10px] sm:text-xs border-collapse">
-                              <thead>
-                                <tr className="border-b border-ice-border/40 text-ink-navy uppercase font-bold text-[9px] tracking-wider">
-                                  <th className="py-2 pr-3">Payout Category</th>
-                                  <th className="py-2 px-2 text-center">Store Bonus</th>
-                                  <th className="py-2 px-2 text-center">Availability</th>
-                                  <th className="py-2 pl-3">Redemption Scope</th>
-                                </tr>
-                              </thead>
-                              <tbody className="divide-y divide-white/[0.04] text-ink-slate font-light">
-                                <tr>
-                                  <td className="py-2.5 pr-3 font-semibold text-ink-navy">Cash Payouts (Bank/UPI)</td>
-                                  <td className="py-2.5 px-2 text-center text-zinc-500">None (0%)</td>
-                                  <td className="py-2.5 px-2 text-center text-emerald-400 font-semibold">Instant Releases</td>
-                                  <td className="py-2.5 pl-3">Direct liquid funds deposited into your personal bank account. Spend anywhere.</td>
-                                </tr>
-                                <tr>
-                                  <td className="py-2.5 pr-3 font-semibold text-ink-navy">Store Gift Cards (e.g. Amazon)</td>
-                                  <td className="py-2.5 px-2 text-center text-emerald-400 font-bold">+{selectedPayoutMethodObj.bonus > 0 ? (selectedPayoutMethodObj.bonus * 100).toFixed(1) : '1.5 - 3.0'}% Extra</td>
-                                  <td className="py-2.5 px-2 text-center text-emerald-400 font-semibold">Instant Releases</td>
-                                  <td className="py-2.5 pl-3">Stores-specific shopping voucher details delivered instantly. Higher purchasing value.</td>
-                                </tr>
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* STEP 4: Final Confirmation Screen */}
-                  {schedulerStep === 4 && (
                     <div className="space-y-5 animate-fadeIn">
                       <div className="space-y-1">
                         <h3 className="text-[11px] font-mono tracking-[0.25em] text-cobalt uppercase flex items-center gap-1.5 font-bold mb-3">
-                          <CheckCircle className="w-3.5 h-3.5" /> 4. Final Review &amp; Confirmation
+                          <CheckCircle className="w-3.5 h-3.5" /> 3. Final Review &amp; Confirmation
                         </h3>
                         <p className="text-xs text-ink-muted leading-relaxed font-light">
-                          Please verify your pickup coordinates, contact details, and selected payout credentials before submitting.
+                          Please verify your pickup address, contact details, and scheduled doorstep inspection time before submitting.
                         </p>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      {/* Instant Doorside Payout Banner */}
+                      <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-md p-4 text-xs text-emerald-800 dark:text-emerald-300 space-y-1.5 animate-fadeIn">
+                        <div className="flex items-center gap-2 font-bold text-sm text-emerald-700 dark:text-emerald-300">
+                          <ShieldCheck className="w-5 h-5 text-emerald-500 flex-shrink-0" />
+                          <span>Instant Doorside Payout Guaranteed</span>
+                        </div>
+                        <p className="font-light leading-relaxed">
+                          No upfront payment credentials required! Your full trade-in payout of <strong>{formatPrice(finalPrice)}</strong> will be transferred instantly via <strong>UPI or Bank Transfer</strong> directly at your doorstep after physical device inspection.
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {/* Box 1: Client Specs */}
                         <div className="border border-ice-border rounded-sm p-4 bg-canvas-white space-y-1.5">
-                          <span className="text-[8px] font-mono text-zinc-500 uppercase block font-bold">1. Client Contact Details</span>
+                          <span className="text-[8px] font-mono text-zinc-500 uppercase block font-bold">1. Contact Details</span>
                           <div className="space-y-1 text-xs font-mono text-ink-navy">
                             <div><strong>Name:</strong> {name}</div>
                             <div><strong>Mobile:</strong> +91 {phone}</div>
@@ -1180,50 +954,30 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                           <span className="text-[8px] font-mono text-zinc-500 uppercase block font-bold">2. Doorside Pickup Schedule</span>
                           <div className="space-y-1 text-xs font-mono text-ink-navy">
                             <div><strong>Date:</strong> {selectedDate}</div>
-                            <div className="truncate"><strong>Window:</strong> {selectedTimeSlot.split(' (')[0]}</div>
-                            <div className="truncate"><strong>Agent:</strong> {assignedAgent.name}</div>
-                          </div>
-                        </div>
-
-                        {/* Box 3: Payout Target */}
-                        <div className="border border-ice-border rounded-sm p-4 bg-canvas-white space-y-1.5">
-                          <span className="text-[8px] font-mono text-zinc-500 uppercase block font-bold">3. Selected Payout Details</span>
-                          <div className="space-y-1 text-xs font-mono text-ink-navy">
-                            <div><strong>Method:</strong> <span className="text-cobalt font-bold">{selectedPayoutMethodObj.name}</span></div>
-                            <div className="truncate">
-                              {paymentMethod === 'upi' ? (
-                                <strong>UPI ID: {upiId}</strong>
-                              ) : paymentMethod === 'bank' ? (
-                                <strong>A/C: ...{accountNumber.slice(-4)} (IFSC: {ifscCode})</strong>
-                              ) : (
-                                <span className="text-emerald-500">Auto-sent to Email &amp; SMS</span>
-                              )}
-                            </div>
+                            <div className="truncate"><strong>Window:</strong> {selectedTimeSlot}</div>
                           </div>
                         </div>
                       </div>
 
                       {/* Address detail */}
                       <div className="border border-ice-border rounded-sm p-4 bg-canvas-white space-y-1.5">
-                        <span className="text-[8px] font-mono text-zinc-500 uppercase block font-bold">Pickup Address</span>
+                        <span className="text-[8px] font-mono text-zinc-500 uppercase block font-bold">Pickup Address &amp; Locality</span>
                         <p className="text-xs font-mono text-ink-navy leading-normal">{address}</p>
                       </div>
 
-                      {/* Final Financial ledger summary box */}
-                      <div className="bg-zinc-950/60 p-4 rounded-sm border border-white/[0.06] space-y-2 font-mono">
-                        <div className="flex justify-between text-xs text-zinc-400">
-                          <span>Diagnostic Base Value:</span>
-                          <span>{formatPrice(finalPrice)}</span>
+                      {/* Final Financial summary box */}
+                      <div className="bg-slate-50 dark:bg-zinc-900/60 p-4 rounded-lg border border-slate-200 dark:border-zinc-800 space-y-2.5 font-sans shadow-xs">
+                        <div className="flex justify-between text-xs text-slate-600 dark:text-zinc-400 font-medium">
+                          <span>Trade-In Valuation Price:</span>
+                          <span className="text-slate-900 dark:text-white font-semibold">{formatPrice(finalPrice)}</span>
                         </div>
-                        {selectedPayoutMethodObj.bonus > 0 && (
-                          <div className="flex justify-between text-xs text-emerald-400">
-                            <span>Store Payout Bonus (+{(selectedPayoutMethodObj.bonus * 100).toFixed(1)}%):</span>
-                            <span>+{formatPrice(payoutBonusAmt)}</span>
-                          </div>
-                        )}
-                        <div className="flex justify-between items-center text-sm font-bold text-ink-navy border-t border-white/[0.06] pt-2.5 mt-2.5">
-                          <span>Final Payout Amount:</span>
-                          <span className="text-xl text-cobalt tracking-tight font-outfit">{formatPrice(totalPayoutVal)}</span>
+                        <div className="flex justify-between text-xs text-emerald-700 dark:text-emerald-400 font-semibold">
+                          <span>Doorstep Inspection Fee:</span>
+                          <span>FREE (₹0)</span>
+                        </div>
+                        <div className="flex justify-between items-center text-sm font-bold text-slate-900 dark:text-white border-t border-slate-200 dark:border-zinc-800 pt-2.5 mt-2.5">
+                          <span>Instant Doorside Payout:</span>
+                          <span className="text-xl text-cobalt font-extrabold font-outfit">{formatPrice(finalPrice)}</span>
                         </div>
                       </div>
                     </div>
@@ -1253,17 +1007,15 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                   {schedulerStep === 1 ? 'Back' : 'Previous'}
                 </button>
 
-                {schedulerStep < 4 ? (
+                {schedulerStep < 3 ? (
                   <button
                     type="button"
                     onClick={handleNextStep}
                     disabled={
-                      schedulerStep === 1 ? !isStep1Valid : 
-                      schedulerStep === 2 ? !isStep2Valid : 
-                      !isStep3Valid
+                      schedulerStep === 1 ? !isStep1Valid : !isStep2Valid
                     }
                     className={`flex-1 bg-cobalt hover:bg-cobalt-hover text-white py-3 rounded-sm font-bold text-sm transition-all flex items-center justify-center gap-2 ${
-                      (schedulerStep === 1 ? !isStep1Valid : schedulerStep === 2 ? !isStep2Valid : !isStep3Valid)
+                      (schedulerStep === 1 ? !isStep1Valid : !isStep2Valid)
                         ? 'opacity-40 cursor-not-allowed'
                         : 'hover:scale-[1.01]'
                     }`}
@@ -1294,9 +1046,9 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
             <div className="lg:col-span-5 space-y-4 sm:space-y-6">
               {/* Receipt Style Lock Summary */}
               <div className="bg-canvas-pure rounded-sm border border-ice-border p-5 relative overflow-hidden shadow-premium">
-                <div className="pb-3 border-b border-white/[0.04] mb-4 flex items-center justify-between">
+                <div className="pb-3 border-b border-ice-border mb-4 flex items-center justify-between">
                   <div className="text-left">
-                    <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-1">Audit Ledger</span>
+                    <span className="text-[10px] font-mono tracking-[0.2em] text-slate-500 uppercase block mb-1">Audit Ledger</span>
                     <h3 className="text-lg font-light text-ink-navy">Specification Ledger</h3>
                   </div>
                   <button
@@ -1308,57 +1060,51 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                   </button>
                 </div>
 
-                <div className="space-y-3 text-xs font-mono text-left">
+                <div className="space-y-3 text-xs font-sans text-left">
                   {/* Detailed breakdown list */}
-                  <div className="flex justify-between items-center py-1 text-zinc-400">
+                  <div className="flex justify-between items-center py-1 text-slate-700 dark:text-zinc-300 font-medium">
                     <span>Base Value ({selectedVariant.storageGb}GB)</span>
-                    <span className="text-cobalt">+{formatPrice(selectedVariant.basePrice)}</span>
+                    <span className="text-cobalt font-bold">+{formatPrice(selectedVariant.basePrice)}</span>
                   </div>
 
                   {/* Deductions breakdown */}
                   {selectedDefects.length > 0 ? (
-                    <div className="py-2 border-y border-white/[0.04] space-y-1.5">
-                      <div className="flex items-center justify-between text-[10px] text-zinc-500 uppercase font-bold tracking-wider mb-1">
+                    <div className="py-2 border-y border-slate-200 dark:border-zinc-800 space-y-1.5">
+                      <div className="flex items-center justify-between text-[10px] text-slate-600 dark:text-zinc-400 uppercase font-bold tracking-wider mb-1">
                         <span>Deductions Applied</span>
                         <button
                           type="button"
                           onClick={onBack}
-                          className="text-cobalt hover:underline font-normal normal-case"
+                          className="text-cobalt hover:underline font-semibold normal-case"
                         >
                           Edit Defects
                         </button>
                       </div>
                       {selectedDefects.map((defect, idx) => {
-                        // Calculate specific deduction amount for this defect
                         const base = selectedVariant.basePrice;
                         const deduction = defect.deductionPercentage > 0 
                           ? base * defect.deductionPercentage 
                           : defect.deductionFixed;
                         return (
-                          <div key={defect.id} className="flex justify-between items-start text-zinc-400">
+                          <div key={defect.id} className="flex justify-between items-start text-slate-800 dark:text-zinc-200 font-medium">
                             <span className="leading-tight">{(idx + 1).toString().padStart(2, '0')}. {getEngineeringLabel(defect.description)}</span>
-                            <span className="text-red-500 flex-shrink-0">-[{formatPrice(deduction)}]</span>
+                            <span className="text-red-600 dark:text-red-400 font-semibold flex-shrink-0">-[{formatPrice(deduction)}]</span>
                           </div>
                         );
                       })}
                     </div>
                   ) : (
-                    <div className="py-3 border-y border-white/[0.04] border-dashed text-center text-[10px] text-emerald-400 italic">
+                    <div className="py-3 border-y border-slate-200 dark:border-zinc-800 border-dashed text-center text-xs text-emerald-700 dark:text-emerald-400 font-semibold italic">
                       [No defects declared. Maximum value applies.]
                     </div>
                   )}
 
-                  <div className="flex justify-between items-center bg-zinc-950/40 p-3 rounded-sm border border-white/[0.06] mt-4">
+                  <div className="flex justify-between items-center bg-slate-100 dark:bg-zinc-900 p-3.5 rounded-lg border border-slate-200 dark:border-zinc-800 mt-4 shadow-xs">
                     <div>
-                      <span className="text-[8px] text-zinc-500 uppercase block font-mono">Total Estimated Payout</span>
-                      <span className="text-xl font-bold text-cobalt tracking-tight font-outfit">{formatPrice(totalPayoutVal)}</span>
-                      {selectedPayoutMethodObj.bonus > 0 && (
-                        <span className="text-[9px] text-emerald-400 block font-mono">
-                          (Includes {(selectedPayoutMethodObj.bonus * 100).toFixed(1)}% Store Bonus)
-                        </span>
-                      )}
+                      <span className="text-[9px] text-slate-600 dark:text-zinc-400 uppercase font-bold tracking-wider block">Total Estimated Payout</span>
+                      <span className="text-xl font-extrabold text-cobalt tracking-tight font-outfit">{formatPrice(totalPayoutVal)}</span>
                     </div>
-                    <span className="text-[9px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-sm border border-emerald-500/20 font-bold uppercase tracking-wider">Locked</span>
+                    <span className="text-[10px] bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 px-2.5 py-1 rounded-md border border-emerald-300 dark:border-emerald-500/30 font-extrabold uppercase tracking-wider">Locked</span>
                   </div>
                 </div>
               </div>
@@ -1391,49 +1137,46 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
             </div>
 
             <h2 className="text-2xl font-light tracking-tight text-ink-navy">Trade-In Confirmed</h2>
-            <p className="text-xs text-ink-muted mt-2 max-w-sm font-light text-center">
-              Your doorside pickup has been locked successfully. A confirmation message was sent to <strong className="text-ink-navy font-semibold">+91 {phone}</strong>.
-            </p>
 
             {/* Receipt Details with declared defects summary & Side-by-side Phone Preview */}
-            <div className="w-full grid grid-cols-1 md:grid-cols-12 gap-6 items-start my-6">
-              <div className="md:col-span-12 bg-zinc-950/40 border border-dashed border-white/[0.12] rounded-sm p-5 text-xs space-y-2.5 font-mono text-left shadow-inner">
-                <div className="flex justify-between font-bold border-b border-white/[0.06] pb-2 mb-2 text-ink-navy">
+            <div className="w-full my-6">
+              <div className="bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg p-5 text-xs space-y-3 font-sans text-left shadow-sm">
+                <div className="flex justify-between items-center font-bold border-b border-slate-200 dark:border-zinc-800 pb-2.5 mb-2.5 text-slate-900 dark:text-white text-sm">
                   <span>Confirmation ID</span>
-                  <span className="text-cobalt">#{confirmationId}</span>
+                  <span className="text-cobalt font-extrabold font-mono text-base">#{confirmationId}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-zinc-500">Device Model</span>
-                  <span className="text-ink-navy font-semibold">{selectedModel.name} ({selectedVariant.storageGb}GB)</span>
+                
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-600 dark:text-zinc-400 font-medium">Device Model</span>
+                  <span className="text-slate-900 dark:text-slate-100 font-semibold">{selectedModel.name} ({selectedVariant.storageGb}GB)</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-zinc-500">Color Variant</span>
-                  <span className="text-ink-navy font-semibold">{selectedVariant.color}</span>
+                
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-600 dark:text-zinc-400 font-medium">Client Name</span>
+                  <span className="text-slate-900 dark:text-slate-100 font-semibold">{name}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-zinc-500">Client Inspector</span>
-                  <span className="text-ink-navy">{name}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-zinc-500">Pickup Address</span>
-                  <span className="text-ink-navy truncate max-w-[240px]">{address}</span>
+                
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-600 dark:text-zinc-400 font-medium">Pickup Address</span>
+                  <span className="text-slate-900 dark:text-slate-100 font-semibold truncate max-w-[240px]">{address}</span>
                 </div>
                 
                 {/* Date time booking overview */}
-                <div className="flex justify-between border-t border-white/[0.04] pt-2">
-                  <span className="text-zinc-500">Scheduled Date</span>
-                  <span className="text-ink-navy font-semibold">{selectedDate}</span>
+                <div className="flex justify-between items-center border-t border-slate-200 dark:border-zinc-800 pt-2.5">
+                  <span className="text-slate-600 dark:text-zinc-400 font-medium">Scheduled Date</span>
+                  <span className="text-slate-900 dark:text-slate-100 font-semibold">{selectedDate}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-zinc-500">Time Slot Window</span>
-                  <span className="text-ink-navy font-semibold">{selectedTimeSlot}</span>
+                
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-600 dark:text-zinc-400 font-medium">Time Slot Window</span>
+                  <span className="text-slate-900 dark:text-slate-100 font-semibold">{selectedTimeSlot}</span>
                 </div>
 
                 {/* Declared defects summary on ticket receipt */}
-                <div className="border-t border-white/[0.04] pt-2 space-y-1">
-                  <span className="text-zinc-500 block">Declared Defects Summary:</span>
+                <div className="border-t border-slate-200 dark:border-zinc-800 pt-2.5 space-y-1.5">
+                  <span className="text-slate-700 dark:text-zinc-300 font-semibold block">Declared Defects Summary:</span>
                   {selectedDefects.length > 0 ? (
-                    <div className="space-y-1 pl-2 text-[10px] text-zinc-400">
+                    <div className="space-y-1 pl-2 text-xs text-slate-800 dark:text-zinc-200 font-medium">
                       {selectedDefects.map(d => (
                         <div key={d.id} className="flex justify-between">
                           <span>• {getEngineeringLabel(d.description)}</span>
@@ -1441,43 +1184,47 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                       ))}
                     </div>
                   ) : (
-                    <span className="pl-2 text-[10px] text-emerald-400 italic">• No defects declared (Flawless Device)</span>
+                    <span className="pl-2 text-xs text-emerald-700 dark:text-emerald-400 font-semibold italic">• No defects declared (Flawless Device)</span>
                   )}
                 </div>
 
-                <div className="flex justify-between border-t border-white/[0.04] pt-2">
-                  <span className="text-zinc-500">KYC Aadhaar Verification</span>
-                  <span className="text-emerald-400 font-bold">VERIFIED ({verifiedName})</span>
-                </div>
-
-                <div className="flex justify-between">
-                  <span className="text-zinc-500">Payout Destination</span>
-                  <span className="text-ink-navy truncate max-w-[200px]">
-                    {paymentMethod === 'upi' ? `UPI: ${upiId}` : 
-                     paymentMethod === 'bank' ? `Bank: A/C ...${accountNumber.slice(-4)}` :
-                     `${selectedPayoutMethodObj.name}`}
+                <div className="flex justify-between items-center border-t border-slate-200 dark:border-zinc-800 pt-2.5">
+                  <span className="text-slate-600 dark:text-zinc-400 font-medium">Payout Destination</span>
+                  <span className="text-emerald-700 dark:text-emerald-400 font-bold truncate max-w-[240px]">
+                    Instant Doorside Payout (UPI / Bank)
                   </span>
                 </div>
                 
-                <div className="flex justify-between font-bold border-t border-white/[0.06] pt-2.5 mt-2 text-sm text-ink-navy">
-                  <span>Final Locked Payout</span>
-                  <span className="text-cobalt font-light tracking-tight text-base font-outfit">{formatPrice(totalPayoutVal)}</span>
+                <div className="flex justify-between items-center border-t border-slate-200 dark:border-zinc-800 pt-3 mt-3 text-slate-900 dark:text-white">
+                  <span className="font-bold text-sm">Final Locked Payout</span>
+                  <span className="text-cobalt font-extrabold text-xl font-outfit">{formatPrice(totalPayoutVal)}</span>
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 p-3 bg-cobalt-light border border-white/[0.06] rounded-sm mb-6 text-xs text-zinc-300 text-left">
-              <Award className="w-4 h-4 text-cobalt flex-shrink-0" />
-              <span className="font-light">Our agent {assignedAgent.name} will call you before arrival. Please keep your device unlocked and clean.</span>
+            <div className="flex items-center gap-2.5 p-3.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 rounded-lg mb-6 text-xs text-slate-800 dark:text-emerald-200 text-left shadow-sm">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+              <span className="font-medium">Our pickup agent will call you before arrival. Please keep your device unlocked and charged.</span>
             </div>
 
-            <button
-              onClick={onSuccess}
-              className="w-full bg-cobalt hover:bg-cobalt-hover text-white py-3.5 rounded-sm font-bold transition-all text-sm"
-              style={{ minHeight: '48px' }}
-            >
-              Return to Catalog Homepage
-            </button>
+            <div className="flex flex-col sm:flex-row gap-3 w-full">
+              <button
+                type="button"
+                onClick={() => downloadBookingPdf(confirmationId)}
+                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 rounded-sm font-bold transition-all text-sm flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+                style={{ minHeight: '48px' }}
+              >
+                📄 Download Official PDF Quotation
+              </button>
+              <button
+                type="button"
+                onClick={onSuccess}
+                className="flex-1 bg-cobalt hover:bg-cobalt-hover text-white py-3.5 rounded-sm font-bold transition-all text-sm"
+                style={{ minHeight: '48px' }}
+              >
+                Return to Catalog Homepage
+              </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
