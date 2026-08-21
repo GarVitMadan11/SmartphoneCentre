@@ -105,6 +105,13 @@ export async function loginWithEmail(
 }
 
 // ── 4. Google Sign-in Popup & Redirect Fallback ───────────────────────────
+export async function triggerGoogleRedirectLogin(): Promise<void> {
+  if (!auth) throw new Error('Firebase Auth is not initialized');
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
+  await signInWithRedirect(auth, provider);
+}
+
 export async function loginWithGoogle(): Promise<{ user: FirebaseUser; token: string }> {
   if (!auth) throw new Error('Firebase Auth is not initialized');
   const provider = new GoogleAuthProvider();
@@ -115,11 +122,9 @@ export async function loginWithGoogle(): Promise<{ user: FirebaseUser; token: st
     const token = await result.user.getIdToken();
     return { user: result.user, token };
   } catch (err: any) {
-    if (err.code === 'auth/popup-blocked' || err.code === 'auth/cancelled-popup-request') {
-      await signInWithRedirect(auth, provider);
-      throw new Error('Redirecting to Google Sign-In...');
-    }
-    throw err;
+    console.warn('[Firebase Auth] Popup sign-in issue, triggering full redirect:', err);
+    await signInWithRedirect(auth, provider);
+    return new Promise(() => {}); // Wait for redirect navigation
   }
 }
 

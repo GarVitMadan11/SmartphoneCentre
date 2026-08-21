@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff, Lock, Mail, ArrowLeft, AlertCircle, Loader2 } from 'lucide-react';
 import { customerLogin, syncFirebaseUser, ApiUser } from '../../utils/api';
-import { loginWithGoogle, loginWithEmail, signupWithEmail } from '../../services/firebaseAuth';
+import { loginWithGoogle, loginWithEmail, signupWithEmail, checkRedirectAuthResult } from '../../services/firebaseAuth';
 
 interface LoginPageProps {
   onLoginSuccess: (user: ApiUser) => void;
@@ -24,6 +24,40 @@ export default function LoginPage({ onLoginSuccess, onNavigate, redirectParam }:
       onNavigate('/');
     }
   };
+
+  // Check if returning from Google OAuth Redirect
+  useEffect(() => {
+    checkRedirectAuthResult().then(async (res) => {
+      if (res && res.user) {
+        setGoogleLoading(true);
+        try {
+          const synced = await syncFirebaseUser(res.token);
+          if (synced && synced.user) {
+            onLoginSuccess(synced.user);
+            handleRedirect();
+            return;
+          }
+        } catch (syncErr) {
+          console.warn('[Firebase Google Auth] Sync warning on redirect:', syncErr);
+        }
+
+        const fallbackUser: ApiUser = {
+          id: res.user.uid,
+          name: res.user.displayName || 'Google User',
+          email: res.user.email || '',
+          phone: res.user.phoneNumber || null,
+          picture: res.user.photoURL || null,
+          emailVerified: Boolean(res.user.emailVerified),
+          hasGoogleLinked: true,
+          hasPassword: false,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        onLoginSuccess(fallbackUser);
+        handleRedirect();
+      }
+    }).catch(() => {});
+  }, []);
 
   const handleFirebaseGoogleLogin = async () => {
     setGoogleLoading(true);
