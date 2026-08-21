@@ -353,39 +353,24 @@ router.post('/logout', (req, res) => {
   res.json({ success: true, message: 'Logged out successfully.' });
 });
 
-// Current User
-router.get('/me', async (req: AuthenticatedCustomerRequest, res) => {
-  try {
-    const cookies = parseCookies(req);
-    const authHeader = req.headers['authorization'];
-    let token: string | undefined;
-
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      token = authHeader.slice(7).trim();
-    } else if (cookies['rex_token']) {
-      token = cookies['rex_token'];
-    }
-
-    if (!token) {
-      res.json({ user: null });
-      return;
-    }
-
-    const decoded = jwt.verify(token, getJwtSecret(), {
-      issuer: JWT_ISSUER,
-      audience: CUSTOMER_JWT_AUDIENCE,
-    }) as any;
-
-    const user = await prisma.user.findUnique({ where: { id: decoded.sub } });
-    if (!user) {
-      res.json({ user: null });
-      return;
-    }
-
-    res.json({ user: sanitizeUser(user) });
-  } catch (err) {
+// Current User (supports both Firebase ID Token and Legacy Session)
+router.get('/me', customerAuth, async (req: AuthenticatedCustomerRequest, res) => {
+  if (req.customer) {
+    res.json({ user: sanitizeUser(req.customer) });
+  } else {
     res.json({ user: null });
   }
+});
+
+// Sync Authenticated Firebase User with PostgreSQL
+router.post('/sync-firebase-user', customerAuth, async (req: AuthenticatedCustomerRequest, res) => {
+  if (!req.customer) {
+    res.status(401).json({ error: 'Unauthorized', message: 'Unable to authenticate Firebase user.' });
+    return;
+  }
+  const token = issueJwt(req.customer.id, req.customer.email);
+  const csrf = setCustomerCookie(res, token);
+  res.json({ success: true, user: sanitizeUser(req.customer), csrfToken: csrf });
 });
 
 // Update Profile

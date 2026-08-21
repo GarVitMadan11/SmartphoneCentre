@@ -74,6 +74,18 @@ export function initFirebaseAdmin(): App | null {
     }
   }
 
+  // Fallback: Initialize with Project ID only (Allows public ID token verification without service account cert)
+  const fallbackProjectId = process.env.FIREBASE_PROJECT_ID || 'rephonix-f2cfa';
+  if (fallbackProjectId) {
+    try {
+      firebaseAdminApp = initializeApp({ projectId: fallbackProjectId });
+      console.log(`🔥 [Firebase Admin] Initialized with Project ID (${fallbackProjectId}) for token verification`);
+      return firebaseAdminApp;
+    } catch (err) {
+      console.warn('[Firebase Admin] Could not initialize with projectId fallback:', err);
+    }
+  }
+
   console.info('[Firebase Admin] Not configured. Set FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY to enable.');
   return null;
 }

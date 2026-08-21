@@ -1,22 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { Eye, EyeOff, Lock, Mail, ArrowLeft, AlertCircle, Loader2 } from 'lucide-react';
-import { customerLogin, googleAuth, fetchAuthConfig, ApiUser } from '../../utils/api';
-
-declare global {
-  interface Window {
-    google?: {
-      accounts: {
-        id: {
-          initialize: (config: any) => void;
-          renderButton: (element: HTMLElement, config: any) => void;
-          prompt?: () => void;
-        };
-      };
-    };
-  }
-}
-
-const STATIC_GOOGLE_CLIENT_ID = (import.meta.env.VITE_GOOGLE_CLIENT_ID || (import.meta.env as any).GOOGLE_CLIENT_ID || '') as string;
+import { customerLogin, syncFirebaseUser, ApiUser } from '../../utils/api';
+import { loginWithGoogle } from '../../services/firebaseAuth';
 
 interface LoginPageProps {
   onLoginSuccess: (user: ApiUser) => void;
@@ -31,9 +16,6 @@ export default function LoginPage({ onLoginSuccess, onNavigate, redirectParam }:
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [linkingRequired, setLinkingRequired] = useState(false);
-  const [activeClientId, setActiveClientId] = useState<string>(STATIC_GOOGLE_CLIENT_ID);
-  const googleBtnRef = useRef<HTMLDivElement>(null);
 
   const handleRedirect = () => {
     if (redirectParam === 'booking') {
@@ -43,96 +25,21 @@ export default function LoginPage({ onLoginSuccess, onNavigate, redirectParam }:
     }
   };
 
-  // Fetch client ID from server if static environment variable is not present
-  useEffect(() => {
-    if (!activeClientId) {
-      fetchAuthConfig().then(res => {
-        if (res.googleClientId) {
-          setActiveClientId(res.googleClientId);
-        }
-      });
-    }
-  }, [activeClientId]);
-
-  // Load Google Identity Services script and render button
-  useEffect(() => {
-    if (!activeClientId) return;
-
-    let isMounted = true;
-
-    const renderGoogleButton = () => {
-      if (!isMounted || !googleBtnRef.current || !window.google?.accounts?.id) return;
-      try {
-        googleBtnRef.current.innerHTML = '';
-        window.google.accounts.id.initialize({
-          client_id: activeClientId,
-          callback: handleGoogleCredential,
-          auto_select: false,
-          cancel_on_tap_outside: true,
-          itp_support: true,
-          ux_mode: 'popup',
-          use_fedcm_for_prompt: false,
-        });
-        const containerWidth = googleBtnRef.current.offsetWidth || 380;
-        const validWidth = Math.min(Math.max(containerWidth, 250), 400);
-        window.google.accounts.id.renderButton(googleBtnRef.current, {
-          theme: 'outline',
-          size: 'large',
-          width: validWidth,
-          text: 'signin_with',
-          shape: 'rectangular',
-        });
-      } catch (err) {
-        console.warn('Google renderButton warning:', err);
-      }
-    };
-
-    const attemptRender = () => {
-      setTimeout(() => {
-        if (isMounted) renderGoogleButton();
-      }, 50);
-    };
-
-    if (window.google?.accounts?.id) {
-      attemptRender();
-    } else {
-      let script = document.querySelector('script[src="https://accounts.google.com/gsi/client"]') as HTMLScriptElement;
-      if (!script) {
-        script = document.createElement('script');
-        script.src = 'https://accounts.google.com/gsi/client';
-        script.async = true;
-        script.defer = true;
-        document.head.appendChild(script);
-      }
-      script.addEventListener('load', attemptRender);
-
-      const interval = setInterval(() => {
-        if (window.google?.accounts?.id) {
-          clearInterval(interval);
-          attemptRender();
-        }
-      }, 250);
-
-      return () => {
-        isMounted = false;
-        clearInterval(interval);
-        script.removeEventListener('load', attemptRender);
-      };
-    }
-  }, [activeClientId]);
-
-  const handleGoogleCredential = async (response: { credential: string }) => {
+  const handleFirebaseGoogleLogin = async () => {
     setGoogleLoading(true);
     setError('');
-    setLinkingRequired(false);
     try {
-      const result = await googleAuth(response.credential);
-      onLoginSuccess(result.user);
-      handleRedirect();
+      const { token } = await loginWithGoogle();
+      const synced = await syncFirebaseUser(token);
+      if (synced && synced.user) {
+        onLoginSuccess(synced.user);
+        handleRedirect();
+      } else {
+        setError('Failed to link Google account with server.');
+      }
     } catch (err: any) {
-      if (err.status === 409) {
-        setLinkingRequired(true);
-        setError('An account with this email already exists. Please log in with your password, then link Google in your account settings.');
+      if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
+        // User voluntarily dismissed popup
       } else {
         setError(err.message || 'Google sign-in failed. Please try again.');
       }
@@ -149,7 +56,6 @@ export default function LoginPage({ onLoginSuccess, onNavigate, redirectParam }:
     }
 
     setError('');
-    setLinkingRequired(false);
     setIsLoading(true);
 
     try {
@@ -164,63 +70,78 @@ export default function LoginPage({ onLoginSuccess, onNavigate, redirectParam }:
   };
 
   return (
-    <div className="min-h-[70vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-6 bg-canvas-pure border border-ice-border rounded-xl p-8 shadow-3d-card text-left">
+    <div className="min-h-[80vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8 bg-canvas-card p-8 border border-ice-border rounded-sm shadow-premium backdrop-blur-sm relative">
+
+        {/* Back Button */}
+        <button
+          onClick={() => onNavigate('/')}
+          className="flex items-center gap-1.5 text-xs text-ink-muted hover:text-ink-navy transition-colors font-mono"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          <span>Back to Home</span>
+        </button>
 
         {/* Header */}
         <div className="text-center">
-          <div className="flex justify-center mb-4">
-            <img src="/logo.svg" className="w-12 h-12 object-contain" alt="Rephonix Logo" />
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-ice-soft text-cobalt mb-3">
+            <Lock className="w-6 h-6" />
           </div>
-          <h2 className="text-3xl font-extrabold text-ink-navy tracking-tight font-outfit">
+          <h2 className="text-2xl font-black text-ink-navy tracking-tight">
             Welcome Back
           </h2>
-          <p className="mt-2 text-xs text-ink-muted font-light">
-            Sign in to manage your bookings and submit resale orders.
+          <p className="mt-1 text-xs text-ink-muted">
+            Sign in to track orders, manage bookings, and view diagnostics
           </p>
         </div>
 
-        {/* Back navigation */}
-        <button
-          onClick={() => onNavigate('/')}
-          className="flex items-center gap-1.5 text-xs text-cobalt hover:underline font-medium"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" /> Back to Home
-        </button>
-
         {/* Error Alert */}
         {error && (
-          <div className={`flex items-start gap-2 ${linkingRequired ? 'bg-amber-500/10 border-amber-500/20 text-amber-600' : 'bg-red-500/10 border-red-500/20 text-red-500'} border p-3 rounded-sm text-xs font-medium`}>
-            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-            <span>{error}</span>
+          <div className="p-3 bg-crimson/10 border border-crimson/20 rounded-sm flex items-start gap-2 text-crimson text-xs">
+            <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+            <div className="flex-1">{error}</div>
           </div>
         )}
 
-        {/* Google Sign-In */}
-        {activeClientId && (
-          <div className="space-y-3">
-            <div className="relative" style={{ minHeight: '44px' }}>
-              {googleLoading ? (
-                <div className="flex items-center justify-center gap-2 w-full h-11 border border-ice-border rounded-sm text-xs text-ink-muted bg-canvas-pure">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Signing in with Google...</span>
-                </div>
-              ) : (
-                <div
-                  ref={googleBtnRef}
-                  id="google-signin-btn"
-                  className="w-full overflow-hidden flex justify-center min-h-[40px]"
+        {/* Google Authentication */}
+        <div className="space-y-3">
+          <button
+            type="button"
+            onClick={handleFirebaseGoogleLogin}
+            disabled={googleLoading}
+            className="w-full flex items-center justify-center gap-3 py-2.5 px-4 bg-canvas-pure border border-ice-border hover:border-cobalt hover:bg-slate-50 text-ink-navy rounded-sm text-xs font-semibold transition-all shadow-sm disabled:opacity-50"
+          >
+            {googleLoading ? (
+              <Loader2 className="w-4 h-4 animate-spin text-cobalt" />
+            ) : (
+              <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                <path
+                  fill="#4285F4"
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                 />
-              )}
-            </div>
+                <path
+                  fill="#34A853"
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                />
+                <path
+                  fill="#EA4335"
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                />
+              </svg>
+            )}
+            <span>{googleLoading ? 'Connecting to Google...' : 'Continue with Google'}</span>
+          </button>
 
-            <div className="flex items-center gap-3">
-              <div className="flex-1 border-t border-ice-border/40" />
-              <span className="text-[10px] font-mono tracking-wider text-ink-muted uppercase">or</span>
-              <div className="flex-1 border-t border-ice-border/40" />
-            </div>
+          <div className="flex items-center gap-3">
+            <div className="flex-1 border-t border-ice-border/40" />
+            <span className="text-[10px] font-mono tracking-wider text-ink-muted uppercase">or</span>
+            <div className="flex-1 border-t border-ice-border/40" />
           </div>
-        )}
+        </div>
 
         {/* Email/Password Form */}
         <form className="space-y-5" onSubmit={handleSubmit}>

@@ -54,3 +54,20 @@ services:
         sync: false       # e.g. Rephonix <support@rephonix.in>
       - key: FRONTEND_URL
         sync: false       # e.g. https://www.rephonix.in
+      # ── Firebase Configuration ───────────────────────────────────────────────
+      - key: FIREBASE_PROJECT_ID
+        value: rephonix-f2cfa
+      - key: VITE_FIREBASE_PROJECT_ID
+        value: rephonix-f2cfa
+      - key: VITE_FIREBASE_AUTH_DOMAIN
+        value: rephonix-f2cfa.firebaseapp.com
+      - key: VITE_FIREBASE_API_KEY
+        value: AIzaSyBmhYvC0BrBU6hXVVFu4GwUigZsM0NEMD0
+      - key: VITE_FIREBASE_STORAGE_BUCKET
+        value: rephonix-f2cfa.firebasestorage.app
+      - key: VITE_FIREBASE_MESSAGING_SENDER_ID
+        value: "730993464038"
+      - key: VITE_FIREBASE_APP_ID
+        value: "1:730993464038:web:b31db03a76e5355c7a6127"
+      - key: VITE_FIREBASE_MEASUREMENT_ID
+        value: "G-FGXD69F6MB"

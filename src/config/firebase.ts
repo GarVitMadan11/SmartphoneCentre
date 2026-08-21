@@ -7,12 +7,13 @@ import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'AIzaSyBmhYvC0BrBU6hXVVFu4GwUigZsM0NEMD0',
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'rephonix-f2cfa.firebaseapp.com',
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'rephonix-f2cfa',
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'rephonix-f2cfa.firebasestorage.app',
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '730993464038',
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || '1:730993464038:web:b31db03a76e5355c7a6127',
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || 'G-FGXD69F6MB',
 };
 
 // Check if valid configuration is provided
@@ -35,3 +36,4 @@ if (isFirebaseClientConfigured) {
 }
 
 export { app, auth, db };
+

@@ -104,16 +104,15 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      // 'unsafe-inline' intentionally excluded from scriptSrc — all JS is in content-hashed bundles.
-      // Google Identity Services (GSI) requires its own origin to be trusted.
-      scriptSrc: ["'self'", "'unsafe-inline'", 'https://api.emailjs.com', 'https://accounts.google.com'],
-      scriptSrcElem: ["'self'", "'unsafe-inline'", 'https://api.emailjs.com', 'https://accounts.google.com'],
-      frameSrc: ["'self'", 'https://accounts.google.com'],
+      // Allow Firebase Auth and Google OAuth scripts, iframes, styles, and API connections
+      scriptSrc: ["'self'", "'unsafe-inline'", 'https://api.emailjs.com', 'https://accounts.google.com', 'https://apis.google.com', 'https://www.google.com', 'https://www.gstatic.com', 'https://*.firebaseapp.com', 'https://*.googleapis.com'],
+      scriptSrcElem: ["'self'", "'unsafe-inline'", 'https://api.emailjs.com', 'https://accounts.google.com', 'https://apis.google.com', 'https://www.google.com', 'https://www.gstatic.com', 'https://*.firebaseapp.com', 'https://*.googleapis.com'],
+      frameSrc: ["'self'", 'https://accounts.google.com', 'https://*.firebaseapp.com', 'https://*.google.com'],
       styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://accounts.google.com'],
       styleSrcElem: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://accounts.google.com'],
       fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
       imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
-      connectSrc: ["'self'", 'https://api.emailjs.com', 'https://accounts.google.com', 'http://localhost:4000', 'http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002', 'http://localhost:5173', 'http://localhost:5174', 'https://rephonix.in', 'https://www.rephonix.in'],
+      connectSrc: ["'self'", 'https://api.emailjs.com', 'https://accounts.google.com', 'https://identitytoolkit.googleapis.com', 'https://securetoken.googleapis.com', 'https://*.googleapis.com', 'https://*.firebaseapp.com', 'https://*.firebaseio.com', 'http://localhost:4000', 'http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002', 'http://localhost:5173', 'http://localhost:5174', 'https://rephonix.in', 'https://www.rephonix.in'],
     },
   },
 }));

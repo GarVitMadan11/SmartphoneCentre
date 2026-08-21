@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import 'dotenv/config';
+import { getAdminAuth } from '../config/firebaseAdmin.js';
 
 /**
  * Returns the JWT signing secret from the environment.
@@ -51,14 +52,15 @@ export function parseCookies(req: Request): Record<string, string> {
 
 /**
  * Middleware that extracts and validates the JWT from:
- * 1. HttpOnly cookie `rex_admin_token`
- * 2. Authorization: Bearer <jwt> header fallback
+ * 1. Firebase Admin ID Token (Bearer token with custom claims)
+ * 2. HttpOnly cookie `rex_admin_token`
+ * 3. Authorization: Bearer <jwt> header fallback
  */
-export function adminAuth(
+export async function adminAuth(
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
-): void {
+): Promise<void> {
   const cookies = parseCookies(req);
   const authHeader = req.headers['authorization'];
   let token: string | undefined;
@@ -89,6 +91,32 @@ export function adminAuth(
     return;
   }
 
+  // 1. Try Firebase Admin ID Token Verification (Custom Claims)
+  const firebaseAdmin = getAdminAuth();
+  if (firebaseAdmin) {
+    try {
+      const decodedFirebase = await firebaseAdmin.verifyIdToken(token);
+      if (decodedFirebase && decodedFirebase.uid) {
+        // Enforce admin custom claim
+        if (decodedFirebase.admin === true || decodedFirebase.role) {
+          const role = (decodedFirebase.role as AdminPayload['role']) || 'OPERATIONS_AGENT';
+          req.adminId = decodedFirebase.uid;
+          req.user = {
+            sub: decodedFirebase.uid,
+            username: decodedFirebase.email || decodedFirebase.uid,
+            role,
+            iss: decodedFirebase.iss,
+            aud: decodedFirebase.aud,
+          };
+          return next();
+        }
+      }
+    } catch {
+      // Continue to legacy JWT fallback if not a valid Firebase Admin token
+    }
+  }
+
+  // 2. Legacy JWT Session Fallback
   try {
     const payload = jwt.verify(token, getJwtSecret(), {
       issuer: JWT_ISSUER,

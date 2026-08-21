@@ -462,7 +462,25 @@ export function registerWithEmail(
   });
 }
 
-/** Sign in or sign up with a Google ID token */
+/** Sync authenticated Firebase user with backend */
+export function syncFirebaseUser(idToken: string): Promise<{
+  success: boolean;
+  user: ApiUser;
+  csrfToken: string;
+}> {
+  return apiFetch<{
+    success: boolean;
+    user: ApiUser;
+    csrfToken: string;
+  }>('/auth/sync-firebase-user', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${idToken}`,
+    },
+  });
+}
+
+/** Sign in or sign up with a Google ID token (Legacy Fallback) */
 export function googleAuth(credential: string): Promise<{
   user: ApiUser;
   csrfToken: string;

@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { getJwtSecret, parseCookies, JWT_ISSUER } from './adminAuth.js';
 import prisma from '../db.js';
+import { getAdminAuth } from '../config/firebaseAdmin.js';
 
 export interface CustomerPayload {
   sub: string; // userId
@@ -49,6 +50,69 @@ export async function customerAuth(
     return;
   }
 
+  // 1. Try Firebase ID Token Verification First (Deterministic & Secure Account Matching)
+  const adminAuth = getAdminAuth();
+  if (adminAuth) {
+    try {
+      const decodedFirebase = await adminAuth.verifyIdToken(token);
+      if (decodedFirebase && decodedFirebase.uid) {
+        let user = null;
+
+        // Step 1: Match by exact Primary UID
+        user = await prisma.user.findUnique({
+          where: { id: decodedFirebase.uid },
+        });
+
+        // Step 2: Match by Verified Email (Strictly if email_verified is TRUE)
+        if (!user && decodedFirebase.email && decodedFirebase.email_verified === true) {
+          user = await prisma.user.findUnique({
+            where: { email: decodedFirebase.email.trim().toLowerCase() },
+          });
+        }
+
+        // Step 3: Match by Verified Phone (Strictly if phone_number is present and verified via Phone Auth)
+        if (!user && decodedFirebase.phone_number) {
+          const rawPhone = decodedFirebase.phone_number.trim();
+          const cleanPhone = rawPhone.replace(/^\+91/, '');
+          user = await prisma.user.findFirst({
+            where: {
+              OR: [
+                { phone: rawPhone },
+                { phone: cleanPhone },
+                { phone: `0${cleanPhone}` },
+              ],
+            },
+          });
+        }
+
+        // Step 4: If not found, create new PostgreSQL User record with exact Firebase UID
+        if (!user) {
+          const primaryEmail = decodedFirebase.email
+            ? decodedFirebase.email.trim().toLowerCase()
+            : `${decodedFirebase.uid}@phone.rephonix.in`;
+
+          user = await prisma.user.create({
+            data: {
+              id: decodedFirebase.uid,
+              email: primaryEmail,
+              name: decodedFirebase.name || (decodedFirebase.phone_number ? `User ${decodedFirebase.phone_number}` : 'Customer'),
+              phone: decodedFirebase.phone_number || null,
+              emailVerified: Boolean(decodedFirebase.email_verified),
+              picture: decodedFirebase.picture || null,
+            },
+          });
+        }
+
+        req.userId = user.id;
+        req.customer = user;
+        return next();
+      }
+    } catch {
+      // If Firebase verification fails, continue to legacy JWT fallback
+    }
+  }
+
+  // 2. Legacy JWT Session Fallback
   try {
     const decoded = jwt.verify(token, getJwtSecret(), {
       issuer: JWT_ISSUER,
@@ -64,7 +128,7 @@ export async function customerAuth(
     req.userId = user.id;
     req.customer = user;
     next();
-  } catch (err) {
+  } catch {
     res.status(401).json({ error: 'Unauthorized', message: 'Invalid or expired token.' });
   }
 }
