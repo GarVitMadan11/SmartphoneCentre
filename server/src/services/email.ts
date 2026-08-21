@@ -112,3 +112,51 @@ export async function sendOtpEmail(to: string, name: string, otp: string): Promi
   const text = 'Hi ' + name + ',\n\nYour verification code is: ' + otp + '\n\nValid for 10 minutes.\n\n-- The Rephonix Team';
   await transporter.sendMail({ from: FROM_ADDRESS, to, subject: 'Your Rephonix Verification Code', html, text });
 }
+
+export async function sendPilotFeedbackEmail(
+  userName: string,
+  userEmail: string,
+  category: string,
+  feedbackText: string
+): Promise<void> {
+  const targetEmail = 'support@rephonix.in';
+  const categoryLabels: Record<string, string> = {
+    suggestion: 'Feature Idea / Suggestion',
+    model_request: 'Brand / Device Model Request',
+    improvement: 'Website / Experience Improvement',
+    general: 'General Pilot Feedback',
+  };
+  const categoryName = categoryLabels[category] || category;
+  const timestamp = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+
+  const body = '<p class="greeting">🚀 New Pilot Feedback Received</p>'
+    + '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin:16px 0;font-size:13px;line-height:1.6;">'
+    + '<p style="margin-bottom:6px;"><strong>Customer Name:</strong> ' + escapeHtml(userName) + '</p>'
+    + '<p style="margin-bottom:6px;"><strong>Customer Gmail / Email:</strong> <a href="mailto:' + escapeHtml(userEmail) + '" style="color:#2563eb;font-weight:bold;">' + escapeHtml(userEmail) + '</a></p>'
+    + '<p style="margin-bottom:6px;"><strong>Category:</strong> <span style="background:#2563eb;color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:bold;">' + escapeHtml(categoryName) + '</span></p>'
+    + '<p><strong>Submitted At:</strong> ' + escapeHtml(timestamp) + ' IST</p>'
+    + '</div>'
+    + '<p class="text" style="font-weight:bold;margin-bottom:6px;">Feedback Content:</p>'
+    + '<div style="background:#ffffff;border:1px solid #cbd5e1;border-left:4px solid #2563eb;border-radius:4px;padding:16px;font-size:14px;line-height:1.6;color:#1e293b;white-space:pre-wrap;">'
+    + escapeHtml(feedbackText)
+    + '</div>'
+    + '<hr class="divider" />'
+    + '<p class="note">Replying to this notification directly emails the customer at <strong>' + escapeHtml(userEmail) + '</strong>.</p>';
+
+  const html = buildEmailHtml('🚀 [Pilot Feedback] ' + categoryName + ' - ' + userName, body);
+  const text = 'New Pilot Feedback Received\n\n'
+    + 'Customer: ' + userName + ' (' + userEmail + ')\n'
+    + 'Category: ' + categoryName + '\n'
+    + 'Submitted: ' + timestamp + ' IST\n\n'
+    + 'Feedback:\n' + feedbackText + '\n';
+
+  await transporter.sendMail({
+    from: FROM_ADDRESS,
+    to: targetEmail,
+    replyTo: `${userName} <${userEmail}>`,
+    subject: `🚀 [Pilot Feedback] ${categoryName} — ${userName} (${userEmail})`,
+    html,
+    text,
+  });
+}
+

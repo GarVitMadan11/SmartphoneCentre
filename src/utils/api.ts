@@ -578,3 +578,17 @@ export function resetPasswordWithOtp(email: string, otp: string, newPassword: st
     body: JSON.stringify({ email, otp, newPassword }),
   });
 }
+
+/** Submit Pilot Program Feedback (sends email directly to support@rephonix.in) */
+export function submitPilotFeedback(payload: {
+  name: string;
+  email: string;
+  category: string;
+  feedback: string;
+}): Promise<{ success: boolean; message: string }> {
+  return apiFetch<{ success: boolean; message: string }>('/support/pilot-feedback', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+

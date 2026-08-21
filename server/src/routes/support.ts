@@ -3,6 +3,8 @@ import rateLimit from 'express-rate-limit';
 import prisma from '../db.js';
 import { processSupportMessage } from '../services/aiSupport.js';
 import { adminAuth, requireRole, AuthenticatedRequest } from '../middleware/adminAuth.js';
+import { customerAuth, AuthenticatedCustomerRequest } from '../middleware/customerAuth.js';
+import { sendPilotFeedbackEmail } from '../services/email.js';
 
 const router = Router();
 
@@ -62,6 +64,48 @@ router.post('/chat', chatLimiter, async (req, res) => {
     res.status(500).json({ error: 'ServerError', message: 'Failed to process chat message.' });
   }
 });
+
+// Submit Pilot Program Feedback (Requires Customer Login; Sends email to support@rephonix.in)
+router.post('/pilot-feedback', customerAuth, async (req: AuthenticatedCustomerRequest, res) => {
+  try {
+    const { name, email, category, feedback } = req.body;
+    const customer = req.customer;
+
+    if (!customer) {
+      res.status(401).json({ error: 'Unauthorized', message: 'Only logged-in users can submit feedback.' });
+      return;
+    }
+
+    const userName = (name || customer.name || '').trim();
+    const userEmail = (email || customer.email || '').trim().toLowerCase();
+    const feedbackText = (feedback || '').trim();
+    const feedbackCategory = (category || 'suggestion').trim();
+
+    if (!userName) {
+      res.status(400).json({ error: 'ValidationError', message: 'Name is required.' });
+      return;
+    }
+
+    if (!userEmail || !userEmail.includes('@')) {
+      res.status(400).json({ error: 'ValidationError', message: 'A valid Gmail/Email address is required.' });
+      return;
+    }
+
+    if (!feedbackText || feedbackText.length < 5) {
+      res.status(400).json({ error: 'ValidationError', message: 'Please enter a feedback message (at least 5 characters).' });
+      return;
+    }
+
+    // Deliver directly to support@rephonix.in
+    await sendPilotFeedbackEmail(userName, userEmail, feedbackCategory, feedbackText);
+
+    res.json({ success: true, message: 'Thank you! Your feedback has been sent directly to support@rephonix.in.' });
+  } catch (err: any) {
+    console.error('POST /api/support/pilot-feedback error:', err);
+    res.status(500).json({ error: 'ServerError', message: 'Failed to submit feedback. Please try again.' });
+  }
+});
+
 
 // Fetch full conversation history (for the customer client).
 // Requires admin authentication — conversation history contains customer PII
