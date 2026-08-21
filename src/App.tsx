@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo, Suspense, useCallback, startTransition } from 'react';
-import { Model, Variant, DefectRule, MODELS as STATIC_MODELS, BRANDS as STATIC_BRANDS, generateVariantsForModel, INITIAL_BOOKINGS, Brand, Booking, TABLET_MODELS, getDeviceImage, getDefectRulesForCategory } from './data/mockDatabase';
+import { Model, Variant, DefectRule, MODELS as STATIC_MODELS, BRANDS as STATIC_BRANDS, generateVariantsForModel, INITIAL_BOOKINGS, Brand, Booking, TABLET_MODELS, getDeviceImage, getDefectRulesForCategory, getMaxVariantPrice } from './data/mockDatabase';
 import { fetchBrands, fetchModels, fetchBookings as apiFetchBookings, fetchCurrentUser, customerLogout, hasAdminToken, ApiUser } from './utils/api';
 import { DeviceSelector } from './components/client/DeviceSelector';
 import { DeviceCategoryShowcase } from './components/client/DeviceCategoryShowcase';
@@ -979,11 +979,14 @@ export default function App() {
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
                   {[
-                    { id: 'apple-17pm', brand: 'Apple', name: 'iPhone 17 Pro Max', price: '₹1,09,000' },
-                    { id: 'apple-17air', brand: 'Apple', name: 'iPhone 17 Air', price: '₹77,000' },
-                    { id: 'sam-s24u', brand: 'Samsung', name: 'Galaxy S24 Ultra', price: '₹42,000' },
-                    { id: 'apple-16pm', brand: 'Apple', name: 'iPhone 16 Pro Max', price: '₹73,000' },
+                    { id: 'apple-17pm', brand: 'Apple', name: 'iPhone 17 Pro Max' },
+                    { id: 'apple-17air', brand: 'Apple', name: 'iPhone 17 Air' },
+                    { id: 'sam-s24u', brand: 'Samsung', name: 'Galaxy S24 Ultra' },
+                    { id: 'apple-16pm', brand: 'Apple', name: 'iPhone 16 Pro Max' },
                   ].map((dev) => {
+                    const modelObj = MODELS.find(m => m.id === dev.id);
+                    const priceVal = modelObj ? getMaxVariantPrice(modelObj) : 0;
+                    const priceStr = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(priceVal);
                     const imgUrl = getDeviceImage(dev.id, dev.id.startsWith('apple') ? 'brand-apple' : 'brand-samsung');
                     return (
                       <div
@@ -1018,7 +1021,7 @@ export default function App() {
                           </h4>
                           <div className="pt-2 border-t border-ice-border/40 mt-2">
                             <span className="text-[9px] font-mono text-ink-slate font-light uppercase block">Valuations Up To</span>
-                            <span className="text-xs sm:text-sm font-black text-emerald-600 font-outfit">{dev.price}</span>
+                            <span className="text-xs sm:text-sm font-black text-emerald-600 font-outfit">{priceStr}</span>
                           </div>
                         </div>
                       </div>
