@@ -2416,13 +2416,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               ) : (
                 <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1">
                   {Array.from(brandSeriesMap.entries()).map(([seriesName, seriesModels]) => {
-                    const isCollapsed = expandedSeries[seriesName] === false;
+                    const isExpanded = expandedSeries[seriesName] !== false;
+                    const isCollapsed = !isExpanded;
                     const allSeriesSelected = seriesModels.length > 0 && seriesModels.every(m => selectedModelIds.includes(m.id));
                     return (
                       <div key={seriesName} className="border border-ice-border/60 rounded-sm overflow-hidden bg-canvas-white">
                         {/* Series Node Header */}
                         <div className="w-full px-3 py-2 bg-slate-50 dark:bg-zinc-800/40 hover:bg-slate-100 dark:hover:bg-zinc-800 border-b border-ice-border/40 flex items-center justify-between text-left transition-all">
-                          <div className="flex items-center gap-2 flex-1 cursor-pointer" onClick={() => setExpandedSeries(prev => ({ ...prev, [seriesName]: !isCollapsed }))}>
+                          <div className="flex items-center gap-2 flex-1 cursor-pointer" onClick={() => setExpandedSeries(prev => ({ ...prev, [seriesName]: !isExpanded }))}>
                             {isCollapsed ? <ChevronRight className="w-3.5 h-3.5 text-zinc-400" /> : <ChevronDown className="w-3.5 h-3.5 text-cobalt" />}
                             <span className="font-outfit text-xs font-bold text-ink-navy">{seriesName}</span>
                           </div>
