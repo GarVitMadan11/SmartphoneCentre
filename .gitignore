@@ -47,6 +47,9 @@ dev.db
 **/dev.db
 server/prisma/dev.db
 
+# Downloaded phone images (unused — app uses external CDN URLs via phoneImages.json)
+src/assets/phones/
+
 # Scraper scripts & caches
 scripts/fetch_real_cashify_prices.py
 scripts/test_scraper.py
