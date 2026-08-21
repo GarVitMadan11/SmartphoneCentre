@@ -207,27 +207,6 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
   // Stable receipt reference code — generated once per wizard session
   const receiptRef = useMemo(() => Math.random().toString(36).substr(2, 6).toUpperCase(), []);
 
-  const handleMarkAllFlawless = () => {
-    setSelectedDefects([]);
-    setIcloudChecked('clear');
-    setScreenConfirmed(true);
-    setBodyConfirmed(true);
-    setFuncConfirmed(true);
-    setConnectConfirmed(true);
-    setAccConfirmed(true);
-    if (model.releaseYear >= 2025) {
-      setWarrantyAge('under_3m');
-      setDeviceAge('under_3m');
-      setWarrantyStatus('active');
-    } else {
-      setWarrantyAge('out_of_warranty');
-      setDeviceAge('1_to_2y');
-      setWarrantyStatus('expired');
-    }
-    setSimType('dual_sim');
-    setStep(6);
-  };
-
   // Toggle selection helper
   const handleToggleDefect = (defect: DefectRule, mutuallyExclusiveId?: string) => {
     setSelectedDefects(prev => {
@@ -633,14 +612,6 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                 <div className="mb-6 text-left">
                   <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
                     <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block">Step 1 of 6 // Critical Gates</span>
-                    <button
-                      type="button"
-                      onClick={handleMarkAllFlawless}
-                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-xs font-bold hover:scale-105 transition-all shadow-xs"
-                    >
-                      <Sparkles className="w-3.5 h-3.5" />
-                      <span>⚡ Mint Condition Device? Jump to Max Payout</span>
-                    </button>
                   </div>
                   <h3 className="text-3xl font-light text-ink-navy tracking-tight">
                     {isApple ? 'Boot & iCloud Status' : 'Boot & Account Lock (Factory Reset Protection)'}
