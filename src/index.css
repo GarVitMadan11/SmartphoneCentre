@@ -282,4 +282,36 @@
   background-size: 32px 32px;
 }
 
+/* ─── Premium Pilot Mode Marquee Ticker ──────────────────── */
+@keyframes tickerSlide {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.animate-pilot-ticker {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: tickerSlide 45s linear infinite;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ticker-container:hover .animate-pilot-ticker {
+    animation-play-state: paused;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-pilot-ticker {
+    animation: none;
+    width: 100%;
+    overflow-x: auto;
+  }
+}
+
+
 

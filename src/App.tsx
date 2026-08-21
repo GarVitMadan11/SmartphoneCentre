@@ -16,6 +16,8 @@ import ResetPasswordPage from './components/client/ResetPasswordPage';
 import VerifyEmailPage from './components/client/VerifyEmailPage';
 import { ToastContainer, ToastMessage } from './components/Toast';
 import { ComingSoon } from './components/client/ComingSoon';
+import { PilotModeBanner } from './components/client/PilotModeBanner';
+import { FeedbackModal } from './components/client/FeedbackModal';
 import { useFocusTrap } from './hooks/useFocusTrap';
 import { safeLazy } from './utils/safeLazy';
 
@@ -580,6 +582,7 @@ export default function App() {
   }, [activeStage, wizardStep, selectedModel, selectedVariant, selectedDefects, finalPrice]);
 
   const [isSpecModalOpen, setIsSpecModalOpen] = useState(false);
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success', title: string = 'Notice') => {
@@ -724,6 +727,9 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-canvas-white text-ink-navy flex flex-col font-sans selection:bg-cobalt selection:text-white">
+
+      {/* ── Pilot Mode Announcement Ticker Marquee ──────────────────── */}
+      <PilotModeBanner onOpenFeedback={() => setIsFeedbackModalOpen(true)} />
 
       {/* ── Consolidated Header Navigation ─────────────────────────── */}
       <HeaderNav
@@ -1668,6 +1674,7 @@ export default function App() {
 
       {/* Specs Modal */}
       <SpecsModal isOpen={isSpecModalOpen} onClose={() => setIsSpecModalOpen(false)} />
+      <FeedbackModal isOpen={isFeedbackModalOpen} onClose={() => setIsFeedbackModalOpen(false)} currentUser={currentUser} />
       <Suspense fallback={null}>
         <OrderTrackingModal isOpen={isTrackOpen} onClose={() => setIsTrackOpen(false)} currentUser={currentUser} models={MODELS} />
       </Suspense>

@@ -188,7 +188,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
   }, [step, icloudChecked, screenConfirmed, bodyConfirmed, funcConfirmed, connectConfirmed, accConfirmed, selectedDefects, rules]);
 
   const [warrantyAge, setWarrantyAge] = useState<'under_3m' | '3_to_6m' | '6_to_11m' | 'out_of_warranty'>('out_of_warranty');
-  const [simType, setSimType] = useState<'dual_sim' | 'single_sim'>('dual_sim');
+  const simType = 'dual_sim';
   const [dualEsim, setDualEsim] = useState<boolean | null>(null);
 
   // Calculate live valuation via Stage 1 Rephonix Pricing Engine
@@ -1389,52 +1389,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   </div>
                 </div>
 
-                {/* SIM Configuration Section */}
-                {!isWatch && (
-                  <div className="mt-6 text-left border-t border-ice-border pt-6">
-                    <h4 className="text-sm font-bold text-ink-navy font-outfit uppercase tracking-wider mb-3">
-                      SIM Slot & Network Support
-                    </h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div
-                        onClick={() => setSimType('dual_sim')}
-                        className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center gap-3 ${
-                          simType === 'dual_sim'
-                            ? 'border-cobalt bg-cobalt-light/40 ring-1 ring-cobalt/30'
-                            : 'border-ice-border bg-canvas-white hover:border-cobalt/40'
-                        }`}
-                      >
-                        <div className="w-12 h-12 rounded-xl bg-cobalt/10 flex items-center justify-center flex-shrink-0">
-                          {getIllustration('sim-dual', deviceType)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h5 className="font-bold text-xs text-ink-navy">Dual SIM (Physical + eSIM / Dual Physical)</h5>
-                          <p className="text-[11px] text-ink-muted mt-0.5 font-light">Standard Indian retail model supporting 2 network lines.</p>
-                        </div>
-                      </div>
 
-                      <div
-                        onClick={() => setSimType('single_sim')}
-                        className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center gap-3 ${
-                          simType === 'single_sim'
-                            ? 'border-amber-500 bg-amber-500/10 ring-1 ring-amber-500/30'
-                            : 'border-ice-border bg-canvas-white hover:border-amber-500/40'
-                        }`}
-                      >
-                        <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center flex-shrink-0">
-                          {getIllustration('sim-single', deviceType)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1">
-                            <h5 className="font-bold text-xs text-ink-navy">Single SIM Only</h5>
-                            <span className="text-[9px] font-mono font-bold bg-amber-500/20 text-amber-600 px-1.5 py-0.5 rounded-md">-₹500</span>
-                          </div>
-                          <p className="text-[11px] text-ink-muted mt-0.5 font-light">Single SIM slot unit or carrier-locked import model.</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
 
                 {/* Dual eSIM Question — Apple Pro / Pro Max iPhone 14+ only */}
                 {(() => {
@@ -1662,13 +1617,6 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         </div>
                       )}
 
-                      {/* Single SIM Variant Adjustment */}
-                      {simType === 'single_sim' && (
-                        <div className="flex justify-between items-center text-amber-600 dark:text-amber-400 border-b border-slate-200 dark:border-zinc-800/60 py-1.5 font-mono text-xs">
-                          <span>Single SIM Regional Variant Adjustment</span>
-                          <span className="font-bold font-outfit">-₹500</span>
-                        </div>
-                      )}
 
                       {/* Cashify-Style Standard Platform Fees */}
                       <div className="pt-2 border-t border-slate-200 dark:border-zinc-800/60 space-y-1.5 text-zinc-500">
