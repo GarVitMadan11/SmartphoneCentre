@@ -2,142 +2,78 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ArrowRight, Smartphone, Tablet, ShieldCheck, Zap, Truck } from 'lucide-react';
 
 /* ─────────────────────────────────────────────
-   Floating Device Composition
-   Layout: Tablet (left) · Smartwatch (centre) · Smartphone (right)
+   2D Premium Device Composition Cards
 ───────────────────────────────────────────── */
 const FloatingComposition: React.FC = () => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [mouse, setMouse] = useState({ x: 0, y: 0 });
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!containerRef.current) return;
-      const rect = containerRef.current.getBoundingClientRect();
-      const cx = rect.left + rect.width / 2;
-      const cy = rect.top + rect.height / 2;
-      setMouse({
-        x: (e.clientX - cx) / (rect.width / 2),
-        y: (e.clientY - cy) / (rect.height / 2),
-      });
-    };
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
-
-  const tiltX = mouse.y * -5;
-  const tiltY = mouse.x * 5;
-
   return (
-    <div
-      ref={containerRef}
-      className="relative w-full h-[420px] sm:h-[480px] flex items-center justify-center"
-      style={{ perspective: '1100px' }}
-    >
+    <div className="relative w-full min-h-[380px] sm:min-h-[440px] flex items-center justify-center p-2 sm:p-4">
+      {/* Background ambient lighting glow */}
+      <div className="absolute inset-0 bg-gradient-to-tr from-cobalt/5 via-emerald-500/5 to-transparent rounded-3xl blur-3xl pointer-events-none" />
 
+      <div className="relative w-full max-w-lg flex flex-col sm:flex-row items-center justify-center gap-5 sm:gap-6">
+        
+        {/* ── CARD 1: iPad Pro 13" (2D Premium Glass Card) ── */}
+        <div className="w-full sm:w-60 bg-white dark:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 rounded-2xl p-5 shadow-xl hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 relative group overflow-hidden">
+          <div className="absolute top-0 right-0 w-28 h-28 bg-emerald-500/5 rounded-full blur-xl pointer-events-none group-hover:bg-emerald-500/10 transition-all" />
+          
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[9px] font-mono font-bold tracking-widest text-emerald-600 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded border border-emerald-200/60 dark:border-emerald-800/60 uppercase">
+              Tablet Valuation
+            </span>
+            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          </div>
 
-      {/* 3D scene */}
-      <div
-        style={{
-          transform: `rotateX(${tiltX}deg) rotateY(${tiltY}deg)`,
-          transformStyle: 'preserve-3d',
-          transition: 'transform 0.12s ease-out',
-        }}
-        className="relative w-full h-full"
-      >
+          <div className="text-left space-y-1">
+            <h4 className="text-sm font-extrabold text-ink-navy dark:text-white font-outfit">iPad Pro 13"</h4>
+            <p className="text-[11px] text-ink-slate font-mono">512GB &middot; M4 Chip</p>
+          </div>
 
-        {/* ── TABLET — left, back layer ── */}
-        <div
-          className="absolute"
-          style={{
-            left: '2%',
-            top: '8%',
-            transformStyle: 'preserve-3d',
-            transform: 'translateZ(-40px) rotate(-7deg)',
-            animation: 'syd-floatA 7s ease-in-out infinite',
-          }}
-        >
-          <div className="relative w-40 h-56 sm:w-48 sm:h-68 rounded-[16px] bg-gradient-to-b from-[#3a3a3c] to-[#1c1c1e] border border-black/20 p-2">
-            <div className="w-full h-full rounded-[11px] bg-white overflow-hidden flex flex-col border border-black/5">
-              <div className="flex justify-center pt-2 pb-1.5">
-                <div className="w-5 h-1 bg-black/15 rounded-full" />
-              </div>
-              <div className="flex-1 mx-1.5 mb-1.5 rounded-[7px] p-2.5 flex flex-col justify-between">
-                <div>
-                  <div className="text-[7px] font-bold text-ink-muted uppercase tracking-widest font-mono">iPAD PRO 13&quot;</div>
-                  <div className="text-[12px] font-black text-ink-navy font-outfit mt-1">Sell for up to</div>
-                  <div className="text-[13px] font-bold text-secondary font-mono">&#8377;72,000</div>
-                </div>
-                <div className="space-y-1">
-                  <div className="h-1 bg-black/8 rounded-full overflow-hidden">
-                    <div className="h-full w-4/5 bg-gradient-to-r from-secondary to-emerald-500 rounded-full" />
-                  </div>
-                  <div className="text-[6px] text-ink-muted font-mono tracking-wider">512GB &middot; M4 CHIP</div>
-                </div>
-              </div>
+          <div className="my-4 pt-3 border-t border-slate-100 dark:border-zinc-800 flex items-baseline justify-between">
+            <span className="text-[10px] font-mono uppercase text-ink-muted">Up to Payout</span>
+            <span className="text-xl font-black text-emerald-600 dark:text-emerald-400 font-mono">₹72,000</span>
+          </div>
+
+          <div className="space-y-1.5">
+            <div className="flex justify-between text-[9px] font-mono text-zinc-400">
+              <span>Flawless Condition</span>
+              <span>100% Top Valuation</span>
+            </div>
+            <div className="w-full bg-slate-100 dark:bg-zinc-800 h-1.5 rounded-full overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full w-[90%]" />
             </div>
           </div>
         </div>
 
+        {/* ── CARD 2: iPhone 16 Pro Max (2D Premium Glass Card) ── */}
+        <div className="w-full sm:w-64 bg-slate-900 text-white border border-slate-800 rounded-2xl p-5 shadow-2xl hover:shadow-[0_20px_40px_rgba(0,0,0,0.3)] hover:-translate-y-1.5 transition-all duration-300 relative group overflow-hidden sm:mt-8">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl pointer-events-none group-hover:bg-blue-500/20 transition-all" />
+          
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[9px] font-mono font-bold tracking-widest text-sky-400 bg-sky-950/60 px-2 py-0.5 rounded border border-sky-800/60 uppercase">
+              Rephonix Certified
+            </span>
+            <span className="text-[9px] font-mono text-zinc-400">NIST Wiped</span>
+          </div>
 
-        {/* ── SMARTPHONE — right, front layer ── */}
-        <div
-          className="absolute"
-          style={{
-            right: '3%',
-            top: '5%',
-            transformStyle: 'preserve-3d',
-            transform: 'translateZ(55px) rotate(5deg)',
-            animation: 'syd-floatC 6s ease-in-out infinite 0.3s',
-          }}
-        >
-          <div className="relative w-36 h-64 sm:w-44 sm:h-80 rounded-[28px] bg-gradient-to-b from-[#3a3a3c] to-[#111] border-[2.5px] border-black/20 p-2">
-            <div className="absolute -right-[3px] top-16 w-[3px] h-8 bg-black/20 rounded-full" />
-            <div className="absolute -right-[3px] top-28 w-[3px] h-5 bg-black/20 rounded-full" />
-            <div className="w-full h-full rounded-[22px] bg-white overflow-hidden flex flex-col border border-black/5">
-              <div className="flex justify-center pt-2.5 pb-1">
-                <div className="w-14 h-3 bg-black rounded-full" />
-              </div>
-              <div className="flex-1 px-2.5 py-1.5 flex flex-col justify-between">
-                <div>
-                  <div className="text-[6px] text-ink-muted font-mono uppercase tracking-widest">Rephonix</div>
-                  <div className="text-[10px] font-black text-ink-navy font-outfit mt-0.5">Your Valuation</div>
-                </div>
-                <div className="space-y-2">
-                  <div className="rounded-lg p-2 border border-black/5">
-                    <div className="text-[6px] text-ink-muted font-mono uppercase">iPhone 16 Pro Max</div>
-                    <div className="text-[14px] font-black text-secondary font-outfit leading-tight">&#8377;89,000</div>
-                    <div className="text-[6px] text-ink-muted font-mono">Excellent Condition</div>
-                  </div>
-                  <div className="flex gap-0.5">
-                    <div className="flex-1 h-1 bg-secondary rounded-full" />
-                    <div className="flex-1 h-1 bg-secondary/40 rounded-full" />
-                    <div className="flex-1 h-1 bg-secondary/15 rounded-full" />
-                  </div>
-                </div>
-                <div className="pb-1 text-[6px] text-ink-muted font-mono text-center tracking-widest">
-                  NIST WIPED &middot; SECURE
-                </div>
-              </div>
-            </div>
+          <div className="text-left space-y-1">
+            <h4 className="text-base font-extrabold text-white font-outfit">iPhone 16 Pro Max</h4>
+            <p className="text-[11px] text-zinc-400 font-mono">256GB &middot; Excellent Grade</p>
+          </div>
+
+          <div className="my-4 pt-3 border-t border-slate-800 flex items-baseline justify-between">
+            <span className="text-[10px] font-mono uppercase text-zinc-400">Estimated Valuation</span>
+            <span className="text-2xl font-black text-emerald-400 font-mono">₹89,000</span>
+          </div>
+
+          <div className="p-2.5 rounded-xl bg-slate-800/80 border border-slate-700/60 flex items-center justify-between text-[10px] font-mono text-zinc-300">
+            <span className="flex items-center gap-1.5 text-emerald-400 font-bold">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> Doorstep Pickup
+            </span>
+            <span className="text-zinc-400">Instant Credit</span>
           </div>
         </div>
 
       </div>
-
-      <style>{`
-        @keyframes syd-floatA {
-          0%, 100% { transform: translateZ(-40px) rotate(-7deg) translateY(0px); }
-          50%       { transform: translateZ(-40px) rotate(-7deg) translateY(-12px); }
-        }
-        @keyframes syd-floatB {
-          0%, 100% { transform: translate(-50%, -50%) translateZ(15px) translateY(0px); }
-          50%       { transform: translate(-50%, -50%) translateZ(15px) translateY(-10px); }
-        }
-        @keyframes syd-floatC {
-          0%, 100% { transform: translateZ(55px) rotate(5deg) translateY(0px); }
-          50%       { transform: translateZ(55px) rotate(5deg) translateY(-15px); }
-        }
-      `}</style>
     </div>
   );
 };
