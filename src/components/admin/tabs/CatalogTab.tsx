@@ -1342,8 +1342,8 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
                   <input
                     type="number"
                     required
-                    min="1000"
-                    step="500"
+                    min="0"
+                    step="1"
                     value={formData.basePrice128GB}
                     onChange={(e) => setFormData({ ...formData, basePrice128GB: parseInt(e.target.value, 10) || 0 })}
                     className="w-full px-3 py-2 bg-white border border-ice-border rounded font-mono font-bold text-emerald-700 focus:border-cobalt focus:outline-none"
