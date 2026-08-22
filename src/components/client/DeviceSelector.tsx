@@ -861,10 +861,15 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
 
   const handleModelClick = (model: Model) => {
     setSelectedModel(model);
-    const rams = getModelSupportedRam(model).filter(r => r > 0);
-    const storages = getModelSupportedStorage(model);
-    const defaultRam = rams.length > 0 ? rams[0] : null;
-    const defaultStorage = storages.length > 0 ? storages[0] : 128;
+    const allRams = getModelSupportedRam(model).filter(r => r > 0);
+    const allStorages = getModelSupportedStorage(model);
+
+    const validRams = allRams.filter(r => allStorages.some(s => isVariantAvailable(model, r, s)));
+    const defaultRam = validRams.length > 0 ? validRams[0] : (allRams.length > 0 ? allRams[0] : null);
+
+    const validStorages = allStorages.filter(s => isVariantAvailable(model, defaultRam || 0, s));
+    const defaultStorage = validStorages.length > 0 ? validStorages[0] : (allStorages.length > 0 ? allStorages[0] : 128);
+
     setSelectedRam(defaultRam);
     setSelectedStorage(defaultStorage);
     setSelectedConnectivity('cellular');
@@ -905,16 +910,23 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
 
   const handleRamSelect = (ram: number) => {
     setSelectedRam(ram);
-    if (selectedModel && selectedStorage !== null) {
+    if (selectedModel) {
+      const allStorages = getModelSupportedStorage(selectedModel);
+      let targetStorage = selectedStorage;
+      if (!targetStorage || !isVariantAvailable(selectedModel, ram, targetStorage)) {
+        targetStorage = allStorages.find(s => isVariantAvailable(selectedModel, ram, s)) || allStorages[0];
+        setSelectedStorage(targetStorage);
+      }
+
       const vars = generateVariantsForModel(selectedModel);
       const activeColor = isTablet ? (selectedConnectivity === 'cellular' ? 'Wi-Fi + Cellular (SIM)' : 'Wi-Fi Only') : (selectedColor || 'Standard');
-      const baseVar = vars.find(v => v.storageGb === selectedStorage && v.color === activeColor) || vars[0];
-      const baseVal = getVariantPrice(selectedModel, ram, selectedStorage);
+      const baseVar = vars.find(v => v.storageGb === targetStorage && v.color === activeColor) || vars[0];
+      const baseVal = getVariantPrice(selectedModel, ram, targetStorage);
       const price = isTablet && selectedConnectivity === 'wifi' ? Math.max(1000, Math.round(baseVal * 0.92)) : baseVal;
       setTempVariant({
         ...baseVar,
         ramGb: ram,
-        storageGb: selectedStorage,
+        storageGb: targetStorage,
         color: activeColor,
         basePrice: price,
       });

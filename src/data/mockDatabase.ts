@@ -1735,17 +1735,37 @@ export function getMaxVariantPrice(model: Model): number {
 
 /** Check if a specific RAM+Storage combo is enabled in DB (not turned OFF by admin) */
 export function isVariantAvailable(model: Model, ramGb: number, storageGb: number): boolean {
-  if (!model.variantPrices || Object.keys(model.variantPrices).length === 0) return true;
+  if (!model || !model.variantPrices) return true;
+  let prices: Record<string, number> | null = null;
+  if (typeof model.variantPrices === 'string') {
+    try {
+      prices = JSON.parse(model.variantPrices);
+    } catch {
+      prices = null;
+    }
+  } else if (typeof model.variantPrices === 'object' && model.variantPrices !== null) {
+    prices = model.variantPrices as Record<string, number>;
+  }
+
+  if (!prices || Object.keys(prices).length === 0) return true;
   const key = `${ramGb}_${storageGb}`;
-  return model.variantPrices[key] !== undefined && model.variantPrices[key] > 0;
+  return prices[key] !== undefined && Number(prices[key]) > 0;
 }
 
 /** Get the admin-defined price for a specific RAM+Storage combo, or best-guess fallback */
 export function getVariantPrice(model: Model, ramGb: number, storageGb: number): number {
-  if (model.variantPrices) {
-    const key = `${ramGb}_${storageGb}`;
-    if (model.variantPrices[key] !== undefined) {
-      return model.variantPrices[key];
+  if (model && model.variantPrices) {
+    let prices: Record<string, number> | null = null;
+    if (typeof model.variantPrices === 'string') {
+      try { prices = JSON.parse(model.variantPrices); } catch { prices = null; }
+    } else if (typeof model.variantPrices === 'object' && model.variantPrices !== null) {
+      prices = model.variantPrices as Record<string, number>;
+    }
+    if (prices) {
+      const key = `${ramGb}_${storageGb}`;
+      if (prices[key] !== undefined && Number(prices[key]) > 0) {
+        return Number(prices[key]);
+      }
     }
   }
   // Base storage calculation
