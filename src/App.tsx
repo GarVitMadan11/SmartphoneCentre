@@ -796,7 +796,11 @@ export default function App() {
           setSelectedTabletBrand(brand);
           navigate('/tablets');
         }}
-
+        onSelectModel={(modelId) => {
+          handleReset();
+          handleDirectSelectModel(modelId);
+        }}
+        models={MODELS}
         onOpenTrackOrder={() => startTransition(() => setIsTrackOpen(true))}
         currentUser={currentUser}
         onLogout={handleLogout}
