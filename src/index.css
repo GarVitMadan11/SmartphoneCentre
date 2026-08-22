@@ -4,13 +4,51 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  color-scheme: light;
+}
+
+html {
+  color-scheme: light;
+}
+
 @layer base {
   body {
     @apply antialiased text-ink-navy bg-canvas-white font-sans;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color-scheme: light;
   }
   h1, h2, h3, h4, h5, h6, .font-outfit {
     font-family: 'Outfit', 'Inter', system-ui, sans-serif;
+  }
+  
+  /* Enforce readable dark navy text on all form elements regardless of OS/Browser Dark Mode */
+  input, textarea, select {
+    color: #002045 !important;
+    caret-color: #002045 !important;
+    -webkit-text-fill-color: #002045 !important;
+  }
+  
+  input::placeholder, textarea::placeholder {
+    color: #74777f !important;
+    -webkit-text-fill-color: #74777f !important;
+    opacity: 0.85;
+  }
+
+  /* Autofill styling override for Chrome/Safari in dark mode */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover, 
+  input:-webkit-autofill:focus,
+  textarea:-webkit-autofill,
+  textarea:-webkit-autofill:hover,
+  textarea:-webkit-autofill:focus,
+  select:-webkit-autofill,
+  select:-webkit-autofill:hover,
+  select:-webkit-autofill:focus {
+    -webkit-text-fill-color: #002045 !important;
+    -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important;
+    box-shadow: 0 0 0px 1000px #ffffff inset !important;
+    transition: background-color 5000s ease-in-out 0s;
   }
 }
 
@@ -281,5 +319,32 @@
     linear-gradient(to bottom, rgba(0, 32, 69, 0.04) 1px, transparent 1px);
   background-size: 32px 32px;
 }
+
+/* ─── Premium Pilot Mode Marquee Ticker ──────────────────── */
+@keyframes tickerSlide {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.animate-pilot-ticker {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: tickerSlide 38s linear infinite !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-pilot-ticker {
+    animation: none;
+    width: 100%;
+    overflow-x: auto;
+  }
+}
+
+
 
 

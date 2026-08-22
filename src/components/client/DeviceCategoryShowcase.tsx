@@ -61,16 +61,16 @@ export const DeviceCategoryShowcase: React.FC<DeviceCategoryShowcaseProps> = ({
         </div>
       </div>
 
-      {/* Editorial Asymmetric Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+      {/* Symmetrical 2-Column Responsive Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 items-stretch">
 
-        {/* 1. SMARTPHONES — Featured Large Card (7 cols) */}
+        {/* 1. SMARTPHONES Card */}
         <div
           onMouseEnter={() => setHoveredCard('smartphones')}
           onMouseLeave={() => handleMouseLeave('smartphones')}
           onMouseMove={(e) => handleMouseMove(e, 'smartphones')}
           onClick={() => handleCardClick('smartphones')}
-          className="lg:col-span-7 cursor-pointer perspective-1000 group"
+          className="cursor-pointer perspective-1000 group flex flex-col"
         >
           <div
             style={{
@@ -121,17 +121,14 @@ export const DeviceCategoryShowcase: React.FC<DeviceCategoryShowcaseProps> = ({
           </div>
         </div>
 
-        {/* Stacked Right Column for Tablets (5 cols) */}
-        <div className="lg:col-span-5 flex">
-
-          {/* 2. TABLETS & iPADS Card */}
-          <div
-            onMouseEnter={() => setHoveredCard('tablets')}
-            onMouseLeave={() => handleMouseLeave('tablets')}
-            onMouseMove={(e) => handleMouseMove(e, 'tablets')}
-            onClick={() => handleCardClick('tablets')}
-            className="cursor-pointer perspective-1000 group flex-1 flex"
-          >
+        {/* 2. TABLETS & iPADS Card */}
+        <div
+          onMouseEnter={() => setHoveredCard('tablets')}
+          onMouseLeave={() => handleMouseLeave('tablets')}
+          onMouseMove={(e) => handleMouseMove(e, 'tablets')}
+          onClick={() => handleCardClick('tablets')}
+          className="cursor-pointer perspective-1000 group flex flex-col"
+        >
             <div
               style={{
                 transform: `rotateX(${rotations.tablets.x}deg) rotateY(${rotations.tablets.y}deg) translateZ(${hoveredCard === 'tablets' ? '10px' : '0px'})`,
@@ -180,8 +177,6 @@ export const DeviceCategoryShowcase: React.FC<DeviceCategoryShowcaseProps> = ({
           </div>
 
         </div>
-
-      </div>
-    </section>
-  );
-};
+      </section>
+    );
+  };

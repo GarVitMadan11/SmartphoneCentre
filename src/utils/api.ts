@@ -604,3 +604,16 @@ export function fetchAuditLogs(search?: string, limit = 100): Promise<AuditLogIt
   return apiFetch<AuditLogItem[]>(`/admin/audit-logs?${query.toString()}`, undefined, true);
 }
 
+/** Submit Pilot Program Feedback (sends email directly to support@rephonix.in) */
+export function submitPilotFeedback(payload: {
+  name: string;
+  email: string;
+  category: string;
+  feedback: string;
+}): Promise<{ success: boolean; message: string }> {
+  return apiFetch<{ success: boolean; message: string }>('/support/pilot-feedback', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+

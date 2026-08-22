@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff, Lock, Mail, ArrowLeft, AlertCircle, Phone, User, Loader2 } from 'lucide-react';
 import emailjs from '@emailjs/browser';
 import { customerSignup, verifyOtp, syncFirebaseUser, ApiUser } from '../../utils/api';
-import { loginWithGoogle, signupWithEmail, loginWithEmail } from '../../services/firebaseAuth';
+import { loginWithGoogle, signupWithEmail, loginWithEmail, checkRedirectAuthResult } from '../../services/firebaseAuth';
 
 interface SignupPageProps {
   onSignupSuccess: (user: ApiUser) => void;
@@ -34,17 +34,71 @@ export default function SignupPage({ onSignupSuccess, onNavigate, redirectParam 
     }
   };
 
+  // Check if returning from Google OAuth Redirect
+  useEffect(() => {
+    checkRedirectAuthResult().then(async (res) => {
+      if (res && res.user) {
+        setGoogleLoading(true);
+        try {
+          const synced = await syncFirebaseUser(res.token);
+          if (synced && synced.user) {
+            onSignupSuccess(synced.user);
+            handleRedirect();
+            return;
+          }
+        } catch (syncErr) {
+          console.warn('[Firebase Google Auth] Sync warning on redirect:', syncErr);
+        }
+
+        const fallbackUser: ApiUser = {
+          id: res.user.uid,
+          name: res.user.displayName || 'Google User',
+          email: res.user.email || '',
+          phone: res.user.phoneNumber || null,
+          picture: res.user.photoURL || null,
+          emailVerified: Boolean(res.user.emailVerified),
+          hasGoogleLinked: true,
+          hasPassword: false,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        onSignupSuccess(fallbackUser);
+        handleRedirect();
+      }
+    }).catch(() => {});
+  }, []);
+
   const handleFirebaseGoogleSignup = async () => {
     setGoogleLoading(true);
     setError('');
     try {
-      const { token } = await loginWithGoogle();
-      const synced = await syncFirebaseUser(token);
-      if (synced && synced.user) {
-        onSignupSuccess(synced.user);
+      const { token, user: fbUser } = await loginWithGoogle();
+      try {
+        const synced = await syncFirebaseUser(token);
+        if (synced && synced.user) {
+          onSignupSuccess(synced.user);
+          handleRedirect();
+          return;
+        }
+      } catch (syncErr) {
+        console.warn('[Firebase Google Auth] Backend sync warning, creating account with verified Firebase user:', syncErr);
+      }
+
+      if (fbUser) {
+        const fallbackUser: ApiUser = {
+          id: fbUser.uid,
+          name: fbUser.displayName || 'Google User',
+          email: fbUser.email || '',
+          phone: fbUser.phoneNumber || null,
+          picture: fbUser.photoURL || null,
+          emailVerified: Boolean(fbUser.emailVerified),
+          hasGoogleLinked: true,
+          hasPassword: false,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        onSignupSuccess(fallbackUser);
         handleRedirect();
-      } else {
-        setError('Failed to create account with Google.');
       }
     } catch (err: any) {
       if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {

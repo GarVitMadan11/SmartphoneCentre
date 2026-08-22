@@ -6,6 +6,8 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   GoogleAuthProvider,
   signInWithPhoneNumber,
   signOut,
@@ -14,8 +16,16 @@ import {
   RecaptchaVerifier,
   ConfirmationResult,
   User as FirebaseUser,
+  browserLocalPersistence,
+  setPersistence,
 } from 'firebase/auth';
 import { auth } from '../config/firebase';
+
+if (auth) {
+  setPersistence(auth, browserLocalPersistence).catch(() => {
+    // Non-blocking persistence fallback
+  });
+}
 
 export interface FirebaseAuthState {
   user: FirebaseUser | null;
@@ -49,7 +59,6 @@ export async function sendPhoneOtp(
   verifier: RecaptchaVerifier
 ): Promise<ConfirmationResult> {
   if (!auth) throw new Error('Firebase Auth is not initialized');
-  // Phone numbers should be formatted in E.164 (e.g. +919034997719)
   let formatted = phoneNumber.trim().replace(/[\s\-]/g, '');
   if (/^[6-9]\d{9}$/.test(formatted)) {
     formatted = `+91${formatted}`;
@@ -58,7 +67,6 @@ export async function sendPhoneOtp(
   } else if (!formatted.startsWith('+')) {
     formatted = `+91${formatted}`;
   }
-
   return signInWithPhoneNumber(auth, formatted, verifier);
 }
 
@@ -96,37 +104,53 @@ export async function loginWithEmail(
   return { user: result.user, token };
 }
 
-// ── 4. Google Sign-in Popup ──────────────────────────────────────────────
+// ── 4. Google Sign-in Popup & Redirect Fallback ───────────────────────────
+export async function triggerGoogleRedirectLogin(): Promise<void> {
+  if (!auth) throw new Error('Firebase Auth is not initialized');
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
+  await signInWithRedirect(auth, provider);
+}
+
 export async function loginWithGoogle(): Promise<{ user: FirebaseUser; token: string }> {
   if (!auth) throw new Error('Firebase Auth is not initialized');
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: 'select_account' });
-  const result = await signInWithPopup(auth, provider);
 
-  // Safe runtime diagnostic log (strictly non-sensitive data)
-  console.log('[Firebase Auth] signInWithPopup succeeded:', {
-    projectId: auth.app.options.projectId,
-    uid: result.user.uid,
-    email: result.user.email,
-    emailVerified: result.user.emailVerified,
-    providerData: result.user.providerData.map(p => ({
-      providerId: p.providerId,
-      email: p.email,
-    })),
-  });
-
-  const token = await result.user.getIdToken();
-  return { user: result.user, token };
+  try {
+    const result = await signInWithPopup(auth, provider);
+    const token = await result.user.getIdToken();
+    return { user: result.user, token };
+  } catch (err: any) {
+    console.warn('[Firebase Auth] Popup sign-in issue, triggering full redirect:', err);
+    await signInWithRedirect(auth, provider);
+    return new Promise(() => {}); // Wait for redirect navigation
+  }
 }
 
-// ── 5. Logout ────────────────────────────────────────────────────────────
+// ── 5. Check Redirect Result on Startup ───────────────────────────────────
+export async function checkRedirectAuthResult(): Promise<{ user: FirebaseUser; token: string } | null> {
+  if (!auth) return null;
+  try {
+    const result = await getRedirectResult(auth);
+    if (result && result.user) {
+      const token = await result.user.getIdToken();
+      return { user: result.user, token };
+    }
+  } catch (err) {
+    console.warn('[Firebase Auth] Redirect auth result check error:', err);
+  }
+  return null;
+}
+
+// ── 6. Logout ────────────────────────────────────────────────────────────
 export async function logoutFirebaseAuth(): Promise<void> {
   if (auth) {
     await signOut(auth);
   }
 }
 
-// ── 6. Auth State Listener ───────────────────────────────────────────────
+// ── 7. Auth State Listener ───────────────────────────────────────────────
 export function subscribeToFirebaseAuth(callback: (user: FirebaseUser | null) => void): () => void {
   if (!auth) {
     callback(null);
@@ -135,7 +159,7 @@ export function subscribeToFirebaseAuth(callback: (user: FirebaseUser | null) =>
   return onAuthStateChanged(auth, callback);
 }
 
-// ── 7. Get Current ID Token ───────────────────────────────────────────────
+// ── 8. Get Current ID Token ───────────────────────────────────────────────
 export async function getFirebaseIdToken(): Promise<string | null> {
   if (!auth || !auth.currentUser) return null;
   try {

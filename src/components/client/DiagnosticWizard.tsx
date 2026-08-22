@@ -111,7 +111,40 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
   // Obtain rules based on model category, brand and model ID
   const rules = useMemo(() => getDefectRulesForCategory(model.category, model.brandId, model.name, model.id), [model]);
 
-  const [deviceAge, setDeviceAge] = useState<AgeFactorKey>('1_to_2y');
+  const isIphone17Series = useMemo(() => model.name.toLowerCase().includes('iphone 17'), [model.name]);
+  
+  // Only ask for warranty on iPhone 15, 16, 17 and above (Never ask for iPhone 11, 12, 13, 14 series)
+  const isEligibleForWarranty = useMemo(() => {
+    const nm = model.name.toLowerCase();
+    if (model.brandId === 'brand-apple' || nm.includes('iphone') || isApple) {
+      if (
+        nm.includes('iphone 14') ||
+        nm.includes('iphone 13') ||
+        nm.includes('iphone 12') ||
+        nm.includes('iphone 11') ||
+        nm.includes('iphone x') ||
+        nm.includes('iphone xs') ||
+        nm.includes('iphone xr') ||
+        nm.includes('iphone 8') ||
+        nm.includes('iphone 7') ||
+        nm.includes('iphone 6') ||
+        nm.includes('iphone se')
+      ) {
+        return false;
+      }
+      return (
+        nm.includes('iphone 15') ||
+        nm.includes('iphone 16') ||
+        nm.includes('iphone 17') ||
+        nm.includes('iphone 18') ||
+        (model.releaseYear ?? 2024) >= 2023
+      );
+    }
+    return (model.releaseYear ?? 2024) >= 2023;
+  }, [model.name, model.brandId, model.releaseYear, isApple]);
+
+  const [deviceAge, setDeviceAge] = useState<AgeFactorKey>('under_3m');
+  const [hasWarranty, setHasWarranty] = useState<boolean | null>(null);
   const [_warrantyStatus, setWarrantyStatus] = useState<'active' | 'expiring_soon' | 'expired' | 'unverified'>(
     model.releaseYear >= 2025 ? 'active' : 'expired'
   );
@@ -122,9 +155,9 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
     { title: 'Body & Frame', icon: ShieldCheck, desc: 'Chassis, buttons, screws & seal' },
     { title: 'Hardware', icon: Activity, desc: 'Cameras, biometrics & audio' },
     { title: 'Connectivity', icon: Zap, desc: 'Battery, cellular, Wi-Fi & serial' },
-    { title: 'Docs & Warranty', icon: Box, desc: 'Accessories, age & warranty' },
+    { title: isEligibleForWarranty ? 'Docs & Warranty' : 'Packaging & Box', icon: Box, desc: isEligibleForWarranty ? 'Accessories, age & warranty' : 'Original box, accessories & invoice' },
     { title: 'Review & Valuation', icon: Receipt, desc: 'Diagnostic review & breakdown' }
-  ], [isApple]);
+  ], [isApple, isEligibleForWarranty]);
 
   // Confirmation state — session only, never persisted to localStorage
   const [screenConfirmed, setScreenConfirmed] = useState(false);
@@ -188,7 +221,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
   }, [step, icloudChecked, screenConfirmed, bodyConfirmed, funcConfirmed, connectConfirmed, accConfirmed, selectedDefects, rules]);
 
   const [warrantyAge, setWarrantyAge] = useState<'under_3m' | '3_to_6m' | '6_to_11m' | 'out_of_warranty'>('out_of_warranty');
-  const [simType, setSimType] = useState<'dual_sim' | 'single_sim'>('dual_sim');
+  const simType = 'dual_sim';
   const [dualEsim, setDualEsim] = useState<boolean | null>(null);
 
   // Calculate live valuation via Stage 1 Rephonix Pricing Engine
@@ -542,10 +575,10 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                 <span className="text-[9px] font-mono tracking-widest text-zinc-400 uppercase block font-semibold">LIVE ESTIMATED PAYOUT</span>
                 <div className="flex items-center gap-2.5 mt-0.5">
                   <span className="text-xl sm:text-2xl font-black text-emerald-400 font-mono tracking-tight">
-                    {valuation.isCritical ? '₹ 0 (Locked)' : formatPrice(Math.max(0, valuation.finalPrice - 119))}
+                    {valuation.isCritical ? '₹ 0 (Locked)' : formatPrice(valuation.finalPrice)}
                   </span>
                   <span className="text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-md border border-emerald-500/30">
-                    {Math.round((valuation.finalPrice / variant.basePrice) * 100)}% Retained
+                    {valuation.retentionPercentage}% Retained
                   </span>
                 </div>
               </div>
@@ -1285,156 +1318,275 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   })}
                 </div>
 
-                {/* Device Age & Warranty Status Section */}
-                <div className="mt-8 text-left border-t border-ice-border pt-6">
-                  <h4 className="text-sm font-bold text-ink-navy font-outfit uppercase tracking-wider mb-3">
-                    Brand Warranty & Device Age
-                  </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                    <div
-                      onClick={() => {
-                        setWarrantyAge('under_3m');
-                        setDeviceAge('under_3m');
-                        setWarrantyStatus('active');
-                      }}
-                      className={`p-3 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
-                        warrantyAge === 'under_3m'
-                          ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/30'
-                          : 'border-ice-border bg-canvas-white hover:border-emerald-500/40'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                          {getIllustration('warranty-under-3m', deviceType)}
-                        </div>
-                        <span className="text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded-md">
-                          0% Reduction
-                        </span>
-                      </div>
-                      <h5 className="font-bold text-xs text-ink-navy">Under 3 Months</h5>
-                      <p className="text-[11px] text-ink-muted mt-0.5 font-light">Full price under brand warranty with valid bill.</p>
-                    </div>
-
-                    <div
-                      onClick={() => {
-                        setWarrantyAge('3_to_6m');
-                        setDeviceAge('3_to_6m');
-                        setWarrantyStatus('active');
-                      }}
-                      className={`p-3 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
-                        warrantyAge === '3_to_6m'
-                          ? 'border-cobalt bg-cobalt-light/40 ring-1 ring-cobalt/30'
-                          : 'border-ice-border bg-canvas-white hover:border-cobalt/40'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="w-10 h-10 rounded-lg bg-cobalt/10 flex items-center justify-center">
-                          {getIllustration('warranty-3-to-6m', deviceType)}
-                        </div>
-                        <span className="text-[9px] font-mono font-bold bg-amber-500/20 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded-md">
-                          -15% Reduction
-                        </span>
-                      </div>
-                      <h5 className="font-bold text-xs text-ink-navy">3 to 6 Months</h5>
-                      <p className="text-[11px] text-ink-muted mt-0.5 font-light">15% age reduction under brand warranty with valid bill.</p>
-                    </div>
-
-                    <div
-                      onClick={() => {
-                        setWarrantyAge('6_to_11m');
-                        setDeviceAge('6_to_12m');
-                        setWarrantyStatus('expiring_soon');
-                      }}
-                      className={`p-3 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
-                        warrantyAge === '6_to_11m'
-                          ? 'border-violet-500 bg-violet-500/10 ring-1 ring-violet-500/30'
-                          : 'border-ice-border bg-canvas-white hover:border-violet-500/40'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="w-10 h-10 rounded-lg bg-violet-500/10 flex items-center justify-center">
-                          {getIllustration('warranty-6-to-11m', deviceType)}
-                        </div>
-                        <span className="text-[9px] font-mono font-bold bg-purple-500/20 text-purple-600 dark:text-purple-400 px-1.5 py-0.5 rounded-md">
-                          -20% Reduction
-                        </span>
-                      </div>
-                      <h5 className="font-bold text-xs text-ink-navy">6 to 11 Months</h5>
-                      <p className="text-[11px] text-ink-muted mt-0.5 font-light">20% age reduction under brand warranty with valid bill.</p>
-                    </div>
-
-                    <div
-                      onClick={() => {
-                        setWarrantyAge('out_of_warranty');
-                        setDeviceAge('1_to_2y');
-                        setWarrantyStatus('expired');
-                      }}
-                      className={`p-3 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
-                        warrantyAge === 'out_of_warranty'
-                          ? 'border-slate-400 bg-slate-100/60 dark:bg-zinc-800 ring-1 ring-slate-400/30'
-                          : 'border-ice-border bg-canvas-white hover:border-slate-400/40'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="w-10 h-10 rounded-lg bg-slate-200 dark:bg-zinc-700 flex items-center justify-center">
-                          {getIllustration('warranty-above-11m', deviceType)}
-                        </div>
-                        <span className="text-[9px] font-mono font-bold bg-rose-500/20 text-rose-600 dark:text-rose-400 px-1.5 py-0.5 rounded-md">
-                          -25% Reduction
-                        </span>
-                      </div>
-                      <h5 className="font-bold text-xs text-ink-navy">Above 11 Months</h5>
-                      <p className="text-[11px] text-ink-muted mt-0.5 font-light">25% reduction for out of warranty / no purchase invoice.</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* SIM Configuration Section */}
-                {!isWatch && (
-                  <div className="mt-6 text-left border-t border-ice-border pt-6">
-                    <h4 className="text-sm font-bold text-ink-navy font-outfit uppercase tracking-wider mb-3">
-                      SIM Slot & Network Support
-                    </h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div
-                        onClick={() => setSimType('dual_sim')}
-                        className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center gap-3 ${
-                          simType === 'dual_sim'
-                            ? 'border-cobalt bg-cobalt-light/40 ring-1 ring-cobalt/30'
-                            : 'border-ice-border bg-canvas-white hover:border-cobalt/40'
-                        }`}
-                      >
-                        <div className="w-12 h-12 rounded-xl bg-cobalt/10 flex items-center justify-center flex-shrink-0">
-                          {getIllustration('sim-dual', deviceType)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h5 className="font-bold text-xs text-ink-navy">Dual SIM (Physical + eSIM / Dual Physical)</h5>
-                          <p className="text-[11px] text-ink-muted mt-0.5 font-light">Standard Indian retail model supporting 2 network lines.</p>
-                        </div>
-                      </div>
-
-                      <div
-                        onClick={() => setSimType('single_sim')}
-                        className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center gap-3 ${
-                          simType === 'single_sim'
-                            ? 'border-amber-500 bg-amber-500/10 ring-1 ring-amber-500/30'
-                            : 'border-ice-border bg-canvas-white hover:border-amber-500/40'
-                        }`}
-                      >
-                        <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center flex-shrink-0">
-                          {getIllustration('sim-single', deviceType)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1">
-                            <h5 className="font-bold text-xs text-ink-navy">Single SIM Only</h5>
-                            <span className="text-[9px] font-mono font-bold bg-amber-500/20 text-amber-600 px-1.5 py-0.5 rounded-md">-₹500</span>
+                {/* Device Age & Warranty Status Section — Only for iPhone 15+ and recent eligible devices */}
+                {isEligibleForWarranty && (
+                  <div className="mt-8 text-left border-t border-ice-border pt-6">
+                  {isIphone17Series ? (
+                    // Direct 4-tier selection for iPhone 17 Series
+                    <div>
+                      <h4 className="text-sm font-bold text-ink-navy font-outfit uppercase tracking-wider mb-3">
+                        Brand Warranty & Device Age
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                        <div
+                          onClick={() => {
+                            setWarrantyAge('under_3m');
+                            setDeviceAge('under_3m');
+                            setWarrantyStatus('active');
+                          }}
+                          className={`p-3 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
+                            warrantyAge === 'under_3m'
+                              ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/30'
+                              : 'border-ice-border bg-canvas-white hover:border-emerald-500/40'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                              {getIllustration('warranty-under-3m', deviceType)}
+                            </div>
+                            <span className="text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded-md">
+                              0% Reduction
+                            </span>
                           </div>
-                          <p className="text-[11px] text-ink-muted mt-0.5 font-light">Single SIM slot unit or carrier-locked import model.</p>
+                          <h5 className="font-bold text-xs text-ink-navy">Under 3 Months</h5>
+                          <p className="text-[11px] text-ink-muted mt-0.5 font-light">Full price under brand warranty with valid bill.</p>
+                        </div>
+
+                        <div
+                          onClick={() => {
+                            setWarrantyAge('3_to_6m');
+                            setDeviceAge('3_to_6m');
+                            setWarrantyStatus('active');
+                          }}
+                          className={`p-3 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
+                            warrantyAge === '3_to_6m'
+                              ? 'border-cobalt bg-cobalt-light/40 ring-1 ring-cobalt/30'
+                              : 'border-ice-border bg-canvas-white hover:border-cobalt/40'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="w-10 h-10 rounded-lg bg-cobalt/10 flex items-center justify-center">
+                              {getIllustration('warranty-3-to-6m', deviceType)}
+                            </div>
+                            <span className="text-[9px] font-mono font-bold bg-amber-500/20 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded-md">
+                              -15% Reduction
+                            </span>
+                          </div>
+                          <h5 className="font-bold text-xs text-ink-navy">3 to 6 Months</h5>
+                          <p className="text-[11px] text-ink-muted mt-0.5 font-light">15% age reduction under brand warranty with valid bill.</p>
+                        </div>
+
+                        <div
+                          onClick={() => {
+                            setWarrantyAge('6_to_11m');
+                            setDeviceAge('6_to_12m');
+                            setWarrantyStatus('expiring_soon');
+                          }}
+                          className={`p-3 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
+                            warrantyAge === '6_to_11m'
+                              ? 'border-violet-500 bg-violet-500/10 ring-1 ring-violet-500/30'
+                              : 'border-ice-border bg-canvas-white hover:border-violet-500/40'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="w-10 h-10 rounded-lg bg-violet-500/10 flex items-center justify-center">
+                              {getIllustration('warranty-6-to-11m', deviceType)}
+                            </div>
+                            <span className="text-[9px] font-mono font-bold bg-purple-500/20 text-purple-600 dark:text-purple-400 px-1.5 py-0.5 rounded-md">
+                              -20% Reduction
+                            </span>
+                          </div>
+                          <h5 className="font-bold text-xs text-ink-navy">6 to 11 Months</h5>
+                          <p className="text-[11px] text-ink-muted mt-0.5 font-light">20% age reduction under brand warranty with valid bill.</p>
+                        </div>
+
+                        <div
+                          onClick={() => {
+                            setWarrantyAge('out_of_warranty');
+                            setDeviceAge('1_to_2y');
+                            setWarrantyStatus('expired');
+                          }}
+                          className={`p-3 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
+                            warrantyAge === 'out_of_warranty'
+                              ? 'border-slate-400 bg-slate-100/60 dark:bg-zinc-800 ring-1 ring-slate-400/30'
+                              : 'border-ice-border bg-canvas-white hover:border-slate-400/40'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="w-10 h-10 rounded-lg bg-slate-200 dark:bg-zinc-700 flex items-center justify-center">
+                              {getIllustration('warranty-above-11m', deviceType)}
+                            </div>
+                            <span className="text-[9px] font-mono font-bold bg-rose-500/20 text-rose-600 dark:text-rose-400 px-1.5 py-0.5 rounded-md">
+                              -25% Reduction
+                            </span>
+                          </div>
+                          <h5 className="font-bold text-xs text-ink-navy">Above 11 Months</h5>
+                          <p className="text-[11px] text-ink-muted mt-0.5 font-light">25% reduction for out of warranty / no purchase invoice.</p>
                         </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  ) : (
+                    // Progressive "Is your device under warranty?" flow for other devices
+                    <div>
+                      <h4 className="text-sm font-bold text-ink-navy font-outfit uppercase tracking-wider mb-1">
+                        Is your device under brand warranty?
+                      </h4>
+                      <p className="text-xs text-ink-muted mb-3 font-light">
+                        Devices with a valid purchase invoice under brand warranty receive higher valuation payouts.
+                      </p>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                        {/* Option: Yes, Under Warranty */}
+                        <div
+                          onClick={() => {
+                            setHasWarranty(true);
+                            if (warrantyAge === 'out_of_warranty') {
+                              setWarrantyAge('under_3m');
+                              setDeviceAge('under_3m');
+                              setWarrantyStatus('active');
+                            }
+                          }}
+                          className={`p-4 rounded-2xl border cursor-pointer transition-all flex items-center gap-3.5 ${
+                            hasWarranty === true
+                              ? 'border-emerald-500 bg-emerald-500/10 ring-2 ring-emerald-500/20 shadow-sm'
+                              : 'border-ice-border bg-canvas-white hover:border-emerald-500/40 hover:bg-slate-50/60'
+                          }`}
+                        >
+                          <div className="w-11 h-11 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-600 shrink-0">
+                            <ShieldCheck className="w-6 h-6" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between">
+                              <h5 className="font-bold text-xs text-ink-navy">Yes, Under Warranty</h5>
+                              <span className="text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-600 px-1.5 py-0.5 rounded">
+                                Valid Bill
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-ink-muted mt-0.5 font-light leading-snug">
+                              Device has active brand warranty &amp; purchasing invoice.
+                            </p>
+                          </div>
+                          <div className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 ${
+                            hasWarranty === true ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-ice-border bg-white'
+                          }`}>
+                            {hasWarranty === true && <Check className="w-3.5 h-3.5" />}
+                          </div>
+                        </div>
+
+                        {/* Option: No, Out of Warranty */}
+                        <div
+                          onClick={() => {
+                            setHasWarranty(false);
+                            setWarrantyAge('out_of_warranty');
+                            setDeviceAge('1_to_2y');
+                            setWarrantyStatus('expired');
+                          }}
+                          className={`p-4 rounded-2xl border cursor-pointer transition-all flex items-center gap-3.5 ${
+                            hasWarranty === false
+                              ? 'border-slate-500 bg-slate-100 dark:bg-zinc-800 ring-2 ring-slate-400/30 shadow-sm'
+                              : 'border-ice-border bg-canvas-white hover:border-slate-400/40 hover:bg-slate-50/60'
+                          }`}
+                        >
+                          <div className="w-11 h-11 rounded-xl bg-slate-200 dark:bg-zinc-700 border border-slate-300 flex items-center justify-center text-slate-600 dark:text-slate-300 shrink-0">
+                            <Box className="w-6 h-6" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between">
+                              <h5 className="font-bold text-xs text-ink-navy">No, Out of Warranty</h5>
+                              <span className="text-[9px] font-mono font-bold bg-rose-500/10 text-rose-600 px-1.5 py-0.5 rounded">
+                                Expired / No Bill
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-ink-muted mt-0.5 font-light leading-snug">
+                              Warranty expired or purchase invoice not available.
+                            </p>
+                          </div>
+                          <div className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 ${
+                            hasWarranty === false ? 'bg-slate-700 border-slate-700 text-white' : 'border-ice-border bg-white'
+                          }`}>
+                            {hasWarranty === false && <Check className="w-3.5 h-3.5" />}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Sub-duration selection when user selects "Yes, Under Warranty" */}
+                      {hasWarranty === true && (
+                        <div className="pt-3 border-t border-dashed border-ice-border animate-in fade-in slide-in-from-top-2 duration-200">
+                          <p className="text-xs font-semibold text-ink-navy mb-2.5">
+                            Select remaining brand warranty period:
+                          </p>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div
+                              onClick={() => {
+                                setWarrantyAge('under_3m');
+                                setDeviceAge('under_3m');
+                                setWarrantyStatus('active');
+                              }}
+                              className={`p-3 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
+                                warrantyAge === 'under_3m'
+                                  ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/30'
+                                  : 'border-ice-border bg-canvas-white hover:border-emerald-500/40'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-600 px-1.5 py-0.5 rounded">
+                                  0% Reduction
+                                </span>
+                              </div>
+                              <h5 className="font-bold text-xs text-ink-navy">Under 3 Months</h5>
+                              <p className="text-[11px] text-ink-muted mt-0.5 font-light">Full price with valid bill.</p>
+                            </div>
+
+                            <div
+                              onClick={() => {
+                                setWarrantyAge('3_to_6m');
+                                setDeviceAge('3_to_6m');
+                                setWarrantyStatus('active');
+                              }}
+                              className={`p-3 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
+                                warrantyAge === '3_to_6m'
+                                  ? 'border-cobalt bg-cobalt-light/40 ring-1 ring-cobalt/30'
+                                  : 'border-ice-border bg-canvas-white hover:border-cobalt/40'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-[9px] font-mono font-bold bg-amber-500/20 text-amber-600 px-1.5 py-0.5 rounded">
+                                  -4.8% Reduction
+                                </span>
+                              </div>
+                              <h5 className="font-bold text-xs text-ink-navy">3 to 6 Months</h5>
+                              <p className="text-[11px] text-ink-muted mt-0.5 font-light">4.8% age reduction under brand warranty.</p>
+                            </div>
+
+                            <div
+                              onClick={() => {
+                                setWarrantyAge('6_to_11m');
+                                setDeviceAge('6_to_12m');
+                                setWarrantyStatus('expiring_soon');
+                              }}
+                              className={`p-3 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
+                                warrantyAge === '6_to_11m'
+                                  ? 'border-violet-500 bg-violet-500/10 ring-1 ring-violet-500/30'
+                                  : 'border-ice-border bg-canvas-white hover:border-violet-500/40'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-[9px] font-mono font-bold bg-purple-500/20 text-purple-600 px-1.5 py-0.5 rounded">
+                                  -8% Reduction
+                                </span>
+                              </div>
+                              <h5 className="font-bold text-xs text-ink-navy">6 to 11 Months</h5>
+                              <p className="text-[11px] text-ink-muted mt-0.5 font-light">8% age reduction under brand warranty.</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+
 
                 {/* Dual eSIM Question — Apple Pro / Pro Max iPhone 14+ only */}
                 {(() => {
@@ -1538,7 +1690,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   <div className="p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5">
                     <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 uppercase tracking-widest block mb-2">ESTIMATED PAYOUT</span>
                     <h4 className="font-black text-2xl text-emerald-600 dark:text-emerald-400 font-outfit">
-                      {formatPrice(Math.max(0, valuation.finalPrice - 119))}
+                      {formatPrice(valuation.finalPrice)}
                     </h4>
                     <p className="text-xs text-zinc-500 mt-0.5">
                       {valuation.retentionPercentage}% Value Retained
@@ -1662,13 +1814,6 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         </div>
                       )}
 
-                      {/* Single SIM Variant Adjustment */}
-                      {simType === 'single_sim' && (
-                        <div className="flex justify-between items-center text-amber-600 dark:text-amber-400 border-b border-slate-200 dark:border-zinc-800/60 py-1.5 font-mono text-xs">
-                          <span>Single SIM Regional Variant Adjustment</span>
-                          <span className="font-bold font-outfit">-₹500</span>
-                        </div>
-                      )}
 
                       {/* Cashify-Style Standard Platform Fees */}
                       <div className="pt-2 border-t border-slate-200 dark:border-zinc-800/60 space-y-1.5 text-zinc-500">
@@ -1703,7 +1848,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         <span className="text-xs text-emerald-600 dark:text-emerald-400 print-text-emerald uppercase tracking-wider block font-mono font-bold mt-0.5">✓ Payout Rate Locked</span>
                       </div>
                       <span className="text-3xl sm:text-4xl font-extrabold text-emerald-600 dark:text-emerald-400 print-text-emerald tracking-tight font-mono font-outfit">
-                        {isPriceLocked ? '₹ XX,XXX' : formatPrice(Math.max(0, valuation.finalPrice - 119))}
+                        {isPriceLocked ? '₹ XX,XXX' : formatPrice(valuation.finalPrice)}
                       </span>
                     </div>
 

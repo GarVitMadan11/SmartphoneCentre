@@ -3,7 +3,8 @@ import { useState, useEffect, useRef, useMemo, Suspense, useCallback, startTrans
 import type { Model, Variant, DefectRule, Brand, Booking } from './data/mockDatabase';
 // Helper functions needed at startup — imported statically but lightweight
 import { generateVariantsForModel, getDeviceImage, getDefectRulesForCategory, getMaxVariantPrice, isTabletDevice } from './data/mockDatabase';
-import { fetchBrands, fetchModels, fetchBookings as apiFetchBookings, fetchCurrentUser, customerLogout, hasAdminToken, ApiUser } from './utils/api';
+import { fetchBrands, fetchModels, fetchBookings as apiFetchBookings, fetchCurrentUser, customerLogout, hasAdminToken, syncFirebaseUser, ApiUser } from './utils/api';
+import { subscribeToFirebaseAuth, checkRedirectAuthResult } from './services/firebaseAuth';
 import { DeviceSelector } from './components/client/DeviceSelector';
 import { DeviceCategoryShowcase } from './components/client/DeviceCategoryShowcase';
 import { SellYourDevice } from './components/client/SellYourDevice';
@@ -19,6 +20,10 @@ import ResetPasswordPage from './components/client/ResetPasswordPage';
 import VerifyEmailPage from './components/client/VerifyEmailPage';
 import { ToastContainer, ToastMessage } from './components/Toast';
 import { ComingSoon } from './components/client/ComingSoon';
+import { PilotModeBanner } from './components/client/PilotModeBanner';
+import { PilotFeedbackSection } from './components/client/PilotFeedbackSection';
+import { FeedbackModal } from './components/client/FeedbackModal';
+import { PILOT_MODE_ENABLED } from './config/pilotMode';
 import { useFocusTrap } from './hooks/useFocusTrap';
 import { safeLazy } from './utils/safeLazy';
 
@@ -356,7 +361,7 @@ export default function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  // Fetch customer session on startup
+  // Fetch customer session on startup & Listen for Firebase Auth state changes
   useEffect(() => {
     fetchCurrentUser()
       .then(res => {
@@ -365,7 +370,51 @@ export default function App() {
         }
       })
       .catch(() => { /* Guest visitor */ });
+
+    checkRedirectAuthResult().catch(() => {});
+
+    const unsubscribe = subscribeToFirebaseAuth(async (fbUser) => {
+      if (fbUser) {
+        try {
+          const token = await fbUser.getIdToken();
+          const synced = await syncFirebaseUser(token);
+          if (synced && synced.user) {
+            setCurrentUser(synced.user);
+            return;
+          }
+        } catch (syncErr) {
+          console.warn('[Firebase Auth] Background sync warning:', syncErr);
+        }
+
+        setCurrentUser({
+          id: fbUser.uid,
+          name: fbUser.displayName || 'Google User',
+          email: fbUser.email || '',
+          phone: fbUser.phoneNumber || null,
+          picture: fbUser.photoURL || null,
+          emailVerified: Boolean(fbUser.emailVerified),
+          hasGoogleLinked: true,
+          hasPassword: false,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
+
+  // Automatically redirect if user logs in while on /login or /signup
+  useEffect(() => {
+    if (currentUser && (path.startsWith('/login') || path.startsWith('/signup'))) {
+      const redirect = new URLSearchParams(window.location.search).get('redirect');
+      if (redirect === 'booking') {
+        navigate('/smartphones');
+      } else {
+        navigate('/');
+      }
+    }
+  }, [currentUser, path]);
 
   // Restore pending booking flow if user logs in
   useEffect(() => {
@@ -603,6 +652,7 @@ export default function App() {
   }, [activeStage, wizardStep, selectedModel, selectedVariant, selectedDefects, finalPrice]);
 
   const [isSpecModalOpen, setIsSpecModalOpen] = useState(false);
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success', title: string = 'Notice') => {
@@ -748,6 +798,9 @@ export default function App() {
   return (
     <div className="min-h-screen bg-canvas-white text-ink-navy flex flex-col font-sans selection:bg-cobalt selection:text-white">
 
+      {/* ── Pilot Mode Announcement Ticker Marquee ──────────────────── */}
+      {PILOT_MODE_ENABLED && <PilotModeBanner onOpenFeedback={() => setIsFeedbackModalOpen(true)} />}
+
       {/* ── Consolidated Header Navigation ─────────────────────────── */}
       <HeaderNav
         currentPath={path}
@@ -766,7 +819,11 @@ export default function App() {
           setSelectedTabletBrand(brand);
           navigate('/tablets');
         }}
-
+        onSelectModel={(modelId) => {
+          handleReset();
+          handleDirectSelectModel(modelId);
+        }}
+        models={MODELS}
         onOpenTrackOrder={() => startTransition(() => setIsTrackOpen(true))}
         currentUser={currentUser}
         onLogout={handleLogout}
@@ -864,7 +921,7 @@ export default function App() {
           )}
 
           {path === '/' && (
-            <div className="space-y-16 py-4">
+            <div className="space-y-20 pt-4 pb-12 sm:pt-6 sm:pb-16">
               {/* 1. Hero Section */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
                 {/* Hero Call to Action */}
@@ -1358,18 +1415,21 @@ export default function App() {
                       ))}
                     </div>
                   </div>
-                  <div className="bg-canvas-pure border border-ice-border rounded-xl p-6">
-                    <div className="text-[10px] font-mono text-ink-muted uppercase tracking-wider mb-4">Live Example — iPhone 14 Pro Max 256GB</div>
+                  <div className="bg-canvas-pure border border-ice-border rounded-xl p-6 shadow-xs">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="text-[10px] font-mono text-ink-muted uppercase tracking-wider font-bold">Live Example — iPhone 14 Pro Max 256GB</div>
+                      <span className="text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-600 px-2 py-0.5 rounded border border-emerald-500/20">87% Retained</span>
+                    </div>
                     <div className="space-y-3">
                       {[
-                        { label: 'Base Price (256GB, Flawless)', value: '₹52,000', color: 'text-cobalt' },
-                        { label: '− Screen hairline crack (12%)', value: '− ₹6,240', color: 'text-red-500' },
-                        { label: '− Missing original charger', value: '− ₹500', color: 'text-orange-500' },
-                        { label: '= Your Final Payout', value: '₹45,260', color: 'text-emerald-600', bold: true },
+                        { label: 'Base Price (256GB, Flawless)', value: '₹46,010', color: 'text-cobalt' },
+                        { label: '− Minor Screen Scratch (10%)', value: '− ₹4,601', color: 'text-red-500' },
+                        { label: '− Missing Original Charger / Cable', value: '− ₹1,500', color: 'text-orange-500' },
+                        { label: '= Your Final Payout', value: '₹39,909', color: 'text-emerald-600', bold: true },
                       ].map(row => (
                         <div key={row.label} className={`flex justify-between items-center py-2.5 ${row.bold ? 'border-t-2 border-ink-navy/10 pt-4 mt-2' : 'border-b border-ice-border/40'}`}>
                           <span className={`text-sm ${row.bold ? 'font-bold text-ink-navy' : 'font-light text-ink-slate'}`}>{row.label}</span>
-                          <span className={`text-sm font-bold ${row.color}`}>{row.value}</span>
+                          <span className={`text-sm font-bold font-mono ${row.color}`}>{row.value}</span>
                         </div>
                       ))}
                     </div>
@@ -1624,6 +1684,11 @@ export default function App() {
               </AdminPinGate>
             </Suspense>
           )}
+
+          {/* ── In-Page Pilot Mode Feedback Section ── */}
+          {PILOT_MODE_ENABLED && !isWorkflow && path === '/' && (
+            <PilotFeedbackSection currentUser={currentUser} onNavigate={navigate} />
+          )}
         </section>
       </main>
 
@@ -1691,6 +1756,9 @@ export default function App() {
 
       {/* Specs Modal */}
       <SpecsModal isOpen={isSpecModalOpen} onClose={() => setIsSpecModalOpen(false)} />
+      {PILOT_MODE_ENABLED && (
+        <FeedbackModal isOpen={isFeedbackModalOpen} onClose={() => setIsFeedbackModalOpen(false)} currentUser={currentUser} onNavigate={navigate} />
+      )}
       <Suspense fallback={null}>
         <OrderTrackingModal isOpen={isTrackOpen} onClose={() => setIsTrackOpen(false)} currentUser={currentUser} models={MODELS} />
       </Suspense>
