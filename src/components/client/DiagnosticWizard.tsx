@@ -1551,11 +1551,11 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                             >
                               <div className="flex items-center justify-between mb-2">
                                 <span className="text-[9px] font-mono font-bold bg-amber-500/20 text-amber-600 px-1.5 py-0.5 rounded">
-                                  -15% Reduction
+                                  -4.8% Reduction
                                 </span>
                               </div>
                               <h5 className="font-bold text-xs text-ink-navy">3 to 6 Months</h5>
-                              <p className="text-[11px] text-ink-muted mt-0.5 font-light">15% age reduction under brand warranty.</p>
+                              <p className="text-[11px] text-ink-muted mt-0.5 font-light">4.8% age reduction under brand warranty.</p>
                             </div>
 
                             <div
@@ -1572,11 +1572,11 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                             >
                               <div className="flex items-center justify-between mb-2">
                                 <span className="text-[9px] font-mono font-bold bg-purple-500/20 text-purple-600 px-1.5 py-0.5 rounded">
-                                  -20% Reduction
+                                  -8% Reduction
                                 </span>
                               </div>
                               <h5 className="font-bold text-xs text-ink-navy">6 to 11 Months</h5>
-                              <p className="text-[11px] text-ink-muted mt-0.5 font-light">20% age reduction under brand warranty.</p>
+                              <p className="text-[11px] text-ink-muted mt-0.5 font-light">8% age reduction under brand warranty.</p>
                             </div>
                           </div>
                         </div>
