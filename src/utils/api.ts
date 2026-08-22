@@ -357,6 +357,7 @@ export interface ApiBooking {
   pickupDate: string;
   pickupTimeSlot: string;
   finalPrice: number;
+  status?: string;
   verificationStatus: 'pending' | 'verified' | 'failed';
   isVerifiedProvider?: boolean;
   verifiedName?: string;

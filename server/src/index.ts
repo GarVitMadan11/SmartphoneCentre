@@ -1118,12 +1118,6 @@ app.get('/api/bookings/:id/pdf', async (req, res) => {
       return;
     }
 
-    let defectDescriptions: string[] = [];
-    try {
-      const ids: string[] = JSON.parse((booking as any).defectIdsJson || '[]');
-      defectDescriptions = ids;
-    } catch (_) {}
-
     const pdfBuffer = await generateBookingQuotationPDF(bookingData);
 
     res.setHeader('Content-Type', 'application/pdf');

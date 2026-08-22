@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import emailjs from '@emailjs/browser';
 import { Model, Variant, DefectRule, Booking } from '../../data/mockDatabase';
-import { createBooking, downloadBookingPdf, ApiUser } from '../../utils/api';
+import { createBooking, ApiUser } from '../../utils/api';
 
 
 interface PickupSchedulerProps {
