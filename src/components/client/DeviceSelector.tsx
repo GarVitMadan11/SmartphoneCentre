@@ -534,46 +534,52 @@ export const PhoneBackPreview: React.FC<{
 // ── Brand Logo using official Simple Icons SVG paths ─────────────────────────
 
 const BRAND_ICON_MAP: Record<string, { icon: { path: string; viewBox?: string; hex?: string }; size: number; brandColor?: string }> = {
-  apple:    { icon: siApple,    size: 20 },
-  samsung:  { icon: siSamsung,  size: 52 }, // Larger size to make horizontal wordmark readable
-  xiaomi:   { icon: siXiaomi,   size: 20 },
-  vivo:     { icon: siVivo,     size: 40 }, // Larger size to make horizontal wordmark readable
-  oneplus:  { icon: siOneplus,  size: 20 },
-  google:   { icon: siGoogle,   size: 20, brandColor: '#4285F4' },
-  oppo:     { icon: siOppo,     size: 45, brandColor: '#008A5E' },
-  motorola: { icon: siMotorola, size: 22, brandColor: '#00112C' },
+  apple:    { icon: siApple,    size: 22 },
+  samsung:  { icon: siSamsung,  size: 48 }, // Adjusted to fit grid card cleanly
+  xiaomi:   { icon: siXiaomi,   size: 22 },
+  vivo:     { icon: siVivo,     size: 38 }, // Adjusted to fit grid card cleanly
+  oneplus:  { icon: siOneplus,  size: 22 },
+  google:   { icon: siGoogle,   size: 22, brandColor: '#4285F4' },
+  oppo:     { icon: siOppo,     size: 42, brandColor: '#008A5E' },
+  motorola: { icon: siMotorola, size: 24, brandColor: '#00112C' },
 };
 
-export function BrandLogo({ logo, isActive }: { logo: string; isActive: boolean }) {
+export function BrandLogo({ logo, isActive, compact = false }: { logo: string; isActive: boolean; compact?: boolean }) {
   if (logo === 'nothing') {
+    // Full dot-matrix NOTHING wordmark
     const fillColor = isActive ? '#ffffff' : '#000000';
+    // Each letter: 5×5 dot grid, spacing=4px per step, letter gap=6px
+    // N=0, O=22, T=44, H=66, I=88(3wide), N=102, G=124
+    const nothingDots: [number, number][] = [
+      // N (x=0)
+      [0,0],[16,0],[0,4],[4,4],[16,4],[0,8],[8,8],[16,8],[0,12],[12,12],[16,12],[0,16],[16,16],
+      // O (x=22)
+      [26,0],[30,0],[34,0],[22,4],[38,4],[22,8],[38,8],[22,12],[38,12],[26,16],[30,16],[34,16],
+      // T (x=44)
+      [44,0],[48,0],[52,0],[56,0],[60,0],[52,4],[52,8],[52,12],[52,16],
+      // H (x=66)
+      [66,0],[82,0],[66,4],[82,4],[66,8],[70,8],[74,8],[78,8],[82,8],[66,12],[82,12],[66,16],[82,16],
+      // I (x=88, 3-wide)
+      [88,0],[92,0],[96,0],[92,4],[92,8],[92,12],[88,16],[92,16],[96,16],
+      // N (x=102)
+      [102,0],[118,0],[102,4],[106,4],[118,4],[102,8],[110,8],[118,8],[102,12],[114,12],[118,12],[102,16],[118,16],
+      // G (x=124)
+      [128,0],[132,0],[136,0],[124,4],[124,8],[132,8],[136,8],[140,8],[124,12],[140,12],[128,16],[132,16],[136,16],
+    ];
     return (
-      <div className="h-6 flex items-center justify-center overflow-visible" style={{ flexShrink: 0 }}>
+      <div className="h-8 flex items-center justify-center overflow-visible" style={{ flexShrink: 0 }}>
         <svg
           role="img"
-          viewBox="0 0 20 20"
-          width="20"
-          height="20"
+          viewBox="-2 -2 146 22"
+          width="54"
+          height="9"
           fill={fillColor}
-          aria-label="nothing"
-          style={{ flexShrink: 0 }}
+          aria-label="Nothing"
+          style={{ flexShrink: 0, maxWidth: '100%' }}
         >
-          {/* Col 1 */}
-          <circle cx="2" cy="2" r="1.8" />
-          <circle cx="2" cy="6" r="1.8" />
-          <circle cx="2" cy="10" r="1.8" />
-          <circle cx="2" cy="14" r="1.8" />
-          <circle cx="2" cy="18" r="1.8" />
-          {/* Diagonal */}
-          <circle cx="6" cy="6" r="1.8" />
-          <circle cx="10" cy="10" r="1.8" />
-          <circle cx="14" cy="14" r="1.8" />
-          {/* Col 5 */}
-          <circle cx="18" cy="2" r="1.8" />
-          <circle cx="18" cy="6" r="1.8" />
-          <circle cx="18" cy="10" r="1.8" />
-          <circle cx="18" cy="14" r="1.8" />
-          <circle cx="18" cy="18" r="1.8" />
+          {nothingDots.map(([cx, cy], i) => (
+            <circle key={i} cx={cx} cy={cy} r="1.8" />
+          ))}
         </svg>
       </div>
     );
@@ -581,19 +587,17 @@ export function BrandLogo({ logo, isActive }: { logo: string; isActive: boolean 
 
   if (logo === 'google') {
     if (isActive) {
-      // On cobalt active background → plain white G
       return (
-        <div className="h-6 flex items-center justify-center overflow-visible" style={{ flexShrink: 0 }}>
-          <svg role="img" viewBox="0 0 24 24" width="20" height="20" fill="#ffffff" aria-label="Google" style={{ flexShrink: 0 }}>
+        <div className="h-8 flex items-center justify-center overflow-visible" style={{ flexShrink: 0 }}>
+          <svg role="img" viewBox="0 0 24 24" width="22" height="22" fill="#ffffff" aria-label="Google" style={{ flexShrink: 0 }}>
             <path d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.114-5.136 4.114-3.513 0-6.36-2.847-6.36-6.36s2.847-6.36 6.36-6.36c1.63 0 3.117.618 4.252 1.628l3.05-3.05C19.342 2.76 16.035 1.5 12.24 1.5 6.42 1.5 1.7 6.22 1.7 12s4.72 10.5 10.54 10.5c5.96 0 10.37-4.19 10.37-10.5 0-.685-.082-1.354-.22-1.715H12.24z" />
           </svg>
         </div>
       );
     }
-    // Inactive → full multicolor Google "G"
     return (
-      <div className="h-6 flex items-center justify-center overflow-visible" style={{ flexShrink: 0 }}>
-        <svg role="img" viewBox="0 0 48 48" width="20" height="20" aria-label="Google" style={{ flexShrink: 0 }}>
+      <div className="h-8 flex items-center justify-center overflow-visible" style={{ flexShrink: 0 }}>
+        <svg role="img" viewBox="0 0 48 48" width="22" height="22" aria-label="Google" style={{ flexShrink: 0 }}>
           <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
           <path fill="#FBBC05" d="M10.53 28.59c-.5-1.45-.78-2.99-.78-4.59s.27-3.14.78-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
           <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
@@ -613,7 +617,7 @@ export function BrandLogo({ logo, isActive }: { logo: string; isActive: boolean 
   const fillColor = isActive ? '#ffffff' : (brandColor ?? `#${icon.hex ?? '6b7280'}`);
 
   return (
-    <div className="h-6 flex items-center justify-center overflow-visible" style={{ flexShrink: 0 }}>
+    <div className="h-8 flex items-center justify-center overflow-visible" style={{ flexShrink: 0 }}>
       <svg
         role="img"
         viewBox="0 0 24 24"

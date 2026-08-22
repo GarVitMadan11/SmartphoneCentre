@@ -945,9 +945,9 @@ export default function App() {
                     Get an instant valuation, free doorstep pickup, and instant cash payment. No hidden deductions, guaranteed.
                   </p>
 
-                  {/* Brand Logo Quick-Select Pills */}
+                  {/* Brand Logo Quick-Select Pills — 5 cols × 2 rows */}
                   {BRANDS.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-5">
+                    <div className="grid grid-cols-5 gap-2 mb-5">
                       {BRANDS.map(brand => (
                         <button
                           key={brand.id}
@@ -957,11 +957,14 @@ export default function App() {
                             if (firstModel) setPendingModelId(firstModel.id);
                           }}
                           title={brand.name}
-                          className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-canvas-pure border border-ice-border hover:border-cobalt/50 hover:shadow-sm text-ink-slate hover:text-cobalt transition-all duration-200 cursor-pointer"
+                          className="flex items-center justify-center px-2 py-3 rounded-xl bg-canvas-pure border border-ice-border hover:border-cobalt/50 hover:shadow-sm text-ink-slate hover:text-cobalt transition-all duration-200 cursor-pointer overflow-hidden"
                         >
-                          <BrandLogo logo={brand.logo} isActive={false} />
+                          <BrandLogo logo={brand.logo} isActive={false} compact />
                         </button>
                       ))}
+                      <span className="flex items-center justify-center py-3 text-[11px] font-medium text-ink-muted/60 italic select-none">
+                        &amp; more brands
+                      </span>
                     </div>
                   )}
 
