@@ -375,15 +375,15 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
     adjustedBenchmark = minimumRecycleFloor;
   }
 
-  // 7. Apply Vendor Premium Rule (+2% / +3%)
   const isHighThreshold = adjustedBenchmark > config.vendorThreshold;
   const vendorMultiplier = isHighThreshold ? config.vendorHighMultiplier : config.vendorLowMultiplier; // 1.03 vs 1.02
   const vendorMultiplierPercentage = isHighThreshold ? '+3%' : '+2%';
 
   const rawCalculatedPrice = adjustedBenchmark * vendorMultiplier;
   
-  // 8. Customer-Facing Rounding Strategy
-  const finalRephonixPrice = roundToCleanIndianPrice(rawCalculatedPrice, config.roundingStrategy);
+  // 8. Customer-Facing Rounding Strategy (Strictly capped at basePrice so maximum retained is 100% for under 3m devices)
+  const unroundedCalculatedPrice = Math.min(basePrice, rawCalculatedPrice);
+  const finalRephonixPrice = Math.min(basePrice, roundToCleanIndianPrice(unroundedCalculatedPrice, config.roundingStrategy));
 
   const isSpecialPartsCategory = fCondition < 0.55;
 

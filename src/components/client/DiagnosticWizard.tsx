@@ -542,10 +542,10 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                 <span className="text-[9px] font-mono tracking-widest text-zinc-400 uppercase block font-semibold">LIVE ESTIMATED PAYOUT</span>
                 <div className="flex items-center gap-2.5 mt-0.5">
                   <span className="text-xl sm:text-2xl font-black text-emerald-400 font-mono tracking-tight">
-                    {valuation.isCritical ? '₹ 0 (Locked)' : formatPrice(Math.max(0, valuation.finalPrice - 119))}
+                    {valuation.isCritical ? '₹ 0 (Locked)' : formatPrice(valuation.finalPrice)}
                   </span>
                   <span className="text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-md border border-emerald-500/30">
-                    {Math.round((valuation.finalPrice / variant.basePrice) * 100)}% Retained
+                    {valuation.retentionPercentage}% Retained
                   </span>
                 </div>
               </div>
@@ -1493,7 +1493,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   <div className="p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5">
                     <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 uppercase tracking-widest block mb-2">ESTIMATED PAYOUT</span>
                     <h4 className="font-black text-2xl text-emerald-600 dark:text-emerald-400 font-outfit">
-                      {formatPrice(Math.max(0, valuation.finalPrice - 119))}
+                      {formatPrice(valuation.finalPrice)}
                     </h4>
                     <p className="text-xs text-zinc-500 mt-0.5">
                       {valuation.retentionPercentage}% Value Retained
@@ -1651,7 +1651,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         <span className="text-xs text-emerald-600 dark:text-emerald-400 print-text-emerald uppercase tracking-wider block font-mono font-bold mt-0.5">✓ Payout Rate Locked</span>
                       </div>
                       <span className="text-3xl sm:text-4xl font-extrabold text-emerald-600 dark:text-emerald-400 print-text-emerald tracking-tight font-mono font-outfit">
-                        {isPriceLocked ? '₹ XX,XXX' : formatPrice(Math.max(0, valuation.finalPrice - 119))}
+                        {isPriceLocked ? '₹ XX,XXX' : formatPrice(valuation.finalPrice)}
                       </span>
                     </div>
 

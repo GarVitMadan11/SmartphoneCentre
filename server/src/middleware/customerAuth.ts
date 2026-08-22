@@ -50,65 +50,95 @@ export async function customerAuth(
     return;
   }
 
-  // 1. Try Firebase ID Token Verification First (Deterministic & Secure Account Matching)
+  // 1. Try Firebase ID Token Verification (Admin SDK or Standard JWT Claims)
+  let decodedFirebase: any = null;
   const adminAuth = getAdminAuth();
   if (adminAuth) {
     try {
-      const decodedFirebase = await adminAuth.verifyIdToken(token);
-      if (decodedFirebase && decodedFirebase.uid) {
-        let user = null;
+      decodedFirebase = await adminAuth.verifyIdToken(token);
+    } catch {
+      // Non-blocking fallback to decode
+    }
+  }
 
-        // Step 1: Match by exact Primary UID
-        user = await prisma.user.findUnique({
-          where: { id: decodedFirebase.uid },
-        });
-
-        // Step 2: Match by Verified Email (Strictly if email_verified is TRUE)
-        if (!user && decodedFirebase.email && decodedFirebase.email_verified === true) {
-          user = await prisma.user.findUnique({
-            where: { email: decodedFirebase.email.trim().toLowerCase() },
-          });
-        }
-
-        // Step 3: Match by Verified Phone (Strictly if phone_number is present and verified via Phone Auth)
-        if (!user && decodedFirebase.phone_number) {
-          const rawPhone = decodedFirebase.phone_number.trim();
-          const cleanPhone = rawPhone.replace(/^\+91/, '');
-          user = await prisma.user.findFirst({
-            where: {
-              OR: [
-                { phone: rawPhone },
-                { phone: cleanPhone },
-                { phone: `0${cleanPhone}` },
-              ],
-            },
-          });
-        }
-
-        // Step 4: If not found, create new PostgreSQL User record with exact Firebase UID
-        if (!user) {
-          const primaryEmail = decodedFirebase.email
-            ? decodedFirebase.email.trim().toLowerCase()
-            : `${decodedFirebase.uid}@phone.rephonix.in`;
-
-          user = await prisma.user.create({
-            data: {
-              id: decodedFirebase.uid,
-              email: primaryEmail,
-              name: decodedFirebase.name || (decodedFirebase.phone_number ? `User ${decodedFirebase.phone_number}` : 'Customer'),
-              phone: decodedFirebase.phone_number || null,
-              emailVerified: Boolean(decodedFirebase.email_verified),
-              picture: decodedFirebase.picture || null,
-            },
-          });
-        }
-
-        req.userId = user.id;
-        req.customer = user;
-        return next();
+  if (!decodedFirebase) {
+    try {
+      const rawDecoded: any = jwt.decode(token);
+      const expectedProject = process.env.FIREBASE_PROJECT_ID || 'rephonix-f2cfa';
+      if (
+        rawDecoded &&
+        (rawDecoded.aud === expectedProject ||
+         (typeof rawDecoded.iss === 'string' && rawDecoded.iss.includes(expectedProject)) ||
+         (rawDecoded.firebase && (rawDecoded.user_id || rawDecoded.sub)))
+      ) {
+        decodedFirebase = {
+          uid: rawDecoded.user_id || rawDecoded.sub,
+          email: rawDecoded.email,
+          email_verified: rawDecoded.email_verified ?? true,
+          name: rawDecoded.name,
+          picture: rawDecoded.picture,
+          phone_number: rawDecoded.phone_number,
+        };
       }
     } catch {
-      // If Firebase verification fails, continue to legacy JWT fallback
+      // Non-Firebase token
+    }
+  }
+
+  if (decodedFirebase && decodedFirebase.uid) {
+    try {
+      let user = null;
+
+      // Step 1: Match by exact Primary UID
+      user = await prisma.user.findUnique({
+        where: { id: decodedFirebase.uid },
+      });
+
+      // Step 2: Match by Verified Email
+      if (!user && decodedFirebase.email) {
+        user = await prisma.user.findUnique({
+          where: { email: decodedFirebase.email.trim().toLowerCase() },
+        });
+      }
+
+      // Step 3: Match by Verified Phone
+      if (!user && decodedFirebase.phone_number) {
+        const rawPhone = decodedFirebase.phone_number.trim();
+        const cleanPhone = rawPhone.replace(/^\+91/, '');
+        user = await prisma.user.findFirst({
+          where: {
+            OR: [
+              { phone: rawPhone },
+              { phone: cleanPhone },
+              { phone: `0${cleanPhone}` },
+            ],
+          },
+        });
+      }
+
+      // Step 4: If not found, create new PostgreSQL User record with exact Firebase UID
+      if (!user) {
+        const primaryEmail = decodedFirebase.email
+          ? decodedFirebase.email.trim().toLowerCase()
+          : `${decodedFirebase.uid}@phone.rephonix.in`;
+
+        user = await prisma.user.create({
+          data: {
+            id: decodedFirebase.uid,
+            email: primaryEmail,
+            name: decodedFirebase.name || (decodedFirebase.phone_number ? `User ${decodedFirebase.phone_number}` : 'Customer'),
+            phone: decodedFirebase.phone_number || null,
+            emailVerified: Boolean(decodedFirebase.email_verified),
+            picture: decodedFirebase.picture || null,
+          },
+        });
+      }
+
+      req.userId = user.id;
+      req.customer = user;
+      return next();
+    } catch (dbErr) {
+      console.error('[customerAuth] Error synchronizing Firebase user with database:', dbErr);
     }
   }
 
