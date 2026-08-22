@@ -544,7 +544,7 @@ const BRAND_ICON_MAP: Record<string, { icon: { path: string; viewBox?: string; h
   motorola: { icon: siMotorola, size: 24, brandColor: '#00112C' },
 };
 
-export function BrandLogo({ logo, isActive, compact = false }: { logo: string; isActive: boolean; compact?: boolean }) {
+export function BrandLogo({ logo, isActive }: { logo: string; isActive: boolean; compact?: boolean }) {
   if (logo === 'nothing') {
     // Full dot-matrix NOTHING wordmark
     const fillColor = isActive ? '#ffffff' : '#000000';
