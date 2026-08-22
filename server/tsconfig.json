@@ -5,6 +5,7 @@
     "moduleResolution": "bundler",
     "lib": ["ES2022"],
     "outDir": "./dist",
+    "rootDir": "./src",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -12,9 +13,8 @@
     "resolveJsonModule": true,
     "declaration": true,
     "declarationMap": true,
-    "sourceMap": true,
-    "baseUrl": "."
+    "sourceMap": true
   },
-  "include": ["src/**/*", "prisma/**/*", "../src/data/**/*", "../src/types/**/*"],
-  "exclude": ["node_modules", "dist", "src/__tests__"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "prisma", "src/__tests__"]
 }

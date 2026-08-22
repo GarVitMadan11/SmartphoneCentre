@@ -80,7 +80,18 @@ async function initDatabase() {
 await initDatabase();
 
 // ─── Start Express Application Server ────────────────────────────────────────
-const serverProcess = spawn('node', ['dist/index.js'], {
+let entryFile = path.resolve(__dirname, '../dist/index.js');
+if (!fs.existsSync(entryFile)) {
+  if (fs.existsSync(path.resolve(__dirname, '../dist/server/src/index.js'))) {
+    entryFile = path.resolve(__dirname, '../dist/server/src/index.js');
+  } else if (fs.existsSync(path.resolve(__dirname, '../dist/src/index.js'))) {
+    entryFile = path.resolve(__dirname, '../dist/src/index.js');
+  }
+}
+
+console.log(`📦 Launching compiled application entry point: ${entryFile}`);
+
+const serverProcess = spawn('node', [entryFile], {
   stdio: 'inherit',
   env: process.env,
 });

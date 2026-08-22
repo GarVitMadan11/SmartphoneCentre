@@ -44,7 +44,7 @@ if (fs.existsSync(schemaPath)) {
 // reach the database.
 // ─────────────────────────────────────────────────────────────────────────
 try {
-  execSync('npx prisma generate && tsc', {
+  execSync('npx prisma generate && npx tsc', {
     stdio: 'inherit',
     env: process.env,
   });
