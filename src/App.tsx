@@ -1392,18 +1392,21 @@ export default function App() {
                       ))}
                     </div>
                   </div>
-                  <div className="bg-canvas-pure border border-ice-border rounded-xl p-6">
-                    <div className="text-[10px] font-mono text-ink-muted uppercase tracking-wider mb-4">Live Example — iPhone 14 Pro Max 256GB</div>
+                  <div className="bg-canvas-pure border border-ice-border rounded-xl p-6 shadow-xs">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="text-[10px] font-mono text-ink-muted uppercase tracking-wider font-bold">Live Example — iPhone 14 Pro Max 256GB</div>
+                      <span className="text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-600 px-2 py-0.5 rounded border border-emerald-500/20">87% Retained</span>
+                    </div>
                     <div className="space-y-3">
                       {[
-                        { label: 'Base Price (256GB, Flawless)', value: '₹52,000', color: 'text-cobalt' },
-                        { label: '− Screen hairline crack (12%)', value: '− ₹6,240', color: 'text-red-500' },
-                        { label: '− Missing original charger', value: '− ₹500', color: 'text-orange-500' },
-                        { label: '= Your Final Payout', value: '₹45,260', color: 'text-emerald-600', bold: true },
+                        { label: 'Base Price (256GB, Flawless)', value: '₹46,010', color: 'text-cobalt' },
+                        { label: '− Minor Screen Scratch (10%)', value: '− ₹4,601', color: 'text-red-500' },
+                        { label: '− Missing Original Charger / Cable', value: '− ₹1,500', color: 'text-orange-500' },
+                        { label: '= Your Final Payout', value: '₹39,909', color: 'text-emerald-600', bold: true },
                       ].map(row => (
                         <div key={row.label} className={`flex justify-between items-center py-2.5 ${row.bold ? 'border-t-2 border-ink-navy/10 pt-4 mt-2' : 'border-b border-ice-border/40'}`}>
                           <span className={`text-sm ${row.bold ? 'font-bold text-ink-navy' : 'font-light text-ink-slate'}`}>{row.label}</span>
-                          <span className={`text-sm font-bold ${row.color}`}>{row.value}</span>
+                          <span className={`text-sm font-bold font-mono ${row.color}`}>{row.value}</span>
                         </div>
                       ))}
                     </div>
