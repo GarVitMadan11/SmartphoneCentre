@@ -898,7 +898,7 @@ export default function App() {
           )}
 
           {path === '/' && (
-            <div className="space-y-16 py-4">
+            <div className="space-y-20 pt-4 pb-12 sm:pt-6 sm:pb-16">
               {/* 1. Hero Section */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
                 {/* Hero Call to Action */}
