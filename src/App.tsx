@@ -5,7 +5,7 @@ import type { Model, Variant, DefectRule, Brand, Booking } from './data/mockData
 import { generateVariantsForModel, getDeviceImage, getDefectRulesForCategory, getMaxVariantPrice, isTabletDevice } from './data/mockDatabase';
 import { fetchBrands, fetchModels, fetchBookings as apiFetchBookings, fetchCurrentUser, customerLogout, hasAdminToken, syncFirebaseUser, ApiUser } from './utils/api';
 import { subscribeToFirebaseAuth, checkRedirectAuthResult } from './services/firebaseAuth';
-import { DeviceSelector } from './components/client/DeviceSelector';
+import { DeviceSelector, BrandLogo } from './components/client/DeviceSelector';
 import { DeviceCategoryShowcase } from './components/client/DeviceCategoryShowcase';
 import { SellYourDevice } from './components/client/SellYourDevice';
 import { HeaderNav } from './components/client/HeaderNav';
@@ -673,13 +673,20 @@ export default function App() {
   const heroSearchResults = useMemo(() => {
     if (heroSearch.trim().length < 2) return [];
     const q = heroSearch.toLowerCase().trim();
+    // Strip all spaces for compact-query matching: "iphone15" → matches "iPhone 15"
+    const qCompact = q.replace(/\s+/g, '');
 
     return MODELS.filter(m => {
+      // Never show hidden models in public search
+      if (m.hidden) return false;
       const brand = BRANDS.find(b => b.id === m.brandId);
       const brandName = brand ? brand.name.toLowerCase() : '';
       const modelName = m.name.toLowerCase();
       const seriesName = m.series ? m.series.toLowerCase() : '';
       const fullText = `${brandName} ${modelName} ${seriesName}`.toLowerCase();
+      // Space-stripped versions for compact queries (e.g. "iphone15" → "iphone 15")
+      const modelNameCompact = modelName.replace(/\s+/g, '');
+      const fullTextCompact  = fullText.replace(/\s+/g, '');
 
       let brandAliases: string[] = [brandName];
       if (m.brandId === 'brand-apple' || brandName === 'apple') {
@@ -700,7 +707,9 @@ export default function App() {
         fullText.includes(q) ||
         modelName.includes(q) ||
         seriesName.includes(q) ||
-        brandAliases.some(alias => alias.includes(q) || q.includes(alias))
+        brandAliases.some(alias => alias.includes(q)) ||
+        // Compact matching: strip spaces so "iphone15" finds "iPhone 15"
+        (qCompact.length >= 2 && (fullTextCompact.includes(qCompact) || modelNameCompact.includes(qCompact)))
       );
     }).slice(0, 10);
   }, [heroSearch]);
@@ -936,6 +945,26 @@ export default function App() {
                     Get an instant valuation, free doorstep pickup, and instant cash payment. No hidden deductions, guaranteed.
                   </p>
 
+                  {/* Brand Logo Quick-Select Pills */}
+                  {BRANDS.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-5">
+                      {BRANDS.map(brand => (
+                        <button
+                          key={brand.id}
+                          onClick={() => { handleReset(); navigate('/smartphones'); setPendingModelId(null);
+                            // Select this brand in DeviceSelector via pendingModelId of first model
+                            const firstModel = MODELS.find(m => m.brandId === brand.id && !m.hidden);
+                            if (firstModel) setPendingModelId(firstModel.id);
+                          }}
+                          title={brand.name}
+                          className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-canvas-pure border border-ice-border hover:border-cobalt/50 hover:shadow-sm text-ink-slate hover:text-cobalt transition-all duration-200 cursor-pointer"
+                        >
+                          <BrandLogo logo={brand.logo} isActive={false} />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
                   {/* Functional Hero Search Bar with live dropdown */}
                   <div ref={heroSearchRef} className="w-full max-w-lg relative mb-8">
                     <div className="bg-canvas-pure p-2 rounded-lg border border-ice-border flex items-center gap-2 shadow-sm">
@@ -979,8 +1008,12 @@ export default function App() {
                               onClick={() => handleHeroSearchSelect(model)}
                               className="w-full flex items-center gap-3 px-4 py-3 hover:bg-cobalt-light/30 transition-colors text-left border-b border-ice-border/40 last:border-0 group"
                             >
-                              <div className="w-8 h-8 rounded-sm bg-ice-gray border border-ice-border flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-cobalt">
-                                {brand?.name.slice(0, 2).toUpperCase() ?? '??'}
+                              <div className="w-8 h-8 rounded-sm bg-ice-gray border border-ice-border flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                {brand ? (
+                                  <BrandLogo logo={brand.logo} isActive={false} />
+                                ) : (
+                                  <span className="text-[10px] font-bold text-cobalt">??</span>
+                                )}
                               </div>
                               <div className="flex-1 min-w-0">
                                 <span className="block text-sm font-semibold text-ink-navy group-hover:text-cobalt transition-colors truncate">{model.name}</span>
