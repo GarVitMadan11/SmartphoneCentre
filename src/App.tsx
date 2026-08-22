@@ -975,9 +975,13 @@ export default function App() {
                           <BrandLogo logo={brand.logo} isActive={false} />
                         </button>
                       ))}
-                      <span className="flex items-center justify-center py-3 text-[11px] font-medium text-ink-muted/60 italic select-none">
-                        &amp; more brands
-                      </span>
+                      <button
+                        onClick={() => { handleReset(); navigate('/smartphones'); setPendingModelId(null); }}
+                        title="View all brands"
+                        className="flex items-center justify-center py-3 text-ink-slate hover:text-cobalt font-bold text-xs sm:text-sm tracking-tight transition-colors duration-200 cursor-pointer select-none"
+                      >
+                        <span>&amp; more brands</span>
+                      </button>
                     </div>
                   )}
 

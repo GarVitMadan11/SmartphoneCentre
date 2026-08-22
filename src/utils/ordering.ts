@@ -63,7 +63,18 @@ export const DEFAULT_SERIES_ORDER: Record<string, string[]> = {
 export function getSavedBrandOrder(): string[] {
   try {
     const raw = localStorage.getItem('stc_brand_order');
-    return raw ? JSON.parse(raw) : [];
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+
+    // Purge outdated cached brand order if Motorola comes before vivo so new DEFAULT_BRAND_ORDER applies immediately
+    const motoIdx = parsed.indexOf('brand-motorola');
+    const vivoIdx = parsed.indexOf('brand-vivo');
+    if (motoIdx !== -1 && vivoIdx !== -1 && motoIdx < vivoIdx) {
+      localStorage.removeItem('stc_brand_order');
+      return [];
+    }
+    return parsed;
   } catch {
     return [];
   }
@@ -208,13 +219,25 @@ export function clearCustomDefaults(brandId?: string): void {
   }
 }
 
+export const DEFAULT_BRAND_ORDER: string[] = [
+  'brand-apple',
+  'brand-samsung',
+  'brand-google',
+  'brand-oneplus',
+  'brand-xiaomi',
+  'brand-vivo',
+  'brand-oppo',
+  'brand-nothing',
+  'brand-motorola',
+];
+
 // Utility to apply brand order to an array of Brand objects
 export function applyBrandOrder(brandsList: Brand[]): Brand[] {
   const customOrder = getSavedBrandOrder();
-  if (!customOrder || customOrder.length === 0) return brandsList;
+  const orderToUse = (customOrder && customOrder.length > 0) ? customOrder : DEFAULT_BRAND_ORDER;
   return [...brandsList].sort((a, b) => {
-    const idxA = customOrder.indexOf(a.id);
-    const idxB = customOrder.indexOf(b.id);
+    const idxA = orderToUse.indexOf(a.id);
+    const idxB = orderToUse.indexOf(b.id);
     if (idxA !== -1 && idxB !== -1) return idxA - idxB;
     if (idxA !== -1) return -1;
     if (idxB !== -1) return 1;

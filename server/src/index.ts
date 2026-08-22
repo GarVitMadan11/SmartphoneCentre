@@ -338,7 +338,6 @@ app.get('/api/brands', async (_req, res) => {
   try {
     const brands = await prisma.brand.findMany({
       where: { active: true },
-      orderBy: { name: 'asc' },
     });
     res.json(brands.map(b => ({ id: b.id, name: b.name, logo: b.logo })));
   } catch (err) {

@@ -508,11 +508,11 @@ export function getDefectRulesForCategory(
 // 1. Brands List
 export const BRANDS: Brand[] = [
   { id: 'brand-apple', name: 'Apple', logo: 'apple' },
-  { id: 'brand-xiaomi', name: 'Xiaomi', logo: 'xiaomi' },
   { id: 'brand-samsung', name: 'Samsung', logo: 'samsung' },
-  { id: 'brand-vivo', name: 'vivo', logo: 'vivo' },
-  { id: 'brand-oneplus', name: 'OnePlus', logo: 'oneplus' },
   { id: 'brand-google', name: 'Google', logo: 'google' },
+  { id: 'brand-oneplus', name: 'OnePlus', logo: 'oneplus' },
+  { id: 'brand-xiaomi', name: 'Xiaomi', logo: 'xiaomi' },
+  { id: 'brand-vivo', name: 'vivo', logo: 'vivo' },
   { id: 'brand-oppo', name: 'OPPO', logo: 'oppo' },
   { id: 'brand-nothing', name: 'Nothing', logo: 'nothing' },
   { id: 'brand-motorola', name: 'Motorola', logo: 'motorola' },
