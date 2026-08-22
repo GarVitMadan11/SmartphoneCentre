@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { BRANDS as STATIC_BRANDS, SMARTPHONE_MODELS as STATIC_SMARTPHONE_MODELS, Model, Brand, Variant, generateVariantsForModel, getDeviceImage, getModelSupportedRam, getModelSupportedStorage, getVariantPrice, isTabletDevice, isSmartwatchDevice, sortModelsByLaunchDesc, getMaxVariantPrice } from '../../data/mockDatabase';
+import { BRANDS as STATIC_BRANDS, SMARTPHONE_MODELS as STATIC_SMARTPHONE_MODELS, Model, Brand, Variant, generateVariantsForModel, getDeviceImage, getModelSupportedRam, getModelSupportedStorage, getVariantPrice, isVariantAvailable, isTabletDevice, isSmartwatchDevice, sortModelsByLaunchDesc, getMaxVariantPrice } from '../../data/mockDatabase';
 import { applyBrandOrder, applySeriesOrder, applyModelOrder, sortSeriesByHierarchy } from '../../utils/ordering';
 import { Search, ChevronRight, Smartphone, Layers, ArrowLeft, ArrowRight, Cpu, Wifi, Radio, X, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -826,21 +826,31 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
 
 
 
-  // Storage Options for selected model
-  const storageOptions = useMemo(() => {
-    if (!selectedModel) return [];
-    return getModelSupportedStorage(selectedModel);
-  }, [selectedModel]);
-
-  // RAM Options for selected model
-  const ramOptions = useMemo(() => {
-    if (!selectedModel) return [];
-    return getModelSupportedRam(selectedModel).filter(r => r > 0);
-  }, [selectedModel]);
-
   // Selected RAM, Storage & Connectivity state
   const [selectedRam, setSelectedRam] = useState<number | null>(null);
   const [selectedStorage, setSelectedStorage] = useState<number | null>(null);
+
+  // RAM Options for selected model (filters out RAMs with zero active variants)
+  const ramOptions = useMemo(() => {
+    if (!selectedModel) return [];
+    const allRams = getModelSupportedRam(selectedModel).filter(r => r > 0);
+    if (!selectedModel.variantPrices || Object.keys(selectedModel.variantPrices).length === 0) {
+      return allRams;
+    }
+    const allStorages = getModelSupportedStorage(selectedModel);
+    return allRams.filter(r => allStorages.some(s => isVariantAvailable(selectedModel, r, s)));
+  }, [selectedModel]);
+
+  // Storage Options for selected model (filters out turned OFF variants)
+  const storageOptions = useMemo(() => {
+    if (!selectedModel) return [];
+    const allStorages = getModelSupportedStorage(selectedModel);
+    if (!selectedModel.variantPrices || Object.keys(selectedModel.variantPrices).length === 0) {
+      return allStorages;
+    }
+    const activeRam = selectedRam ?? (ramOptions.length > 0 ? ramOptions[0] : 0);
+    return allStorages.filter(s => isVariantAvailable(selectedModel, activeRam, s));
+  }, [selectedModel, selectedRam, ramOptions]);
   const [selectedConnectivity, setSelectedConnectivity] = useState<'wifi' | 'cellular'>('cellular');
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
 

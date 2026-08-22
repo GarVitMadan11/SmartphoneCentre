@@ -530,6 +530,22 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
     });
   };
 
+  const handleToggleVariant = (ram: number, storage: number, enable: boolean) => {
+    const key = `${ram}_${storage}`;
+    setFormData((prev) => {
+      const nextMap = { ...prev.variantPrices };
+      if (!enable) {
+        delete nextMap[key];
+      } else {
+        const baseAnchor = prev.basePrice128GB || 15000;
+        const storageMult = storage >= 1024 ? 1.8 : storage === 512 ? 1.45 : storage === 256 ? 1.2 : 1.0;
+        const ramAdd = ram >= 16 ? 4000 : ram >= 12 ? 2500 : ram >= 8 ? 1000 : 0;
+        nextMap[key] = Math.round((baseAnchor * storageMult) + ramAdd);
+      }
+      return { ...prev, variantPrices: nextMap };
+    });
+  };
+
   const handleVariantPriceChange = (ram: number, storage: number, valStr: string) => {
     const key = `${ram}_${storage}`;
     const price = parseInt(valStr, 10);
@@ -1489,23 +1505,55 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
                           )}
                           {formData.supportedStorageGb.map((storage) => {
                             const key = `${ram}_${storage}`;
-                            const val = formData.variantPrices[key] !== undefined ? formData.variantPrices[key] : '';
+                            const priceVal = formData.variantPrices[key];
+                            const isEnabled = priceVal !== undefined && priceVal > 0;
+
                             return (
-                              <td key={storage} className="p-2 text-center border-r border-ice-border">
-                                <div className="relative">
-                                  <span className="absolute left-2.5 top-2.5 text-zinc-400 text-[10px] font-bold">₹</span>
-                                  <input
-                                    type="number"
-                                    value={val}
-                                    placeholder="Price"
-                                    onChange={(e) => handleVariantPriceChange(ram, storage, e.target.value)}
-                                    className="w-full pl-6 pr-2 py-1.5 bg-canvas-pure border border-ice-border focus:border-cobalt rounded font-mono font-bold text-ink-navy text-right focus:outline-none"
-                                  />
-                                </div>
-                                {val && (
-                                  <span className="text-[9px] font-bold text-emerald-600 block mt-1">
-                                    {formatPrice(Number(val))}
+                              <td key={storage} className={`p-2 text-center border-r border-ice-border transition-all ${!isEnabled ? 'bg-zinc-50/80 opacity-75' : ''}`}>
+                                <div className="flex items-center justify-between gap-1 mb-1.5 px-0.5">
+                                  <span className={`text-[9px] font-bold font-mono uppercase ${isEnabled ? 'text-emerald-600' : 'text-zinc-400'}`}>
+                                    {isEnabled ? '● Active' : '○ Off (N/A)'}
                                   </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleVariant(ram, storage, !isEnabled)}
+                                    className={`relative inline-flex h-4 w-7 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                                      isEnabled ? 'bg-emerald-500' : 'bg-zinc-300'
+                                    }`}
+                                    title={isEnabled ? 'Click to disable variant (Turn OFF)' : 'Click to enable variant (Turn ON)'}
+                                  >
+                                    <span
+                                      className={`pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                                        isEnabled ? 'translate-x-3' : 'translate-x-0'
+                                      }`}
+                                    />
+                                  </button>
+                                </div>
+
+                                {isEnabled ? (
+                                  <div>
+                                    <div className="relative">
+                                      <span className="absolute left-2.5 top-2 text-zinc-400 text-[10px] font-bold">₹</span>
+                                      <input
+                                        type="number"
+                                        value={priceVal}
+                                        placeholder="Price"
+                                        onChange={(e) => handleVariantPriceChange(ram, storage, e.target.value)}
+                                        className="w-full pl-6 pr-2 py-1 bg-white border border-ice-border focus:border-cobalt rounded font-mono font-bold text-ink-navy text-right text-xs focus:outline-none shadow-xs"
+                                      />
+                                    </div>
+                                    <span className="text-[9px] font-bold text-emerald-600 block mt-0.5">
+                                      {formatPrice(Number(priceVal))}
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleVariant(ram, storage, true)}
+                                    className="w-full py-1 px-1.5 bg-zinc-100 hover:bg-emerald-50 text-zinc-400 hover:text-emerald-600 border border-dashed border-zinc-300 hover:border-emerald-400 rounded text-[9px] font-mono font-bold transition-all cursor-pointer"
+                                  >
+                                    + Enable
+                                  </button>
                                 )}
                               </td>
                             );

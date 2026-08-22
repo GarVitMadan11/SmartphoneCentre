@@ -1733,6 +1733,13 @@ export function getMaxVariantPrice(model: Model): number {
   return model.basePrice128GB;
 }
 
+/** Check if a specific RAM+Storage combo is enabled in DB (not turned OFF by admin) */
+export function isVariantAvailable(model: Model, ramGb: number, storageGb: number): boolean {
+  if (!model.variantPrices || Object.keys(model.variantPrices).length === 0) return true;
+  const key = `${ramGb}_${storageGb}`;
+  return model.variantPrices[key] !== undefined && model.variantPrices[key] > 0;
+}
+
 /** Get the admin-defined price for a specific RAM+Storage combo, or best-guess fallback */
 export function getVariantPrice(model: Model, ramGb: number, storageGb: number): number {
   if (model.variantPrices) {
