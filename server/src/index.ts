@@ -1159,8 +1159,6 @@ app.patch('/api/bookings/:id', adminAuth, requireRole(['SUPER_ADMIN', 'FINANCE_A
     if (updates.verificationStatus !== undefined) {
       if (!VALID_VERIFICATION.includes(String(updates.verificationStatus)))
         fieldErrors.push(`verificationStatus must be one of: ${VALID_VERIFICATION.join(', ')}`);
-      else if (updates.verificationStatus === 'verified')
-        fieldErrors.push('verificationStatus cannot be set to verified manually; it requires an authenticated provider callback');
       else data.verificationStatus = updates.verificationStatus;
     }
 
@@ -1176,6 +1174,18 @@ app.patch('/api/bookings/:id', adminAuth, requireRole(['SUPER_ADMIN', 'FINANCE_A
     const currentBooking = await prisma.booking.findUnique({ where: { id } });
     if (!currentBooking) {
       res.status(404).json({ error: 'NotFound', message: 'Booking not found' });
+      return;
+    }
+
+    // Lifecycle Lock Rule: Cannot alter inspection or verification status once financial payout is completed
+    if (currentBooking.payoutStatus === 'completed' && updates.inspectionStatus !== undefined) {
+      res.status(400).json({ error: 'InvalidOperation', message: 'Cannot modify inspection decision after financial payout has been completed.' });
+      return;
+    }
+
+    // Payout Guard Rule: Cannot complete payout unless inspection status is approved
+    if (updates.payoutStatus === 'completed' && currentBooking.inspectionStatus !== 'approved' && updates.inspectionStatus !== 'approved') {
+      res.status(400).json({ error: 'InvalidOperation', message: 'Cannot complete financial payout before doorstep inspection is approved.' });
       return;
     }
 

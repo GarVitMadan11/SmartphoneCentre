@@ -237,6 +237,7 @@ export const LedgerTab: React.FC<LedgerTabProps> = ({
                   <th className="p-3">Client</th>
                   <th className="p-3">Device</th>
                   <th className="p-3">Est. Value</th>
+                  <th className="p-3">Stage Progress</th>
                   <th className="p-3">KYC Status</th>
                   <th className="p-3">Inspection</th>
                   <th className="p-3">Payout</th>
@@ -268,6 +269,25 @@ export const LedgerTab: React.FC<LedgerTabProps> = ({
                           {b.bonusPercentage > 0 && (
                             <span className="block text-emerald-500 text-[9px] font-bold">+{b.bonusPercentage * 100}% Bonus</span>
                           )}
+                        </td>
+                        <td className="py-3 px-3">
+                          <div className="flex items-center gap-1">
+                            {[
+                              { step: 1, label: 'Booked', passed: true },
+                              { step: 2, label: 'Inspected', passed: b.inspectionStatus === 'approved' || b.payoutStatus === 'completed' },
+                              { step: 3, label: 'Paid Out', passed: b.payoutStatus === 'completed' },
+                            ].map((s) => (
+                              <span
+                                key={s.step}
+                                className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full text-[9px] font-bold font-mono flex items-center justify-center transition-all ${
+                                  s.passed ? 'bg-emerald-600 text-white shadow-xs' : 'bg-slate-200 text-slate-400'
+                                }`}
+                                title={`${s.step}. ${s.label}: ${s.passed ? 'Completed' : 'Pending'}`}
+                              >
+                                {s.passed ? '✓' : s.step}
+                              </span>
+                            ))}
+                          </div>
                         </td>
                         <td className="py-3 px-3">
                           {b.verificationStatus === 'verified' && (
@@ -451,70 +471,151 @@ export const LedgerTab: React.FC<LedgerTabProps> = ({
                 </div>
               </div>
 
-              {/* Admin Actions */}
-              <div className="border-t border-ice-border pt-4 space-y-3">
-                <span className="text-[9px] font-mono tracking-[0.15em] text-zinc-500 uppercase block font-bold">5. Administrative Controls</span>
-                <div className="space-y-2">
-                  <span className="text-[10px] text-zinc-500 font-mono block">Physical Doorstep Inspection:</span>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleInspectionChange(selectedBooking.id, 'approved')}
-                      disabled={selectedBooking.inspectionStatus === 'approved'}
-                      className={`py-2 px-3 text-xs font-bold rounded-sm border transition-all flex items-center justify-center gap-1.5 ${
-                        selectedBooking.inspectionStatus === 'approved'
-                          ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30 cursor-not-allowed opacity-90'
-                          : 'bg-canvas-white text-ink-navy border-ice-border hover:border-emerald-400 hover:text-emerald-500 hover:bg-emerald-500/5'
-                      }`}
-                    >
-                      <CheckCircle className="w-3.5 h-3.5" />
-                      Approve Match
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleInspectionChange(selectedBooking.id, 'rejected')}
-                      disabled={selectedBooking.inspectionStatus === 'rejected'}
-                      className={`py-2 px-3 text-xs font-bold rounded-sm border transition-all flex items-center justify-center gap-1.5 ${
-                        selectedBooking.inspectionStatus === 'rejected'
-                          ? 'bg-red-500/10 text-red-500 border-red-500/30 cursor-not-allowed opacity-90'
-                          : 'bg-canvas-white text-ink-navy border-ice-border hover:border-red-400 hover:text-red-500 hover:bg-red-500/5'
-                      }`}
-                    >
-                      <XCircle className="w-3.5 h-3.5" />
-                      Reject Match
-                    </button>
-                  </div>
-                </div>
-                <div className="space-y-2 pt-1">
-                  <span className="text-[10px] text-zinc-500 font-mono block">Financial Disbursement:</span>
-                  {currentUser && currentUser.role !== 'SUPER_ADMIN' && currentUser.role !== 'FINANCE_APPROVER' ? (
-                    <div className="p-2.5 bg-amber-500/10 border border-amber-500/20 rounded text-[10px] font-mono text-amber-600">
-                      🔒 Payout disbursement is restricted to Finance Approvers & Super Admins.
+              {/* Admin Actions: Role-Based Approval Workflow */}
+              {(() => {
+                const activeRole = currentUser?.role || 'SUPER_ADMIN';
+                const canApproveInspection = activeRole === 'SUPER_ADMIN' || activeRole === 'OPERATIONS_AGENT';
+                const canDisbursePayout = activeRole === 'SUPER_ADMIN' || activeRole === 'FINANCE_APPROVER';
+
+                return (
+                  <div className="border-t border-ice-border pt-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[9px] font-mono tracking-[0.15em] text-zinc-500 uppercase font-bold block">
+                        5. Role-Based Approval Workflow
+                      </span>
+                      <span className="text-[9px] font-mono text-cobalt font-bold px-2 py-0.5 bg-cobalt/10 rounded border border-cobalt/20">
+                        Active Role: {activeRole}
+                      </span>
                     </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => handlePayoutComplete(selectedBooking.id)}
-                      disabled={selectedBooking.inspectionStatus !== 'approved' || selectedBooking.payoutStatus === 'completed'}
-                      className={`w-full py-2.5 px-3 text-xs font-bold rounded-sm border transition-all flex items-center justify-center gap-2 ${
-                        selectedBooking.payoutStatus === 'completed'
-                          ? 'bg-emerald-600 border-emerald-600 text-white cursor-not-allowed'
-                          : selectedBooking.inspectionStatus !== 'approved'
-                          ? 'bg-canvas-white text-zinc-400 border-ice-border cursor-not-allowed opacity-50'
-                          : 'bg-cobalt hover:bg-cobalt-hover text-white border-cobalt hover:scale-[1.01]'
-                      }`}
-                    >
-                      <CreditCard className="w-4 h-4" />
-                      {selectedBooking.payoutStatus === 'completed' ? 'Payout Marked Completed ✓' : 'Disburse Instant Payout'}
-                    </button>
-                  )}
-                  {selectedBooking.inspectionStatus !== 'approved' && selectedBooking.payoutStatus !== 'completed' && (
-                    <span className="text-[9px] text-amber-500 block italic leading-tight mt-1 text-center font-mono">
-                      * Must approve doorstep inspect match before payout release.
-                    </span>
-                  )}
-                </div>
-              </div>
+
+                    {/* Stage 1: Booked */}
+                    <div className="p-3 bg-slate-50/50 dark:bg-zinc-900/50 border border-ice-border rounded-md space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-ink-navy flex items-center gap-1.5 font-outfit">
+                          <span className="w-5 h-5 rounded-full bg-emerald-500 text-white text-[10px] flex items-center justify-center font-mono font-bold">1</span>
+                          1. Booked (Trade-In Created)
+                        </span>
+                        <span className="text-[9px] font-mono font-bold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 uppercase">
+                          Confirmed
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-zinc-500 font-mono pl-6">
+                        Booked on {selectedBooking.dateCreated ? new Date(selectedBooking.dateCreated).toLocaleString('en-IN') : selectedBooking.pickupDate}
+                      </p>
+                    </div>
+
+                    {/* Stage 2: Inspected (Physical Doorstep Check) */}
+                    <div className="p-3 bg-slate-50/50 dark:bg-zinc-900/50 border border-ice-border rounded-md space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-ink-navy flex items-center gap-1.5 font-outfit">
+                          <span className={`w-5 h-5 rounded-full text-white text-[10px] flex items-center justify-center font-mono font-bold ${
+                            selectedBooking.inspectionStatus === 'approved' ? 'bg-emerald-500' : 'bg-slate-400'
+                          }`}>2</span>
+                          2. Inspected (Doorstep Audit)
+                        </span>
+                        <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded uppercase ${
+                          selectedBooking.inspectionStatus === 'approved' ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20' :
+                          selectedBooking.inspectionStatus === 'rejected' ? 'bg-red-500/10 text-red-500 border border-red-500/20' :
+                          'bg-amber-500/10 text-amber-600 border border-amber-500/20'
+                        }`}>
+                          {selectedBooking.inspectionStatus}
+                        </span>
+                      </div>
+
+                      {canApproveInspection ? (
+                        <div className="space-y-1.5 pl-6">
+                          <div className="grid grid-cols-2 gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleInspectionChange(selectedBooking.id, 'approved')}
+                              disabled={selectedBooking.inspectionStatus === 'approved' || selectedBooking.payoutStatus === 'completed'}
+                              className={`py-1.5 px-2 text-[11px] font-bold rounded border transition-all flex items-center justify-center gap-1.5 ${
+                                selectedBooking.inspectionStatus === 'approved'
+                                  ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30 cursor-not-allowed opacity-90'
+                                  : selectedBooking.payoutStatus === 'completed'
+                                  ? 'bg-canvas-white text-zinc-400 border-ice-border cursor-not-allowed opacity-50'
+                                  : 'bg-canvas-white text-ink-navy border-ice-border hover:border-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/5 cursor-pointer'
+                              }`}
+                            >
+                              <CheckCircle className="w-3.5 h-3.5" /> Approve Match
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleInspectionChange(selectedBooking.id, 'rejected')}
+                              disabled={selectedBooking.inspectionStatus === 'rejected' || selectedBooking.payoutStatus === 'completed'}
+                              className={`py-1.5 px-2 text-[11px] font-bold rounded border transition-all flex items-center justify-center gap-1.5 ${
+                                selectedBooking.inspectionStatus === 'rejected'
+                                  ? 'bg-red-500/10 text-red-500 border-red-500/30 cursor-not-allowed opacity-90'
+                                  : selectedBooking.payoutStatus === 'completed'
+                                  ? 'bg-canvas-white text-zinc-400 border-ice-border cursor-not-allowed opacity-50'
+                                  : 'bg-canvas-white text-ink-navy border-ice-border hover:border-red-500 hover:text-red-500 hover:bg-red-500/5 cursor-pointer'
+                              }`}
+                            >
+                              <XCircle className="w-3.5 h-3.5" /> Reject Match
+                            </button>
+                          </div>
+                          {selectedBooking.payoutStatus === 'completed' && (
+                            <span className="text-[9px] font-mono text-zinc-500 block italic leading-tight">
+                              🔒 Inspection status is locked after financial payout is completed.
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="pl-6 text-[10px] font-mono text-amber-600 bg-amber-500/10 p-2 rounded border border-amber-500/20">
+                          🔒 Inspection approval requires Operations Agent or Super Admin role.
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Stage 3: Paid Out (Financial Disbursement) */}
+                    <div className="p-3 bg-slate-50/50 dark:bg-zinc-900/50 border border-ice-border rounded-md space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-ink-navy flex items-center gap-1.5 font-outfit">
+                          <span className={`w-5 h-5 rounded-full text-white text-[10px] flex items-center justify-center font-mono font-bold ${
+                            selectedBooking.payoutStatus === 'completed' ? 'bg-emerald-500' : 'bg-slate-400'
+                          }`}>3</span>
+                          3. Paid Out (Instant Credit)
+                        </span>
+                        <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded uppercase ${
+                          selectedBooking.payoutStatus === 'completed' ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-600 border border-amber-500/20'
+                        }`}>
+                          {selectedBooking.payoutStatus}
+                        </span>
+                      </div>
+
+                      <div className="pl-6">
+                        {!canDisbursePayout ? (
+                          <div className="p-2.5 bg-amber-500/10 border border-amber-500/20 rounded text-[10px] font-mono text-amber-600">
+                            🔒 Payout disbursement is restricted to Finance Approvers & Super Admins.
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handlePayoutComplete(selectedBooking.id)}
+                            disabled={selectedBooking.inspectionStatus !== 'approved' || selectedBooking.payoutStatus === 'completed'}
+                            className={`w-full py-2 px-3 text-xs font-bold rounded-sm border transition-all flex items-center justify-center gap-2 ${
+                              selectedBooking.payoutStatus === 'completed'
+                                ? 'bg-emerald-600 border-emerald-600 text-white cursor-not-allowed'
+                                : selectedBooking.inspectionStatus !== 'approved'
+                                ? 'bg-canvas-white text-zinc-400 border-ice-border cursor-not-allowed opacity-50'
+                                : 'bg-cobalt hover:bg-cobalt-hover text-white border-cobalt shadow-sm cursor-pointer'
+                            }`}
+                          >
+                            <CreditCard className="w-4 h-4" />
+                            {selectedBooking.payoutStatus === 'completed' ? 'Payout Marked Completed ✓' : 'Disburse Instant Payout'}
+                          </button>
+                        )}
+                        {selectedBooking.inspectionStatus !== 'approved' && selectedBooking.payoutStatus !== 'completed' && (
+                          <span className="text-[9px] text-amber-600 block italic leading-tight mt-1 font-mono">
+                            * Doorstep inspection (Step 2) must be approved prior to payout release.
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                  </div>
+                );
+              })()}
             </motion.div>
           )}
         </AnimatePresence>

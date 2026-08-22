@@ -83,10 +83,9 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const getStatusStep = (status: { inspectionStatus: string; payoutStatus: string; verificationStatus?: string }) => {
-    if (status.payoutStatus === 'completed') return 4;
-    if (status.inspectionStatus === 'approved') return 3;
-    if (status.verificationStatus === 'verified') return 2;
+  const getStatusStep = (status: { inspectionStatus: string; payoutStatus: string }) => {
+    if (status.payoutStatus === 'completed') return 3;
+    if (status.inspectionStatus === 'approved') return 2;
     return 1;
   };
 
@@ -324,7 +323,6 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                             <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-zinc-200 -z-0" />
                             {[
                               { title: 'Booked', desc: 'Order confirmed' },
-                              { title: 'Verified', desc: 'Identity check' },
                               { title: 'Inspected', desc: 'Doorside audit' },
                               { title: 'Paid Out', desc: 'Funds transferred' },
                             ].map((s, idx) => {
