@@ -681,6 +681,7 @@ export default function App() {
   const [heroSearch, setHeroSearch] = useState('');
   const [heroSearchOpen, setHeroSearchOpen] = useState(false);
   const [pendingModelId, setPendingModelId] = useState<string | null>(null);
+  const [pendingBrandId, setPendingBrandId] = useState<string | null>(null);
   const heroSearchRef = useRef<HTMLDivElement>(null);
 
   const heroSearchResults = useMemo(() => {
@@ -828,11 +829,9 @@ export default function App() {
         currentPath={path}
         onNavigate={(p) => { handleReset(); navigate(p); }}
         onSelectBrand={(brandId) => {
-          const firstModelOfBrand = MODELS.find(m => m.brandId === brandId && !m.hidden);
-          if (firstModelOfBrand) {
-            setPendingModelId(firstModelOfBrand.id);
-          }
           handleReset();
+          setPendingModelId(null);
+          setPendingBrandId(brandId);
           setActiveStage('select');
           navigate('/smartphones');
         }}
@@ -934,6 +933,8 @@ export default function App() {
               </div>
               <DeviceSelector
                 onVariantSelected={handleVariantSelected}
+                defaultBrandId={pendingBrandId}
+                onDefaultBrandConsumed={() => setPendingBrandId(null)}
                 defaultModelId={pendingModelId}
                 onDefaultModelConsumed={() => setPendingModelId(null)}
                 brands={BRANDS}
@@ -964,10 +965,11 @@ export default function App() {
                       {orderedBrands.map(brand => (
                         <button
                           key={brand.id}
-                          onClick={() => { handleReset(); navigate('/smartphones'); setPendingModelId(null);
-                            // Select this brand in DeviceSelector via pendingModelId of first model
-                            const firstModel = MODELS.find(m => m.brandId === brand.id && !m.hidden);
-                            if (firstModel) setPendingModelId(firstModel.id);
+                          onClick={() => {
+                            handleReset();
+                            setPendingModelId(null);
+                            setPendingBrandId(brand.id);
+                            navigate('/smartphones');
                           }}
                           title={brand.name}
                           className="flex items-center justify-center px-2 py-3 rounded-xl bg-canvas-pure border border-ice-border hover:border-cobalt/50 hover:shadow-sm text-ink-slate hover:text-cobalt transition-all duration-200 cursor-pointer overflow-hidden"

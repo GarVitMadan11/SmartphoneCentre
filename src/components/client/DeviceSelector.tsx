@@ -635,6 +635,10 @@ export function BrandLogo({ logo, isActive }: { logo: string; isActive: boolean;
 
 interface DeviceSelectorProps {
   onVariantSelected: (model: Model, variant: Variant) => void;
+  /** When set, the selector will pre-select this brand tab without opening any model */
+  defaultBrandId?: string | null;
+  /** Called after defaultBrandId has been consumed so the parent can clear it */
+  onDefaultBrandConsumed?: () => void;
   /** When set, the selector will auto-open this model's variant panel */
   defaultModelId?: string | null;
   /** Called after defaultModelId has been consumed so the parent can clear it */
@@ -647,6 +651,8 @@ interface DeviceSelectorProps {
 
 export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
   onVariantSelected,
+  defaultBrandId,
+  onDefaultBrandConsumed,
   defaultModelId,
   onDefaultModelConsumed,
   brands: propBrands,
@@ -696,6 +702,18 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
     }, 150);
     return () => clearTimeout(timer);
   }, [searchQuery]);
+
+  // Handle external brand pre-selection (from homepage brand pills or nav menu)
+  useEffect(() => {
+    if (!defaultBrandId) return;
+    setSelectedBrandId(defaultBrandId);
+    setSelectedSeries(null);
+    setSelectedModel(null);
+    setSelectedStorage(null);
+    setTempVariant(null);
+    onDefaultBrandConsumed?.();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [defaultBrandId]);
 
   // Handle external model pre-selection (from hero search)
   useEffect(() => {
