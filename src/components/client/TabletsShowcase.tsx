@@ -34,9 +34,8 @@ export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
   }, [defaultBrand]);
 
   const tabletModelsList = useMemo(() => {
-    if (propModels && propModels.length > 0) {
-      const fromProps = propModels.filter(m => !m.hidden && isTabletDevice(m.brandId, m.name, m.id));
-      if (fromProps.length > 0) return fromProps;
+    if (propModels) {
+      return propModels.filter(m => !m.hidden && isTabletDevice(m.brandId, m.name, m.id));
     }
     return TABLET_MODELS.filter(m => !m.hidden);
   }, [propModels]);
@@ -162,7 +161,7 @@ export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
                   : 'bg-canvas-white text-ink-slate border border-ice-border hover:border-cobalt/30'
               }`}
             >
-              All Tablets ({TABLET_MODELS.length})
+              All Tablets ({tabletModelsList.length})
             </button>
             <button
               onClick={() => setSelectedBrand('apple')}
@@ -173,7 +172,7 @@ export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
               }`}
             >
               <span className="w-2 h-2 rounded-full bg-zinc-400" />
-              <span>Apple iPads</span>
+              <span>Apple iPads ({tabletModelsList.filter(m => m.brandId === 'brand-apple').length})</span>
             </button>
             <button
               onClick={() => setSelectedBrand('samsung')}
@@ -184,7 +183,7 @@ export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
               }`}
             >
               <span className="w-2 h-2 rounded-full bg-blue-400" />
-              <span>Samsung Galaxy Tabs</span>
+              <span>Samsung Galaxy Tabs ({tabletModelsList.filter(m => m.brandId === 'brand-samsung').length})</span>
             </button>
           </div>
 

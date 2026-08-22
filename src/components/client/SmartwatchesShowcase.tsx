@@ -32,9 +32,8 @@ export const SmartwatchesShowcase: React.FC<SmartwatchesShowcaseProps> = ({
   }, [defaultBrand]);
 
   const watchModelsList = useMemo(() => {
-    if (propModels && propModels.length > 0) {
-      const fromProps = propModels.filter(m => !m.hidden && isSmartwatchDevice(m.brandId, m.name, m.id));
-      if (fromProps.length > 0) return fromProps;
+    if (propModels) {
+      return propModels.filter(m => !m.hidden && isSmartwatchDevice(m.brandId, m.name, m.id));
     }
     return SMARTWATCH_MODELS.filter(m => !m.hidden);
   }, [propModels]);
