@@ -778,26 +778,34 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   {/* Flawless Option */}
                   {(() => {
                     const isAnyScreenSelected = selectedDefects.some(d => d.category === 'screen');
-                    const isSelected = !isAnyScreenSelected && screenConfirmed;
+                    const isSelected = screenConfirmed && !isAnyScreenSelected;
                     return (
                       <div
                         role="checkbox"
                         tabIndex={0}
                         aria-checked={isSelected}
                         onKeyDown={e => handleKeyDown(e, () => {
-                          setSelectedDefects(prev => prev.filter(d => d.category !== 'screen'));
-                          setScreenConfirmed(true);
+                          if (isSelected) {
+                            setScreenConfirmed(false);
+                          } else {
+                            setSelectedDefects(prev => prev.filter(d => d.category !== 'screen'));
+                            setScreenConfirmed(true);
+                          }
                         })}
                         onClick={() => {
-                          setSelectedDefects(prev => prev.filter(d => d.category !== 'screen'));
-                          setScreenConfirmed(true);
+                          if (isSelected) {
+                            setScreenConfirmed(false);
+                          } else {
+                            setSelectedDefects(prev => prev.filter(d => d.category !== 'screen'));
+                            setScreenConfirmed(true);
+                          }
                         }}
                         className={`p-3.5 rounded-xl border cursor-pointer transition-all duration-300 flex items-start gap-3.5 text-left focus:outline-none focus:ring-2 focus:ring-cobalt ${
                           isSelected
                             ? 'border-cobalt bg-cobalt-light/40 shadow-sm ring-1 ring-cobalt/30 scale-[1.01]'
-                            : !screenConfirmed
-                            ? 'border-ice-border bg-canvas-white hover:border-cobalt/40 hover:bg-slate-50/60'
-                            : 'border-ice-border bg-canvas-white opacity-50 hover:opacity-80'
+                            : isAnyScreenSelected
+                            ? 'border-ice-border bg-canvas-white opacity-40 hover:opacity-70'
+                            : 'border-ice-border bg-canvas-white hover:border-cobalt/40 hover:bg-slate-50/60'
                         }`}
                       >
                         <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-gradient-to-br from-emerald-500/15 to-teal-500/10 border border-emerald-500/25 flex items-center justify-center overflow-hidden shadow-xs">
@@ -817,9 +825,12 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   })()}
 
                   {/* Screen Defect Options */}
-                  {rules.filter(r => r.category === 'screen').map(defect => {
-                    const isSelected = selectedDefects.some(d => d.id === defect.id);
-                    return (
+                  {(() => {
+                    const isAnyScreenSelected = selectedDefects.some(d => d.category === 'screen');
+                    const isFlawlessSelected = screenConfirmed && !isAnyScreenSelected;
+                    return rules.filter(r => r.category === 'screen').map(defect => {
+                      const isSelected = selectedDefects.some(d => d.id === defect.id);
+                      return (
                       <div
                         key={defect.id}
                         role="checkbox"
@@ -834,7 +845,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                               ? 'defect-screen-cracked' 
                               : undefined
                           );
-                          setScreenConfirmed(true);
+                          setScreenConfirmed(false);
                         })}
                         onClick={() => {
                           handleToggleDefect(
@@ -845,14 +856,14 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                               ? 'defect-screen-cracked' 
                               : undefined
                           );
-                          setScreenConfirmed(true);
+                          setScreenConfirmed(false);
                         }}
                         className={`p-3.5 rounded-xl border cursor-pointer transition-all duration-300 flex items-start gap-3.5 text-left focus:outline-none focus:ring-2 focus:ring-cobalt ${
                           isSelected
                             ? 'border-cobalt bg-cobalt-light/40 shadow-sm ring-1 ring-cobalt/30 scale-[1.01]'
-                            : !screenConfirmed
-                            ? 'border-ice-border bg-canvas-white hover:border-cobalt/40 hover:bg-slate-50/60'
-                            : 'border-ice-border bg-canvas-white opacity-50 hover:opacity-80'
+                            : isFlawlessSelected
+                            ? 'border-ice-border bg-canvas-white opacity-40 hover:opacity-70'
+                            : 'border-ice-border bg-canvas-white hover:border-cobalt/40 hover:bg-slate-50/60'
                         }`}
                       >
                         <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-gradient-to-br from-rose-500/15 to-amber-500/10 border border-rose-500/20 flex items-center justify-center overflow-hidden shadow-xs">
@@ -874,7 +885,8 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         </div>
                       </div>
                     );
-                  })}
+                  });
+                })()}
                 </div>
               </motion.div>
             )}
@@ -897,26 +909,34 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   {/* Flawless Option */}
                   {(() => {
                     const isAnyBodySelected = selectedDefects.some(d => d.category === 'body');
-                    const isSelected = !isAnyBodySelected && bodyConfirmed;
+                    const isSelected = bodyConfirmed && !isAnyBodySelected;
                     return (
                       <div
                         role="checkbox"
                         tabIndex={0}
                         aria-checked={isSelected}
                         onKeyDown={e => handleKeyDown(e, () => {
-                          setSelectedDefects(prev => prev.filter(d => d.category !== 'body'));
-                          setBodyConfirmed(true);
+                          if (isSelected) {
+                            setBodyConfirmed(false);
+                          } else {
+                            setSelectedDefects(prev => prev.filter(d => d.category !== 'body'));
+                            setBodyConfirmed(true);
+                          }
                         })}
                         onClick={() => {
-                          setSelectedDefects(prev => prev.filter(d => d.category !== 'body'));
-                          setBodyConfirmed(true);
+                          if (isSelected) {
+                            setBodyConfirmed(false);
+                          } else {
+                            setSelectedDefects(prev => prev.filter(d => d.category !== 'body'));
+                            setBodyConfirmed(true);
+                          }
                         }}
                         className={`p-3.5 rounded-xl border cursor-pointer transition-all duration-300 flex items-start gap-3.5 text-left focus:outline-none focus:ring-2 focus:ring-cobalt ${
                           isSelected
                             ? 'border-cobalt bg-cobalt-light/40 shadow-sm ring-1 ring-cobalt/30 scale-[1.01]'
-                            : !bodyConfirmed
-                            ? 'border-ice-border bg-canvas-white hover:border-cobalt/40 hover:bg-slate-50/60'
-                            : 'border-ice-border bg-canvas-white opacity-50 hover:opacity-80'
+                            : isAnyBodySelected
+                            ? 'border-ice-border bg-canvas-white opacity-40 hover:opacity-70'
+                            : 'border-ice-border bg-canvas-white hover:border-cobalt/40 hover:bg-slate-50/60'
                         }`}
                       >
                         <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-gradient-to-br from-emerald-500/15 to-teal-500/10 border border-emerald-500/25 flex items-center justify-center overflow-hidden shadow-xs">
@@ -936,9 +956,12 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   })()}
 
                   {/* Body Rules */}
-                  {rules.filter(r => r.category === 'body').map(defect => {
-                    const isSelected = selectedDefects.some(d => d.id === defect.id);
-                    return (
+                  {(() => {
+                    const isAnyBodySelected = selectedDefects.some(d => d.category === 'body');
+                    const isFlawlessSelected = bodyConfirmed && !isAnyBodySelected;
+                    return rules.filter(r => r.category === 'body').map(defect => {
+                      const isSelected = selectedDefects.some(d => d.id === defect.id);
+                      return (
                       <div
                         key={defect.id}
                         role="checkbox"
@@ -953,7 +976,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                               ? 'defect-body-dented' 
                               : undefined
                           );
-                          setBodyConfirmed(true);
+                          setBodyConfirmed(false);
                         })}
                         onClick={() => {
                           handleToggleDefect(
@@ -964,14 +987,14 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                               ? 'defect-body-dented' 
                               : undefined
                           );
-                          setBodyConfirmed(true);
+                          setBodyConfirmed(false);
                         }}
                         className={`p-3.5 rounded-xl border cursor-pointer transition-all duration-300 flex items-start gap-3.5 text-left focus:outline-none focus:ring-2 focus:ring-cobalt ${
                           isSelected
                             ? 'border-cobalt bg-cobalt-light/40 shadow-sm ring-1 ring-cobalt/30 scale-[1.01]'
-                            : !bodyConfirmed
-                            ? 'border-ice-border bg-canvas-white hover:border-cobalt/40 hover:bg-slate-50/60'
-                            : 'border-ice-border bg-canvas-white opacity-50 hover:opacity-80'
+                            : isFlawlessSelected
+                            ? 'border-ice-border bg-canvas-white opacity-40 hover:opacity-70'
+                            : 'border-ice-border bg-canvas-white hover:border-cobalt/40 hover:bg-slate-50/60'
                         }`}
                       >
                         <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-gradient-to-br from-amber-500/15 to-orange-500/10 border border-amber-500/20 flex items-center justify-center overflow-hidden shadow-xs">
@@ -993,7 +1016,8 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         </div>
                       </div>
                     );
-                  })}
+                  });
+                })()}
                 </div>
               </motion.div>
             )}
@@ -1017,26 +1041,34 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   {(() => {
                     const ids = rules.filter(r => ['camera', 'functionality'].includes(r.category)).map(r => r.id);
                     const isAnySelected = selectedDefects.some(d => ids.includes(d.id));
-                    const isSelected = !isAnySelected && funcConfirmed;
+                    const isSelected = funcConfirmed && !isAnySelected;
                     return (
                       <div
                         role="checkbox"
                         tabIndex={0}
                         aria-checked={isSelected}
                         onKeyDown={e => handleKeyDown(e, () => {
-                          setSelectedDefects(prev => prev.filter(d => !ids.includes(d.id)));
-                          setFuncConfirmed(true);
+                          if (isSelected) {
+                            setFuncConfirmed(false);
+                          } else {
+                            setSelectedDefects(prev => prev.filter(d => !ids.includes(d.id)));
+                            setFuncConfirmed(true);
+                          }
                         })}
                         onClick={() => {
-                          setSelectedDefects(prev => prev.filter(d => !ids.includes(d.id)));
-                          setFuncConfirmed(true);
+                          if (isSelected) {
+                            setFuncConfirmed(false);
+                          } else {
+                            setSelectedDefects(prev => prev.filter(d => !ids.includes(d.id)));
+                            setFuncConfirmed(true);
+                          }
                         }}
                         className={`p-3.5 rounded-xl border cursor-pointer transition-all duration-300 flex items-start gap-3.5 text-left focus:outline-none focus:ring-2 focus:ring-cobalt ${
                           isSelected
                             ? 'border-cobalt bg-cobalt-light/40 shadow-sm ring-1 ring-cobalt/30 scale-[1.01]'
-                            : !funcConfirmed
-                            ? 'border-ice-border bg-canvas-white hover:border-cobalt/40 hover:bg-slate-50/60'
-                            : 'border-ice-border bg-canvas-white opacity-50 hover:opacity-80'
+                            : isAnySelected
+                            ? 'border-ice-border bg-canvas-white opacity-40 hover:opacity-70'
+                            : 'border-ice-border bg-canvas-white hover:border-cobalt/40 hover:bg-slate-50/60'
                         }`}
                       >
                         <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-gradient-to-br from-emerald-500/15 to-teal-500/10 border border-emerald-500/25 flex items-center justify-center overflow-hidden shadow-xs">
@@ -1058,9 +1090,13 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   })()}
 
                   {/* Hardware / functionality rules */}
-                  {rules.filter(r => ['camera', 'functionality'].includes(r.category)).map(defect => {
-                    const isSelected = selectedDefects.some(d => d.id === defect.id);
-                    return (
+                  {(() => {
+                    const ids = rules.filter(r => ['camera', 'functionality'].includes(r.category)).map(r => r.id);
+                    const isAnySelected = selectedDefects.some(d => ids.includes(d.id));
+                    const isAffirmativeSelected = funcConfirmed && !isAnySelected;
+                    return rules.filter(r => ['camera', 'functionality'].includes(r.category)).map(defect => {
+                      const isSelected = selectedDefects.some(d => d.id === defect.id);
+                      return (
                       <div
                         key={defect.id}
                         role="checkbox"
@@ -1068,18 +1104,18 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         aria-checked={isSelected}
                         onKeyDown={e => handleKeyDown(e, () => {
                           handleToggleDefect(defect);
-                          setFuncConfirmed(true);
+                          setFuncConfirmed(false);
                         })}
                         onClick={() => {
                           handleToggleDefect(defect);
-                          setFuncConfirmed(true);
+                          setFuncConfirmed(false);
                         }}
                         className={`p-3.5 rounded-xl border cursor-pointer transition-all duration-300 flex items-start gap-3.5 text-left focus:outline-none focus:ring-2 focus:ring-cobalt ${
                           isSelected
                             ? 'border-cobalt bg-cobalt-light/40 shadow-sm ring-1 ring-cobalt/30 scale-[1.01]'
-                            : !funcConfirmed
-                            ? 'border-ice-border bg-canvas-white hover:border-cobalt/40 hover:bg-slate-50/60'
-                            : 'border-ice-border bg-canvas-white opacity-50 hover:opacity-80'
+                            : isAffirmativeSelected
+                            ? 'border-ice-border bg-canvas-white opacity-40 hover:opacity-70'
+                            : 'border-ice-border bg-canvas-white hover:border-cobalt/40 hover:bg-slate-50/60'
                         }`}
                       >
                         <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-gradient-to-br from-blue-500/15 to-indigo-500/10 border border-blue-500/20 flex items-center justify-center overflow-hidden shadow-xs">
@@ -1101,7 +1137,8 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         </div>
                       </div>
                     );
-                  })}
+                  });
+                })()}
                 </div>
               </motion.div>
             )}
@@ -1125,26 +1162,34 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   {(() => {
                     const ids = rules.filter(r => r.category === 'connectivity').map(r => r.id);
                     const isAnySelected = selectedDefects.some(d => ids.includes(d.id));
-                    const isSelected = !isAnySelected && connectConfirmed;
+                    const isSelected = connectConfirmed && !isAnySelected;
                     return (
                       <div
                         role="checkbox"
                         tabIndex={0}
                         aria-checked={isSelected}
                         onKeyDown={e => handleKeyDown(e, () => {
-                          setSelectedDefects(prev => prev.filter(d => !ids.includes(d.id)));
-                          setConnectConfirmed(true);
+                          if (isSelected) {
+                            setConnectConfirmed(false);
+                          } else {
+                            setSelectedDefects(prev => prev.filter(d => !ids.includes(d.id)));
+                            setConnectConfirmed(true);
+                          }
                         })}
                         onClick={() => {
-                          setSelectedDefects(prev => prev.filter(d => !ids.includes(d.id)));
-                          setConnectConfirmed(true);
+                          if (isSelected) {
+                            setConnectConfirmed(false);
+                          } else {
+                            setSelectedDefects(prev => prev.filter(d => !ids.includes(d.id)));
+                            setConnectConfirmed(true);
+                          }
                         }}
                         className={`p-3.5 rounded-xl border cursor-pointer transition-all duration-300 flex items-start gap-3.5 text-left focus:outline-none focus:ring-2 focus:ring-cobalt ${
                           isSelected
                             ? 'border-cobalt bg-cobalt-light/40 shadow-sm ring-1 ring-cobalt/30 scale-[1.01]'
-                            : !connectConfirmed
-                            ? 'border-ice-border bg-canvas-white hover:border-cobalt/40 hover:bg-slate-50/60'
-                            : 'border-ice-border bg-canvas-white opacity-50 hover:opacity-80'
+                            : isAnySelected
+                            ? 'border-ice-border bg-canvas-white opacity-40 hover:opacity-70'
+                            : 'border-ice-border bg-canvas-white hover:border-cobalt/40 hover:bg-slate-50/60'
                         }`}
                       >
                         <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-gradient-to-br from-emerald-500/15 to-teal-500/10 border border-emerald-500/25 flex items-center justify-center stroke-emerald-600">
@@ -1166,9 +1211,13 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   })()}
 
                   {/* Connectivity & verification rules */}
-                  {rules.filter(r => r.category === 'connectivity').map(defect => {
-                    const isSelected = selectedDefects.some(d => d.id === defect.id);
-                    return (
+                  {(() => {
+                    const ids = rules.filter(r => r.category === 'connectivity').map(r => r.id);
+                    const isAnySelected = selectedDefects.some(d => ids.includes(d.id));
+                    const isAffirmativeSelected = connectConfirmed && !isAnySelected;
+                    return rules.filter(r => r.category === 'connectivity').map(defect => {
+                      const isSelected = selectedDefects.some(d => d.id === defect.id);
+                      return (
                       <div
                         key={defect.id}
                         role="checkbox"
@@ -1176,18 +1225,18 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         aria-checked={isSelected}
                         onKeyDown={e => handleKeyDown(e, () => {
                           handleToggleDefect(defect);
-                          setConnectConfirmed(true);
+                          setConnectConfirmed(false);
                         })}
                         onClick={() => {
                           handleToggleDefect(defect);
-                          setConnectConfirmed(true);
+                          setConnectConfirmed(false);
                         }}
                         className={`p-3.5 rounded-xl border cursor-pointer transition-all duration-300 flex items-start gap-3.5 text-left focus:outline-none focus:ring-2 focus:ring-cobalt ${
                           isSelected
                             ? 'border-cobalt bg-cobalt-light/40 shadow-sm ring-1 ring-cobalt/30 scale-[1.01]'
-                            : !connectConfirmed
-                            ? 'border-ice-border bg-canvas-white hover:border-cobalt/40 hover:bg-slate-50/60'
-                            : 'border-ice-border bg-canvas-white opacity-50 hover:opacity-80'
+                            : isAffirmativeSelected
+                            ? 'border-ice-border bg-canvas-white opacity-40 hover:opacity-70'
+                            : 'border-ice-border bg-canvas-white hover:border-cobalt/40 hover:bg-slate-50/60'
                         }`}
                       >
                         <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-gradient-to-br from-violet-500/15 to-purple-500/10 border border-violet-500/20 flex items-center justify-center overflow-hidden shadow-xs">
@@ -1209,7 +1258,8 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         </div>
                       </div>
                     );
-                  })}
+                  });
+                })()}
                 </div>
               </motion.div>
             )}
@@ -1233,26 +1283,34 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   {(() => {
                     const ids = rules.filter(r => r.category === 'accessories' && !r.isCriticalFailure).map(r => r.id);
                     const isAnySelected = selectedDefects.some(d => ids.includes(d.id));
-                    const isSelected = !isAnySelected && accConfirmed;
+                    const isSelected = accConfirmed && !isAnySelected;
                     return (
                       <div
                         role="checkbox"
                         tabIndex={0}
                         aria-checked={isSelected}
                         onKeyDown={e => handleKeyDown(e, () => {
-                          setSelectedDefects(prev => prev.filter(d => !ids.includes(d.id)));
-                          setAccConfirmed(true);
+                          if (isSelected) {
+                            setAccConfirmed(false);
+                          } else {
+                            setSelectedDefects(prev => prev.filter(d => !ids.includes(d.id)));
+                            setAccConfirmed(true);
+                          }
                         })}
                         onClick={() => {
-                          setSelectedDefects(prev => prev.filter(d => !ids.includes(d.id)));
-                          setAccConfirmed(true);
+                          if (isSelected) {
+                            setAccConfirmed(false);
+                          } else {
+                            setSelectedDefects(prev => prev.filter(d => !ids.includes(d.id)));
+                            setAccConfirmed(true);
+                          }
                         }}
                         className={`p-3.5 rounded-xl border cursor-pointer transition-all duration-300 flex items-start gap-3.5 text-left focus:outline-none focus:ring-2 focus:ring-cobalt ${
                           isSelected
                             ? 'border-cobalt bg-cobalt-light/40 shadow-sm ring-1 ring-cobalt/30 scale-[1.01]'
-                            : !accConfirmed
-                            ? 'border-ice-border bg-canvas-white hover:border-cobalt/40 hover:bg-slate-50/60'
-                            : 'border-ice-border bg-canvas-white opacity-50 hover:opacity-80'
+                            : isAnySelected
+                            ? 'border-ice-border bg-canvas-white opacity-40 hover:opacity-70'
+                            : 'border-ice-border bg-canvas-white hover:border-cobalt/40 hover:bg-slate-50/60'
                         }`}
                       >
                         <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-gradient-to-br from-emerald-500/15 to-teal-500/10 border border-emerald-500/25 flex items-center justify-center stroke-emerald-600">
@@ -1272,9 +1330,13 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   })()}
 
                   {/* Accessories options */}
-                  {rules.filter(r => r.category === 'accessories' && !r.isCriticalFailure).map(defect => {
-                    const isSelected = selectedDefects.some(d => d.id === defect.id);
-                    return (
+                  {(() => {
+                    const ids = rules.filter(r => r.category === 'accessories' && !r.isCriticalFailure).map(r => r.id);
+                    const isAnySelected = selectedDefects.some(d => ids.includes(d.id));
+                    const isAffirmativeSelected = accConfirmed && !isAnySelected;
+                    return rules.filter(r => r.category === 'accessories' && !r.isCriticalFailure).map(defect => {
+                      const isSelected = selectedDefects.some(d => d.id === defect.id);
+                      return (
                       <div
                         key={defect.id}
                         role="checkbox"
@@ -1282,18 +1344,18 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         aria-checked={isSelected}
                         onKeyDown={e => handleKeyDown(e, () => {
                           handleToggleDefect(defect);
-                          setAccConfirmed(true);
+                          setAccConfirmed(false);
                         })}
                         onClick={() => {
                           handleToggleDefect(defect);
-                          setAccConfirmed(true);
+                          setAccConfirmed(false);
                         }}
                         className={`p-3.5 rounded-xl border cursor-pointer transition-all duration-300 flex items-start gap-3.5 text-left focus:outline-none focus:ring-2 focus:ring-cobalt ${
                           isSelected
                             ? 'border-cobalt bg-cobalt-light/40 shadow-sm ring-1 ring-cobalt/30 scale-[1.01]'
-                            : !accConfirmed
-                            ? 'border-ice-border bg-canvas-white hover:border-cobalt/40 hover:bg-slate-50/60'
-                            : 'border-ice-border bg-canvas-white opacity-50 hover:opacity-80'
+                            : isAffirmativeSelected
+                            ? 'border-ice-border bg-canvas-white opacity-40 hover:opacity-70'
+                            : 'border-ice-border bg-canvas-white hover:border-cobalt/40 hover:bg-slate-50/60'
                         }`}
                       >
                         <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-gradient-to-br from-amber-500/15 to-orange-500/10 border border-amber-500/20 flex items-center justify-center overflow-hidden shadow-xs">
@@ -1315,7 +1377,8 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         </div>
                       </div>
                     );
-                  })}
+                  });
+                })()}
                 </div>
 
                 {/* Device Age & Warranty Status Section — Only for iPhone 15+ and recent eligible devices */}
