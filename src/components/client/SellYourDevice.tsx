@@ -6,70 +6,97 @@ import { ArrowRight, Smartphone, Tablet, ShieldCheck, Zap, Truck } from 'lucide-
 ───────────────────────────────────────────── */
 const FloatingComposition: React.FC = () => {
   return (
-    <div className="relative w-full min-h-[380px] sm:min-h-[440px] flex items-center justify-center p-2 sm:p-4">
+    <div className="relative w-full min-h-[440px] flex items-center justify-center p-2 sm:p-4">
       {/* Background ambient lighting glow */}
-      <div className="absolute inset-0 bg-gradient-to-tr from-cobalt/5 via-emerald-500/5 to-transparent rounded-3xl blur-3xl pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-tr from-cobalt/10 via-emerald-500/10 to-transparent rounded-3xl blur-3xl pointer-events-none" />
 
-      <div className="relative w-full max-w-lg flex flex-col sm:flex-row items-center justify-center gap-5 sm:gap-6">
+      <div className="relative w-full max-w-2xl flex flex-col sm:flex-row items-center justify-center gap-6">
         
-        {/* ── CARD 1: iPad Pro 13" (2D Premium Glass Card) ── */}
-        <div className="w-full sm:w-60 bg-white dark:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 rounded-2xl p-5 shadow-xl hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 relative group overflow-hidden">
-          <div className="absolute top-0 right-0 w-28 h-28 bg-emerald-500/5 rounded-full blur-xl pointer-events-none group-hover:bg-emerald-500/10 transition-all" />
+        {/* ── CARD 1: iPad Pro 13" ── */}
+        <div className="w-full sm:w-64 h-[420px] bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xl hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 relative group overflow-hidden flex flex-col justify-between">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none group-hover:bg-emerald-500/10 transition-all" />
           
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[9px] font-mono font-bold tracking-widest text-emerald-600 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded border border-emerald-200/60 dark:border-emerald-800/60 uppercase">
-              Tablet Valuation
-            </span>
-            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          </div>
-
-          <div className="text-left space-y-1">
-            <h4 className="text-sm font-extrabold text-ink-navy dark:text-white font-outfit">iPad Pro 13"</h4>
-            <p className="text-[11px] text-ink-slate font-mono">512GB &middot; M4 Chip</p>
-          </div>
-
-          <div className="my-4 pt-3 border-t border-slate-100 dark:border-zinc-800 flex items-baseline justify-between">
-            <span className="text-[10px] font-mono uppercase text-ink-muted">Up to Payout</span>
-            <span className="text-xl font-black text-emerald-600 dark:text-emerald-400 font-mono">₹72,000</span>
-          </div>
-
-          <div className="space-y-1.5">
-            <div className="flex justify-between text-[9px] font-mono text-zinc-400">
-              <span>Flawless Condition</span>
-              <span>100% Top Valuation</span>
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[9px] font-mono font-bold tracking-widest text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 uppercase">
+                Tablet Valuation
+              </span>
+              <span className="flex items-center gap-1 text-[9px] font-mono text-emerald-600 font-semibold">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live Quote
+              </span>
             </div>
-            <div className="w-full bg-slate-100 dark:bg-zinc-800 h-1.5 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full w-[90%]" />
+
+            {/* GSMArena Device Image */}
+            <div className="w-full h-36 flex items-center justify-center my-2 relative z-10">
+              <img
+                src="https://fdn2.gsmarena.com/vv/bigpic/apple-ipad-pro-13-2024.jpg"
+                alt="iPad Pro 13"
+                referrerPolicy="no-referrer"
+                className="max-h-full max-w-full object-contain filter drop-shadow-md group-hover:scale-105 transition-transform duration-300"
+              />
+            </div>
+
+            <div className="text-left space-y-0.5">
+              <h4 className="text-base font-extrabold text-slate-900 font-outfit">iPad Pro 13"</h4>
+              <p className="text-[11px] text-slate-500 font-mono">512GB &middot; M4 Chip</p>
+            </div>
+          </div>
+
+          <div>
+            <div className="my-3 pt-3 border-t border-slate-100 flex items-baseline justify-between">
+              <span className="text-[10px] font-mono uppercase text-slate-400 font-medium">Up To Payout</span>
+              <span className="text-2xl font-black text-emerald-600 font-mono">₹72,000</span>
+            </div>
+
+            <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between text-[10px] font-mono text-slate-600">
+              <span className="flex items-center gap-1.5 text-emerald-600 font-bold">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Doorstep Pickup
+              </span>
+              <span className="text-slate-500 font-medium">Top Valuation</span>
             </div>
           </div>
         </div>
 
-        {/* ── CARD 2: iPhone 16 Pro Max (2D Premium Glass Card) ── */}
-        <div className="w-full sm:w-64 bg-slate-900 text-white border border-slate-800 rounded-2xl p-5 shadow-2xl hover:shadow-[0_20px_40px_rgba(0,0,0,0.3)] hover:-translate-y-1.5 transition-all duration-300 relative group overflow-hidden sm:mt-8">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl pointer-events-none group-hover:bg-blue-500/20 transition-all" />
+        {/* ── CARD 2: iPhone 16 Pro Max ── */}
+        <div className="w-full sm:w-64 h-[420px] bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xl hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 relative group overflow-hidden flex flex-col justify-between">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl pointer-events-none group-hover:bg-blue-500/10 transition-all" />
           
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[9px] font-mono font-bold tracking-widest text-sky-400 bg-sky-950/60 px-2 py-0.5 rounded border border-sky-800/60 uppercase">
-              Rephonix Certified
-            </span>
-            <span className="text-[9px] font-mono text-zinc-400">NIST Wiped</span>
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[9px] font-mono font-bold tracking-widest text-slate-700 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 uppercase">
+                Rephonix Certified
+              </span>
+              <span className="text-[9px] font-mono text-slate-400 font-medium">NIST Wiped</span>
+            </div>
+
+            {/* GSMArena Device Image */}
+            <div className="w-full h-36 flex items-center justify-center my-2 relative z-10">
+              <img
+                src="https://fdn2.gsmarena.com/vv/bigpic/apple-iphone-16-pro-max.jpg"
+                alt="iPhone 16 Pro Max"
+                referrerPolicy="no-referrer"
+                className="max-h-full max-w-full object-contain filter drop-shadow-md group-hover:scale-105 transition-transform duration-300"
+              />
+            </div>
+
+            <div className="text-left space-y-0.5">
+              <h4 className="text-base font-extrabold text-slate-900 font-outfit">iPhone 16 Pro Max</h4>
+              <p className="text-[11px] text-slate-500 font-mono">256GB &middot; Excellent Grade</p>
+            </div>
           </div>
 
-          <div className="text-left space-y-1">
-            <h4 className="text-base font-extrabold text-white font-outfit">iPhone 16 Pro Max</h4>
-            <p className="text-[11px] text-zinc-400 font-mono">256GB &middot; Excellent Grade</p>
-          </div>
+          <div>
+            <div className="my-3 pt-3 border-t border-slate-100 flex items-baseline justify-between">
+              <span className="text-[10px] font-mono uppercase text-slate-400 font-medium">Estimated Valuation</span>
+              <span className="text-2xl font-black text-emerald-600 font-mono">₹89,000</span>
+            </div>
 
-          <div className="my-4 pt-3 border-t border-slate-800 flex items-baseline justify-between">
-            <span className="text-[10px] font-mono uppercase text-zinc-400">Estimated Valuation</span>
-            <span className="text-2xl font-black text-emerald-400 font-mono">₹89,000</span>
-          </div>
-
-          <div className="p-2.5 rounded-xl bg-slate-800/80 border border-slate-700/60 flex items-center justify-between text-[10px] font-mono text-zinc-300">
-            <span className="flex items-center gap-1.5 text-emerald-400 font-bold">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> Doorstep Pickup
-            </span>
-            <span className="text-zinc-400">Instant Credit</span>
+            <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between text-[10px] font-mono text-slate-600">
+              <span className="flex items-center gap-1.5 text-emerald-600 font-bold">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Doorstep Pickup
+              </span>
+              <span className="text-slate-500 font-medium">Instant Credit</span>
+            </div>
           </div>
         </div>
 

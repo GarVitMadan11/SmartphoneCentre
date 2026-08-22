@@ -1357,38 +1357,31 @@ export default function App() {
                         <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
                       </span>
                       <span className="text-[11px] font-mono font-bold tracking-widest text-emerald-400 uppercase">
-                        REAL-TIME PLATFORM METRICS
+                        PLATFORM METRICS
                       </span>
                     </div>
-                    <span className="text-[11px] text-slate-400 font-mono hidden sm:block">
-                      100% Aadhaar &amp; IMEI Verified System
-                    </span>
                   </div>
 
                   {/* 4 Metric Columns */}
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 relative z-10 text-center sm:text-left">
                     <div className="sm:border-r sm:border-white/10 sm:pr-4">
-                      <div className="text-3xl sm:text-4xl font-black text-white tracking-tight font-outfit">12,400+</div>
-                      <div className="text-xs font-bold text-blue-300 uppercase tracking-wider mt-1">Devices Processed</div>
-                      <div className="text-[11px] text-slate-400 font-mono mt-0.5">Across 45+ Indian Cities</div>
+                      <div className="text-3xl sm:text-4xl font-black text-white tracking-tight font-outfit">Delhi NCR</div>
+                      <div className="text-xs font-bold text-blue-300 uppercase tracking-wider mt-1">Exclusive Service Area</div>
                     </div>
 
                     <div className="lg:border-r lg:border-white/10 lg:pr-4">
-                      <div className="text-3xl sm:text-4xl font-black text-emerald-400 tracking-tight font-outfit">₹14 Cr+</div>
-                      <div className="text-xs font-bold text-emerald-300 uppercase tracking-wider mt-1">Paid to Customers</div>
-                      <div className="text-[11px] text-slate-400 font-mono mt-0.5">Direct Instant UPI Credit</div>
+                      <div className="text-3xl sm:text-4xl font-black text-emerald-400 tracking-tight font-outfit">₹1.8 Cr+</div>
+                      <div className="text-xs font-bold text-emerald-300 uppercase tracking-wider mt-1">Paid to Sellers</div>
                     </div>
 
                     <div className="sm:border-r sm:border-white/10 sm:pr-4">
-                      <div className="text-3xl sm:text-4xl font-black text-white tracking-tight font-outfit">99.4%</div>
-                      <div className="text-xs font-bold text-blue-300 uppercase tracking-wider mt-1">Quote Accuracy</div>
-                      <div className="text-[11px] text-slate-400 font-mono mt-0.5">Zero Doorstep Deduction</div>
+                      <div className="text-3xl sm:text-4xl font-black text-white tracking-tight font-outfit">98.5%</div>
+                      <div className="text-xs font-bold text-blue-300 uppercase tracking-wider mt-1">Quote Match Rate</div>
                     </div>
 
                     <div>
-                      <div className="text-3xl sm:text-4xl font-black text-amber-400 tracking-tight font-outfit">&lt;15 min</div>
-                      <div className="text-xs font-bold text-amber-300 uppercase tracking-wider mt-1">Avg. Pickup Time</div>
-                      <div className="text-[11px] text-slate-400 font-mono mt-0.5">Rapid Executive Dispatch</div>
+                      <div className="text-3xl sm:text-4xl font-black text-amber-400 tracking-tight font-outfit">Min 3 Days</div>
+                      <div className="text-xs font-bold text-amber-300 uppercase tracking-wider mt-1">Scheduled Pickup</div>
                     </div>
                   </div>
                 </div>
