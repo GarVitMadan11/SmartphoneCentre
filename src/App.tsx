@@ -5,6 +5,7 @@ import type { Model, Variant, DefectRule, Brand, Booking } from './data/mockData
 import { generateVariantsForModel, getDeviceImage, getDefectRulesForCategory, getMaxVariantPrice, isTabletDevice } from './data/mockDatabase';
 import { fetchBrands, fetchModels, fetchBookings as apiFetchBookings, fetchCurrentUser, customerLogout, hasAdminToken, syncFirebaseUser, ApiUser } from './utils/api';
 import { subscribeToFirebaseAuth, checkRedirectAuthResult } from './services/firebaseAuth';
+import { applyBrandOrder } from './utils/ordering';
 import { DeviceSelector, BrandLogo } from './components/client/DeviceSelector';
 import { DeviceCategoryShowcase } from './components/client/DeviceCategoryShowcase';
 import { SellYourDevice } from './components/client/SellYourDevice';
@@ -535,6 +536,18 @@ export default function App() {
   // catalogReady tracks when the async catalog chunk has resolved
   const catalogReadyRef = useRef(false);
 
+  const [orderVersion, setOrderVersion] = useState(0);
+
+  useEffect(() => {
+    const handleOrderChange = () => setOrderVersion(v => v + 1);
+    window.addEventListener('stc_catalog_order_changed', handleOrderChange);
+    return () => window.removeEventListener('stc_catalog_order_changed', handleOrderChange);
+  }, []);
+
+  const orderedBrands = useMemo(() => {
+    return applyBrandOrder(BRANDS);
+  }, [BRANDS, orderVersion]);
+
 
   const refreshCatalog = useCallback(async () => {
     try {
@@ -946,9 +959,9 @@ export default function App() {
                   </p>
 
                   {/* Brand Logo Quick-Select Pills — 5 cols × 2 rows */}
-                  {BRANDS.length > 0 && (
+                  {orderedBrands.length > 0 && (
                     <div className="grid grid-cols-5 gap-2 mb-5">
-                      {BRANDS.map(brand => (
+                      {orderedBrands.map(brand => (
                         <button
                           key={brand.id}
                           onClick={() => { handleReset(); navigate('/smartphones'); setPendingModelId(null);
@@ -959,7 +972,7 @@ export default function App() {
                           title={brand.name}
                           className="flex items-center justify-center px-2 py-3 rounded-xl bg-canvas-pure border border-ice-border hover:border-cobalt/50 hover:shadow-sm text-ink-slate hover:text-cobalt transition-all duration-200 cursor-pointer overflow-hidden"
                         >
-                          <BrandLogo logo={brand.logo} isActive={false} compact />
+                          <BrandLogo logo={brand.logo} isActive={false} />
                         </button>
                       ))}
                       <span className="flex items-center justify-center py-3 text-[11px] font-medium text-ink-muted/60 italic select-none">
