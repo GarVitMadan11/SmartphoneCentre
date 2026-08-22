@@ -14,7 +14,7 @@ import prisma from './db.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 import { adminAuth, requireRole, AuthenticatedRequest } from './middleware/adminAuth.js';
-import adminRouter from './routes/admin.js';
+import adminRouter, { logAdminAudit } from './routes/admin.js';
 import supportRouter from './routes/support.js';
 import { customerAuth, AuthenticatedCustomerRequest } from './middleware/customerAuth.js';
 import authRouter from './routes/auth.js';
@@ -426,6 +426,10 @@ app.post('/api/models', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITOR']
       res.status(400).json({ error: 'BadRequest', message: 'Missing required fields' });
       return;
     }
+    if (!Number.isFinite(Number(releaseYear)) || !Number.isFinite(Number(basePrice128GB)) || Number(basePrice128GB) <= 0) {
+      res.status(400).json({ error: 'BadRequest', message: 'releaseYear and basePrice128GB must be valid positive numbers.' });
+      return;
+    }
     if (!isValidImageUrl(imageUrl)) {
       res.status(400).json({ error: 'BadRequest', message: 'imageUrl must be a valid http(s) URL or base64 Data URL' });
       return;
@@ -452,6 +456,16 @@ app.post('/api/models', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITOR']
         hidden: Boolean(hidden),
         ...(({ supportedRamGb: ramStr, variantPrices: JSON.stringify(pricesObj) }) as any),
       },
+    });
+
+    logAdminAudit({
+      adminUserId: (req as AuthenticatedRequest).user?.sub,
+      action: 'create_model',
+      targetType: 'model',
+      targetId: model.legacyId,
+      payload: { name: model.name, category: model.category, basePrice128GB: model.basePrice128GB },
+      ipAddress: String(req.ip ?? ''),
+      userAgent: String(req.headers['user-agent'] ?? ''),
     });
 
     res.status(201).json({
@@ -558,6 +572,16 @@ app.post('/api/models/bulk-update', adminAuth, requireRole(['SUPER_ADMIN', 'CATA
       }
     }
 
+    logAdminAudit({
+      adminUserId: (req as AuthenticatedRequest).user?.sub,
+      action: 'bulk_update_models',
+      targetType: 'catalog',
+      targetId: 'multiple',
+      payload: { count: updatedCount, totalInBatch: updates.length },
+      ipAddress: String(req.ip ?? ''),
+      userAgent: String(req.headers['user-agent'] ?? ''),
+    });
+
     res.json({ success: true, updatedCount });
   } catch (err) {
     console.error('POST /api/models/bulk-update error:', err);
@@ -652,6 +676,16 @@ app.patch('/api/models/:legacyId', adminAuth, requireRole(['SUPER_ADMIN', 'CATAL
         }
       });
 
+      logAdminAudit({
+        adminUserId: (req as AuthenticatedRequest).user?.sub,
+        action: 'create_model',
+        targetType: 'model',
+        targetId: created.legacyId,
+        payload: { name: created.name },
+        ipAddress: String(req.ip ?? ''),
+        userAgent: String(req.headers['user-agent'] ?? ''),
+      });
+
       res.json({
         ...created,
         id: created.legacyId,
@@ -665,6 +699,16 @@ app.patch('/api/models/:legacyId', adminAuth, requireRole(['SUPER_ADMIN', 'CATAL
     const model = await prisma.model.update({
       where: { id: existing.id },
       data,
+    });
+
+    logAdminAudit({
+      adminUserId: (req as AuthenticatedRequest).user?.sub,
+      action: 'update_model',
+      targetType: 'model',
+      targetId: model.legacyId,
+      payload: { name: model.name, updatedFields: Object.keys(data) },
+      ipAddress: String(req.ip ?? ''),
+      userAgent: String(req.headers['user-agent'] ?? ''),
     });
 
     res.json({
@@ -689,6 +733,15 @@ app.delete('/api/models/:legacyId', adminAuth, requireRole(['SUPER_ADMIN', 'CATA
     });
     if (existing) {
       await prisma.model.delete({ where: { id: existing.id } });
+      logAdminAudit({
+        adminUserId: (req as AuthenticatedRequest).user?.sub,
+        action: 'delete_model',
+        targetType: 'model',
+        targetId: existing.legacyId,
+        payload: { name: existing.name },
+        ipAddress: String(req.ip ?? ''),
+        userAgent: String(req.headers['user-agent'] ?? ''),
+      });
     }
     res.json({ success: true });
   } catch (err) {
@@ -696,6 +749,7 @@ app.delete('/api/models/:legacyId', adminAuth, requireRole(['SUPER_ADMIN', 'CATA
     res.status(500).json({ error: 'ServerError', message: 'Failed to delete model.' });
   }
 });
+
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SERVER-AUTHORITATIVE PRICING QUOTE ENGINE
@@ -713,7 +767,9 @@ app.post('/api/quotes', async (req, res) => {
       return;
     }
 
-    const model = await prisma.model.findUnique({ where: { legacyId: modelId } });
+    const model = await prisma.model.findFirst({
+      where: { OR: [{ legacyId: modelId }, { id: modelId }] },
+    });
     if (!model || model.hidden) {
       res.status(404).json({ error: 'NotFound', message: 'Model not found in catalog or is unavailable for trade-in.' });
       return;

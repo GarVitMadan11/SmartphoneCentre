@@ -60,6 +60,24 @@ export default defineConfig({
     sourcemap: false,
     // Raise chunk size warning threshold slightly for framer-motion
     chunkSizeWarningLimit: 700,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          // Put the entire device catalog + phone images + prices into a dedicated chunk
+          if (id.includes('mockDatabase') || id.includes('phoneImages') || id.includes('actualPrices')) {
+            return 'catalog-data';
+          }
+          // Split framer-motion into its own chunk (heavy animation library)
+          if (id.includes('framer-motion')) {
+            return 'framer-motion';
+          }
+          // Split lucide icons into their own chunk
+          if (id.includes('lucide-react')) {
+            return 'lucide-icons';
+          }
+        },
+      },
+    },
   },
   define: {
     'import.meta.env.VITE_GOOGLE_CLIENT_ID': JSON.stringify(

@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-let dbUrl = (process.env.DATABASE_URL ?? '').trim().replace(/^['"]|['"]$/g, '');
+let dbUrl = (process.env.DATABASE_URL ?? '').trim().replace(/^['\"]|['\"]$/g, '');
 const isRenderEnv = Boolean(process.env.RENDER || process.env.RENDER_SERVICE_ID);
 
 if (!dbUrl) {
@@ -32,28 +32,54 @@ if (fs.existsSync(schemaPath)) {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────
-// DATABASE PUSH & SEED (Runs on Server Startup inside Render internal network)
-// ─────────────────────────────────────────────────────────────────────────
-try {
-  console.log('🔄 Executing Prisma DB Push...');
-  execSync('npx prisma db push --accept-data-loss', {
-    stdio: 'inherit',
-    env: process.env,
-  });
-  console.log('✅ Database schema in sync.');
+// ─────────────────────────────────────────────────────────────────────────────
+// DATABASE PUSH & CONDITIONAL SEED
+//
+// KEY FIX: The seed script runs only when the database is empty (first boot).
+// On every subsequent restart it is SKIPPED — this preserves all admin changes
+// made via the admin panel (model edits, price changes, hidden flags, etc.).
+//
+// Previously the seed ran on EVERY restart, overwriting live admin data.
+// ─────────────────────────────────────────────────────────────────────────────
+async function initDatabase() {
+  try {
+    console.log('🔄 Executing Prisma DB Push (schema sync only)...');
+    execSync('npx prisma db push --accept-data-loss', {
+      stdio: 'inherit',
+      env: process.env,
+    });
+    console.log('✅ Database schema in sync.');
 
-  console.log('🌱 Syncing catalog seed data...');
-  execSync('npx tsx prisma/seed.ts', {
-    stdio: 'inherit',
-    env: process.env,
-  });
-  console.log('✅ Catalog seed data synced.');
-} catch (err) {
-  console.error('⚠️ Database sync on startup notice:', (err && err.message) || err);
+    // Check if the database already has models (i.e. it has been seeded before)
+    const { PrismaClient } = await import('@prisma/client');
+    const prisma = new PrismaClient();
+    let modelCount = 0;
+    try {
+      modelCount = await prisma.model.count();
+    } finally {
+      await prisma.$disconnect();
+    }
+
+    if (modelCount === 0) {
+      // Fresh / empty database — run the seed to populate the initial catalog
+      console.log('🌱 Fresh database detected — running initial catalog seed...');
+      execSync('npx tsx prisma/seed.ts', {
+        stdio: 'inherit',
+        env: process.env,
+      });
+      console.log('✅ Initial catalog seed complete.');
+    } else {
+      // Data already exists — skip seed to preserve admin changes
+      console.log(`✅ Database has ${modelCount} models — skipping seed (admin changes preserved).`);
+    }
+  } catch (err) {
+    console.error('⚠️ Database init notice:', (err && err.message) || err);
+  }
 }
 
-// Start Express Application Server
+await initDatabase();
+
+// ─── Start Express Application Server ────────────────────────────────────────
 const serverProcess = spawn('node', ['dist/index.js'], {
   stdio: 'inherit',
   env: process.env,

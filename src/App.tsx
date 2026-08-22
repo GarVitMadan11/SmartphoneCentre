@@ -1,5 +1,8 @@
 import { useState, useEffect, useRef, useMemo, Suspense, useCallback, startTransition } from 'react';
-import { Model, Variant, DefectRule, MODELS as STATIC_MODELS, BRANDS as STATIC_BRANDS, generateVariantsForModel, INITIAL_BOOKINGS, Brand, Booking, TABLET_MODELS, getDeviceImage, getDefectRulesForCategory, getMaxVariantPrice } from './data/mockDatabase';
+// Types only — no heavy data arrays in this import (keeps initial bundle lean)
+import type { Model, Variant, DefectRule, Brand, Booking } from './data/mockDatabase';
+// Helper functions needed at startup — imported statically but lightweight
+import { generateVariantsForModel, getDeviceImage, getDefectRulesForCategory, getMaxVariantPrice, isTabletDevice } from './data/mockDatabase';
 import { fetchBrands, fetchModels, fetchBookings as apiFetchBookings, fetchCurrentUser, customerLogout, hasAdminToken, ApiUser } from './utils/api';
 import { DeviceSelector } from './components/client/DeviceSelector';
 import { DeviceCategoryShowcase } from './components/client/DeviceCategoryShowcase';
@@ -418,7 +421,7 @@ export default function App() {
   };
 
   const getPathForModel = (model: Model): string => {
-    if (TABLET_MODELS.some(m => m.id === model.id)) return '/tablets';
+    if (isTabletDevice(model.brandId, model.name, model.id)) return '/tablets';
     return '/smartphones';
   };
 
@@ -474,18 +477,26 @@ export default function App() {
     });
   }, [path, activeStage]);
 
-  // ── Dynamic data from API (falls back to static data) ─────────────────────
-  const [BRANDS, setBrands] = useState<Brand[]>(STATIC_BRANDS);
-  const [MODELS, setModels] = useState<Model[]>(STATIC_MODELS);
-  const [apiBookings, setApiBookings] = useState<Booking[]>(INITIAL_BOOKINGS);
+  // ── Dynamic data from API (falls back to static catalog data) ──────────────
+  // MODELS and BRANDS start empty — the catalog data module is loaded
+  // dynamically so it does not block the initial JS bundle parse.
+  const [BRANDS, setBrands] = useState<Brand[]>([]);
+  const [MODELS, setModels] = useState<Model[]>([]);
+  const [apiBookings, setApiBookings] = useState<Booking[]>([]);
+  // catalogReady tracks when the async catalog chunk has resolved
+  const catalogReadyRef = useRef(false);
+
 
   const refreshCatalog = useCallback(async () => {
     try {
-      const [brands, models] = await Promise.all([fetchBrands(), fetchModels()]);
-      if (brands.length > 0) setBrands(brands);
-      if (models.length > 0) setModels(models as Model[]);
+      const [brandsRes, modelsRes] = await Promise.allSettled([fetchBrands(), fetchModels()]);
+      if (brandsRes.status === 'fulfilled' && brandsRes.value.length > 0) {
+        setBrands(brandsRes.value);
+      }
+      if (modelsRes.status === 'fulfilled' && modelsRes.value.length > 0) {
+        setModels(modelsRes.value as Model[]);
+      }
     } catch {
-      // API not available — keep static data
       console.info('[App] API unavailable, using static catalog data');
     }
   }, []);
@@ -500,44 +511,42 @@ export default function App() {
     }
   }, []);
 
+  // ── Lazy-load the heavy catalog data module (deferred from initial bundle) ──
+  // Runs once on mount. The dynamic import pulls mockDatabase + phoneImages.json
+  // + actualPrices.json as a separate JS chunk, keeping Time-To-Interactive fast.
   useEffect(() => {
+    let cancelled = false;
+    import('./data/mockDatabase').then((db) => {
+      if (cancelled) return;
+      // Only use static data as fallback if the API didn't already populate state
+      setBrands(prev => prev.length === 0 ? db.BRANDS : prev);
+      setModels(prev => prev.length === 0 ? db.MODELS as Model[] : prev);
+      setApiBookings(prev => prev.length === 0 ? db.INITIAL_BOOKINGS : prev);
+      catalogReadyRef.current = true;
+    }).catch(() => {
+      console.warn('[App] Failed to load catalog data module');
+      catalogReadyRef.current = true;
+
+    });
+    // Also run API refresh in parallel
     refreshCatalog();
     refreshBookings();
+    return () => { cancelled = true; };
   }, [refreshCatalog, refreshBookings]);
 
   // ── Sensitive state — persisted across reload with 24h TTL ────────────────────────
-  const [selectedModel, setSelectedModel] = useState<Model | null>(() => {
-    const nav = savedNav.current;
-    if (nav?.selectedModelId) {
-      return STATIC_MODELS.find(m => m.id === nav.selectedModelId) || null;
-    }
-    return null;
-  });
+  // Note: STATIC_MODELS not available at startup (catalog loads dynamically).
+  // The useEffect below restores model state once catalog resolves.
+  const [selectedModel, setSelectedModel] = useState<Model | null>(null);
 
   const [selectedVariant, setSelectedVariant] = useState<Variant | null>(() => {
     const nav = savedNav.current;
     if (nav?.selectedVariant) return nav.selectedVariant;
-    if (nav?.selectedModelId) {
-      const model = STATIC_MODELS.find(m => m.id === nav.selectedModelId);
-      if (model) {
-        const variants = generateVariantsForModel(model);
-        return variants[0] || null;
-      }
-    }
     return null;
   });
 
-  const [selectedDefects, setSelectedDefects] = useState<DefectRule[]>(() => {
-    const nav = savedNav.current;
-    if (nav?.selectedModelId && nav?.selectedDefectIds && nav.selectedDefectIds.length > 0) {
-      const model = STATIC_MODELS.find(m => m.id === nav.selectedModelId);
-      if (model) {
-        const rules = getDefectRulesForCategory(model.category, model.brandId, model.name, model.id);
-        return rules.filter(r => nav.selectedDefectIds!.includes(r.id));
-      }
-    }
-    return [];
-  });
+  const [selectedDefects, setSelectedDefects] = useState<DefectRule[]>([]);
+
 
   const [finalPrice, setFinalPrice] = useState<number>(() => {
     const nav = savedNav.current;
@@ -546,12 +555,26 @@ export default function App() {
   });
 
   // Sync API models once catalog loads if model ID is valid
+  // Also restores selectedVariant and selectedDefects since the catalog now loads async.
   useEffect(() => {
     if (savedNav.current?.selectedModelId && MODELS.length > 0) {
-      const apiModel = MODELS.find(m => m.id === savedNav.current?.selectedModelId && !m.hidden);
+      const nav = savedNav.current;
+      const apiModel = MODELS.find(m => m.id === nav.selectedModelId && !m.hidden);
       if (apiModel) {
         setSelectedModel(apiModel);
-      } else if (MODELS.some(m => m.id === savedNav.current?.selectedModelId && m.hidden)) {
+        // Restore variant from saved nav
+        if (nav.selectedVariant) {
+          setSelectedVariant(nav.selectedVariant);
+        } else {
+          const variants = generateVariantsForModel(apiModel);
+          setSelectedVariant(variants[0] || null);
+        }
+        // Restore defects from saved nav
+        if (nav.selectedDefectIds && nav.selectedDefectIds.length > 0) {
+          const rules = getDefectRulesForCategory(apiModel.category, apiModel.brandId, apiModel.name, apiModel.id);
+          setSelectedDefects(rules.filter(r => nav.selectedDefectIds!.includes(r.id)));
+        }
+      } else if (MODELS.some(m => m.id === nav.selectedModelId && m.hidden)) {
         setSelectedModel(null);
         setSelectedVariant(null);
         setActiveStage('select');
@@ -602,7 +625,7 @@ export default function App() {
     const q = heroSearch.toLowerCase().trim();
 
     return MODELS.filter(m => {
-      const brand = STATIC_BRANDS.find(b => b.id === m.brandId);
+      const brand = BRANDS.find(b => b.id === m.brandId);
       const brandName = brand ? brand.name.toLowerCase() : '';
       const modelName = m.name.toLowerCase();
       const seriesName = m.series ? m.series.toLowerCase() : '';

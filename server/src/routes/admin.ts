@@ -317,4 +317,85 @@ router.get('/me', adminAuth, (req: AuthenticatedRequest, res: Response): void =>
   });
 });
 
+/**
+ * Helper function to create audit log records from any server context.
+ */
+export async function logAdminAudit(params: {
+  adminUserId?: string;
+  action: string;
+  targetType: string;
+  targetId: string;
+  payload?: Record<string, unknown> | string;
+  ipAddress?: string;
+  userAgent?: string;
+}) {
+  try {
+    const payloadStr = typeof params.payload === 'string' 
+      ? params.payload 
+      : JSON.stringify(params.payload ?? {});
+
+    await prisma.adminAuditLog.create({
+      data: {
+        adminUserId: params.adminUserId ?? 'system',
+        action: params.action,
+        targetType: params.targetType,
+        targetId: params.targetId,
+        payload: payloadStr,
+        ipAddress: params.ipAddress ?? '',
+        userAgent: params.userAgent ?? '',
+      },
+    });
+  } catch (err) {
+    console.error('Failed to log admin audit event:', err);
+  }
+}
+
+/**
+ * GET /api/admin/audit-logs
+ * Retrieves paginated audit logs for admin review.
+ */
+router.get('/audit-logs', adminAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const limit = Math.min(Math.max(parseInt(String(req.query.limit || '100'), 10), 1), 500);
+    const search = String(req.query.search || '').trim().toLowerCase();
+
+    const logs = await prisma.adminAuditLog.findMany({
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+    });
+
+    let filtered = logs;
+    if (search) {
+      filtered = logs.filter(l =>
+        l.action.toLowerCase().includes(search) ||
+        l.targetType.toLowerCase().includes(search) ||
+        l.targetId.toLowerCase().includes(search) ||
+        l.adminUserId.toLowerCase().includes(search) ||
+        l.payload.toLowerCase().includes(search)
+      );
+    }
+
+    res.json(filtered.map(l => {
+      let parsedPayload: Record<string, unknown> = {};
+      try { parsedPayload = JSON.parse(l.payload); } catch { parsedPayload = { raw: l.payload }; }
+
+      return {
+        id: l.id,
+        adminUserId: l.adminUserId,
+        action: l.action,
+        targetType: l.targetType,
+        targetId: l.targetId,
+        payload: parsedPayload,
+        ipAddress: l.ipAddress,
+        userAgent: l.userAgent,
+        createdAt: l.createdAt.toISOString(),
+      };
+    }));
+  } catch (err) {
+    console.error('GET /api/admin/audit-logs error:', err);
+    res.status(500).json({ error: 'ServerError', message: 'Failed to fetch audit logs.' });
+  }
+});
+
 export default router;
+

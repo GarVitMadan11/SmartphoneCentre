@@ -388,6 +388,7 @@ export interface ApiUser {
   emailVerified: boolean;
   hasGoogleLinked: boolean;
   hasPassword: boolean;
+  role?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -578,3 +579,24 @@ export function resetPasswordWithOtp(email: string, otp: string, newPassword: st
     body: JSON.stringify({ email, otp, newPassword }),
   });
 }
+
+export interface AuditLogItem {
+  id: string;
+  adminUserId: string;
+  action: string;
+  targetType: string;
+  targetId: string;
+  payload: Record<string, unknown>;
+  ipAddress: string;
+  userAgent: string;
+  createdAt: string;
+}
+
+export function fetchAuditLogs(search?: string, limit = 100): Promise<AuditLogItem[]> {
+  const query = new URLSearchParams();
+  if (search) query.append('search', search);
+  query.append('limit', String(limit));
+
+  return apiFetch<AuditLogItem[]>(`/admin/audit-logs?${query.toString()}`, undefined, true);
+}
+
