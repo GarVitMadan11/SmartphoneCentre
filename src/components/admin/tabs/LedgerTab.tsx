@@ -1,6 +1,6 @@
 import React from 'react';
 import { Booking } from '../../../data/mockDatabase';
-import { ApiUser } from '../../../utils/api';
+import { ApiUser, updateBooking } from '../../../utils/api';
 import {
   Search, Filter,
   CheckCircle, XCircle, Clock, CreditCard,
@@ -18,42 +18,104 @@ interface Metrics {
 export interface LedgerTabProps {
   bookings: Booking[];
   currentUser?: ApiUser | null;
-  metrics: Metrics;
-  filteredBookings: Booking[];
-  selectedBookingId: string | null;
-  setSelectedBookingId: (id: string | null) => void;
-  searchTerm: string;
-  setSearchTerm: (v: string) => void;
-  filterVerification: string;
-  setFilterVerification: (v: string) => void;
-  filterInspection: string;
-  setFilterInspection: (v: string) => void;
-  filterPayout: string;
-  setFilterPayout: (v: string) => void;
-  handleInspectionChange: (id: string, status: 'approved' | 'rejected') => Promise<void>;
-  handlePayoutComplete: (id: string) => Promise<void>;
-  formatPrice: (price: number) => string;
+  onRefresh?: () => void;
+  metrics?: Metrics;
+  filteredBookings?: Booking[];
+  selectedBookingId?: string | null;
+  setSelectedBookingId?: (id: string | null) => void;
+  searchTerm?: string;
+  setSearchTerm?: (v: string) => void;
+  filterVerification?: string;
+  setFilterVerification?: (v: string) => void;
+  filterInspection?: string;
+  setFilterInspection?: (v: string) => void;
+  filterPayout?: string;
+  setFilterPayout?: (v: string) => void;
+  handleInspectionChange?: (id: string, status: 'approved' | 'rejected') => Promise<void>;
+  handlePayoutComplete?: (id: string) => Promise<void>;
+  formatPrice?: (price: number) => string;
 }
 
 export const LedgerTab: React.FC<LedgerTabProps> = ({
   bookings,
   currentUser,
-  metrics,
-  filteredBookings,
-  selectedBookingId,
-  setSelectedBookingId,
-  searchTerm,
-  setSearchTerm,
-  filterVerification,
-  setFilterVerification,
-  filterInspection,
-  setFilterInspection,
-  filterPayout,
-  setFilterPayout,
-  handleInspectionChange,
-  handlePayoutComplete,
-  formatPrice,
+  onRefresh,
+  metrics: propsMetrics,
+  filteredBookings: propsFilteredBookings,
+  selectedBookingId: propsSelectedBookingId,
+  setSelectedBookingId: propsSetSelectedBookingId,
+  searchTerm: propsSearchTerm,
+  setSearchTerm: propsSetSearchTerm,
+  filterVerification: propsFilterVerification,
+  setFilterVerification: propsSetFilterVerification,
+  filterInspection: propsFilterInspection,
+  setFilterInspection: propsSetFilterInspection,
+  filterPayout: propsFilterPayout,
+  setFilterPayout: propsSetFilterPayout,
+  handleInspectionChange: propsHandleInspectionChange,
+  handlePayoutComplete: propsHandlePayoutComplete,
+  formatPrice: propsFormatPrice,
 }) => {
+  const [internalSearch, setInternalSearch] = React.useState('');
+  const [internalVerification, setInternalVerification] = React.useState('all');
+  const [internalInspection, setInternalInspection] = React.useState('all');
+  const [internalPayout, setInternalPayout] = React.useState('all');
+  const [internalSelectedId, setInternalSelectedId] = React.useState<string | null>(null);
+
+  const searchTerm = propsSearchTerm ?? internalSearch;
+  const setSearchTerm = propsSetSearchTerm ?? setInternalSearch;
+  const filterVerification = propsFilterVerification ?? internalVerification;
+  const setFilterVerification = propsSetFilterVerification ?? setInternalVerification;
+  const filterInspection = propsFilterInspection ?? internalInspection;
+  const setFilterInspection = propsSetFilterInspection ?? setInternalInspection;
+  const filterPayout = propsFilterPayout ?? internalPayout;
+  const setFilterPayout = propsSetFilterPayout ?? setInternalPayout;
+  const selectedBookingId = propsSelectedBookingId !== undefined ? propsSelectedBookingId : internalSelectedId;
+  const setSelectedBookingId = propsSetSelectedBookingId ?? setInternalSelectedId;
+
+  const formatPrice = propsFormatPrice ?? ((p: number) => `₹${p.toLocaleString('en-IN')}`);
+
+  const handleInspectionChange = propsHandleInspectionChange ?? (async (id: string, status: 'approved' | 'rejected') => {
+    await updateBooking(id, { inspectionStatus: status });
+    if (onRefresh) onRefresh();
+  });
+
+  const handlePayoutComplete = propsHandlePayoutComplete ?? (async (id: string) => {
+    await updateBooking(id, { payoutStatus: 'completed' });
+    if (onRefresh) onRefresh();
+  });
+
+  const metrics = React.useMemo(() => {
+    if (propsMetrics) return propsMetrics;
+    const completed = bookings.filter(b => b.payoutStatus === 'completed');
+    const totalPaidAmt = completed.reduce((sum, b) => sum + (b.finalPrice || 0), 0);
+    const pendingInspections = bookings.filter(b => b.inspectionStatus === 'pending').length;
+    const verified = bookings.filter(b => b.verificationStatus === 'verified').length;
+    return {
+      totalPaidAmt,
+      pendingInspections,
+      verificationRate: bookings.length ? Math.round((verified / bookings.length) * 100) : 100,
+      completedPayouts: completed.length,
+    };
+  }, [bookings, propsMetrics]);
+
+  const filteredBookings = React.useMemo(() => {
+    if (propsFilteredBookings) return propsFilteredBookings;
+    return bookings.filter(b => {
+      if (filterVerification !== 'all' && b.verificationStatus !== filterVerification) return false;
+      if (filterInspection !== 'all' && b.inspectionStatus !== filterInspection) return false;
+      if (filterPayout !== 'all' && b.payoutStatus !== filterPayout) return false;
+      if (searchTerm) {
+        const q = searchTerm.toLowerCase();
+        const matchId = b.id.toLowerCase().includes(q);
+        const matchName = b.customerName?.toLowerCase().includes(q);
+        const matchPhone = b.customerPhone?.toLowerCase().includes(q);
+        const matchModel = b.modelName?.toLowerCase().includes(q);
+        return matchId || matchName || matchPhone || matchModel;
+      }
+      return true;
+    });
+  }, [bookings, propsFilteredBookings, filterVerification, filterInspection, filterPayout, searchTerm]);
   const selectedBooking = bookings.find(b => b.id === selectedBookingId) || null;
 
   return (

@@ -5,20 +5,12 @@ import bcrypt from 'bcryptjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { BRANDS, MODELS, getDeviceImage } from '../../src/data/mockDatabase';
+import { BRANDS, MODELS, getDeviceImage, buildVariantPricesForModel, getModelSupportedStorage, getModelSupportedRam } from '../../src/data/mockDatabase';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-let actualPricesMap: Record<string, any> = {};
-try {
-  const actualPricesPath = path.resolve(__dirname, '../../src/data/actualPrices.json');
-  if (fs.existsSync(actualPricesPath)) {
-    actualPricesMap = JSON.parse(fs.readFileSync(actualPricesPath, 'utf8'));
-  }
-} catch (err) {
-  console.warn('Could not read actualPrices.json in seed script:', err);
-}
+
 
 
 const dbUrl = (process.env.DATABASE_URL || '').trim();
@@ -57,20 +49,16 @@ async function main() {
   console.log(`  ✓ ${BRANDS.length} brands ready`);
 
   // 2. Sync Models (Smartphones, Tablets, Smartwatches)
-  for (const m of MODELS) {
-    const storageArr = m.supportedStorageGb && m.supportedStorageGb.length > 0
-      ? m.supportedStorageGb
-      : [128, 256, 512];
-    const ramArr = m.supportedRamGb && m.supportedRamGb.length > 0
-      ? m.supportedRamGb
-      : [0];
-    const variantPricesObj = m.variantPrices || {};
-    const modelImageUrl = m.imageUrl || getDeviceImage(m) || '';
+  const chunkSize = 25;
+  for (let i = 0; i < MODELS.length; i += chunkSize) {
+    const chunk = MODELS.slice(i, i + chunkSize);
+    await Promise.all(chunk.map(async (m) => {
+      const storageArr = getModelSupportedStorage(m);
+      const ramArr = getModelSupportedRam(m);
+      const variantPricesObj = buildVariantPricesForModel(m);
+      const modelImageUrl = m.imageUrl || getDeviceImage(m) || '';
 
-    await prisma.model.upsert({
-      where: { legacyId: m.id },
-      create: {
-        legacyId: m.id,
+      const modelData = {
         brandId: m.brandId,
         name: m.name,
         category: m.category,
@@ -81,11 +69,24 @@ async function main() {
         supportedStorageGb: JSON.stringify(storageArr),
         supportedRamGb: JSON.stringify(ramArr),
         variantPrices: JSON.stringify(variantPricesObj),
-      },
-      update: {
-        imageUrl: modelImageUrl, // Sync latest GSMArena image URL
-      },
-    });
+      };
+
+      try {
+        await prisma.model.upsert({
+          where: { legacyId: m.id },
+          create: { legacyId: m.id, ...modelData },
+          update: modelData,
+        });
+      } catch (err) {
+        // Retry once after brief delay if DB connection reset
+        await new Promise(r => setTimeout(r, 200));
+        await prisma.model.upsert({
+          where: { legacyId: m.id },
+          create: { legacyId: m.id, ...modelData },
+          update: modelData,
+        });
+      }
+    }));
   }
   console.log(`  ✓ ${MODELS.length} catalog models synced`);
 

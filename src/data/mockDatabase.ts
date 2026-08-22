@@ -1458,7 +1458,17 @@ export const MODELS: Model[] = sortModelsByLaunchDesc([
   ...SMARTPHONE_MODELS,
   ...TABLET_MODELS_WITH_PRICES,
   ...SMARTWATCH_MODELS_WITH_PRICES,
-]);
+]).map(m => {
+  const supportedStorageGb = getModelSupportedStorage(m);
+  const supportedRamGb = getModelSupportedRam(m);
+  const variantPrices = buildVariantPricesForModel(m);
+  return {
+    ...m,
+    supportedStorageGb,
+    supportedRamGb,
+    variantPrices,
+  };
+});
 
 // Helper to get historically accurate colors for a model
 function getColorsForModel(model: Model): string[] {
@@ -1639,15 +1649,15 @@ export function getModelSupportedRam(model: Model): number[] {
   if (isSmartwatchDevice(model.brandId, model.name, model.id)) {
     return [2];
   }
+  if (model.supportedRamGb && Array.isArray(model.supportedRamGb) && model.supportedRamGb.length > 0) {
+    return model.supportedRamGb;
+  }
   const modelPrices = (actualPrices as Record<string, any>)[model.id];
   if (modelPrices && modelPrices.ourPrices && Object.keys(modelPrices.ourPrices).length > 0) {
     const rams = Array.from(new Set(
       Object.keys(modelPrices.ourPrices).map(k => Number(k.split('_')[0])).filter(r => !isNaN(r))
     )).sort((a, b) => a - b);
     if (rams.length > 0) return rams;
-  }
-  if (model.supportedRamGb && Array.isArray(model.supportedRamGb) && model.supportedRamGb.some(r => r > 0)) {
-    return model.supportedRamGb.filter(r => r > 0);
   }
   // Android Smartphones & Android Tablets defaults based on category
   if (model.category === 'flagship') return [8, 12, 16];
@@ -1666,16 +1676,12 @@ export function getModelSupportedStorage(model: Model): number[] {
     if (storages.length > 0) return storages;
   }
 
+  if (model.supportedStorageGb && Array.isArray(model.supportedStorageGb) && model.supportedStorageGb.length > 0) {
+    return [...model.supportedStorageGb].sort((a, b) => a - b);
+  }
+
   const nameLower = model.name.toLowerCase();
   const isProMaxOrUltra = nameLower.includes('pro max') || nameLower.includes('17 pro') || nameLower.includes('17 air') || nameLower.includes('ultra') || nameLower.includes('fold');
-
-  if (model.supportedStorageGb && Array.isArray(model.supportedStorageGb) && model.supportedStorageGb.length > 0) {
-    let list = model.supportedStorageGb;
-    if (isProMaxOrUltra) {
-      list = list.filter(gb => gb >= 256);
-    }
-    if (list.length > 0) return list;
-  }
 
   if (isProMaxOrUltra) {
     return nameLower.includes('17') || nameLower.includes('m4') ? [256, 512, 1024, 2048] : [256, 512, 1024];

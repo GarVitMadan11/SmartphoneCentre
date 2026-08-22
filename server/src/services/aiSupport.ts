@@ -92,9 +92,7 @@ async function generateAiResponse(
   let handoffReason = undefined;
   let intent = "general";
 
-  // Look back at full history to recall what phone was mentioned
-  const fullText = conversationHistory.map(h => h.content).join(' ') + ' ' + userMessage;
-  const historyLower = fullText.toLowerCase();
+
 
   // 1. Playful / Conversational Banter Handling
   if (lowerMsg.includes('i love you') || lowerMsg.includes('love u') || lowerMsg.includes('marry me')) {

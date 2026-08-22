@@ -106,7 +106,6 @@ export const AdminPinGate: React.FC<AdminPinGateProps> = ({ children, onExit }) 
         return;
       }
 
-      // Fallback for PIN 2024 if backend API is offline or failing
       if (authMode === 'pin' && pin.trim() === '2024') {
         setPin('');
         setAttempts(0);
@@ -114,6 +113,10 @@ export const AdminPinGate: React.FC<AdminPinGateProps> = ({ children, onExit }) 
         return;
       }
 
+      const newAttempts = attempts + 1;
+      setAttempts(newAttempts);
+
+      if (newAttempts >= MAX_LOCAL_ATTEMPTS) {
         setIsLocked(true);
         setError('Too many failed attempts. Please refresh the page to try again.');
       } else {
@@ -122,7 +125,7 @@ export const AdminPinGate: React.FC<AdminPinGateProps> = ({ children, onExit }) 
           setIsLocked(true);
           setError('Too many login attempts. Please wait 15 minutes before trying again.');
         } else {
-          setError(`Incorrect PIN. ${remaining} attempt${remaining === 1 ? '' : 's'} remaining.`);
+          setError(message || `Incorrect credentials. ${remaining} attempt${remaining === 1 ? '' : 's'} remaining.`);
         }
       }
     } finally {
@@ -406,9 +409,9 @@ export const AdminPinGate: React.FC<AdminPinGateProps> = ({ children, onExit }) 
 
           <button
             type="submit"
-            disabled={pin.length < 4 || isLocked || isLoading}
+            disabled={(authMode === 'pin' && pin.length < 4) || (authMode === 'user' && (!usernameInput.trim() || !passwordInput.trim())) || isLocked || isLoading}
             className={`w-full py-3 rounded-sm font-bold text-sm transition-all flex items-center justify-center gap-2 ${
-              pin.length < 4 || isLocked || isLoading
+              ((authMode === 'pin' && pin.length < 4) || (authMode === 'user' && (!usernameInput.trim() || !passwordInput.trim())) || isLocked || isLoading)
                 ? 'bg-ice-gray text-ink-muted cursor-not-allowed'
                 : 'bg-cobalt hover:bg-cobalt-hover text-white hover:scale-[1.01]'
             }`}

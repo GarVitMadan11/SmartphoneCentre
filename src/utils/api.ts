@@ -434,8 +434,12 @@ export function customerLogout(): Promise<{ success: boolean; message: string }>
   });
 }
 
-export function fetchCurrentUser(): Promise<{ user: ApiUser | null }> {
-  return apiFetch<{ user: ApiUser | null }>('/auth/me');
+export async function fetchCurrentUser(): Promise<{ user: ApiUser | null }> {
+  try {
+    return await apiFetch<{ user: ApiUser | null }>('/auth/me');
+  } catch {
+    return { user: null };
+  }
 }
 
 export function updateCustomerProfile(name: string, phone: string): Promise<{ user: ApiUser }> {

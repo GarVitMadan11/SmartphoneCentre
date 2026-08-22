@@ -132,3 +132,62 @@ export async function customerAuth(
     res.status(401).json({ error: 'Unauthorized', message: 'Invalid or expired token.' });
   }
 }
+
+/** Optional Customer Auth for session checks (/auth/me) — returns user: null gracefully without HTTP 401 when unauthenticated */
+export async function optionalCustomerAuth(
+  req: AuthenticatedCustomerRequest,
+  _res: Response,
+  next: NextFunction
+): Promise<void> {
+  const cookies = parseCookies(req);
+  const authHeader = req.headers['authorization'];
+  let token: string | undefined;
+
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.slice(7).trim();
+  } else if (cookies['rex_token']) {
+    token = cookies['rex_token'];
+  }
+
+  if (!token) {
+    req.customer = null;
+    return next();
+  }
+
+  const adminAuth = getAdminAuth();
+  if (adminAuth) {
+    try {
+      const decodedFirebase = await adminAuth.verifyIdToken(token);
+      if (decodedFirebase && decodedFirebase.uid) {
+        let user = await prisma.user.findUnique({ where: { id: decodedFirebase.uid } });
+        if (!user && decodedFirebase.email && decodedFirebase.email_verified === true) {
+          user = await prisma.user.findUnique({ where: { email: decodedFirebase.email.trim().toLowerCase() } });
+        }
+        if (user) {
+          req.userId = user.id;
+          req.customer = user;
+          return next();
+        }
+      }
+    } catch { /* ignore error, fallback to legacy */ }
+  }
+
+  try {
+    const decoded = jwt.verify(token, getJwtSecret(), {
+      issuer: JWT_ISSUER,
+      audience: CUSTOMER_JWT_AUDIENCE,
+    }) as CustomerPayload;
+
+    const user = await prisma.user.findUnique({ where: { id: decoded.sub } });
+    if (user) {
+      req.userId = user.id;
+      req.customer = user;
+    } else {
+      req.customer = null;
+    }
+  } catch {
+    req.customer = null;
+  }
+
+  next();
+}

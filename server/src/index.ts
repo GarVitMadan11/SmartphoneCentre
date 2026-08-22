@@ -24,7 +24,6 @@ import {
   PRICING_ENGINE_VERSION,
   QUOTE_TTL_MINUTES,
   generateQuoteSignature,
-  verifyQuoteSignature,
   DeviceCategory,
 } from './services/valuation.js';
 import {
@@ -192,7 +191,7 @@ const globalLimiter = rateLimit({
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: 50,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'TooManyRequests', message: 'Too many login attempts. Please wait 15 minutes.' },
@@ -237,9 +236,7 @@ const UPI_RE = /^[a-zA-Z0-9._-]{2,256}@[a-zA-Z][a-zA-Z0-9.-]{1,63}$/;
 const IFSC_RE = /^[A-Z]{4}0[A-Z0-9]{6}$/;
 const BANK_ACCOUNT_RE = /^\d{9,18}$/;
 
-function isFiniteNonNegativeNumber(value: unknown): value is number {
-  return typeof value === 'number' && Number.isFinite(value) && value >= 0;
-}
+
 
 export function isValidImageUrl(url?: string): boolean {
   if (!url || typeof url !== 'string') return true;
@@ -314,7 +311,7 @@ function payoutBonusFor(method: string, estimatedPrice: number): { percentage: n
 }
 
 // Prevent API response caching across all environments
-app.use('/api', (req, res, next) => {
+app.use('/api', (_req, res, next) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
@@ -915,7 +912,7 @@ function mapBooking(b: import('@prisma/client').Booking, includeUnmaskedPayout =
 }
 
 // Get all bookings — ADMIN ONLY (Masked by default, decrypted for Finance Approver / Super Admin)
-app.get('/api/bookings', adminAuth, async (req: AuthenticatedRequest, res) => {
+app.get('/api/bookings', adminAuth, requireRole(['SUPER_ADMIN', 'FINANCE_APPROVER', 'OPERATIONS_AGENT']), async (req: AuthenticatedRequest, res) => {
   try {
     const bookings = await prisma.booking.findMany({ orderBy: { createdAt: 'desc' } });
     const isFinanceAdmin = req.user?.role === 'SUPER_ADMIN' || req.user?.role === 'FINANCE_APPROVER';

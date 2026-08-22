@@ -4,8 +4,8 @@ import jwt from 'jsonwebtoken';
 import { randomBytes, createHash } from 'node:crypto';
 import { OAuth2Client } from 'google-auth-library';
 import prisma from '../db.js';
-import { getJwtSecret, JWT_ISSUER, parseCookies } from '../middleware/adminAuth.js';
-import { customerAuth, AuthenticatedCustomerRequest, CUSTOMER_JWT_AUDIENCE } from '../middleware/customerAuth.js';
+import { getJwtSecret, JWT_ISSUER } from '../middleware/adminAuth.js';
+import { customerAuth, optionalCustomerAuth, AuthenticatedCustomerRequest, CUSTOMER_JWT_AUDIENCE } from '../middleware/customerAuth.js';
 import {
   sendVerificationEmail,
   sendPasswordResetEmail,
@@ -380,14 +380,14 @@ router.post('/login', async (req, res) => {
 });
 
 // Logout
-router.post('/logout', (req, res) => {
+router.post('/logout', (_req, res) => {
   res.clearCookie('rex_token', { path: '/' });
   res.clearCookie('rex_csrf', { path: '/' });
   res.json({ success: true, message: 'Logged out successfully.' });
 });
 
-// Current User (supports both Firebase ID Token and Legacy Session)
-router.get('/me', customerAuth, async (req: AuthenticatedCustomerRequest, res) => {
+// Current User (supports both Firebase ID Token and Legacy Session; returns user: null gracefully if unauthenticated)
+router.get('/me', optionalCustomerAuth, async (req: AuthenticatedCustomerRequest, res) => {
   if (req.customer) {
     res.json({ user: sanitizeUser(req.customer) });
   } else {

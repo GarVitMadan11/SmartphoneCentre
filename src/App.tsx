@@ -360,11 +360,11 @@ export default function App() {
   useEffect(() => {
     fetchCurrentUser()
       .then(res => {
-        if (res.user) {
+        if (res?.user) {
           setCurrentUser(res.user);
         }
       })
-      .catch(err => console.warn('Customer session fetch error:', err));
+      .catch(() => { /* Guest visitor */ });
   }, []);
 
   // Restore pending booking flow if user logs in

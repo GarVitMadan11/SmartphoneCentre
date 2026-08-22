@@ -90,7 +90,7 @@ router.get('/chat/:id', adminAuth, requireRole(['SUPER_ADMIN', 'OPERATIONS_AGENT
 // ── Admin Routes (Protected) ─────────────────────────────────────────────
 
 // Get list of conversations
-router.get('/conversations', adminAuth, requireRole(['SUPER_ADMIN', 'OPERATIONS_AGENT']), async (req, res) => {
+router.get('/conversations', adminAuth, requireRole(['SUPER_ADMIN', 'OPERATIONS_AGENT']), async (_req, res) => {
   try {
     const conversations = await prisma.supportConversation.findMany({
       orderBy: { updatedAt: 'desc' },
