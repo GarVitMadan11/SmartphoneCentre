@@ -225,12 +225,41 @@ export interface ApiModel {
   hidden?: boolean;
 }
 
-export function fetchModels(brandId?: string): Promise<ApiModel[]> {
-  const qs = brandId ? `brandId=${encodeURIComponent(brandId)}&` : '';
-  return apiFetch<ApiModel[]>(`/models?${qs}_t=${Date.now()}`);
+export function getCachedModels(): ApiModel[] {
+  try {
+    const raw = localStorage.getItem('stc_cached_models');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch {}
+  return [];
 }
 
-export function createModel(data: {
+export function saveCachedModels(models: ApiModel[]): void {
+  try {
+    if (Array.isArray(models) && models.length > 0) {
+      localStorage.setItem('stc_cached_models', JSON.stringify(models));
+    }
+  } catch {}
+}
+
+export async function fetchModels(brandId?: string): Promise<ApiModel[]> {
+  const qs = brandId ? `brandId=${encodeURIComponent(brandId)}&` : '';
+  try {
+    const data = await apiFetch<ApiModel[]>(`/models?${qs}_t=${Date.now()}`);
+    if (!brandId && Array.isArray(data) && data.length > 0) {
+      saveCachedModels(data);
+    }
+    return data;
+  } catch (err) {
+    const cached = getCachedModels();
+    if (cached.length > 0) return cached;
+    throw err;
+  }
+}
+
+export async function createModel(data: {
   legacyId: string;
   brandId: string;
   name: string;
@@ -244,19 +273,52 @@ export function createModel(data: {
   variantPrices?: Record<string, number>;
   hidden?: boolean;
 }): Promise<ApiModel> {
-  return apiFetch<ApiModel>('/models', { method: 'POST', body: JSON.stringify(data) }, true);
+  const res = await apiFetch<ApiModel>('/models', { method: 'POST', body: JSON.stringify(data) }, true);
+  try {
+    const cached = getCachedModels();
+    saveCachedModels([res, ...cached]);
+  } catch {}
+  return res;
 }
 
-export function updateModel(legacyId: string, data: Partial<Omit<ApiModel, 'id' | 'brandId'>>): Promise<ApiModel> {
-  return apiFetch<ApiModel>(`/models/${encodeURIComponent(legacyId)}`, { method: 'PATCH', body: JSON.stringify(data) }, true);
+export async function updateModel(legacyId: string, data: Partial<Omit<ApiModel, 'id' | 'brandId'>>): Promise<ApiModel> {
+  const res = await apiFetch<ApiModel>(`/models/${encodeURIComponent(legacyId)}`, { method: 'PATCH', body: JSON.stringify(data) }, true);
+  try {
+    const cached = getCachedModels();
+    if (cached.length > 0) {
+      const idx = cached.findIndex(m => m.id === legacyId || (m as any).legacyId === legacyId);
+      if (idx !== -1) {
+        cached[idx] = { ...cached[idx], ...data, ...res };
+        saveCachedModels(cached);
+      }
+    }
+  } catch {}
+  return res;
 }
 
-export function bulkUpdateModels(updates: Array<{ id: string; changes: Partial<Omit<ApiModel, 'id' | 'brandId'>> }>): Promise<{ updatedCount: number }> {
-  return apiFetch<{ updatedCount: number }>('/models/bulk-update', { method: 'POST', body: JSON.stringify({ updates }) }, true);
+export async function bulkUpdateModels(updates: Array<{ id: string; changes: Partial<Omit<ApiModel, 'id' | 'brandId'>> }>): Promise<{ updatedCount: number }> {
+  const res = await apiFetch<{ updatedCount: number }>('/models/bulk-update', { method: 'POST', body: JSON.stringify({ updates }) }, true);
+  try {
+    const cached = getCachedModels();
+    if (cached.length > 0) {
+      const updateMap = new Map(updates.map(u => [u.id, u.changes]));
+      const updatedList = cached.map(m => {
+        const ch = updateMap.get(m.id) || updateMap.get((m as any).legacyId);
+        return ch ? { ...m, ...ch } : m;
+      });
+      saveCachedModels(updatedList);
+    }
+  } catch {}
+  return res;
 }
 
-export function deleteModel(legacyId: string): Promise<{ success: boolean }> {
-  return apiFetch<{ success: boolean }>(`/models/${encodeURIComponent(legacyId)}`, { method: 'DELETE' }, true);
+export async function deleteModel(legacyId: string): Promise<{ success: boolean }> {
+  const res = await apiFetch<{ success: boolean }>(`/models/${encodeURIComponent(legacyId)}`, { method: 'DELETE' }, true);
+  try {
+    const cached = getCachedModels();
+    saveCachedModels(cached.filter(m => m.id !== legacyId && (m as any).legacyId !== legacyId));
+  } catch {}
+  return res;
 }
 
 // ── Quotes & Valuations ───────────────────────────────────────────────────

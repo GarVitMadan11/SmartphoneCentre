@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useMemo, Suspense, useCallback, startTrans
 import type { Model, Variant, DefectRule, Brand, Booking } from './data/mockDatabase';
 // Helper functions needed at startup — imported statically but lightweight
 import { generateVariantsForModel, getDeviceImage, getDefectRulesForCategory, getMaxVariantPrice, isTabletDevice } from './data/mockDatabase';
-import { fetchBrands, fetchModels, fetchBookings as apiFetchBookings, fetchCurrentUser, customerLogout, hasAdminToken, syncFirebaseUser, ApiUser } from './utils/api';
+import { fetchBrands, fetchModels, getCachedModels, fetchBookings as apiFetchBookings, fetchCurrentUser, customerLogout, hasAdminToken, syncFirebaseUser, ApiUser } from './utils/api';
 import { subscribeToFirebaseAuth, checkRedirectAuthResult } from './services/firebaseAuth';
 import { applyBrandOrder } from './utils/ordering';
 import { DeviceSelector, BrandLogo } from './components/client/DeviceSelector';
@@ -531,7 +531,10 @@ export default function App() {
   // MODELS and BRANDS start empty — the catalog data module is loaded
   // dynamically so it does not block the initial JS bundle parse.
   const [BRANDS, setBrands] = useState<Brand[]>([]);
-  const [MODELS, setModels] = useState<Model[]>([]);
+  const [MODELS, setModels] = useState<Model[]>(() => {
+    const cached = getCachedModels();
+    return cached.length > 0 ? (cached as Model[]) : [];
+  });
   const [apiBookings, setApiBookings] = useState<Booking[]>([]);
   // catalogReady tracks when the async catalog chunk has resolved
   const catalogReadyRef = useRef(false);
@@ -582,7 +585,11 @@ export default function App() {
       if (cancelled) return;
       // Only use static data as fallback if the API didn't already populate state
       setBrands(prev => prev.length === 0 ? db.BRANDS : prev);
-      setModels(prev => prev.length === 0 ? db.MODELS as Model[] : prev);
+      setModels(prev => {
+        if (prev.length > 0) return prev;
+        const cached = getCachedModels();
+        return cached.length > 0 ? (cached as Model[]) : (db.MODELS as Model[]);
+      });
       setApiBookings(prev => prev.length === 0 ? db.INITIAL_BOOKINGS : prev);
       catalogReadyRef.current = true;
     }).catch(() => {
