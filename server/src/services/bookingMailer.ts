@@ -84,7 +84,7 @@ export async function sendBookingConfirmationEmail(booking: PDFBookingData, base
   const htmlBody = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
       <div style="background-color: #1e3a8a; padding: 24px; text-align: center;">
-        <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: bold;">SmartphoneCentre</h1>
+        <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: bold;">Rephonix</h1>
         <p style="color: #93c5fd; margin: 6px 0 0 0; font-size: 13px; text-transform: uppercase; tracking-spacing: 1px;">Trade-In Booking Quotation Receipt</p>
       </div>
 
@@ -132,14 +132,14 @@ export async function sendBookingConfirmationEmail(booking: PDFBookingData, base
       </div>
 
       <div style="background-color: #f1f5f9; padding: 16px; text-align: center; font-size: 12px; color: #64748b; border-top: 1px solid #e2e8f0;">
-        <p style="margin: 0;">SmartphoneCentre — Secure Smartphone Trade-In Network</p>
+        <p style="margin: 0;">Rephonix — Secure Smartphone Trade-In Network</p>
       </div>
     </div>
   `;
 
   try {
     await transporter.sendMail({
-      from: `"SmartphoneCentre" <${process.env.SMTP_USER || process.env.EMAIL_USER || 'no-reply@smartphonecentre.com'}>`,
+      from: `"Rephonix" <${process.env.SMTP_USER || process.env.EMAIL_USER || 'no-reply@rephonix.in'}>`,
       to: recipientEmail,
       subject: `[Trade-In Confirmed] Quotation Receipt #${booking.id} - ${booking.modelName}`,
       html: htmlBody,

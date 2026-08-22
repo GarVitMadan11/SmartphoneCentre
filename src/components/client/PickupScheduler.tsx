@@ -1209,19 +1209,11 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
               <span className="font-medium">Our pickup agent will call you before arrival. Please keep your device unlocked and charged.</span>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3 w-full">
-              <button
-                type="button"
-                onClick={() => downloadBookingPdf(confirmationId)}
-                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 rounded-sm font-bold transition-all text-sm flex items-center justify-center gap-2 shadow-sm cursor-pointer"
-                style={{ minHeight: '48px' }}
-              >
-                📄 Download Official PDF Quotation
-              </button>
+            <div className="w-full">
               <button
                 type="button"
                 onClick={onSuccess}
-                className="flex-1 bg-cobalt hover:bg-cobalt-hover text-white py-3.5 rounded-sm font-bold transition-all text-sm"
+                className="w-full bg-cobalt hover:bg-cobalt-hover text-white py-3.5 rounded-sm font-bold transition-all text-sm shadow-md cursor-pointer"
                 style={{ minHeight: '48px' }}
               >
                 Return to Catalog Homepage

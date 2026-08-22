@@ -70,7 +70,10 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onShowToast }) => {
               </div>
               <div>
                 <span className="text-[10px] font-mono tracking-wider text-ink-muted uppercase block">Call Support</span>
-                <a href="tel:+919876543210" className="text-sm font-semibold text-ink-navy hover:text-cobalt transition-colors">+91 98765 43210</a>
+                <div className="flex flex-col gap-1">
+                  <a href="tel:+919034997719" className="text-sm font-semibold text-ink-navy hover:text-cobalt transition-colors">+91 90349 97719</a>
+                  <a href="tel:+919996534193" className="text-sm font-semibold text-ink-navy hover:text-cobalt transition-colors">+91 99965 34193</a>
+                </div>
               </div>
             </div>
 

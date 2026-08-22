@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Search, CheckCircle2, Clock, AlertCircle, Package, Calendar, MapPin, Copy, Check } from 'lucide-react';
+import { X, Search, CheckCircle2, Clock, AlertCircle, Package, Calendar, MapPin, Copy, Check, FileText, Download } from 'lucide-react';
 import { trackBookingOrder, fetchMyBookings, downloadBookingPdf, ApiTrackBooking, ApiBooking, ApiUser } from '../../utils/api';
 import { getDeviceImage, Model } from '../../data/mockDatabase';
 
@@ -8,15 +8,17 @@ interface OrderTrackingModalProps {
   onClose: () => void;
   currentUser?: ApiUser | null;
   models?: Model[];
+  initialTab?: 'my_bookings' | 'track_search' | 'invoices';
 }
 
 export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
   isOpen,
   onClose,
   currentUser,
-  models = []
+  models = [],
+  initialTab = 'my_bookings',
 }) => {
-  const [activeTab, setActiveTab] = useState<'my_bookings' | 'track_search'>('my_bookings');
+  const [activeTab, setActiveTab] = useState<'my_bookings' | 'track_search' | 'invoices'>(initialTab);
   
   // My Bookings list state
   const [myBookings, setMyBookings] = useState<ApiBooking[]>([]);
@@ -34,13 +36,13 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       if (currentUser) {
-        setActiveTab('my_bookings');
+        setActiveTab(initialTab || 'my_bookings');
         loadCustomerBookings();
       } else {
         setActiveTab('track_search');
       }
     }
-  }, [isOpen, currentUser]);
+  }, [isOpen, currentUser, initialTab]);
 
   const loadCustomerBookings = async () => {
     setFetchingMyBookings(true);
@@ -137,26 +139,41 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
           </div>
 
           {/* Navigation Tabs */}
-          <div className="flex border-b border-ice-border/60 -mb-4 pt-1 gap-4 text-xs font-semibold">
+          <div className="flex border-b border-ice-border/60 -mb-4 pt-1 gap-4 text-xs font-semibold overflow-x-auto">
             {currentUser && (
-              <button
-                type="button"
-                onClick={() => setActiveTab('my_bookings')}
-                className={`pb-3 border-b-2 flex items-center gap-2 transition-all ${
-                  activeTab === 'my_bookings'
-                    ? 'border-cobalt text-cobalt font-bold'
-                    : 'border-transparent text-ink-muted hover:text-ink-navy'
-                }`}
-              >
-                <Package className="w-4 h-4" />
-                <span>My Bookings ({myBookings.length})</span>
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('my_bookings')}
+                  className={`pb-3 border-b-2 flex items-center gap-2 transition-all shrink-0 ${
+                    activeTab === 'my_bookings'
+                      ? 'border-cobalt text-cobalt font-bold'
+                      : 'border-transparent text-ink-muted hover:text-ink-navy'
+                  }`}
+                >
+                  <Package className="w-4 h-4" />
+                  <span>My Bookings ({myBookings.length})</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('invoices')}
+                  className={`pb-3 border-b-2 flex items-center gap-2 transition-all shrink-0 ${
+                    activeTab === 'invoices'
+                      ? 'border-cobalt text-cobalt font-bold'
+                      : 'border-transparent text-ink-muted hover:text-ink-navy'
+                  }`}
+                >
+                  <FileText className="w-4 h-4 text-emerald-600" />
+                  <span>Invoices &amp; Receipts</span>
+                </button>
+              </>
             )}
 
             <button
               type="button"
               onClick={() => setActiveTab('track_search')}
-              className={`pb-3 border-b-2 flex items-center gap-2 transition-all ${
+              className={`pb-3 border-b-2 flex items-center gap-2 transition-all shrink-0 ${
                 activeTab === 'track_search'
                   ? 'border-cobalt text-cobalt font-bold'
                   : 'border-transparent text-ink-muted hover:text-ink-navy'
@@ -299,15 +316,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                           </div>
                         </div>
 
-                        <div className="flex justify-end pt-1">
-                          <button
-                            type="button"
-                            onClick={() => downloadBookingPdf(b.id)}
-                            className="inline-flex items-center gap-1.5 text-xs font-semibold text-cobalt hover:text-cobalt-hover hover:underline bg-cobalt/10 px-3 py-1.5 rounded-md border border-cobalt/20 transition-all cursor-pointer"
-                          >
-                            📄 Download PDF Quotation
-                          </button>
-                        </div>
+
 
                         {/* Status Progression Stepper */}
                         <div className="pt-2">
@@ -345,7 +354,82 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
             </div>
           )}
 
-          {/* TAB 2: Track Search Form */}
+          {/* TAB 3: Invoices & Receipts List */}
+          {activeTab === 'invoices' && (
+            <div className="space-y-4 animate-fadeIn">
+              {fetchingMyBookings ? (
+                <div className="py-12 text-center text-ink-muted space-y-3">
+                  <div className="w-7 h-7 border-2 border-cobalt border-t-transparent rounded-full animate-spin mx-auto" />
+                  <p className="text-xs font-medium">Loading tax invoices &amp; receipts...</p>
+                </div>
+              ) : myBookings.length === 0 ? (
+                <div className="py-12 text-center bg-zinc-50 rounded-2xl border border-ice-border p-6 space-y-3">
+                  <FileText className="w-10 h-10 text-slate-300 mx-auto" />
+                  <h4 className="font-bold text-ink-navy text-sm">No Invoices Available Yet</h4>
+                  <p className="text-xs text-ink-muted max-w-sm mx-auto">
+                    Invoices and official sale receipts will appear here once you place a trade-in pickup order.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {myBookings.map((b) => {
+                    const formattedPrice = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(b.finalPrice);
+                    return (
+                      <div key={b.id} className="bg-canvas-pure border border-ice-border rounded-2xl p-4 sm:p-5 shadow-xs hover:shadow-md transition-shadow space-y-4 text-left">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-ice-border/60 pb-3">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center font-black text-xs">
+                              TAX
+                            </div>
+                            <div>
+                              <h4 className="font-extrabold text-sm text-ink-navy tracking-tight">OFFICIAL TAX INVOICE</h4>
+                              <span className="text-[11px] font-mono text-ink-muted">Invoice No: INV-{b.id}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200 uppercase tracking-wider">
+                              {b.status || 'CONFIRMED'}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                          <div>
+                            <span className="text-[10px] font-mono text-ink-muted uppercase block">Device Details</span>
+                            <span className="font-bold text-ink-navy">{b.modelName} ({b.storageGb}GB)</span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] font-mono text-ink-muted uppercase block">Booking Date</span>
+                            <span className="font-semibold text-slate-700">{new Date(b.dateCreated).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] font-mono text-ink-muted uppercase block">Customer Name</span>
+                            <span className="font-semibold text-slate-700">{b.customerName}</span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] font-mono text-ink-muted uppercase block">Final Agreed Payout</span>
+                            <span className="font-black text-emerald-600 font-mono text-sm">{formattedPrice}</span>
+                          </div>
+                        </div>
+
+                        <div className="pt-3 border-t border-ice-border/60 flex items-center justify-between gap-3">
+                          <span className="text-[11px] text-slate-400 font-mono hidden sm:inline">100% GST &amp; Aadhaar Compliant Receipt</span>
+                          <button
+                            type="button"
+                            onClick={() => downloadBookingPdf(b.id)}
+                            className="w-full sm:w-auto px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                          >
+                            <Download className="w-3.5 h-3.5" />
+                            <span>Download Tax Invoice (PDF)</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
           {activeTab === 'track_search' && (
             <div className="space-y-6 animate-fadeIn">
               <form onSubmit={handleTrack} className="space-y-4">

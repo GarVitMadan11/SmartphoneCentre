@@ -36,7 +36,7 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onBack }) => {
             1. Field-Level Payout Encryption & Security
           </h2>
           <p>
-            SmartphoneCentre employs field-level <strong>AES-256-GCM encryption</strong> for all sensitive financial identifiers, including bank account numbers, IFSC codes, and UPI handles. Payout details are encrypted prior to database storage and are never logged or stored in plaintext.
+            Rephonix employs field-level <strong>AES-256-GCM encryption</strong> for all sensitive financial identifiers, including bank account numbers, IFSC codes, and UPI handles. Payout details are encrypted prior to database storage and are never logged or stored in plaintext.
           </p>
         </section>
 
@@ -76,8 +76,8 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onBack }) => {
             If you have questions regarding this Privacy Policy or wish to exercise your data rights, please contact our Compliance Officer:
           </p>
           <div className="p-4 bg-white rounded-lg border border-ice-border font-mono text-xs space-y-1">
-            <p><strong>Email:</strong> privacy@smartphonecentre.com</p>
-            <p><strong>Grievance Office:</strong> SmartphoneCentre Regulatory & Legal Dept, HSR Layout, Sector 4, Bengaluru - 560102</p>
+            <p><strong>Email:</strong> privacy@rephonix.in</p>
+            <p><strong>Grievance Office:</strong> Rephonix Regulatory & Legal Dept, HSR Layout, Sector 4, Bengaluru - 560102</p>
           </div>
         </section>
       </div>

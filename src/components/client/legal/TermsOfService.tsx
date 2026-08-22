@@ -36,7 +36,7 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ onBack }) => {
             1. Valuation & Server-Authoritative Pricing
           </h2>
           <p>
-            All trade-in quotes generated on SmartphoneCentre are calculated by our versioned server pricing engine based on catalog specifications and declared defect parameters. Initial estimated valuations are valid for 30 minutes or until physical doorstep inspection. Final payout amounts are subject to physical verification by an authorized agent.
+            All trade-in quotes generated on Rephonix are calculated by our versioned server pricing engine based on catalog specifications and declared defect parameters. Initial estimated valuations are valid for 30 minutes or until physical doorstep inspection. Final payout amounts are subject to physical verification by an authorized agent.
           </p>
         </section>
 
@@ -46,7 +46,7 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ onBack }) => {
             2. Customer Device Ownership & Data Wipe Responsibility
           </h2>
           <p>
-            By initiating a trade-in booking, you certify that you are the lawful owner of the device or authorized to sell it. Customers MUST remove all cloud accounts (Apple iCloud, Google Account, Samsung Account), disable activation locks, and perform a full factory reset prior to handing over the device to our agent. SmartphoneCentre is not responsible for data remaining on un-wiped devices.
+            By initiating a trade-in booking, you certify that you are the lawful owner of the device or authorized to sell it. Customers MUST remove all cloud accounts (Apple iCloud, Google Account, Samsung Account), disable activation locks, and perform a full factory reset prior to handing over the device to our agent. Rephonix is not responsible for data remaining on un-wiped devices.
           </p>
         </section>
 
@@ -67,7 +67,7 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ onBack }) => {
         <section className="space-y-3">
           <h2 className="text-base font-bold text-ink-navy">5. Cancellation & Refunds</h2>
           <p>
-            Bookings may be canceled freely at any point prior to physical device handover. Once payout has been disbursed and the device handed over, ownership transfers irrevocably to SmartphoneCentre and the sale is final.
+            Bookings may be canceled freely at any point prior to physical device handover. Once payout has been disbursed and the device handed over, ownership transfers irrevocably to Rephonix and the sale is final.
           </p>
         </section>
       </div>

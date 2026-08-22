@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { Smartphone, Tablet, ChevronDown, Zap, Truck, Menu, X, User, Package, Search, ArrowRight, Sparkles } from 'lucide-react';
+import { Smartphone, Tablet, ChevronDown, Zap, Truck, Menu, X, User, Package, Search, ArrowRight, Sparkles, FileText } from 'lucide-react';
 import { ApiUser } from '../../utils/api';
 import { BRANDS as STATIC_BRANDS, Model, getDeviceImage, getMaxVariantPrice } from '../../data/mockDatabase';
 import { applyBrandOrder } from '../../utils/ordering';
@@ -11,6 +11,7 @@ interface HeaderNavProps {
   onSelectTabletBrand?: (brand: 'apple' | 'samsung') => void;
   onSelectModel?: (modelId: string) => void;
   onOpenTrackOrder?: () => void;
+  onOpenInvoices?: () => void;
   currentUser?: ApiUser | null;
   onLogout?: () => void;
   models?: Model[];
@@ -23,6 +24,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
   onSelectTabletBrand,
   onSelectModel,
   onOpenTrackOrder,
+  onOpenInvoices,
   currentUser,
   onLogout,
   models = [],
@@ -371,6 +373,22 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                     >
                       <Package className="w-4 h-4 text-cobalt" />
                       <span>Your Bookings</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setUserDropdownOpen(false);
+                        if (onOpenInvoices) {
+                          onOpenInvoices();
+                        } else if (onOpenTrackOrder) {
+                          onOpenTrackOrder();
+                        } else {
+                          onNavigate('/profile');
+                        }
+                      }}
+                      className="w-full text-left text-xs font-semibold p-2.5 rounded-xl hover:bg-slate-100 text-slate-700 hover:text-cobalt transition-colors flex items-center gap-2.5"
+                    >
+                      <FileText className="w-4 h-4 text-emerald-600" />
+                      <span>Invoices &amp; Receipts</span>
                     </button>
                     <button
                       onClick={() => { setUserDropdownOpen(false); onNavigate('/profile'); }}

@@ -1,5 +1,34 @@
 import PDFDocument from 'pdfkit';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { formatPrice } from '../utils/formatters.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+function getLogoBuffer(): Buffer | null {
+  try {
+    const possiblePaths = [
+      path.join(process.cwd(), 'public', 'logo.svg'),
+      path.join(process.cwd(), '..', 'public', 'logo.svg'),
+      path.resolve(__dirname, '../../../public/logo.svg'),
+      path.resolve(__dirname, '../../public/logo.svg'),
+    ];
+    for (const p of possiblePaths) {
+      if (fs.existsSync(p)) {
+        const svgContent = fs.readFileSync(p, 'utf8');
+        const match = svgContent.match(/xlink:href="data:image\/jpeg;base64,([^"]+)"/);
+        if (match && match[1]) {
+          return Buffer.from(match[1].trim(), 'base64');
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Error loading logo.svg for PDF:', err);
+  }
+  return null;
+}
 
 export interface PDFBookingData {
   id: string;
@@ -16,6 +45,11 @@ export interface PDFBookingData {
   dateCreated: string;
 }
 
+function formatPdfPrice(price: number): string {
+  if (typeof price !== 'number' || isNaN(price)) return 'Rs. 0';
+  return 'Rs. ' + price.toLocaleString('en-IN');
+}
+
 export function generateBookingQuotationPDF(booking: PDFBookingData): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     try {
@@ -26,28 +60,35 @@ export function generateBookingQuotationPDF(booking: PDFBookingData): Promise<Bu
       doc.on('end', () => resolve(Buffer.concat(buffers)));
       doc.on('error', (err: Error) => reject(err));
 
+      const logoBuffer = getLogoBuffer();
+      let headerTextX = 40;
+      if (logoBuffer) {
+        doc.image(logoBuffer, 40, 36, { width: 38, height: 38 });
+        headerTextX = 86;
+      }
+
       // Brand Header
       doc
         .fillColor('#1E3A8A')
         .fontSize(22)
         .font('Helvetica-Bold')
-        .text('SMARTPHONECENTRE', 40, 40);
+        .text('REPHONIX', headerTextX, 36);
 
       doc
         .fillColor('#64748B')
-        .fontSize(10)
+        .fontSize(9.5)
         .font('Helvetica')
-        .text('OFFICIAL TRADE-IN QUOTATION RECEIPT', 40, 68);
+        .text('OFFICIAL TRADE-IN QUOTATION RECEIPT', headerTextX, 63);
 
       // Top right Metadata Box
       doc
         .fillColor('#0F172A')
         .fontSize(10)
         .font('Helvetica-Bold')
-        .text(`Booking ID: #${booking.id}`, 380, 40, { align: 'right' })
+        .text(`Booking ID: #${booking.id}`, 350, 40, { width: 195, align: 'right' })
         .font('Helvetica')
         .fillColor('#64748B')
-        .text(`Date Issued: ${new Date(booking.dateCreated || Date.now()).toLocaleDateString('en-IN')}`, 380, 56, { align: 'right' });
+        .text(`Date Issued: ${new Date(booking.dateCreated || Date.now()).toLocaleDateString('en-IN')}`, 350, 56, { width: 195, align: 'right' });
 
       doc
         .moveTo(40, 88)
@@ -167,7 +208,7 @@ export function generateBookingQuotationPDF(booking: PDFBookingData): Promise<Bu
         .fontSize(10)
         .font('Helvetica-Bold')
         .text('Item Description', 50, y + 7)
-        .text('Amount (INR)', 440, y + 7, { align: 'right' });
+        .text('Amount (INR)', 350, y + 7, { width: 195, align: 'right' });
 
       y += 24;
 
@@ -180,10 +221,10 @@ export function generateBookingQuotationPDF(booking: PDFBookingData): Promise<Bu
         .fillColor('#334155')
         .fontSize(9.5)
         .font('Helvetica')
-        .text(`Locked Valuation Quote (${booking.modelName})`, 50, y + 6)
+        .text(`Locked Valuation Quote (${booking.modelName})`, 50, y + 6, { width: 300 })
         .font('Helvetica-Bold')
         .fillColor('#0F172A')
-        .text(formatPrice(booking.finalPrice), 440, y + 6, { align: 'right' });
+        .text(formatPdfPrice(booking.finalPrice), 350, y + 6, { width: 195, align: 'right' });
 
       y += 22;
 
@@ -196,10 +237,10 @@ export function generateBookingQuotationPDF(booking: PDFBookingData): Promise<Bu
         .fillColor('#334155')
         .fontSize(9.5)
         .font('Helvetica')
-        .text('Doorstep Inspection & Pickup Fee', 50, y + 6)
+        .text('Doorstep Inspection & Pickup Fee', 50, y + 6, { width: 300 })
         .font('Helvetica-Bold')
         .fillColor('#059669')
-        .text('FREE (₹0)', 440, y + 6, { align: 'right' });
+        .text('FREE (Rs. 0)', 350, y + 6, { width: 195, align: 'right' });
 
       y += 22;
 
@@ -213,10 +254,10 @@ export function generateBookingQuotationPDF(booking: PDFBookingData): Promise<Bu
           .fillColor('#334155')
           .fontSize(9.5)
           .font('Helvetica')
-          .text(`Declared Defects (${booking.defectDescriptions.length} item(s) noted)`, 50, y + 6)
+          .text(`Declared Defects (${booking.defectDescriptions.length} item(s) noted)`, 50, y + 6, { width: 300 })
           .font('Helvetica')
           .fillColor('#64748B')
-          .text('Included in Quote', 440, y + 6, { align: 'right' });
+          .text('Included in Quote', 350, y + 6, { width: 195, align: 'right' });
 
         y += 22;
       }
@@ -232,7 +273,7 @@ export function generateBookingQuotationPDF(booking: PDFBookingData): Promise<Bu
         .font('Helvetica-Bold')
         .text('INSTANT DOORSIDE PAYOUT:', 50, y + 10)
         .fontSize(14)
-        .text(formatPrice(booking.finalPrice), 430, y + 8, { align: 'right' });
+        .text(formatPdfPrice(booking.finalPrice), 330, y + 9, { width: 215, align: 'right' });
 
       y += 50;
 
@@ -255,9 +296,9 @@ export function generateBookingQuotationPDF(booking: PDFBookingData): Promise<Bu
 
       // Terms & Footer
       doc
-        .fillColor('#94A3B8')
-        .fontSize(8)
-        .font('Helvetica')
+        .fillColor('#000000')
+        .fontSize(8.5)
+        .font('Helvetica-Bold')
         .text('Terms & Conditions: Quote is valid for 7 days. Device must match the declared conditions upon physical inspection. Agent will contact you prior to arrival.', 40, y, { width: 515, align: 'center' });
 
       doc.end();

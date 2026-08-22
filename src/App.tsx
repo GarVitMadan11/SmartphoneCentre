@@ -682,6 +682,7 @@ export default function App() {
   const [heroSearchOpen, setHeroSearchOpen] = useState(false);
   const [pendingModelId, setPendingModelId] = useState<string | null>(null);
   const [pendingBrandId, setPendingBrandId] = useState<string | null>(null);
+  const [trackModalTab, setTrackModalTab] = useState<'my_bookings' | 'track_search' | 'invoices'>('my_bookings');
   const heroSearchRef = useRef<HTMLDivElement>(null);
 
   const heroSearchResults = useMemo(() => {
@@ -845,7 +846,8 @@ export default function App() {
           handleDirectSelectModel(modelId);
         }}
         models={MODELS}
-        onOpenTrackOrder={() => startTransition(() => setIsTrackOpen(true))}
+        onOpenTrackOrder={() => startTransition(() => { setTrackModalTab('my_bookings'); setIsTrackOpen(true); })}
+        onOpenInvoices={() => startTransition(() => { setTrackModalTab('invoices'); setIsTrackOpen(true); })}
         currentUser={currentUser}
         onLogout={handleLogout}
       />
@@ -1815,7 +1817,7 @@ export default function App() {
         <FeedbackModal isOpen={isFeedbackModalOpen} onClose={() => setIsFeedbackModalOpen(false)} currentUser={currentUser} onNavigate={navigate} />
       )}
       <Suspense fallback={null}>
-        <OrderTrackingModal isOpen={isTrackOpen} onClose={() => setIsTrackOpen(false)} currentUser={currentUser} models={MODELS} />
+        <OrderTrackingModal isOpen={isTrackOpen} onClose={() => setIsTrackOpen(false)} currentUser={currentUser} models={MODELS} initialTab={trackModalTab} />
       </Suspense>
 
       {/* Toast notifications */}
