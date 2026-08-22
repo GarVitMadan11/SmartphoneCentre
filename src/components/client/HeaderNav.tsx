@@ -297,32 +297,16 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
             </button>
           </nav>
 
-          {/* ── In-Between Spotlight Search Trigger Button ──────────────── */}
+          {/* ── In-Between Spotlight Search Trigger Icon Button ──────────────── */}
           <div className="flex items-center shrink-0">
-            {/* Desktop Pill Search Bar */}
             <button
               type="button"
               onClick={() => setIsSearchOpen(true)}
-              className="hidden md:flex items-center justify-between w-40 lg:w-48 xl:w-56 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100/90 border border-ice-border hover:border-slate-300 text-slate-400 hover:text-slate-600 transition-all shadow-2xs cursor-pointer group"
-              aria-label="Open search modal"
+              className="p-2 sm:p-2.5 rounded-xl border border-ice-border hover:border-cobalt hover:text-cobalt text-slate-600 bg-slate-50 hover:bg-slate-100 transition-all shadow-2xs cursor-pointer flex items-center justify-center shrink-0 group"
+              aria-label="Search models"
+              title="Search models (⌘K)"
             >
-              <div className="flex items-center gap-2 truncate">
-                <Search className="w-3.5 h-3.5 text-slate-400 group-hover:text-cobalt transition-colors shrink-0" />
-                <span className="text-xs text-slate-400 font-normal truncate">Search models...</span>
-              </div>
-              <span className="hidden xl:inline-flex items-center text-[10px] font-mono text-slate-400 bg-white border border-slate-200 px-1.5 py-0.5 rounded shadow-2xs shrink-0 select-none">
-                ⌘K
-              </span>
-            </button>
-
-            {/* Compact Search Icon for Mobile/Tablet */}
-            <button
-              type="button"
-              onClick={() => setIsSearchOpen(true)}
-              className="md:hidden p-2 rounded-xl border border-ice-border hover:border-cobalt hover:text-cobalt text-slate-600 bg-slate-50 transition-colors"
-              aria-label="Search"
-            >
-              <Search className="w-4 h-4" />
+              <Search className="w-4 h-4 text-slate-500 group-hover:text-cobalt transition-colors shrink-0" />
             </button>
           </div>
 
@@ -333,10 +317,10 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
             <button
               type="button"
               onClick={() => { setActiveDropdown(null); setUserDropdownOpen(false); onNavigate('/smartphones'); }}
-              className="px-3.5 py-1.5 rounded-xl bg-cobalt hover:bg-cobalt-hover text-white font-bold text-xs transition-all shadow-sm hover:shadow-md flex items-center gap-1.5 active:scale-95 cursor-pointer"
+              className="px-3 py-1.5 rounded-xl bg-cobalt hover:bg-cobalt-hover text-white font-bold text-xs transition-all shadow-sm hover:shadow-md flex items-center gap-1.5 active:scale-95 cursor-pointer shrink-0"
             >
-              <Zap className="w-3.5 h-3.5 fill-current" />
-              <span>Instant Quote</span>
+              <Zap className="w-3.5 h-3.5 fill-current shrink-0" />
+              <span className="whitespace-nowrap">Instant Quote</span>
             </button>
 
             {/* Track Order Button */}
@@ -344,28 +328,28 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
               <button
                 type="button"
                 onClick={() => { setActiveDropdown(null); setUserDropdownOpen(false); onOpenTrackOrder(); }}
-                className="px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 hover:text-cobalt font-bold text-xs transition-all flex items-center gap-1.5 border border-ice-border hover:border-cobalt/40 cursor-pointer"
+                className="px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 hover:text-cobalt font-bold text-xs transition-all flex items-center gap-1.5 border border-ice-border hover:border-cobalt/40 cursor-pointer shrink-0"
               >
-                <Truck className="w-3.5 h-3.5 text-cobalt" />
-                <span>Track Order</span>
+                <Truck className="w-3.5 h-3.5 text-cobalt shrink-0" />
+                <span className="whitespace-nowrap">Track Order</span>
               </button>
             )}
 
             {/* Customer Auth Profile Badge */}
             {currentUser ? (
-              <div className="relative">
+              <div className="relative shrink-0">
                 <button
                   type="button"
                   onClick={() => { setActiveDropdown(null); setUserDropdownOpen(prev => !prev); }}
-                  className={`px-3 py-1.5 rounded-xl flex items-center gap-2 border border-ice-border hover:border-cobalt/50 font-bold text-xs transition-all bg-canvas-white hover:bg-slate-50 cursor-pointer ${
+                  className={`px-2.5 sm:px-3 py-1.5 rounded-xl flex items-center gap-1.5 sm:gap-2 border border-ice-border hover:border-cobalt/50 font-bold text-xs transition-all bg-canvas-white hover:bg-slate-50 cursor-pointer shrink-0 ${
                     userDropdownOpen ? 'border-cobalt text-cobalt ring-2 ring-cobalt/10' : 'text-slate-800'
                   }`}
                 >
-                  <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-cobalt to-indigo-600 text-white flex items-center justify-center text-[11px] font-black shadow-xs">
+                  <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-cobalt to-indigo-600 text-white flex items-center justify-center text-[11px] font-black shadow-xs shrink-0">
                     {initial}
                   </div>
-                  <span>Hi, {firstName}</span>
-                  <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${userDropdownOpen ? 'rotate-180 text-cobalt' : 'text-slate-400'}`} />
+                  <span className="truncate max-w-[80px] sm:max-w-[120px] whitespace-nowrap">Hi, {firstName}</span>
+                  <ChevronDown className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${userDropdownOpen ? 'rotate-180 text-cobalt' : 'text-slate-400'}`} />
                 </button>
 
                 {userDropdownOpen && (
