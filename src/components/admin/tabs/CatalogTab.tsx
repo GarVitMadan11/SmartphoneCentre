@@ -47,7 +47,7 @@ interface CatalogTabProps {
   onRefresh?: () => void;
 }
 
-const STANDARD_STORAGE_OPTIONS = [64, 128, 256, 512, 1024, 2048];
+const STANDARD_STORAGE_OPTIONS = [16, 32, 64, 128, 256, 512, 1024, 2048];
 const STANDARD_RAM_OPTIONS = [0, 2, 3, 4, 6, 8, 12, 16, 24];
 
 export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initialBrands, onRefresh }) => {
@@ -1433,7 +1433,7 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
                   <span className="text-[10px] font-mono text-zinc-500">Selected: {formData.supportedStorageGb.join(', ')} GB</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {STANDARD_STORAGE_OPTIONS.map((gb) => {
+                  {Array.from(new Set([...STANDARD_STORAGE_OPTIONS, ...formData.supportedStorageGb])).sort((a, b) => a - b).map((gb) => {
                     const isSelected = formData.supportedStorageGb.includes(gb);
                     return (
                       <button
@@ -1468,7 +1468,7 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
                   </span>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {STANDARD_RAM_OPTIONS.map((gb) => {
+                  {Array.from(new Set([...STANDARD_RAM_OPTIONS, ...formData.supportedRamGb])).sort((a, b) => a - b).map((gb) => {
                     const isSelected = formData.supportedRamGb.includes(gb);
                     return (
                       <button
