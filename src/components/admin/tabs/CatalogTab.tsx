@@ -74,6 +74,13 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
 
   // Drag & drop state
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [orderVersion, setOrderVersion] = useState(0);
+
+  useEffect(() => {
+    const handleOrderChange = () => setOrderVersion((v) => v + 1);
+    window.addEventListener('stc_catalog_order_changed', handleOrderChange);
+    return () => window.removeEventListener('stc_catalog_order_changed', handleOrderChange);
+  }, []);
 
   // Modals
   const [editingModel, setEditingModel] = useState<Model | null>(null);
@@ -185,7 +192,7 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
       return true;
     });
     setOrderedModels(applyModelOrder(reorderModelBrandId, brandModels));
-  }, [reorderModelBrandId, reorderModelSeries, models]);
+  }, [reorderModelBrandId, reorderModelSeries, models, orderVersion]);
 
   // Filter and order models by category, search, series, and brand ordering
   const filteredModels = useMemo(() => {
@@ -222,13 +229,33 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
       return true;
     });
 
-    // Apply custom model order if brand is filtered
+    // Apply custom model order per brand
     if (selectedBrandFilter !== 'all') {
       list = applyModelOrder(selectedBrandFilter, list);
+    } else {
+      const brandGroups = new Map<string, Model[]>();
+      list.forEach((m) => {
+        if (!brandGroups.has(m.brandId)) brandGroups.set(m.brandId, []);
+        brandGroups.get(m.brandId)!.push(m);
+      });
+      const reorderedList: Model[] = [];
+      const brandOrder = applyBrandOrder(orderedBrands.length > 0 ? orderedBrands : initialBrands);
+      brandOrder.forEach((b) => {
+        const bModels = brandGroups.get(b.id);
+        if (bModels && bModels.length > 0) {
+          reorderedList.push(...applyModelOrder(b.id, bModels));
+        }
+      });
+      brandGroups.forEach((bModels, bId) => {
+        if (!brandOrder.some((b) => b.id === bId)) {
+          reorderedList.push(...applyModelOrder(bId, bModels));
+        }
+      });
+      list = reorderedList;
     }
 
     return list;
-  }, [models, category, selectedBrandFilter, selectedSeriesFilter, showHiddenOnly, searchQuery]);
+  }, [models, category, selectedBrandFilter, selectedSeriesFilter, showHiddenOnly, searchQuery, orderVersion, orderedBrands, initialBrands]);
 
   // Group models by Series for display
   const modelsGroupedBySeries = useMemo(() => {
@@ -467,7 +494,27 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
   };
 
   const handleSaveModelOrder = () => {
-    saveModelOrder(reorderModelBrandId, orderedModels.map((m) => m.id));
+    let finalOrder: string[] = [];
+    if (reorderModelSeries === 'all') {
+      finalOrder = orderedModels.map((m) => m.id);
+    } else {
+      const allBrandModels = models.filter((m) => m.brandId === reorderModelBrandId);
+      const currentFullList = applyModelOrder(reorderModelBrandId, allBrandModels);
+      const reorderedIds = orderedModels.map((m) => m.id);
+      const reorderedSet = new Set(reorderedIds);
+
+      let reorderedIdx = 0;
+      finalOrder = currentFullList.map((m) => {
+        if (reorderedSet.has(m.id)) {
+          const newId = reorderedIds[reorderedIdx];
+          reorderedIdx++;
+          return newId;
+        }
+        return m.id;
+      });
+    }
+
+    saveModelOrder(reorderModelBrandId, finalOrder);
     setSuccessMsg('Custom model display order saved successfully!');
   };
 
