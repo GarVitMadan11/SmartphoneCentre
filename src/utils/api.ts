@@ -206,8 +206,13 @@ export interface ApiBrand {
   logo: string;
 }
 
-export function fetchBrands(): Promise<ApiBrand[]> {
-  return apiFetch<ApiBrand[]>(`/brands?_t=${Date.now()}`);
+export async function fetchBrands(): Promise<ApiBrand[]> {
+  try {
+    return await apiFetch<ApiBrand[]>(`/brands?_t=${Date.now()}`);
+  } catch (err) {
+    console.info('[API] fetchBrands unavailable, fallback to static brands');
+    return [];
+  }
 }
 
 export interface ApiModel {
@@ -225,9 +230,11 @@ export interface ApiModel {
   hidden?: boolean;
 }
 
+const MODEL_CACHE_KEY = 'stc_cached_models_v2';
+
 export function getCachedModels(): ApiModel[] {
   try {
-    const raw = localStorage.getItem('stc_cached_models');
+    const raw = localStorage.getItem(MODEL_CACHE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) return parsed;
@@ -239,7 +246,7 @@ export function getCachedModels(): ApiModel[] {
 export function saveCachedModels(models: ApiModel[]): void {
   try {
     if (Array.isArray(models) && models.length > 0) {
-      localStorage.setItem('stc_cached_models', JSON.stringify(models));
+      localStorage.setItem(MODEL_CACHE_KEY, JSON.stringify(models));
     }
   } catch {}
 }
@@ -255,7 +262,8 @@ export async function fetchModels(brandId?: string): Promise<ApiModel[]> {
   } catch (err) {
     const cached = getCachedModels();
     if (cached.length > 0) return cached;
-    throw err;
+    console.info('[API] fetchModels rate limited / unavailable, fallback to local models');
+    return [];
   }
 }
 
@@ -531,21 +539,24 @@ export function registerWithEmail(
 }
 
 /** Sync authenticated Firebase user with backend */
-export function syncFirebaseUser(idToken: string): Promise<{
+export async function syncFirebaseUser(idToken: string): Promise<{
   success: boolean;
   user: ApiUser;
   csrfToken: string;
-}> {
-  return apiFetch<{
-    success: boolean;
-    user: ApiUser;
-    csrfToken: string;
-  }>('/auth/sync-firebase-user', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${idToken}`,
-    },
-  });
+} | null> {
+  try {
+    return await apiFetch<{
+      success: boolean;
+      user: ApiUser;
+      csrfToken: string;
+    }>('/auth/sync-firebase-user', {
+      method: 'POST',
+      body: JSON.stringify({ idToken }),
+    });
+  } catch (err) {
+    console.info('[Auth] syncFirebaseUser rate limited / unavailable');
+    return null;
+  }
 }
 
 /** Sign in or sign up with a Google ID token (Legacy Fallback) */

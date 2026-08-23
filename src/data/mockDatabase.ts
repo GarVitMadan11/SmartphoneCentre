@@ -518,8 +518,12 @@ export const BRANDS: Brand[] = [
   { id: 'brand-motorola', name: 'Motorola', logo: 'motorola' },
 ];
 
-const catalogId = (brandId: string, name: string) =>
-  `catalog-${brandId.replace('brand-', '')}-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}`;
+const catalogId = (brandId: string, name: string) => {
+  const brandSlug = brandId.replace('brand-', '').toLowerCase();
+  const cleanName = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  const deDuplicated = cleanName.startsWith(`${brandSlug}-`) ? cleanName.slice(brandSlug.length + 1) : cleanName;
+  return `catalog-${brandSlug}-${deDuplicated}`;
+};
 
 const catalogCategory = (name: string): DeviceCategory => {
   if (/ultra|pro max|fold|flip|x300|x200 pro|x100 pro|find x|s26 ultra|s25 ultra/i.test(name)) return 'flagship';
@@ -1420,36 +1424,40 @@ export function sortModelsByLaunchDesc(modelsList: Model[]): Model[] {
 const RAW_SMARTPHONE_MODELS: Model[] = sortModelsByLaunchDesc([
   ...BASE_MODELS,
   ...CATALOG_ADDITIONS.filter((addition) => !BASE_MODELS.some((model) =>
-    model.brandId === addition.brandId && model.name.toLowerCase() === addition.name.toLowerCase(),
+    model.id === addition.id ||
+    (model.brandId === addition.brandId && model.name.toLowerCase().trim() === addition.name.toLowerCase().trim())
   )),
 ].filter(m => !isTabletDevice(m.brandId, m.name, m.id) && !isSmartwatchDevice(m.brandId, m.name, m.id)));
 
 export const SMARTPHONE_MODELS: Model[] = sortModelsByLaunchDesc(RAW_SMARTPHONE_MODELS.map(m => {
+  if (m.variantPrices && Object.keys(m.variantPrices).length > 0) {
+    return m;
+  }
   const vp = buildVariantPricesForModel(m);
-  const maxPrice = Object.values(vp).length > 0 ? Math.max(...Object.values(vp)) : m.basePrice128GB;
   return {
     ...m,
-    basePrice128GB: maxPrice,
     variantPrices: vp
   };
 }));
 
 export const TABLET_MODELS_WITH_PRICES: Model[] = sortModelsByLaunchDesc(TABLET_MODELS.map(m => {
+  if (m.variantPrices && Object.keys(m.variantPrices).length > 0) {
+    return m;
+  }
   const vp = buildVariantPricesForModel(m);
-  const maxPrice = Object.values(vp).length > 0 ? Math.max(...Object.values(vp)) : m.basePrice128GB;
   return {
     ...m,
-    basePrice128GB: maxPrice,
     variantPrices: vp
   };
 }));
 
 export const SMARTWATCH_MODELS_WITH_PRICES: Model[] = sortModelsByLaunchDesc(SMARTWATCH_MODELS.map(m => {
+  if (m.variantPrices && Object.keys(m.variantPrices).length > 0) {
+    return m;
+  }
   const vp = buildVariantPricesForModel(m);
-  const maxPrice = Object.values(vp).length > 0 ? Math.max(...Object.values(vp)) : m.basePrice128GB;
   return {
     ...m,
-    basePrice128GB: maxPrice,
     variantPrices: vp
   };
 }));
@@ -1643,16 +1651,45 @@ export function generateVariantsForModel(model: Model): Variant[] {
 
 /** Returns supported RAM options (GB) for a model. Returns [0] for Apple devices */
 export function getModelSupportedRam(model: Model): number[] {
+  if (!model) return [0];
   if (isAppleDevice(model.brandId, model.name)) {
     return [0];
   }
   if (isSmartwatchDevice(model.brandId, model.name, model.id)) {
     return [2];
   }
-  if (model.supportedRamGb && Array.isArray(model.supportedRamGb) && model.supportedRamGb.length > 0) {
-    return model.supportedRamGb;
+
+  let ramArr: number[] | null = null;
+  if (Array.isArray(model.supportedRamGb) && model.supportedRamGb.length > 0) {
+    ramArr = model.supportedRamGb;
+  } else if (typeof model.supportedRamGb === 'string') {
+    try {
+      const parsed = JSON.parse(model.supportedRamGb);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        ramArr = parsed;
+      }
+    } catch {}
   }
-  const modelPrices = (actualPrices as Record<string, any>)[model.id];
+
+  if (ramArr && ramArr.length > 0) {
+    return [...ramArr].map(Number).filter(r => !isNaN(r)).sort((a, b) => a - b);
+  }
+
+  let pricesObj: Record<string, number> | null = null;
+  if (typeof model.variantPrices === 'string') {
+    try { pricesObj = JSON.parse(model.variantPrices); } catch {}
+  } else if (typeof model.variantPrices === 'object' && model.variantPrices !== null) {
+    pricesObj = model.variantPrices as Record<string, number>;
+  }
+
+  if (pricesObj && Object.keys(pricesObj).length > 0) {
+    const rams = Array.from(new Set(
+      Object.keys(pricesObj).map(k => Number(k.split('_')[0])).filter(r => !isNaN(r))
+    )).sort((a, b) => a - b);
+    if (rams.length > 0) return rams;
+  }
+
+  const modelPrices = getActualPricesForModel(model);
   if (modelPrices && modelPrices.ourPrices && Object.keys(modelPrices.ourPrices).length > 0) {
     const rams = Array.from(new Set(
       Object.keys(modelPrices.ourPrices).map(k => Number(k.split('_')[0])).filter(r => !isNaN(r))
@@ -1666,18 +1703,76 @@ export function getModelSupportedRam(model: Model): number[] {
   return [2, 4, 6, 8];
 }
 
-/** Returns accurate supported storage options (GB) for a model (eliminates 128GB for Pro Max, Ultra, Fold models) */
+function getActualPricesForModel(model: Model) {
+  if (!model) return null;
+  const ap = actualPrices as Record<string, any>;
+  if (model.id && ap[model.id]) return ap[model.id];
+
+  const brandSlug = (model.brandId || '').replace('brand-', '').toLowerCase();
+  const cleanName = (model.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
+  const altKey1 = `catalog-${brandSlug}-${cleanName}`;
+  if (ap[altKey1]) return ap[altKey1];
+
+  const altKey2 = `catalog-${brandSlug}-${brandSlug}-${cleanName}`;
+  if (ap[altKey2]) return ap[altKey2];
+
+  const altKey3 = cleanName.startsWith(`${brandSlug}-`) ? `catalog-${cleanName}` : `catalog-${brandSlug}-${cleanName}`;
+  if (ap[altKey3]) return ap[altKey3];
+
+  const targetName = (model.name || '').toLowerCase().trim();
+  if (targetName) {
+    for (const key in ap) {
+      const entry = ap[key];
+      if (entry && entry.modelName && entry.modelName.toLowerCase().trim() === targetName) {
+        return entry;
+      }
+    }
+  }
+
+  return null;
+}
+
+/** Returns accurate supported storage options (GB) for a model */
 export function getModelSupportedStorage(model: Model): number[] {
-  const modelPrices = (actualPrices as Record<string, any>)[model.id];
+  if (!model) return [128, 256];
+
+  let storageArr: number[] | null = null;
+  if (Array.isArray(model.supportedStorageGb) && model.supportedStorageGb.length > 0) {
+    storageArr = model.supportedStorageGb;
+  } else if (typeof model.supportedStorageGb === 'string') {
+    try {
+      const parsed = JSON.parse(model.supportedStorageGb);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        storageArr = parsed;
+      }
+    } catch {}
+  }
+
+  if (storageArr && storageArr.length > 0) {
+    return [...storageArr].map(Number).filter(s => !isNaN(s) && s > 0).sort((a, b) => a - b);
+  }
+
+  let pricesObj: Record<string, number> | null = null;
+  if (typeof model.variantPrices === 'string') {
+    try { pricesObj = JSON.parse(model.variantPrices); } catch {}
+  } else if (typeof model.variantPrices === 'object' && model.variantPrices !== null) {
+    pricesObj = model.variantPrices as Record<string, number>;
+  }
+
+  if (pricesObj && Object.keys(pricesObj).length > 0) {
+    const storages = Array.from(new Set(
+      Object.keys(pricesObj).map(k => Number(k.split('_')[1])).filter(s => !isNaN(s) && s > 0)
+    )).sort((a, b) => a - b);
+    if (storages.length > 0) return storages;
+  }
+
+  const modelPrices = getActualPricesForModel(model);
   if (modelPrices && modelPrices.ourPrices && Object.keys(modelPrices.ourPrices).length > 0) {
     const storages = Array.from(new Set(
       Object.keys(modelPrices.ourPrices).map(k => Number(k.split('_')[1])).filter(s => !isNaN(s) && s > 0)
     )).sort((a, b) => a - b);
     if (storages.length > 0) return storages;
-  }
-
-  if (model.supportedStorageGb && Array.isArray(model.supportedStorageGb) && model.supportedStorageGb.length > 0) {
-    return [...model.supportedStorageGb].sort((a, b) => a - b);
   }
 
   const nameLower = model.name.toLowerCase();
@@ -1694,10 +1789,20 @@ export function getModelSupportedStorage(model: Model): number[] {
 
 /** Generates the full record of +3% Cashify prices for all supported RAM and storage variants of a model */
 export function buildVariantPricesForModel(model: Model): Record<string, number> {
-  if (model.variantPrices && Object.keys(model.variantPrices).length > 0) {
-    return model.variantPrices;
+  if (model.variantPrices) {
+    if (typeof model.variantPrices === 'object' && model.variantPrices !== null && Object.keys(model.variantPrices).length > 0) {
+      return model.variantPrices as Record<string, number>;
+    }
+    if (typeof model.variantPrices === 'string') {
+      try {
+        const parsed = JSON.parse(model.variantPrices);
+        if (parsed && typeof parsed === 'object' && Object.keys(parsed).length > 0) {
+          return parsed as Record<string, number>;
+        }
+      } catch {}
+    }
   }
-  const modelPrices = (actualPrices as Record<string, any>)[model.id];
+  const modelPrices = getActualPricesForModel(model);
   if (modelPrices && modelPrices.ourPrices && Object.keys(modelPrices.ourPrices).length > 0) {
     return { ...modelPrices.ourPrices };
   }
@@ -1723,14 +1828,53 @@ export function buildVariantPricesForModel(model: Model): Record<string, number>
   return map;
 }
 
-/** Returns the maximum variant price (Max RAM + Max Storage at +3%) for a model */
+/** Returns the maximum variant price across active, supported RAM & Storage combinations for a model */
 export function getMaxVariantPrice(model: Model): number {
-  const vp = model.variantPrices || buildVariantPricesForModel(model);
-  const prices = Object.values(vp);
-  if (prices.length > 0) {
-    return Math.max(...prices);
+  if (!model) return 10000;
+
+  const rams = getModelSupportedRam(model);
+  const storages = getModelSupportedStorage(model);
+  const activePrices: number[] = [];
+
+  const activeRams = rams.length > 0 ? rams : [0];
+  for (const r of activeRams) {
+    for (const s of storages) {
+      if (isVariantAvailable(model, r, s)) {
+        const price = getVariantPrice(model, r, s);
+        if (price > 0) {
+          activePrices.push(price);
+        }
+      }
+    }
   }
-  return model.basePrice128GB;
+
+  if (activePrices.length > 0) {
+    return Math.max(...activePrices);
+  }
+
+  // Fallback: If no combinations matched via getModelSupportedRam/Storage, check explicit active entries in variantPrices
+  let pricesObj: Record<string, number> | null = null;
+  if (typeof model.variantPrices === 'string') {
+    try {
+      pricesObj = JSON.parse(model.variantPrices);
+    } catch {
+      pricesObj = null;
+    }
+  } else if (typeof model.variantPrices === 'object' && model.variantPrices !== null) {
+    pricesObj = model.variantPrices as Record<string, number>;
+  }
+
+  if (pricesObj && Object.keys(pricesObj).length > 0) {
+    const rawPrices = Object.values(pricesObj)
+      .map(v => Number(v))
+      .filter(v => !isNaN(v) && v > 0);
+
+    if (rawPrices.length > 0) {
+      return Math.max(...rawPrices);
+    }
+  }
+
+  return model.basePrice128GB || 10000;
 }
 
 /** Check if a specific RAM+Storage combo is enabled in DB (not turned OFF by admin) */

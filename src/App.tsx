@@ -1048,7 +1048,7 @@ export default function App() {
                               </div>
                               <div className="flex-1 min-w-0">
                                 <span className="block text-sm font-semibold text-ink-navy group-hover:text-cobalt transition-colors truncate">{model.name}</span>
-                                <span className="block text-[10px] text-ink-muted font-mono">{brand?.name} · Up to ₹{(model.basePrice128GB).toLocaleString('en-IN')}</span>
+                                <span className="block text-[10px] text-ink-muted font-mono">{brand?.name} · Up to ₹{getMaxVariantPrice(model).toLocaleString('en-IN')}</span>
                               </div>
                               <svg className="w-4 h-4 text-ink-muted group-hover:text-cobalt transition-colors flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

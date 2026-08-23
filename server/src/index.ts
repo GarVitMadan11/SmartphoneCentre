@@ -182,37 +182,43 @@ if (distExists) {
 }
 
 // ── Rate limiting ─────────────────────────────────────────────────────────
+const isDev = process.env.NODE_ENV !== 'production';
+
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 200,
+  max: isDev ? 10000 : 2000,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'TooManyRequests', message: 'Too many requests. Please try again later.' },
+  skip: () => isDev,
 });
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 50,
+  max: isDev ? 1000 : 100,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'TooManyRequests', message: 'Too many login attempts. Please wait 15 minutes.' },
   skipSuccessfulRequests: true,
+  skip: () => isDev,
 });
 
 const bookingLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
-  max: 10,
+  max: isDev ? 500 : 20,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'TooManyRequests', message: 'Too many booking submissions. Please try again later.' },
+  skip: () => isDev,
 });
 
 const trackingLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 20,
+  max: isDev ? 500 : 50,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'TooManyRequests', message: 'Too many order tracking attempts. Please try again in 15 minutes.' },
+  skip: () => isDev,
 });
 
 app.use(globalLimiter);

@@ -1214,7 +1214,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
 
                           <div className="pt-4 border-t border-ice-border/60 flex items-center justify-between">
                             <div className="text-left">
-                              <span className="text-[10px] text-zinc-400 uppercase font-mono block">Up to Get</span>
+                              <span className="text-[10px] text-zinc-400 uppercase font-mono block">Up to</span>
                               <span className="text-lg font-extrabold text-emerald-600 font-mono">
                                 {formatPrice(getMaxVariantPrice(model))}
                               </span>
