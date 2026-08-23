@@ -556,7 +556,9 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
       } else {
         nextMap[key] = price;
       }
-      return { ...prev, variantPrices: nextMap };
+      const activePrices = Object.values(nextMap).filter(v => typeof v === 'number' && v > 0);
+      const minPrice = activePrices.length > 0 ? Math.min(...activePrices) : prev.basePrice128GB;
+      return { ...prev, variantPrices: nextMap, basePrice128GB: minPrice };
     });
   };
 
@@ -1354,7 +1356,12 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-ink-navy mb-1 uppercase font-mono">Base Price Anchor (₹) *</label>
+                  <label className="block text-[11px] font-bold text-ink-navy mb-1 uppercase font-mono flex items-center justify-between">
+                    <span>Base Price Anchor (₹) *</span>
+                    <span className="text-[9px] text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                      Auto-synced with lowest variant
+                    </span>
+                  </label>
                   <input
                     type="number"
                     required
@@ -1364,6 +1371,9 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
                     onChange={(e) => setFormData({ ...formData, basePrice128GB: parseInt(e.target.value, 10) || 0 })}
                     className="w-full px-3 py-2 bg-white border border-ice-border rounded font-mono font-bold text-emerald-700 focus:border-cobalt focus:outline-none"
                   />
+                  <span className="text-[10px] text-zinc-400 font-mono block mt-1">
+                    Used as fallback baseline. Overridden by explicit Variant Matrix below.
+                  </span>
                 </div>
               </div>
 
