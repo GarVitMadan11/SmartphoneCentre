@@ -1065,15 +1065,15 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                 <div className="space-y-3 text-xs font-sans text-left">
                   {/* Detailed breakdown list */}
                   <div className="flex justify-between items-center py-1 text-slate-700 dark:text-zinc-300 font-medium">
-                    <span>Base Value ({selectedVariant.storageGb}GB)</span>
-                    <span className="text-cobalt font-bold">+{formatPrice(selectedVariant.basePrice)}</span>
+                    <span>Base Device Configuration</span>
+                    <span className="text-slate-600 dark:text-zinc-300 font-semibold">{selectedVariant.storageGb}GB</span>
                   </div>
 
-                  {/* Deductions breakdown */}
+                  {/* Declared conditions breakdown */}
                   {selectedDefects.length > 0 ? (
                     <div className="py-2 border-y border-slate-200 dark:border-zinc-800 space-y-1.5">
                       <div className="flex items-center justify-between text-[10px] text-slate-600 dark:text-zinc-400 uppercase font-bold tracking-wider mb-1">
-                        <span>Deductions Applied</span>
+                        <span>Declared Conditions</span>
                         <button
                           type="button"
                           onClick={onBack}
@@ -1082,18 +1082,12 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                           Edit Defects
                         </button>
                       </div>
-                      {selectedDefects.map((defect, idx) => {
-                        const base = selectedVariant.basePrice;
-                        const deduction = defect.deductionPercentage > 0 
-                          ? base * defect.deductionPercentage 
-                          : defect.deductionFixed;
-                        return (
-                          <div key={defect.id} className="flex justify-between items-start text-slate-800 dark:text-zinc-200 font-medium">
-                            <span className="leading-tight">{(idx + 1).toString().padStart(2, '0')}. {getEngineeringLabel(defect.description)}</span>
-                            <span className="text-red-600 dark:text-red-400 font-semibold flex-shrink-0">-[{formatPrice(deduction)}]</span>
-                          </div>
-                        );
-                      })}
+                      {selectedDefects.map((defect, idx) => (
+                        <div key={defect.id} className="flex justify-between items-start text-slate-800 dark:text-zinc-200 font-medium">
+                          <span className="leading-tight">{(idx + 1).toString().padStart(2, '0')}. {getEngineeringLabel(defect.description)}</span>
+                          <span className="text-slate-500 dark:text-zinc-400 text-[10px] font-mono flex-shrink-0">Declared</span>
+                        </div>
+                      ))}
                     </div>
                   ) : (
                     <div className="py-3 border-y border-slate-200 dark:border-zinc-800 border-dashed text-center text-xs text-emerald-700 dark:text-emerald-400 font-semibold italic">

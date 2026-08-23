@@ -872,9 +872,6 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <h4 className="font-bold text-sm text-ink-navy">{defect.description}</h4>
-                            <span className="text-[9px] font-mono font-bold bg-rose-500/10 text-rose-600 px-1.5 py-0.5 rounded-md border border-rose-500/20">
-                              {defect.deductionPercentage > 0 ? `-${parseFloat((defect.deductionPercentage * 100).toFixed(1))}%` : `-${formatPrice(defect.deductionFixed)}`}
-                            </span>
                           </div>
                           <p className="text-xs text-ink-muted mt-1 font-light leading-snug">{defect.subText}</p>
                         </div>
@@ -1003,9 +1000,6 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <h4 className="font-bold text-sm text-ink-navy">{defect.description}</h4>
-                            <span className="text-[9px] font-mono font-bold bg-rose-500/10 text-rose-600 px-1.5 py-0.5 rounded-md border border-rose-500/20">
-                              {defect.deductionPercentage > 0 ? `-${parseFloat((defect.deductionPercentage * 100).toFixed(1))}%` : `-${formatPrice(defect.deductionFixed)}`}
-                            </span>
                           </div>
                           <p className="text-xs text-ink-muted mt-1 font-light leading-snug">{defect.subText}</p>
                         </div>
@@ -1124,9 +1118,6 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <h4 className="font-bold text-sm text-ink-navy">{defect.description}</h4>
-                            <span className="text-[9px] font-mono font-bold bg-rose-500/10 text-rose-600 px-1.5 py-0.5 rounded-md border border-rose-500/20">
-                              {defect.deductionPercentage > 0 ? `-${parseFloat((defect.deductionPercentage * 100).toFixed(1))}%` : `-${formatPrice(defect.deductionFixed)}`}
-                            </span>
                           </div>
                           <p className="text-xs text-ink-muted mt-1 font-light leading-snug">{defect.subText}</p>
                         </div>
@@ -1245,9 +1236,6 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <h4 className="font-bold text-sm text-ink-navy">{defect.description}</h4>
-                            <span className="text-[9px] font-mono font-bold bg-rose-500/10 text-rose-600 px-1.5 py-0.5 rounded-md border border-rose-500/20">
-                              {defect.deductionPercentage > 0 ? `-${parseFloat((defect.deductionPercentage * 100).toFixed(1))}%` : `-${formatPrice(defect.deductionFixed)}`}
-                            </span>
                           </div>
                           <p className="text-xs text-ink-muted mt-1 font-light leading-snug">{defect.subText}</p>
                         </div>
@@ -1364,9 +1352,6 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <h4 className="font-bold text-sm text-ink-navy">{defect.description}</h4>
-                            <span className="text-[9px] font-mono font-bold bg-rose-500/10 text-rose-600 px-1.5 py-0.5 rounded-md border border-rose-500/20">
-                              Deduct: {formatPrice(defect.deductionFixed)}
-                            </span>
                           </div>
                           <p className="text-xs text-ink-muted mt-1 font-light leading-snug">{defect.subText}</p>
                         </div>
@@ -1407,12 +1392,9 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                             <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
                               {getIllustration('warranty-under-3m', deviceType)}
                             </div>
-                            <span className="text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded-md">
-                              0% Reduction
-                            </span>
                           </div>
                           <h5 className="font-bold text-xs text-ink-navy">Under 3 Months</h5>
-                          <p className="text-[11px] text-ink-muted mt-0.5 font-light">Full price under brand warranty with valid bill.</p>
+                          <p className="text-[11px] text-ink-muted mt-0.5 font-light">Active brand warranty with valid purchase invoice.</p>
                         </div>
 
                         <div
@@ -1431,12 +1413,9 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                             <div className="w-10 h-10 rounded-lg bg-cobalt/10 flex items-center justify-center">
                               {getIllustration('warranty-3-to-6m', deviceType)}
                             </div>
-                            <span className="text-[9px] font-mono font-bold bg-amber-500/20 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded-md">
-                              -15% Reduction
-                            </span>
                           </div>
                           <h5 className="font-bold text-xs text-ink-navy">3 to 6 Months</h5>
-                          <p className="text-[11px] text-ink-muted mt-0.5 font-light">15% age reduction under brand warranty with valid bill.</p>
+                          <p className="text-[11px] text-ink-muted mt-0.5 font-light">Active brand warranty with valid purchase invoice.</p>
                         </div>
 
                         <div
@@ -1455,12 +1434,9 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                             <div className="w-10 h-10 rounded-lg bg-violet-500/10 flex items-center justify-center">
                               {getIllustration('warranty-6-to-11m', deviceType)}
                             </div>
-                            <span className="text-[9px] font-mono font-bold bg-purple-500/20 text-purple-600 dark:text-purple-400 px-1.5 py-0.5 rounded-md">
-                              -20% Reduction
-                            </span>
                           </div>
                           <h5 className="font-bold text-xs text-ink-navy">6 to 11 Months</h5>
-                          <p className="text-[11px] text-ink-muted mt-0.5 font-light">20% age reduction under brand warranty with valid bill.</p>
+                          <p className="text-[11px] text-ink-muted mt-0.5 font-light">Active brand warranty with valid purchase invoice.</p>
                         </div>
 
                         <div
@@ -1479,12 +1455,9 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                             <div className="w-10 h-10 rounded-lg bg-slate-200 dark:bg-zinc-700 flex items-center justify-center">
                               {getIllustration('warranty-above-11m', deviceType)}
                             </div>
-                            <span className="text-[9px] font-mono font-bold bg-rose-500/20 text-rose-600 dark:text-rose-400 px-1.5 py-0.5 rounded-md">
-                              -25% Reduction
-                            </span>
                           </div>
                           <h5 className="font-bold text-xs text-ink-navy">Above 11 Months</h5>
-                          <p className="text-[11px] text-ink-muted mt-0.5 font-light">25% reduction for out of warranty / no purchase invoice.</p>
+                          <p className="text-[11px] text-ink-muted mt-0.5 font-light">Out of brand warranty / no purchase invoice.</p>
                         </div>
                       </div>
                     </div>
@@ -1591,13 +1564,8 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                                   : 'border-ice-border bg-canvas-white hover:border-emerald-500/40'
                               }`}
                             >
-                              <div className="flex items-center justify-between mb-2">
-                                <span className="text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-600 px-1.5 py-0.5 rounded">
-                                  0% Reduction
-                                </span>
-                              </div>
                               <h5 className="font-bold text-xs text-ink-navy">Under 3 Months</h5>
-                              <p className="text-[11px] text-ink-muted mt-0.5 font-light">Full price with valid bill.</p>
+                              <p className="text-[11px] text-ink-muted mt-0.5 font-light">Active brand warranty with valid bill.</p>
                             </div>
 
                             <div
@@ -1612,13 +1580,8 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                                   : 'border-ice-border bg-canvas-white hover:border-cobalt/40'
                               }`}
                             >
-                              <div className="flex items-center justify-between mb-2">
-                                <span className="text-[9px] font-mono font-bold bg-amber-500/20 text-amber-600 px-1.5 py-0.5 rounded">
-                                  -4.8% Reduction
-                                </span>
-                              </div>
                               <h5 className="font-bold text-xs text-ink-navy">3 to 6 Months</h5>
-                              <p className="text-[11px] text-ink-muted mt-0.5 font-light">4.8% age reduction under brand warranty.</p>
+                              <p className="text-[11px] text-ink-muted mt-0.5 font-light">Active brand warranty with valid bill.</p>
                             </div>
 
                             <div
@@ -1633,13 +1596,8 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                                   : 'border-ice-border bg-canvas-white hover:border-violet-500/40'
                               }`}
                             >
-                              <div className="flex items-center justify-between mb-2">
-                                <span className="text-[9px] font-mono font-bold bg-purple-500/20 text-purple-600 px-1.5 py-0.5 rounded">
-                                  -8% Reduction
-                                </span>
-                              </div>
                               <h5 className="font-bold text-xs text-ink-navy">6 to 11 Months</h5>
-                              <p className="text-[11px] text-ink-muted mt-0.5 font-light">8% age reduction under brand warranty.</p>
+                              <p className="text-[11px] text-ink-muted mt-0.5 font-light">Active brand warranty with valid bill.</p>
                             </div>
                           </div>
                         </div>
@@ -1773,8 +1731,8 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                       {selectedDefects.map((defect, i) => (
                         <div key={i} className="p-3 rounded-lg border border-ice-border bg-canvas-white flex justify-between items-center text-xs">
                           <span className="font-medium text-ink-navy">{defect.description}</span>
-                          <span className="font-mono text-rose-500 font-bold">
-                            {defect.deductionPercentage > 0 ? `-${Math.round(defect.deductionPercentage * 100)}%` : `-${formatPrice(defect.deductionFixed)}`}
+                          <span className="font-mono text-amber-600 dark:text-amber-400 font-semibold text-[10px] bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                            Declared
                           </span>
                         </div>
                       ))}
@@ -1852,8 +1810,8 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
                     <div className="space-y-3 text-xs font-mono">
                       <div className="flex justify-between items-center py-2 text-ink-navy dark:text-zinc-200 print-text-dark border-b border-slate-200 dark:border-zinc-800/80 print-border">
-                        <span className="font-medium">00. Base Configuration Value ({variant.storageGb}GB)</span>
-                        <span className="text-emerald-600 dark:text-emerald-400 print-text-emerald font-bold text-sm font-outfit">+{formatPrice(variant.basePrice)}</span>
+                        <span className="font-medium">00. Base Configuration ({variant.storageGb}GB)</span>
+                        <span className="text-emerald-600 dark:text-emerald-400 print-text-emerald font-semibold text-xs font-mono">Verified Spec</span>
                       </div>
 
                       {valuation.deductions.length === 0 ? (
@@ -1871,7 +1829,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                               className="flex justify-between items-center text-ink-navy dark:text-zinc-300 print-text-dark border-b border-slate-200 dark:border-zinc-800/60 print-border py-1.5"
                             >
                               <span className="font-normal">{(i + 1).toString().padStart(2, '0')}. {getEngineeringLabel(d.description)}</span>
-                              <span className="text-red-500 dark:text-red-400 print-text-red font-bold font-outfit text-xs">-[{formatPrice(d.totalDeducted)}]</span>
+                              <span className="text-slate-500 dark:text-zinc-400 font-mono text-[10px] uppercase font-semibold">Assessment Verified</span>
                             </motion.div>
                           ))}
                         </div>
