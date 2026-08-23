@@ -239,12 +239,12 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
     }
     fAge = config.ageFactors[ageKey] ?? 1.00;
   } else if (isIphone15or16) {
-    // iPhone 15 & 16 Series: 0% under 3m, 4.8% 3-6m, 8.0% 6-11m
+    // iPhone 15 & 16 Series: 0% under 3m, 6.0% 3-6m, 10.0% 6-11m
     const wAge = input.warrantyAge || (input.deviceAge === '3_to_6m' ? '3_to_6m' : input.deviceAge === '6_to_12m' ? '6_to_11m' : 'under_3m');
     if (wAge === '3_to_6m') {
-      fAge = 0.952; // -4.8% reduction
+      fAge = 0.94; // -6.0% reduction
     } else if (wAge === '6_to_11m') {
-      fAge = 0.920; // -8.0% reduction
+      fAge = 0.90; // -10.0% reduction
     } else {
       fAge = 1.00; // 0% reduction (under 3 months)
     }
