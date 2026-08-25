@@ -239,18 +239,32 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
     }
     fAge = config.ageFactors[ageKey] ?? 1.00;
   } else if (isIphone15or16) {
-    // iPhone 15 & 16 Series: 0% under 3m, 6.0% 3-6m, 10.0% 6-11m
-    const wAge = input.warrantyAge || (input.deviceAge === '3_to_6m' ? '3_to_6m' : input.deviceAge === '6_to_12m' ? '6_to_11m' : 'under_3m');
+    // iPhone 15 & 16 Series: 0% under 3m, 6.0% 3-6m, 10.0% 6-11m, 25.0% out of warranty (>11m)
+    const wAge = input.warrantyAge || (
+      input.deviceAge === '3_to_6m' ? '3_to_6m' :
+      input.deviceAge === '6_to_12m' ? '6_to_11m' :
+      input.deviceAge === '1_to_2y' || input.deviceAge === '2_to_3y' || input.deviceAge === 'above_4y' ? 'out_of_warranty' :
+      'under_3m'
+    );
     if (wAge === '3_to_6m') {
       fAge = 0.94; // -6.0% reduction
     } else if (wAge === '6_to_11m') {
       fAge = 0.90; // -10.0% reduction
+    } else if (wAge === 'out_of_warranty' || input.deviceAge === '1_to_2y' || input.deviceAge === '2_to_3y' || input.deviceAge === 'above_4y') {
+      fAge = 0.75; // -25.0% reduction (out of warranty / above 11 months)
     } else {
       fAge = 1.00; // 0% reduction (under 3 months)
     }
   } else {
-    // Other models retain 100% baseline market price
-    fAge = 1.00;
+    // Other models apply age factors from config (under 3m: 1.00, 3-6m: 0.85, 6-11m: 0.80, >11m: 0.75)
+    let ageKey: AgeFactorKey = input.deviceAge || 'under_3m';
+    if (!input.deviceAge && input.warrantyAge) {
+      if (input.warrantyAge === 'under_3m') ageKey = 'under_3m';
+      else if (input.warrantyAge === '3_to_6m') ageKey = '3_to_6m';
+      else if (input.warrantyAge === '6_to_11m') ageKey = '6_to_12m';
+      else ageKey = '1_to_2y';
+    }
+    fAge = config.ageFactors[ageKey] ?? 1.00;
   }
 
   // 2. Market Demand Factor F_market
