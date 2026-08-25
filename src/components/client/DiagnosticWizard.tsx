@@ -111,8 +111,6 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
   // Obtain rules based on model category, brand and model ID
   const rules = useMemo(() => getDefectRulesForCategory(model.category, model.brandId, model.name, model.id), [model]);
 
-  const isIphone17Series = useMemo(() => model.name.toLowerCase().includes('iphone 17'), [model.name]);
-  
   // Only ask for warranty on iPhone 15, 16, 17 and above (Never ask for iPhone 11, 12, 13, 14 series)
   const isEligibleForWarranty = useMemo(() => {
     const nm = model.name.toLowerCase();
@@ -540,7 +538,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
       </AnimatePresence>
 
       {/* Premium Evaluation Wizard Header */}
-      <div className="bg-canvas-pure border border-ice-border rounded-xl p-4 sm:p-5 mb-6 shadow-sm space-y-4 text-left">
+      <div className="bg-canvas-pure border border-ice-border rounded-xl p-4 sm:p-5 mb-6 shadow-sm space-y-5 text-left">
         {/* Top Header Row: Device Info + Live Payout HUD */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-ice-border/60">
           <div className="flex items-center gap-3.5 min-w-0">
@@ -554,14 +552,14 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase font-semibold">Evaluation Wizard</span>
-                <span className="text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                <span className="text-[10px] font-mono tracking-[0.15em] text-ink-muted uppercase font-semibold">Evaluation Wizard</span>
+                <span className="text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
                   Up to {formatPrice(variant.basePrice)}
                 </span>
               </div>
-              <div className="flex flex-wrap items-center gap-2 mt-0.5">
+              <div className="flex flex-wrap items-center gap-2 mt-1">
                 <h2 className="font-bold text-ink-navy text-xl sm:text-2xl tracking-tight truncate">{model.name}</h2>
-                <span className="text-[10px] font-mono font-bold tracking-wider bg-cobalt/10 text-cobalt px-2.5 py-0.5 rounded-md border border-cobalt/20 flex-shrink-0">
+                <span className="text-[10px] font-mono font-bold tracking-wider bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-zinc-300 px-2 py-0.5 rounded-md border border-slate-200 dark:border-zinc-700 flex-shrink-0">
                   {variant.storageGb >= 1024 ? '1TB' : `${variant.storageGb}GB`}
                 </span>
               </div>
@@ -570,14 +568,14 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
           {/* Real-Time Live Payout HUD Badge */}
           {step < 6 && (
-            <div className="flex items-center gap-3 bg-gradient-to-r from-slate-900 via-zinc-900 to-slate-950 text-white px-4 py-2.5 rounded-xl border border-zinc-800 shadow-md flex-shrink-0">
+            <div className="flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/25 dark:bg-emerald-950/40 dark:border-emerald-800/50 px-4 py-2.5 rounded-xl shadow-xs flex-shrink-0">
               <div>
-                <span className="text-[9px] font-mono tracking-widest text-zinc-400 uppercase block font-semibold">LIVE ESTIMATED PAYOUT</span>
+                <span className="text-[9px] font-mono tracking-widest text-emerald-800 dark:text-emerald-300 uppercase block font-bold">LIVE ESTIMATED PAYOUT</span>
                 <div className="flex items-center gap-2.5 mt-0.5">
-                  <span className="text-xl sm:text-2xl font-black text-emerald-400 font-mono tracking-tight">
+                  <span className="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 font-outfit tracking-tight">
                     {valuation.isCritical ? '₹ 0 (Locked)' : formatPrice(valuation.finalPrice)}
                   </span>
-                  <span className="text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-md border border-emerald-500/30">
+                  <span className="text-[10px] font-bold bg-emerald-600 text-white px-2 py-0.5 rounded-full shadow-xs">
                     {valuation.retentionPercentage}% Retained
                   </span>
                 </div>
@@ -602,36 +600,46 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
           </div>
 
           {/* Desktop 7-Step Horizontal Stepper with Connecting Bar */}
-          <div className="hidden sm:flex items-center justify-between relative w-full pt-1">
-            {/* Connecting Track Line */}
-            <div className="absolute top-5 left-6 right-6 h-1 bg-zinc-200 dark:bg-zinc-800 -z-0 rounded-full">
+          <div className="hidden sm:flex justify-between relative w-full pt-1">
+            {/* Connecting Track Line — Exactly centered vertically at 18px (half of 36px circle height + 4px pt-1) */}
+            <div className="absolute top-[22px] -translate-y-1/2 left-6 right-6 h-1 bg-slate-200 dark:bg-zinc-800 z-0 rounded-full">
               <div 
                 className="h-full bg-gradient-to-r from-cobalt via-emerald-500 to-emerald-600 transition-all duration-500 rounded-full"
                 style={{ width: `${(Math.min(step, 6) / 6) * 100}%` }}
               />
             </div>
 
-            {stepsList.map((s, idx) => {
+            {stepsList.map((_s, idx) => {
               const isCompleted = step > idx;
               const isActive = step === idx;
+
+              const stepLabels = [
+                'Boot',
+                'Display',
+                'Body',
+                'Hardware',
+                'Connectivity',
+                isEligibleForWarranty ? 'Docs & Age' : 'Packaging',
+                'Review'
+              ];
 
               return (
                 <div key={idx} className="relative z-10 flex flex-col items-center group cursor-pointer" onClick={() => isCompleted && setStep(idx)}>
                   <div 
-                    className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs transition-all duration-300 ${
+                    className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-300 ${
                       isCompleted 
                         ? 'bg-emerald-500 text-white shadow-sm ring-2 ring-emerald-500/20' 
                         : isActive 
-                        ? 'bg-cobalt text-white scale-110 ring-4 ring-cobalt/20 font-extrabold shadow-md' 
-                        : 'bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-zinc-500'
+                        ? 'bg-cobalt text-white ring-2 ring-cobalt/30 font-extrabold shadow-md scale-105' 
+                        : 'bg-white dark:bg-zinc-900 border border-slate-300 dark:border-zinc-700 text-slate-400'
                     }`}
                   >
                     {isCompleted ? <Check className="w-4 h-4 stroke-[3]" /> : idx + 1}
                   </div>
-                  <span className={`text-[10px] font-mono uppercase tracking-wider mt-1.5 font-bold transition-colors ${
-                    isActive ? 'text-cobalt' : isCompleted ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-400'
+                  <span className={`text-[11px] font-semibold mt-1.5 transition-colors ${
+                    isActive ? 'text-cobalt font-bold' : isCompleted ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'
                   }`}>
-                    {s.title.split(' ')[0]}
+                    {stepLabels[idx]}
                   </span>
                 </div>
               );
@@ -1367,107 +1375,14 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                 </div>
 
                 {/* Device Age & Warranty Status Section — Only for iPhone 15+ and recent eligible devices */}
+                {/* Device Age & Warranty Status Section — For all eligible devices */}
                 {isEligibleForWarranty && (
-                  <div className="mt-8 text-left border-t border-ice-border pt-6">
-                  {isIphone17Series ? (
-                    // Direct 4-tier selection for iPhone 17 Series
+                  <div className="mt-6 text-left border-t border-ice-border/60 pt-5">
                     <div>
-                      <h4 className="text-sm font-bold text-ink-navy font-outfit uppercase tracking-wider mb-3">
-                        Brand Warranty & Device Age
-                      </h4>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                        <div
-                          onClick={() => {
-                            setWarrantyAge('under_3m');
-                            setDeviceAge('under_3m');
-                            setWarrantyStatus('active');
-                          }}
-                          className={`p-3 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
-                            warrantyAge === 'under_3m'
-                              ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/30'
-                              : 'border-ice-border bg-canvas-white hover:border-emerald-500/40'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                              {getIllustration('warranty-under-3m', deviceType)}
-                            </div>
-                          </div>
-                          <h5 className="font-bold text-xs text-ink-navy">Under 3 Months</h5>
-                          <p className="text-[11px] text-ink-muted mt-0.5 font-light">Active brand warranty with valid purchase invoice.</p>
-                        </div>
-
-                        <div
-                          onClick={() => {
-                            setWarrantyAge('3_to_6m');
-                            setDeviceAge('3_to_6m');
-                            setWarrantyStatus('active');
-                          }}
-                          className={`p-3 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
-                            warrantyAge === '3_to_6m'
-                              ? 'border-cobalt bg-cobalt-light/40 ring-1 ring-cobalt/30'
-                              : 'border-ice-border bg-canvas-white hover:border-cobalt/40'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="w-10 h-10 rounded-lg bg-cobalt/10 flex items-center justify-center">
-                              {getIllustration('warranty-3-to-6m', deviceType)}
-                            </div>
-                          </div>
-                          <h5 className="font-bold text-xs text-ink-navy">3 to 6 Months</h5>
-                          <p className="text-[11px] text-ink-muted mt-0.5 font-light">Active brand warranty with valid purchase invoice.</p>
-                        </div>
-
-                        <div
-                          onClick={() => {
-                            setWarrantyAge('6_to_11m');
-                            setDeviceAge('6_to_12m');
-                            setWarrantyStatus('expiring_soon');
-                          }}
-                          className={`p-3 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
-                            warrantyAge === '6_to_11m'
-                              ? 'border-violet-500 bg-violet-500/10 ring-1 ring-violet-500/30'
-                              : 'border-ice-border bg-canvas-white hover:border-violet-500/40'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="w-10 h-10 rounded-lg bg-violet-500/10 flex items-center justify-center">
-                              {getIllustration('warranty-6-to-11m', deviceType)}
-                            </div>
-                          </div>
-                          <h5 className="font-bold text-xs text-ink-navy">6 to 11 Months</h5>
-                          <p className="text-[11px] text-ink-muted mt-0.5 font-light">Active brand warranty with valid purchase invoice.</p>
-                        </div>
-
-                        <div
-                          onClick={() => {
-                            setWarrantyAge('out_of_warranty');
-                            setDeviceAge('1_to_2y');
-                            setWarrantyStatus('expired');
-                          }}
-                          className={`p-3 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
-                            warrantyAge === 'out_of_warranty'
-                              ? 'border-slate-400 bg-slate-100/60 dark:bg-zinc-800 ring-1 ring-slate-400/30'
-                              : 'border-ice-border bg-canvas-white hover:border-slate-400/40'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="w-10 h-10 rounded-lg bg-slate-200 dark:bg-zinc-700 flex items-center justify-center">
-                              {getIllustration('warranty-above-11m', deviceType)}
-                            </div>
-                          </div>
-                          <h5 className="font-bold text-xs text-ink-navy">Above 11 Months</h5>
-                          <p className="text-[11px] text-ink-muted mt-0.5 font-light">Out of brand warranty / no purchase invoice.</p>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    // Progressive "Is your device under warranty?" flow for other devices
-                    <div>
-                      <h4 className="text-sm font-bold text-ink-navy font-outfit uppercase tracking-wider mb-1">
+                      <h4 className="text-xs font-bold text-ink-navy font-outfit uppercase tracking-wider mb-1">
                         Is your device under brand warranty?
                       </h4>
-                      <p className="text-xs text-ink-muted mb-3 font-light">
+                      <p className="text-[11px] text-ink-muted mb-3 font-light">
                         Devices with a valid purchase invoice under brand warranty receive higher valuation payouts.
                       </p>
 
@@ -1482,14 +1397,14 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                               setWarrantyStatus('active');
                             }
                           }}
-                          className={`p-4 rounded-2xl border cursor-pointer transition-all flex items-center gap-3.5 ${
+                          className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center gap-3 ${
                             hasWarranty === true
-                              ? 'border-emerald-500 bg-emerald-500/10 ring-2 ring-emerald-500/20 shadow-sm'
+                              ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/20'
                               : 'border-ice-border bg-canvas-white hover:border-emerald-500/40 hover:bg-slate-50/60'
                           }`}
                         >
-                          <div className="w-11 h-11 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-600 shrink-0">
-                            <ShieldCheck className="w-6 h-6" />
+                          <div className="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-600 shrink-0">
+                            <ShieldCheck className="w-5 h-5" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between">
@@ -1502,10 +1417,10 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                               Device has active brand warranty &amp; purchasing invoice.
                             </p>
                           </div>
-                          <div className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 ${
-                            hasWarranty === true ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-ice-border bg-white'
+                          <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${
+                            hasWarranty === true ? 'bg-emerald-600 text-white' : 'border border-ice-border bg-white'
                           }`}>
-                            {hasWarranty === true && <Check className="w-3.5 h-3.5" />}
+                            {hasWarranty === true && <Check className="w-2.5 h-2.5 stroke-[3]" />}
                           </div>
                         </div>
 
@@ -1517,14 +1432,14 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                             setDeviceAge('1_to_2y');
                             setWarrantyStatus('expired');
                           }}
-                          className={`p-4 rounded-2xl border cursor-pointer transition-all flex items-center gap-3.5 ${
+                          className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center gap-3 ${
                             hasWarranty === false
-                              ? 'border-slate-500 bg-slate-100 dark:bg-zinc-800 ring-2 ring-slate-400/30 shadow-sm'
+                              ? 'border-slate-500 bg-slate-100 dark:bg-zinc-800 ring-1 ring-slate-400/30'
                               : 'border-ice-border bg-canvas-white hover:border-slate-400/40 hover:bg-slate-50/60'
                           }`}
                         >
-                          <div className="w-11 h-11 rounded-xl bg-slate-200 dark:bg-zinc-700 border border-slate-300 flex items-center justify-center text-slate-600 dark:text-slate-300 shrink-0">
-                            <Box className="w-6 h-6" />
+                          <div className="w-9 h-9 rounded-lg bg-slate-200 dark:bg-zinc-700 border border-slate-300 flex items-center justify-center text-slate-600 dark:text-slate-300 shrink-0">
+                            <Box className="w-5 h-5" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between">
@@ -1537,10 +1452,10 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                               Warranty expired or purchase invoice not available.
                             </p>
                           </div>
-                          <div className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 ${
-                            hasWarranty === false ? 'bg-slate-700 border-slate-700 text-white' : 'border-ice-border bg-white'
+                          <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${
+                            hasWarranty === false ? 'bg-slate-700 text-white' : 'border border-ice-border bg-white'
                           }`}>
-                            {hasWarranty === false && <Check className="w-3.5 h-3.5" />}
+                            {hasWarranty === false && <Check className="w-2.5 h-2.5 stroke-[3]" />}
                           </div>
                         </div>
                       </div>
@@ -1549,9 +1464,9 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                       {hasWarranty === true && (
                         <div className="pt-3 border-t border-dashed border-ice-border animate-in fade-in slide-in-from-top-2 duration-200">
                           <p className="text-xs font-semibold text-ink-navy mb-2.5">
-                            Select remaining brand warranty period:
+                            Select device age (with valid bill):
                           </p>
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                             <div
                               onClick={() => {
                                 setWarrantyAge('under_3m');
@@ -1603,13 +1518,10 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         </div>
                       )}
                     </div>
-                  )}
-                </div>
-              )}
+                  </div>
+                )}
 
-
-
-                {/* Dual eSIM Question — Apple Pro / Pro Max iPhone 14+ only */}
+                {/* Dual eSIM / Physical SIM Question — Apple Pro / Pro Max iPhone 14+ only */}
                 {(() => {
                   const nm = model.name.toLowerCase();
                   const isProOrProMax = nm.includes('pro max') || nm.includes(' pro');
@@ -1617,34 +1529,30 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                     nm.includes('iphone 14') || nm.includes('iphone 15') ||
                     nm.includes('iphone 16') || nm.includes('iphone 17')
                   );
-                  const is17Series = nm.includes('iphone 17');
                   if (!isEligible) return null;
                   return (
-                    <div className="mt-6 text-left border-t border-ice-border pt-6">
-                      <h4 className="text-sm font-bold text-ink-navy font-outfit uppercase tracking-wider mb-1">
-                        How many eSIMs does your device support?
+                    <div className="mt-5 text-left border-t border-ice-border/60 pt-5">
+                      <h4 className="text-xs font-bold text-ink-navy font-outfit uppercase tracking-wider mb-2.5">
+                        Does your phone support physical SIM?
                       </h4>
-                      <p className="text-[11px] text-ink-muted mb-3 font-light">
-                        Please select &quot;Dual eSIM&quot; if your device supports dual eSIMs. Otherwise, select &quot;Single eSIM&quot;.
-                      </p>
+
                       <div className="grid grid-cols-2 gap-3">
                         <div
                           onClick={() => setDualEsim(false)}
                           className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center gap-3 ${
                             dualEsim === false
                               ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/30'
-                              : 'border-ice-border bg-canvas-white hover:border-emerald-500/40'
+                              : 'border-ice-border bg-canvas-white hover:border-emerald-500/40 hover:bg-slate-50/50'
                           }`}
                         >
-                          <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
-                            <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <rect x="5" y="2" width="14" height="20" rx="2" strokeWidth="2"/>
-                              <line x1="12" y1="18" x2="12" y2="18.01" strokeWidth="2" strokeLinecap="round"/>
-                            </svg>
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
+                            dualEsim === false ? 'bg-emerald-500 text-white' : 'bg-emerald-500/10 text-emerald-600'
+                          }`}>
+                            <Check className="w-4 h-4 stroke-[2.5]" />
                           </div>
                           <div>
-                            <h5 className="font-bold text-xs text-ink-navy">Single eSIM</h5>
-                            <p className="text-[11px] text-ink-muted mt-0.5 font-light">Supports one eSIM line.</p>
+                            <h5 className="font-bold text-xs text-ink-navy">Yes</h5>
+                            <p className="text-[10px] text-ink-muted font-light mt-0.5">Has physical SIM tray</p>
                           </div>
                         </div>
 
@@ -1652,25 +1560,18 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           onClick={() => setDualEsim(true)}
                           className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center gap-3 ${
                             dualEsim === true
-                              ? 'border-rose-500 bg-rose-500/10 ring-1 ring-rose-500/30'
-                              : 'border-ice-border bg-canvas-white hover:border-rose-500/40'
+                              ? 'border-slate-700 bg-slate-100 dark:bg-zinc-800 ring-1 ring-slate-700/30'
+                              : 'border-ice-border bg-canvas-white hover:border-slate-400/40 hover:bg-slate-50/50'
                           }`}
                         >
-                          <div className="w-8 h-8 rounded-lg bg-rose-500/10 flex items-center justify-center flex-shrink-0">
-                            <svg className="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <rect x="3" y="2" width="8" height="13" rx="1.5" strokeWidth="2"/>
-                              <rect x="13" y="2" width="8" height="13" rx="1.5" strokeWidth="2"/>
-                              <line x1="7" y1="18" x2="17" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                            </svg>
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
+                            dualEsim === true ? 'bg-slate-700 text-white' : 'bg-slate-200 dark:bg-zinc-700 text-slate-600'
+                          }`}>
+                            <X className="w-4 h-4 stroke-[2.5]" />
                           </div>
                           <div>
-                            <div className="flex items-center gap-1.5">
-                              <h5 className="font-bold text-xs text-ink-navy">Dual eSIM</h5>
-                              <span className="text-[9px] font-mono font-bold bg-rose-500/20 text-rose-600 px-1.5 py-0.5 rounded-md">
-                                -{is17Series ? '8' : '5'}%
-                              </span>
-                            </div>
-                            <p className="text-[11px] text-ink-muted mt-0.5 font-light">Supports two eSIM lines simultaneously.</p>
+                            <h5 className="font-bold text-xs text-ink-navy">No</h5>
+                            <p className="text-[10px] text-ink-muted font-light mt-0.5">eSIM only (No physical tray)</p>
                           </div>
                         </div>
                       </div>
