@@ -155,6 +155,37 @@ export function resetSeriesOrder(brandId: string): void {
   }
 }
 
+export function getSkippedSeriesBrands(): string[] {
+  try {
+    const raw = localStorage.getItem('stc_skipped_series_brands');
+    if (!raw) return ['brand-nothing']; // Default: Nothing skips series step
+    return JSON.parse(raw);
+  } catch {
+    return ['brand-nothing'];
+  }
+}
+
+export function setBrandSkipSeries(brandId: string, skip: boolean): void {
+  try {
+    const current = getSkippedSeriesBrands();
+    let updated: string[];
+    if (skip) {
+      updated = Array.from(new Set([...current, brandId]));
+    } else {
+      updated = current.filter(id => id !== brandId);
+    }
+    localStorage.setItem('stc_skipped_series_brands', JSON.stringify(updated));
+    window.dispatchEvent(new Event('stc_catalog_order_changed'));
+  } catch (e) {
+    console.error('Failed to update brand skip series setting:', e);
+  }
+}
+
+export function isBrandSeriesSkipped(brandId: string): boolean {
+  const list = getSkippedSeriesBrands();
+  return list.includes(brandId);
+}
+
 export function getSavedModelOrder(brandId: string): string[] {
   try {
     const raw = localStorage.getItem(`stc_model_order_${brandId}`);

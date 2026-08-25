@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { BRANDS as STATIC_BRANDS, SMARTPHONE_MODELS as STATIC_SMARTPHONE_MODELS, Model, Brand, Variant, generateVariantsForModel, getDeviceImage, getModelSupportedRam, getModelSupportedStorage, getVariantPrice, isVariantAvailable, isTabletDevice, isSmartwatchDevice, sortModelsByLaunchDesc, getMaxVariantPrice } from '../../data/mockDatabase';
-import { applyBrandOrder, applySeriesOrder, applyModelOrder, sortSeriesByHierarchy } from '../../utils/ordering';
+import { applyBrandOrder, applySeriesOrder, applyModelOrder, sortSeriesByHierarchy, isBrandSeriesSkipped } from '../../utils/ordering';
 import { Search, ChevronRight, Smartphone, Layers, ArrowLeft, ArrowRight, Cpu, Wifi, Radio, X, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -747,6 +747,9 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
 
   // Get available series for the selected brand
   const availableSeries = useMemo(() => {
+    if (isBrandSeriesSkipped(selectedBrandId)) {
+      return [];
+    }
     const brandModels = MODELS.filter(m => m.brandId === selectedBrandId);
     const seriesSet = new Set<string>();
     brandModels.forEach(m => {
@@ -1053,7 +1056,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
           )}
 
           <AnimatePresence mode="wait">
-            {debouncedSearchQuery.trim() === '' && selectedSeries === null ? (
+            {debouncedSearchQuery.trim() === '' && selectedSeries === null && availableSeries.length > 0 ? (
               <motion.div
                 key="series-view"
                 initial={{ opacity: 0, x: -20 }}
@@ -1114,8 +1117,8 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
               >
-                {/* Breadcrumb / Back Navigation if not searching */}
-                {debouncedSearchQuery.trim() === '' && (
+                {/* Breadcrumb / Back Navigation if not searching and series is selected */}
+                {debouncedSearchQuery.trim() === '' && selectedSeries !== null && (
                   <div className="flex items-center justify-between mb-5 pb-3 border-b border-white/[0.04]">
                     <motion.button
                       whileHover={{ x: -2 }}

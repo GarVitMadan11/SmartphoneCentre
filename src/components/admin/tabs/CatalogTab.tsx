@@ -39,6 +39,8 @@ import {
   resetModelOrder,
   applyModelOrder,
   shuffleArray,
+  setBrandSkipSeries,
+  isBrandSeriesSkipped,
 } from '../../../utils/ordering';
 
 interface CatalogTabProps {
@@ -946,7 +948,7 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
             <div className="space-y-3">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
                 <div className="flex items-center gap-2">
-                  <span className="font-mono text-sky-100 font-semibold">Select Brand to Reorder Series:</span>
+                  <span className="font-mono text-sky-100 font-semibold">Select Brand to Manage Series:</span>
                   <select
                     value={reorderSeriesBrandId}
                     onChange={(e) => setReorderSeriesBrandId(e.target.value)}
@@ -967,6 +969,35 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
                   <Shuffle className="w-3 h-3 text-sky-200" />
                   <span>Random Shuffle</span>
                 </button>
+              </div>
+
+              {/* Skip / Hide Series Step Toggle Banner for Brand */}
+              <div className="p-3 bg-sky-900/70 border border-sky-400/50 rounded-lg flex items-center justify-between gap-3 text-xs shadow-inner">
+                <div>
+                  <span className="font-bold text-white block font-outfit text-sm">
+                    ⚡ Bypass / Hide Series Step for {orderedBrands.find((b) => b.id === reorderSeriesBrandId)?.name || 'Selected Brand'}
+                  </span>
+                  <span className="text-[11px] text-sky-100 font-mono leading-relaxed block mt-0.5">
+                    When enabled, clicking this brand in the public store skips the series sub-category step and displays all models directly (e.g. Nothing).
+                  </span>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                  <input
+                    type="checkbox"
+                    checked={isBrandSeriesSkipped(reorderSeriesBrandId)}
+                    onChange={(e) => {
+                      setBrandSkipSeries(reorderSeriesBrandId, e.target.checked);
+                      setOrderVersion((v) => v + 1);
+                      setSuccessMsg(
+                        e.target.checked
+                          ? `Series step bypassed for ${orderedBrands.find((b) => b.id === reorderSeriesBrandId)?.name || 'brand'}. Storefront will display all models directly!`
+                          : `Series step enabled for ${orderedBrands.find((b) => b.id === reorderSeriesBrandId)?.name || 'brand'}.`
+                      );
+                    }}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-sky-950 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                </label>
               </div>
 
               {orderedSeries.length === 0 ? (
