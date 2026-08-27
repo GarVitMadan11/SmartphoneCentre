@@ -982,6 +982,31 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                           <span className="text-xl text-cobalt font-extrabold font-outfit">{formatPrice(finalPrice)}</span>
                         </div>
                       </div>
+
+                      {/* Not satisfied with the price? Contact Us Banner */}
+                      <div className="mt-4 bg-[#f3f4f6] dark:bg-zinc-800/80 border border-slate-200/80 dark:border-zinc-700/60 rounded-2xl p-4 sm:px-6 sm:py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+                        <div>
+                          <h4 className="font-bold text-slate-900 dark:text-white text-sm sm:text-base tracking-tight">
+                            Not satisfied with the price?
+                          </h4>
+                          <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-0.5 font-normal">
+                            Please connect with our team
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (onNavigate) {
+                              onNavigate('/contact');
+                            } else {
+                              window.location.href = '/contact';
+                            }
+                          }}
+                          className="text-cobalt dark:text-sky-400 hover:text-cobalt-hover dark:hover:text-sky-300 font-bold text-xs sm:text-sm hover:underline cursor-pointer transition-colors flex-shrink-0 self-end sm:self-auto"
+                        >
+                          Contact Us
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>

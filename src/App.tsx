@@ -1700,6 +1700,7 @@ export default function App() {
                 setStep={setWizardStep}
                 currentUser={currentUser}
                 onLoginSuccess={(user: ApiUser) => setCurrentUser(user)}
+                onNavigate={navigate}
               />
             </Suspense>
           )}

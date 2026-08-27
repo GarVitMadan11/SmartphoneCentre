@@ -5,7 +5,8 @@ import type { AgeFactorKey } from '../../data/pricingRulesConfig';
 import { 
   ArrowLeft, Check, ChevronRight, Activity, Sparkles, 
   Smartphone, Box, Zap, ShieldCheck, Printer, Receipt,
-  X, Lock, Eye, EyeOff, AlertCircle, Mail, User
+  X, Lock, Eye, EyeOff, AlertCircle, Mail, User,
+  Phone, MessageSquare, ExternalLink, Headphones, Send
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getIllustration } from './Illustrations';
@@ -89,6 +90,7 @@ interface DiagnosticWizardProps {
   setStep: React.Dispatch<React.SetStateAction<number>>;
   currentUser?: ApiUser | null;
   onLoginSuccess?: (user: ApiUser) => void;
+  onNavigate?: (path: string) => void;
 }
 
 export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
@@ -102,6 +104,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
   setStep,
   currentUser,
   onLoginSuccess,
+  onNavigate,
 }) => {
   const isApple = useMemo(() => isAppleDevice(model.brandId, model.name), [model]);
   const isWatch = useMemo(() => isSmartwatchDevice(model.brandId, model.name, model.id), [model]);
@@ -283,6 +286,12 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
   // Phone Check Lock Modal states
   const [isPriceLocked, setIsPriceLocked] = useState(!currentUser);
   const [lockModalOpen, setLockModalOpen] = useState(false);
+  const [contactModalOpen, setContactModalOpen] = useState(false);
+  const [expectedPrice, setExpectedPrice] = useState('');
+  const [contactPhone, setContactPhone] = useState(currentUser?.phone || '');
+  const [contactNote, setContactNote] = useState('');
+  const [isSubmittingBestPrice, setIsSubmittingBestPrice] = useState(false);
+  const [bestPriceSubmitted, setBestPriceSubmitted] = useState(false);
   const [modalStage, setModalStage] = useState<'email' | 'password' | 'signup' | 'otp'>('email');
   const [phoneInput, setPhoneInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
@@ -1774,6 +1783,25 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                       </span>
                     </div>
 
+                    {/* Not satisfied with the price? Contact Us Banner */}
+                    <div className="mt-5 bg-[#f3f4f6] dark:bg-zinc-800/80 border border-slate-200/80 dark:border-zinc-700/60 rounded-2xl p-4 sm:px-6 sm:py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs print:hidden">
+                      <div>
+                        <h4 className="font-bold text-slate-900 dark:text-white text-sm sm:text-base tracking-tight">
+                          Not satisfied with the price?
+                        </h4>
+                        <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-0.5 font-normal">
+                          Please connect with our team
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setContactModalOpen(true)}
+                        className="text-cobalt dark:text-sky-400 hover:text-cobalt-hover dark:hover:text-sky-300 font-bold text-xs sm:text-sm hover:underline cursor-pointer transition-colors flex-shrink-0 self-end sm:self-auto"
+                      >
+                        Contact Us
+                      </button>
+                    </div>
+
                     <p className="text-[10px] text-zinc-500 mt-4 italic text-center font-mono">
                       Estimated Trade-In Value. Final offer is subject to physical inspection, IMEI/device verification and diagnostic confirmation.
                     </p>
@@ -2190,6 +2218,183 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
               )}
 
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Best Price Negotiation & Support Contact Modal */}
+      {contactModalOpen && (
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200">
+          <div className="relative max-w-lg w-full bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden shadow-2xl border border-zinc-200 dark:border-zinc-800 text-left p-6 sm:p-7">
+            {/* Close button */}
+            <button 
+              type="button"
+              onClick={() => {
+                setContactModalOpen(false);
+                setBestPriceSubmitted(false);
+              }} 
+              className="absolute top-4 right-4 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 p-1.5 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Header */}
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-cobalt/10 text-cobalt flex items-center justify-center flex-shrink-0">
+                <Headphones className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white font-outfit leading-snug">
+                  Get The Best Price Guaranteed
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-zinc-400">
+                  Have a better offer or want a custom quote? Connect with our team!
+                </p>
+              </div>
+            </div>
+
+            {/* Device & Valuation Summary */}
+            <div className="bg-slate-50 dark:bg-zinc-800/60 rounded-xl p-3.5 border border-slate-200 dark:border-zinc-700/60 mb-5 flex justify-between items-center text-xs">
+              <div>
+                <span className="text-[10px] font-mono uppercase text-slate-400 block">DEVICE</span>
+                <span className="font-bold text-slate-800 dark:text-zinc-200">{model.name} ({variant.storageGb}GB)</span>
+              </div>
+              <div className="text-right">
+                <span className="text-[10px] font-mono uppercase text-slate-400 block">CURRENT QUOTE</span>
+                <span className="font-extrabold text-emerald-600 dark:text-emerald-400 text-sm font-outfit">{formatPrice(valuation.finalPrice)}</span>
+              </div>
+            </div>
+
+            {bestPriceSubmitted ? (
+              <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-5 text-center space-y-2 my-2 animate-fadeIn">
+                <div className="w-10 h-10 rounded-full bg-emerald-500 text-white mx-auto flex items-center justify-center">
+                  <Check className="w-6 h-6" />
+                </div>
+                <h4 className="font-bold text-emerald-800 dark:text-emerald-300 text-sm">Best Price Request Received!</h4>
+                <p className="text-xs text-emerald-700 dark:text-emerald-400">
+                  Our pricing desk is evaluating your request for <strong>{model.name}</strong>. We will call/WhatsApp you at <strong>+91 {contactPhone}</strong> within 15 minutes with our best revised offer!
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setContactModalOpen(false);
+                    setBestPriceSubmitted(false);
+                  }}
+                  className="mt-2 text-xs font-bold text-emerald-800 dark:text-emerald-300 underline hover:no-underline"
+                >
+                  Close Window
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Quick Action Channels */}
+                <div className="grid grid-cols-2 gap-3">
+                  <a
+                    href={`https://wa.me/919034997719?text=${encodeURIComponent(`Hi Rephonix Team! I got an online quote of ${formatPrice(valuation.finalPrice)} for my ${model.name} (${variant.storageGb}GB). Can I get a better price?`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 p-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-all shadow-xs"
+                  >
+                    <MessageSquare className="w-4 h-4 fill-current" />
+                    <span>WhatsApp Us</span>
+                  </a>
+
+                  <a
+                    href="tel:+919034997719"
+                    className="flex items-center justify-center gap-2 p-3 rounded-xl bg-cobalt hover:bg-cobalt-hover text-white font-bold text-xs transition-all shadow-xs"
+                  >
+                    <Phone className="w-4 h-4" />
+                    <span>Call Manager</span>
+                  </a>
+                </div>
+
+                <div className="relative flex items-center my-3">
+                  <div className="flex-grow border-t border-slate-200 dark:border-zinc-800" />
+                  <span className="flex-shrink mx-3 text-[10px] font-mono text-slate-400 uppercase tracking-widest">Or Request Price Match</span>
+                  <div className="flex-grow border-t border-slate-200 dark:border-zinc-800" />
+                </div>
+
+                {/* Quick callback request form */}
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    setIsSubmittingBestPrice(true);
+                    setTimeout(() => {
+                      setIsSubmittingBestPrice(false);
+                      setBestPriceSubmitted(true);
+                    }, 600);
+                  }}
+                  className="space-y-3"
+                >
+                  <div>
+                    <label className="text-[11px] font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
+                      Your Mobile / WhatsApp Number *
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      placeholder="10-digit mobile number"
+                      value={contactPhone}
+                      onChange={(e) => setContactPhone(e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-lg text-xs font-mono text-slate-900 dark:text-white focus:ring-2 focus:ring-cobalt outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
+                      Your Target Expected Price (₹)
+                    </label>
+                    <input
+                      type="number"
+                      placeholder={`e.g. ₹${Math.round(valuation.finalPrice * 1.1)}`}
+                      value={expectedPrice}
+                      onChange={(e) => setExpectedPrice(e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-lg text-xs font-mono text-slate-900 dark:text-white focus:ring-2 focus:ring-cobalt outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
+                      Any competitor quote or comments (Optional)
+                    </label>
+                    <textarea
+                      rows={2}
+                      placeholder="e.g. Cashify offered me ₹X..."
+                      value={contactNote}
+                      onChange={(e) => setContactNote(e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-lg text-xs font-sans text-slate-900 dark:text-white focus:ring-2 focus:ring-cobalt outline-none resize-none"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isSubmittingBestPrice}
+                    className="w-full py-2.5 bg-gradient-to-r from-cobalt to-indigo-600 hover:from-cobalt-hover hover:to-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
+                  >
+                    {isSubmittingBestPrice ? 'Submitting...' : 'Submit Best Price Request'}
+                    <Send className="w-3.5 h-3.5" />
+                  </button>
+                </form>
+
+                {/* Full contact page link */}
+                <div className="pt-2 text-center border-t border-slate-100 dark:border-zinc-800">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setContactModalOpen(false);
+                      if (onNavigate) {
+                        onNavigate('/contact');
+                      } else {
+                        window.location.href = '/contact';
+                      }
+                    }}
+                    className="text-xs text-slate-500 dark:text-zinc-400 hover:text-cobalt dark:hover:text-sky-400 font-medium inline-flex items-center gap-1"
+                  >
+                    Or visit our full Contact Page <ExternalLink className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

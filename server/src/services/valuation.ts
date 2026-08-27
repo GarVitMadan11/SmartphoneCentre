@@ -11,7 +11,39 @@ const CAPS: Record<string, number> = { screen: .40, body: .20, camera: .18, func
 
 const STORAGE_PRICE_MULTIPLIERS: Record<number, number> = { 64: 0.88, 128: 1.0, 256: 1.15, 512: 1.32, 1024: 1.55 };
 
-export function maximumQuoteFor(basePrice128GB: number, storageGb: number): number {
+export function maximumQuoteFor(
+  basePrice128GB: number,
+  storageGb: number,
+  variantPrices?: string | Record<string, number> | null,
+  ramGb?: number
+): number {
+  if (variantPrices) {
+    let pricesObj: Record<string, number> | null = null;
+    if (typeof variantPrices === 'string') {
+      try {
+        pricesObj = JSON.parse(variantPrices);
+      } catch {}
+    } else if (typeof variantPrices === 'object' && variantPrices !== null) {
+      pricesObj = variantPrices as Record<string, number>;
+    }
+
+    if (pricesObj && Object.keys(pricesObj).length > 0) {
+      if (ramGb) {
+        const exactKey = `${ramGb}_${storageGb}`;
+        if (pricesObj[exactKey] !== undefined && Number(pricesObj[exactKey]) > 0) {
+          return Number(pricesObj[exactKey]);
+        }
+      }
+      for (const [key, price] of Object.entries(pricesObj)) {
+        const parts = key.split('_');
+        const keyStorage = parts.length > 1 ? Number(parts[1]) : Number(parts[0]);
+        if (keyStorage === storageGb && Number(price) > 0) {
+          return Number(price);
+        }
+      }
+    }
+  }
+
   const multiplier = STORAGE_PRICE_MULTIPLIERS[storageGb] ?? 1.0;
   return Math.round(basePrice128GB * multiplier);
 }

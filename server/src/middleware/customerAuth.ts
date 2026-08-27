@@ -34,6 +34,12 @@ export async function customerAuth(
   } else if (cookies['rex_token']) {
     token = cookies['rex_token'];
     isCookieSession = true;
+  } else if (req.body && typeof req.body.idToken === 'string' && req.body.idToken.trim()) {
+    token = req.body.idToken.trim();
+    isCookieSession = false;
+  } else if (req.body && typeof req.body.token === 'string' && req.body.token.trim()) {
+    token = req.body.token.trim();
+    isCookieSession = false;
   }
 
   // SameSite cookies are the first CSRF defense; cookie-only sessions require matching CSRF token.
@@ -177,6 +183,10 @@ export async function optionalCustomerAuth(
     token = authHeader.slice(7).trim();
   } else if (cookies['rex_token']) {
     token = cookies['rex_token'];
+  } else if (req.body && typeof req.body.idToken === 'string' && req.body.idToken.trim()) {
+    token = req.body.idToken.trim();
+  } else if (req.body && typeof req.body.token === 'string' && req.body.token.trim()) {
+    token = req.body.token.trim();
   }
 
   if (!token) {

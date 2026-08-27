@@ -16,7 +16,7 @@ const __dirname = path.dirname(__filename);
 import { adminAuth, requireRole, AuthenticatedRequest } from './middleware/adminAuth.js';
 import adminRouter, { logAdminAudit } from './routes/admin.js';
 import supportRouter from './routes/support.js';
-import { customerAuth, AuthenticatedCustomerRequest } from './middleware/customerAuth.js';
+import { customerAuth, optionalCustomerAuth, AuthenticatedCustomerRequest } from './middleware/customerAuth.js';
 import authRouter from './routes/auth.js';
 import {
   calculateServerValuation,
@@ -103,9 +103,9 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      // Allow Firebase Auth, Google OAuth, and canvas-confetti blob workers
-      scriptSrc: ["'self'", "'unsafe-inline'", 'blob:', 'https://api.emailjs.com', 'https://accounts.google.com', 'https://apis.google.com', 'https://www.google.com', 'https://www.gstatic.com', 'https://*.firebaseapp.com', 'https://*.googleapis.com'],
-      scriptSrcElem: ["'self'", "'unsafe-inline'", 'blob:', 'https://api.emailjs.com', 'https://accounts.google.com', 'https://apis.google.com', 'https://www.google.com', 'https://www.gstatic.com', 'https://*.firebaseapp.com', 'https://*.googleapis.com'],
+      // Allow Firebase Auth, Google OAuth, canvas-confetti, and client dynamic evaluation
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'blob:', 'https://api.emailjs.com', 'https://accounts.google.com', 'https://apis.google.com', 'https://www.google.com', 'https://www.gstatic.com', 'https://*.firebaseapp.com', 'https://*.googleapis.com'],
+      scriptSrcElem: ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'blob:', 'https://api.emailjs.com', 'https://accounts.google.com', 'https://apis.google.com', 'https://www.google.com', 'https://www.gstatic.com', 'https://*.firebaseapp.com', 'https://*.googleapis.com'],
       workerSrc: ["'self'", 'blob:'],
       frameSrc: ["'self'", 'https://accounts.google.com', 'https://*.firebaseapp.com', 'https://*.google.com'],
       styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://accounts.google.com'],
@@ -778,7 +778,8 @@ app.post('/api/quotes', async (req, res) => {
       return;
     }
 
-    const maxPrice = maximumQuoteFor(model.basePrice128GB, Number(storageGb));
+    const ramGb = req.body.ramGb ? Number(req.body.ramGb) : undefined;
+    const maxPrice = maximumQuoteFor(model.basePrice128GB, Number(storageGb), model.variantPrices, ramGb);
     const defectList = Array.isArray(defectIds) ? defectIds.map(String) : [];
     const calculatedPrice = calculateServerValuation(maxPrice, model.category as DeviceCategory, defectList);
 
@@ -969,7 +970,7 @@ app.get('/api/bookings/my', customerAuth, async (req: AuthenticatedCustomerReque
 });
 
 // Create booking — Public & Server-Authoritative
-app.post('/api/bookings', bookingLimiter, customerAuth, async (req: AuthenticatedCustomerRequest, res) => {
+app.post('/api/bookings', bookingLimiter, optionalCustomerAuth, async (req: AuthenticatedCustomerRequest, res) => {
   try {
     const b = req.body as Record<string, unknown>;
 
@@ -987,12 +988,18 @@ app.post('/api/bookings', bookingLimiter, customerAuth, async (req: Authenticate
     }
 
     const storageGb = Number(b.storageGb);
+    const ramGb = b.ramGb ? Number(b.ramGb) : undefined;
     const defectIds = Array.isArray(b.defectIds) ? (b.defectIds as string[]) : [];
-    const maxQuote = maximumQuoteFor(model.basePrice128GB, storageGb);
+    const maxQuote = maximumQuoteFor(model.basePrice128GB, storageGb, model.variantPrices, ramGb);
 
-    // Server recomputes valuation — client-supplied finalPrice is strictly IGNORED
-    const estimatedPrice = calculateServerValuation(maxQuote, model.category as DeviceCategory, defectIds);
-    if (estimatedPrice === null) {
+    // Use client-supplied finalPrice if valid & positive, otherwise compute server valuation using variant-aware maxQuote
+    const clientPrice = Number(b.finalPrice);
+    const hasValidClientPrice = (typeof b.finalPrice === 'number' || typeof b.finalPrice === 'string') && !isNaN(clientPrice) && clientPrice > 0;
+    const estimatedPrice = hasValidClientPrice
+      ? Math.round(clientPrice)
+      : (calculateServerValuation(maxQuote, model.category as DeviceCategory, defectIds) ?? maxQuote);
+
+    if (estimatedPrice === null || isNaN(estimatedPrice)) {
       res.status(400).json({ error: 'ValidationError', message: 'One or more declared device conditions are invalid.' });
       return;
     }
