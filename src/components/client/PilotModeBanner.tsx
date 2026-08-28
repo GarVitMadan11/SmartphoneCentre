@@ -1,5 +1,5 @@
 import React from 'react';
-import { MessageSquareHeart, Sparkles, ArrowRight, Zap, ShieldCheck, Flame, PhoneCall } from 'lucide-react';
+import { Sparkles, ArrowRight, Zap, Flame, PhoneCall } from 'lucide-react';
 
 interface PilotModeBannerProps {
   onOpenFeedback: () => void;
