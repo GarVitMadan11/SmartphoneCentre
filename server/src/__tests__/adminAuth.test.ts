@@ -27,12 +27,12 @@ describe('Admin Authentication Middleware', () => {
 
   const createMockNext = () => vi.fn() as NextFunction;
 
-  it('should return 401 if Authorization header is missing', () => {
+  it('should return 401 if Authorization header is missing', async () => {
     const req = createMockReq() as AuthenticatedRequest;
     const res = createMockRes();
     const next = createMockNext();
 
-    adminAuth(req, res, next);
+    await adminAuth(req, res, next);
 
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith(
@@ -43,23 +43,23 @@ describe('Admin Authentication Middleware', () => {
     expect(next).not.toHaveBeenCalled();
   });
 
-  it('should return 401 if Authorization header is not Bearer style', () => {
+  it('should return 401 if Authorization header is not Bearer style', async () => {
     const req = createMockReq('Basic c29tZXRva2Vu') as AuthenticatedRequest;
     const res = createMockRes();
     const next = createMockNext();
 
-    adminAuth(req, res, next);
+    await adminAuth(req, res, next);
 
     expect(res.status).toHaveBeenCalledWith(401);
     expect(next).not.toHaveBeenCalled();
   });
 
-  it('should return 401 if token is invalid', () => {
+  it('should return 401 if token is invalid', async () => {
     const req = createMockReq('Bearer invalidtokenhere') as AuthenticatedRequest;
     const res = createMockRes();
     const next = createMockNext();
 
-    adminAuth(req, res, next);
+    await adminAuth(req, res, next);
 
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith(
@@ -70,7 +70,7 @@ describe('Admin Authentication Middleware', () => {
     expect(next).not.toHaveBeenCalled();
   });
 
-  it('should return 401 if token is expired', () => {
+  it('should return 401 if token is expired', async () => {
     const expiredToken = jwt.sign(
       { sub: 'admin', role: 'admin', exp: Math.floor(Date.now() / 1000) - 10, iss: JWT_ISSUER, aud: JWT_AUDIENCE },
       mockSecret
@@ -79,7 +79,7 @@ describe('Admin Authentication Middleware', () => {
     const res = createMockRes();
     const next = createMockNext();
 
-    adminAuth(req, res, next);
+    await adminAuth(req, res, next);
 
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith(
@@ -90,7 +90,7 @@ describe('Admin Authentication Middleware', () => {
     expect(next).not.toHaveBeenCalled();
   });
 
-  it('should return 403 if token role is not admin', () => {
+  it('should return 403 if token role is not admin', async () => {
     const userToken = jwt.sign(
       { sub: 'user123', role: 'user', iss: JWT_ISSUER, aud: JWT_AUDIENCE },
       mockSecret
@@ -99,7 +99,7 @@ describe('Admin Authentication Middleware', () => {
     const res = createMockRes();
     const next = createMockNext();
 
-    adminAuth(req, res, next);
+    await adminAuth(req, res, next);
 
     expect(res.status).toHaveBeenCalledWith(403);
     expect(res.json).toHaveBeenCalledWith(
@@ -110,7 +110,7 @@ describe('Admin Authentication Middleware', () => {
     expect(next).not.toHaveBeenCalled();
   });
 
-  it('should call next() and assign adminId if token is valid and role is admin', () => {
+  it('should call next() and assign adminId if token is valid and role is admin', async () => {
     const validToken = jwt.sign(
       { sub: 'admin-id-456', role: 'admin', iss: JWT_ISSUER, aud: JWT_AUDIENCE },
       mockSecret
@@ -119,7 +119,7 @@ describe('Admin Authentication Middleware', () => {
     const res = createMockRes();
     const next = createMockNext();
 
-    adminAuth(req, res, next);
+    await adminAuth(req, res, next);
 
     expect(res.status).not.toHaveBeenCalled();
     expect(next).toHaveBeenCalled();

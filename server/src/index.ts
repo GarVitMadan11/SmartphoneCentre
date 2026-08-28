@@ -106,6 +106,7 @@ app.use(helmet({
       objectSrc: ["'none'"],
       baseUri: ["'self'"],
       frameAncestors: ["'self'"],
+      upgradeInsecureRequests: [],
       // Strict script sources — removed 'unsafe-inline' and 'unsafe-eval'
       scriptSrc: [
         "'self'",
@@ -144,12 +145,6 @@ app.use(helmet({
         'https://*.googleapis.com',
         'https://*.firebaseapp.com',
         'https://*.firebaseio.com',
-        'http://localhost:4000',
-        'http://localhost:3000',
-        'http://localhost:3001',
-        'http://localhost:3002',
-        'http://localhost:5173',
-        'http://localhost:5174',
         'https://rephonix.in',
         'https://www.rephonix.in',
       ],
