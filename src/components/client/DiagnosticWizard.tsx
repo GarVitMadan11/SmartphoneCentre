@@ -2331,13 +2331,30 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
                 {/* Quick callback request form */}
                 <form
-                  onSubmit={(e) => {
+                  onSubmit={async (e) => {
                     e.preventDefault();
                     setIsSubmittingBestPrice(true);
-                    setTimeout(() => {
-                      setIsSubmittingBestPrice(false);
-                      setBestPriceSubmitted(true);
-                    }, 600);
+                    try {
+                      await sendQuoteAlertApi({
+                        customerName: currentUser?.name || 'Potential Customer (Price Match Request)',
+                        customerPhone: contactPhone || currentUser?.phone || 'N/A',
+                        customerEmail: currentUser?.email || 'price-match-lead@rephonix.in',
+                        modelName: model.name,
+                        storageGb: variant.storageGb,
+                        estimatedPayout: valuation.finalPrice,
+                        retentionPercentage: valuation.retentionPercentage,
+                        defects: [
+                          `Customer Mobile/WhatsApp: ${contactPhone}`,
+                          `Target Expected Price: ₹${expectedPrice || 'Not specified'}`,
+                          `Competitor Quote / Notes: ${contactNote || 'None'}`
+                        ],
+                        refCode: `MATCH-${receiptRef}`
+                      });
+                    } catch (err) {
+                      console.warn('[Price Match] Failed to send email alert:', err);
+                    }
+                    setIsSubmittingBestPrice(false);
+                    setBestPriceSubmitted(true);
                   }}
                   className="space-y-3"
                 >
