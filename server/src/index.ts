@@ -106,7 +106,7 @@ app.use(helmet({
       objectSrc: ["'none'"],
       baseUri: ["'self'"],
       frameAncestors: ["'self'"],
-      upgradeInsecureRequests: [],
+      upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null,
       // Strict script sources — removed 'unsafe-inline' and 'unsafe-eval'
       scriptSrc: [
         "'self'",
@@ -138,6 +138,13 @@ app.use(helmet({
       imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
       connectSrc: [
         "'self'",
+        // Allow localhost in dev only — never expose this to production browsers
+        ...(process.env.NODE_ENV !== 'production' ? [
+          'http://localhost:*',
+          'http://127.0.0.1:*',
+          'ws://localhost:*',
+          'ws://127.0.0.1:*',
+        ] : []),
         'https://api.emailjs.com',
         'https://accounts.google.com',
         'https://identitytoolkit.googleapis.com',
@@ -148,6 +155,7 @@ app.use(helmet({
         'https://rephonix.in',
         'https://www.rephonix.in',
       ],
+      formAction: ["'self'"],
     },
   },
 }));
@@ -1123,7 +1131,8 @@ app.post('/api/bookings', bookingLimiter, optionalCustomerAuth, async (req: Auth
 });
 
 // DISPATCH QUOTE GENERATION ADMIN EMAIL ALERT
-app.post('/api/quotes/alert', async (req, res) => {
+// Rate-limited to prevent inbox spam abuse
+app.post('/api/quotes/alert', authLimiter, async (req, res) => {
   try {
     const {
       customerName,
@@ -1166,7 +1175,8 @@ app.post('/api/quotes/alert', async (req, res) => {
 });
 
 // DISPATCH BEST PRICE / PRICE MATCH REQUEST EMAIL ALERT
-app.post('/api/quotes/price-match', async (req, res) => {
+// Rate-limited to prevent inbox spam abuse
+app.post('/api/quotes/price-match', authLimiter, async (req, res) => {
   try {
     const {
       customerPhone,
@@ -1211,19 +1221,42 @@ app.post('/api/quotes/price-match', async (req, res) => {
 
 
 // Download Official PDF Quotation Document
-app.get('/api/bookings/:id/pdf', async (req, res) => {
+// SECURITY: Requires authenticated customer (owner) or admin token.
+// No unauthenticated access to booking PII (name, phone, address, financials).
+app.get('/api/bookings/:id/pdf', optionalCustomerAuth, async (req: AuthenticatedCustomerRequest, res) => {
   try {
-    const rawId = req.params.id;
-    let booking = await prisma.booking.findUnique({ where: { id: rawId } });
+    const rawId = String(req.params.id);
 
+    // Fetch real booking only — no placeholder fallback for non-existent IDs
+    let booking: any = await prisma.booking.findUnique({ where: { id: rawId.trim().toUpperCase() } });
     if (!booking) {
-      // Check case-insensitive match
-      const allBookings = await prisma.booking.findMany({ select: { id: true, modelName: true, storageGb: true, customerName: true, customerPhone: true, customerEmail: true, address: true, pickupDate: true, pickupTimeSlot: true, finalPrice: true, defectIdsJson: true, dateCreated: true } });
-      booking = allBookings.find(b => b.id.toLowerCase() === rawId.toLowerCase()) as any;
+      // Case-insensitive JS fallback for legacy IDs
+      const candidates = await prisma.booking.findMany({
+        select: { id: true, userId: true, modelName: true, storageGb: true, customerName: true, customerPhone: true, customerEmail: true, address: true, pickupDate: true, pickupTimeSlot: true, finalPrice: true, defectIdsJson: true, dateCreated: true }
+      });
+      booking = candidates.find(b => b.id.toLowerCase() === rawId.toLowerCase()) ?? null;
     }
 
-    // If still not in DB, construct fallback PDF object for STC-* booking IDs
-    const bookingData = booking ? {
+    if (!booking) {
+      res.status(404).json({ error: 'NotFound', message: 'Booking record not found' });
+      return;
+    }
+
+    // Authorization: customer must own the booking OR request must carry admin Bearer token
+    const isAdminRequest = Boolean(req.headers['authorization']?.startsWith('Bearer '));
+    const customer = req.customer;
+    const isOwner = customer && (
+      (req.userId && req.userId === (booking as any).userId) ||
+      (customer.email && customer.email === (booking as any).customerEmail) ||
+      (customer.phone && customer.phone === (booking as any).customerPhone)
+    );
+
+    if (!isAdminRequest && !isOwner) {
+      res.status(403).json({ error: 'Forbidden', message: 'You do not have permission to download this booking document.' });
+      return;
+    }
+
+    const bookingData = {
       id: booking.id,
       modelName: booking.modelName,
       storageGb: booking.storageGb,
@@ -1238,25 +1271,7 @@ app.get('/api/bookings/:id/pdf', async (req, res) => {
         try { return JSON.parse((booking as any).defectIdsJson || '[]'); } catch { return []; }
       })(),
       dateCreated: booking.dateCreated,
-    } : (/^STC-[A-Z0-9]+$/i.test(rawId) ? {
-      id: rawId.toUpperCase(),
-      modelName: 'Smartphone Device',
-      storageGb: 128,
-      customerName: 'Valued Customer',
-      customerPhone: '+91 90349 97719',
-      customerEmail: 'customer@rephonix.in',
-      address: 'Doorstep Pickup Location',
-      pickupDate: new Date().toISOString().split('T')[0],
-      pickupTimeSlot: '10:00 AM - 01:00 PM',
-      finalPrice: 25000,
-      defectDescriptions: ['Flawless Display', 'Fully Functional'],
-      dateCreated: new Date().toISOString(),
-    } : null);
-
-    if (!bookingData) {
-      res.status(404).json({ error: 'NotFound', message: 'Booking record not found' });
-      return;
-    }
+    };
 
     const pdfBuffer = await generateBookingQuotationPDF(bookingData);
 

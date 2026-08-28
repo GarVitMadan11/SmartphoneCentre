@@ -36,6 +36,19 @@ export default defineConfig({
       'X-Frame-Options': 'DENY',
       'Referrer-Policy': 'strict-origin-when-cross-origin',
       'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=()',
+      // Allow browser to connect to local Express API (port 4000) and all required 3rd-party services
+      'Content-Security-Policy': [
+        "default-src 'self'",
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://api.emailjs.com https://accounts.google.com https://apis.google.com https://www.google.com https://www.gstatic.com https://*.firebaseapp.com https://*.googleapis.com",
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com",
+        "font-src 'self' https://fonts.gstatic.com data:",
+        "img-src 'self' data: blob: https:",
+        "connect-src 'self' http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:* https://api.emailjs.com https://accounts.google.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://*.googleapis.com https://*.firebaseapp.com https://*.firebaseio.com https://rephonix.in https://www.rephonix.in",
+        "frame-src 'self' https://accounts.google.com https://*.firebaseapp.com https://*.google.com",
+        "worker-src 'self' blob:",
+        "object-src 'none'",
+        "base-uri 'self'",
+      ].join('; '),
     }
   },
   preview: {

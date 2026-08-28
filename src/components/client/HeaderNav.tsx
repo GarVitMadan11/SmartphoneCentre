@@ -29,6 +29,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
   onLogout,
   models = [],
 }) => {
+  void onOpenInvoices;
   const [activeDropdown, setActiveDropdown] = useState<'phones' | 'tablets' | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSubMenu, setMobileSubMenu] = useState<'phones' | 'tablets' | null>(null);
@@ -363,13 +364,9 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                     <button
                       onClick={() => { 
                         setUserDropdownOpen(false); 
-                        if (onOpenTrackOrder) {
-                          onOpenTrackOrder();
-                        } else {
-                          onNavigate('/profile');
-                        }
+                        onNavigate('/profile?tab=bookings');
                       }}
-                      className="w-full text-left text-xs font-semibold p-2.5 rounded-xl hover:bg-slate-100 text-slate-700 hover:text-cobalt transition-colors flex items-center gap-2.5"
+                      className="w-full text-left text-xs font-semibold p-2.5 rounded-xl hover:bg-slate-100 text-slate-700 hover:text-cobalt transition-colors flex items-center gap-2.5 cursor-pointer"
                     >
                       <Package className="w-4 h-4 text-cobalt" />
                       <span>Your Bookings</span>
@@ -377,22 +374,16 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                     <button
                       onClick={() => {
                         setUserDropdownOpen(false);
-                        if (onOpenInvoices) {
-                          onOpenInvoices();
-                        } else if (onOpenTrackOrder) {
-                          onOpenTrackOrder();
-                        } else {
-                          onNavigate('/profile');
-                        }
+                        onNavigate('/profile?tab=invoices');
                       }}
-                      className="w-full text-left text-xs font-semibold p-2.5 rounded-xl hover:bg-slate-100 text-slate-700 hover:text-cobalt transition-colors flex items-center gap-2.5"
+                      className="w-full text-left text-xs font-semibold p-2.5 rounded-xl hover:bg-slate-100 text-slate-700 hover:text-cobalt transition-colors flex items-center gap-2.5 cursor-pointer"
                     >
                       <FileText className="w-4 h-4 text-emerald-600" />
                       <span>Invoices &amp; Receipts</span>
                     </button>
                     <button
-                      onClick={() => { setUserDropdownOpen(false); onNavigate('/profile'); }}
-                      className="w-full text-left text-xs font-semibold p-2.5 rounded-xl hover:bg-slate-100 text-slate-700 hover:text-cobalt transition-colors flex items-center gap-2.5"
+                      onClick={() => { setUserDropdownOpen(false); onNavigate('/profile?tab=profile'); }}
+                      className="w-full text-left text-xs font-semibold p-2.5 rounded-xl hover:bg-slate-100 text-slate-700 hover:text-cobalt transition-colors flex items-center gap-2.5 cursor-pointer"
                     >
                       <User className="w-4 h-4 text-slate-400" />
                       <span>Profile Settings</span>
@@ -537,8 +528,22 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                     Signed in as {currentUser.name}
                   </div>
                   <button
-                    onClick={() => { setMobileMenuOpen(false); onNavigate('/profile'); }}
-                    className="w-full text-left text-xs py-2 px-3 text-slate-700 font-medium hover:bg-slate-100 rounded-lg flex items-center gap-2"
+                    onClick={() => { setMobileMenuOpen(false); onNavigate('/profile?tab=bookings'); }}
+                    className="w-full text-left text-xs py-2.5 px-3 text-slate-700 font-semibold hover:bg-slate-100 rounded-xl flex items-center gap-2.5 cursor-pointer"
+                  >
+                    <Package className="w-4 h-4 text-cobalt" />
+                    <span>Your Bookings</span>
+                  </button>
+                  <button
+                    onClick={() => { setMobileMenuOpen(false); onNavigate('/profile?tab=invoices'); }}
+                    className="w-full text-left text-xs py-2.5 px-3 text-slate-700 font-semibold hover:bg-slate-100 rounded-xl flex items-center gap-2.5 cursor-pointer"
+                  >
+                    <FileText className="w-4 h-4 text-emerald-600" />
+                    <span>Invoices &amp; Receipts</span>
+                  </button>
+                  <button
+                    onClick={() => { setMobileMenuOpen(false); onNavigate('/profile?tab=profile'); }}
+                    className="w-full text-left text-xs py-2.5 px-3 text-slate-700 font-semibold hover:bg-slate-100 rounded-xl flex items-center gap-2.5 cursor-pointer"
                   >
                     <User className="w-4 h-4 text-slate-400" />
                     <span>Profile Settings</span>

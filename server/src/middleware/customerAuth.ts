@@ -56,40 +56,20 @@ export async function customerAuth(
     return;
   }
 
-  // 1. Try Firebase ID Token Verification (Admin SDK or Standard JWT Claims)
+  // 1. Try Firebase ID Token Verification (Admin SDK — cryptographically verified)
   let decodedFirebase: any = null;
   const adminAuth = getAdminAuth();
   if (adminAuth) {
     try {
       decodedFirebase = await adminAuth.verifyIdToken(token);
     } catch {
-      // Non-blocking fallback to decode
+      // Firebase Admin SDK rejected the token or is unavailable.
+      // Fall through to legacy JWT verification below.
+      // NOTE: We intentionally do NOT fall back to jwt.decode() here because
+      // jwt.decode() skips signature verification and could allow auth bypass.
     }
   }
-
-  if (!decodedFirebase) {
-    try {
-      const rawDecoded: any = jwt.decode(token);
-      const expectedProject = process.env.FIREBASE_PROJECT_ID || 'rephonix-f2cfa';
-      if (
-        rawDecoded &&
-        (rawDecoded.aud === expectedProject ||
-         (typeof rawDecoded.iss === 'string' && rawDecoded.iss.includes(expectedProject)) ||
-         (rawDecoded.firebase && (rawDecoded.user_id || rawDecoded.sub)))
-      ) {
-        decodedFirebase = {
-          uid: rawDecoded.user_id || rawDecoded.sub,
-          email: rawDecoded.email,
-          email_verified: rawDecoded.email_verified ?? true,
-          name: rawDecoded.name,
-          picture: rawDecoded.picture,
-          phone_number: rawDecoded.phone_number,
-        };
-      }
-    } catch {
-      // Non-Firebase token
-    }
-  }
+  // No jwt.decode() fallback — unverified tokens must never be trusted.
 
   if (decodedFirebase && decodedFirebase.uid) {
     try {

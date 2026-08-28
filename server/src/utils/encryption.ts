@@ -27,14 +27,23 @@ function deriveKeyFromSecret(secretStr: string): Buffer {
 
 /**
  * Returns the primary AES-256-GCM encryption key from the environment.
+ * Throws in production if PAYOUT_ENCRYPTION_KEY is absent — hardcoded
+ * fallback strings are publicly known and must never be used in production.
  */
 function getEncryptionKey(): Buffer {
   const envKey = (process.env.PAYOUT_ENCRYPTION_KEY || '').trim();
   if (envKey) {
     return deriveKeyFromSecret(envKey);
   }
-  const fallbackSecret = (process.env.JWT_SECRET || 'smartphone-centre-payout-key-fallback').trim();
-  return deriveKeyFromSecret(fallbackSecret);
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('FATAL: PAYOUT_ENCRYPTION_KEY must be set in production — payout data cannot be encrypted safely without it.');
+  }
+  // Local development only: fall back to JWT_SECRET so dev runs without extra env setup
+  const devFallback = (process.env.JWT_SECRET || '').trim();
+  if (!devFallback) {
+    throw new Error('Set JWT_SECRET or PAYOUT_ENCRYPTION_KEY to run locally.');
+  }
+  return deriveKeyFromSecret(devFallback);
 }
 
 /**
@@ -55,8 +64,8 @@ function getCandidateDecryptionKeys(): Buffer[] {
     if (!keys.some(k => k.equals(jwtKey))) keys.push(jwtKey);
   }
 
-  const defaultKey = deriveKeyFromSecret('smartphone-centre-payout-key-fallback');
-  if (!keys.some(k => k.equals(defaultKey))) keys.push(defaultKey);
+  // NOTE: No hardcoded fallback key — a publicly known string must never
+  // be a candidate decryption key for sensitive payout data.
 
   return keys;
 }

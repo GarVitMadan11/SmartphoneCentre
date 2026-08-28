@@ -905,6 +905,7 @@ export default function App() {
               onLogout={handleLogout}
               onUpdateUser={(updatedUser) => setCurrentUser(updatedUser)}
               onNavigate={navigate}
+              models={MODELS}
             />
           )}
 

@@ -6,15 +6,14 @@
 function getApiBaseUrl(): string {
   if (typeof window !== 'undefined') {
     const hostname = window.location.hostname;
-    // Local development only: frontend runs on 3000/5173, backend runs on 4000
+    // Local development: always use the relative /api path so requests go through
+    // the Vite proxy (vite.config.ts → server.proxy → http://localhost:4000).
+    // Using an absolute URL like http://localhost:4000/api bypasses the proxy and
+    // triggers cross-origin CSP violations.
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
-      // Allow explicit override via env var for local dev only
+      // Allow an explicit env override (e.g. VITE_API_URL=http://staging.example.com/api)
       const envUrl = (import.meta.env.VITE_API_URL as string | undefined)?.trim().replace(/\/$/, '');
-      if (envUrl && !envUrl.includes(hostname === 'localhost' ? 'onrender.com' : '')) return envUrl;
-      const port = window.location.port;
-      if (port && port !== '4000') {
-        return `${window.location.protocol}//${hostname}:4000/api`;
-      }
+      if (envUrl && !envUrl.startsWith('/')) return envUrl;
       return '/api';
     }
   }
