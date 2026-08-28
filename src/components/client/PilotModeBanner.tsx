@@ -33,7 +33,7 @@ export const PilotModeBanner: React.FC<PilotModeBannerProps> = ({ onOpenFeedback
       <div className="inline-flex items-center gap-2 bg-slate-900/60 backdrop-blur-md px-3 py-1 rounded-full border border-slate-700/50 shadow-inner">
         <Flame className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
         <p className="text-xs sm:text-[13px] text-slate-200 font-medium whitespace-nowrap">
-          Can’t find your model? <span className="text-amber-300 font-bold">New models added daily!</span> Reach out below.
+          Can’t find your model? <span className="text-amber-300 font-bold">New models and categories will be added as soon as possible</span>
         </p>
       </div>
 
