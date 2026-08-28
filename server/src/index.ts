@@ -32,7 +32,7 @@ import {
   maskPayoutDetails,
 } from './utils/encryption.js';
 import { generateBookingQuotationPDF } from './services/pdfGenerator.js';
-import { sendBookingConfirmationEmail, sendAdminQuoteAlertEmail } from './services/bookingMailer.js';
+import { sendBookingConfirmationEmail, sendAdminQuoteAlertEmail, sendAdminPriceMatchAlertEmail } from './services/bookingMailer.js';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // STARTUP ENVIRONMENT VALIDATION
@@ -1107,17 +1107,21 @@ app.post('/api/quotes/alert', async (req, res) => {
       return;
     }
 
-    sendAdminQuoteAlertEmail({
-      customerName: String(customerName || 'Registered Customer'),
-      customerPhone: String(customerPhone || 'N/A'),
-      customerEmail: String(customerEmail),
-      modelName: String(modelName),
-      storageGb: Number(storageGb) || 128,
-      estimatedPayout: Number(estimatedPayout) || 0,
-      retentionPercentage: Number(retentionPercentage) || 100,
-      defects: Array.isArray(defects) ? defects.map(String) : [],
-      refCode: refCode ? String(refCode) : undefined,
-    }).catch(err => console.error('[POST /api/quotes/alert] Failed to dispatch admin quote alert:', err));
+    try {
+      await sendAdminQuoteAlertEmail({
+        customerName: String(customerName || 'Registered Customer'),
+        customerPhone: String(customerPhone || 'N/A'),
+        customerEmail: String(customerEmail),
+        modelName: String(modelName),
+        storageGb: Number(storageGb) || 128,
+        estimatedPayout: Number(estimatedPayout) || 0,
+        retentionPercentage: Number(retentionPercentage) || 100,
+        defects: Array.isArray(defects) ? defects.map(String) : [],
+        refCode: refCode ? String(refCode) : undefined,
+      });
+    } catch (err) {
+      console.error('[POST /api/quotes/alert] Failed to dispatch admin quote alert:', err);
+    }
 
     res.json({ success: true, message: 'Quote alert email notification dispatched.' });
   } catch (err) {
@@ -1125,6 +1129,50 @@ app.post('/api/quotes/alert', async (req, res) => {
     res.status(500).json({ error: 'ServerError', message: 'Failed to process quote alert.' });
   }
 });
+
+// DISPATCH BEST PRICE / PRICE MATCH REQUEST EMAIL ALERT
+app.post('/api/quotes/price-match', async (req, res) => {
+  try {
+    const {
+      customerPhone,
+      customerEmail,
+      customerName,
+      modelName,
+      storageGb,
+      currentQuote,
+      expectedPrice,
+      comments,
+      refCode,
+    } = req.body || {};
+
+    if (!customerPhone || !modelName) {
+      res.status(400).json({ error: 'ValidationError', message: 'customerPhone and modelName are required.' });
+      return;
+    }
+
+    try {
+      await sendAdminPriceMatchAlertEmail({
+        customerPhone: String(customerPhone),
+        customerEmail: customerEmail ? String(customerEmail) : undefined,
+        customerName: customerName ? String(customerName) : undefined,
+        modelName: String(modelName),
+        storageGb: Number(storageGb) || 128,
+        currentQuote: Number(currentQuote) || 0,
+        expectedPrice: expectedPrice ? String(expectedPrice) : 'N/A',
+        comments: comments ? String(comments) : undefined,
+        refCode: refCode ? String(refCode) : undefined,
+      });
+    } catch (err) {
+      console.error('[POST /api/quotes/price-match] Failed to send price match email:', err);
+    }
+
+    res.json({ success: true, message: 'Price match request email dispatched.' });
+  } catch (err) {
+    console.error('POST /api/quotes/price-match error:', err);
+    res.status(500).json({ error: 'ServerError', message: 'Failed to process price match request.' });
+  }
+});
+
 
 
 // Download Official PDF Quotation Document

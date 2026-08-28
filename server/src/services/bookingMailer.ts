@@ -476,4 +476,115 @@ export async function sendAdminQuoteAlertEmail(data: QuoteAlertData): Promise<bo
   }
 }
 
+export interface PriceMatchAlertData {
+  customerPhone: string;
+  customerEmail?: string;
+  customerName?: string;
+  modelName: string;
+  storageGb: number;
+  currentQuote: number;
+  expectedPrice: number | string;
+  comments?: string;
+  refCode?: string;
+}
 
+export async function sendAdminPriceMatchAlertEmail(data: PriceMatchAlertData): Promise<boolean> {
+  const adminRecipient = process.env.ADMIN_ALERT_EMAIL || 'garvitmadan511@gmail.com';
+  const cleanPhone = String(data.customerPhone).replace(/\D/g, '');
+  const phoneFormatted = cleanPhone.length === 10 ? cleanPhone : data.customerPhone;
+  const waUrl = `https://wa.me/91${phoneFormatted}`;
+  const callUrl = `tel:${data.customerPhone}`;
+  const formattedCurrent = typeof data.currentQuote === 'number' ? `₹${data.currentQuote.toLocaleString('en-IN')}` : `₹${data.currentQuote}`;
+  const formattedExpected = typeof data.expectedPrice === 'number'
+    ? `₹${data.expectedPrice.toLocaleString('en-IN')}`
+    : (String(data.expectedPrice).startsWith('₹') ? String(data.expectedPrice) : `₹${data.expectedPrice}`);
+
+  const transporter = getTransporter();
+  if (!transporter) {
+    console.log(`[Price Match Mailer] SMTP credentials not set. Price Match alert ready for ${adminRecipient}: Phone ${data.customerPhone}, Expected ${formattedExpected}`);
+    return true;
+  }
+
+  const htmlBody = `
+    <div style="font-family: Arial, sans-serif; max-width: 650px; margin: 0 auto; background-color: #0f172a; border: 1px solid #d97706; border-radius: 12px; overflow: hidden; color: #f8fafc;">
+      <div style="background: linear-gradient(135deg, #78350f 0%, #b45309 50%, #1e3a8a 100%); padding: 24px; text-align: center; border-bottom: 1px solid #d97706;">
+        <span style="display: inline-block; padding: 4px 14px; background-color: #f59e0b; color: #000000; font-weight: bold; font-size: 11px; border-radius: 20px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">🏷️ PRICE MATCH / CUSTOM QUOTE REQUEST</span>
+        <h1 style="color: #ffffff; margin: 4px 0 0 0; font-size: 22px; font-weight: bold;">Rephonix Price Match Lead</h1>
+        <p style="color: #fef3c7; margin: 4px 0 0 0; font-size: 13px;">Ref Code: ${data.refCode || 'MATCH-REQUEST'}</p>
+      </div>
+
+      <div style="padding: 24px; background-color: #1e293b;">
+        <p style="font-size: 14px; color: #cbd5e1; margin-top: 0;">A customer requested a target price match / custom quote for their device:</p>
+
+        <!-- CUSTOMER CONTACT HIGHLIGHT -->
+        <div style="margin-bottom: 20px; background-color: #0f172a; padding: 18px; border-radius: 8px; border: 1px solid #f59e0b;">
+          <h3 style="margin: 0 0 12px 0; font-size: 13px; font-weight: bold; color: #fbbf24; text-transform: uppercase; letter-spacing: 0.5px;">📞 Customer Contact Info</h3>
+          <table style="width: 100%; border-collapse: collapse; font-size: 13px; color: #e2e8f0;">
+            <tr>
+              <td style="padding: 6px 0; color: #94a3b8; width: 150px;">Mobile / WhatsApp:</td>
+              <td style="padding: 6px 0; font-weight: bold; color: #38bdf8; font-size: 16px;"><a href="${callUrl}" style="color: #38bdf8; text-decoration: none;">+91 ${data.customerPhone}</a></td>
+            </tr>
+            ${data.customerName ? `
+            <tr>
+              <td style="padding: 6px 0; color: #94a3b8;">Customer Name:</td>
+              <td style="padding: 6px 0; font-weight: bold; color: #f8fafc;">${data.customerName}</td>
+            </tr>` : ''}
+            ${data.customerEmail ? `
+            <tr>
+              <td style="padding: 6px 0; color: #94a3b8;">Email Address:</td>
+              <td style="padding: 6px 0; font-weight: bold; color: #f8fafc;"><a href="mailto:${data.customerEmail}" style="color: #f8fafc; text-decoration: underline;">${data.customerEmail}</a></td>
+            </tr>` : ''}
+          </table>
+        </div>
+
+        <!-- TARGET DEVICE & PRICE COMPARISON -->
+        <div style="margin-bottom: 20px; background-color: #0f172a; padding: 18px; border-radius: 8px; border: 1px solid #334155;">
+          <h3 style="margin: 0 0 12px 0; font-size: 13px; font-weight: bold; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.5px;">📱 Device & Price Match Request</h3>
+          <table style="width: 100%; border-collapse: collapse; font-size: 13px; color: #e2e8f0;">
+            <tr>
+              <td style="padding: 6px 0; color: #94a3b8; width: 150px;">Target Device:</td>
+              <td style="padding: 6px 0; font-weight: bold; color: #f8fafc;">${data.modelName} (${data.storageGb >= 1024 ? '1TB' : data.storageGb + 'GB'})</td>
+            </tr>
+            <tr>
+              <td style="padding: 6px 0; color: #94a3b8;">Current System Quote:</td>
+              <td style="padding: 6px 0; font-weight: bold; color: #94a3b8; text-decoration: line-through;">${formattedCurrent}</td>
+            </tr>
+            <tr style="border-top: 1px solid #334155;">
+              <td style="padding: 10px 0 4px 0; font-weight: bold; color: #fbbf24; font-size: 14px;">Customer Target Price:</td>
+              <td style="padding: 10px 0 4px 0; font-weight: bold; color: #f59e0b; font-size: 24px;">${formattedExpected}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px 0 4px 0; color: #94a3b8; vertical-align: top;">Comments:</td>
+              <td style="padding: 10px 0 4px 0; font-weight: bold; color: #e2e8f0; line-height: 1.4;">${data.comments || 'No additional comments provided'}</td>
+            </tr>
+          </table>
+        </div>
+
+        <!-- ACTION BUTTONS -->
+        <div style="text-align: center; margin: 24px 0 8px 0;">
+          <a href="${waUrl}" style="background-color: #10b981; color: #ffffff; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px; display: inline-block; margin-right: 8px;">💬 Open WhatsApp Chat</a>
+          <a href="${callUrl}" style="background-color: #2563eb; color: #ffffff; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px; display: inline-block;">📞 Call Customer Now</a>
+        </div>
+      </div>
+
+      <div style="background-color: #0f172a; padding: 16px; text-align: center; font-size: 11px; color: #64748b; border-top: 1px solid #334155;">
+        <p style="margin: 0;">Rephonix Price Match Engine &bull; Urgent Deal Opportunity Lead</p>
+      </div>
+    </div>
+  `;
+
+  try {
+    await transporter.sendMail({
+      from: `"Rephonix Deals" <${process.env.SMTP_USER || process.env.EMAIL_USER || 'no-reply@rephonix.in'}>`,
+      to: adminRecipient,
+      subject: `🏷️ [PRICE MATCH REQUEST] ${data.modelName} (${data.storageGb >= 1024 ? '1TB' : data.storageGb + 'GB'}) - Target: ${formattedExpected} (Phone: ${data.customerPhone})`,
+      html: htmlBody,
+    });
+
+    console.log(`[Price Match Mailer] Successfully sent SMTP price match alert email to ${adminRecipient} for phone ${data.customerPhone}!`);
+    return true;
+  } catch (err) {
+    console.error('[Price Match Mailer] Failed to send price match alert email via Nodemailer:', err);
+    return false;
+  }
+}

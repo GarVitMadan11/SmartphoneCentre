@@ -711,4 +711,25 @@ export function sendQuoteAlertApi(payload: QuoteAlertPayload): Promise<{ success
   });
 }
 
+export interface PriceMatchAlertPayload {
+  customerPhone: string;
+  customerEmail?: string;
+  customerName?: string;
+  modelName: string;
+  storageGb: number;
+  currentQuote: number;
+  expectedPrice: number | string;
+  comments?: string;
+  refCode?: string;
+}
+
+/** Send Price Match / Custom Quote Request email to admin */
+export function sendPriceMatchAlertApi(payload: PriceMatchAlertPayload): Promise<{ success: boolean }> {
+  return apiFetch<{ success: boolean }>('/quotes/price-match', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+
 

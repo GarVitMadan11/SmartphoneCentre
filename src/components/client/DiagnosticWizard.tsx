@@ -12,7 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { getIllustration } from './Illustrations';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import emailjs from '@emailjs/browser';
-import { checkEmail, customerLogin, customerSignup, verifyOtp, sendQuoteAlertApi, ApiUser } from '../../utils/api';
+import { checkEmail, customerLogin, customerSignup, verifyOtp, sendQuoteAlertApi, sendPriceMatchAlertApi, ApiUser } from '../../utils/api';
 
 const getEngineeringLabel = (description: string) => {
   const mapping: { [key: string]: string } = {
@@ -2335,19 +2335,15 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                     e.preventDefault();
                     setIsSubmittingBestPrice(true);
                     try {
-                      await sendQuoteAlertApi({
-                        customerName: currentUser?.name || 'Potential Customer (Price Match Request)',
+                      await sendPriceMatchAlertApi({
                         customerPhone: contactPhone || currentUser?.phone || 'N/A',
-                        customerEmail: currentUser?.email || 'price-match-lead@rephonix.in',
+                        customerEmail: currentUser?.email,
+                        customerName: currentUser?.name,
                         modelName: model.name,
                         storageGb: variant.storageGb,
-                        estimatedPayout: valuation.finalPrice,
-                        retentionPercentage: valuation.retentionPercentage,
-                        defects: [
-                          `Customer Mobile/WhatsApp: ${contactPhone}`,
-                          `Target Expected Price: ₹${expectedPrice || 'Not specified'}`,
-                          `Competitor Quote / Notes: ${contactNote || 'None'}`
-                        ],
+                        currentQuote: valuation.finalPrice,
+                        expectedPrice: expectedPrice || Math.round(valuation.finalPrice * 1.1),
+                        comments: contactNote || 'No additional comments',
                         refCode: `MATCH-${receiptRef}`
                       });
                     } catch (err) {
@@ -2387,11 +2383,11 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
                   <div>
                     <label className="text-[11px] font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
-                      Any competitor quote or comments (Optional)
+                      Comments (Optional)
                     </label>
                     <textarea
                       rows={2}
-                      placeholder="e.g. Cashify offered me ₹X..."
+                      placeholder="e.g. Additional details or target price notes..."
                       value={contactNote}
                       onChange={(e) => setContactNote(e.target.value)}
                       className="w-full px-3 py-2 bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-lg text-xs font-sans text-slate-900 dark:text-white focus:ring-2 focus:ring-cobalt outline-none resize-none"
