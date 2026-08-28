@@ -691,3 +691,24 @@ export function submitPilotFeedback(payload: {
   });
 }
 
+export interface QuoteAlertPayload {
+  customerName: string;
+  customerPhone: string;
+  customerEmail: string;
+  modelName: string;
+  storageGb: number;
+  estimatedPayout: number;
+  retentionPercentage: number;
+  defects: string[];
+  refCode?: string;
+}
+
+/** Send diagnostic quote alert email to admin when a logged-in user generates a quote */
+export function sendQuoteAlertApi(payload: QuoteAlertPayload): Promise<{ success: boolean }> {
+  return apiFetch<{ success: boolean }>('/quotes/alert', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+

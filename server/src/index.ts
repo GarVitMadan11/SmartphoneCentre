@@ -32,7 +32,7 @@ import {
   maskPayoutDetails,
 } from './utils/encryption.js';
 import { generateBookingQuotationPDF } from './services/pdfGenerator.js';
-import { sendBookingConfirmationEmail } from './services/bookingMailer.js';
+import { sendBookingConfirmationEmail, sendAdminQuoteAlertEmail } from './services/bookingMailer.js';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // STARTUP ENVIRONMENT VALIDATION
@@ -1061,20 +1061,24 @@ app.post('/api/bookings', bookingLimiter, optionalCustomerAuth, async (req: Auth
     const host = req.get('host') || 'localhost:4000';
     const baseUrl = `${protocol}://${host}`;
 
-    sendBookingConfirmationEmail({
-      id: booking.id,
-      modelName: booking.modelName,
-      storageGb: booking.storageGb,
-      customerName: booking.customerName,
-      customerPhone: booking.customerPhone,
-      customerEmail: booking.customerEmail,
-      address: booking.address,
-      pickupDate: booking.pickupDate,
-      pickupTimeSlot: booking.pickupTimeSlot,
-      finalPrice: booking.finalPrice,
-      defectDescriptions: defectIds,
-      dateCreated: booking.dateCreated,
-    }, baseUrl).catch(err => console.error('[POST /api/bookings] Failed to dispatch quotation email:', err));
+    try {
+      await sendBookingConfirmationEmail({
+        id: booking.id,
+        modelName: booking.modelName,
+        storageGb: booking.storageGb,
+        customerName: booking.customerName,
+        customerPhone: booking.customerPhone,
+        customerEmail: booking.customerEmail,
+        address: booking.address,
+        pickupDate: booking.pickupDate,
+        pickupTimeSlot: booking.pickupTimeSlot,
+        finalPrice: booking.finalPrice,
+        defectDescriptions: defectIds,
+        dateCreated: booking.dateCreated,
+      }, baseUrl);
+    } catch (err) {
+      console.error('[POST /api/bookings] Failed to dispatch quotation email:', err);
+    }
 
     res.status(201).json({ success: true, id: booking.id });
   } catch (err) {
@@ -1082,6 +1086,46 @@ app.post('/api/bookings', bookingLimiter, optionalCustomerAuth, async (req: Auth
     res.status(500).json({ error: 'ServerError', message: 'Failed to create booking' });
   }
 });
+
+// DISPATCH QUOTE GENERATION ADMIN EMAIL ALERT
+app.post('/api/quotes/alert', async (req, res) => {
+  try {
+    const {
+      customerName,
+      customerPhone,
+      customerEmail,
+      modelName,
+      storageGb,
+      estimatedPayout,
+      retentionPercentage,
+      defects,
+      refCode,
+    } = req.body || {};
+
+    if (!customerEmail || !modelName) {
+      res.status(400).json({ error: 'ValidationError', message: 'customerEmail and modelName are required.' });
+      return;
+    }
+
+    sendAdminQuoteAlertEmail({
+      customerName: String(customerName || 'Registered Customer'),
+      customerPhone: String(customerPhone || 'N/A'),
+      customerEmail: String(customerEmail),
+      modelName: String(modelName),
+      storageGb: Number(storageGb) || 128,
+      estimatedPayout: Number(estimatedPayout) || 0,
+      retentionPercentage: Number(retentionPercentage) || 100,
+      defects: Array.isArray(defects) ? defects.map(String) : [],
+      refCode: refCode ? String(refCode) : undefined,
+    }).catch(err => console.error('[POST /api/quotes/alert] Failed to dispatch admin quote alert:', err));
+
+    res.json({ success: true, message: 'Quote alert email notification dispatched.' });
+  } catch (err) {
+    console.error('POST /api/quotes/alert error:', err);
+    res.status(500).json({ error: 'ServerError', message: 'Failed to process quote alert.' });
+  }
+});
+
 
 // Download Official PDF Quotation Document
 app.get('/api/bookings/:id/pdf', async (req, res) => {
@@ -1291,7 +1335,7 @@ if (distExists) {
 // SERVER START
 // ═══════════════════════════════════════════════════════════════════════════
 
-const server = app.listen(PORT, '0.0.0.0', () => {
+const server = app.listen(PORT, () => {
   console.log(`\n🚀 SmartphoneCentre API server running at http://0.0.0.0:${PORT}`);
   console.log(`   Health:       http://localhost:${PORT}/api/health`);
   console.log(`   Admin auth:   POST http://localhost:${PORT}/api/admin/auth`);

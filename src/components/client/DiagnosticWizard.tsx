@@ -12,7 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { getIllustration } from './Illustrations';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import emailjs from '@emailjs/browser';
-import { checkEmail, customerLogin, customerSignup, verifyOtp, ApiUser } from '../../utils/api';
+import { checkEmail, customerLogin, customerSignup, verifyOtp, sendQuoteAlertApi, ApiUser } from '../../utils/api';
 
 const getEngineeringLabel = (description: string) => {
   const mapping: { [key: string]: string } = {
@@ -1662,7 +1662,22 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
                   <button
                     type="button"
-                    onClick={() => setStep(7)}
+                    onClick={() => {
+                      setStep(7);
+                      if (currentUser) {
+                        sendQuoteAlertApi({
+                          customerName: currentUser.name || 'Registered Customer',
+                          customerPhone: currentUser.phone || 'N/A',
+                          customerEmail: currentUser.email,
+                          modelName: model.name,
+                          storageGb: variant.storageGb,
+                          estimatedPayout: valuation.finalPrice,
+                          retentionPercentage: valuation.retentionPercentage,
+                          defects: selectedDefects.map(d => d.description),
+                          refCode: `SCH-${receiptRef}`,
+                        }).catch(err => console.warn('[Diagnostic Wizard] Failed to dispatch quote email alert:', err));
+                      }
+                    }}
                     className="px-6 py-3 bg-gradient-to-r from-cobalt to-indigo-600 hover:from-cobalt-hover hover:to-indigo-700 text-white font-bold rounded-lg text-sm transition-all shadow-md hover:scale-[1.02] flex items-center gap-2"
                   >
                     <span>Confirm Diagnostics &amp; Generate Quote</span>
