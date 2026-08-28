@@ -15,13 +15,13 @@ export const PilotModeBanner: React.FC<PilotModeBannerProps> = ({ onOpenFeedback
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
           <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400 shadow-sm shadow-emerald-400/50"></span>
         </span>
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-blue-500/20 border border-blue-400/30 text-blue-300">
-          <Sparkles className="w-2.5 h-2.5 text-blue-300" />
-          <span>PILOT MODE</span>
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-emerald-500/20 border border-emerald-400/30 text-emerald-300">
+          <Sparkles className="w-2.5 h-2.5 text-emerald-300" />
+          <span>WE ARE LIVE</span>
         </span>
         <span className="text-xs sm:text-sm font-bold font-outfit text-white tracking-wide flex items-center gap-1.5">
-          <span>🚀</span>
-          <span>We’re Currently in Pilot Mode</span>
+          <span>🎉</span>
+          <span>We are LIVE &amp; now you can sell your old gadgets!</span>
         </span>
       </div>
 
@@ -30,7 +30,7 @@ export const PilotModeBanner: React.FC<PilotModeBannerProps> = ({ onOpenFeedback
 
       {/* 2. Supporting Message */}
       <p className="text-xs sm:text-[13px] text-slate-300 font-light leading-none whitespace-nowrap">
-        We’re building and improving the experience, and your feedback can help us make it better. Tell us what you’d like to see, what we can improve, and what would make the website more useful for you.
+        Can’t find your specific phone? Some models are currently not listed and will be added very soon!
       </p>
 
       {/* Subtle Bullet Separator */}
@@ -38,7 +38,7 @@ export const PilotModeBanner: React.FC<PilotModeBannerProps> = ({ onOpenFeedback
 
       {/* 3. Additional Message */}
       <div className="inline-flex items-center gap-1.5 text-xs sm:text-[13px] text-blue-200/90 font-medium whitespace-nowrap bg-blue-500/10 px-2.5 py-0.5 rounded-md border border-blue-400/20">
-        <span>More brands &amp; models will be available soon</span>
+        <span>More gadget categories &amp; models coming soon</span>
       </div>
 
       {/* Subtle Bullet Separator */}
@@ -52,10 +52,10 @@ export const PilotModeBanner: React.FC<PilotModeBannerProps> = ({ onOpenFeedback
           onOpenFeedback();
         }}
         className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-full border border-blue-400/40 shadow-sm shadow-blue-900/50 hover:scale-105 transition-all duration-200 active:scale-95 group shrink-0 cursor-pointer"
-        aria-label="Share Your Feedback"
+        aria-label="Contact Us & Feedback"
       >
         <MessageSquareHeart className="w-3 h-3 text-blue-200 group-hover:scale-110 transition-transform" />
-        <span>Share Your Feedback</span>
+        <span>Contact Us / Support</span>
         <ArrowRight className="w-3 h-3 text-blue-200 group-hover:translate-x-0.5 transition-transform" />
       </button>
 
