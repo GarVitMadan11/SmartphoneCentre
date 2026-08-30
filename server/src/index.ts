@@ -442,6 +442,10 @@ app.get('/api/models', async (req, res) => {
         else if (lower.includes('xiaomi') || lower.includes('mi')) resolvedSeries = 'Xiaomi Series';
       }
 
+      const supportsWarrantyQuestion = (parsedVariantPrices as any)?._supportsWarrantyQuestion !== undefined
+        ? Boolean((parsedVariantPrices as any)._supportsWarrantyQuestion)
+        : (m.releaseYear >= 2023);
+
       return {
         id: m.legacyId,
         brandId: m.brandId,
@@ -455,6 +459,7 @@ app.get('/api/models', async (req, res) => {
         supportedRamGb: parsedRamGb,
         variantPrices: parsedVariantPrices,
         hidden: Boolean((m as any).hidden ?? false),
+        supportsWarrantyQuestion,
       };
     }));
   } catch (err) {
@@ -467,7 +472,7 @@ app.get('/api/models', async (req, res) => {
 app.post('/api/models', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITOR']), async (req, res) => {
   try {
     const { legacyId, brandId, name, category, releaseYear, basePrice128GB,
-            series, imageUrl, supportedStorageGb, supportedRamGb, variantPrices, hidden } = req.body;
+            series, imageUrl, supportedStorageGb, supportedRamGb, variantPrices, hidden, supportsWarrantyQuestion } = req.body;
     if (!legacyId || !brandId || !name || !category || !releaseYear || !basePrice128GB) {
       res.status(400).json({ error: 'BadRequest', message: 'Missing required fields' });
       return;
@@ -483,7 +488,10 @@ app.post('/api/models', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITOR']
 
     const storageStr = Array.isArray(supportedStorageGb) ? JSON.stringify(supportedStorageGb) : JSON.stringify([128, 256, 512]);
     const ramStr = Array.isArray(supportedRamGb) ? JSON.stringify(supportedRamGb) : JSON.stringify([0]);
-    const pricesObj = (variantPrices && typeof variantPrices === 'object' && !Array.isArray(variantPrices)) ? variantPrices : {};
+    const pricesObj = (variantPrices && typeof variantPrices === 'object' && !Array.isArray(variantPrices)) ? { ...variantPrices } : {};
+    if (supportsWarrantyQuestion !== undefined) {
+      (pricesObj as any)._supportsWarrantyQuestion = Boolean(supportsWarrantyQuestion);
+    }
     // Auto-compute basePrice128GB from minimum variant price if prices are set
     const allPrices = Object.values(pricesObj).filter((v): v is number => typeof v === 'number' && v > 0);
     const resolvedBase = allPrices.length > 0 ? Math.min(...allPrices) : Number(basePrice128GB);
@@ -514,12 +522,18 @@ app.post('/api/models', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITOR']
       userAgent: String(req.headers['user-agent'] ?? ''),
     });
 
+    const createdVP = JSON.parse((model as any).variantPrices ?? '{}');
+    const resSupportsWarrantyQuestion = createdVP._supportsWarrantyQuestion !== undefined
+      ? Boolean(createdVP._supportsWarrantyQuestion)
+      : (model.releaseYear >= 2023);
+
     res.status(201).json({
       ...model,
       id: model.legacyId,
       supportedStorageGb: JSON.parse(model.supportedStorageGb),
       supportedRamGb: JSON.parse((model as any).supportedRamGb ?? '[0]'),
-      variantPrices: JSON.parse((model as any).variantPrices ?? '{}'),
+      variantPrices: createdVP,
+      supportsWarrantyQuestion: resSupportsWarrantyQuestion,
     });
   } catch (err) {
     console.error('POST /api/models error:', err);
@@ -676,14 +690,24 @@ app.patch('/api/models/:legacyId', adminAuth, requireRole(['SUPER_ADMIN', 'CATAL
       const prices = Object.values(updates.variantPrices as Record<string, number>).filter((v): v is number => typeof v === 'number' && v > 0);
       if (prices.length > 0) data.basePrice128GB = Math.min(...prices);
     }
+    const existing = await prisma.model.findFirst({
+      where: { OR: [{ legacyId }, { id: legacyId }] }
+    });
+
+    if (updates.supportsWarrantyQuestion !== undefined) {
+      let vp: Record<string, any> = {};
+      try {
+        const rawVP = (data as any).variantPrices || existing?.variantPrices || '{}';
+        vp = typeof rawVP === 'string' ? JSON.parse(rawVP) : { ...rawVP };
+      } catch { vp = {}; }
+      vp._supportsWarrantyQuestion = Boolean(updates.supportsWarrantyQuestion);
+      (data as any).variantPrices = JSON.stringify(vp);
+    }
+
     if (Object.keys(data).length === 0) {
       res.status(400).json({ error: 'BadRequest', message: 'No valid model fields supplied.' });
       return;
     }
-
-    const existing = await prisma.model.findFirst({
-      where: { OR: [{ legacyId }, { id: legacyId }] }
-    });
 
     if (!existing) {
       let brandId = (updates.brandId as string) || '';
@@ -732,12 +756,16 @@ app.patch('/api/models/:legacyId', adminAuth, requireRole(['SUPER_ADMIN', 'CATAL
         userAgent: String(req.headers['user-agent'] ?? ''),
       });
 
+      const createdVP = (created as any).variantPrices ? JSON.parse((created as any).variantPrices) : {};
       res.json({
         ...created,
         id: created.legacyId,
         supportedStorageGb: created.supportedStorageGb ? JSON.parse(created.supportedStorageGb) : [128, 256, 512],
         supportedRamGb: (created as any).supportedRamGb ? JSON.parse((created as any).supportedRamGb) : [0],
-        variantPrices: (created as any).variantPrices ? JSON.parse((created as any).variantPrices) : {},
+        variantPrices: createdVP,
+        supportsWarrantyQuestion: createdVP._supportsWarrantyQuestion !== undefined
+          ? Boolean(createdVP._supportsWarrantyQuestion)
+          : (created.releaseYear >= 2023),
       });
       return;
     }
@@ -757,12 +785,16 @@ app.patch('/api/models/:legacyId', adminAuth, requireRole(['SUPER_ADMIN', 'CATAL
       userAgent: String(req.headers['user-agent'] ?? ''),
     });
 
+    const updatedVP = (model as any).variantPrices ? JSON.parse((model as any).variantPrices) : {};
     res.json({
       ...model,
       id: model.legacyId,
       supportedStorageGb: model.supportedStorageGb ? JSON.parse(model.supportedStorageGb) : [128, 256, 512],
       supportedRamGb: (model as any).supportedRamGb ? JSON.parse((model as any).supportedRamGb) : [0],
-      variantPrices: (model as any).variantPrices ? JSON.parse((model as any).variantPrices) : {},
+      variantPrices: updatedVP,
+      supportsWarrantyQuestion: updatedVP._supportsWarrantyQuestion !== undefined
+        ? Boolean(updatedVP._supportsWarrantyQuestion)
+        : (model.releaseYear >= 2023),
     });
   } catch (err) {
     console.error('PATCH /api/models error:', err);

@@ -114,8 +114,11 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
   // Obtain rules based on model category, brand and model ID
   const rules = useMemo(() => getDefectRulesForCategory(model.category, model.brandId, model.name, model.id), [model]);
 
-  // Only ask for warranty on iPhone 15, 16, 17 and above (Never ask for iPhone 11, 12, 13, 14 series)
+  // Only ask for warranty if model.supportsWarrantyQuestion is true (or fallback for recent devices >= 2023)
   const isEligibleForWarranty = useMemo(() => {
+    if (model.supportsWarrantyQuestion !== undefined) {
+      return model.supportsWarrantyQuestion;
+    }
     const nm = model.name.toLowerCase();
     if (model.brandId === 'brand-apple' || nm.includes('iphone') || isApple) {
       if (
@@ -142,7 +145,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
       );
     }
     return (model.releaseYear ?? 2024) >= 2023;
-  }, [model.name, model.brandId, model.releaseYear, isApple]);
+  }, [model, isApple]);
 
   const [deviceAge, setDeviceAge] = useState<AgeFactorKey>('under_3m');
   const [hasWarranty, setHasWarranty] = useState<boolean | null>(null);

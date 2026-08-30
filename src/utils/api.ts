@@ -279,6 +279,7 @@ export async function createModel(data: {
   supportedRamGb?: number[];
   variantPrices?: Record<string, number>;
   hidden?: boolean;
+  supportsWarrantyQuestion?: boolean;
 }): Promise<ApiModel> {
   const res = await apiFetch<ApiModel>('/models', { method: 'POST', body: JSON.stringify(data) }, true);
   try {

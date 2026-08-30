@@ -69,6 +69,7 @@ async function main() {
         supportedStorageGb: JSON.stringify(storageArr),
         supportedRamGb: JSON.stringify(ramArr),
         variantPrices: JSON.stringify(variantPricesObj),
+        hidden: true,
       };
 
       try {

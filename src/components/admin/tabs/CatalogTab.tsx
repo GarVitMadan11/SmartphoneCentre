@@ -25,6 +25,7 @@ import {
   Folder,
   Tag,
   RotateCcw,
+  ShieldCheck,
 } from 'lucide-react';
 import { Model, Brand, isSmartwatchDevice, isTabletDevice } from '../../../data/mockDatabase';
 import { fetchModels, createModel, updateModel, deleteModel } from '../../../utils/api';
@@ -103,6 +104,7 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
     supportedRamGb: number[];
     variantPrices: Record<string, number>;
     hidden: boolean;
+    supportsWarrantyQuestion: boolean;
   }>({
     id: '',
     legacyId: '',
@@ -117,6 +119,7 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
     supportedRamGb: [0],
     variantPrices: {},
     hidden: false,
+    supportsWarrantyQuestion: true,
   });
 
   const [saving, setSaving] = useState(false);
@@ -307,6 +310,7 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
       supportedRamGb: model.supportedRamGb && model.supportedRamGb.length > 0 ? [...model.supportedRamGb] : [0],
       variantPrices: model.variantPrices ? { ...model.variantPrices } : {},
       hidden: Boolean(model.hidden),
+      supportsWarrantyQuestion: model.supportsWarrantyQuestion ?? ((model.releaseYear || 2024) >= 2023),
     });
   };
 
@@ -329,6 +333,7 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
       supportedRamGb: [0],
       variantPrices: {},
       hidden: false,
+      supportsWarrantyQuestion: true,
     });
   };
 
@@ -377,6 +382,7 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
         supportedRamGb: formData.supportedRamGb,
         variantPrices: cleanedVariantPrices,
         hidden: formData.hidden,
+        supportsWarrantyQuestion: formData.supportsWarrantyQuestion,
       };
 
       if (isAddingNew) {
@@ -1239,6 +1245,13 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
                           <span className="px-2 py-0.5 text-[10px] font-mono text-zinc-600 bg-zinc-100 rounded">
                             {model.category}
                           </span>
+                          <span className={`px-2 py-0.5 text-[10px] font-bold font-mono rounded border ${
+                            (model.supportsWarrantyQuestion ?? (model.releaseYear >= 2023))
+                              ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
+                              : 'text-zinc-500 bg-zinc-100 border-zinc-200'
+                          }`}>
+                            Warranty Q: {(model.supportsWarrantyQuestion ?? (model.releaseYear >= 2023)) ? 'ON' : 'OFF'}
+                          </span>
                         </div>
 
                         {model.hidden ? (
@@ -1661,6 +1674,25 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
                     </tbody>
                   </table>
                 </div>
+              </div>
+
+              {/* Brand Warranty Question Switch */}
+              <div className="p-4 bg-canvas-pure border border-ice-border rounded-lg flex items-center justify-between">
+                <div>
+                  <span className="font-bold text-ink-navy block flex items-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                    <span>Enable Brand Warranty Question</span>
+                  </span>
+                  <span className="text-[11px] text-zinc-500">
+                    When ON, the "Is your device under brand warranty?" question appears in customer diagnostics. When OFF, the question is skipped to avoid double penalties on out-of-warranty devices.
+                  </span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={formData.supportsWarrantyQuestion}
+                  onChange={(e) => setFormData({ ...formData, supportsWarrantyQuestion: e.target.checked })}
+                  className="w-5 h-5 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                />
               </div>
 
               {/* Visibility Switch */}

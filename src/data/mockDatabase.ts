@@ -23,6 +23,7 @@ export interface Model {
   supportedRamGb?: number[];     // RAM tiers e.g. [6, 8, 12]; [0] = no RAM variants (Apple)
   variantPrices?: Record<string, number>; // key: "ramGb_storageGb" e.g. "8_256" → 84900
   hidden?: boolean;                       // If true, hidden from frontend (disable selling)
+  supportsWarrantyQuestion?: boolean;     // If true, diagnostic wizard asks warranty & SIM questions
 }
 
 export interface Variant {
@@ -648,8 +649,221 @@ const CASHIFY_BENCHMARKS: Record<string, { supportedStorageGb: number[]; variant
   }
 };
 
+export function resolveModelReleaseYear(brandId: string, name: string, fallbackYear: number): number {
+  const n = name.trim();
+  const b = brandId.toLowerCase();
+
+  // ── APPLE ──
+  if (b === 'brand-apple' || b === 'apple') {
+    if (/iPhone 17/i.test(n)) return 2025;
+    if (/iPhone 16/i.test(n)) return 2024;
+    if (/iPhone 15/i.test(n)) return 2023;
+    if (/iPhone 14/i.test(n)) return 2022;
+    if (/iPhone 13/i.test(n)) return 2021;
+    if (/iPhone 12/i.test(n)) return 2020;
+    if (/iPhone 11/i.test(n)) return 2019;
+    if (/iPhone XR|iPhone XS/i.test(n)) return 2018;
+    if (/iPhone X\b/i.test(n)) return 2017;
+    if (/iPhone SE3/i.test(n)) return 2022;
+    if (/iPhone SE2/i.test(n)) return 2020;
+    if (/iPad Pro 13" \(M4\)|iPad Pro 11" \(M4\)|iPad Air 13" \(M2\)|iPad Air 11" \(M2\)|iPad mini 7/i.test(n)) return 2024;
+    if (/iPad \(10th Generation\)/i.test(n)) return 2022;
+    if (/Apple Watch Series 10|Apple Watch Ultra 2/i.test(n)) return 2024;
+    if (/Apple Watch Series 9|Apple Watch SE \(2nd Gen\)/i.test(n)) return 2023;
+  }
+
+  // ── SAMSUNG ──
+  if (b === 'brand-samsung' || b === 'samsung') {
+    if (/Galaxy S26/i.test(n)) return 2026;
+    if (/Galaxy S25/i.test(n)) return 2025;
+    if (/Galaxy S24/i.test(n)) return 2024;
+    if (/Galaxy S23/i.test(n)) return 2023;
+    if (/Galaxy S22|S20 FE 2022/i.test(n)) return 2022;
+    if (/Galaxy S21 FE/i.test(n)) return 2022;
+    if (/Galaxy S21/i.test(n)) return 2021;
+    if (/Galaxy S20/i.test(n)) return 2020;
+    if (/Galaxy S10/i.test(n)) return 2019;
+    if (/Galaxy S9/i.test(n)) return 2018;
+    if (/Galaxy S8/i.test(n)) return 2017;
+    if (/Galaxy S7/i.test(n)) return 2016;
+    if (/Galaxy S6/i.test(n)) return 2015;
+
+    if (/Z Fold 8|Z Flip 8/i.test(n)) return 2026;
+    if (/Z Fold 7|Z Flip 7/i.test(n)) return 2025;
+    if (/Z Fold 6|Z Flip 6/i.test(n)) return 2024;
+    if (/Z Fold 5|Z Flip 5/i.test(n)) return 2023;
+    if (/Z Fold 4|Z Flip 4/i.test(n)) return 2022;
+    if (/Z Fold 3|Z Flip 3|Z Fold3|Z Flip3/i.test(n)) return 2021;
+    if (/Z Fold 2/i.test(n)) return 2020;
+
+    // A Series
+    if (/A17|A27|A37|A57/i.test(n)) return 2025;
+    if (/A26|A36|A56/i.test(n)) return 2025;
+    if (/A16/i.test(n)) return 2024;
+    if (/A06|A15|A25|A35|A55/i.test(n)) return 2024;
+    if (/A14|A24|A34|A54/i.test(n)) return 2023;
+    if (/A04|A13|A23|A33|A53|A73/i.test(n)) return 2022;
+    if (/A03s|A02|A12|A22|A32|A52|A72/i.test(n)) return 2021;
+    if (/A03\b/i.test(n)) return 2022;
+
+    // F Series
+    if (/F07|F70|F47/i.test(n)) return 2025;
+    if (/F06|F16|F36|F56/i.test(n)) return 2024;
+    if (/F14|F34|F54/i.test(n)) return 2024;
+    if (/F13|F23/i.test(n)) return 2022;
+    if (/F02s|F12|F22|F42|F62/i.test(n)) return 2021;
+
+    // M Series
+    if (/M47|M07/i.test(n)) return 2025;
+    if (/M06|M16|M36|M56|M55|M35/i.test(n)) return 2024;
+    if (/M14|M34|M54/i.test(n)) return 2024;
+    if (/M04|M13|M33/i.test(n)) return 2022;
+    if (/M32 5G/i.test(n)) return 2021;
+    if (/M02|M12|M21|M32|M42|M52|M62/i.test(n)) return 2021;
+  }
+
+  // ── GOOGLE ──
+  if (b === 'brand-google' || b === 'google') {
+    if (/Pixel 10/i.test(n)) return 2025;
+    if (/Pixel 9a/i.test(n)) return 2025;
+    if (/Pixel 9/i.test(n)) return 2024;
+    if (/Pixel 8a/i.test(n)) return 2024;
+    if (/Pixel 8|Pixel Fold/i.test(n)) return 2023;
+    if (/Pixel 7a/i.test(n)) return 2023;
+    if (/Pixel 7|Pixel 6a/i.test(n)) return 2022;
+    if (/Pixel 6/i.test(n)) return 2021;
+  }
+
+  // ── ONEPLUS ──
+  if (b === 'brand-oneplus' || b === 'oneplus') {
+    if (/OnePlus 15/i.test(n)) return 2025;
+    if (/OnePlus 13/i.test(n)) return 2025;
+    if (/OnePlus 12/i.test(n)) return 2024;
+    if (/OnePlus Nord 4|OnePlus Nord CE 4/i.test(n)) return 2024;
+    if (/OnePlus 11|OnePlus Open/i.test(n)) return 2023;
+    if (/OnePlus Nord 3|OnePlus Nord CE 3/i.test(n)) return 2023;
+    if (/OnePlus 10/i.test(n)) return 2022;
+    if (/OnePlus Nord 2T|OnePlus Nord 2 CE/i.test(n)) return 2022;
+    if (/OnePlus 9|OnePlus Nord 2\b/i.test(n)) return 2021;
+    if (/OnePlus 8/i.test(n)) return 2020;
+    if (/Nord 5/i.test(n)) return 2025;
+    if (/Nord 6/i.test(n)) return 2025;
+  }
+
+  // ── NOTHING ──
+  if (b === 'brand-nothing' || b === 'nothing') {
+    if (/Phone 4a/i.test(n)) return 2026;
+    if (/Phone 3|Phone \(3\)|Phone 3a|Phone \(3a\)|CMF Phone 2/i.test(n)) return 2025;
+    if (/Phone 2a|CMF Phone 1/i.test(n)) return 2024;
+    if (/Phone 2|Phone \(2\)/i.test(n)) return 2023;
+    if (/Phone 1|Phone \(1\)/i.test(n)) return 2022;
+  }
+
+  // ── XIAOMI / REDMI / POCO ──
+  if (b === 'brand-xiaomi' || b === 'xiaomi') {
+    if (/Xiaomi 17/i.test(n)) return 2026;
+    if (/Xiaomi 16/i.test(n)) return 2026;
+    if (/Xiaomi 15 Ultra/i.test(n)) return 2025;
+    if (/Xiaomi 15/i.test(n)) return 2024;
+    if (/Xiaomi 14/i.test(n)) return 2024;
+    if (/Xiaomi 13T|Xiaomi 13\b|Xiaomi 13 Pro|Xiaomi 13 Lite/i.test(n)) return 2023;
+    if (/Xiaomi 12|Xiaomi 11i/i.test(n)) return 2022;
+    if (/Mi 11/i.test(n)) return 2021;
+
+    if (/Redmi Note 17/i.test(n)) return 2026;
+    if (/Redmi Note 15/i.test(n)) return 2026;
+    if (/Redmi Note 14/i.test(n)) return 2024;
+    if (/Redmi Note 13/i.test(n)) return 2024;
+    if (/Redmi Note 12/i.test(n)) return 2023;
+    if (/Redmi Note 11/i.test(n)) return 2022;
+    if (/Redmi Note 10/i.test(n)) return 2021;
+
+    if (/Redmi Turbo 5/i.test(n)) return 2026;
+    if (/Redmi 15/i.test(n)) return 2025;
+    if (/Redmi 14/i.test(n)) return 2024;
+    if (/Redmi 13/i.test(n)) return 2024;
+    if (/Redmi 12/i.test(n)) return 2023;
+    if (/Redmi 11 Prime 5G/i.test(n)) return 2022;
+    if (/Redmi 11/i.test(n)) return 2022;
+    if (/Redmi 10 Power|Redmi 10 Prime 2022/i.test(n)) return 2022;
+    if (/Redmi 10|Redmi 9/i.test(n)) return 2021;
+    if (/Redmi A3/i.test(n)) return 2024;
+    if (/Redmi A2/i.test(n)) return 2023;
+    if (/Redmi K50i/i.test(n)) return 2022;
+
+    if (/POCO F7|POCO X7|POCO M7/i.test(n)) return 2025;
+    if (/POCO F6|POCO X6|POCO M6/i.test(n)) return 2024;
+    if (/POCO F5|POCO X5/i.test(n)) return 2023;
+    if (/POCO X4/i.test(n)) return 2022;
+    if (/POCO X8|POCO M8/i.test(n)) return 2026;
+  }
+
+  // ── VIVO ──
+  if (b === 'brand-vivo' || b === 'vivo') {
+    if (/X300|X5 Fold/i.test(n)) return 2025;
+    if (/X200/i.test(n)) return 2024;
+    if (/X100|X Fold 3|X Fold3/i.test(n)) return 2024;
+    if (/X90/i.test(n)) return 2023;
+    if (/X80/i.test(n)) return 2022;
+    if (/X60/i.test(n)) return 2021;
+
+    if (/V70|V60/i.test(n)) return 2025;
+    if (/V50|V40|V30/i.test(n)) return 2024;
+    if (/V29|V27/i.test(n)) return 2023;
+    if (/V25|V23/i.test(n)) return 2022;
+    if (/V21/i.test(n)) return 2021;
+
+    if (/T5/i.test(n)) return 2026;
+    if (/T4/i.test(n)) return 2025;
+    if (/T3/i.test(n)) return 2024;
+    if (/T2/i.test(n)) return 2023;
+    if (/T1/i.test(n)) return 2022;
+
+    if (/Y400|Y300 5G|Y300 Plus|Y39|Y29|Y19/i.test(n)) return 2025;
+    if (/Y300|Y200 5G|Y200e|Y18|Y28/i.test(n)) return 2024;
+    if (/Y200|Y100|Y36|Y56|Y17s|Y27|Y11 5G|Y21 5G|Y31 5G/i.test(n)) return 2023;
+    if (/Y16|Y22|Y35|Y21G/i.test(n)) return 2022;
+    if (/Y51 Pro/i.test(n)) return 2021;
+    if (/Y12s|Y20|Y20G|Y31\b|Y51\b|Y72|Y73/i.test(n)) return 2021;
+  }
+
+  // ── OPPO ──
+  if (b === 'brand-oppo' || b === 'oppo') {
+    if (/Reno 16/i.test(n)) return 2026;
+    if (/Reno 15|Reno 14|Reno 13/i.test(n)) return 2025;
+    if (/Reno 12|Reno 11/i.test(n)) return 2024;
+    if (/Reno 10/i.test(n)) return 2023;
+    if (/Reno 8/i.test(n)) return 2022;
+
+    if (/Find X9/i.test(n)) return 2025;
+    if (/Find X8/i.test(n)) return 2024;
+
+    if (/F33|F31|F29/i.test(n)) return 2025;
+    if (/F27|F25/i.test(n)) return 2024;
+    if (/F23/i.test(n)) return 2023;
+    if (/F21/i.test(n)) return 2022;
+
+    if (/A6\b|A6x|A6s|A6t|A6k|A6 Pro/i.test(n)) return 2026;
+    if (/A5\b|A5x|A5 Pro/i.test(n)) return 2025;
+    if (/A3\b|A3x|A3 Pro|A60/i.test(n)) return 2024;
+    if (/A38|A58 4G|A59/i.test(n)) return 2023;
+    if (/A36|A57/i.test(n)) return 2022;
+    if (/A55s|A53s|A54|A55/i.test(n)) return 2021;
+  }
+
+  // ── MOTOROLA ──
+  if (b === 'brand-motorola' || b === 'motorola') {
+    if (/Edge 70|Edge 60|Razr 60|G06|G36|G56|G57|G67/i.test(n)) return 2025;
+    if (/Edge 50|Razr 50|G04|G05/i.test(n)) return 2024;
+    if (/Edge 40/i.test(n)) return 2023;
+  }
+
+  return fallbackYear;
+}
+
 const makeCatalogModels = (brandId: string, series: string, releaseYear: number, names: string[]): Model[] =>
   names.map((name) => {
+    const resolvedYear = resolveModelReleaseYear(brandId, name, releaseYear);
     const category = catalogCategory(name);
     const benchmarkKey = Object.keys(CASHIFY_BENCHMARKS).find(key => name === key);
     const benchmark = benchmarkKey ? CASHIFY_BENCHMARKS[benchmarkKey] : undefined;
@@ -671,11 +885,13 @@ const makeCatalogModels = (brandId: string, series: string, releaseYear: number,
       brandId,
       name,
       category,
-      releaseYear,
-      basePrice128GB: catalogPrice(brandId, name, category, releaseYear),
+      releaseYear: resolvedYear,
+      basePrice128GB: catalogPrice(brandId, name, category, resolvedYear),
       series: resolvedSeries,
       supportedStorageGb: benchmark ? benchmark.supportedStorageGb : undefined,
       variantPrices: benchmark ? benchmark.variantPrices : undefined,
+      hidden: true,
+      supportsWarrantyQuestion: resolvedYear >= 2023,
     };
   });
 
@@ -876,10 +1092,10 @@ const BASE_MODELS: Model[] = [
   { id: 'vi-v27p',     brandId: 'brand-vivo', name: 'vivo V27 Pro', category: 'premium',  releaseYear: 2023, basePrice128GB: 11500, series: 'V Series' },
   { id: 'vi-v25',      brandId: 'brand-vivo', name: 'vivo V25', category: 'midrange', releaseYear: 2022, basePrice128GB:  7500, series: 'V Series' },
   { id: 'vi-v25p',     brandId: 'brand-vivo', name: 'vivo V25 Pro', category: 'premium',  releaseYear: 2022, basePrice128GB:  9500, series: 'V Series' },
-  { id: 'vi-v23',      brandId: 'brand-vivo', name: 'vivo V23', category: 'midrange', releaseYear: 2021, basePrice128GB:  6500, series: 'V Series' },
-  { id: 'vi-v23p',     brandId: 'brand-vivo', name: 'vivo V23 Pro', category: 'premium',  releaseYear: 2021, basePrice128GB:  8500, series: 'V Series' },
-  { id: 'vi-v21',      brandId: 'brand-vivo', name: 'vivo V21', category: 'midrange', releaseYear: 2020, basePrice128GB:  5500, series: 'V Series' },
-  { id: 'vi-v21p',     brandId: 'brand-vivo', name: 'vivo V21 Pro', category: 'premium',  releaseYear: 2020, basePrice128GB:  7500, series: 'V Series' },
+  { id: 'vi-v23',      brandId: 'brand-vivo', name: 'vivo V23', category: 'midrange', releaseYear: 2022, basePrice128GB:  6500, series: 'V Series' },
+  { id: 'vi-v23p',     brandId: 'brand-vivo', name: 'vivo V23 Pro', category: 'premium',  releaseYear: 2022, basePrice128GB:  8500, series: 'V Series' },
+  { id: 'vi-v21',      brandId: 'brand-vivo', name: 'vivo V21', category: 'midrange', releaseYear: 2021, basePrice128GB:  5500, series: 'V Series' },
+  { id: 'vi-v21p',     brandId: 'brand-vivo', name: 'vivo V21 Pro', category: 'premium',  releaseYear: 2021, basePrice128GB:  7500, series: 'V Series' },
   { id: 'vi-t1-5g',    brandId: 'brand-vivo', name: 'vivo T1 5G', category: 'budget',   releaseYear: 2022, basePrice128GB:  5000, series: 'T Series' },
   { id: 'vi-t2p',      brandId: 'brand-vivo', name: 'vivo T2 Pro', category: 'midrange', releaseYear: 2023, basePrice128GB:  8500, series: 'T Series' },
   { id: 'vi-t2',       brandId: 'brand-vivo', name: 'vivo T2', category: 'budget',   releaseYear: 2023, basePrice128GB:  6500, series: 'T Series' },
@@ -901,7 +1117,7 @@ const BASE_MODELS: Model[] = [
   { id: 'vi-y11-5g',   brandId: 'brand-vivo', name: 'vivo Y11 5G', category: 'budget',   releaseYear: 2023, basePrice128GB:  5000, series: 'Y Series' },
   { id: 'vi-y21-5g',   brandId: 'brand-vivo', name: 'vivo Y21 5G', category: 'budget',   releaseYear: 2023, basePrice128GB:  5500, series: 'Y Series' },
   { id: 'vi-y31-5g',   brandId: 'brand-vivo', name: 'vivo Y31 5G', category: 'budget',   releaseYear: 2023, basePrice128GB:  6000, series: 'Y Series' },
-  { id: 'vi-y31p',     brandId: 'brand-vivo', name: 'vivo Y31 Pro', category: 'budget',   releaseYear: 2023, basePrice128GB:  7000, series: 'Y Series' },
+  { id: 'vi-y31p',     brandId: 'brand-vivo', name: 'vivo Y31 Pro', category: 'budget',   releaseYear: 2021, basePrice128GB:  7000, series: 'Y Series' },
   { id: 'vi-y51p',     brandId: 'brand-vivo', name: 'vivo Y51 Pro', category: 'budget',   releaseYear: 2023, basePrice128GB:  8000, series: 'Y Series' },
 
   // --- ONEPLUS ---
@@ -936,7 +1152,7 @@ const BASE_MODELS: Model[] = [
   { id: 'goog-10p',      brandId: 'brand-google', name: 'Pixel 10 Pro',     category: 'premium',  releaseYear: 2025, basePrice128GB: 52000, series: 'Pixel 10 Series',   imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/google-pixel-10-pro.jpg' },
   { id: 'goog-10p-xl',   brandId: 'brand-google', name: 'Pixel 10 Pro XL',  category: 'premium',  releaseYear: 2025, basePrice128GB: 58000, series: 'Pixel 10 Series',   imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/google-pixel-10-pro-xl.jpg' },
   { id: 'goog-10p-fold', brandId: 'brand-google', name: 'Pixel 10 Pro Fold',category: 'premium',  releaseYear: 2025, basePrice128GB: 72000, series: 'Pixel 10 Series',   imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/google-pixel-10-pro-fold.jpg' },
-  { id: 'goog-10a',      brandId: 'brand-google', name: 'Pixel 10a',        category: 'midrange', releaseYear: 2026, basePrice128GB: 22000, series: 'Pixel 10 Series',   imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/google-pixel-10a.jpg' },
+  { id: 'goog-10a',      brandId: 'brand-google', name: 'Pixel 10a',        category: 'midrange', releaseYear: 2025, basePrice128GB: 22000, series: 'Pixel 10 Series',   imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/google-pixel-10a.jpg' },
 
   // --- OPPO ---
   // (OPPO models dynamically populated via CATALOG_ADDITIONS)
@@ -1422,7 +1638,15 @@ export function sortModelsByLaunchDesc(modelsList: Model[]): Model[] {
 }
 
 const RAW_SMARTPHONE_MODELS: Model[] = sortModelsByLaunchDesc([
-  ...BASE_MODELS,
+  ...BASE_MODELS.map(m => {
+    const resolvedYear = resolveModelReleaseYear(m.brandId, m.name, m.releaseYear);
+    return {
+      ...m,
+      releaseYear: resolvedYear,
+      hidden: true,
+      supportsWarrantyQuestion: m.supportsWarrantyQuestion ?? (resolvedYear >= 2023),
+    };
+  }),
   ...CATALOG_ADDITIONS.filter((addition) => !BASE_MODELS.some((model) =>
     model.id === addition.id ||
     (model.brandId === addition.brandId && model.name.toLowerCase().trim() === addition.name.toLowerCase().trim())
@@ -1475,6 +1699,8 @@ export const MODELS: Model[] = sortModelsByLaunchDesc([
     supportedStorageGb,
     supportedRamGb,
     variantPrices,
+    hidden: true,
+    supportsWarrantyQuestion: m.supportsWarrantyQuestion ?? (m.releaseYear >= 2023),
   };
 });
 
