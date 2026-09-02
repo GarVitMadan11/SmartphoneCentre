@@ -309,6 +309,10 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
     if (defect.id === 'defect-screen-cracked' && penalty === 0) {
       penalty = 0.28; // Standard ~28% display panel deduction
     }
+    if (defect.deductionFixed > 0) {
+      const fixedPenalty = Math.min(0.30, defect.deductionFixed / basePrice);
+      penalty = Math.max(penalty, fixedPenalty);
+    }
     const factor = Math.max(0, 1.0 - penalty);
     if (factor < fDisplay) {
       fDisplay = factor;

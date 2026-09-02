@@ -737,6 +737,7 @@ export const getIllustration = (
       case 'defect-watch-screen-touch':
         return <WatchTouchUnresponsiveIllustration />;
       case 'defect-screen-truetone':
+      case 'defect-screen-non-original':
         return <WatchFlawlessDisplayIllustration />;
       case 'body-flawless':
         return <WatchFlawlessFrameIllustration />;
@@ -798,6 +799,7 @@ export const getIllustration = (
       case 'defect-screen-touch':
         return <TabletTouchUnresponsiveIllustration />;
       case 'defect-screen-truetone':
+      case 'defect-screen-non-original':
         return <TabletTrueToneIllustration />;
       case 'body-flawless':
         return <TabletFlawlessFrameIllustration />;
@@ -860,6 +862,7 @@ export const getIllustration = (
     case 'defect-screen-touch':
       return <TouchUnresponsiveIllustration />;
     case 'defect-screen-truetone':
+    case 'defect-screen-non-original':
       return <TrueToneIllustration />;
 
     // Body

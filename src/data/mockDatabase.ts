@@ -280,6 +280,7 @@ export function getDefectRulesForCategory(
 
   const isApple = isAppleDevice(brandId, modelName);
   const screenPct   = category === 'flagship' ? 0.28 : category === 'premium' ? 0.22 : 0.18;
+  const nonOriginalScreenPct = category === 'flagship' ? 0.40 : category === 'premium' ? 0.32 : 0.25;
   const bodyDentPct = category === 'flagship' ? 0.08 : category === 'premium' ? 0.07 : 0.06;
   const cameraPct   = category === 'flagship' ? 0.15 : category === 'premium' ? 0.12 : 0.08;
 
@@ -326,6 +327,14 @@ export function getDefectRulesForCategory(
         : 'Screen color profile sync or auto-brightness calibration failing — indicates non-OEM display.',
       deductionFixed: category === 'flagship' ? 2500 : 1500,
       deductionPercentage: 0
+    },
+    {
+      id: 'defect-screen-non-original',
+      category: 'screen',
+      description: 'Replaced / Non-Original Screen',
+      subText: 'Display panel has been changed or replaced with a local/aftermarket screen.',
+      deductionFixed: 0,
+      deductionPercentage: nonOriginalScreenPct
     },
 
     // ── BODY ─────────────────────────────────────────────────────────────

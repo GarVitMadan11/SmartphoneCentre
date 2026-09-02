@@ -690,11 +690,34 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
   }, [rawModels]);
   const [selectedBrandId, setSelectedBrandId] = useState<string>('brand-apple');
   const [selectedSeries, setSelectedSeries] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('q') || '';
+    }
+    return '';
+  });
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('q') || '';
+    }
+    return '';
+  });
   const [selectedModel, setSelectedModel] = useState<Model | null>(null);
   const [tempVariant, setTempVariant] = useState<Variant | null>(null);
   const variantSelectorRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const qParam = params.get('q');
+      if (qParam && qParam !== searchQuery) {
+        setSearchQuery(qParam);
+        setDebouncedSearchQuery(qParam);
+      }
+    }
+  }, [defaultBrandId, defaultModelId]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -975,43 +998,71 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
 
   return (
     <div className="w-full">
-      {/* Brand Tabs — horizontally scrollable on mobile */}
-      <div className="flex gap-2.5 mb-6 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-none" style={{scrollbarWidth: 'none'}}>
-        {BRANDS.map(brand => {
-          const isActive = selectedBrandId === brand.id;
-          return (
-            <motion.button
-              key={brand.id}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => {
-                setSelectedBrandId(brand.id);
-                setSelectedSeries(null);
-                setSelectedModel(null);
-                setSelectedStorage(null);
-                setTempVariant(null);
-              }}
-              className={`relative flex-shrink-0 px-4 sm:px-5 py-2.5 sm:py-3 rounded-md font-semibold text-xs sm:text-sm flex flex-col items-center justify-center gap-1.5 border transition-all duration-300 ${
-                isActive
-                  ? 'border-transparent text-white shadow-[0_4px_15px_rgba(59,130,246,0.25)]'
-                  : 'bg-canvas-pure text-ink-slate border-ice-border hover:border-cobalt/40 hover:bg-cobalt-light/10 opacity-85 hover:opacity-100'
-              }`}
-              style={{ minHeight: '64px', minWidth: '72px' }}
-            >
-              {isActive && (
-                <motion.div
-                  layoutId="activeBrandBg"
-                  className="absolute inset-0 bg-cobalt rounded-md z-0"
-                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                />
-              )}
-              <div className="relative z-10 flex flex-col items-center gap-1.5">
-                <BrandLogo logo={brand.logo} isActive={isActive} />
-                <span className={`text-[10px] font-semibold tracking-wide transition-colors duration-300 ${isActive ? 'text-white font-bold' : 'text-ink-slate'}`}>{brand.name}</span>
-              </div>
-            </motion.button>
-          );
-        })}
+      {/* Search bar — above brand tabs */}
+      <div className="relative mb-5">
+        <Search className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 text-ink-muted w-4 h-4 sm:w-5 sm:h-5" />
+        <input
+          id="device-search-input"
+          type="text"
+          placeholder="Search all brands (e.g. iPhone 15 Pro, Galaxy S24)..."
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          className="w-full pl-10 sm:pl-12 pr-10 py-3 sm:py-3.5 rounded-sm border border-ice-border bg-canvas-pure text-ink-navy text-sm placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all duration-300"
+          style={{ minHeight: '48px' }}
+          aria-label="Search all device models"
+        />
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery('')}
+            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-ink-muted hover:text-cobalt transition-colors"
+            aria-label="Clear search"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        )}
       </div>
+
+      {/* Brand Tabs — hidden when a search query is active */}
+      {!debouncedSearchQuery.trim() && (
+        <div className="flex gap-2.5 mb-6 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-none" style={{scrollbarWidth: 'none'}}>
+          {BRANDS.map(brand => {
+            const isActive = selectedBrandId === brand.id;
+            return (
+              <motion.button
+                key={brand.id}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  setSelectedBrandId(brand.id);
+                  setSelectedSeries(null);
+                  setSelectedModel(null);
+                  setSelectedStorage(null);
+                  setTempVariant(null);
+                }}
+                className={`relative flex-shrink-0 px-4 sm:px-5 py-2.5 sm:py-3 rounded-md font-semibold text-xs sm:text-sm flex flex-col items-center justify-center gap-1.5 border transition-all duration-300 ${
+                  isActive
+                    ? 'border-transparent text-white shadow-[0_4px_15px_rgba(59,130,246,0.25)]'
+                    : 'bg-canvas-pure text-ink-slate border-ice-border hover:border-cobalt/40 hover:bg-cobalt-light/10 opacity-85 hover:opacity-100'
+                }`}
+                style={{ minHeight: '64px', minWidth: '72px' }}
+              >
+                {isActive && (
+                  <motion.div
+                    layoutId="activeBrandBg"
+                    className="absolute inset-0 bg-cobalt rounded-md z-0"
+                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                  />
+                )}
+                <div className="relative z-10 flex flex-col items-center gap-1.5">
+                  <BrandLogo logo={brand.logo} isActive={isActive} />
+                  <span className={`text-[10px] font-semibold tracking-wide transition-colors duration-300 ${isActive ? 'text-white font-bold' : 'text-ink-slate'}`}>{brand.name}</span>
+                </div>
+              </motion.button>
+            );
+          })}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-8 items-start">
         {/* Left Side: Search and Models list / Series Cards */}
@@ -1020,38 +1071,25 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
           className="lg:col-span-12"
         >
-          {/* Search bar */}
-          <div className="relative mb-4 sm:mb-6">
-            <Search className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 text-ink-muted w-4 h-4 sm:w-5 sm:h-5" />
-            <input
-              id="device-search-input"
-              type="text"
-              placeholder="Search all brands (e.g. iPhone 15 Pro, Galaxy S24)..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="w-full pl-10 sm:pl-12 pr-10 py-3 sm:py-3.5 rounded-sm border border-ice-border bg-canvas-pure text-ink-navy text-sm placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all duration-300"
-              style={{ minHeight: '48px' }}
-              aria-label="Search all device models"
-            />
-            {searchQuery && (
+          {/* Search Results Header */}
+          {debouncedSearchQuery.trim() !== '' && (
+            <div className="flex items-center justify-between mb-5 animate-fadeIn">
+              <div>
+                <p className="text-xs font-mono text-cobalt font-bold uppercase tracking-wider mb-0.5">
+                  Search Results
+                </p>
+                <p className="text-sm font-semibold text-ink-navy">
+                  {filteredModels.length > 0
+                    ? <>"{debouncedSearchQuery}" — <span className="text-cobalt">{filteredModels.length} model{filteredModels.length !== 1 ? 's' : ''} found</span> across all brands</>
+                    : <>No models found for "{debouncedSearchQuery}"</>}
+                </p>
+              </div>
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-ink-muted hover:text-cobalt transition-colors"
-                aria-label="Clear search"
+                className="text-xs text-ink-muted hover:text-cobalt font-semibold transition-colors border border-ice-border px-3 py-1.5 rounded-lg hover:border-cobalt/40"
               >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                ✕ Clear search
               </button>
-            )}
-          </div>
-          {/* Cross-brand hint when searching */}
-          {debouncedSearchQuery.trim() !== '' && (
-            <div className="flex items-center gap-1.5 mb-4 text-[11px] text-cobalt font-mono animate-fadeIn">
-              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              Searching across all {filteredModels.length > 0 ? `${filteredModels.length} ` : ''}models from all brands
             </div>
           )}
 

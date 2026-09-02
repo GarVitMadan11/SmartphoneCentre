@@ -822,6 +822,8 @@ export default function App() {
   const isWorkflow = (activeStage === 'diagnose' || activeStage === 'schedule') && 
                      selectedModel !== null && selectedVariant !== null;
 
+  const cleanPath = path.split('?')[0];
+
   if (import.meta.env.VITE_COMING_SOON === 'true') {
     return <ComingSoon />;
   }
@@ -834,7 +836,7 @@ export default function App() {
 
       {/* ── Consolidated Header Navigation ─────────────────────────── */}
       <HeaderNav
-        currentPath={path}
+        currentPath={cleanPath}
         onNavigate={(p) => { handleReset(); navigate(p); }}
         onSelectBrand={(brandId) => {
           handleReset();
@@ -916,11 +918,11 @@ export default function App() {
             />
           )}
 
-          {path === '/about' && <AboutPage />}
+          {cleanPath === '/about' && <AboutPage />}
 
-          {path === '/contact' && <ContactPage onShowToast={showToast} />}
+          {cleanPath === '/contact' && <ContactPage onShowToast={showToast} />}
 
-          {path === '/tablets' && !isWorkflow && (
+          {cleanPath === '/tablets' && !isWorkflow && (
             <TabletsShowcase
               models={MODELS}
               onSelectVariant={handleVariantSelected}
@@ -931,7 +933,7 @@ export default function App() {
 
 
 
-          {path === '/smartphones' && !isWorkflow && (
+          {cleanPath === '/smartphones' && !isWorkflow && (
             <div className="bg-canvas-pure border border-ice-border/60 rounded-xl p-5 sm:p-8 shadow-3d-card scroll-mt-24 mb-12">
               <div className="mb-8 pb-5 border-b border-ice-border/40 text-left">
                 <span className="text-[10px] font-mono tracking-[0.2em] text-cobalt font-bold uppercase block mb-1">
@@ -953,7 +955,7 @@ export default function App() {
             </div>
           )}
 
-          {path === '/' && (
+          {cleanPath === '/' && (
             <div className="space-y-20 pt-4 pb-12 sm:pt-6 sm:pb-16">
               {/* 1. Hero Section */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
@@ -1009,6 +1011,19 @@ export default function App() {
                           value={heroSearch}
                           onChange={e => { setHeroSearch(e.target.value); setHeroSearchOpen(true); }}
                           onFocus={() => setHeroSearchOpen(true)}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              setHeroSearchOpen(false);
+                              if (heroSearch.trim()) {
+                                handleReset();
+                                navigate(`/smartphones?q=${encodeURIComponent(heroSearch.trim())}`);
+                              } else {
+                                handleReset();
+                                navigate('/smartphones');
+                              }
+                            }
+                          }}
                           className="w-full pl-10 pr-4 py-3 text-sm bg-transparent text-ink-navy placeholder:text-ink-muted focus:outline-none"
                           aria-label="Search for a smartphone model"
                           autoComplete="off"
@@ -1016,8 +1031,10 @@ export default function App() {
                       </div>
                       <button
                         onClick={() => {
-                          if (heroSearch.trim() && heroSearchResults.length > 0) {
-                            handleHeroSearchSelect(heroSearchResults[0]);
+                          setHeroSearchOpen(false);
+                          if (heroSearch.trim()) {
+                            handleReset();
+                            navigate(`/smartphones?q=${encodeURIComponent(heroSearch.trim())}`);
                           } else {
                             handleReset();
                             navigate('/smartphones');

@@ -38,7 +38,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
   // Spotlight Search Modal State
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
 
   const navRef = useRef<HTMLDivElement>(null);
   const modalInputRef = useRef<HTMLInputElement>(null);
@@ -73,9 +73,10 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
   useEffect(() => {
     if (isSearchOpen) {
       setTimeout(() => modalInputRef.current?.focus(), 50);
+      setSelectedIndex(-1);
     } else {
       setSearchQuery('');
-      setSelectedIndex(0);
+      setSelectedIndex(-1);
     }
   }, [isSearchOpen]);
 
@@ -119,7 +120,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
 
   const handleSearchSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (searchResults.length > 0 && selectedIndex >= 0 && searchResults[selectedIndex]) {
+    if (selectedIndex >= 0 && searchResults.length > 0 && searchResults[selectedIndex]) {
       handleSelectSearchedModel(searchResults[selectedIndex]);
       return;
     }
@@ -133,10 +134,10 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
   const handleModalKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setSelectedIndex(prev => (prev < searchResults.length - 1 ? prev + 1 : prev));
+      setSelectedIndex(prev => (prev < searchResults.length - 1 ? prev + 1 : 0));
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      setSelectedIndex(prev => (prev > 0 ? prev - 1 : 0));
+      setSelectedIndex(prev => (prev > 0 ? prev - 1 : searchResults.length - 1));
     } else if (e.key === 'Enter') {
       e.preventDefault();
       handleSearchSubmit();
@@ -588,7 +589,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
-                  setSelectedIndex(0);
+                  setSelectedIndex(-1);
                 }}
                 onKeyDown={handleModalKeyDown}
                 placeholder="Type device name e.g. iPhone 15 Pro, Samsung S24, OnePlus..."
