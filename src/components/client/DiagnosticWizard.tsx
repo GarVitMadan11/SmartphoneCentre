@@ -603,7 +603,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                 <span className="text-[9px] font-mono tracking-widest text-emerald-800 dark:text-emerald-300 uppercase block font-bold">LIVE ESTIMATED PAYOUT</span>
                 <div className="flex items-center gap-2.5 mt-0.5">
                   <span className="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 font-outfit tracking-tight">
-                    {valuation.isCritical ? '₹ 0 (Locked)' : formatPrice(valuation.finalPrice)}
+                    {!currentUser ? '₹ XX,XXX' : valuation.isCritical ? '₹ 0 (Locked)' : formatPrice(valuation.finalPrice)}
                   </span>
                   <span className="text-[10px] font-bold bg-emerald-600 text-white px-2 py-0.5 rounded-full shadow-xs">
                     {valuation.retentionPercentage}% Retained

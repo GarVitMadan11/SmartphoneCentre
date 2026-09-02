@@ -448,7 +448,7 @@ export default function ProfilePage({
                     {/* Stepper Progress */}
                     <div className="pt-2">
                       <div className="relative flex items-center justify-between text-center">
-                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-zinc-200 -z-0" />
+                        <div className="absolute left-4 right-4 top-4 -translate-y-1/2 h-1 bg-zinc-200 -z-0" />
                         {[
                           { title: 'Booked', desc: 'Order confirmed' },
                           { title: 'Inspected', desc: 'Doorside audit' },
