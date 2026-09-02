@@ -301,18 +301,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
             </button>
           </nav>
 
-          {/* ── In-Between Spotlight Search Trigger Icon Button ──────────────── */}
-          <div className="flex items-center shrink-0">
-            <button
-              type="button"
-              onClick={() => setIsSearchOpen(true)}
-              className="p-2 sm:p-2.5 rounded-xl border border-ice-border hover:border-cobalt hover:text-cobalt text-slate-600 bg-slate-50 hover:bg-slate-100 transition-all shadow-2xs cursor-pointer flex items-center justify-center shrink-0 group"
-              aria-label="Search models"
-              title="Search models (⌘K)"
-            >
-              <Search className="w-4 h-4 text-slate-500 group-hover:text-cobalt transition-colors shrink-0" />
-            </button>
-          </div>
+
 
           {/* Right CTA Actions */}
           <div className="hidden sm:flex items-center gap-2 shrink-0">
