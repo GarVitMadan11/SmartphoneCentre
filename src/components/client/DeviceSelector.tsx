@@ -674,22 +674,24 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
   const rawModels = propModels && propModels.length > 0 ? propModels : STATIC_SMARTPHONE_MODELS;
   const MODELS = useMemo(() => {
     return rawModels.map(m => {
-      let resolvedSeries = m.series || '';
+      let resolved = m.series || '';
       if (m.brandId === 'brand-xiaomi') {
         const lower = m.name.toLowerCase();
-        if (lower.includes('poco f')) resolvedSeries = 'POCO F Series';
-        else if (lower.includes('poco x')) resolvedSeries = 'POCO X Series';
-        else if (lower.includes('poco m')) resolvedSeries = 'POCO M Series';
-        else if (lower.includes('poco c')) resolvedSeries = 'POCO C Series';
-        else if (lower.includes('redmi note')) resolvedSeries = 'Redmi Note Series';
-        else if (lower.includes('redmi')) resolvedSeries = 'Redmi Series';
-        else if (lower.includes('xiaomi') || lower.includes('mi')) resolvedSeries = 'Xiaomi Series';
+        if (lower.includes('poco f')) resolved = 'POCO F Series';
+        else if (lower.includes('poco x')) resolved = 'POCO X Series';
+        else if (lower.includes('poco m')) resolved = 'POCO M Series';
+        else if (lower.includes('poco c')) resolved = 'POCO C Series';
+        else if (lower.includes('redmi note')) resolved = 'Redmi Note Series';
+        else if (lower.includes('redmi')) resolved = 'Redmi Series';
+        else if (lower.includes('xiaomi') || lower.includes('mi')) resolved = 'Xiaomi Series';
       }
-      return { ...m, series: resolvedSeries };
+      return { ...m, series: resolved };
     }).filter(m => !m.hidden && !isTabletDevice(m.brandId, m.name, m.id) && !isSmartwatchDevice(m.brandId, m.name, m.id));
   }, [rawModels]);
+
   const [selectedBrandId, setSelectedBrandId] = useState<string>('brand-apple');
   const [selectedSeries, setSelectedSeries] = useState<string | null>(null);
+  const [seriesSearchQuery, setSeriesSearchQuery] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
@@ -717,7 +719,17 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
         setDebouncedSearchQuery(qParam);
       }
     }
+    setSeriesSearchQuery('');
   }, [defaultBrandId, defaultModelId]);
+
+  // Filtered models within the selected series (for series-level search)
+  const seriesFilteredModels = useMemo(() => {
+    if (!selectedSeries) return [];
+    const base = MODELS.filter(m => m.brandId === selectedBrandId && m.series === selectedSeries);
+    if (!seriesSearchQuery.trim()) return base;
+    const q = seriesSearchQuery.toLowerCase().trim();
+    return base.filter(m => m.name.toLowerCase().includes(q));
+  }, [MODELS, selectedBrandId, selectedSeries, seriesSearchQuery]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -998,70 +1010,122 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
 
   return (
     <div className="w-full">
-      {/* Search bar — above brand tabs */}
-      <div className="relative mb-5">
-        <Search className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 text-ink-muted w-4 h-4 sm:w-5 sm:h-5" />
-        <input
-          id="device-search-input"
-          type="text"
-          placeholder="Search all brands (e.g. iPhone 15 Pro, Galaxy S24)..."
-          value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
-          className="w-full pl-10 sm:pl-12 pr-10 py-3 sm:py-3.5 rounded-sm border border-ice-border bg-canvas-pure text-ink-navy text-sm placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all duration-300"
-          style={{ minHeight: '48px' }}
-          aria-label="Search all device models"
-        />
-        {searchQuery && (
-          <button
-            onClick={() => setSearchQuery('')}
-            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-ink-muted hover:text-cobalt transition-colors"
-            aria-label="Clear search"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        )}
-      </div>
-
-      {/* Brand Tabs — hidden when a search query is active */}
-      {!debouncedSearchQuery.trim() && (
-        <div className="flex gap-2.5 mb-6 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-none" style={{scrollbarWidth: 'none'}}>
-          {BRANDS.map(brand => {
-            const isActive = selectedBrandId === brand.id;
-            return (
-              <motion.button
-                key={brand.id}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => {
-                  setSelectedBrandId(brand.id);
-                  setSelectedSeries(null);
-                  setSelectedModel(null);
-                  setSelectedStorage(null);
-                  setTempVariant(null);
-                }}
-                className={`relative flex-shrink-0 px-4 sm:px-5 py-2.5 sm:py-3 rounded-md font-semibold text-xs sm:text-sm flex flex-col items-center justify-center gap-1.5 border transition-all duration-300 ${
-                  isActive
-                    ? 'border-transparent text-white shadow-[0_4px_15px_rgba(59,130,246,0.25)]'
-                    : 'bg-canvas-pure text-ink-slate border-ice-border hover:border-cobalt/40 hover:bg-cobalt-light/10 opacity-85 hover:opacity-100'
-                }`}
-                style={{ minHeight: '64px', minWidth: '72px' }}
+      {/* When a SERIES is selected — show series header + series search, hide global search + brand tabs */}
+      {selectedSeries && !debouncedSearchQuery.trim() ? (
+        <div className="mb-5">
+          {/* Series Header with back button */}
+          <div className="flex items-center justify-between mb-4 pb-3 border-b border-ice-border/50">
+            <motion.button
+              whileHover={{ x: -2 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => {
+                setSelectedSeries(null);
+                setSelectedModel(null);
+                setSelectedStorage(null);
+                setTempVariant(null);
+                setSeriesSearchQuery('');
+              }}
+              className="flex items-center gap-1.5 text-xs text-ink-muted hover:text-cobalt transition-colors font-semibold"
+            >
+              <ArrowLeft className="w-4 h-4" /> Back to Series
+            </motion.button>
+            <span className="text-xs text-zinc-500 font-mono font-semibold uppercase tracking-widest">{selectedSeries}</span>
+          </div>
+          {/* Series-specific search */}
+          <div className="relative">
+            <Search className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 text-ink-muted w-4 h-4 sm:w-5 sm:h-5" />
+            <input
+              id="series-search-input"
+              type="text"
+              placeholder={`Search within ${selectedSeries}...`}
+              value={seriesSearchQuery}
+              onChange={e => setSeriesSearchQuery(e.target.value)}
+              autoFocus
+              className="w-full pl-10 sm:pl-12 pr-10 py-3 sm:py-3.5 rounded-sm border border-ice-border bg-canvas-pure text-ink-navy text-sm placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all duration-300"
+              style={{ minHeight: '48px' }}
+              aria-label={`Search within ${selectedSeries}`}
+            />
+            {seriesSearchQuery && (
+              <button
+                onClick={() => setSeriesSearchQuery('')}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-ink-muted hover:text-cobalt transition-colors"
+                aria-label="Clear search"
               >
-                {isActive && (
-                  <motion.div
-                    layoutId="activeBrandBg"
-                    className="absolute inset-0 bg-cobalt rounded-md z-0"
-                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                  />
-                )}
-                <div className="relative z-10 flex flex-col items-center gap-1.5">
-                  <BrandLogo logo={brand.logo} isActive={isActive} />
-                  <span className={`text-[10px] font-semibold tracking-wide transition-colors duration-300 ${isActive ? 'text-white font-bold' : 'text-ink-slate'}`}>{brand.name}</span>
-                </div>
-              </motion.button>
-            );
-          })}
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
         </div>
+      ) : (
+        <>
+          {/* Global search bar — above brand tabs */}
+          <div className="relative mb-5">
+            <Search className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 text-ink-muted w-4 h-4 sm:w-5 sm:h-5" />
+            <input
+              id="device-search-input"
+              type="text"
+              placeholder="Search all brands (e.g. iPhone 15 Pro, Galaxy S24)..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="w-full pl-10 sm:pl-12 pr-10 py-3 sm:py-3.5 rounded-sm border border-ice-border bg-canvas-pure text-ink-navy text-sm placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all duration-300"
+              style={{ minHeight: '48px' }}
+              aria-label="Search all device models"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-ink-muted hover:text-cobalt transition-colors"
+                aria-label="Clear search"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
+
+          {/* Brand Tabs — hidden when a search query is active */}
+          {!debouncedSearchQuery.trim() && (
+            <div className="flex gap-2.5 mb-6 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-none" style={{scrollbarWidth: 'none'}}>
+              {BRANDS.map(brand => {
+                const isActive = selectedBrandId === brand.id;
+                return (
+                  <motion.button
+                    key={brand.id}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => {
+                      setSelectedBrandId(brand.id);
+                      setSelectedSeries(null);
+                      setSelectedModel(null);
+                      setSelectedStorage(null);
+                      setTempVariant(null);
+                    }}
+                    className={`relative flex-shrink-0 px-4 sm:px-5 py-2.5 sm:py-3 rounded-md font-semibold text-xs sm:text-sm flex flex-col items-center justify-center gap-1.5 border transition-all duration-300 ${
+                      isActive
+                        ? 'border-transparent text-white shadow-[0_4px_15px_rgba(59,130,246,0.25)]'
+                        : 'bg-canvas-pure text-ink-slate border-ice-border hover:border-cobalt/40 hover:bg-cobalt-light/10 opacity-85 hover:opacity-100'
+                    }`}
+                    style={{ minHeight: '64px', minWidth: '72px' }}
+                  >
+                    {isActive && (
+                      <motion.div
+                        layoutId="activeBrandBg"
+                        className="absolute inset-0 bg-cobalt rounded-md z-0"
+                        transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                      />
+                    )}
+                    <div className="relative z-10 flex flex-col items-center gap-1.5">
+                      <BrandLogo logo={brand.logo} isActive={isActive} />
+                      <span className={`text-[10px] font-semibold tracking-wide transition-colors duration-300 ${isActive ? 'text-white font-bold' : 'text-ink-slate'}`}>{brand.name}</span>
+                    </div>
+                  </motion.button>
+                );
+              })}
+            </div>
+          )}
+        </>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-8 items-start">
@@ -1155,8 +1219,8 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
               >
-                {/* Breadcrumb / Back Navigation if not searching and series is selected */}
-                {debouncedSearchQuery.trim() === '' && selectedSeries !== null && (
+                {/* Breadcrumb / Back Navigation — hidden when series is selected (back is now in header above) */}
+                {debouncedSearchQuery.trim() === '' && selectedSeries !== null && false && (
                   <div className="flex items-center justify-between mb-5 pb-3 border-b border-white/[0.04]">
                     <motion.button
                       whileHover={{ x: -2 }}
@@ -1176,17 +1240,21 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                 )}
 
                 {/* Models Grid: vertical cards matching tablet showcase design */}
+                {(() => {
+                  const displayModels = (selectedSeries && !debouncedSearchQuery.trim()) ? seriesFilteredModels : filteredModels;
+                  return (
                 <div className={`grid grid-cols-1 sm:grid-cols-2 ${selectedModel ? 'lg:grid-cols-2' : 'lg:grid-cols-3'} gap-6`}>
-                  {filteredModels.length === 0 && (
+                   {displayModels.length === 0 && (
                     <div className="col-span-full py-12 px-4 text-center border border-dashed border-ice-border rounded-2xl bg-canvas-pure">
                       <Smartphone className="w-10 h-10 text-ink-muted mx-auto mb-3" />
                       <h4 className="text-base font-semibold text-ink-navy">No models found</h4>
                       <p className="text-xs text-ink-muted mt-1 max-w-xs mx-auto">
-                        No results for <span className="font-mono text-cobalt">"{searchQuery}"</span>.<br />
-                        Try a brand name (e.g. "Apple", "Samsung") or a model number.
+                        {seriesSearchQuery
+                          ? <>No results for <span className="font-mono text-cobalt">"{seriesSearchQuery}"</span> in {selectedSeries}.<br />Try a different name.</>  
+                          : <>No results for <span className="font-mono text-cobalt">"{searchQuery}"</span>.<br />Try a brand name or model number.</>}
                       </p>
                       <button
-                        onClick={() => setSearchQuery('')}
+                        onClick={() => seriesSearchQuery ? setSeriesSearchQuery('') : setSearchQuery('')}
                         className="mt-4 px-4 py-2 bg-cobalt hover:bg-cobalt-hover text-white text-xs font-bold rounded-lg transition-all"
                         style={{ minHeight: '36px' }}
                       >
@@ -1195,7 +1263,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                     </div>
                   )}
                   <AnimatePresence>
-                    {filteredModels.map(model => {
+                    {displayModels.map(model => {
                       const isSelected = selectedModel?.id === model.id;
                       const hasSelection = selectedModel !== null;
                       return (
@@ -1271,8 +1339,10 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                         </motion.div>
                       );
                     })}
-                  </AnimatePresence>
-                </div>
+                      </AnimatePresence>
+                    </div>
+                  );
+                })()}
               </motion.div>
             )}
           </AnimatePresence>
