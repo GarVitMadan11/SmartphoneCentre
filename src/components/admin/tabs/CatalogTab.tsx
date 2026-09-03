@@ -27,7 +27,7 @@ import {
   RotateCcw,
   ShieldCheck,
 } from 'lucide-react';
-import { Model, Brand, isSmartwatchDevice, isTabletDevice } from '../../../data/mockDatabase';
+import { Model, Brand, isSmartwatchDevice, isTabletDevice, buildVariantPricesForModel, isVariantAvailable } from '../../../data/mockDatabase';
 import { fetchModels, createModel, updateModel, deleteModel } from '../../../utils/api';
 import {
   saveBrandOrder,
@@ -667,6 +667,111 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
     document.body.removeChild(link);
   };
 
+  const handleExportActiveVariantsCsv = () => {
+    // Export ONLY active (non-hidden) devices
+    const activeModels = models.filter((m) => {
+      if (m.hidden) return false;
+      let matchesCat = false;
+      if (category === 'smartphones') {
+        matchesCat = !isTabletDevice(m.brandId, m.name, m.id) && !isSmartwatchDevice(m.brandId, m.name, m.id);
+      } else if (category === 'tablets') {
+        matchesCat = isTabletDevice(m.brandId, m.name, m.id);
+      } else if (category === 'smartwatches') {
+        matchesCat = isSmartwatchDevice(m.brandId, m.name, m.id);
+      }
+      return matchesCat;
+    });
+
+    const headers = [
+      'Model ID',
+      'Brand ID',
+      'Brand Name',
+      'Model Name',
+      'Category',
+      'Series',
+      'Release Year',
+      'RAM (GB)',
+      'Storage (GB)',
+      'Formatted Storage',
+      'Variant Price (INR)',
+      'Base Anchor Price 128GB (INR)',
+      'Warranty Question Supported',
+      'Image URL',
+      'Status'
+    ];
+
+    const brandMap = new Map<string, string>();
+    initialBrands.forEach((b) => brandMap.set(b.id, b.name));
+
+    const rows: string[][] = [];
+
+    activeModels.forEach((m) => {
+      const brandName = brandMap.get(m.brandId) || m.brandId;
+      const variantPricesMap = buildVariantPricesForModel(m);
+      const entries = Object.entries(variantPricesMap);
+
+      if (entries.length > 0) {
+        entries.forEach(([key, price]) => {
+          const parts = key.split('_');
+          const ramGb = Number(parts[0]) || 0;
+          const storageGb = Number(parts[1]) || 0;
+
+          if (price > 0 && isVariantAvailable(m, ramGb, storageGb)) {
+            const formattedStorage = storageGb >= 1024 ? `${storageGb / 1024} TB` : `${storageGb} GB`;
+            const ramLabel = ramGb === 0 ? 'N/A' : `${ramGb} GB`;
+
+            rows.push([
+              m.id,
+              m.brandId,
+              `"${brandName.replace(/"/g, '""')}"`,
+              `"${m.name.replace(/"/g, '""')}"`,
+              m.category,
+              `"${(m.series || '').replace(/"/g, '""')}"`,
+              String(m.releaseYear || ''),
+              ramLabel,
+              String(storageGb),
+              formattedStorage,
+              String(price),
+              String(m.basePrice128GB || ''),
+              m.supportsWarrantyQuestion ? 'Yes' : 'No',
+              `"${(m.imageUrl || '').replace(/"/g, '""')}"`,
+              'Active'
+            ]);
+          }
+        });
+      } else {
+        rows.push([
+          m.id,
+          m.brandId,
+          `"${brandName.replace(/"/g, '""')}"`,
+          `"${m.name.replace(/"/g, '""')}"`,
+          m.category,
+          `"${(m.series || '').replace(/"/g, '""')}"`,
+          String(m.releaseYear || ''),
+          'N/A',
+          '128',
+          '128 GB',
+          String(m.basePrice128GB || 0),
+          String(m.basePrice128GB || 0),
+          m.supportsWarrantyQuestion ? 'Yes' : 'No',
+          `"${(m.imageUrl || '').replace(/"/g, '""')}"`,
+          'Active'
+        ]);
+      }
+    });
+
+    const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `active_${category}_ram_storage_prices_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const formatPrice = (val: number) => {
     return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(val);
   };
@@ -767,9 +872,19 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
           <button
             onClick={handleExportCsv}
             className="px-3 py-2 bg-zinc-100 hover:bg-zinc-200 text-ink-navy text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer"
+            title="Export model overview CSV"
           >
             <Download className="w-3.5 h-3.5 text-cobalt" />
             <span>Export CSV</span>
+          </button>
+
+          <button
+            onClick={handleExportActiveVariantsCsv}
+            className="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+            title="Download CSV of all active models with RAM, Storage & Variant Prices"
+          >
+            <Download className="w-3.5 h-3.5 text-emerald-600" />
+            <span>Export Active Prices CSV</span>
           </button>
 
           <button

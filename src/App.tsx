@@ -1197,10 +1197,13 @@ export default function App() {
               </div>
 
               {/* 1.6 Sell Your Device Section */}
-              <SellYourDevice onGetValuation={() => {
-                handleReset();
-                navigate('/smartphones');
-              }} />
+              <SellYourDevice
+                currentUser={currentUser}
+                onGetValuation={() => {
+                  handleReset();
+                  navigate('/smartphones');
+                }}
+              />
 
               {/* 3. How It Works Section */}
               <div id="how-it-works-section" className="py-12 border-t border-b border-ice-border/40">

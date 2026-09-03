@@ -1,10 +1,35 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowRight, Smartphone, Tablet, ShieldCheck, Zap, Truck } from 'lucide-react';
+import { ArrowRight, Smartphone, Tablet, ShieldCheck, Zap } from 'lucide-react';
+import { fetchModels, type ApiUser } from '../../utils/api';
+import { getMaxVariantPrice, type Model } from '../../data/mockDatabase';
 
 /* ─────────────────────────────────────────────
    2D Premium Device Composition Cards
 ───────────────────────────────────────────── */
-const FloatingComposition: React.FC = () => {
+const FloatingComposition: React.FC<{ currentUser?: ApiUser | null }> = ({ currentUser }) => {
+  const [ipadMaxPrice, setIpadMaxPrice] = useState<number | null>(null);
+  const [iphoneMaxPrice, setIphoneMaxPrice] = useState<number | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    fetchModels().then((rawModels) => {
+      if (!mounted) return;
+      const models = rawModels as unknown as Model[];
+      const ipad = models.find((m) => m.id === 'apple-ipad-pro-m4-13' || m.name.toLowerCase().includes('ipad pro 13'));
+      const iphone = models.find((m) => m.id === 'apple-16pm' || m.name.toLowerCase().includes('iphone 16 pro max'));
+
+      if (ipad) setIpadMaxPrice(getMaxVariantPrice(ipad));
+      if (iphone) setIphoneMaxPrice(getMaxVariantPrice(iphone));
+    }).catch(() => {});
+
+    return () => { mounted = false; };
+  }, []);
+
+  const formatPriceStr = (val: number | null, fallback: string) => {
+    if (!val || val <= 0) return fallback;
+    return `₹${val.toLocaleString('en-IN')}`;
+  };
+
   return (
     <div className="relative w-full min-h-[440px] flex items-center justify-center p-2 sm:p-4">
       {/* Background ambient lighting glow */}
@@ -45,7 +70,9 @@ const FloatingComposition: React.FC = () => {
           <div>
             <div className="my-3 pt-3 border-t border-slate-100 flex items-baseline justify-between">
               <span className="text-[10px] font-mono uppercase text-slate-400 font-medium">Up To Payout</span>
-              <span className="text-2xl font-black text-emerald-600 font-mono">₹72,000</span>
+              <span className="text-2xl font-black text-emerald-600 font-mono">
+                {!currentUser ? 'Rs XX,XXX' : formatPriceStr(ipadMaxPrice, '₹78,000')}
+              </span>
             </div>
 
             <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between text-[10px] font-mono text-slate-600">
@@ -88,7 +115,9 @@ const FloatingComposition: React.FC = () => {
           <div>
             <div className="my-3 pt-3 border-t border-slate-100 flex items-baseline justify-between">
               <span className="text-[10px] font-mono uppercase text-slate-400 font-medium">Estimated Valuation</span>
-              <span className="text-2xl font-black text-emerald-600 font-mono">₹89,000</span>
+              <span className="text-2xl font-black text-emerald-600 font-mono">
+                {!currentUser ? 'Rs XX,XXX' : formatPriceStr(iphoneMaxPrice, '₹86,500')}
+              </span>
             </div>
 
             <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between text-[10px] font-mono text-slate-600">
@@ -159,24 +188,14 @@ const ProcessStep: React.FC<StepProps> = ({ number, title, description, icon, de
 };
 
 /* ─────────────────────────────────────────────
-   Trust Badge Pill
+   Feature Pill
 ───────────────────────────────────────────── */
-const TrustBadge: React.FC<{ icon: React.ReactNode; label: string }> = ({ icon, label }) => (
-  <div className="flex items-center gap-2 px-4 py-2.5 bg-canvas-white border border-ice-border rounded-full shadow-sm text-sm font-semibold text-ink-navy">
-    <span className="text-secondary [&>svg]:w-4 [&>svg]:h-4">{icon}</span>
-    {label}
-  </div>
-);
-
-/* ─────────────────────────────────────────────
-   Device Type Pill
-───────────────────────────────────────────── */
-const DeviceTypePill: React.FC<{ icon: React.ReactNode; label: string; value: string }> = ({ icon, label, value }) => (
-  <div className="group flex items-center gap-3 px-4 py-3 bg-canvas-white border border-ice-border rounded-xl shadow-sm hover:border-cobalt/30 hover:shadow-md transition-all duration-300">
-    <div className="w-9 h-9 rounded-lg bg-ice-gray flex items-center justify-center text-cobalt flex-shrink-0 group-hover:bg-cobalt/10 transition-colors duration-300 [&>svg]:w-[18px] [&>svg]:h-[18px]">
+const FeaturePill: React.FC<{ icon: React.ReactNode; label: string; value: string }> = ({ icon, label, value }) => (
+  <div className="flex items-center gap-3 p-3 rounded-xl bg-canvas-white border border-ice-border shadow-xs hover:border-cobalt/30 transition-all">
+    <div className="w-8 h-8 rounded-lg bg-cobalt/8 flex items-center justify-center text-cobalt shrink-0">
       {icon}
     </div>
-    <div className="text-left">
+    <div>
       <div className="text-[9px] font-mono tracking-wider text-ink-muted uppercase">{label}</div>
       <div className="text-xs font-bold text-ink-navy font-outfit">{value}</div>
     </div>
@@ -186,7 +205,10 @@ const DeviceTypePill: React.FC<{ icon: React.ReactNode; label: string; value: st
 /* ─────────────────────────────────────────────
    Main Export
 ───────────────────────────────────────────── */
-export const SellYourDevice: React.FC<{ onGetValuation?: () => void }> = ({ onGetValuation }) => {
+export const SellYourDevice: React.FC<{
+  onGetValuation?: () => void;
+  currentUser?: ApiUser | null;
+}> = ({ onGetValuation, currentUser }) => {
   const [heroVisible, setHeroVisible] = useState(false);
   const heroRef = useRef<HTMLDivElement>(null);
 
@@ -234,25 +256,23 @@ export const SellYourDevice: React.FC<{ onGetValuation?: () => void }> = ({ onGe
             </p>
 
             {/* Device type pills */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
-              <DeviceTypePill icon={<Smartphone />} label="SMARTPHONES" value="Up to &#8377;1,10,000" />
-              <DeviceTypePill icon={<Tablet />} label="TABLETS & iPADS" value="Up to &#8377;80,000" />
+            <div className="grid grid-cols-2 gap-3 mb-8 max-w-md">
+              <FeaturePill icon={<Smartphone className="w-4 h-4" />} label="Smartphones" value="iPhone, Galaxy & More" />
+              <FeaturePill icon={<Tablet className="w-4 h-4" />} label="Tablets" value="iPad & Android Tabs" />
+              <FeaturePill icon={<Zap className="w-4 h-4" />} label="Speed" value="Instant Doorstep Credit" />
+              <FeaturePill icon={<ShieldCheck className="w-4 h-4" />} label="Security" value="NIST 800-88 Data Wipe" />
             </div>
 
             {/* CTA */}
-            <button
-              onClick={onGetValuation}
-              className="group relative inline-flex items-center gap-3 px-8 py-4 bg-cobalt hover:bg-cobalt-hover text-white font-bold text-sm sm:text-base rounded-xl shadow-lg shadow-cobalt/20 hover:shadow-cobalt/35 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] font-outfit tracking-wide"
-            >
-              GET YOUR VALUATION
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
-            </button>
-
-            {/* Trust badges — Tailored for Indian Market (UPI, IMPS, Instant Payout) */}
-            <div className="flex flex-wrap items-center gap-2.5 mt-6">
-              <TrustBadge icon={<Zap />} label="Instant UPI & IMPS Payout" />
-              <TrustBadge icon={<ShieldCheck />} label="100% Price Lock Guarantee" />
-              <TrustBadge icon={<Truck />} label="Free Doorstep Pickup across India" />
+            <div className="flex flex-wrap items-center gap-4">
+              <button
+                type="button"
+                onClick={onGetValuation}
+                className="px-7 py-3.5 rounded-xl bg-cobalt hover:bg-cobalt-hover text-white font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer group"
+              >
+                <span>Get Instant Valuation</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </button>
             </div>
             
             {/* Accepted Indian Payment Methods Bar */}
@@ -275,7 +295,7 @@ export const SellYourDevice: React.FC<{ onGetValuation?: () => void }> = ({ onGe
               transition: 'opacity 0.8s ease 0.2s, transform 0.8s ease 0.2s',
             }}
           >
-            <FloatingComposition />
+            <FloatingComposition currentUser={currentUser} />
           </div>
         </div>
 
