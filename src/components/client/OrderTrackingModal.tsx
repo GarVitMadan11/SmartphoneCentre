@@ -283,6 +283,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                             <p className="text-xs text-ink-muted mt-0.5 truncate font-mono">
                               Storage: {b.storageGb >= 1024 ? `${b.storageGb / 1024}TB` : `${b.storageGb}GB`}
                               {b.color && b.color !== 'Standard' ? ` • ${b.color}` : ''}
+                              {b.imei ? ` • IMEI: ${b.imei}` : ''}
                             </p>
                           </div>
 

@@ -320,6 +320,8 @@ export function validateBookingBody(b: Record<string, unknown>): string[] {
     errors.push('customerPhone: must be a valid 10-digit Indian mobile number');
   if (!b.customerEmail || typeof b.customerEmail !== 'string' || b.customerEmail.trim().length > 100 || !EMAIL_RE.test(b.customerEmail.trim()))
     errors.push('customerEmail: must be a valid email address under 100 characters');
+  if (!b.imei || typeof b.imei !== 'string' || b.imei.trim().length !== 15 || !/^\d{15}$/.test(b.imei.trim()))
+    errors.push('imei: must be a valid 15-digit IMEI number');
   if (!b.address || typeof b.address !== 'string' || b.address.trim().length < 10 || b.address.trim().length > 500)
     errors.push('address: must be between 10 and 500 characters');
   if (!b.pickupDate || typeof b.pickupDate !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(b.pickupDate) || Number.isNaN(Date.parse(`${b.pickupDate}T00:00:00.000Z`)))
@@ -959,7 +961,7 @@ app.post('/api/bookings/track', trackingLimiter, async (req, res) => {
 // BOOKINGS (CREATION & ADMIN MANAGEMENT)
 // ═══════════════════════════════════════════════════════════════════════════
 
-function mapBooking(b: import('@prisma/client').Booking, includeUnmaskedPayout = false) {
+function mapBooking(b: any, includeUnmaskedPayout = false) {
   const rawDetails = decryptPayoutDetails(b.payoutDetailsJson);
   const safeDetails = includeUnmaskedPayout ? rawDetails : maskPayoutDetails(rawDetails);
 
@@ -972,6 +974,7 @@ function mapBooking(b: import('@prisma/client').Booking, includeUnmaskedPayout =
     customerName: b.customerName,
     customerPhone: b.customerPhone,
     customerEmail: b.customerEmail,
+    imei: b.imei || 'Not provided',
     address: b.address,
     pickupDate: b.pickupDate,
     pickupTimeSlot: b.pickupTimeSlot,
@@ -1097,6 +1100,7 @@ app.post('/api/bookings', bookingLimiter, optionalCustomerAuth, async (req: Auth
         customerName: (req.customer?.name || String(b.customerName ?? '')).trim(),
         customerPhone: (req.customer?.phone || String(b.customerPhone ?? '')).trim(),
         customerEmail: (req.customer?.email || String(b.customerEmail ?? '')).trim(),
+        imei: String(b.imei ?? '').trim(),
         address: String(b.address).trim(),
         pickupDate: String(b.pickupDate),
         pickupTimeSlot: String(b.pickupTimeSlot),
@@ -1119,7 +1123,7 @@ app.post('/api/bookings', bookingLimiter, optionalCustomerAuth, async (req: Auth
         dateCreated: new Date().toISOString(),
         payoutDetailsJson: encryptedPayoutJson,
         defectIdsJson: JSON.stringify(defectIds),
-      },
+      } as any,
     });
 
     await prisma.bookingEvent.create({

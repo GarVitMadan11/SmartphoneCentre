@@ -2282,6 +2282,7 @@ export interface Booking {
   customerName: string;
   customerPhone: string;
   customerEmail: string;
+  imei: string;
   address: string;
   pickupDate: string;
   pickupTimeSlot: string;

@@ -36,6 +36,7 @@ export interface PDFBookingData {
   customerName: string;
   customerPhone: string;
   customerEmail: string;
+  imei?: string;
   address: string;
   pickupDate: string;
   pickupTimeSlot: string;
@@ -135,6 +136,17 @@ export function generateBookingQuotationPDF(booking: PDFBookingData): Promise<Bu
         .font('Helvetica')
         .fillColor('#0F172A')
         .text(booking.customerEmail, 130, y);
+
+      if (booking.imei) {
+        y += 18;
+        doc
+          .font('Helvetica-Bold')
+          .fillColor('#334155')
+          .text('Device IMEI:', 40, y)
+          .font('Helvetica')
+          .fillColor('#0F172A')
+          .text(booking.imei, 130, y);
+      }
 
       y += 30;
 

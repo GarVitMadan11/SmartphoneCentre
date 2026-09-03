@@ -4,7 +4,7 @@ import { ApiUser, updateBooking } from '../../../utils/api';
 import {
   Search, Filter,
   CheckCircle, XCircle, Clock, CreditCard,
-  ChevronRight, Calendar, MapPin, User,
+  ChevronRight, Calendar, MapPin, User, Smartphone,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -175,9 +175,9 @@ export const LedgerTab: React.FC<LedgerTabProps> = ({
               <button
                 type="button"
                 onClick={() => {
-                  const csvHeader = "ID,Client,Phone,Model,Valuation,KYC,Inspection,Payout\n";
+                  const csvHeader = "ID,Client,Phone,IMEI,Model,Valuation,KYC,Inspection,Payout\n";
                   const csvRows = filteredBookings.map(b =>
-                    `"${b.id}","${b.customerName}","${b.customerPhone}","${b.modelName}",${b.finalPrice},"${b.verificationStatus}","${b.inspectionStatus}","${b.payoutStatus}"`
+                    `"${b.id}","${b.customerName}","${b.customerPhone}","${b.imei || 'Not provided'}","${b.modelName}",${b.finalPrice},"${b.verificationStatus}","${b.inspectionStatus}","${b.payoutStatus}"`
                   ).join("\n");
                   const blob = new Blob([csvHeader + csvRows], { type: 'text/csv' });
                   const url = window.URL.createObjectURL(blob);
@@ -379,6 +379,10 @@ export const LedgerTab: React.FC<LedgerTabProps> = ({
                   <div className="flex items-start gap-1.5">
                     <span className="text-cobalt font-semibold select-none mt-0.5">@</span>
                     <span className="text-zinc-600"><strong>Email:</strong> {selectedBooking.customerEmail}</span>
+                  </div>
+                  <div className="flex items-start gap-1.5">
+                    <Smartphone className="w-3.5 h-3.5 text-cobalt mt-0.5 flex-shrink-0" />
+                    <span className="text-zinc-600"><strong>Device IMEI:</strong> <code className="bg-zinc-100 text-cobalt px-1.5 py-0.5 rounded font-mono font-bold">{selectedBooking.imei || 'Not provided'}</code></span>
                   </div>
                   <div className="flex items-start gap-1.5 border-t border-white/[0.04] pt-1.5 mt-1.5">
                     <Calendar className="w-3.5 h-3.5 text-cobalt mt-0.5 flex-shrink-0" />

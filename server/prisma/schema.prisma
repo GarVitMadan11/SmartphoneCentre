@@ -124,6 +124,7 @@ model Booking {
   customerName          String
   customerPhone         String
   customerEmail         String
+  imei                  String         @default("")
   address               String
   pickupDate            String
   pickupTimeSlot        String

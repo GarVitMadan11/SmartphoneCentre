@@ -361,6 +361,7 @@ export interface ApiBooking {
   customerName: string;
   customerPhone: string;
   customerEmail: string;
+  imei: string;
   address: string;
   pickupDate: string;
   pickupTimeSlot: string;
@@ -388,6 +389,7 @@ export interface ApiTrackBooking {
   storageGb: number;
   color: string;
   customerName: string;
+  imei?: string;
   pickupDate: string;
   pickupTimeSlot: string;
   finalPayoutAmount: number;

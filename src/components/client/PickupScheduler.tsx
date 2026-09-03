@@ -132,13 +132,13 @@ const getEngineeringLabel = (description: string) => {
   return mapping[description] || description;
 };
 
-// Luhn Checksum Algorithm for 15-digit IMEI verification
+// Luhn Checksum Algorithm for mandatory 15-digit IMEI verification
 const validateLuhn = (imei: string): boolean => {
-  if (!imei) return true; // Optional field is valid when empty
-  if (imei.length !== 15) return false;
+  const clean = (imei || '').trim();
+  if (!clean || clean.length !== 15) return false; // Required 15-digit IMEI
   let sum = 0;
   for (let i = 0; i < 15; i++) {
-    let digit = parseInt(imei[i], 10);
+    let digit = parseInt(clean[i], 10);
     if (isNaN(digit)) return false;
     if (i % 2 === 1) {
       digit *= 2;
@@ -317,7 +317,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
   // Step 1 Validation
   const isPhoneValid = useMemo(() => /^[6-9]\d{9}$/.test(phone), [phone]);
   const isEmailValid = useMemo(() => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email), [email]);
-  const isImeiValid = useMemo(() => !imei || (imei.length === 15 && validateLuhn(imei)), [imei]);
+  const isImeiValid = useMemo(() => Boolean(imei.trim()) && imei.trim().length === 15 && validateLuhn(imei.trim()), [imei]);
   const isNameValid = useMemo(() => name.trim().length >= 2 && name.trim().length <= 80, [name]);
   const isStep1Valid = useMemo(() => {
     return isNameValid && isEmailValid && isPhoneValid && isImeiValid && hasConsented;
@@ -455,6 +455,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
       customerName: name.trim(),
       customerPhone: phone.trim(),
       customerEmail: email.trim(),
+      imei: imei.trim(),
       address: `${address.trim()} (Pincode: ${pincode.trim()})`,
       pickupDate: selectedDate,
       pickupTimeSlot: selectedTimeSlot,
@@ -695,6 +696,53 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                         )}
                         {phone && isPhoneValid && (
                           <span className="text-[10px] text-emerald-400 mt-1 block">✓ Valid Indian mobile number.</span>
+                        )}
+                      </div>
+
+                      {/* Mandatory IMEI Number Field */}
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="text-xs font-semibold text-ink-slate flex items-center gap-1">
+                            Device 15-Digit IMEI Number * <span className="text-red-500 font-bold">(Required)</span>
+                          </label>
+                          <span className="text-[10px] font-mono text-zinc-400">Dial *#06# to check</span>
+                        </div>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            required
+                            inputMode="numeric"
+                            maxLength={15}
+                            value={imei}
+                            onChange={e => setImei(e.target.value.replace(/\D/g, '').slice(0, 15))}
+                            placeholder="e.g. 354892109845123 (15 digits)"
+                            className={`w-full p-3 pr-9 rounded-sm border bg-canvas-white text-ink-navy text-sm font-mono focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all ${
+                              imei && isImeiValid ? 'border-emerald-400' : imei && !isImeiValid ? 'border-red-400' : 'border-ice-border'
+                            }`}
+                            style={{ minHeight: '48px' }}
+                          />
+                          {imei && (
+                            <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-sm font-bold ${
+                              isImeiValid ? 'text-emerald-400' : 'text-red-400'
+                            }`}>
+                              {isImeiValid ? '✓' : '✗'}
+                            </span>
+                          )}
+                        </div>
+                        {imei && !isImeiValid && (
+                          <span className="text-[10px] text-red-400 mt-1 block">
+                            Must be a valid 15-digit IMEI number (Luhn algorithm verified).
+                          </span>
+                        )}
+                        {imei && isImeiValid && (
+                          <span className="text-[10px] text-emerald-400 mt-1 block">
+                            ✓ Valid 15-digit device IMEI number verified.
+                          </span>
+                        )}
+                        {!imei && (
+                          <span className="text-[10px] text-zinc-400 mt-1 block font-mono">
+                            💡 Dial <strong>*#06#</strong> on your phone dialer or look in Settings &gt; About.
+                          </span>
                         )}
                       </div>
                     </div>
