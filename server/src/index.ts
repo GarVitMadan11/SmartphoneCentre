@@ -30,6 +30,8 @@ import {
   encryptPayoutDetails,
   decryptPayoutDetails,
   maskPayoutDetails,
+  encryptField,
+  decryptField,
 } from './utils/encryption.js';
 import { generateBookingQuotationPDF } from './services/pdfGenerator.js';
 import { sendBookingConfirmationEmail, sendAdminQuoteAlertEmail, sendAdminPriceMatchAlertEmail } from './services/bookingMailer.js';
@@ -100,6 +102,8 @@ if (!ALLOWED_ORIGINS.includes('https://www.rephonix.in')) {
 
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
+  // Fix #5: Explicit Referrer-Policy — never leak full URL to third parties
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
@@ -160,6 +164,11 @@ app.use(helmet({
   },
 }));
 
+// Fix #2: Replace *.onrender.com wildcard with specific Render subdomain from env
+// Set RENDER_EXTERNAL_URL in your Render dashboard (e.g. https://your-app.onrender.com)
+const RENDER_EXTERNAL_URL = (process.env.RENDER_EXTERNAL_URL ?? '').trim().replace(/\/$/, '');
+const RENDER_ORIGIN = RENDER_EXTERNAL_URL ? new URL(RENDER_EXTERNAL_URL).origin : null;
+
 app.use(cors({
   origin: (origin, callback) => {
     // No origin = same-origin request or server-to-server — always allowed.
@@ -167,18 +176,17 @@ app.use(cors({
     try {
       const cleanOrigin = origin.trim().replace(/\/$/, '');
       const hostname = new URL(cleanOrigin).hostname;
-      // Whitelist: explicit allowed origins OR any *.onrender.com subdomain (Render preview deployments)
-      // NOTE: NODE_ENV bypass has been removed — all environments use the explicit whitelist.
+      // Whitelist: explicit allowed origins OR the specific Render deployment origin (not wildcard)
       if (
         ALLOWED_ORIGINS.includes(cleanOrigin) ||
-        hostname.endsWith('.onrender.com') ||
+        (RENDER_ORIGIN && cleanOrigin === RENDER_ORIGIN) ||
         hostname === 'localhost' ||
         hostname === '127.0.0.1'
       ) {
         return callback(null, true);
       }
     } catch { /* ignore invalid origin URL */ }
-    
+
     // Safety: If origin is not allowed, do not crash with 500 error, just refuse CORS headers
     callback(null, false);
   },
@@ -961,6 +969,37 @@ app.post('/api/bookings/track', trackingLimiter, async (req, res) => {
 // BOOKINGS (CREATION & ADMIN MANAGEMENT)
 // ═══════════════════════════════════════════════════════════════════════════
 
+// ── IMEI encryption helpers (Fix #1) ──────────────────────────────────────
+// IMEI is a unique device identifier. Store encrypted at rest.
+// Format: JSON string with __enc marker — self-describing so legacy plain-text
+// records are handled gracefully (backward-compatible, no data loss).
+function encryptImei(imei: string): string {
+  if (!imei) return '';
+  try {
+    const payload = encryptField(imei);
+    return JSON.stringify({ __enc: true, ...payload });
+  } catch {
+    // If encryption fails (e.g. key not configured in dev), store plain with warning
+    console.warn('[IMEI] Encryption unavailable — storing plain text (dev only)');
+    return imei;
+  }
+}
+
+function decryptImei(raw: string): string {
+  if (!raw) return '';
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed?.__enc === true && parsed.iv && parsed.ciphertext && parsed.authTag) {
+      return decryptField({ iv: parsed.iv, ciphertext: parsed.ciphertext, authTag: parsed.authTag });
+    }
+    // Legacy plain-text IMEI — return as-is (backward compatible)
+    return raw;
+  } catch {
+    // Not JSON — legacy plain-text IMEI
+    return raw;
+  }
+}
+
 function mapBooking(b: any, includeUnmaskedPayout = false) {
   const rawDetails = decryptPayoutDetails(b.payoutDetailsJson);
   const safeDetails = includeUnmaskedPayout ? rawDetails : maskPayoutDetails(rawDetails);
@@ -974,7 +1013,7 @@ function mapBooking(b: any, includeUnmaskedPayout = false) {
     customerName: b.customerName,
     customerPhone: b.customerPhone,
     customerEmail: b.customerEmail,
-    imei: b.imei || 'Not provided',
+    imei: decryptImei(b.imei || ''),
     address: b.address,
     pickupDate: b.pickupDate,
     pickupTimeSlot: b.pickupTimeSlot,
@@ -1016,13 +1055,23 @@ app.get('/api/bookings/my', customerAuth, async (req: AuthenticatedCustomerReque
       return;
     }
 
-    const conditions: Array<Record<string, unknown>> = [];
-    if (req.userId) conditions.push({ userId: req.userId });
-    if (req.customer?.email) conditions.push({ customerEmail: req.customer.email });
-    if (req.customer?.phone) conditions.push({ customerPhone: req.customer.phone });
+    // Fix #4: If the customer has a linked account (userId), query strictly by userId.
+    // This prevents family members sharing an email address from seeing each other's bookings.
+    // Email/phone fallback is only used for pre-account (guest) bookings where no userId exists.
+    let whereClause: Record<string, unknown>;
+    if (req.userId) {
+      // Authenticated account: only their bookings
+      whereClause = { userId: req.userId };
+    } else {
+      // Guest (no account): fall back to contact identifiers
+      const conditions: Array<Record<string, unknown>> = [];
+      if (req.customer?.email) conditions.push({ customerEmail: req.customer.email });
+      if (req.customer?.phone) conditions.push({ customerPhone: req.customer.phone });
+      whereClause = conditions.length === 1 ? conditions[0] : { OR: conditions };
+    }
 
     const bookings = await prisma.booking.findMany({
-      where: { OR: conditions },
+      where: whereClause,
       include: {
         events: {
           orderBy: { createdAt: 'desc' }
@@ -1100,7 +1149,7 @@ app.post('/api/bookings', bookingLimiter, optionalCustomerAuth, async (req: Auth
         customerName: (req.customer?.name || String(b.customerName ?? '')).trim(),
         customerPhone: (req.customer?.phone || String(b.customerPhone ?? '')).trim(),
         customerEmail: (req.customer?.email || String(b.customerEmail ?? '')).trim(),
-        imei: String(b.imei ?? '').trim(),
+        imei: encryptImei(String(b.imei ?? '').trim()),
         address: String(b.address).trim(),
         pickupDate: String(b.pickupDate),
         pickupTimeSlot: String(b.pickupTimeSlot),
@@ -1299,6 +1348,7 @@ app.get('/api/bookings/:id/pdf', optionalCustomerAuth, async (req: Authenticated
       customerName: booking.customerName,
       customerPhone: booking.customerPhone,
       customerEmail: booking.customerEmail,
+      imei: decryptImei((booking as any).imei || ''),
       address: booking.address,
       pickupDate: booking.pickupDate,
       pickupTimeSlot: booking.pickupTimeSlot,
