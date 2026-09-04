@@ -30,6 +30,8 @@ import {
   encryptPayoutDetails,
   decryptPayoutDetails,
   maskPayoutDetails,
+  encryptField,
+  decryptField,
 } from './utils/encryption.js';
 import { generateBookingQuotationPDF } from './services/pdfGenerator.js';
 import { sendBookingConfirmationEmail, sendAdminQuoteAlertEmail, sendAdminPriceMatchAlertEmail } from './services/bookingMailer.js';
@@ -967,6 +969,37 @@ app.post('/api/bookings/track', trackingLimiter, async (req, res) => {
 // BOOKINGS (CREATION & ADMIN MANAGEMENT)
 // ═══════════════════════════════════════════════════════════════════════════
 
+// ── IMEI encryption helpers (Fix #1) ──────────────────────────────────────
+// IMEI is a unique device identifier. Store encrypted at rest.
+// Format: JSON string with __enc marker — self-describing so legacy plain-text
+// records are handled gracefully (backward-compatible, no data loss).
+function encryptImei(imei: string): string {
+  if (!imei) return '';
+  try {
+    const payload = encryptField(imei);
+    return JSON.stringify({ __enc: true, ...payload });
+  } catch {
+    // If encryption fails (e.g. key not configured in dev), store plain with warning
+    console.warn('[IMEI] Encryption unavailable — storing plain text (dev only)');
+    return imei;
+  }
+}
+
+function decryptImei(raw: string): string {
+  if (!raw) return '';
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed?.__enc === true && parsed.iv && parsed.ciphertext && parsed.authTag) {
+      return decryptField({ iv: parsed.iv, ciphertext: parsed.ciphertext, authTag: parsed.authTag });
+    }
+    // Legacy plain-text IMEI — return as-is (backward compatible)
+    return raw;
+  } catch {
+    // Not JSON — legacy plain-text IMEI
+    return raw;
+  }
+}
+
 function mapBooking(b: any, includeUnmaskedPayout = false) {
   const rawDetails = decryptPayoutDetails(b.payoutDetailsJson);
   const safeDetails = includeUnmaskedPayout ? rawDetails : maskPayoutDetails(rawDetails);
@@ -980,7 +1013,7 @@ function mapBooking(b: any, includeUnmaskedPayout = false) {
     customerName: b.customerName,
     customerPhone: b.customerPhone,
     customerEmail: b.customerEmail,
-    imei: b.imei || 'Not provided',
+    imei: decryptImei(b.imei || ''),
     address: b.address,
     pickupDate: b.pickupDate,
     pickupTimeSlot: b.pickupTimeSlot,
@@ -1106,7 +1139,7 @@ app.post('/api/bookings', bookingLimiter, optionalCustomerAuth, async (req: Auth
         customerName: (req.customer?.name || String(b.customerName ?? '')).trim(),
         customerPhone: (req.customer?.phone || String(b.customerPhone ?? '')).trim(),
         customerEmail: (req.customer?.email || String(b.customerEmail ?? '')).trim(),
-        imei: String(b.imei ?? '').trim(),
+        imei: encryptImei(String(b.imei ?? '').trim()),
         address: String(b.address).trim(),
         pickupDate: String(b.pickupDate),
         pickupTimeSlot: String(b.pickupTimeSlot),
@@ -1305,6 +1338,7 @@ app.get('/api/bookings/:id/pdf', optionalCustomerAuth, async (req: Authenticated
       customerName: booking.customerName,
       customerPhone: booking.customerPhone,
       customerEmail: booking.customerEmail,
+      imei: decryptImei((booking as any).imei || ''),
       address: booking.address,
       pickupDate: booking.pickupDate,
       pickupTimeSlot: booking.pickupTimeSlot,
