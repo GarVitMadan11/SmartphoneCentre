@@ -100,6 +100,8 @@ if (!ALLOWED_ORIGINS.includes('https://www.rephonix.in')) {
 
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
+  // Fix #5: Explicit Referrer-Policy — never leak full URL to third parties
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
@@ -160,6 +162,11 @@ app.use(helmet({
   },
 }));
 
+// Fix #2: Replace *.onrender.com wildcard with specific Render subdomain from env
+// Set RENDER_EXTERNAL_URL in your Render dashboard (e.g. https://your-app.onrender.com)
+const RENDER_EXTERNAL_URL = (process.env.RENDER_EXTERNAL_URL ?? '').trim().replace(/\/$/, '');
+const RENDER_ORIGIN = RENDER_EXTERNAL_URL ? new URL(RENDER_EXTERNAL_URL).origin : null;
+
 app.use(cors({
   origin: (origin, callback) => {
     // No origin = same-origin request or server-to-server — always allowed.
@@ -167,18 +174,17 @@ app.use(cors({
     try {
       const cleanOrigin = origin.trim().replace(/\/$/, '');
       const hostname = new URL(cleanOrigin).hostname;
-      // Whitelist: explicit allowed origins OR any *.onrender.com subdomain (Render preview deployments)
-      // NOTE: NODE_ENV bypass has been removed — all environments use the explicit whitelist.
+      // Whitelist: explicit allowed origins OR the specific Render deployment origin (not wildcard)
       if (
         ALLOWED_ORIGINS.includes(cleanOrigin) ||
-        hostname.endsWith('.onrender.com') ||
+        (RENDER_ORIGIN && cleanOrigin === RENDER_ORIGIN) ||
         hostname === 'localhost' ||
         hostname === '127.0.0.1'
       ) {
         return callback(null, true);
       }
     } catch { /* ignore invalid origin URL */ }
-    
+
     // Safety: If origin is not allowed, do not crash with 500 error, just refuse CORS headers
     callback(null, false);
   },
