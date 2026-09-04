@@ -1055,13 +1055,23 @@ app.get('/api/bookings/my', customerAuth, async (req: AuthenticatedCustomerReque
       return;
     }
 
-    const conditions: Array<Record<string, unknown>> = [];
-    if (req.userId) conditions.push({ userId: req.userId });
-    if (req.customer?.email) conditions.push({ customerEmail: req.customer.email });
-    if (req.customer?.phone) conditions.push({ customerPhone: req.customer.phone });
+    // Fix #4: If the customer has a linked account (userId), query strictly by userId.
+    // This prevents family members sharing an email address from seeing each other's bookings.
+    // Email/phone fallback is only used for pre-account (guest) bookings where no userId exists.
+    let whereClause: Record<string, unknown>;
+    if (req.userId) {
+      // Authenticated account: only their bookings
+      whereClause = { userId: req.userId };
+    } else {
+      // Guest (no account): fall back to contact identifiers
+      const conditions: Array<Record<string, unknown>> = [];
+      if (req.customer?.email) conditions.push({ customerEmail: req.customer.email });
+      if (req.customer?.phone) conditions.push({ customerPhone: req.customer.phone });
+      whereClause = conditions.length === 1 ? conditions[0] : { OR: conditions };
+    }
 
     const bookings = await prisma.booking.findMany({
-      where: { OR: conditions },
+      where: whereClause,
       include: {
         events: {
           orderBy: { createdAt: 'desc' }
