@@ -17,7 +17,7 @@ async function callGeminiRestApi(
 ): Promise<AiResponse | null> {
   try {
     const dbModels = await prisma.model.findMany({ where: { hidden: false }, select: { name: true, basePrice128GB: true, category: true } });
-    const catalogSummary = dbModels.map(m => {
+    const catalogSummary = dbModels.map((m: any) => {
       const is256Base = m.category === 'flagship' || m.name.includes('15 Pro Max') || m.name.includes('16 Pro') || m.name.includes('17');
       const minGb = is256Base ? 256 : 128;
       const maxGb = is256Base ? 512 : 256;
@@ -123,12 +123,12 @@ async function generateAiResponse(
       const models = await prisma.model.findMany({ where: { hidden: false }, include: { brand: true } });
       const msgClean = lowerMsg.replace(/^for\s+/, '').trim();
       
-      const matchedModel = models.find(m => {
+      const matchedModel = models.find((m: any) => {
         const nameLower = m.name.toLowerCase();
         const shortName = nameLower.replace('iphone ', '').trim(); // e.g. "17 pro max"
         if (msgClean === shortName || msgClean === nameLower || msgClean === `iphone ${shortName}`) return true;
         const words = nameLower.split(' ');
-        return words.every(w => msgClean.includes(w));
+        return words.every((w: any) => msgClean.includes(w));
       });
 
       if (matchedModel) {
@@ -274,7 +274,7 @@ export async function processSupportMessage(
     }
   });
 
-  const history = conversation.messages.map(m => ({ role: m.role, content: m.content }));
+  const history = conversation.messages.map((m: any) => ({ role: m.role, content: m.content }));
   history.push({ role: 'user', content: message });
 
   // Get AI Response
