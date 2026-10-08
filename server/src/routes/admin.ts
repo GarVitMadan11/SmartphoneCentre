@@ -366,7 +366,7 @@ router.get('/audit-logs', adminAuth, async (req: AuthenticatedRequest, res: Resp
 
     let filtered = logs;
     if (search) {
-      filtered = logs.filter(l =>
+      filtered = logs.filter((l: any) =>
         l.action.toLowerCase().includes(search) ||
         l.targetType.toLowerCase().includes(search) ||
         l.targetId.toLowerCase().includes(search) ||
@@ -375,7 +375,7 @@ router.get('/audit-logs', adminAuth, async (req: AuthenticatedRequest, res: Resp
       );
     }
 
-    res.json(filtered.map(l => {
+    res.json(filtered.map((l: any) => {
       let parsedPayload: Record<string, unknown> = {};
       try { parsedPayload = JSON.parse(l.payload); } catch { parsedPayload = { raw: l.payload }; }
 
@@ -398,4 +398,3 @@ router.get('/audit-logs', adminAuth, async (req: AuthenticatedRequest, res: Resp
 });
 
 export default router;
-
