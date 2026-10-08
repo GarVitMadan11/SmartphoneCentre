@@ -399,7 +399,7 @@ app.get('/api/brands', async (_req, res) => {
     const brands = await prisma.brand.findMany({
       where: { active: true },
     });
-    res.json(brands.map(b => ({ id: b.id, name: b.name, logo: b.logo })));
+    res.json(brands.map((b: any) => ({ id: b.id, name: b.name, logo: b.logo })));
   } catch (err) {
     console.error('GET /api/brands error:', err);
     res.status(500).json({ error: 'ServerError', message: 'Failed to fetch brands' });
@@ -953,7 +953,7 @@ app.post('/api/bookings/track', trackingLimiter, async (req, res) => {
       payoutStatus: booking.payoutStatus,
       verificationStatus: booking.verificationStatus,
       dateCreated: booking.dateCreated,
-      events: booking.events.map(e => ({
+      events: booking.events.map((e: any) => ({
         eventType: e.eventType,
         note: e.note,
         createdAt: e.createdAt,
@@ -1040,7 +1040,7 @@ app.get('/api/bookings', adminAuth, requireRole(['SUPER_ADMIN', 'FINANCE_APPROVE
   try {
     const bookings = await prisma.booking.findMany({ orderBy: { createdAt: 'desc' } });
     const isFinanceAdmin = req.user?.role === 'SUPER_ADMIN' || req.user?.role === 'FINANCE_APPROVER';
-    res.json(bookings.map(b => mapBooking(b, isFinanceAdmin)));
+    res.json(bookings.map((b: any) => mapBooking(b, isFinanceAdmin)));
   } catch (err) {
     console.error('GET /api/bookings error:', err);
     res.status(500).json({ error: 'ServerError', message: 'Failed to fetch bookings' });
@@ -1080,9 +1080,9 @@ app.get('/api/bookings/my', customerAuth, async (req: AuthenticatedCustomerReque
       orderBy: { createdAt: 'desc' },
     });
 
-    const mapped = bookings.map(b => ({
+    const mapped = bookings.map((b: any) => ({
       ...mapBooking(b, false),
-      events: b.events.map(e => ({
+      events: b.events.map((e: any) => ({
         eventType: e.eventType,
         note: e.note,
         createdAt: e.createdAt,
@@ -1319,7 +1319,7 @@ app.get('/api/bookings/:id/pdf', optionalCustomerAuth, async (req: Authenticated
       const candidates = await prisma.booking.findMany({
         select: { id: true, userId: true, modelName: true, storageGb: true, customerName: true, customerPhone: true, customerEmail: true, address: true, pickupDate: true, pickupTimeSlot: true, finalPrice: true, defectIdsJson: true, dateCreated: true }
       });
-      booking = candidates.find(b => b.id.toLowerCase() === rawId.toLowerCase()) ?? null;
+      booking = candidates.find((b: any) => b.id.toLowerCase() === rawId.toLowerCase()) ?? null;
     }
 
     if (!booking) {
@@ -1532,7 +1532,7 @@ const server = app.listen(PORT, () => {
   // Render falls back to serving the static dist/ folder for all paths.
   prisma.$connect()
     .then(() => console.log('✅ Database connected'))
-    .catch((err) => console.error('⚠️  Database connection failed (queries will return 500 until DB wakes up):', err));
+    .catch((err: unknown) => console.error('⚠️  Database connection failed (queries will return 500 until DB wakes up):', err));
 });
 
 const gracefulShutdown = async (signal: string) => {
