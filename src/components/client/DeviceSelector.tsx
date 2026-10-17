@@ -633,6 +633,134 @@ export function BrandLogo({ logo, isActive }: { logo: string; isActive: boolean;
   );
 }
 
+// ── Series Card with Dynamic Model Slideshow (Image + Model Name + Max Variant Price) ──
+const SeriesCard: React.FC<{
+  seriesName: string;
+  stats: { modelCount: number; yearRange: string };
+  models: Model[];
+  onClick: () => void;
+  formatPrice: (price: number) => string;
+}> = ({ seriesName, stats, models, onClick, formatPrice }) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    if (models.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentIndex(prev => (prev + 1) % models.length);
+    }, 2800); // Smooth 2.8s display interval per model
+    return () => clearInterval(interval);
+  }, [models.length]);
+
+  const activeModel = models[currentIndex] || null;
+  const activeMaxPrice = activeModel ? getMaxVariantPrice(activeModel) : 0;
+  const activeImg = activeModel ? getDeviceImage(activeModel.id, activeModel.brandId, undefined, activeModel.imageUrl) : '';
+
+  return (
+    <motion.div
+      whileHover={{ scale: 1.015, y: -2 }}
+      whileTap={{ scale: 0.985 }}
+      onClick={onClick}
+      className="p-5 rounded-2xl border border-ice-border bg-canvas-pure cursor-pointer hover:border-cobalt/40 transition-all duration-300 shadow-sm hover:shadow-premium group flex flex-col justify-between relative overflow-hidden"
+      style={{ minHeight: '175px' }}
+    >
+      {/* Top Details Row: Icon / Series Name / Year Badge */}
+      <div className="text-left relative z-10">
+        <div className="flex justify-between items-start mb-2">
+          <div className="p-2 rounded-xl bg-cobalt-light/10 text-cobalt border border-cobalt/10 group-hover:bg-cobalt group-hover:text-white transition-colors duration-300">
+            <Smartphone className="w-5 h-5" />
+          </div>
+          <span className="text-[10px] font-mono font-semibold tracking-wider text-zinc-500 bg-canvas-white border border-ice-border/60 px-2.5 py-0.5 rounded-full">
+            {stats.yearRange}
+          </span>
+        </div>
+
+        <h4 className="font-bold text-base text-ink-navy leading-tight group-hover:text-cobalt transition-colors duration-300 font-outfit">
+          {seriesName}
+        </h4>
+        <p className="text-[11px] text-ink-muted mt-1 font-light">
+          {stats.modelCount} {stats.modelCount === 1 ? 'model' : 'models'} available
+        </p>
+      </div>
+
+      {/* Middle Animated Stage: Cycling Model Image & Live Max Variant Price */}
+      {activeModel && (
+        <div className="mt-3 pt-3 border-t border-ice-border/60 flex items-center justify-between relative z-10">
+          <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
+            {/* Animated Device Image */}
+            <div className="w-12 h-14 flex-shrink-0 flex items-center justify-center relative overflow-hidden bg-canvas-white rounded-lg border border-ice-border/50 p-1">
+              <AnimatePresence mode="wait">
+                <motion.img
+                  key={activeModel.id}
+                  src={activeImg}
+                  alt={activeModel.name}
+                  referrerPolicy="no-referrer"
+                  initial={{ opacity: 0, scale: 0.85, y: 6 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.85, y: -6 }}
+                  transition={{ duration: 0.35, ease: 'easeOut' }}
+                  onError={(e) => {
+                    const img = e.target as HTMLImageElement;
+                    const fallback = getDeviceImage('', activeModel.brandId);
+                    if (img.src !== fallback) {
+                      img.src = fallback;
+                    }
+                  }}
+                  className="max-h-full max-w-full object-contain filter drop-shadow-xs"
+                  draggable={false}
+                />
+              </AnimatePresence>
+            </div>
+
+            {/* Model Name & Live Max Price Slideshow */}
+            <div className="min-w-0 flex-1 text-left">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeModel.id}
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <span className="text-[11px] font-bold text-ink-navy truncate block group-hover:text-cobalt transition-colors">
+                    {activeModel.name}
+                  </span>
+                  <div className="flex items-baseline gap-1 mt-0.5">
+                    <span className="text-[9px] text-zinc-400 font-mono uppercase">Max spec:</span>
+                    <span className="text-xs font-black text-emerald-600 font-mono tracking-tight">
+                      {formatPrice(activeMaxPrice)}
+                    </span>
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+          </div>
+
+          {/* Action indicator button */}
+          <div className="w-7 h-7 rounded-full bg-canvas-white border border-ice-border flex items-center justify-center group-hover:bg-cobalt group-hover:border-cobalt transition-all duration-300 flex-shrink-0 shadow-xs">
+            <ChevronRight className="w-4 h-4 text-ink-muted group-hover:text-white transition-colors" />
+          </div>
+        </div>
+      )}
+
+      {/* Subtle indicator dots if more than 1 model in series */}
+      {models.length > 1 && (
+        <div className="flex items-center gap-1 mt-2.5 justify-center">
+          {models.slice(0, 6).map((m, idx) => (
+            <span
+              key={m.id}
+              className={`h-1 rounded-full transition-all duration-300 ${
+                idx === (currentIndex % Math.min(models.length, 6))
+                  ? 'w-3.5 bg-cobalt'
+                  : 'w-1 bg-zinc-300'
+              }`}
+            />
+          ))}
+        </div>
+      )}
+    </motion.div>
+  );
+};
+
 interface DeviceSelectorProps {
   onVariantSelected: (model: Model, variant: Variant) => void;
   /** When set, the selector will pre-select this brand tab without opening any model */
@@ -1218,37 +1346,19 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   {availableSeries.map(seriesName => {
                     const stats = seriesStats[seriesName] || { modelCount: 0, yearRange: '' };
+                    const seriesModels = applyModelOrder(
+                      selectedBrandId,
+                      MODELS.filter(m => m.brandId === selectedBrandId && m.series === seriesName)
+                    );
                     return (
-                      <motion.div
+                      <SeriesCard
                         key={seriesName}
-                        whileHover={{ scale: 1.015, y: -2 }}
-                        whileTap={{ scale: 0.985 }}
+                        seriesName={seriesName}
+                        stats={stats}
+                        models={seriesModels}
                         onClick={() => setSelectedSeries(seriesName)}
-                        className="p-5 rounded-sm border border-ice-border bg-canvas-pure cursor-pointer hover:border-cobalt/40 transition-all duration-300 shadow-sm hover:shadow-premium group flex flex-col justify-between"
-                        style={{ minHeight: '140px' }}
-                      >
-                        <div className="text-left">
-                          <div className="flex justify-between items-start mb-3">
-                            <div className="p-2 rounded-sm bg-cobalt-light/10 text-cobalt border border-cobalt/10 group-hover:bg-cobalt group-hover:text-white transition-colors duration-300">
-                              <Smartphone className="w-5 h-5" />
-                            </div>
-                            <span className="text-[10px] font-mono font-semibold tracking-wider text-zinc-500 bg-white/[0.03] px-2 py-0.5 rounded-sm">
-                              {stats.yearRange}
-                            </span>
-                          </div>
-                          <h4 className="font-semibold text-base text-ink-navy leading-tight group-hover:text-cobalt transition-colors duration-300">
-                            {seriesName}
-                          </h4>
-                          <p className="text-[11px] text-ink-muted mt-1.5 font-light">
-                            {stats.modelCount} {stats.modelCount === 1 ? 'model' : 'models'} available
-                          </p>
-                        </div>
-                        <div className="mt-4 pt-3 border-t border-white/[0.04] flex items-center justify-end text-left">
-                          <div className="w-6 h-6 rounded-full bg-canvas-white border border-ice-border flex items-center justify-center group-hover:bg-cobalt group-hover:border-cobalt transition-all duration-300">
-                            <ChevronRight className="w-3.5 h-3.5 text-ink-muted group-hover:text-white transition-colors" />
-                          </div>
-                        </div>
-                      </motion.div>
+                        formatPrice={formatPrice}
+                      />
                     );
                   })}
                 </div>
