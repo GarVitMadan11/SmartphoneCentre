@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo, Suspense, useCallback, startTrans
 // Types only — no heavy data arrays in this import (keeps initial bundle lean)
 import type { Model, Variant, DefectRule, Brand, Booking } from './data/mockDatabase';
 // Helper functions needed at startup — imported statically but lightweight
-import { generateVariantsForModel, getDeviceImage, getDefectRulesForCategory, getMaxVariantPrice, isTabletDevice } from './data/mockDatabase';
+import { generateVariantsForModel, getDeviceImage, getDefectRulesForCategory, getMaxVariantPrice } from './data/mockDatabase';
 import { fetchBrands, fetchModels, getCachedModels, fetchBookings as apiFetchBookings, fetchCurrentUser, customerLogout, hasAdminToken, syncFirebaseUser, ApiUser } from './utils/api';
 import { subscribeToFirebaseAuth, checkRedirectAuthResult } from './services/firebaseAuth';
 import { applyBrandOrder } from './utils/ordering';
@@ -25,8 +25,10 @@ import { PilotModeBanner } from './components/client/PilotModeBanner';
 import { PilotFeedbackSection } from './components/client/PilotFeedbackSection';
 import { FeedbackModal } from './components/client/FeedbackModal';
 import { PILOT_MODE_ENABLED } from './config/pilotMode';
-import { useFocusTrap } from './hooks/useFocusTrap';
+import { SpecsModal } from './components/client/SpecsModal';
+import { FaqSection } from './components/client/FaqSection';
 import { safeLazy } from './utils/safeLazy';
+import { getModelUrlPath, matchModelFromPath, formatVariantSlug } from './utils/slugs';
 
 // ── Lazy-loaded heavy components (code splitting with chunk auto-retry) ──────
 const DiagnosticWizard   = safeLazy(() => import('./components/client/DiagnosticWizard'), 'DiagnosticWizard');
@@ -40,8 +42,7 @@ const OrderTrackingModal = safeLazy(() => import('./components/client/OrderTrack
 // ─────────────────────────────────────────────────────────────────────────────
 import { 
   Award, ShieldCheck, Zap, Search,
-  X,
-  Truck, Lock, CheckCircle2, Sparkles, ArrowRight, Info, Code, GitBranch, Database, Instagram
+  Truck, Lock, CheckCircle2, Sparkles, ArrowRight, Instagram
 } from 'lucide-react';
 
 import applePhoneImg from './assets/apple_phone.png';
@@ -99,224 +100,8 @@ function clearNavState() {
   localStorage.removeItem('stc_nav');
 }
 
-// ────────────────────────────────────────────────────────────────────────────
-
-interface SpecsModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
-
-function SpecsModal({ isOpen, onClose }: SpecsModalProps) {
-  const modalRef = useRef<HTMLDivElement>(null);
-  useFocusTrap(modalRef, isOpen);
-
-  if (!isOpen) return null;
-  return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label="System Design Specification"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
-    >
-      <div ref={modalRef} className="bg-canvas-pure border border-ice-border rounded-lg max-w-3xl w-full max-h-[85vh] flex flex-col shadow-premium overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-ice-border bg-canvas-white">
-          <div className="text-left">
-            <h3 className="font-outfit font-light text-xl text-ink-navy">System Design Specification</h3>
-            <span className="text-[10px] font-mono tracking-wider text-zinc-500 uppercase">Rephonix Architecture</span>
-          </div>
-          <button 
-            onClick={onClose}
-            aria-label="Close system design specification"
-            className="p-2 rounded-sm border border-ice-border text-ink-slate hover:border-cobalt hover:text-cobalt transition-colors"
-          >
-            <X className="w-4 h-4" aria-hidden="true" />
-          </button>
-        </div>
-        
-        {/* Body */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6 text-left text-sm text-ink-slate leading-relaxed">
-          {/* Section 1 */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-ink-navy font-outfit font-light text-lg border-b border-white/[0.04] pb-1">
-              <Info className="w-5 h-5 text-cobalt" />
-              1. Business Architecture &amp; Pillars
-            </div>
-            <p className="font-light">Rephonix bridges the gap between high-volume commercial supply and consumer convenience, structured across three key pillars:</p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
-              <div className="bg-canvas-white p-3 border border-ice-border rounded-sm">
-                <span className="text-cobalt font-semibold block text-xs uppercase font-mono mb-1">C2B Sourcing</span>
-                <p className="text-xs font-light text-zinc-500">Consumer direct digital self-diagnostic wizard for honest grading, instant dynamic valuations, and doorstep pickups.</p>
-              </div>
-              <div className="bg-canvas-white p-3 border border-ice-border rounded-sm">
-                <span className="text-cobalt font-semibold block text-xs uppercase font-mono mb-1">B2B2C Ingestion</span>
-                <p className="text-xs font-light text-zinc-500">A blind marketplace allowing vetted physical retail storefront partners to list refurbished inventory under strict grading rules.</p>
-              </div>
-              <div className="bg-canvas-white p-3 border border-ice-border rounded-sm">
-                <span className="text-cobalt font-semibold block text-xs uppercase font-mono mb-1">B2C Storefront</span>
-                <p className="text-xs font-light text-zinc-500">A masked, high-trust store (similar to Apple Certified Refurbished) featuring certified quality, warranties, and fulfillment.</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Section 2 */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-ink-navy font-outfit font-light text-lg border-b border-white/[0.04] pb-1">
-              <Code className="w-5 h-5 text-cobalt" />
-              2. Design System Specification
-            </div>
-            <p className="font-light">Following the Industrial Luxury visual model, the interface focuses on spatial tactile cards, micro-borders, and high-fidelity overlays.</p>
-            <table className="w-full text-xs font-mono text-ink-slate border-collapse">
-              <thead>
-                <tr className="border-b border-white/[0.06] text-ink-navy text-left">
-                  <th className="py-2">Token</th>
-                  <th className="py-2">Color Space</th>
-                  <th className="py-2">Role</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-b border-white/[0.04]">
-                  <td className="py-2 text-zinc-300">Obsidian Canvas</td>
-                  <td className="py-2 text-zinc-400">#09090B</td>
-                  <td className="py-2">Main background canvas</td>
-                </tr>
-                <tr className="border-b border-white/[0.04]">
-                  <td className="py-2 text-zinc-300">Card Pure</td>
-                  <td className="py-2 text-zinc-400">#121214</td>
-                  <td className="py-2">Elevated surfaces &amp; interactive panels</td>
-                </tr>
-                <tr className="border-b border-white/[0.04]">
-                  <td className="py-2 text-zinc-300">Industrial Cobalt</td>
-                  <td className="py-2 text-zinc-400">#3B82F6 / #1D4ED8</td>
-                  <td className="py-2">Brand focus, interactive states, locks</td>
-                </tr>
-                <tr className="border-b border-white/[0.04]">
-                  <td className="py-2 text-zinc-300">Zinc Alabaster</td>
-                  <td className="py-2 text-zinc-400">#F4F4F5</td>
-                  <td className="py-2">Primary readable text</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          {/* Section 3 */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-ink-navy font-outfit font-light text-lg border-b border-white/[0.04] pb-1">
-              <GitBranch className="w-5 h-5 text-cobalt" />
-              3. Dynamic Valuation Algorithm
-            </div>
-            <p className="font-light">Values are computed programmatically using base-to-defect pricing formula unique to each model variant:</p>
-            <div className="bg-canvas-white p-4 rounded-sm border border-ice-border text-xs font-mono text-center text-cobalt">
-              Price_Final = Price_Base - Σ ( Deduction_Fixed + ( Price_Base × Deduction_Percentage ) )
-            </div>
-            <div className="text-xs space-y-1 font-light text-zinc-500">
-              <div>• <strong>Price_Base</strong>: Anchor price set for a flawless device variant.</div>
-              <div>• <strong>Deduction_Fixed</strong>: Cash deduction applied for accessories (e.g. missing box).</div>
-              <div>• <strong>Deduction_Percentage</strong>: Proportional penalty for wear/damage (e.g. 28% for flagship screen crack).</div>
-              <div>• <strong>Category Caps</strong>: Screen (Max 40%), Body (Max 20%), Camera (Max 18%), Battery (Max 8%), Accessories (Max 12%). Prevent compounding deductions from driving value below an 8% baseline resale floor.</div>
-            </div>
-          </div>
-
-          {/* Section 4 */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-ink-navy font-outfit font-light text-lg border-b border-white/[0.04] pb-1">
-              <Database className="w-5 h-5 text-cobalt" />
-              4. Core Relational Data Schema
-            </div>
-            <p className="font-light text-xs">A relational model binds brands, models, specific variants, defect rules, and customer bookings together:</p>
-            <div className="bg-zinc-950 p-4 rounded-sm border border-ice-border text-xs font-mono overflow-x-auto text-zinc-300">
-              {`BRANDS (id, name, logo)\n└── MODELS (id, brand_id, name, category, release_year)\n    ├── DEVICE_VARIANTS (id, model_id, storage_gb, color, base_price)\n    └── DEFECT_RULES (id, category, description, fixed, percentage, is_critical)\n        └── TRADE_IN_BOOKINGS (id, variant_id, customer_name, customer_phone, final_quote, address)`}
-            </div>
-          </div>
-        </div>
-        
-        {/* Footer */}
-        <div className="px-6 py-4 border-t border-ice-border bg-canvas-white flex justify-end">
-          <button 
-            onClick={onClose}
-            className="px-5 py-2 bg-cobalt hover:bg-cobalt-hover text-white text-xs font-bold rounded-sm transition-all"
-          >
-            Close Specifications
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── FAQ Section Component ─────────────────────────────────────────────────────
-
-const FAQ_ITEMS = [
-  {
-    q: 'How do I know the price is genuine?',
-    a: 'Our pricing engine computes quotes using market-calibrated base prices and documented deduction rules. The price you see is the price you get — we never renegotiate at pickup unless device condition is materially different from what you reported.',
-  },
-  {
-    q: 'How quickly will I receive payment?',
-    a: 'Payment is processed within minutes of our executive completing the on-site verification at your doorstep. UPI and bank transfers are instant. Cash arrangements are also available on request.',
-  },
-  {
-    q: 'Is my personal data safe after the trade?',
-    a: 'Every device undergoes a military-grade (DoD 5220.22-M) secure erase before leaving your premises. We provide a certified data destruction certificate on request. We never access your personal files.',
-  },
-  {
-    q: 'What if I change my mind after booking?',
-    a: 'You can cancel or reschedule your pickup at any time up to 2 hours before the scheduled slot at no charge. Your quote is locked for 7 days so you can rebook whenever suits you.',
-  },
-  {
-    q: 'Which cities do you currently operate in?',
-    a: 'We currently service Mumbai, Delhi NCR, Bangalore, Hyderabad, Chennai, and Pune. Coverage is expanding — contact us if you\'re in another city and we\'ll check availability.',
-  },
-  {
-    q: 'Can I sell multiple devices at once?',
-    a: 'Yes! For bulk (3+ devices) or corporate liquidations, contact our B2B team for a customized quote, certified bulk data wiping, and dedicated logistics support.',
-  },
-  {
-    q: 'What devices do you accept?',
-    a: 'We accept iPhones (up to 6 years old), Samsung Galaxy S and A series, OnePlus, Google Pixel, and Motorola devices. We continuously expand our catalog — if your model is not listed, reach out via our helpdesk.',
-  },
-];
-
-function FaqSection() {
-  const [openIdx, setOpenIdx] = useState<number | null>(null);
-  return (
-    <div className="py-8 border-t border-ice-border/40">
-      <div className="text-center max-w-2xl mx-auto mb-10">
-        <span className="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold bg-secondary/10 text-secondary mb-4 tracking-wide uppercase">Frequently Asked</span>
-        <h2 className="text-3xl font-extrabold text-ink-navy tracking-tight">Common Questions</h2>
-        <p className="text-ink-slate mt-2 text-sm font-light">Everything you need to know before selling your device.</p>
-      </div>
-      <div className="max-w-3xl mx-auto space-y-3">
-        {FAQ_ITEMS.map((item, i) => (
-          <div key={i} className="border border-ice-border rounded-xl overflow-hidden bg-canvas-pure">
-            <button
-              id={`faq-btn-${i}`}
-              aria-expanded={openIdx === i}
-              aria-controls={`faq-panel-${i}`}
-              onClick={() => setOpenIdx(openIdx === i ? null : i)}
-              className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left hover:bg-ice-gray/50 transition-colors"
-            >
-              <span className="text-sm font-semibold text-ink-navy">{item.q}</span>
-              <svg
-                className={`w-5 h-5 text-ink-muted flex-shrink-0 transition-transform duration-200 ${openIdx === i ? 'rotate-45' : ''}`}
-                fill="none" viewBox="0 0 24 24" stroke="currentColor"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-            </button>
-            {openIdx === i && (
-              <div id={`faq-panel-${i}`} role="region" aria-labelledby={`faq-btn-${i}`} className="px-5 pb-5 text-sm text-ink-slate font-light leading-relaxed border-t border-ice-border/40 pt-4 animate-fadeIn">
-                {item.a}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
+
 
 export default function App() {
   // ── Navigation state — persisted in localStorage with TTL (non-sensitive) ──
@@ -470,63 +255,6 @@ export default function App() {
     });
   };
 
-  const getPathForModel = (model: Model): string => {
-    if (isTabletDevice(model.brandId, model.name, model.id)) return '/tablets';
-    return '/smartphones';
-  };
-
-  useEffect(() => {
-    let title = "Rephonix | Sell Your Devices at the Best Price";
-    const cleanPath = path.split('?')[0];
-    switch (cleanPath) {
-      case '/smartphones':
-        title = "Sell Smartphones | Rephonix";
-        break;
-      case '/tablets':
-        title = "Sell Tablets & iPads | Rephonix";
-        break;
-      case '/about':
-        title = "About Rephonix";
-        break;
-      case '/contact':
-        title = "Contact Rephonix";
-        break;
-      case SECRET_ADMIN_PATH:
-        title = "Control Center | Rephonix";
-        break;
-      case '/login':
-        title = "Login | Rephonix";
-        break;
-      case '/signup':
-        title = "Create Account | Rephonix";
-        break;
-      case '/forgot-password':
-        title = "Forgot Password | Rephonix";
-        break;
-      case '/reset-password':
-        title = "Reset Password | Rephonix";
-        break;
-      case '/verify-email':
-        title = "Verify Email | Rephonix";
-        break;
-      case '/profile':
-        title = "My Profile | Rephonix";
-        break;
-    }
-    document.title = title;
-  }, [path]);
-
-  // Sync activeStage with secret admin path
-  useEffect(() => {
-    startTransition(() => {
-      if (path === SECRET_ADMIN_PATH) {
-        setActiveStage('admin');
-      } else if (activeStage === 'admin') {
-        setActiveStage('select');
-      }
-    });
-  }, [path, activeStage]);
-
   // ── Dynamic data from API (falls back to static catalog data) ──────────────
   // MODELS and BRANDS start empty — the catalog data module is loaded
   // dynamically so it does not block the initial JS bundle parse.
@@ -550,6 +278,74 @@ export default function App() {
   const orderedBrands = useMemo(() => {
     return applyBrandOrder(BRANDS);
   }, [BRANDS, orderVersion]);
+
+  const getPathForModel = (model: Model, storageGb?: number, ramGb?: number): string => {
+    const brand = BRANDS.find(b => b.id === model.brandId);
+    return getModelUrlPath(brand?.name || model.brandId, model.name, storageGb, ramGb);
+  };
+
+  useEffect(() => {
+    let title = "Rephonix | Sell Your Devices at the Best Price";
+    const cleanPath = path.split('?')[0];
+
+    const modelMatch = matchModelFromPath(cleanPath, MODELS, BRANDS);
+    if (modelMatch) {
+      if (modelMatch.variant?.storageGb) {
+        const specStr = formatVariantSlug(modelMatch.variant.storageGb, modelMatch.variant.ramGb).toUpperCase();
+        title = `Sell ${modelMatch.model.name} (${specStr}) | Rephonix`;
+      } else {
+        title = `Sell ${modelMatch.model.name} | Rephonix`;
+      }
+    } else {
+      switch (cleanPath) {
+        case '/smartphones':
+          title = "Sell Smartphones | Rephonix";
+          break;
+        case '/tablets':
+          title = "Sell Tablets & iPads | Rephonix";
+          break;
+        case '/about':
+          title = "About Rephonix";
+          break;
+        case '/contact':
+          title = "Contact Rephonix";
+          break;
+        case SECRET_ADMIN_PATH:
+          title = "Control Center | Rephonix";
+          break;
+        case '/login':
+          title = "Login | Rephonix";
+          break;
+        case '/signup':
+          title = "Create Account | Rephonix";
+          break;
+        case '/forgot-password':
+          title = "Forgot Password | Rephonix";
+          break;
+        case '/reset-password':
+          title = "Reset Password | Rephonix";
+          break;
+        case '/verify-email':
+          title = "Verify Email | Rephonix";
+          break;
+        case '/profile':
+          title = "My Profile | Rephonix";
+          break;
+      }
+    }
+    document.title = title;
+  }, [path, MODELS, BRANDS]);
+
+  // Sync activeStage with secret admin path
+  useEffect(() => {
+    startTransition(() => {
+      if (path === SECRET_ADMIN_PATH) {
+        setActiveStage('admin');
+      } else if (activeStage === 'admin') {
+        setActiveStage('select');
+      }
+    });
+  }, [path, activeStage]);
 
 
   const refreshCatalog = useCallback(async () => {
@@ -651,6 +447,36 @@ export default function App() {
     }
   }, [MODELS]);
 
+  // Deep-link / direct URL route matcher: e.g. /apple/iphone-17-pro-max/2tb or /samsung/galaxy-z-fold-8/16gb-512gb
+  useEffect(() => {
+    if (MODELS.length === 0) return;
+    const clean = path.split('?')[0];
+    const match = matchModelFromPath(clean, MODELS, BRANDS);
+    if (match) {
+      const model = match.model;
+      setSelectedModel(model);
+      const variants = generateVariantsForModel(model);
+      if (variants && variants.length > 0) {
+        let chosenVariant = variants[0];
+        if (match.variant && match.variant.storageGb) {
+          const targetStorage = match.variant.storageGb;
+          const targetRam = match.variant.ramGb;
+          const found = variants.find(v => {
+            const matchStorage = v.storageGb === targetStorage;
+            const matchRam = targetRam ? v.ramGb === targetRam : true;
+            return matchStorage && matchRam;
+          }) || variants.find(v => v.storageGb === targetStorage);
+          if (found) chosenVariant = found;
+        }
+        setSelectedVariant(chosenVariant);
+        setFinalPrice(chosenVariant.basePrice);
+      }
+      setSelectedDefects([]);
+      setWizardStep(0);
+      setActiveStage('diagnose');
+    }
+  }, [path, MODELS, BRANDS]);
+
   // Auto-persist active workflow state to localStorage whenever workflow state updates
   useEffect(() => {
     if (activeStage === 'diagnose' || activeStage === 'schedule') {
@@ -688,6 +514,7 @@ export default function App() {
   const [heroSearch, setHeroSearch] = useState('');
   const [heroSearchOpen, setHeroSearchOpen] = useState(false);
   const [pendingModelId, setPendingModelId] = useState<string | null>(null);
+  const [pendingVariant, setPendingVariant] = useState<{ storageGb?: number; ramGb?: number } | null>(null);
   const [pendingBrandId, setPendingBrandId] = useState<string | null>(null);
   const [trackModalTab, setTrackModalTab] = useState<'my_bookings' | 'track_search' | 'invoices'>('my_bookings');
   const heroSearchRef = useRef<HTMLDivElement>(null);
@@ -781,7 +608,7 @@ export default function App() {
       setFinalPrice(variant.basePrice);
       setActiveStage('diagnose');
       
-      const targetPath = getPathForModel(model);
+      const targetPath = getPathForModel(model, variant.storageGb, variant.ramGb);
       navigate(targetPath);
     });
   };
@@ -926,6 +753,15 @@ export default function App() {
             <TabletsShowcase
               models={MODELS}
               onSelectVariant={handleVariantSelected}
+              onModelClick={(model) => {
+                window.history.pushState({}, '', getPathForModel(model));
+              }}
+              onModelDismiss={() => {
+                window.history.replaceState({}, '', '/tablets');
+              }}
+              onVariantChange={(model, storageGb, ramGb) => {
+                window.history.replaceState({}, '', getPathForModel(model, storageGb, ramGb));
+              }}
               onBackToHome={() => { handleReset(); navigate('/'); }}
               defaultBrand={selectedTabletBrand}
             />
@@ -945,10 +781,23 @@ export default function App() {
               </div>
               <DeviceSelector
                 onVariantSelected={handleVariantSelected}
+                onModelClick={(model) => {
+                  window.history.pushState({}, '', getPathForModel(model));
+                }}
+                onModelDismiss={() => {
+                  window.history.replaceState({}, '', '/smartphones');
+                }}
+                onVariantChange={(model, storageGb, ramGb) => {
+                  window.history.replaceState({}, '', getPathForModel(model, storageGb, ramGb));
+                }}
                 defaultBrandId={pendingBrandId}
                 onDefaultBrandConsumed={() => setPendingBrandId(null)}
                 defaultModelId={pendingModelId}
-                onDefaultModelConsumed={() => setPendingModelId(null)}
+                defaultVariant={pendingVariant}
+                onDefaultModelConsumed={() => {
+                  setPendingModelId(null);
+                  setPendingVariant(null);
+                }}
                 brands={BRANDS}
                 models={MODELS}
               />

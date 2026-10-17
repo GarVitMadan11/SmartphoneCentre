@@ -1,4 +1,4 @@
-import { calculateStage1Valuation, determineDeviceSegment } from './pricingEngine.ts';
+import { calculateStage1Valuation, determineDeviceSegment } from '../utils/pricingEngine.ts';
 import type { Variant, DefectRule } from '../data/mockDatabase.ts';
 
 const makeVariant = (basePrice: number, storageGb = 256): Variant => ({
@@ -118,8 +118,6 @@ export function runPricingEngineTests(): { passed: number; total: number } {
       ],
       deviceAge: 'under_3m'
     });
-    // fCosmetic = 0.96, fDisplay = 0.72, fBattery = 0.95
-    // fCondition = 0.96 * 0.72 * 0.95 = 0.65664
     const expectedVal = Math.round(100000 * 0.96 * 0.72 * 0.95);
     assert(res.auditTrail.preAccessoryValue === expectedVal, `Pre-accessory value matches multiplicative score (${expectedVal})`);
   });
@@ -137,8 +135,6 @@ export function runPricingEngineTests(): { passed: number; total: number } {
       ],
       deviceAge: 'under_3m'
     });
-    // Total raw accessory deductions = 3000 + 2500 + 2000 = 7500
-    // Capped at 10% of 60,000 = 6000
     assert(res.auditTrail.dAccessories === 7500, 'Raw accessories deduction is 7,500');
     assert(res.auditTrail.dAccessoriesCapped === 6000, 'Capped accessories deduction is 6,000');
     assert(res.adjustedBenchmark === 54000, 'Pre-vendor benchmark equals 60,000 - 6,000 = 54,000');
@@ -333,12 +329,6 @@ export function runPricingEngineTests(): { passed: number; total: number } {
       marketDemand: 'high',
       variantType: 'indian'
     });
-    // B = 65000, fAge = 0.94, fMarket = 1.00, fVariant = 1.00
-    // fCosmetic = 0.96, fDisplay = 0.75, fBattery = 0.97 -> fCondition = 0.96 * 0.75 * 0.97 = 0.6984
-    // preAccessoryValue = Math.round(65000 * 0.94 * 1.00 * 0.6984 * 1.00) = 42672
-    // dAccessories = 1500
-    // pre-vendor adjustedBenchmark = 42672 - 1500 = 41172
-    // vendorMultiplier = 1.02 (<= 50,000) -> 41172 * 1.02 = 41995.44 -> clean_50 rounded = 42000
     assert(!res.isCritical, 'Not critical');
     assert(res.auditTrail.fAge === 0.94, 'fAge 0.94');
     assert(res.auditTrail.preAccessoryValue === 42672, 'preAccessoryValue matches calculation');
@@ -359,4 +349,3 @@ const gProc = (globalThis as any).process;
 if (typeof gProc !== 'undefined' && gProc.argv && gProc.argv[1]?.includes('pricingEngineTestRunner')) {
   runPricingEngineTests();
 }
-

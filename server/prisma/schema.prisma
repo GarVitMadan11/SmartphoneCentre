@@ -156,6 +156,7 @@ model Booking {
   @@index([payoutStatus])
   @@index([createdAt])
   @@index([customerPhone])
+  @@index([customerEmail])
   @@index([userId])
 }
 
@@ -222,6 +223,7 @@ model OtpVerification {
   id        String   @id @default(uuid())
   phone     String   @unique
   otp       String
+  attempts  Int      @default(0)
   expiresAt DateTime
   createdAt DateTime @default(now())
 }

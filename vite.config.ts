@@ -97,25 +97,25 @@ export default defineConfig({
       process.env.VITE_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID || ''
     ),
     'import.meta.env.VITE_FIREBASE_API_KEY': JSON.stringify(
-      process.env.VITE_FIREBASE_API_KEY || 'AIzaSyBmhYvC0BrBU6hXVVFu4GwUigZsM0NEMD0'
+      process.env.VITE_FIREBASE_API_KEY || ''
     ),
     'import.meta.env.VITE_FIREBASE_AUTH_DOMAIN': JSON.stringify(
-      process.env.VITE_FIREBASE_AUTH_DOMAIN || 'rephonix-f2cfa.firebaseapp.com'
+      process.env.VITE_FIREBASE_AUTH_DOMAIN || ''
     ),
     'import.meta.env.VITE_FIREBASE_PROJECT_ID': JSON.stringify(
-      process.env.VITE_FIREBASE_PROJECT_ID || 'rephonix-f2cfa'
+      process.env.VITE_FIREBASE_PROJECT_ID || ''
     ),
     'import.meta.env.VITE_FIREBASE_STORAGE_BUCKET': JSON.stringify(
-      process.env.VITE_FIREBASE_STORAGE_BUCKET || 'rephonix-f2cfa.firebasestorage.app'
+      process.env.VITE_FIREBASE_STORAGE_BUCKET || ''
     ),
     'import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID': JSON.stringify(
-      process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '730993464038'
+      process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || ''
     ),
     'import.meta.env.VITE_FIREBASE_APP_ID': JSON.stringify(
-      process.env.VITE_FIREBASE_APP_ID || '1:730993464038:web:b31db03a76e5355c7a6127'
+      process.env.VITE_FIREBASE_APP_ID || ''
     ),
     'import.meta.env.VITE_FIREBASE_MEASUREMENT_ID': JSON.stringify(
-      process.env.VITE_FIREBASE_MEASUREMENT_ID || 'G-FGXD69F6MB'
+      process.env.VITE_FIREBASE_MEASUREMENT_ID || ''
     ),
   },
 })

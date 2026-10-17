@@ -11,9 +11,6 @@ function getApiBaseUrl(): string {
     // Using an absolute URL like http://localhost:4000/api bypasses the proxy and
     // triggers cross-origin CSP violations.
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
-      // Allow an explicit env override (e.g. VITE_API_URL=http://staging.example.com/api)
-      const envUrl = (import.meta.env.VITE_API_URL as string | undefined)?.trim().replace(/\/$/, '');
-      if (envUrl && !envUrl.startsWith('/')) return envUrl;
       return '/api';
     }
   }
@@ -99,7 +96,6 @@ async function apiFetch<T>(path: string, options?: RequestInit, withAuth = false
   }
 
   // Authentication is carried by session cookie or Bearer token header
-  void withAuth;
 
   const baseUrl = getApiBaseUrl();
   const res = await fetch(`${baseUrl}${path}`, {
@@ -423,7 +419,13 @@ export async function downloadBookingPdf(bookingId: string): Promise<void> {
   const baseUrl = getApiBaseUrl();
   const url = `${baseUrl}/bookings/${encodeURIComponent(bookingId)}/pdf`;
   try {
-    const res = await fetch(url, { mode: 'cors' });
+    const adminToken = getStoredAdminToken();
+    const headers: Record<string, string> = adminToken ? { Authorization: `Bearer ${adminToken}` } : {};
+    const res = await fetch(url, {
+      mode: 'cors',
+      credentials: 'include',
+      headers,
+    });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const blob = await res.blob();
     const blobUrl = window.URL.createObjectURL(blob);

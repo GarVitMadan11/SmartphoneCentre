@@ -10,6 +10,9 @@ interface TabletsShowcaseProps {
   onSelectVariant: (model: Model, variant: Variant) => void;
   onBackToHome: () => void;
   defaultBrand?: 'all' | 'apple' | 'samsung';
+  onModelClick?: (model: Model) => void;
+  onModelDismiss?: () => void;
+  onVariantChange?: (model: Model, storageGb: number, ramGb?: number) => void;
 }
 
 export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
@@ -17,6 +20,9 @@ export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
   onSelectVariant,
   onBackToHome,
   defaultBrand,
+  onModelClick,
+  onModelDismiss,
+  onVariantChange,
 }) => {
   const [selectedBrand, setSelectedBrand] = useState<'all' | 'apple' | 'samsung'>(defaultBrand ?? 'all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -89,12 +95,16 @@ export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
   }, [selectedModelForSpec, selectedRam, selectedStorage, ramOptions, connectivity]);
 
   const handleOpenSpecModal = (model: Model) => {
+    onModelClick?.(model);
     const defaultRams = getModelSupportedRam(model).filter(r => r > 0);
     const defaultStorages = model.supportedStorageGb && model.supportedStorageGb.length > 0 ? model.supportedStorageGb : [128, 256, 512];
-    setSelectedRam(defaultRams.length > 0 ? defaultRams[0] : 0);
-    setSelectedStorage(defaultStorages[0]);
+    const initialRam = defaultRams.length > 0 ? defaultRams[0] : 0;
+    const initialStorage = defaultStorages[0];
+    setSelectedRam(initialRam);
+    setSelectedStorage(initialStorage);
     setConnectivity('cellular');
     setSelectedModelForSpec(model);
+    onVariantChange?.(model, initialStorage, initialRam > 0 ? initialRam : undefined);
   };
 
   const handleProceedWithSpec = () => {
@@ -293,7 +303,10 @@ export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
 
                   <button
                     type="button"
-                    onClick={() => setSelectedModelForSpec(null)}
+                    onClick={() => {
+                      setSelectedModelForSpec(null);
+                      onModelDismiss?.();
+                    }}
                     className="p-2 rounded-lg border border-ice-border text-zinc-400 hover:text-ink-navy hover:bg-zinc-100 transition-all"
                   >
                     <X className="w-4 h-4" />
@@ -314,7 +327,12 @@ export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
                     <div className="grid grid-cols-2 gap-2.5">
                       <button
                         type="button"
-                        onClick={() => setConnectivity('cellular')}
+                        onClick={() => {
+                          setConnectivity('cellular');
+                          if (selectedModelForSpec) {
+                            onVariantChange?.(selectedModelForSpec, selectedStorage, selectedRam > 0 ? selectedRam : undefined);
+                          }
+                        }}
                         className={`py-3.5 px-3.5 rounded-xl border text-xs font-bold font-mono transition-all flex items-center justify-between ${
                           connectivity === 'cellular'
                             ? 'bg-cobalt text-white border-cobalt shadow-md shadow-cobalt/20'
@@ -333,7 +351,12 @@ export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
 
                       <button
                         type="button"
-                        onClick={() => setConnectivity('wifi')}
+                        onClick={() => {
+                          setConnectivity('wifi');
+                          if (selectedModelForSpec) {
+                            onVariantChange?.(selectedModelForSpec, selectedStorage, selectedRam > 0 ? selectedRam : undefined);
+                          }
+                        }}
                         className={`py-3.5 px-3.5 rounded-xl border text-xs font-bold font-mono transition-all flex items-center justify-between ${
                           connectivity === 'wifi'
                             ? 'bg-cobalt text-white border-cobalt shadow-md shadow-cobalt/20'
@@ -366,7 +389,12 @@ export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
                           <button
                             key={ram}
                             type="button"
-                            onClick={() => setSelectedRam(ram)}
+                            onClick={() => {
+                              setSelectedRam(ram);
+                              if (selectedModelForSpec) {
+                                onVariantChange?.(selectedModelForSpec, selectedStorage, ram > 0 ? ram : undefined);
+                              }
+                            }}
                             className={`py-3 px-3 rounded-xl border text-xs font-bold font-mono transition-all flex items-center justify-center gap-1.5 ${
                               selectedRam === ram
                                 ? 'bg-cobalt text-white border-cobalt shadow-md shadow-cobalt/20'
@@ -394,7 +422,13 @@ export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
                         <button
                           key={st}
                           type="button"
-                          onClick={() => setSelectedStorage(st)}
+                          onClick={() => {
+                            setSelectedStorage(st);
+                            if (selectedModelForSpec) {
+                              const effRam = ramOptions.length > 0 ? selectedRam : 0;
+                              onVariantChange?.(selectedModelForSpec, st, effRam > 0 ? effRam : undefined);
+                            }
+                          }}
                           className={`py-3 px-3 rounded-xl border text-xs font-bold font-mono transition-all flex items-center justify-center gap-1 ${
                             selectedStorage === st
                               ? 'bg-violet-600 text-white border-violet-600 shadow-md shadow-violet-600/20'

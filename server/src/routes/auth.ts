@@ -1,7 +1,7 @@
 import { Router, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { randomBytes, createHash } from 'node:crypto';
+import { randomBytes, createHash, randomInt } from 'node:crypto';
 import { OAuth2Client } from 'google-auth-library';
 import prisma from '../db.js';
 import { getJwtSecret, JWT_ISSUER } from '../middleware/adminAuth.js';
@@ -24,7 +24,6 @@ router.get('/config', (_req, res) => {
   });
 });
 
-const signupAttemptsStore = new Map<string, number>();
 
 interface EmailOtpSession {
   email: string;
@@ -192,16 +191,14 @@ router.post('/signup', async (req, res) => {
       return;
     }
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otp = randomInt(100000, 1000000).toString();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
     await prisma.otpVerification.upsert({
       where: { phone: cleanPhone },
-      create: { phone: cleanPhone, otp, expiresAt },
-      update: { otp, expiresAt },
+      create: { phone: cleanPhone, otp, expiresAt, attempts: 0 },
+      update: { otp, expiresAt, attempts: 0 },
     });
-
-    signupAttemptsStore.set(cleanPhone, 0);
 
     // Securely dispatch verification code using the backend email service
     sendOtpEmail(cleanEmail, name.trim(), otp).catch(err => {
@@ -251,10 +248,8 @@ router.post('/verify-otp', async (req, res) => {
     }
 
     // Max attempts check (3 attempts)
-    const currentAttempts = signupAttemptsStore.get(cleanPhone) || 0;
-    if (currentAttempts >= 3) {
+    if (otpRecord.attempts >= 3) {
       await prisma.otpVerification.delete({ where: { phone: cleanPhone } }).catch(() => {});
-      signupAttemptsStore.delete(cleanPhone);
       res.status(400).json({ error: 'ValidationError', message: 'Maximum verification attempts exceeded. Please request a new code.' });
       return;
     }
@@ -262,18 +257,19 @@ router.post('/verify-otp', async (req, res) => {
     // Expiry check
     if (new Date() > otpRecord.expiresAt) {
       await prisma.otpVerification.delete({ where: { phone: cleanPhone } }).catch(() => {});
-      signupAttemptsStore.delete(cleanPhone);
       res.status(400).json({ error: 'ValidationError', message: 'Verification code has expired. Please request a new one.' });
       return;
     }
 
     // OTP match check
     if (otpRecord.otp !== otp.trim()) {
-      const newAttempts = currentAttempts + 1;
-      signupAttemptsStore.set(cleanPhone, newAttempts);
+      const updatedRecord = await prisma.otpVerification.update({
+        where: { phone: cleanPhone },
+        data: { attempts: { increment: 1 } },
+      }).catch(() => null);
+      const newAttempts = updatedRecord ? updatedRecord.attempts : otpRecord.attempts + 1;
       if (newAttempts >= 3) {
         await prisma.otpVerification.delete({ where: { phone: cleanPhone } }).catch(() => {});
-        signupAttemptsStore.delete(cleanPhone);
         res.status(400).json({ error: 'ValidationError', message: 'Maximum verification attempts exceeded. Please request a new code.' });
         return;
       }
@@ -283,7 +279,6 @@ router.post('/verify-otp', async (req, res) => {
     }
 
     await prisma.otpVerification.delete({ where: { phone: cleanPhone } }).catch(() => {});
-    signupAttemptsStore.delete(cleanPhone);
 
     const passwordHash = await bcrypt.hash(password, 12);
 
@@ -934,7 +929,7 @@ router.post('/send-email-otp', customerAuth, async (req: AuthenticatedCustomerRe
     }
 
     // Generate random 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otp = randomInt(100000, 1000000).toString();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
 
     emailOtpStore.set(cleanEmail, {
@@ -1063,7 +1058,7 @@ router.post('/forgot-password-request', async (req, res) => {
     }
 
     // Generate random 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otp = randomInt(100000, 1000000).toString();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
 
     forgotPasswordOtpStore.set(cleanEmail, {

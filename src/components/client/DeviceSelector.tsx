@@ -643,6 +643,14 @@ interface DeviceSelectorProps {
   defaultModelId?: string | null;
   /** Called after defaultModelId has been consumed so the parent can clear it */
   onDefaultModelConsumed?: () => void;
+  /** Optional callback when user clicks a model card to update the URL route */
+  onModelClick?: (model: Model) => void;
+  /** Optional callback when user closes/dismisses the model modal */
+  onModelDismiss?: () => void;
+  /** Optional callback when RAM or storage variant selection changes in the modal */
+  onVariantChange?: (model: Model, storageGb: number, ramGb?: number) => void;
+  /** Optional pre-selected variant specs from URL */
+  defaultVariant?: { storageGb?: number; ramGb?: number } | null;
   /** Dynamic brands from API (falls back to static) */
   brands?: Brand[];
   /** Dynamic models from API (falls back to static) */
@@ -655,6 +663,10 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
   onDefaultBrandConsumed,
   defaultModelId,
   onDefaultModelConsumed,
+  onModelClick,
+  onModelDismiss,
+  onVariantChange,
+  defaultVariant,
   brands: propBrands,
   models: propModels,
 }) => {
@@ -750,7 +762,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [defaultBrandId]);
 
-  // Handle external model pre-selection (from hero search)
+  // Handle external model pre-selection (from hero search or direct URL)
   useEffect(() => {
     if (!defaultModelId) return;
     const model = MODELS.find(m => m.id === defaultModelId);
@@ -758,8 +770,34 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
       setSelectedBrandId(model.brandId);
       setSelectedSeries(model.series || null);
       setSelectedModel(model);
-      setSelectedStorage(null);
-      setTempVariant(null);
+
+      const allRams = getModelSupportedRam(model).filter(r => r > 0);
+      const allStorages = getModelSupportedStorage(model);
+
+      let targetRam = defaultVariant?.ramGb ?? (allRams.length > 0 ? allRams[0] : null);
+      let targetStorage = defaultVariant?.storageGb ?? (allStorages.length > 0 ? allStorages[0] : 128);
+
+      if (targetRam && !allRams.includes(targetRam)) targetRam = allRams[0] || null;
+      if (targetStorage && !allStorages.includes(targetStorage)) targetStorage = allStorages[0] || 128;
+
+      setSelectedRam(targetRam);
+      setSelectedStorage(targetStorage);
+
+      const vars = generateVariantsForModel(model);
+      const modelIsTablet = isTabletDevice(model.brandId, model.name, model.id);
+      const defaultColor = modelIsTablet ? 'Wi-Fi + Cellular (SIM)' : (vars.find(v => v.storageGb === targetStorage)?.color || 'Standard');
+      setSelectedColor(defaultColor);
+
+      const baseVar = vars.find(v => v.storageGb === targetStorage && v.color === defaultColor) || vars[0];
+      const baseVal = getVariantPrice(model, targetRam || 0, targetStorage);
+      setTempVariant({
+        ...baseVar,
+        ramGb: targetRam || undefined,
+        storageGb: targetStorage,
+        color: defaultColor,
+        basePrice: baseVal,
+      });
+
       // Scroll to variant panel after brief paint delay
       setTimeout(() => {
         variantSelectorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -767,7 +805,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
     }
     onDefaultModelConsumed?.();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [defaultModelId]);
+  }, [defaultModelId, defaultVariant]);
 
   useEffect(() => {
     if (selectedModel && variantSelectorRef.current) {
@@ -899,6 +937,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
 
   const handleModelClick = (model: Model) => {
     setSelectedModel(model);
+    onModelClick?.(model);
     const allRams = getModelSupportedRam(model).filter(r => r > 0);
     const allStorages = getModelSupportedStorage(model);
 
@@ -926,6 +965,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
       color: defaultColor,
       basePrice: baseVal,
     });
+    onVariantChange?.(model, defaultStorage, defaultRam || undefined);
   };
 
   const handleConnectivitySelect = (conn: 'wifi' | 'cellular') => {
@@ -943,6 +983,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
         color: conn === 'cellular' ? 'Wi-Fi + Cellular (SIM)' : 'Wi-Fi Only',
         basePrice: price,
       });
+      onVariantChange?.(selectedModel, selectedStorage, ram > 0 ? ram : undefined);
     }
   };
 
@@ -968,6 +1009,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
         color: activeColor,
         basePrice: price,
       });
+      onVariantChange?.(selectedModel, targetStorage, ram);
     }
   };
 
@@ -991,6 +1033,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
         color: activeColor,
         basePrice: price,
       });
+      onVariantChange?.(selectedModel, storage, ram > 0 ? ram : undefined);
     }
   };
 
@@ -1040,7 +1083,6 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
               placeholder={`Search within ${selectedSeries}...`}
               value={seriesSearchQuery}
               onChange={e => setSeriesSearchQuery(e.target.value)}
-              autoFocus
               className="w-full pl-10 sm:pl-12 pr-10 py-3 sm:py-3.5 rounded-sm border border-ice-border bg-canvas-pure text-ink-navy text-sm placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all duration-300"
               style={{ minHeight: '48px' }}
               aria-label={`Search within ${selectedSeries}`}
@@ -1378,7 +1420,10 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
 
                   <button
                     type="button"
-                    onClick={() => setSelectedModel(null)}
+                    onClick={() => {
+                      setSelectedModel(null);
+                      onModelDismiss?.();
+                    }}
                     className="p-2 rounded-lg border border-ice-border text-zinc-400 hover:text-ink-navy hover:bg-zinc-100 transition-all"
                     aria-label="Close dialog"
                   >

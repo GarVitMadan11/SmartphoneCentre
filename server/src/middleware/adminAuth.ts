@@ -165,3 +165,71 @@ export function requireRole(allowedRoles: Array<AdminPayload['role']>) {
     });
   };
 }
+
+/**
+ * Optional Admin Auth middleware: populates req.adminId and req.user only if a valid admin token is presented.
+ * Does not reject unauthenticated requests.
+ */
+export async function optionalAdminAuth(
+  req: AuthenticatedRequest,
+  _res: Response,
+  next: NextFunction
+): Promise<void> {
+  const cookies = parseCookies(req);
+  const authHeader = req.headers['authorization'];
+  let token: string | undefined;
+
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.slice(7).trim();
+  } else if (cookies['rex_admin_token']) {
+    token = cookies['rex_admin_token'];
+  }
+
+  if (!token) {
+    return next();
+  }
+
+  // 1. Try Firebase Admin ID Token Verification
+  const firebaseAdmin = getAdminAuth();
+  if (firebaseAdmin) {
+    try {
+      const decodedFirebase = await firebaseAdmin.verifyIdToken(token);
+      if (decodedFirebase && decodedFirebase.uid) {
+        if (decodedFirebase.admin === true || decodedFirebase.role) {
+          const role = (decodedFirebase.role as AdminPayload['role']) || 'OPERATIONS_AGENT';
+          req.adminId = decodedFirebase.uid;
+          req.user = {
+            sub: decodedFirebase.uid,
+            username: decodedFirebase.email || decodedFirebase.uid,
+            role,
+            iss: decodedFirebase.iss,
+            aud: decodedFirebase.aud,
+          };
+          return next();
+        }
+      }
+    } catch {
+      // Continue to JWT fallback
+    }
+  }
+
+  // 2. Legacy JWT Session Fallback
+  try {
+    const payload = jwt.verify(token, getJwtSecret(), {
+      issuer: JWT_ISSUER,
+      audience: JWT_AUDIENCE,
+      algorithms: ['HS256'],
+    }) as AdminPayload;
+
+    const allowedRoles: AdminPayload['role'][] = ['SUPER_ADMIN', 'FINANCE_APPROVER', 'OPERATIONS_AGENT', 'CATALOG_EDITOR', 'admin'];
+    if (allowedRoles.includes(payload.role)) {
+      req.adminId = payload.sub;
+      req.user = payload;
+    }
+  } catch {
+    // Ignore invalid admin token in optional check
+  }
+
+  next();
+}
+

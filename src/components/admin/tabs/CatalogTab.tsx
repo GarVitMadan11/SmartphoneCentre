@@ -414,6 +414,8 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
         prev.map((m) => (m.id === model.id ? { ...m, hidden: updatedHidden } : m))
       );
       setSuccessMsg(`Model "${model.name}" is now ${updatedHidden ? 'hidden from public store' : 'visible in public store'}.`);
+      if (onRefresh) onRefresh();
+      window.dispatchEvent(new CustomEvent('stc_catalog_order_changed'));
     } catch (err: any) {
       console.error('Failed to toggle model visibility:', err);
       setError(err.message || 'Failed to update visibility');

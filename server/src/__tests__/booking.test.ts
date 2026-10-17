@@ -6,6 +6,7 @@ describe('Booking Body Input Validation', () => {
     customerName: ' Vikramaditya Singh ',
     customerPhone: '9876543210',
     customerEmail: 'vikram@example.com',
+    imei: '358249101234567',
     address: 'Flat 101, Galaxy Apartments, Mumbai - 400001',
     pickupDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
     pickupTimeSlot: '12:00 PM - 03:00 PM (Afternoon)',

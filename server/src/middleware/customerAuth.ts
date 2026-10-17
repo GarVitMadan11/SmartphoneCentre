@@ -14,6 +14,8 @@ export interface CustomerPayload {
 export interface AuthenticatedCustomerRequest extends Request {
   userId?: string;
   customer?: any;
+  adminId?: string;
+  admin?: any;
 }
 
 export const CUSTOMER_JWT_AUDIENCE = 'smartphone-centre-customer';

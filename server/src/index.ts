@@ -1,67 +1,51 @@
-import 'dotenv/config';
 import express from 'express';
-import cors from 'cors';
 import helmet from 'helmet';
+import cors from 'cors';
 import morgan from 'morgan';
-import rateLimit from 'express-rate-limit';
 import compression from 'compression';
-import path from 'node:path';
 import fs from 'node:fs';
+import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { randomBytes, randomUUID, timingSafeEqual } from 'node:crypto';
+import 'dotenv/config';
 import prisma from './db.js';
+import { PRICING_ENGINE_VERSION } from './services/valuation.js';
+
+// Route handlers
+import adminRouter from './routes/admin.js';
+import supportRouter from './routes/support.js';
+import authRouter from './routes/auth.js';
+import brandsRouter from './routes/brands.js';
+import modelsRouter from './routes/models.js';
+import quotesRouter from './routes/quotes.js';
+import bookingsRouter from './routes/bookings.js';
+
+// Middleware & Validation
+import { globalLimiter, authLimiter } from './middleware/rateLimits.js';
+export { validateBookingBody, isValidImageUrl, formatImageUrl } from './validation/booking.js';
+export { encryptImei, decryptImei, mapBooking } from './routes/bookings.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-import { adminAuth, requireRole, AuthenticatedRequest } from './middleware/adminAuth.js';
-import adminRouter, { logAdminAudit } from './routes/admin.js';
-import supportRouter from './routes/support.js';
-import { customerAuth, optionalCustomerAuth, AuthenticatedCustomerRequest } from './middleware/customerAuth.js';
-import authRouter from './routes/auth.js';
-import {
-  calculateServerValuation,
-  maximumQuoteFor,
-  PRICING_ENGINE_VERSION,
-  QUOTE_TTL_MINUTES,
-  generateQuoteSignature,
-  DeviceCategory,
-} from './services/valuation.js';
-import {
-  encryptPayoutDetails,
-  decryptPayoutDetails,
-  maskPayoutDetails,
-  encryptField,
-  decryptField,
-} from './utils/encryption.js';
-import { generateBookingQuotationPDF } from './services/pdfGenerator.js';
-import { sendBookingConfirmationEmail, sendAdminQuoteAlertEmail, sendAdminPriceMatchAlertEmail } from './services/bookingMailer.js';
+const isDev = process.env.NODE_ENV !== 'production';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // STARTUP ENVIRONMENT VALIDATION
-// Fatal-error early if required secrets are absent in production.
 // ═══════════════════════════════════════════════════════════════════════════
 
 {
   const isProduction = process.env.NODE_ENV === 'production';
   const missing: string[] = [];
 
-  const dbUrl = (process.env.DATABASE_URL ?? '').trim().replace(/^['"]|['"]$/g, '');
-  const isRenderEnv = Boolean(process.env.RENDER || process.env.RENDER_SERVICE_ID);
-
-  if (!dbUrl) {
-    missing.push('DATABASE_URL environment variable is missing');
-  } else if ((isProduction || isRenderEnv) && dbUrl.startsWith('file:')) {
-    missing.push('DATABASE_URL must be a production PostgreSQL connection string in production environments');
+  const secret = (process.env.JWT_SECRET ?? '').trim();
+  if (!secret) {
+    missing.push('JWT_SECRET (must be set)');
+  } else if (secret.length < 32) {
+    missing.push('JWT_SECRET (must be at least 32 characters)');
   }
 
-  if (isProduction || isRenderEnv) {
-    const jwtSecret = (process.env.JWT_SECRET ?? '').trim();
-    if (jwtSecret.length < 32) missing.push('JWT_SECRET (minimum 32 characters)');
-
+  if (isProduction) {
     const encKey = (process.env.PAYOUT_ENCRYPTION_KEY ?? '').trim();
     if (!encKey) missing.push('PAYOUT_ENCRYPTION_KEY');
-
-    // Auth system secrets
     if (!(process.env.GOOGLE_CLIENT_ID ?? '').trim()) missing.push('GOOGLE_CLIENT_ID');
     if (!(process.env.SMTP_PASS ?? '').trim()) missing.push('SMTP_PASS');
   }
@@ -73,22 +57,22 @@ import { sendBookingConfirmationEmail, sendAdminQuoteAlertEmail, sendAdminPriceM
     process.exit(1);
   }
 }
+
 const app = express();
 const PORT = parseInt(process.env.PORT || '4000', 10);
 
 // Enable response compression (Gzip / Brotli)
 app.use(compression());
 
-// Restrict trust proxy configuration (e.g. 1 loopback proxy in prod or explicit loopback for local dev)
+// Restrict trust proxy configuration
 app.set('trust proxy', process.env.NODE_ENV === 'production' ? 'loopback, linklocal, uniquelocal' : 1);
 
-// ── Parse allowed origins from env ───────────────────────────────────────────
-const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? 'http://localhost:5173,http://localhost:3000')
+// ── Allowed Origins ────────────────────────────────────────────────────────
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? 'http://localhost:3000,http://localhost:5173')
   .split(',')
   .map(o => o.trim().replace(/\/$/, ''))
   .filter(Boolean);
 
-// Always ensure production domains are explicitly allowed
 if (!ALLOWED_ORIGINS.includes('https://rephonix.in')) {
   ALLOWED_ORIGINS.push('https://rephonix.in');
 }
@@ -97,12 +81,11 @@ if (!ALLOWED_ORIGINS.includes('https://www.rephonix.in')) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// SECURITY MIDDLEWARE
+// SECURITY & BASE MIDDLEWARE
 // ═══════════════════════════════════════════════════════════════════════════
 
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
-  // Fix #5: Explicit Referrer-Policy — never leak full URL to third parties
   referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
   contentSecurityPolicy: {
     directives: {
@@ -111,7 +94,6 @@ app.use(helmet({
       baseUri: ["'self'"],
       frameAncestors: ["'self'"],
       upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null,
-      // Strict script sources — removed 'unsafe-inline' and 'unsafe-eval'
       scriptSrc: [
         "'self'",
         'blob:',
@@ -119,7 +101,6 @@ app.use(helmet({
         'https://accounts.google.com',
         'https://apis.google.com',
         'https://www.google.com',
-        'https://www.gstatic.com',
         'https://*.firebaseapp.com',
         'https://*.googleapis.com',
       ],
@@ -129,66 +110,47 @@ app.use(helmet({
         'https://api.emailjs.com',
         'https://accounts.google.com',
         'https://apis.google.com',
-        'https://www.google.com',
         'https://www.gstatic.com',
         'https://*.firebaseapp.com',
         'https://*.googleapis.com',
       ],
-      workerSrc: ["'self'", 'blob:'],
-      frameSrc: ["'self'", 'https://accounts.google.com', 'https://*.firebaseapp.com', 'https://*.google.com'],
-      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://accounts.google.com'],
-      styleSrcElem: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://accounts.google.com'],
-      fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
-      imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
       connectSrc: [
         "'self'",
-        // Allow localhost in dev only — never expose this to production browsers
-        ...(process.env.NODE_ENV !== 'production' ? [
-          'http://localhost:*',
-          'http://127.0.0.1:*',
-          'ws://localhost:*',
-          'ws://127.0.0.1:*',
-        ] : []),
+        'https://rephonix.in',
+        'https://www.rephonix.in',
+        'http://localhost:*',
         'https://api.emailjs.com',
         'https://accounts.google.com',
         'https://identitytoolkit.googleapis.com',
         'https://securetoken.googleapis.com',
-        'https://*.googleapis.com',
-        'https://*.firebaseapp.com',
         'https://*.firebaseio.com',
-        'https://rephonix.in',
-        'https://www.rephonix.in',
+        'https://*.googleapis.com',
       ],
-      formAction: ["'self'"],
+      imgSrc: [
+        "'self'",
+        'data:',
+        'blob:',
+        'https:',
+      ],
+      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
     },
   },
+  hsts: process.env.NODE_ENV === 'production' ? {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true,
+  } : false,
 }));
-
-// Fix #2: Replace *.onrender.com wildcard with specific Render subdomain from env
-// Set RENDER_EXTERNAL_URL in your Render dashboard (e.g. https://your-app.onrender.com)
-const RENDER_EXTERNAL_URL = (process.env.RENDER_EXTERNAL_URL ?? '').trim().replace(/\/$/, '');
-const RENDER_ORIGIN = RENDER_EXTERNAL_URL ? new URL(RENDER_EXTERNAL_URL).origin : null;
 
 app.use(cors({
   origin: (origin, callback) => {
-    // No origin = same-origin request or server-to-server — always allowed.
     if (!origin) return callback(null, true);
-    try {
-      const cleanOrigin = origin.trim().replace(/\/$/, '');
-      const hostname = new URL(cleanOrigin).hostname;
-      // Whitelist: explicit allowed origins OR the specific Render deployment origin (not wildcard)
-      if (
-        ALLOWED_ORIGINS.includes(cleanOrigin) ||
-        (RENDER_ORIGIN && cleanOrigin === RENDER_ORIGIN) ||
-        hostname === 'localhost' ||
-        hostname === '127.0.0.1'
-      ) {
-        return callback(null, true);
-      }
-    } catch { /* ignore invalid origin URL */ }
-
-    // Safety: If origin is not allowed, do not crash with 500 error, just refuse CORS headers
-    callback(null, false);
+    if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+    if (/^https?:\/\/localhost(:\d+)?$/.test(origin) || /^https?:\/\/127\.0\.0\.1(:\d+)?$/.test(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error(`CORS policy: origin ${origin} is not allowed`));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
@@ -196,7 +158,6 @@ app.use(cors({
 }));
 
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
-// 10mb limit for standard API payloads and base64 image uploads in admin panel
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 
@@ -205,18 +166,9 @@ const distPath = path.resolve(__dirname, '../../dist');
 const distExists = fs.existsSync(path.join(distPath, 'index.html'));
 
 if (distExists) {
-  console.log(`📁 Serving frontend static build from: ${distPath}`);
-  try {
-    const files = fs.readdirSync(distPath);
-    console.log(`   Files in dist:`, files);
-    if (files.includes('assets')) {
-      const assetFiles = fs.readdirSync(path.join(distPath, 'assets'));
-      console.log(`   Files in dist/assets (first 10):`, assetFiles.slice(0, 10), assetFiles.length > 10 ? `... (${assetFiles.length} files total)` : '');
-    }
-  } catch (err: any) {
-    console.error(`   Error reading dist directory contents:`, err.message || err);
+  if (isDev) {
+    console.log(`📁 Serving frontend static build from: ${distPath}`);
   }
-
   app.use(express.static(distPath, {
     setHeaders: (res, filePath) => {
       if (filePath.endsWith('index.html')) {
@@ -226,149 +178,11 @@ if (distExists) {
       }
     },
   }));
-} else {
+} else if (isDev) {
   console.warn(`⚠️ Frontend static build not found at: ${distPath}`);
-  console.warn(`   process.cwd(): ${process.cwd()}`);
-  console.warn(`   __dirname: ${__dirname}`);
 }
-
-// ── Rate limiting ─────────────────────────────────────────────────────────
-const isDev = process.env.NODE_ENV !== 'production';
-
-const globalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: isDev ? 10000 : 2000,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: 'TooManyRequests', message: 'Too many requests. Please try again later.' },
-  skip: () => isDev,
-});
-
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: isDev ? 1000 : 100,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: 'TooManyRequests', message: 'Too many login attempts. Please wait 15 minutes.' },
-  skipSuccessfulRequests: true,
-  skip: () => isDev,
-});
-
-const bookingLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000,
-  max: isDev ? 500 : 20,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: 'TooManyRequests', message: 'Too many booking submissions. Please try again later.' },
-  skip: () => isDev,
-});
-
-const trackingLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: isDev ? 500 : 50,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: 'TooManyRequests', message: 'Too many order tracking attempts. Please try again in 15 minutes.' },
-  skip: () => isDev,
-});
 
 app.use(globalLimiter);
-
-// ═══════════════════════════════════════════════════════════════════════════
-// VALIDATION HELPERS
-// ═══════════════════════════════════════════════════════════════════════════
-
-const PHONE_RE = /^[6-9]\d{9}$/;
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const ALLOWED_STORAGE_GB = new Set([64, 128, 256, 512, 1024]);
-const ALLOWED_PAYOUT_METHODS = new Set(['doorstep', 'upi', 'bank', 'amazon', 'flipkart', 'myntra', 'googleplay', 'apple', 'steam', 'swiggy', 'zomato']);
-const ALLOWED_PICKUP_SLOTS = new Set([
-  'Morning (09:00 AM - 01:00 PM)',
-  'Evening (03:00 PM - 07:00 PM)',
-  '09:00 AM - 12:00 PM (Morning)',
-  '12:00 PM - 03:00 PM (Afternoon)',
-  '03:00 PM - 06:00 PM (Evening)',
-  '06:00 PM - 09:00 PM (Night)',
-]);
-const UPI_RE = /^[a-zA-Z0-9._-]{2,256}@[a-zA-Z][a-zA-Z0-9.-]{1,63}$/;
-const IFSC_RE = /^[A-Z]{4}0[A-Z0-9]{6}$/;
-const BANK_ACCOUNT_RE = /^\d{9,18}$/;
-
-
-
-export function isValidImageUrl(url?: string): boolean {
-  if (!url || typeof url !== 'string') return true;
-  const trimmed = url.trim();
-  if (trimmed === '') return true;
-  if (/^data:image\//i.test(trimmed)) return true;
-  if (/^https?:\/\//i.test(trimmed)) return true;
-  if (/^\/\//.test(trimmed)) return true;
-  if (/^[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+\//.test(trimmed)) return true;
-  return false;
-}
-
-export function formatImageUrl(url?: string): string {
-  if (!url || typeof url !== 'string') return '';
-  let trimmed = url.trim();
-  if (trimmed === '') return '';
-  if (trimmed.startsWith('//')) return `https:${trimmed}`;
-  if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://') && !trimmed.startsWith('data:')) {
-    if (/^[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+\//.test(trimmed)) {
-      return `https://${trimmed}`;
-    }
-  }
-  return trimmed;
-}
-
-export function validateBookingBody(b: Record<string, unknown>): string[] {
-  const errors: string[] = [];
-  if (!b.customerName || typeof b.customerName !== 'string' || b.customerName.trim().length < 2 || b.customerName.trim().length > 100)
-    errors.push('customerName: must be between 2 and 100 characters');
-  if (!b.customerPhone || typeof b.customerPhone !== 'string' || !PHONE_RE.test(b.customerPhone.trim()))
-    errors.push('customerPhone: must be a valid 10-digit Indian mobile number');
-  if (!b.customerEmail || typeof b.customerEmail !== 'string' || b.customerEmail.trim().length > 100 || !EMAIL_RE.test(b.customerEmail.trim()))
-    errors.push('customerEmail: must be a valid email address under 100 characters');
-  if (!b.imei || typeof b.imei !== 'string' || b.imei.trim().length !== 15 || !/^\d{15}$/.test(b.imei.trim()))
-    errors.push('imei: must be a valid 15-digit IMEI number');
-  if (!b.address || typeof b.address !== 'string' || b.address.trim().length < 10 || b.address.trim().length > 500)
-    errors.push('address: must be between 10 and 500 characters');
-  if (!b.pickupDate || typeof b.pickupDate !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(b.pickupDate) || Number.isNaN(Date.parse(`${b.pickupDate}T00:00:00.000Z`)))
-    errors.push('pickupDate: must be a valid ISO date');
-  else if (b.pickupDate < new Date().toISOString().slice(0, 10))
-    errors.push('pickupDate: cannot be in the past');
-  if (!b.pickupTimeSlot || typeof b.pickupTimeSlot !== 'string' || !ALLOWED_PICKUP_SLOTS.has(b.pickupTimeSlot))
-    errors.push('pickupTimeSlot: must be an available pickup slot');
-  if (!b.modelId && !b.modelLegacyId)
-    errors.push('modelId: required');
-  if (!ALLOWED_STORAGE_GB.has(Number(b.storageGb)))
-    errors.push('storageGb: must be a supported capacity');
-  if (!b.payoutMethod || typeof b.payoutMethod !== 'string' || !ALLOWED_PAYOUT_METHODS.has(b.payoutMethod))
-    errors.push('payoutMethod: must be a supported method');
-  const payoutDetails = b.payoutDetails;
-  if ((b.payoutMethod === 'upi' || b.payoutMethod === 'bank') && (!payoutDetails || typeof payoutDetails !== 'object' || Array.isArray(payoutDetails))) {
-    errors.push('payoutDetails: required for the selected payout method');
-  } else if (payoutDetails && typeof payoutDetails === 'object' && !Array.isArray(payoutDetails)) {
-    const details = payoutDetails as Record<string, unknown>;
-    if (b.payoutMethod === 'upi' && (typeof details.upiId !== 'string' || !UPI_RE.test(details.upiId.trim())))
-      errors.push('payoutDetails.upiId: must be a valid UPI ID');
-    if (b.payoutMethod === 'bank') {
-      if (typeof details.accountHolderName !== 'string' || details.accountHolderName.trim().length < 2 || details.accountHolderName.trim().length > 100)
-        errors.push('payoutDetails.accountHolderName: must be between 2 and 100 characters');
-      if (typeof details.accountNumber !== 'string' || !BANK_ACCOUNT_RE.test(details.accountNumber.trim()))
-        errors.push('payoutDetails.accountNumber: must contain 9 to 18 digits');
-      if (typeof details.ifscCode !== 'string' || !IFSC_RE.test(details.ifscCode.trim().toUpperCase()))
-        errors.push('payoutDetails.ifscCode: must be a valid IFSC code');
-    }
-  }
-  if (!Array.isArray(b.defectIds) || !b.defectIds.every(id => typeof id === 'string'))
-    errors.push('defectIds: must be an array of defect identifiers');
-  return errors;
-}
-
-function payoutBonusFor(method: string, estimatedPrice: number): { percentage: number; amount: number } {
-  const percentage = method === 'amazon' || method === 'flipkart' || method === 'voucher' ? 0.03 : 0;
-  return { percentage, amount: Math.round(estimatedPrice * percentage) };
-}
 
 // Prevent API response caching across all environments
 app.use('/api', (_req, res, next) => {
@@ -379,7 +193,7 @@ app.use('/api', (_req, res, next) => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// HEALTH CHECK
+// API ROUTES
 // ═══════════════════════════════════════════════════════════════════════════
 
 app.get('/api/health', (_req, res) => {
@@ -389,1111 +203,12 @@ app.get('/api/health', (_req, res) => {
 app.use('/api/admin', authLimiter, adminRouter);
 app.use('/api/support', supportRouter);
 app.use('/api/auth', authLimiter, authRouter);
-
-// ═══════════════════════════════════════════════════════════════════════════
-// BRANDS & MODELS
-// ═══════════════════════════════════════════════════════════════════════════
-
-app.get('/api/brands', async (_req, res) => {
-  try {
-    const brands = await prisma.brand.findMany({
-      where: { active: true },
-    });
-    res.json(brands.map(b => ({ id: b.id, name: b.name, logo: b.logo })));
-  } catch (err) {
-    console.error('GET /api/brands error:', err);
-    res.status(500).json({ error: 'ServerError', message: 'Failed to fetch brands' });
-  }
-});
-
-app.get('/api/models', async (req, res) => {
-  try {
-    const { brandId } = req.query;
-    const where: Record<string, unknown> = {};
-    if (brandId && typeof brandId === 'string') where.brandId = brandId;
-
-    let models: any[] = [];
-    try {
-      models = await prisma.model.findMany({
-        where,
-        orderBy: [
-          { releaseYear: 'desc' },
-          { basePrice128GB: 'desc' },
-          { name: 'asc' },
-        ],
-      });
-    } catch (dbErr) {
-      console.warn('GET /api/models DB query warning (falling back to simple query):', dbErr);
-      try {
-        models = await prisma.model.findMany({ where });
-      } catch (innerErr) {
-        console.error('GET /api/models DB connection error:', innerErr);
-        models = [];
-      }
-    }
-
-    res.json(models.map(m => {
-      let parsedStorageGb: number[] | undefined;
-      let parsedRamGb: number[] | undefined;
-      let parsedVariantPrices: Record<string, number> | undefined;
-      try { parsedStorageGb = JSON.parse(m.supportedStorageGb); } catch { parsedStorageGb = [128, 256, 512]; }
-      try { parsedRamGb = JSON.parse((m as any).supportedRamGb ?? '[0]'); } catch { parsedRamGb = [0]; }
-      try { parsedVariantPrices = JSON.parse((m as any).variantPrices ?? '{}'); } catch { parsedVariantPrices = {}; }
-
-      let resolvedSeries = m.series || '';
-      if (m.brandId === 'brand-xiaomi') {
-        const lower = m.name.toLowerCase();
-        if (lower.includes('poco f')) resolvedSeries = 'POCO F Series';
-        else if (lower.includes('poco x')) resolvedSeries = 'POCO X Series';
-        else if (lower.includes('poco m')) resolvedSeries = 'POCO M Series';
-        else if (lower.includes('poco c')) resolvedSeries = 'POCO C Series';
-        else if (lower.includes('redmi note')) resolvedSeries = 'Redmi Note Series';
-        else if (lower.includes('redmi')) resolvedSeries = 'Redmi Series';
-        else if (lower.includes('xiaomi') || lower.includes('mi')) resolvedSeries = 'Xiaomi Series';
-      }
-
-      const supportsWarrantyQuestion = (parsedVariantPrices as any)?._supportsWarrantyQuestion !== undefined
-        ? Boolean((parsedVariantPrices as any)._supportsWarrantyQuestion)
-        : (m.releaseYear >= 2023);
-
-      return {
-        id: m.legacyId,
-        brandId: m.brandId,
-        name: m.name,
-        category: m.category,
-        releaseYear: m.releaseYear,
-        basePrice128GB: m.basePrice128GB,
-        series: resolvedSeries,
-        imageUrl: (m.imageUrl && !m.imageUrl.toLowerCase().startsWith('file:') && !m.imageUrl.startsWith('/opt/render')) ? m.imageUrl : undefined,
-        supportedStorageGb: parsedStorageGb,
-        supportedRamGb: parsedRamGb,
-        variantPrices: parsedVariantPrices,
-        hidden: Boolean((m as any).hidden ?? false),
-        supportsWarrantyQuestion,
-      };
-    }));
-  } catch (err) {
-    console.error('GET /api/models error:', err);
-    res.status(500).json({ error: 'ServerError', message: 'Failed to fetch models' });
-  }
-});
-
-
-app.post('/api/models', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITOR']), async (req, res) => {
-  try {
-    const { legacyId, brandId, name, category, releaseYear, basePrice128GB,
-            series, imageUrl, supportedStorageGb, supportedRamGb, variantPrices, hidden, supportsWarrantyQuestion } = req.body;
-    if (!legacyId || !brandId || !name || !category || !releaseYear || !basePrice128GB) {
-      res.status(400).json({ error: 'BadRequest', message: 'Missing required fields' });
-      return;
-    }
-    if (!Number.isFinite(Number(releaseYear)) || !Number.isFinite(Number(basePrice128GB)) || Number(basePrice128GB) <= 0) {
-      res.status(400).json({ error: 'BadRequest', message: 'releaseYear and basePrice128GB must be valid positive numbers.' });
-      return;
-    }
-    if (!isValidImageUrl(imageUrl)) {
-      res.status(400).json({ error: 'BadRequest', message: 'imageUrl must be a valid http(s) URL or base64 Data URL' });
-      return;
-    }
-
-    const storageStr = Array.isArray(supportedStorageGb) ? JSON.stringify(supportedStorageGb) : JSON.stringify([128, 256, 512]);
-    const ramStr = Array.isArray(supportedRamGb) ? JSON.stringify(supportedRamGb) : JSON.stringify([0]);
-    const pricesObj = (variantPrices && typeof variantPrices === 'object' && !Array.isArray(variantPrices)) ? { ...variantPrices } : {};
-    if (supportsWarrantyQuestion !== undefined) {
-      (pricesObj as any)._supportsWarrantyQuestion = Boolean(supportsWarrantyQuestion);
-    }
-    // Auto-compute basePrice128GB from minimum variant price if prices are set
-    const allPrices = Object.values(pricesObj).filter((v): v is number => typeof v === 'number' && v > 0);
-    const resolvedBase = allPrices.length > 0 ? Math.min(...allPrices) : Number(basePrice128GB);
-
-    const model = await prisma.model.create({
-      data: {
-        legacyId: String(legacyId).trim(),
-        brandId: String(brandId),
-        name: String(name).trim(),
-        category: String(category).trim(),
-        releaseYear: Number(releaseYear),
-        basePrice128GB: resolvedBase,
-        series: series ? String(series).trim() : '',
-        imageUrl: imageUrl ? String(imageUrl).trim() : '',
-        supportedStorageGb: storageStr,
-        hidden: Boolean(hidden),
-        ...(({ supportedRamGb: ramStr, variantPrices: JSON.stringify(pricesObj) }) as any),
-      },
-    });
-
-    logAdminAudit({
-      adminUserId: (req as AuthenticatedRequest).user?.sub,
-      action: 'create_model',
-      targetType: 'model',
-      targetId: model.legacyId,
-      payload: { name: model.name, category: model.category, basePrice128GB: model.basePrice128GB },
-      ipAddress: String(req.ip ?? ''),
-      userAgent: String(req.headers['user-agent'] ?? ''),
-    });
-
-    const createdVP = JSON.parse((model as any).variantPrices ?? '{}');
-    const resSupportsWarrantyQuestion = createdVP._supportsWarrantyQuestion !== undefined
-      ? Boolean(createdVP._supportsWarrantyQuestion)
-      : (model.releaseYear >= 2023);
-
-    res.status(201).json({
-      ...model,
-      id: model.legacyId,
-      supportedStorageGb: JSON.parse(model.supportedStorageGb),
-      supportedRamGb: JSON.parse((model as any).supportedRamGb ?? '[0]'),
-      variantPrices: createdVP,
-      supportsWarrantyQuestion: resSupportsWarrantyQuestion,
-    });
-  } catch (err) {
-    console.error('POST /api/models error:', err);
-    res.status(500).json({ error: 'ServerError', message: 'Failed to create model' });
-  }
-});
-
-
-app.post('/api/models/bulk-update', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITOR']), async (req, res) => {
-  try {
-    const { updates } = req.body;
-    if (!Array.isArray(updates) || updates.length === 0) {
-      res.status(400).json({ error: 'BadRequest', message: 'updates array is required and must not be empty.' });
-      return;
-    }
-
-    let updatedCount = 0;
-    for (const item of updates) {
-      const { id, changes } = item;
-      if (!id || !changes || typeof changes !== 'object') continue;
-
-      const legacyId = String(id);
-      const existing = await prisma.model.findFirst({
-        where: { OR: [{ legacyId }, { id: legacyId }] }
-      });
-
-      const data: Record<string, unknown> = {};
-      for (const field of ['name', 'category', 'series']) {
-        if (changes[field] !== undefined && typeof changes[field] === 'string') {
-          data[field] = changes[field].trim();
-        }
-      }
-      for (const field of ['releaseYear', 'basePrice128GB']) {
-        if (changes[field] !== undefined && Number.isFinite(Number(changes[field])) && Number(changes[field]) > 0) {
-          data[field] = Number(changes[field]);
-        }
-      }
-      if (changes.imageUrl !== undefined && (typeof changes.imageUrl === 'string')) {
-        if (isValidImageUrl(changes.imageUrl)) data.imageUrl = changes.imageUrl.trim();
-      }
-      if (changes.supportedStorageGb !== undefined && Array.isArray(changes.supportedStorageGb)) {
-        data.supportedStorageGb = JSON.stringify(changes.supportedStorageGb);
-      }
-      if (changes.hidden !== undefined) {
-        data.hidden = Boolean(changes.hidden);
-      }
-      if (changes.supportedRamGb !== undefined && Array.isArray(changes.supportedRamGb)) {
-        (data as any).supportedRamGb = JSON.stringify(changes.supportedRamGb);
-      }
-      if (changes.variantPrices !== undefined && typeof changes.variantPrices === 'object' && !Array.isArray(changes.variantPrices)) {
-        (data as any).variantPrices = JSON.stringify(changes.variantPrices);
-        const prices = Object.values(changes.variantPrices as Record<string, number>).filter((v): v is number => typeof v === 'number' && v > 0);
-        if (prices.length > 0) data.basePrice128GB = Math.min(...prices);
-      }
-
-      if (!existing) {
-        let brandId = (changes.brandId as string) || '';
-        if (!brandId) {
-          if (legacyId.startsWith('apple-') || legacyId.startsWith('iphone-')) brandId = 'brand-apple';
-          else if (legacyId.startsWith('sam-') || legacyId.startsWith('samsung-')) brandId = 'brand-samsung';
-          else if (legacyId.startsWith('op-') || legacyId.startsWith('oneplus-')) brandId = 'brand-oneplus';
-          else if (legacyId.startsWith('vi-') || legacyId.startsWith('vivo-')) brandId = 'brand-vivo';
-          else if (legacyId.startsWith('xi-') || legacyId.startsWith('xiaomi-') || legacyId.startsWith('redmi-') || legacyId.startsWith('poco-')) brandId = 'brand-xiaomi';
-          else brandId = 'brand-apple';
-        }
-
-        const brandExists = await prisma.brand.findUnique({ where: { id: brandId } });
-        if (!brandExists) {
-          await prisma.brand.create({
-            data: { id: brandId, name: brandId.replace('brand-', '').toUpperCase(), logo: '/logo.svg' }
-          });
-        }
-
-        await prisma.model.create({
-          data: {
-            legacyId,
-            brandId,
-            name: (data.name as string) || (changes.name as string) || legacyId,
-            category: (data.category as string) || (changes.category as string) || 'midrange',
-            releaseYear: Number(data.releaseYear) || Number(changes.releaseYear) || new Date().getFullYear(),
-            basePrice128GB: Number(data.basePrice128GB) || Number(changes.basePrice128GB) || 10000,
-            series: (data.series as string) || (changes.series as string) || '',
-            imageUrl: (data.imageUrl as string) || '',
-            supportedStorageGb: data.supportedStorageGb ? String(data.supportedStorageGb) : '[128,256,512]',
-            hidden: Boolean(data.hidden ?? changes.hidden ?? false),
-            ...(({
-              supportedRamGb: (data as any).supportedRamGb ? String((data as any).supportedRamGb) : '[0]',
-              variantPrices: (data as any).variantPrices ? String((data as any).variantPrices) : '{}',
-            }) as any),
-          }
-        });
-        updatedCount++;
-      } else if (Object.keys(data).length > 0) {
-        await prisma.model.update({ where: { id: existing.id }, data });
-        updatedCount++;
-      }
-    }
-
-    logAdminAudit({
-      adminUserId: (req as AuthenticatedRequest).user?.sub,
-      action: 'bulk_update_models',
-      targetType: 'catalog',
-      targetId: 'multiple',
-      payload: { count: updatedCount, totalInBatch: updates.length },
-      ipAddress: String(req.ip ?? ''),
-      userAgent: String(req.headers['user-agent'] ?? ''),
-    });
-
-    res.json({ success: true, updatedCount });
-  } catch (err) {
-    console.error('POST /api/models/bulk-update error:', err);
-    res.status(500).json({ error: 'ServerError', message: 'Failed bulk updating models.' });
-  }
-});
-
-
-app.patch('/api/models/:legacyId', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITOR']), async (req, res) => {
-  try {
-    const legacyId = String(req.params.legacyId);
-    const updates = req.body as Record<string, unknown>;
-    const data: Record<string, unknown> = {};
-    for (const field of ['name', 'category']) {
-      if (updates[field] !== undefined && typeof updates[field] === 'string' && (updates[field] as string).trim().length > 0) {
-        data[field] = (updates[field] as string).trim();
-      }
-    }
-    if (updates.series !== undefined && typeof updates.series === 'string') {
-      data.series = updates.series.trim();
-    }
-    for (const field of ['releaseYear', 'basePrice128GB']) {
-      if (updates[field] !== undefined && Number.isFinite(Number(updates[field])) && Number(updates[field]) > 0) {
-        data[field] = Number(updates[field]);
-      }
-    }
-    if (updates.imageUrl !== undefined) {
-      if (typeof updates.imageUrl !== 'string' || !isValidImageUrl(updates.imageUrl)) {
-        res.status(400).json({ error: 'BadRequest', message: 'imageUrl must be a valid http(s) URL or base64 Data URL.' });
-        return;
-      }
-      data.imageUrl = formatImageUrl(updates.imageUrl);
-    }
-    if (updates.supportedStorageGb !== undefined && Array.isArray(updates.supportedStorageGb)) {
-      data.supportedStorageGb = JSON.stringify(updates.supportedStorageGb);
-    }
-    if (updates.hidden !== undefined) {
-      data.hidden = Boolean(updates.hidden);
-    }
-    if (updates.supportedRamGb !== undefined && Array.isArray(updates.supportedRamGb)) {
-      (data as any).supportedRamGb = JSON.stringify(updates.supportedRamGb);
-    }
-    if (updates.variantPrices !== undefined && typeof updates.variantPrices === 'object' && !Array.isArray(updates.variantPrices)) {
-      (data as any).variantPrices = JSON.stringify(updates.variantPrices);
-      // Auto-update basePrice128GB from minimum variant price
-      const prices = Object.values(updates.variantPrices as Record<string, number>).filter((v): v is number => typeof v === 'number' && v > 0);
-      if (prices.length > 0) data.basePrice128GB = Math.min(...prices);
-    }
-    const existing = await prisma.model.findFirst({
-      where: { OR: [{ legacyId }, { id: legacyId }] }
-    });
-
-    if (updates.supportsWarrantyQuestion !== undefined) {
-      let vp: Record<string, any> = {};
-      try {
-        const rawVP = (data as any).variantPrices || existing?.variantPrices || '{}';
-        vp = typeof rawVP === 'string' ? JSON.parse(rawVP) : { ...rawVP };
-      } catch { vp = {}; }
-      vp._supportsWarrantyQuestion = Boolean(updates.supportsWarrantyQuestion);
-      (data as any).variantPrices = JSON.stringify(vp);
-    }
-
-    if (Object.keys(data).length === 0) {
-      res.status(400).json({ error: 'BadRequest', message: 'No valid model fields supplied.' });
-      return;
-    }
-
-    if (!existing) {
-      let brandId = (updates.brandId as string) || '';
-      if (!brandId) {
-        if (legacyId.startsWith('apple-') || legacyId.startsWith('iphone-')) brandId = 'brand-apple';
-        else if (legacyId.startsWith('sam-') || legacyId.startsWith('samsung-')) brandId = 'brand-samsung';
-        else if (legacyId.startsWith('op-') || legacyId.startsWith('oneplus-')) brandId = 'brand-oneplus';
-        else if (legacyId.startsWith('vi-') || legacyId.startsWith('vivo-')) brandId = 'brand-vivo';
-        else if (legacyId.startsWith('xi-') || legacyId.startsWith('xiaomi-') || legacyId.startsWith('redmi-') || legacyId.startsWith('poco-')) brandId = 'brand-xiaomi';
-        else brandId = 'brand-apple';
-      }
-
-      const brandExists = await prisma.brand.findUnique({ where: { id: brandId } });
-      if (!brandExists) {
-        await prisma.brand.create({
-          data: { id: brandId, name: brandId.replace('brand-', '').toUpperCase(), logo: '/logo.svg' }
-        });
-      }
-
-      const created = await prisma.model.create({
-        data: {
-          legacyId,
-          brandId,
-          name: (data.name as string) || (updates.name as string) || legacyId,
-          category: (data.category as string) || (updates.category as string) || 'midrange',
-          releaseYear: Number(data.releaseYear) || Number(updates.releaseYear) || new Date().getFullYear(),
-          basePrice128GB: Number(data.basePrice128GB) || Number(updates.basePrice128GB) || 10000,
-          series: (data.series as string) || (updates.series as string) || '',
-          imageUrl: (data.imageUrl as string) || '',
-          supportedStorageGb: data.supportedStorageGb ? String(data.supportedStorageGb) : '[128,256,512]',
-          hidden: Boolean(data.hidden ?? updates.hidden ?? false),
-          ...(({
-            supportedRamGb: (data as any).supportedRamGb ? String((data as any).supportedRamGb) : '[0]',
-            variantPrices: (data as any).variantPrices ? String((data as any).variantPrices) : '{}',
-          }) as any),
-        }
-      });
-
-      logAdminAudit({
-        adminUserId: (req as AuthenticatedRequest).user?.sub,
-        action: 'create_model',
-        targetType: 'model',
-        targetId: created.legacyId,
-        payload: { name: created.name },
-        ipAddress: String(req.ip ?? ''),
-        userAgent: String(req.headers['user-agent'] ?? ''),
-      });
-
-      const createdVP = (created as any).variantPrices ? JSON.parse((created as any).variantPrices) : {};
-      res.json({
-        ...created,
-        id: created.legacyId,
-        supportedStorageGb: created.supportedStorageGb ? JSON.parse(created.supportedStorageGb) : [128, 256, 512],
-        supportedRamGb: (created as any).supportedRamGb ? JSON.parse((created as any).supportedRamGb) : [0],
-        variantPrices: createdVP,
-        supportsWarrantyQuestion: createdVP._supportsWarrantyQuestion !== undefined
-          ? Boolean(createdVP._supportsWarrantyQuestion)
-          : (created.releaseYear >= 2023),
-      });
-      return;
-    }
-
-    const model = await prisma.model.update({
-      where: { id: existing.id },
-      data,
-    });
-
-    logAdminAudit({
-      adminUserId: (req as AuthenticatedRequest).user?.sub,
-      action: 'update_model',
-      targetType: 'model',
-      targetId: model.legacyId,
-      payload: { name: model.name, updatedFields: Object.keys(data) },
-      ipAddress: String(req.ip ?? ''),
-      userAgent: String(req.headers['user-agent'] ?? ''),
-    });
-
-    const updatedVP = (model as any).variantPrices ? JSON.parse((model as any).variantPrices) : {};
-    res.json({
-      ...model,
-      id: model.legacyId,
-      supportedStorageGb: model.supportedStorageGb ? JSON.parse(model.supportedStorageGb) : [128, 256, 512],
-      supportedRamGb: (model as any).supportedRamGb ? JSON.parse((model as any).supportedRamGb) : [0],
-      variantPrices: updatedVP,
-      supportsWarrantyQuestion: updatedVP._supportsWarrantyQuestion !== undefined
-        ? Boolean(updatedVP._supportsWarrantyQuestion)
-        : (model.releaseYear >= 2023),
-    });
-  } catch (err) {
-    console.error('PATCH /api/models error:', err);
-    res.status(500).json({ error: 'ServerError', message: 'Failed to update model.' });
-  }
-});
-
-
-app.delete('/api/models/:legacyId', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITOR']), async (req, res) => {
-  try {
-    const legacyId = String(req.params.legacyId);
-    const existing = await prisma.model.findFirst({
-      where: { OR: [{ legacyId }, { id: legacyId }] }
-    });
-    if (existing) {
-      await prisma.model.delete({ where: { id: existing.id } });
-      logAdminAudit({
-        adminUserId: (req as AuthenticatedRequest).user?.sub,
-        action: 'delete_model',
-        targetType: 'model',
-        targetId: existing.legacyId,
-        payload: { name: existing.name },
-        ipAddress: String(req.ip ?? ''),
-        userAgent: String(req.headers['user-agent'] ?? ''),
-      });
-    }
-    res.json({ success: true });
-  } catch (err) {
-    console.error('DELETE /api/models error:', err);
-    res.status(500).json({ error: 'ServerError', message: 'Failed to delete model.' });
-  }
-});
-
-
-// ═══════════════════════════════════════════════════════════════════════════
-// SERVER-AUTHORITATIVE PRICING QUOTE ENGINE
-// ═══════════════════════════════════════════════════════════════════════════
-
-app.post('/api/quotes', async (req, res) => {
-  try {
-    const { modelId, storageGb, defectIds } = req.body;
-    if (!modelId || typeof modelId !== 'string') {
-      res.status(400).json({ error: 'BadRequest', message: 'modelId is required.' });
-      return;
-    }
-    if (!ALLOWED_STORAGE_GB.has(Number(storageGb))) {
-      res.status(400).json({ error: 'BadRequest', message: 'Invalid storage capacity.' });
-      return;
-    }
-
-    const model = await prisma.model.findFirst({
-      where: { OR: [{ legacyId: modelId }, { id: modelId }] },
-    });
-    if (!model || model.hidden) {
-      res.status(404).json({ error: 'NotFound', message: 'Model not found in catalog or is unavailable for trade-in.' });
-      return;
-    }
-
-    const ramGb = req.body.ramGb ? Number(req.body.ramGb) : undefined;
-    const maxPrice = maximumQuoteFor(model.basePrice128GB, Number(storageGb), model.variantPrices, ramGb);
-    const defectList = Array.isArray(defectIds) ? defectIds.map(String) : [];
-    const calculatedPrice = calculateServerValuation(maxPrice, model.category as DeviceCategory, defectList);
-
-    if (calculatedPrice === null) {
-      res.status(400).json({ error: 'ValidationError', message: 'Invalid defect identifiers supplied.' });
-      return;
-    }
-
-    const expiresAtDate = new Date(Date.now() + QUOTE_TTL_MINUTES * 60 * 1000);
-    const expiresAtIso = expiresAtDate.toISOString();
-    const signature = generateQuoteSignature(model.legacyId, Number(storageGb), defectList, calculatedPrice, expiresAtIso);
-
-    const quoteRecord = await prisma.quote.create({
-      data: {
-        id: `Q-${randomUUID()}`,
-        modelLegacyId: model.legacyId,
-        storageGb: Number(storageGb),
-        defectIdsJson: JSON.stringify(defectList),
-        calculatedPrice,
-        expiresAt: expiresAtDate,
-        version: PRICING_ENGINE_VERSION,
-        signature,
-      },
-    });
-
-    res.json({
-      quoteId: quoteRecord.id,
-      modelId: model.legacyId,
-      modelName: model.name,
-      storageGb: Number(storageGb),
-      maxPrice,
-      calculatedPrice,
-      version: PRICING_ENGINE_VERSION,
-      expiresAt: expiresAtIso,
-      signature,
-    });
-  } catch (err) {
-    console.error('POST /api/quotes error:', err);
-    res.status(500).json({ error: 'ServerError', message: 'Failed to generate quote' });
-  }
-});
-
-// ═══════════════════════════════════════════════════════════════════════════
-// ORDER TRACKING (PUBLIC, RATE-LIMITED BY PHONE + BOOKING ID)
-// ═══════════════════════════════════════════════════════════════════════════
-
-app.post('/api/bookings/track', trackingLimiter, async (req, res) => {
-  try {
-    const { bookingId, phone } = req.body;
-    if (!bookingId || typeof bookingId !== 'string' || !phone || typeof phone !== 'string') {
-      res.status(400).json({ error: 'BadRequest', message: 'bookingId and customer phone are required.' });
-      return;
-    }
-
-    const booking = await prisma.booking.findUnique({
-      where: { id: bookingId.trim().toUpperCase() },
-      include: { events: { orderBy: { createdAt: 'asc' } } },
-    });
-
-    // Use constant-time comparison for the phone number to prevent timing attacks
-    // that could be used to enumerate valid booking IDs.
-    const phoneMatch = booking &&
-      (() => {
-        try {
-          const a = Buffer.from(booking.customerPhone.trim());
-          const b = Buffer.from(phone.trim());
-          return a.length === b.length && timingSafeEqual(a, b);
-        } catch { return false; }
-      })();
-
-    if (!phoneMatch) {
-      res.status(404).json({ error: 'NotFound', message: 'No booking found matching the provided Booking ID and phone number.' });
-      return;
-    }
-
-    res.json({
-      id: booking.id,
-      modelName: booking.modelName,
-      storageGb: booking.storageGb,
-      color: booking.color,
-      customerName: booking.customerName,
-      pickupDate: booking.pickupDate,
-      pickupTimeSlot: booking.pickupTimeSlot,
-      finalPayoutAmount: booking.finalPayoutAmount,
-      inspectionStatus: booking.inspectionStatus,
-      payoutStatus: booking.payoutStatus,
-      verificationStatus: booking.verificationStatus,
-      dateCreated: booking.dateCreated,
-      events: booking.events.map(e => ({
-        eventType: e.eventType,
-        note: e.note,
-        createdAt: e.createdAt,
-      })),
-    });
-  } catch (err) {
-    console.error('POST /api/bookings/track error:', err);
-    res.status(500).json({ error: 'ServerError', message: 'Failed to track order' });
-  }
-});
-
-// ═══════════════════════════════════════════════════════════════════════════
-// BOOKINGS (CREATION & ADMIN MANAGEMENT)
-// ═══════════════════════════════════════════════════════════════════════════
-
-// ── IMEI encryption helpers (Fix #1) ──────────────────────────────────────
-// IMEI is a unique device identifier. Store encrypted at rest.
-// Format: JSON string with __enc marker — self-describing so legacy plain-text
-// records are handled gracefully (backward-compatible, no data loss).
-function encryptImei(imei: string): string {
-  if (!imei) return '';
-  try {
-    const payload = encryptField(imei);
-    return JSON.stringify({ __enc: true, ...payload });
-  } catch {
-    // If encryption fails (e.g. key not configured in dev), store plain with warning
-    console.warn('[IMEI] Encryption unavailable — storing plain text (dev only)');
-    return imei;
-  }
-}
-
-function decryptImei(raw: string): string {
-  if (!raw) return '';
-  try {
-    const parsed = JSON.parse(raw);
-    if (parsed?.__enc === true && parsed.iv && parsed.ciphertext && parsed.authTag) {
-      return decryptField({ iv: parsed.iv, ciphertext: parsed.ciphertext, authTag: parsed.authTag });
-    }
-    // Legacy plain-text IMEI — return as-is (backward compatible)
-    return raw;
-  } catch {
-    // Not JSON — legacy plain-text IMEI
-    return raw;
-  }
-}
-
-function mapBooking(b: any, includeUnmaskedPayout = false) {
-  const rawDetails = decryptPayoutDetails(b.payoutDetailsJson);
-  const safeDetails = includeUnmaskedPayout ? rawDetails : maskPayoutDetails(rawDetails);
-
-  return {
-    id: b.id,
-    modelId: b.modelLegacyId,
-    modelName: b.modelName,
-    storageGb: b.storageGb,
-    color: b.color,
-    customerName: b.customerName,
-    customerPhone: b.customerPhone,
-    customerEmail: b.customerEmail,
-    imei: decryptImei(b.imei || ''),
-    address: b.address,
-    pickupDate: b.pickupDate,
-    pickupTimeSlot: b.pickupTimeSlot,
-    finalPrice: b.finalPrice,
-    verificationStatus: b.verificationStatus,
-    isVerifiedProvider: b.isVerifiedProvider,
-    verifiedName: b.verifiedName,
-    maskedAadhaar: b.maskedAadhaar,
-    verificationDate: b.verificationDate,
-    payoutMethod: b.payoutMethod,
-    payoutMethodName: b.payoutMethodName,
-    bonusPercentage: b.bonusPercentage,
-    bonusAmount: b.bonusAmount,
-    finalPayoutAmount: b.finalPayoutAmount,
-    payoutDetails: safeDetails,
-    inspectionStatus: b.inspectionStatus,
-    payoutStatus: b.payoutStatus,
-    dateCreated: b.dateCreated,
-  };
-}
-
-// Get all bookings — ADMIN ONLY (Masked by default, decrypted for Finance Approver / Super Admin)
-app.get('/api/bookings', adminAuth, requireRole(['SUPER_ADMIN', 'FINANCE_APPROVER', 'OPERATIONS_AGENT']), async (req: AuthenticatedRequest, res) => {
-  try {
-    const bookings = await prisma.booking.findMany({ orderBy: { createdAt: 'desc' } });
-    const isFinanceAdmin = req.user?.role === 'SUPER_ADMIN' || req.user?.role === 'FINANCE_APPROVER';
-    res.json(bookings.map(b => mapBooking(b, isFinanceAdmin)));
-  } catch (err) {
-    console.error('GET /api/bookings error:', err);
-    res.status(500).json({ error: 'ServerError', message: 'Failed to fetch bookings' });
-  }
-});
-
-// Get current customer's bookings — AUTHENTICATED CUSTOMER ONLY
-app.get('/api/bookings/my', customerAuth, async (req: AuthenticatedCustomerRequest, res) => {
-  try {
-    if (!req.userId && !req.customer?.email && !req.customer?.phone) {
-      res.json([]);
-      return;
-    }
-
-    // Fix #4: If the customer has a linked account (userId), query strictly by userId.
-    // This prevents family members sharing an email address from seeing each other's bookings.
-    // Email/phone fallback is only used for pre-account (guest) bookings where no userId exists.
-    let whereClause: Record<string, unknown>;
-    if (req.userId) {
-      // Authenticated account: only their bookings
-      whereClause = { userId: req.userId };
-    } else {
-      // Guest (no account): fall back to contact identifiers
-      const conditions: Array<Record<string, unknown>> = [];
-      if (req.customer?.email) conditions.push({ customerEmail: req.customer.email });
-      if (req.customer?.phone) conditions.push({ customerPhone: req.customer.phone });
-      whereClause = conditions.length === 1 ? conditions[0] : { OR: conditions };
-    }
-
-    const bookings = await prisma.booking.findMany({
-      where: whereClause,
-      include: {
-        events: {
-          orderBy: { createdAt: 'desc' }
-        }
-      },
-      orderBy: { createdAt: 'desc' },
-    });
-
-    const mapped = bookings.map(b => ({
-      ...mapBooking(b, false),
-      events: b.events.map(e => ({
-        eventType: e.eventType,
-        note: e.note,
-        createdAt: e.createdAt,
-      }))
-    }));
-
-    res.json(mapped);
-  } catch (err) {
-    console.error('GET /api/bookings/my error:', err);
-    res.status(500).json({ error: 'ServerError', message: 'Failed to fetch customer bookings' });
-  }
-});
-
-// Create booking — Public & Server-Authoritative
-app.post('/api/bookings', bookingLimiter, optionalCustomerAuth, async (req: AuthenticatedCustomerRequest, res) => {
-  try {
-    const b = req.body as Record<string, unknown>;
-
-    const errors = validateBookingBody(b);
-    if (errors.length > 0) {
-      res.status(400).json({ error: 'ValidationError', message: 'Booking validation failed', fields: errors });
-      return;
-    }
-
-    const modelLegacyId = String(b.modelId ?? b.modelLegacyId);
-    const model = await prisma.model.findUnique({ where: { legacyId: modelLegacyId } });
-    if (!model || model.hidden) {
-      res.status(400).json({ error: 'ValidationError', message: 'The selected device is no longer available for trade-in.' });
-      return;
-    }
-
-    const storageGb = Number(b.storageGb);
-    const ramGb = b.ramGb ? Number(b.ramGb) : undefined;
-    const defectIds = Array.isArray(b.defectIds) ? (b.defectIds as string[]) : [];
-    const maxQuote = maximumQuoteFor(model.basePrice128GB, storageGb, model.variantPrices, ramGb);
-
-    // Use client-supplied finalPrice if valid & positive, otherwise compute server valuation using variant-aware maxQuote
-    const clientPrice = Number(b.finalPrice);
-    const hasValidClientPrice = (typeof b.finalPrice === 'number' || typeof b.finalPrice === 'string') && !isNaN(clientPrice) && clientPrice > 0;
-    const estimatedPrice = hasValidClientPrice
-      ? Math.round(clientPrice)
-      : (calculateServerValuation(maxQuote, model.category as DeviceCategory, defectIds) ?? maxQuote);
-
-    if (estimatedPrice === null || isNaN(estimatedPrice)) {
-      res.status(400).json({ error: 'ValidationError', message: 'One or more declared device conditions are invalid.' });
-      return;
-    }
-
-    const payout = payoutBonusFor(String(b.payoutMethod), estimatedPrice);
-    const bookingId = `STC-${randomBytes(6).toString('base64url').toUpperCase()}`;
-
-    // Encrypt sensitive payout details before DB write
-    const rawPayoutDetails = (b.payoutDetails && typeof b.payoutDetails === 'object') ? (b.payoutDetails as Record<string, unknown>) : {};
-    const encryptedPayoutJson = encryptPayoutDetails(rawPayoutDetails);
-
-    const booking = await prisma.booking.create({
-      data: {
-        id: bookingId,
-        userId: req.userId,
-        modelLegacyId: model.legacyId,
-        modelName: model.name,
-        storageGb,
-        color: String(b.color ?? ''),
-        customerName: (req.customer?.name || String(b.customerName ?? '')).trim(),
-        customerPhone: (req.customer?.phone || String(b.customerPhone ?? '')).trim(),
-        customerEmail: (req.customer?.email || String(b.customerEmail ?? '')).trim(),
-        imei: encryptImei(String(b.imei ?? '').trim()),
-        address: String(b.address).trim(),
-        pickupDate: String(b.pickupDate),
-        pickupTimeSlot: String(b.pickupTimeSlot),
-        finalPrice: estimatedPrice,
-        // Browser input is never evidence of identity. Only an authenticated
-        // provider callback may promote this record to verified.
-        verificationStatus: 'pending',
-        isVerifiedProvider: false,
-        verificationProofHash: '',
-        verifiedName: '',
-        maskedAadhaar: '',
-        verificationDate: '',
-        payoutMethod: String(b.payoutMethod),
-        payoutMethodName: String(b.payoutMethodName ?? ''),
-        bonusPercentage: payout.percentage,
-        bonusAmount: payout.amount,
-        finalPayoutAmount: estimatedPrice + payout.amount,
-        inspectionStatus: 'pending',
-        payoutStatus: 'pending',
-        dateCreated: new Date().toISOString(),
-        payoutDetailsJson: encryptedPayoutJson,
-        defectIdsJson: JSON.stringify(defectIds),
-      } as any,
-    });
-
-    await prisma.bookingEvent.create({
-      data: {
-        bookingId: booking.id,
-        eventType: 'created',
-        toValue: booking.id,
-        note: `Booking created for ${booking.customerName} — ${booking.modelName}`,
-      },
-    });
-
-    // Send confirmation email with PDF quotation link/attachment
-    const protocol = req.protocol || 'http';
-    const host = req.get('host') || 'localhost:4000';
-    const baseUrl = `${protocol}://${host}`;
-
-    try {
-      await sendBookingConfirmationEmail({
-        id: booking.id,
-        modelName: booking.modelName,
-        storageGb: booking.storageGb,
-        customerName: booking.customerName,
-        customerPhone: booking.customerPhone,
-        customerEmail: booking.customerEmail,
-        address: booking.address,
-        pickupDate: booking.pickupDate,
-        pickupTimeSlot: booking.pickupTimeSlot,
-        finalPrice: booking.finalPrice,
-        defectDescriptions: defectIds,
-        dateCreated: booking.dateCreated,
-      }, baseUrl);
-    } catch (err) {
-      console.error('[POST /api/bookings] Failed to dispatch quotation email:', err);
-    }
-
-    res.status(201).json({ success: true, id: booking.id });
-  } catch (err) {
-    console.error('POST /api/bookings error:', err);
-    res.status(500).json({ error: 'ServerError', message: 'Failed to create booking' });
-  }
-});
-
-// DISPATCH QUOTE GENERATION ADMIN EMAIL ALERT
-// Rate-limited to prevent inbox spam abuse
-app.post('/api/quotes/alert', authLimiter, async (req, res) => {
-  try {
-    const {
-      customerName,
-      customerPhone,
-      customerEmail,
-      modelName,
-      storageGb,
-      estimatedPayout,
-      retentionPercentage,
-      defects,
-      refCode,
-    } = req.body || {};
-
-    if (!customerEmail || !modelName) {
-      res.status(400).json({ error: 'ValidationError', message: 'customerEmail and modelName are required.' });
-      return;
-    }
-
-    try {
-      await sendAdminQuoteAlertEmail({
-        customerName: String(customerName || 'Registered Customer'),
-        customerPhone: String(customerPhone || 'N/A'),
-        customerEmail: String(customerEmail),
-        modelName: String(modelName),
-        storageGb: Number(storageGb) || 128,
-        estimatedPayout: Number(estimatedPayout) || 0,
-        retentionPercentage: Number(retentionPercentage) || 100,
-        defects: Array.isArray(defects) ? defects.map(String) : [],
-        refCode: refCode ? String(refCode) : undefined,
-      });
-    } catch (err) {
-      console.error('[POST /api/quotes/alert] Failed to dispatch admin quote alert:', err);
-    }
-
-    res.json({ success: true, message: 'Quote alert email notification dispatched.' });
-  } catch (err) {
-    console.error('POST /api/quotes/alert error:', err);
-    res.status(500).json({ error: 'ServerError', message: 'Failed to process quote alert.' });
-  }
-});
-
-// DISPATCH BEST PRICE / PRICE MATCH REQUEST EMAIL ALERT
-// Rate-limited to prevent inbox spam abuse
-app.post('/api/quotes/price-match', authLimiter, async (req, res) => {
-  try {
-    const {
-      customerPhone,
-      customerEmail,
-      customerName,
-      modelName,
-      storageGb,
-      currentQuote,
-      expectedPrice,
-      comments,
-      refCode,
-    } = req.body || {};
-
-    if (!customerPhone || !modelName) {
-      res.status(400).json({ error: 'ValidationError', message: 'customerPhone and modelName are required.' });
-      return;
-    }
-
-    try {
-      await sendAdminPriceMatchAlertEmail({
-        customerPhone: String(customerPhone),
-        customerEmail: customerEmail ? String(customerEmail) : undefined,
-        customerName: customerName ? String(customerName) : undefined,
-        modelName: String(modelName),
-        storageGb: Number(storageGb) || 128,
-        currentQuote: Number(currentQuote) || 0,
-        expectedPrice: expectedPrice ? String(expectedPrice) : 'N/A',
-        comments: comments ? String(comments) : undefined,
-        refCode: refCode ? String(refCode) : undefined,
-      });
-    } catch (err) {
-      console.error('[POST /api/quotes/price-match] Failed to send price match email:', err);
-    }
-
-    res.json({ success: true, message: 'Price match request email dispatched.' });
-  } catch (err) {
-    console.error('POST /api/quotes/price-match error:', err);
-    res.status(500).json({ error: 'ServerError', message: 'Failed to process price match request.' });
-  }
-});
-
-
-
-// Download Official PDF Quotation Document
-// SECURITY: Requires authenticated customer (owner) or admin token.
-// No unauthenticated access to booking PII (name, phone, address, financials).
-app.get('/api/bookings/:id/pdf', optionalCustomerAuth, async (req: AuthenticatedCustomerRequest, res) => {
-  try {
-    const rawId = String(req.params.id);
-
-    // Fetch real booking only — no placeholder fallback for non-existent IDs
-    let booking: any = await prisma.booking.findUnique({ where: { id: rawId.trim().toUpperCase() } });
-    if (!booking) {
-      // Case-insensitive JS fallback for legacy IDs
-      const candidates = await prisma.booking.findMany({
-        select: { id: true, userId: true, modelName: true, storageGb: true, customerName: true, customerPhone: true, customerEmail: true, address: true, pickupDate: true, pickupTimeSlot: true, finalPrice: true, defectIdsJson: true, dateCreated: true }
-      });
-      booking = candidates.find(b => b.id.toLowerCase() === rawId.toLowerCase()) ?? null;
-    }
-
-    if (!booking) {
-      res.status(404).json({ error: 'NotFound', message: 'Booking record not found' });
-      return;
-    }
-
-    // Authorization: customer must own the booking OR request must carry admin Bearer token
-    const isAdminRequest = Boolean(req.headers['authorization']?.startsWith('Bearer '));
-    const customer = req.customer;
-    const isOwner = customer && (
-      (req.userId && req.userId === (booking as any).userId) ||
-      (customer.email && customer.email === (booking as any).customerEmail) ||
-      (customer.phone && customer.phone === (booking as any).customerPhone)
-    );
-
-    if (!isAdminRequest && !isOwner) {
-      res.status(403).json({ error: 'Forbidden', message: 'You do not have permission to download this booking document.' });
-      return;
-    }
-
-    const bookingData = {
-      id: booking.id,
-      modelName: booking.modelName,
-      storageGb: booking.storageGb,
-      customerName: booking.customerName,
-      customerPhone: booking.customerPhone,
-      customerEmail: booking.customerEmail,
-      imei: decryptImei((booking as any).imei || ''),
-      address: booking.address,
-      pickupDate: booking.pickupDate,
-      pickupTimeSlot: booking.pickupTimeSlot,
-      finalPrice: booking.finalPrice,
-      defectDescriptions: (() => {
-        try { return JSON.parse((booking as any).defectIdsJson || '[]'); } catch { return []; }
-      })(),
-      dateCreated: booking.dateCreated,
-    };
-
-    const pdfBuffer = await generateBookingQuotationPDF(bookingData);
-
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `inline; filename="Quotation-${bookingData.id}.pdf"`);
-    res.send(pdfBuffer);
-  } catch (err) {
-    console.error('GET /api/bookings/:id/pdf error:', err);
-    res.status(500).json({ error: 'ServerError', message: 'Failed to generate PDF quotation.' });
-  }
-});
-
-// Update booking status — ADMIN ONLY (RBAC protected)
-app.patch('/api/bookings/:id', adminAuth, requireRole(['SUPER_ADMIN', 'FINANCE_APPROVER', 'OPERATIONS_AGENT']), async (req: AuthenticatedRequest, res) => {
-  try {
-    const id = String(req.params.id);
-    const updates = req.body as Record<string, unknown>;
-
-    const VALID_INSPECTION = ['pending', 'approved', 'rejected'];
-    const VALID_PAYOUT = ['pending', 'completed'];
-    const VALID_VERIFICATION = ['pending', 'verified', 'failed'];
-
-    const data: Record<string, unknown> = {};
-    const fieldErrors: string[] = [];
-
-    if (updates.inspectionStatus !== undefined) {
-      if (!VALID_INSPECTION.includes(String(updates.inspectionStatus)))
-        fieldErrors.push(`inspectionStatus must be one of: ${VALID_INSPECTION.join(', ')}`);
-      else data.inspectionStatus = updates.inspectionStatus;
-    }
-    if (updates.payoutStatus !== undefined) {
-      if (req.user?.role !== 'SUPER_ADMIN' && req.user?.role !== 'FINANCE_APPROVER') {
-        res.status(403).json({ error: 'Forbidden', message: 'Only Finance Approvers or Super Admins can update payout status.' });
-        return;
-      }
-      if (!VALID_PAYOUT.includes(String(updates.payoutStatus)))
-        fieldErrors.push(`payoutStatus must be one of: ${VALID_PAYOUT.join(', ')}`);
-      else data.payoutStatus = updates.payoutStatus;
-    }
-    if (updates.verificationStatus !== undefined) {
-      if (!VALID_VERIFICATION.includes(String(updates.verificationStatus)))
-        fieldErrors.push(`verificationStatus must be one of: ${VALID_VERIFICATION.join(', ')}`);
-      else data.verificationStatus = updates.verificationStatus;
-    }
-
-    if (fieldErrors.length > 0) {
-      res.status(400).json({ error: 'ValidationError', message: 'Invalid status values', fields: fieldErrors });
-      return;
-    }
-    if (Object.keys(data).length === 0) {
-      res.status(400).json({ error: 'BadRequest', message: 'No valid fields to update.' });
-      return;
-    }
-
-    const currentBooking = await prisma.booking.findUnique({ where: { id } });
-    if (!currentBooking) {
-      res.status(404).json({ error: 'NotFound', message: 'Booking not found' });
-      return;
-    }
-
-    // Lifecycle Lock Rule: Cannot alter inspection or verification status once financial payout is completed
-    if (currentBooking.payoutStatus === 'completed' && updates.inspectionStatus !== undefined) {
-      res.status(400).json({ error: 'InvalidOperation', message: 'Cannot modify inspection decision after financial payout has been completed.' });
-      return;
-    }
-
-    // Payout Guard Rule: Cannot complete payout unless inspection status is approved
-    if (updates.payoutStatus === 'completed' && currentBooking.inspectionStatus !== 'approved' && updates.inspectionStatus !== 'approved') {
-      res.status(400).json({ error: 'InvalidOperation', message: 'Cannot complete financial payout before doorstep inspection is approved.' });
-      return;
-    }
-
-    const booking = await prisma.booking.update({ where: { id }, data });
-
-    // Synchronous durable writes for booking events & audit log
-    const now = new Date();
-    for (const [field, toValue] of Object.entries(data)) {
-      const fromValue = String((currentBooking as Record<string, unknown>)[field] ?? '');
-      await prisma.bookingEvent.create({
-        data: {
-          bookingId: id,
-          eventType: 'status_change',
-          fromValue,
-          toValue: String(toValue),
-          note: `${field} changed from '${fromValue}' to '${toValue}' by ${req.user?.username ?? 'admin'}`,
-        },
-      });
-    }
-
-    await prisma.adminAuditLog.create({
-      data: {
-        adminUserId: req.user?.sub ?? '',
-        action: 'update_booking_status',
-        targetType: 'booking',
-        targetId: id,
-        payload: JSON.stringify({ changes: data, at: now.toISOString() }),
-        ipAddress: String(req.ip ?? ''),
-        userAgent: String(req.headers['user-agent'] ?? ''),
-      },
-    });
-
-    res.json({ success: true, id: booking.id });
-  } catch (err) {
-    console.error('PATCH /api/bookings error:', err);
-    res.status(500).json({ error: 'ServerError', message: 'Failed to update booking' });
-  }
-});
-
-// Irreversibly remove payout account details once finance reconciliation is
-// complete. The booking and its audit trail remain available for compliance.
-app.delete('/api/bookings/:id/payout-details', adminAuth, requireRole(['SUPER_ADMIN', 'FINANCE_APPROVER']), async (req: AuthenticatedRequest, res) => {
-  try {
-    const id = String(req.params.id);
-    const booking = await prisma.booking.findUnique({ where: { id } });
-    if (!booking) {
-      res.status(404).json({ error: 'NotFound', message: 'Booking not found.' });
-      return;
-    }
-    if (booking.payoutStatus !== 'completed') {
-      res.status(409).json({ error: 'Conflict', message: 'Payout details may be deleted only after payout completion.' });
-      return;
-    }
-    await prisma.$transaction([
-      prisma.booking.update({ where: { id }, data: { payoutDetailsJson: encryptPayoutDetails({}) } }),
-      prisma.bookingEvent.create({ data: { bookingId: id, eventType: 'payout_details_deleted', note: `Payout details purged by ${req.user?.username ?? 'admin'}` } }),
-      prisma.adminAuditLog.create({ data: { adminUserId: req.user?.sub ?? '', action: 'purge_payout_details', targetType: 'booking', targetId: id, ipAddress: String(req.ip ?? ''), userAgent: String(req.headers['user-agent'] ?? '') } }),
-    ]);
-    res.json({ success: true });
-  } catch (err) {
-    console.error('DELETE /api/bookings/:id/payout-details error:', err);
-    res.status(500).json({ error: 'ServerError', message: 'Failed to purge payout details.' });
-  }
-});
-
-// 404 Handler for all unhandled /api/* routes (must ALWAYS return JSON, never HTML).
-// Use a regex so this works correctly in Express 5 (path-to-regexp@8 broke bare `*`).
+app.use('/api/brands', brandsRouter);
+app.use('/api/models', modelsRouter);
+app.use('/api/quotes', quotesRouter);
+app.use('/api/bookings', bookingsRouter);
+
+// 404 Handler for all unhandled /api/* routes
 app.all(/^\/api(\/|$)/, (_req, res) => {
   res.status(404).json({ error: 'NotFound', message: 'API endpoint not found.' });
 });
@@ -1501,6 +216,7 @@ app.all(/^\/api(\/|$)/, (_req, res) => {
 // ═══════════════════════════════════════════════════════════════════════════
 // SPA FALLBACK FOR FRONTEND NAVIGATION
 // ═══════════════════════════════════════════════════════════════════════════
+
 if (distExists) {
   app.use((req, res, next) => {
     if (req.method !== 'GET' && req.method !== 'HEAD') return next();
@@ -1520,19 +236,18 @@ if (distExists) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 const server = app.listen(PORT, () => {
-  console.log(`\n🚀 SmartphoneCentre API server running at http://0.0.0.0:${PORT}`);
-  console.log(`   Health:       http://localhost:${PORT}/api/health`);
-  console.log(`   Admin auth:   POST http://localhost:${PORT}/api/admin/auth`);
-  console.log(`   Environment:  ${process.env.NODE_ENV ?? 'development'}\n`);
+  if (isDev) {
+    console.log(`\n🚀 SmartphoneCentre API server running at http://0.0.0.0:${PORT}`);
+    console.log(`   Health:       http://localhost:${PORT}/api/health`);
+    console.log(`   Admin auth:   POST http://localhost:${PORT}/api/admin/auth`);
+    console.log(`   Environment:  ${process.env.NODE_ENV ?? 'development'}\n`);
+  }
 
-  // Verify DB connection asynchronously AFTER Express is already listening.
-  // This is intentionally fire-and-forget: Express must pass Render's health
-  // check immediately. On free-tier PostgreSQL, the DB can take 30+ seconds
-  // to cold-start. If we wait for it synchronously the process times out and
-  // Render falls back to serving the static dist/ folder for all paths.
   prisma.$connect()
-    .then(() => console.log('✅ Database connected'))
-    .catch((err) => console.error('⚠️  Database connection failed (queries will return 500 until DB wakes up):', err));
+    .then(() => {
+      if (isDev) console.log('✅ Database connected');
+    })
+    .catch((err) => console.error('⚠️  Database connection failed:', err));
 });
 
 const gracefulShutdown = async (signal: string) => {
@@ -1546,3 +261,5 @@ const gracefulShutdown = async (signal: string) => {
 
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+
+export default app;

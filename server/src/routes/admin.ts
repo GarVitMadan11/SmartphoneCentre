@@ -279,6 +279,7 @@ router.post('/auth', async (req: Request, res: Response): Promise<void> => {
   setAdminCookie(res, token);
 
   res.json({
+    token,
     expiresAt: expiresAtMs,
     user: { id: sub, username: userUsername, role },
   });
