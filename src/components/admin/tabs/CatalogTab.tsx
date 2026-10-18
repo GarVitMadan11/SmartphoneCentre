@@ -27,7 +27,7 @@ import {
   RotateCcw,
   ShieldCheck,
 } from 'lucide-react';
-import { Model, Brand, isSmartwatchDevice, isTabletDevice, buildVariantPricesForModel, isVariantAvailable } from '../../../data/mockDatabase';
+import { Model, Brand, BRANDS, isSmartwatchDevice, isTabletDevice, buildVariantPricesForModel, isVariantAvailable } from '../../../data/mockDatabase';
 import { fetchModels, createModel, updateModel, deleteModel } from '../../../utils/api';
 import {
   saveBrandOrder,
@@ -88,41 +88,6 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
   // Modals
   const [editingModel, setEditingModel] = useState<Model | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
-
-  // Form State for Create / Edit
-  const [formData, setFormData] = useState<{
-    id: string;
-    legacyId: string;
-    brandId: string;
-    name: string;
-    category: 'flagship' | 'premium' | 'midrange' | 'budget';
-    releaseYear: number;
-    basePrice128GB: number;
-    series: string;
-    imageUrl: string;
-    supportedStorageGb: number[];
-    supportedRamGb: number[];
-    variantPrices: Record<string, number>;
-    hidden: boolean;
-    supportsWarrantyQuestion: boolean;
-  }>({
-    id: '',
-    legacyId: '',
-    brandId: initialBrands[0]?.id || 'brand-apple',
-    name: '',
-    category: 'premium',
-    releaseYear: new Date().getFullYear(),
-    basePrice128GB: 30000,
-    series: '',
-    imageUrl: '',
-    supportedStorageGb: [128, 256, 512],
-    supportedRamGb: [0],
-    variantPrices: {},
-    hidden: false,
-    supportsWarrantyQuestion: true,
-  });
-
-  const [saving, setSaving] = useState(false);
 
   // Load models from API (Database)
   const loadModels = async () => {
@@ -296,113 +261,12 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
   const handleStartEdit = (model: Model) => {
     setEditingModel(model);
     setIsAddingNew(false);
-    setFormData({
-      id: model.id,
-      legacyId: model.id,
-      brandId: model.brandId,
-      name: model.name,
-      category: model.category,
-      releaseYear: model.releaseYear || new Date().getFullYear(),
-      basePrice128GB: model.basePrice128GB || 0,
-      series: model.series || '',
-      imageUrl: model.imageUrl || '',
-      supportedStorageGb: model.supportedStorageGb && model.supportedStorageGb.length > 0 ? [...model.supportedStorageGb] : [128, 256, 512],
-      supportedRamGb: model.supportedRamGb && model.supportedRamGb.length > 0 ? [...model.supportedRamGb] : [0],
-      variantPrices: model.variantPrices ? { ...model.variantPrices } : {},
-      hidden: Boolean(model.hidden),
-      supportsWarrantyQuestion: model.supportsWarrantyQuestion ?? ((model.releaseYear || 2024) >= 2023),
-    });
   };
 
   // Open Add New Model Modal
   const handleStartAdd = () => {
-    const defaultBrand = initialBrands[0]?.id || 'brand-apple';
     setEditingModel(null);
     setIsAddingNew(true);
-    setFormData({
-      id: '',
-      legacyId: '',
-      brandId: defaultBrand,
-      name: '',
-      category: 'premium',
-      releaseYear: new Date().getFullYear(),
-      basePrice128GB: 30000,
-      series: '',
-      imageUrl: '',
-      supportedStorageGb: [128, 256, 512],
-      supportedRamGb: [0],
-      variantPrices: {},
-      hidden: false,
-      supportsWarrantyQuestion: true,
-    });
-  };
-
-  // Save Model
-  const handleSaveModel = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.name.trim()) {
-      setError('Model name is required');
-      return;
-    }
-    if (!formData.brandId) {
-      setError('Brand is required');
-      return;
-    }
-
-    try {
-      setSaving(true);
-      setError(null);
-
-      const legacyId = isAddingNew
-        ? formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
-        : formData.legacyId;
-
-      const cleanedVariantPrices: Record<string, number> = {};
-      const validRams = formData.supportedRamGb && formData.supportedRamGb.length > 0 ? formData.supportedRamGb : [0];
-      const validStorages = formData.supportedStorageGb && formData.supportedStorageGb.length > 0 ? formData.supportedStorageGb : [128];
-      Object.entries(formData.variantPrices || {}).forEach(([k, v]) => {
-        const [rStr, sStr] = k.split('_');
-        const r = Number(rStr);
-        const s = Number(sStr);
-        if (typeof v === 'number' && v > 0 && validRams.includes(r) && validStorages.includes(s)) {
-          cleanedVariantPrices[k] = v;
-        }
-      });
-
-      const payload = {
-        legacyId,
-        brandId: formData.brandId,
-        name: formData.name.trim(),
-        category: formData.category,
-        releaseYear: Number(formData.releaseYear),
-        basePrice128GB: Number(formData.basePrice128GB),
-        series: formData.series.trim(),
-        imageUrl: formData.imageUrl.trim(),
-        supportedStorageGb: formData.supportedStorageGb,
-        supportedRamGb: formData.supportedRamGb,
-        variantPrices: cleanedVariantPrices,
-        hidden: formData.hidden,
-        supportsWarrantyQuestion: formData.supportsWarrantyQuestion,
-      };
-
-      if (isAddingNew) {
-        await createModel(payload);
-        setSuccessMsg(`Model "${formData.name}" added successfully to database!`);
-      } else {
-        await updateModel(legacyId, payload);
-        setSuccessMsg(`Model "${formData.name}" updated successfully in database!`);
-      }
-
-      setEditingModel(null);
-      setIsAddingNew(false);
-      await loadModels();
-      if (onRefresh) onRefresh();
-    } catch (err: any) {
-      console.error('Failed to save model:', err);
-      setError(err.message || 'Failed to save model to database');
-    } finally {
-      setSaving(false);
-    }
   };
 
   // Toggle Hidden
@@ -570,78 +434,7 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
   const handleDragEnd = () => {
     setDraggedIndex(null);
   };
-
-  // Form Controls logic
-  const handleToggleStorageGb = (gb: number) => {
-    setFormData((prev) => {
-      const exists = prev.supportedStorageGb.includes(gb);
-      const nextStorage = exists
-        ? prev.supportedStorageGb.filter((s) => s !== gb)
-        : [...prev.supportedStorageGb, gb].sort((a, b) => a - b);
-      if (nextStorage.length === 0) return prev;
-      return { ...prev, supportedStorageGb: nextStorage };
-    });
-  };
-
-  const handleToggleRamGb = (gb: number) => {
-    setFormData((prev) => {
-      const exists = prev.supportedRamGb.includes(gb);
-      let nextRam: number[];
-      if (gb === 0) {
-        nextRam = [0];
-      } else {
-        nextRam = exists
-          ? prev.supportedRamGb.filter((r) => r !== gb && r !== 0)
-          : [...prev.supportedRamGb.filter((r) => r !== 0), gb].sort((a, b) => a - b);
-        if (nextRam.length === 0) nextRam = [0];
-      }
-      return { ...prev, supportedRamGb: nextRam };
-    });
-  };
-
-  const handleToggleVariant = (ram: number, storage: number, enable: boolean) => {
-    const key = `${ram}_${storage}`;
-    setFormData((prev) => {
-      const nextMap = { ...prev.variantPrices };
-      if (!enable) {
-        delete nextMap[key];
-      } else {
-        const baseAnchor = prev.basePrice128GB || 10000;
-        const storageMult = storage >= 1024 ? 1.35 : storage === 512 ? 1.25 : storage === 256 ? 1.12 : 1.0;
-        const ramAdd = ram >= 16 ? 1500 : ram >= 12 ? 1000 : ram >= 8 ? 500 : 0;
-        nextMap[key] = Math.round((baseAnchor * storageMult) + ramAdd);
-      }
-      return { ...prev, variantPrices: nextMap };
-    });
-  };
-
-  const handleVariantPriceChange = (ram: number, storage: number, valStr: string) => {
-    const key = `${ram}_${storage}`;
-    const price = parseInt(valStr, 10);
-    setFormData((prev) => {
-      const nextMap = { ...prev.variantPrices };
-      nextMap[key] = isNaN(price) ? 0 : price;
-      const activePrices = Object.values(nextMap).filter((v): v is number => typeof v === 'number' && v > 0);
-      const minPrice = activePrices.length > 0 ? Math.min(...activePrices) : prev.basePrice128GB;
-      return { ...prev, variantPrices: nextMap, basePrice128GB: minPrice };
-    });
-  };
-
-  const handleImageFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 2 * 1024 * 1024) {
-      setError('Image file must be under 2MB.');
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        setFormData((prev) => ({ ...prev, imageUrl: reader.result as string }));
-      }
-    };
-    reader.readAsDataURL(file);
-  };
+  // Export CSV
 
   const handleExportCsv = () => {
     const headers = ['id', 'brandId', 'name', 'category', 'series', 'releaseYear', 'basePrice128GB', 'supportedStorageGb', 'supportedRamGb', 'imageUrl', 'hidden'];
@@ -1477,380 +1270,776 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
       )}
 
       {/* Edit / Create Model Modal */}
-      {(editingModel || isAddingNew) && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-canvas-white border border-ice-border rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
-            {/* Modal Header */}
-            <div className="px-6 py-4 bg-zinc-900 text-white flex justify-between items-center">
-              <div>
-                <h3 className="text-lg font-bold flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-purple-400" />
-                  {isAddingNew ? 'Add New Model to Catalog Database' : `Edit Model: ${formData.name}`}
-                </h3>
-                <p className="text-xs text-zinc-400 mt-0.5 font-mono">
-                  Configure storage variants, RAM variants, launch year, prices, image URL & visibility directly in DB.
-                </p>
-              </div>
-              <button
-                onClick={() => {
-                  setEditingModel(null);
-                  setIsAddingNew(false);
-                }}
-                className="text-zinc-400 hover:text-white p-1 rounded-full hover:bg-zinc-800 cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
+      <EditSpecsAndPricesModal
+        isOpen={Boolean(editingModel || isAddingNew)}
+        model={editingModel}
+        isAddingNew={isAddingNew}
+        brands={orderedBrands.length > 0 ? orderedBrands : initialBrands}
+        onClose={() => {
+          setEditingModel(null);
+          setIsAddingNew(false);
+        }}
+        onSaveSuccess={async () => {
+          setSuccessMsg(
+            isAddingNew
+              ? 'Model added successfully to database!'
+              : `Model "${editingModel?.name || ''}" updated successfully in database!`
+          );
+          setEditingModel(null);
+          setIsAddingNew(false);
+          await loadModels();
+          if (onRefresh) onRefresh();
+        }}
+      />
+    </div>
+  );
+};
+
+export interface EditSpecsAndPricesModalProps {
+  isOpen: boolean;
+  model: Model | null;
+  isAddingNew?: boolean;
+  brands?: Brand[];
+  highlightVariant?: { ram: number; storage: number } | null;
+  cashifyPrices?: Record<string, number>;
+  onClose: () => void;
+  onSaveSuccess: (savedModel?: any) => void;
+}
+
+export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = ({
+  isOpen,
+  model,
+  isAddingNew = false,
+  brands = [],
+  highlightVariant,
+  cashifyPrices,
+  onClose,
+  onSaveSuccess,
+}) => {
+  const availableBrands = brands.length > 0 ? brands : BRANDS;
+
+  const [formData, setFormData] = useState<{
+    id: string;
+    legacyId: string;
+    brandId: string;
+    name: string;
+    category: 'flagship' | 'premium' | 'midrange' | 'budget';
+    releaseYear: number;
+    basePrice128GB: number;
+    series: string;
+    imageUrl: string;
+    supportedStorageGb: number[];
+    supportedRamGb: number[];
+    variantPrices: Record<string, number>;
+    hidden: boolean;
+    supportsWarrantyQuestion: boolean;
+  }>({
+    id: '',
+    legacyId: '',
+    brandId: availableBrands[0]?.id || 'brand-apple',
+    name: '',
+    category: 'premium',
+    releaseYear: new Date().getFullYear(),
+    basePrice128GB: 30000,
+    series: '',
+    imageUrl: '',
+    supportedStorageGb: [128, 256, 512],
+    supportedRamGb: [0],
+    variantPrices: {},
+    hidden: false,
+    supportsWarrantyQuestion: true,
+  });
+
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    if (model) {
+      setFormData({
+        id: model.id,
+        legacyId: (model as any).legacyId || model.id,
+        brandId: model.brandId || availableBrands[0]?.id || 'brand-apple',
+        name: model.name,
+        category: model.category || 'premium',
+        releaseYear: model.releaseYear || new Date().getFullYear(),
+        basePrice128GB: model.basePrice128GB || 0,
+        series: model.series || '',
+        imageUrl: model.imageUrl || '',
+        supportedStorageGb:
+          model.supportedStorageGb && model.supportedStorageGb.length > 0
+            ? [...model.supportedStorageGb]
+            : [128, 256, 512],
+        supportedRamGb:
+          model.supportedRamGb && model.supportedRamGb.length > 0
+            ? [...model.supportedRamGb]
+            : [0],
+        variantPrices: model.variantPrices ? { ...model.variantPrices } : {},
+        hidden: Boolean(model.hidden),
+        supportsWarrantyQuestion:
+          model.supportsWarrantyQuestion ?? ((model.releaseYear || 2024) >= 2023),
+      });
+      setError(null);
+    } else if (isAddingNew) {
+      setFormData({
+        id: '',
+        legacyId: '',
+        brandId: availableBrands[0]?.id || 'brand-apple',
+        name: '',
+        category: 'premium',
+        releaseYear: new Date().getFullYear(),
+        basePrice128GB: 30000,
+        series: '',
+        imageUrl: '',
+        supportedStorageGb: [128, 256, 512],
+        supportedRamGb: [0],
+        variantPrices: {},
+        hidden: false,
+        supportsWarrantyQuestion: true,
+      });
+      setError(null);
+    }
+  }, [isOpen, model, isAddingNew, availableBrands]);
+
+  if (!isOpen) return null;
+
+  const handleToggleStorageGb = (gb: number) => {
+    setFormData((prev) => {
+      const exists = prev.supportedStorageGb.includes(gb);
+      const nextStorage = exists
+        ? prev.supportedStorageGb.filter((s) => s !== gb)
+        : [...prev.supportedStorageGb, gb].sort((a, b) => a - b);
+      if (nextStorage.length === 0) return prev;
+      return { ...prev, supportedStorageGb: nextStorage };
+    });
+  };
+
+  const handleToggleRamGb = (gb: number) => {
+    setFormData((prev) => {
+      const exists = prev.supportedRamGb.includes(gb);
+      let nextRam: number[];
+      if (gb === 0) {
+        nextRam = [0];
+      } else {
+        nextRam = exists
+          ? prev.supportedRamGb.filter((r) => r !== gb && r !== 0)
+          : [...prev.supportedRamGb.filter((r) => r !== 0), gb].sort((a, b) => a - b);
+        if (nextRam.length === 0) nextRam = [0];
+      }
+      return { ...prev, supportedRamGb: nextRam };
+    });
+  };
+
+  const handleToggleVariant = (ram: number, storage: number, enable: boolean) => {
+    const key = `${ram}_${storage}`;
+    setFormData((prev) => {
+      const nextMap = { ...prev.variantPrices };
+      if (!enable) {
+        delete nextMap[key];
+      } else {
+        const baseAnchor = prev.basePrice128GB || 10000;
+        const storageMult = storage >= 1024 ? 1.35 : storage === 512 ? 1.25 : storage === 256 ? 1.12 : 1.0;
+        const ramAdd = ram >= 16 ? 1500 : ram >= 12 ? 1000 : ram >= 8 ? 500 : 0;
+        nextMap[key] = Math.round(baseAnchor * storageMult + ramAdd);
+      }
+      return { ...prev, variantPrices: nextMap };
+    });
+  };
+
+  const handleVariantPriceChange = (ram: number, storage: number, valStr: string) => {
+    const key = `${ram}_${storage}`;
+    const price = parseInt(valStr, 10);
+    setFormData((prev) => {
+      const nextMap = { ...prev.variantPrices };
+      nextMap[key] = isNaN(price) ? 0 : price;
+      const activePrices = Object.values(nextMap).filter(
+        (v): v is number => typeof v === 'number' && v > 0
+      );
+      const minPrice = activePrices.length > 0 ? Math.min(...activePrices) : prev.basePrice128GB;
+      return { ...prev, variantPrices: nextMap, basePrice128GB: minPrice };
+    });
+  };
+
+  const handleImageFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      setError('Image file must be under 2MB.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        setFormData((prev) => ({ ...prev, imageUrl: reader.result as string }));
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSaveModel = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.name.trim()) {
+      setError('Model name is required');
+      return;
+    }
+    if (!formData.brandId) {
+      setError('Brand is required');
+      return;
+    }
+
+    try {
+      setSaving(true);
+      setError(null);
+
+      const legacyId = isAddingNew
+        ? formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+        : formData.legacyId || formData.id;
+
+      const cleanedVariantPrices: Record<string, number> = {};
+      const validRams =
+        formData.supportedRamGb && formData.supportedRamGb.length > 0
+          ? formData.supportedRamGb
+          : [0];
+      const validStorages =
+        formData.supportedStorageGb && formData.supportedStorageGb.length > 0
+          ? formData.supportedStorageGb
+          : [128];
+
+      Object.entries(formData.variantPrices || {}).forEach(([k, v]) => {
+        const [rStr, sStr] = k.split('_');
+        const r = Number(rStr);
+        const s = Number(sStr);
+        if (typeof v === 'number' && v > 0 && validRams.includes(r) && validStorages.includes(s)) {
+          cleanedVariantPrices[k] = v;
+        }
+      });
+
+      const payload = {
+        legacyId,
+        brandId: formData.brandId,
+        name: formData.name.trim(),
+        category: formData.category,
+        releaseYear: Number(formData.releaseYear),
+        basePrice128GB: Number(formData.basePrice128GB),
+        series: formData.series.trim(),
+        imageUrl: formData.imageUrl.trim(),
+        supportedStorageGb: formData.supportedStorageGb,
+        supportedRamGb: formData.supportedRamGb,
+        variantPrices: cleanedVariantPrices,
+        hidden: formData.hidden,
+        supportsWarrantyQuestion: formData.supportsWarrantyQuestion,
+      };
+
+      let result;
+      if (isAddingNew) {
+        result = await createModel(payload);
+      } else {
+        result = await updateModel(legacyId, payload);
+      }
+
+      window.dispatchEvent(new CustomEvent('stc_catalog_order_changed'));
+      onSaveSuccess(result);
+      onClose();
+    } catch (err: any) {
+      console.error('Failed to save model:', err);
+      setError(err.message || 'Failed to save model to database');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const modalFormatPrice = (val: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0,
+    }).format(val);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+      <div className="bg-canvas-white border border-ice-border rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+        {/* Modal Header */}
+        <div className="px-6 py-4 bg-zinc-900 text-white flex justify-between items-center">
+          <div>
+            <h3 className="text-lg font-bold flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-purple-400" />
+              {isAddingNew ? 'Add New Model to Catalog Database' : `Edit Model: ${formData.name}`}
+            </h3>
+            <p className="text-xs text-zinc-400 mt-0.5 font-mono">
+              Configure storage variants, RAM variants, launch year, prices, image URL & visibility directly in DB.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-zinc-400 hover:text-white p-1 rounded-full hover:bg-zinc-800 cursor-pointer"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Modal Body / Form */}
+        <form onSubmit={handleSaveModel} className="p-6 space-y-6 overflow-y-auto flex-1 text-xs">
+          {error && (
+            <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-xs font-semibold flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {/* Basic Info Section */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-canvas-pure border border-ice-border rounded-lg">
+            <div>
+              <label className="block text-[11px] font-bold text-ink-navy mb-1 uppercase font-mono">
+                Model Name *
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="e.g. iPhone 16 Pro Max"
+                className="w-full px-3 py-2 bg-white border border-ice-border rounded font-semibold text-ink-navy focus:border-cobalt focus:outline-none"
+              />
             </div>
 
-            {/* Modal Body / Form */}
-            <form onSubmit={handleSaveModel} className="p-6 space-y-6 overflow-y-auto flex-1 text-xs">
-              {/* Basic Info Section */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-canvas-pure border border-ice-border rounded-lg">
-                <div>
-                  <label className="block text-[11px] font-bold text-ink-navy mb-1 uppercase font-mono">Model Name *</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="e.g. iPhone 16 Pro Max"
-                    className="w-full px-3 py-2 bg-white border border-ice-border rounded font-semibold text-ink-navy focus:border-cobalt focus:outline-none"
-                  />
-                </div>
+            <div>
+              <label className="block text-[11px] font-bold text-ink-navy mb-1 uppercase font-mono">
+                Brand *
+              </label>
+              <select
+                value={formData.brandId}
+                onChange={(e) => setFormData({ ...formData, brandId: e.target.value })}
+                className="w-full px-3 py-2 bg-white border border-ice-border rounded font-semibold text-ink-navy focus:border-cobalt focus:outline-none cursor-pointer"
+              >
+                {availableBrands.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-                <div>
-                  <label className="block text-[11px] font-bold text-ink-navy mb-1 uppercase font-mono">Brand *</label>
-                  <select
-                    value={formData.brandId}
-                    onChange={(e) => setFormData({ ...formData, brandId: e.target.value })}
-                    className="w-full px-3 py-2 bg-white border border-ice-border rounded font-semibold text-ink-navy focus:border-cobalt focus:outline-none cursor-pointer"
-                  >
-                    {orderedBrands.map((b) => (
-                      <option key={b.id} value={b.id}>
-                        {b.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+            <div>
+              <label className="block text-[11px] font-bold text-ink-navy mb-1 uppercase font-mono">
+                Series / Sub-Name
+              </label>
+              <input
+                type="text"
+                value={formData.series}
+                onChange={(e) => setFormData({ ...formData, series: e.target.value })}
+                placeholder="e.g. iPhone 16 Series"
+                className="w-full px-3 py-2 bg-white border border-ice-border rounded text-ink-navy focus:border-cobalt focus:outline-none"
+              />
+            </div>
 
-                <div>
-                  <label className="block text-[11px] font-bold text-ink-navy mb-1 uppercase font-mono">Series / Sub-Name</label>
-                  <input
-                    type="text"
-                    value={formData.series}
-                    onChange={(e) => setFormData({ ...formData, series: e.target.value })}
-                    placeholder="e.g. iPhone 16 Series"
-                    className="w-full px-3 py-2 bg-white border border-ice-border rounded text-ink-navy focus:border-cobalt focus:outline-none"
-                  />
-                </div>
+            <div>
+              <label className="block text-[11px] font-bold text-ink-navy mb-1 uppercase font-mono">
+                Category Tier
+              </label>
+              <select
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value as any })}
+                className="w-full px-3 py-2 bg-white border border-ice-border rounded font-semibold text-ink-navy focus:border-cobalt focus:outline-none cursor-pointer"
+              >
+                <option value="flagship">Flagship</option>
+                <option value="premium">Premium</option>
+                <option value="midrange">Midrange</option>
+                <option value="budget">Budget</option>
+              </select>
+            </div>
 
-                <div>
-                  <label className="block text-[11px] font-bold text-ink-navy mb-1 uppercase font-mono">Category Tier</label>
-                  <select
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value as any })}
-                    className="w-full px-3 py-2 bg-white border border-ice-border rounded font-semibold text-ink-navy focus:border-cobalt focus:outline-none cursor-pointer"
-                  >
-                    <option value="flagship">Flagship</option>
-                    <option value="premium">Premium</option>
-                    <option value="midrange">Midrange</option>
-                    <option value="budget">Budget</option>
-                  </select>
-                </div>
+            <div>
+              <label className="block text-[11px] font-bold text-ink-navy mb-1 uppercase font-mono">
+                Launch Year *
+              </label>
+              <input
+                type="number"
+                required
+                min="2010"
+                max="2030"
+                value={formData.releaseYear}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    releaseYear: parseInt(e.target.value, 10) || new Date().getFullYear(),
+                  })
+                }
+                className="w-full px-3 py-2 bg-white border border-ice-border rounded font-mono text-ink-navy focus:border-cobalt focus:outline-none"
+              />
+            </div>
 
-                <div>
-                  <label className="block text-[11px] font-bold text-ink-navy mb-1 uppercase font-mono">Launch Year *</label>
-                  <input
-                    type="number"
-                    required
-                    min="2010"
-                    max="2030"
-                    value={formData.releaseYear}
-                    onChange={(e) => setFormData({ ...formData, releaseYear: parseInt(e.target.value, 10) || new Date().getFullYear() })}
-                    className="w-full px-3 py-2 bg-white border border-ice-border rounded font-mono text-ink-navy focus:border-cobalt focus:outline-none"
-                  />
-                </div>
+            <div>
+              <label className="block text-[11px] font-bold text-ink-navy mb-1 uppercase font-mono flex items-center justify-between">
+                <span>Base Price Anchor (₹) *</span>
+                <span className="text-[9px] text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                  Auto-synced with lowest variant
+                </span>
+              </label>
+              <input
+                type="number"
+                required
+                min="0"
+                step="1"
+                value={formData.basePrice128GB}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    basePrice128GB: parseInt(e.target.value, 10) || 0,
+                  })
+                }
+                className="w-full px-3 py-2 bg-white border border-ice-border rounded font-mono font-bold text-emerald-700 focus:border-cobalt focus:outline-none"
+              />
+              <span className="text-[10px] text-zinc-400 font-mono block mt-1">
+                Used as fallback baseline. Overridden by explicit Variant Matrix below.
+              </span>
+            </div>
+          </div>
 
-                <div>
-                  <label className="block text-[11px] font-bold text-ink-navy mb-1 uppercase font-mono flex items-center justify-between">
-                    <span>Base Price Anchor (₹) *</span>
-                    <span className="text-[9px] text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                      Auto-synced with lowest variant
-                    </span>
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    min="0"
-                    step="1"
-                    value={formData.basePrice128GB}
-                    onChange={(e) => setFormData({ ...formData, basePrice128GB: parseInt(e.target.value, 10) || 0 })}
-                    className="w-full px-3 py-2 bg-white border border-ice-border rounded font-mono font-bold text-emerald-700 focus:border-cobalt focus:outline-none"
-                  />
-                  <span className="text-[10px] text-zinc-400 font-mono block mt-1">
-                    Used as fallback baseline. Overridden by explicit Variant Matrix below.
-                  </span>
-                </div>
-              </div>
+          {/* Image URL Section */}
+          <div className="p-4 bg-canvas-pure border border-ice-border rounded-lg space-y-3">
+            <label className="block text-[11px] font-bold text-ink-navy uppercase font-mono flex items-center justify-between">
+              <span>Product Image URL</span>
+              <span className="text-[10px] text-zinc-400 font-normal">GSMArena or CDN link</span>
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="url"
+                value={formData.imageUrl.startsWith('data:') ? '' : formData.imageUrl}
+                onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                placeholder="https://fdn2.gsmarena.com/vv/bigpic/phone-name.jpg"
+                className="flex-1 px-3 py-2 bg-white border border-ice-border rounded font-mono text-xs text-ink-navy focus:border-cobalt focus:outline-none"
+              />
+              <label className="px-3 py-2 bg-zinc-200 hover:bg-zinc-300 text-ink-navy rounded font-semibold cursor-pointer flex items-center gap-1.5 transition-all">
+                <span>Upload</span>
+                <input type="file" accept="image/*" onChange={handleImageFileUpload} className="hidden" />
+              </label>
+            </div>
 
-              {/* Image URL Section */}
-              <div className="p-4 bg-canvas-pure border border-ice-border rounded-lg space-y-3">
-                <label className="block text-[11px] font-bold text-ink-navy uppercase font-mono flex items-center justify-between">
-                  <span>Product Image URL</span>
-                  <span className="text-[10px] text-zinc-400 font-normal">GSMArena or CDN link</span>
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="url"
-                    value={formData.imageUrl.startsWith('data:') ? '' : formData.imageUrl}
-                    onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                    placeholder="https://fdn2.gsmarena.com/vv/bigpic/phone-name.jpg"
-                    className="flex-1 px-3 py-2 bg-white border border-ice-border rounded font-mono text-xs text-ink-navy focus:border-cobalt focus:outline-none"
-                  />
-                  <label className="px-3 py-2 bg-zinc-200 hover:bg-zinc-300 text-ink-navy rounded font-semibold cursor-pointer flex items-center gap-1.5 transition-all">
-                    <span>Upload</span>
-                    <input type="file" accept="image/*" onChange={handleImageFileUpload} className="hidden" />
-                  </label>
-                </div>
-
-                {formData.imageUrl && (
-                  <div className="flex items-center gap-3 bg-white p-2.5 rounded border border-ice-border">
-                    <img src={formData.imageUrl} alt="Preview" className="w-12 h-12 object-contain bg-zinc-50 rounded border p-1" />
-                    <div className="flex-1 overflow-hidden font-mono text-[11px]">
-                      <span className="text-emerald-600 font-bold block">✓ Image Attached</span>
-                      <span className="text-zinc-500 truncate block">{formData.imageUrl}</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setFormData({ ...formData, imageUrl: '' })}
-                      className="text-rose-600 hover:underline font-bold text-[11px] cursor-pointer"
-                    >
-                      Clear
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Storage Variants Selector */}
-              <div className="p-4 bg-canvas-pure border border-ice-border rounded-lg space-y-3">
-                <div className="flex justify-between items-center">
-                  <label className="block text-[11px] font-bold text-ink-navy uppercase font-mono flex items-center gap-1.5">
-                    <HardDrive className="w-4 h-4 text-cobalt" />
-                    <span>Supported Storage Variants (GB)</span>
-                  </label>
-                  <span className="text-[10px] font-mono text-zinc-500">Selected: {formData.supportedStorageGb.join(', ')} GB</span>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {Array.from(new Set([...STANDARD_STORAGE_OPTIONS, ...formData.supportedStorageGb])).sort((a, b) => a - b).map((gb) => {
-                    const isSelected = formData.supportedStorageGb.includes(gb);
-                    return (
-                      <button
-                        type="button"
-                        key={gb}
-                        onClick={() => handleToggleStorageGb(gb)}
-                        className={`px-3 py-1.5 rounded-lg border text-xs font-mono font-bold transition-all cursor-pointer flex items-center gap-1 ${
-                          isSelected
-                            ? 'bg-cobalt text-white border-cobalt shadow-sm'
-                            : 'bg-white text-ink-navy border-ice-border hover:border-cobalt'
-                        }`}
-                      >
-                        <span>{gb >= 1024 ? `${gb / 1024} TB` : `${gb} GB`}</span>
-                        {isSelected && <Check className="w-3 h-3" />}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* RAM Variants Selector */}
-              <div className="p-4 bg-canvas-pure border border-ice-border rounded-lg space-y-3">
-                <div className="flex justify-between items-center">
-                  <label className="block text-[11px] font-bold text-ink-navy uppercase font-mono flex items-center gap-1.5">
-                    <Cpu className="w-4 h-4 text-purple-600" />
-                    <span>Supported RAM Variants (GB)</span>
-                  </label>
-                  <span className="text-[10px] font-mono text-zinc-500">
-                    {formData.supportedRamGb.length === 1 && formData.supportedRamGb[0] === 0
-                      ? 'No RAM Variants (Apple-style / Fixed)'
-                      : `Selected: ${formData.supportedRamGb.join(', ')} GB`}
-                  </span>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {Array.from(new Set([...STANDARD_RAM_OPTIONS, ...formData.supportedRamGb])).sort((a, b) => a - b).map((gb) => {
-                    const isSelected = formData.supportedRamGb.includes(gb);
-                    return (
-                      <button
-                        type="button"
-                        key={gb}
-                        onClick={() => handleToggleRamGb(gb)}
-                        className={`px-3 py-1.5 rounded-lg border text-xs font-mono font-bold transition-all cursor-pointer flex items-center gap-1 ${
-                          isSelected
-                            ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
-                            : 'bg-white text-ink-navy border-ice-border hover:border-purple-300'
-                        }`}
-                      >
-                        <span>{gb === 0 ? 'No RAM (Apple)' : `${gb} GB`}</span>
-                        {isSelected && <Check className="w-3 h-3" />}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* RAM x Storage Price Matrix */}
-              <div className="p-4 bg-canvas-pure border border-ice-border rounded-lg space-y-3">
-                <div className="flex justify-between items-center">
-                  <label className="block text-[11px] font-bold text-ink-navy uppercase font-mono flex items-center gap-1.5">
-                    <Grid className="w-4 h-4 text-emerald-600" />
-                    <span>Variant Price Matrix (INR ₹)</span>
-                  </label>
-                  <span className="text-[10px] font-mono text-zinc-500">Set price for each RAM x Storage combination stored in DB</span>
-                </div>
-
-                <div className="overflow-x-auto border border-ice-border rounded-lg bg-white">
-                  <table className="w-full text-xs font-mono border-collapse">
-                    <thead>
-                      <tr className="bg-zinc-100/70 border-b border-ice-border text-zinc-600 text-[10px] uppercase font-bold">
-                        {!(formData.supportedRamGb.length === 1 && formData.supportedRamGb[0] === 0) && (
-                          <th className="p-2 text-left border-r border-ice-border">RAM \ Storage</th>
-                        )}
-                        {formData.supportedStorageGb.map((s) => (
-                          <th key={s} className="p-2 text-center border-r border-ice-border min-w-[110px]">
-                            {s >= 1024 ? `${s / 1024} TB` : `${s} GB`}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-ice-border">
-                      {(formData.supportedRamGb.length === 1 && formData.supportedRamGb[0] === 0 ? [0] : formData.supportedRamGb).map((ram) => (
-                        <tr key={ram} className="hover:bg-zinc-50/50">
-                          {!(formData.supportedRamGb.length === 1 && formData.supportedRamGb[0] === 0) && (
-                            <td className="p-2.5 font-bold text-purple-700 bg-purple-50/50 border-r border-ice-border whitespace-nowrap">
-                              {ram} GB RAM
-                            </td>
-                          )}
-                          {formData.supportedStorageGb.map((storage) => {
-                            const key = `${ram}_${storage}`;
-                            const priceVal = formData.variantPrices[key];
-                            const isEnabled = priceVal !== undefined;
-
-                            return (
-                              <td key={storage} className={`p-2 text-center border-r border-ice-border transition-all ${!isEnabled ? 'bg-zinc-50/80 opacity-75' : ''}`}>
-                                <div className="flex items-center justify-between gap-1 mb-1.5 px-0.5">
-                                  <span className={`text-[9px] font-bold font-mono uppercase ${isEnabled ? 'text-emerald-600' : 'text-zinc-400'}`}>
-                                    {isEnabled ? '● Active' : '○ Off (N/A)'}
-                                  </span>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleToggleVariant(ram, storage, !isEnabled)}
-                                    className={`relative inline-flex h-4 w-7 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                                      isEnabled ? 'bg-emerald-500' : 'bg-zinc-300'
-                                    }`}
-                                    title={isEnabled ? 'Click to disable variant (Turn OFF)' : 'Click to enable variant (Turn ON)'}
-                                  >
-                                    <span
-                                      className={`pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                                        isEnabled ? 'translate-x-3' : 'translate-x-0'
-                                      }`}
-                                    />
-                                  </button>
-                                </div>
-
-                                {isEnabled ? (
-                                  <div>
-                                    <div className="relative">
-                                      <span className="absolute left-2.5 top-2 text-zinc-400 text-[10px] font-bold">₹</span>
-                                      <input
-                                        type="number"
-                                        value={priceVal === 0 ? '' : priceVal}
-                                        placeholder="0"
-                                        onChange={(e) => handleVariantPriceChange(ram, storage, e.target.value)}
-                                        className="w-full pl-6 pr-2 py-1 bg-white border border-ice-border focus:border-cobalt rounded font-mono font-bold text-ink-navy text-right text-xs focus:outline-none shadow-xs"
-                                      />
-                                    </div>
-                                    {Boolean(priceVal && priceVal > 0) && (
-                                      <span className="text-[9px] font-bold text-emerald-600 block mt-0.5">
-                                        {formatPrice(Number(priceVal))}
-                                      </span>
-                                    )}
-                                  </div>
-                                ) : (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleToggleVariant(ram, storage, true)}
-                                    className="w-full py-1 px-1.5 bg-zinc-100 hover:bg-emerald-50 text-zinc-400 hover:text-emerald-600 border border-dashed border-zinc-300 hover:border-emerald-400 rounded text-[9px] font-mono font-bold transition-all cursor-pointer"
-                                  >
-                                    + Enable
-                                  </button>
-                                )}
-                              </td>
-                            );
-                          })}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* Brand Warranty Question Switch */}
-              <div className="p-4 bg-canvas-pure border border-ice-border rounded-lg flex items-center justify-between">
-                <div>
-                  <span className="font-bold text-ink-navy block flex items-center gap-1.5">
-                    <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                    <span>Enable Brand Warranty Question</span>
-                  </span>
-                  <span className="text-[11px] text-zinc-500">
-                    When ON, the "Is your device under brand warranty?" question appears in customer diagnostics. When OFF, the question is skipped to avoid double penalties on out-of-warranty devices.
-                  </span>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={formData.supportsWarrantyQuestion}
-                  onChange={(e) => setFormData({ ...formData, supportsWarrantyQuestion: e.target.checked })}
-                  className="w-5 h-5 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+            {formData.imageUrl && (
+              <div className="flex items-center gap-3 bg-white p-2.5 rounded border border-ice-border">
+                <img
+                  src={formData.imageUrl}
+                  alt="Preview"
+                  className="w-12 h-12 object-contain bg-zinc-50 rounded border p-1"
                 />
-              </div>
-
-              {/* Visibility Switch */}
-              <div className="p-4 bg-canvas-pure border border-ice-border rounded-lg flex items-center justify-between">
-                <div>
-                  <span className="font-bold text-ink-navy block">Hide Model from Store</span>
-                  <span className="text-[11px] text-zinc-500">When enabled, this model will be hidden from public customers.</span>
+                <div className="flex-1 overflow-hidden font-mono text-[11px]">
+                  <span className="text-emerald-600 font-bold block">✓ Image Attached</span>
+                  <span className="text-zinc-500 truncate block">{formData.imageUrl}</span>
                 </div>
-                <input
-                  type="checkbox"
-                  checked={formData.hidden}
-                  onChange={(e) => setFormData({ ...formData, hidden: e.target.checked })}
-                  className="w-5 h-5 rounded text-cobalt focus:ring-cobalt cursor-pointer"
-                />
-              </div>
-
-              {/* Submit Buttons */}
-              <div className="flex justify-end gap-3 pt-4 border-t border-ice-border">
                 <button
                   type="button"
-                  onClick={() => {
-                    setEditingModel(null);
-                    setIsAddingNew(false);
-                  }}
-                  className="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-ink-navy text-xs font-bold rounded-lg transition-all cursor-pointer"
+                  onClick={() => setFormData({ ...formData, imageUrl: '' })}
+                  className="text-rose-600 hover:underline font-bold text-[11px] cursor-pointer"
                 >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="px-6 py-2 bg-cobalt hover:bg-cobalt-hover text-white text-xs font-bold rounded-lg shadow-md transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
-                >
-                  {saving && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
-                  <span>{isAddingNew ? 'Create Model in DB' : 'Save Changes to DB'}</span>
+                  Clear
                 </button>
               </div>
-            </form>
+            )}
           </div>
-        </div>
-      )}
+
+          {/* Storage Variants Selector */}
+          <div className="p-4 bg-canvas-pure border border-ice-border rounded-lg space-y-3">
+            <div className="flex justify-between items-center">
+              <label className="block text-[11px] font-bold text-ink-navy uppercase font-mono flex items-center gap-1.5">
+                <HardDrive className="w-4 h-4 text-cobalt" />
+                <span>Supported Storage Variants (GB)</span>
+              </label>
+              <span className="text-[10px] font-mono text-zinc-500">
+                Selected: {formData.supportedStorageGb.join(', ')} GB
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {Array.from(new Set([...STANDARD_STORAGE_OPTIONS, ...formData.supportedStorageGb]))
+                .sort((a, b) => a - b)
+                .map((gb) => {
+                  const isSelected = formData.supportedStorageGb.includes(gb);
+                  return (
+                    <button
+                      type="button"
+                      key={gb}
+                      onClick={() => handleToggleStorageGb(gb)}
+                      className={`px-3 py-1.5 rounded-lg border text-xs font-mono font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                        isSelected
+                          ? 'bg-cobalt text-white border-cobalt shadow-sm'
+                          : 'bg-white text-ink-navy border-ice-border hover:border-cobalt'
+                      }`}
+                    >
+                      <span>{gb >= 1024 ? `${gb / 1024} TB` : `${gb} GB`}</span>
+                      {isSelected && <Check className="w-3 h-3" />}
+                    </button>
+                  );
+                })}
+            </div>
+          </div>
+
+          {/* RAM Variants Selector */}
+          <div className="p-4 bg-canvas-pure border border-ice-border rounded-lg space-y-3">
+            <div className="flex justify-between items-center">
+              <label className="block text-[11px] font-bold text-ink-navy uppercase font-mono flex items-center gap-1.5">
+                <Cpu className="w-4 h-4 text-purple-600" />
+                <span>Supported RAM Variants (GB)</span>
+              </label>
+              <span className="text-[10px] font-mono text-zinc-500">
+                {formData.supportedRamGb.length === 1 && formData.supportedRamGb[0] === 0
+                  ? 'No RAM Variants (Apple-style / Fixed)'
+                  : `Selected: ${formData.supportedRamGb.join(', ')} GB`}
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {Array.from(new Set([...STANDARD_RAM_OPTIONS, ...formData.supportedRamGb]))
+                .sort((a, b) => a - b)
+                .map((gb) => {
+                  const isSelected = formData.supportedRamGb.includes(gb);
+                  return (
+                    <button
+                      type="button"
+                      key={gb}
+                      onClick={() => handleToggleRamGb(gb)}
+                      className={`px-3 py-1.5 rounded-lg border text-xs font-mono font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                        isSelected
+                          ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
+                          : 'bg-white text-ink-navy border-ice-border hover:border-purple-300'
+                      }`}
+                    >
+                      <span>{gb === 0 ? 'No RAM (Apple)' : `${gb} GB`}</span>
+                      {isSelected && <Check className="w-3 h-3" />}
+                    </button>
+                  );
+                })}
+            </div>
+          </div>
+
+          {/* RAM x Storage Price Matrix */}
+          <div className="p-4 bg-canvas-pure border border-ice-border rounded-lg space-y-3">
+            <div className="flex justify-between items-center">
+              <label className="block text-[11px] font-bold text-ink-navy uppercase font-mono flex items-center gap-1.5">
+                <Grid className="w-4 h-4 text-emerald-600" />
+                <span>Variant Price Matrix (INR ₹)</span>
+              </label>
+              <span className="text-[10px] font-mono text-zinc-500">
+                Set Rephonix payout price for each RAM x Storage combination stored in DB
+              </span>
+            </div>
+
+            <div className="overflow-x-auto border border-ice-border rounded-lg bg-white">
+              <table className="w-full text-xs font-mono border-collapse">
+                <thead>
+                  <tr className="bg-zinc-100/70 border-b border-ice-border text-zinc-600 text-[10px] uppercase font-bold">
+                    {!(formData.supportedRamGb.length === 1 && formData.supportedRamGb[0] === 0) && (
+                      <th className="p-2 text-left border-r border-ice-border">RAM \ Storage</th>
+                    )}
+                    {formData.supportedStorageGb.map((s) => (
+                      <th key={s} className="p-2 text-center border-r border-ice-border min-w-[120px]">
+                        {s >= 1024 ? `${s / 1024} TB` : `${s} GB`}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-ice-border">
+                  {(formData.supportedRamGb.length === 1 && formData.supportedRamGb[0] === 0
+                    ? [0]
+                    : formData.supportedRamGb
+                  ).map((ram) => (
+                    <tr key={ram} className="hover:bg-zinc-50/50">
+                      {!(formData.supportedRamGb.length === 1 && formData.supportedRamGb[0] === 0) && (
+                        <td className="p-2.5 font-bold text-purple-700 bg-purple-50/50 border-r border-ice-border whitespace-nowrap">
+                          {ram} GB RAM
+                        </td>
+                      )}
+                      {formData.supportedStorageGb.map((storage) => {
+                        const key = `${ram}_${storage}`;
+                        const priceVal = formData.variantPrices[key];
+                        const isEnabled = priceVal !== undefined;
+                        const isHighlighted =
+                          highlightVariant &&
+                          (highlightVariant.ram === ram || (ram === 0 && !highlightVariant.ram)) &&
+                          highlightVariant.storage === storage;
+
+                        return (
+                          <td
+                            key={storage}
+                            className={`p-2 text-center border-r border-ice-border transition-all ${
+                              isHighlighted
+                                ? 'bg-amber-50/70 ring-2 ring-inset ring-amber-400'
+                                : !isEnabled
+                                ? 'bg-zinc-50/80 opacity-75'
+                                : ''
+                            }`}
+                          >
+                            <div className="flex items-center justify-between gap-1 mb-1.5 px-0.5">
+                              <span
+                                className={`text-[9px] font-bold font-mono uppercase ${
+                                  isEnabled ? 'text-emerald-600' : 'text-zinc-400'
+                                }`}
+                              >
+                                {isHighlighted ? (
+                                  <span className="text-amber-800 bg-amber-200/80 px-1 rounded text-[8px] font-extrabold mr-1">
+                                    CURRENT
+                                  </span>
+                                ) : null}
+                                {isEnabled ? '● Active' : '○ Off (N/A)'}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleToggleVariant(ram, storage, !isEnabled)}
+                                className={`relative inline-flex h-4 w-7 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                                  isEnabled ? 'bg-emerald-500' : 'bg-zinc-300'
+                                }`}
+                                title={
+                                  isEnabled
+                                    ? 'Click to disable variant (Turn OFF)'
+                                    : 'Click to enable variant (Turn ON)'
+                                }
+                              >
+                                <span
+                                  className={`pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                                    isEnabled ? 'translate-x-3' : 'translate-x-0'
+                                  }`}
+                                />
+                              </button>
+                            </div>
+
+                            {isEnabled ? (
+                              <div>
+                                <div className="relative">
+                                  <span className="absolute left-2.5 top-2 text-zinc-400 text-[10px] font-bold">
+                                    ₹
+                                  </span>
+                                  <input
+                                    type="number"
+                                    value={priceVal === 0 ? '' : priceVal}
+                                    placeholder="0"
+                                    autoFocus={Boolean(isHighlighted)}
+                                    onChange={(e) =>
+                                      handleVariantPriceChange(ram, storage, e.target.value)
+                                    }
+                                    className={`w-full pl-6 pr-2 py-1 bg-white border rounded font-mono font-bold text-ink-navy text-right text-xs focus:outline-none shadow-xs ${
+                                      isHighlighted
+                                        ? 'border-amber-400 ring-2 ring-amber-200'
+                                        : 'border-ice-border focus:border-cobalt'
+                                    }`}
+                                  />
+                                </div>
+                                {Boolean(priceVal && priceVal > 0) && (
+                                  <span className="text-[9px] font-bold text-emerald-600 block mt-0.5">
+                                    {modalFormatPrice(Number(priceVal))}
+                                  </span>
+                                )}
+                                {Boolean(cashifyPrices && cashifyPrices[key] && cashifyPrices[key] > 0) && (() => {
+                                  const cPrice = cashifyPrices![key];
+                                  const recPrice = Math.round(cPrice * 1.03);
+                                  const isBelowTarget = !priceVal || Number(priceVal) < recPrice;
+                                  return (
+                                    <div className="mt-1 pt-1 border-t border-dashed border-zinc-200 text-[9px] font-mono leading-tight text-left">
+                                      <div className="text-zinc-500 flex justify-between">
+                                        <span>Cashify:</span>
+                                        <span className="font-semibold">₹{cPrice.toLocaleString('en-IN')}</span>
+                                      </div>
+                                      <div className="flex items-center justify-between mt-0.5">
+                                        <span className={isBelowTarget ? 'text-indigo-700 font-bold' : 'text-emerald-700 font-bold'}>
+                                          Rec (+3%): ₹{recPrice.toLocaleString('en-IN')}
+                                        </span>
+                                        {isBelowTarget && (
+                                          <button
+                                            type="button"
+                                            onClick={() => handleVariantPriceChange(ram, storage, String(recPrice))}
+                                            className="text-[9px] font-bold text-indigo-700 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-1 py-0.5 rounded border border-indigo-200 cursor-pointer ml-1 transition-colors"
+                                            title={`Set price to recommended ₹${recPrice.toLocaleString('en-IN')} (+3%)`}
+                                          >
+                                            ⚡ Set
+                                          </button>
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                })()}
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => handleToggleVariant(ram, storage, true)}
+                                className="w-full py-1 px-1.5 bg-zinc-100 hover:bg-emerald-50 text-zinc-400 hover:text-emerald-600 border border-dashed border-zinc-300 hover:border-emerald-400 rounded text-[9px] font-mono font-bold transition-all cursor-pointer"
+                              >
+                                + Enable
+                              </button>
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Brand Warranty Question Switch */}
+          <div className="p-4 bg-canvas-pure border border-ice-border rounded-lg flex items-center justify-between">
+            <div>
+              <span className="font-bold text-ink-navy flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                <span>Enable Brand Warranty Question</span>
+              </span>
+              <span className="text-[11px] text-zinc-500 block mt-0.5">
+                When ON, the "Is your device under brand warranty?" question appears in customer diagnostics. When OFF, the question is skipped to avoid double penalties on out-of-warranty devices.
+              </span>
+            </div>
+            <input
+              type="checkbox"
+              checked={formData.supportsWarrantyQuestion}
+              onChange={(e) =>
+                setFormData({ ...formData, supportsWarrantyQuestion: e.target.checked })
+              }
+              className="w-5 h-5 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+            />
+          </div>
+
+          {/* Visibility Switch */}
+          <div className="p-4 bg-canvas-pure border border-ice-border rounded-lg flex items-center justify-between">
+            <div>
+              <span className="font-bold text-ink-navy flex items-center gap-1.5">
+                {formData.hidden ? (
+                  <EyeOff className="w-4 h-4 text-amber-600" />
+                ) : (
+                  <Eye className="w-4 h-4 text-emerald-600" />
+                )}
+                <span>Hide Model from Store</span>
+              </span>
+              <span className="text-[11px] text-zinc-500 block mt-0.5">
+                When enabled, this model will be hidden from public customers on the storefront.
+              </span>
+            </div>
+            <input
+              type="checkbox"
+              checked={formData.hidden}
+              onChange={(e) => setFormData({ ...formData, hidden: e.target.checked })}
+              className="w-5 h-5 rounded text-cobalt focus:ring-cobalt cursor-pointer"
+            />
+          </div>
+
+          {/* Submit Buttons */}
+          <div className="flex justify-end gap-3 pt-4 border-t border-ice-border">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-ink-navy text-xs font-bold rounded-lg transition-all cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="px-6 py-2 bg-cobalt hover:bg-cobalt-hover text-white text-xs font-bold rounded-lg shadow-md transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+            >
+              {saving && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
+              <span>{isAddingNew ? 'Create Model in DB' : 'Save Changes to DB'}</span>
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };

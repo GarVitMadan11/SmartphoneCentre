@@ -25,10 +25,15 @@ import {
   saveCashifyCustomUrl,
   testCashifyUrlApi,
   triggerCashifyScan,
+  fetchModels,
+  updateModel,
+  bulkUpdateModels,
   CashifySummaryData,
   CashifyVariantItem,
   CashifyPriceAlertItem,
 } from '../../../utils/api';
+import { Model } from '../../../data/mockDatabase';
+import { EditSpecsAndPricesModal } from './CatalogTab';
 
 export const CashifyMonitorTab: React.FC = () => {
   const [activeSubTab, setActiveSubTab] = useState<'variants' | 'alerts'>('variants');
@@ -53,13 +58,24 @@ export const CashifyMonitorTab: React.FC = () => {
   const [testResult, setTestResult] = useState<{ ok: boolean; status: number } | null>(null);
   const [savingUrl, setSavingUrl] = useState<boolean>(false);
 
+  // Recommended price fixing states
+  const [fixingVariantKey, setFixingVariantKey] = useState<string | null>(null);
+  const [isBulkFixing, setIsBulkFixing] = useState<boolean>(false);
+
+  // Specs & Prices Edit Modal state
+  const [models, setModels] = useState<Model[]>([]);
+  const [editingModelForSpecs, setEditingModelForSpecs] = useState<Model | null>(null);
+  const [highlightSpecVariant, setHighlightSpecVariant] = useState<{ ram: number; storage: number } | null>(null);
+  const [successNotification, setSuccessNotification] = useState<string | null>(null);
+
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const [sumRes, variantsRes, alertsRes] = await Promise.all([
+      const [sumRes, variantsRes, alertsRes, modelsRes] = await Promise.all([
         fetchCashifySummary().catch(() => null),
         fetchCashifyVariants().catch(() => []),
         fetchCashifyPriceAlerts().catch(() => []),
+        fetchModels().catch(() => []),
       ]);
       if (sumRes) {
         setSummary(sumRes);
@@ -67,12 +83,214 @@ export const CashifyMonitorTab: React.FC = () => {
       }
       setVariants(variantsRes);
       setAlerts(alertsRes);
+      if (modelsRes && Array.isArray(modelsRes)) {
+        setModels(modelsRes as Model[]);
+      }
     } catch (err) {
       console.error('Failed to load Cashify monitor data:', err);
     } finally {
       setLoading(false);
     }
   }, []);
+
+  const handleOpenEditSpecs = async (variant: CashifyVariantItem) => {
+    let target = models.find(
+      (m) =>
+        m.id === variant.modelId ||
+        (m as any).legacyId === variant.modelId ||
+        m.name.toLowerCase() === variant.modelName.toLowerCase()
+    );
+
+    if (!target) {
+      try {
+        const freshModels = await fetchModels();
+        if (freshModels && Array.isArray(freshModels)) {
+          setModels(freshModels as Model[]);
+          target = freshModels.find(
+            (m) =>
+              m.id === variant.modelId ||
+              (m as any).legacyId === variant.modelId ||
+              m.name.toLowerCase() === variant.modelName.toLowerCase()
+          ) as Model | undefined;
+        }
+      } catch (err) {
+        console.error('Failed to fetch models for specs edit:', err);
+      }
+    }
+
+    if (!target) {
+      target = {
+        id: variant.modelId,
+        legacyId: variant.modelId,
+        brandId: variant.brandId || 'brand-apple',
+        name: variant.modelName,
+        category: 'premium',
+        releaseYear: variant.releaseYear || new Date().getFullYear(),
+        basePrice128GB: variant.rephonixPrice || 30000,
+        supportedStorageGb: [variant.storageGb || 128],
+        supportedRamGb: [variant.ramGb || 0],
+        variantPrices: { [`${variant.ramGb}_${variant.storageGb}`]: variant.rephonixPrice },
+      } as Model;
+    }
+
+    setHighlightSpecVariant({ ram: variant.ramGb, storage: variant.storageGb });
+    setEditingModelForSpecs(target);
+  };
+
+  const handleSpecsSaveSuccess = async () => {
+    setSuccessNotification('Model specs & prices updated successfully in database!');
+    await loadData();
+    window.dispatchEvent(new CustomEvent('stc_catalog_order_changed'));
+  };
+
+  // 1-Click Apply Recommended Price (+3% above Cashify) for a specific variant
+  const handleApplyRecommendedPrice = async (variant: CashifyVariantItem, recommendedPrice: number) => {
+    if (fixingVariantKey || isBulkFixing) return;
+    setFixingVariantKey(variant.variantKey);
+    try {
+      let target = models.find(
+        (m) =>
+          m.id === variant.modelId ||
+          (m as any).legacyId === variant.modelId ||
+          m.name.toLowerCase() === variant.modelName.toLowerCase()
+      );
+
+      if (!target) {
+        const freshModels = await fetchModels();
+        if (freshModels && Array.isArray(freshModels)) {
+          setModels(freshModels as Model[]);
+          target = freshModels.find(
+            (m) =>
+              m.id === variant.modelId ||
+              (m as any).legacyId === variant.modelId ||
+              m.name.toLowerCase() === variant.modelName.toLowerCase()
+          ) as Model | undefined;
+        }
+      }
+
+      const legacyId = (target as any)?.legacyId || target?.id || variant.modelId;
+      const key = `${variant.ramGb}_${variant.storageGb}`;
+      const currentVariantPrices = target?.variantPrices ? { ...target.variantPrices } : {};
+      currentVariantPrices[key] = recommendedPrice;
+
+      const activePrices = Object.values(currentVariantPrices).filter(
+        (v): v is number => typeof v === 'number' && v > 0
+      );
+      const minPrice = activePrices.length > 0 ? Math.min(...activePrices) : recommendedPrice;
+
+      await updateModel(legacyId, {
+        variantPrices: currentVariantPrices,
+        basePrice128GB: minPrice,
+      });
+
+      // Update local state immediately for instant responsive UI
+      setVariants((prev) =>
+        prev.map((v) => {
+          if (v.variantKey === variant.variantKey) {
+            const newDiff = recommendedPrice - (v.cashifyPrice || 0);
+            return {
+              ...v,
+              rephonixPrice: recommendedPrice,
+              difference: newDiff,
+            };
+          }
+          return v;
+        })
+      );
+
+      setModels((prev) =>
+        prev.map((m) => {
+          if (m.id === legacyId || (m as any).legacyId === legacyId) {
+            return {
+              ...m,
+              variantPrices: currentVariantPrices,
+              basePrice128GB: minPrice,
+            };
+          }
+          return m;
+        })
+      );
+
+      setSuccessNotification(
+        `✓ Updated ${variant.modelName} (${variant.specLabel}) buyback payout to ₹${recommendedPrice.toLocaleString('en-IN')} (+3% above Cashify)!`
+      );
+      window.dispatchEvent(new CustomEvent('stc_catalog_order_changed'));
+    } catch (err: any) {
+      console.error('Failed to update recommended price:', err);
+      alert('Failed to update price: ' + (err.message || err));
+    } finally {
+      setFixingVariantKey(null);
+    }
+  };
+
+  // Bulk Apply Recommended Price (+3%) to all visible variants below target
+  const handleBulkFixAllRecommended = async () => {
+    if (isBulkFixing || fixingVariantKey) return;
+    const variantsToFix = filteredVariants.filter(
+      (v) => v.cashifyPrice !== null && v.cashifyPrice > 0 && v.rephonixPrice < Math.round(v.cashifyPrice * 1.03)
+    );
+
+    if (variantsToFix.length === 0) {
+      alert('All currently visible variants already meet or exceed the +3% Cashify target!');
+      return;
+    }
+
+    const confirm = window.confirm(
+      `Apply recommended +3% prices to all ${variantsToFix.length} visible variants below target?\n\nThis will update buyback prices directly in the database.`
+    );
+    if (!confirm) return;
+
+    setIsBulkFixing(true);
+    try {
+      const modelUpdatesMap = new Map<string, Record<string, number>>();
+
+      variantsToFix.forEach((v) => {
+        const legacyId = v.modelId;
+        const key = `${v.ramGb}_${v.storageGb}`;
+        const recPrice = Math.round(v.cashifyPrice! * 1.03);
+
+        const existingTarget = models.find(
+          (m) =>
+            m.id === legacyId ||
+            (m as any).legacyId === legacyId ||
+            m.name.toLowerCase() === v.modelName.toLowerCase()
+        );
+        const resolvedLegacyId = (existingTarget as any)?.legacyId || existingTarget?.id || legacyId;
+
+        const currentPrices =
+          modelUpdatesMap.get(resolvedLegacyId) ||
+          (existingTarget?.variantPrices ? { ...existingTarget.variantPrices } : {});
+
+        currentPrices[key] = recPrice;
+        modelUpdatesMap.set(resolvedLegacyId, currentPrices);
+      });
+
+      const updatesPayload = Array.from(modelUpdatesMap.entries()).map(([id, prices]) => {
+        const activePrices = Object.values(prices).filter((p): p is number => typeof p === 'number' && p > 0);
+        const minPrice = activePrices.length > 0 ? Math.min(...activePrices) : 30000;
+        return {
+          id,
+          changes: {
+            variantPrices: prices,
+            basePrice128GB: minPrice,
+          },
+        };
+      });
+
+      await bulkUpdateModels(updatesPayload);
+
+      setSuccessNotification(
+        `✓ Successfully updated ${variantsToFix.length} variants across ${modelUpdatesMap.size} models to +3% above Cashify!`
+      );
+      window.dispatchEvent(new CustomEvent('stc_catalog_order_changed'));
+      await loadData();
+    } catch (err: any) {
+      console.error('Failed bulk price update:', err);
+      alert('Failed bulk price update: ' + (err.message || err));
+    } finally {
+      setIsBulkFixing(false);
+    }
+  };
 
   useEffect(() => {
     loadData();
@@ -99,6 +317,31 @@ export const CashifyMonitorTab: React.FC = () => {
     return Array.from(set).sort((a, b) => a - b);
   }, [variants]);
 
+  // Count of all variants with a Cashify quote that are below +3% target
+  const belowTargetTotalCount = useMemo(() => {
+    return variants.filter(
+      (v) => v.cashifyPrice !== null && v.cashifyPrice > 0 && v.rephonixPrice < Math.round(v.cashifyPrice * 1.03)
+    ).length;
+  }, [variants]);
+
+  // Map of Cashify prices for the active model being edited in the modal
+  const editingModelCashifyPrices = useMemo(() => {
+    if (!editingModelForSpecs) return undefined;
+    const map: Record<string, number> = {};
+    variants.forEach((v) => {
+      if (
+        (v.modelId === editingModelForSpecs.id ||
+          v.modelId === (editingModelForSpecs as any).legacyId ||
+          v.modelName.toLowerCase() === editingModelForSpecs.name.toLowerCase()) &&
+        v.cashifyPrice !== null &&
+        v.cashifyPrice > 0
+      ) {
+        map[`${v.ramGb}_${v.storageGb}`] = v.cashifyPrice;
+      }
+    });
+    return Object.keys(map).length > 0 ? map : undefined;
+  }, [editingModelForSpecs, variants]);
+
   // Filtered variants (Each row is 1 RAM + 1 Storage variant)
   const filteredVariants = useMemo(() => {
     return variants.filter(v => {
@@ -114,6 +357,16 @@ export const CashifyMonitorTab: React.FC = () => {
       if (statusFilter === 'OVERRIDDEN' && !v.isCustomOverride) return false;
       if (statusFilter === 'HAS_PRICE' && v.cashifyPrice === null) return false;
       if (statusFilter === 'PENDING' && v.cashifyPrice !== null) return false;
+      if (statusFilter === 'BELOW_TARGET') {
+        if (v.cashifyPrice === null || v.cashifyPrice <= 0) return false;
+        const rec = Math.round(v.cashifyPrice * 1.03);
+        if (v.rephonixPrice >= rec) return false;
+      }
+      if (statusFilter === 'MEETS_TARGET') {
+        if (v.cashifyPrice === null || v.cashifyPrice <= 0) return false;
+        const rec = Math.round(v.cashifyPrice * 1.03);
+        if (v.rephonixPrice < rec) return false;
+      }
 
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
@@ -454,6 +707,8 @@ export const CashifyMonitorTab: React.FC = () => {
               className="px-2.5 py-1.5 border border-ice-border bg-canvas-white rounded-lg text-xs font-semibold text-ink-navy focus:outline-none focus:border-cobalt shadow-xs cursor-pointer"
             >
               <option value="ALL">All Statuses</option>
+              <option value="BELOW_TARGET">🚨 Below +3% Target ({belowTargetTotalCount})</option>
+              <option value="MEETS_TARGET">🎯 Meets +3% Target</option>
               <option value="VERIFIED">✅ Verified URL</option>
               <option value="MISSING">⚠️ Missing URL</option>
               <option value="OVERRIDDEN">⭐ Custom Overridden</option>
@@ -473,6 +728,24 @@ export const CashifyMonitorTab: React.FC = () => {
             </select>
           )}
 
+          {/* Quick Auto-Fix All to +3% Target Button */}
+          {activeSubTab === 'variants' && belowTargetTotalCount > 0 && (
+            <button
+              type="button"
+              onClick={handleBulkFixAllRecommended}
+              disabled={isBulkFixing || !!fixingVariantKey}
+              className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 active:scale-95 text-white rounded-lg text-xs font-bold shadow-xs flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 whitespace-nowrap"
+              title={`Automatically update all ${belowTargetTotalCount} underpriced variants to +3% above Cashify`}
+            >
+              {isBulkFixing ? (
+                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Zap className="w-3.5 h-3.5 fill-current text-white" />
+              )}
+              <span>Auto-Fix All to +3% ({belowTargetTotalCount})</span>
+            </button>
+          )}
+
           {/* Search Box */}
           <div className="relative flex-1 sm:w-56">
             <Search className="w-3.5 h-3.5 text-ink-muted absolute left-3 top-1/2 -translate-y-1/2" />
@@ -487,6 +760,22 @@ export const CashifyMonitorTab: React.FC = () => {
         </div>
       </div>
 
+      {/* Success Notification Banner */}
+      {successNotification && (
+        <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-semibold flex items-center justify-between shadow-xs animate-in fade-in">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            <span>{successNotification}</span>
+          </div>
+          <button
+            onClick={() => setSuccessNotification(null)}
+            className="text-emerald-600 hover:text-emerald-900 cursor-pointer p-0.5 rounded"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* ── View 1: Variant Price Matrix Table (1 Row = 1 RAM + 1 Storage Variant) ── */}
       {activeSubTab === 'variants' && (
         <div className="bg-canvas-white border border-ice-border rounded-xl shadow-xs overflow-hidden">
@@ -499,7 +788,7 @@ export const CashifyMonitorTab: React.FC = () => {
                   <th className="py-3 px-3">Storage</th>
                   <th className="py-3 px-4">Rephonix Price</th>
                   <th className="py-3 px-4">Cashify Price</th>
-                  <th className="py-3 px-4">Margin Difference</th>
+                  <th className="py-3 px-4 min-w-[210px]">Margin Difference & Rec (+3%)</th>
                   <th className="py-3 px-4">Cashify Variant URL</th>
                   <th className="py-3 px-4">Status</th>
                   <th className="py-3 px-4 text-right">Actions</th>
@@ -516,15 +805,19 @@ export const CashifyMonitorTab: React.FC = () => {
                   filteredVariants.map(variant => {
                     const isEditing = editingKey === variant.variantKey;
                     const hasCashifyPrice = variant.cashifyPrice !== null;
-                    const isPayingMore = (variant.difference ?? 0) > 0;
 
                     return (
                       <tr key={variant.variantKey} className="hover:bg-slate-50/70 transition-colors">
                         {/* 1. Model & Brand */}
                         <td className="py-3 px-4">
-                          <div className="font-bold text-ink-navy text-sm leading-tight">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEditSpecs(variant)}
+                            className="font-bold text-ink-navy hover:text-cobalt hover:underline text-sm leading-tight text-left cursor-pointer transition-colors block"
+                            title="Click to edit specs & prices for this model"
+                          >
                             {variant.modelName}
-                          </div>
+                          </button>
                           <div className="text-[11px] text-ink-muted font-mono mt-0.5">
                             {variant.brandName} • {variant.releaseYear}
                           </div>
@@ -552,8 +845,18 @@ export const CashifyMonitorTab: React.FC = () => {
 
                         {/* 4. Rephonix Buyback Price */}
                         <td className="py-3 px-4 whitespace-nowrap">
-                          <div className="font-extrabold text-ink-navy text-sm">
-                            ₹{variant.rephonixPrice.toLocaleString('en-IN')}
+                          <div className="flex items-center gap-1.5 group">
+                            <span className="font-extrabold text-ink-navy text-sm">
+                              ₹{variant.rephonixPrice.toLocaleString('en-IN')}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleOpenEditSpecs(variant)}
+                              className="opacity-0 group-hover:opacity-100 p-0.5 text-cobalt hover:bg-cobalt/10 rounded transition-all cursor-pointer"
+                              title="Edit Rephonix buyback prices for this model"
+                            >
+                              <Edit2 className="w-3 h-3" />
+                            </button>
                           </div>
                           <div className="text-[10px] text-emerald-700 font-mono">Our Buyback Payout</div>
                         </td>
@@ -581,22 +884,99 @@ export const CashifyMonitorTab: React.FC = () => {
                           )}
                         </td>
 
-                        {/* 6. Margin Difference */}
-                        <td className="py-3 px-4 whitespace-nowrap">
-                          {hasCashifyPrice ? (
-                            <span
-                              className={`px-2 py-0.5 rounded-md font-mono text-xs font-bold inline-block ${
-                                isPayingMore
-                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                  : 'bg-rose-50 text-rose-700 border border-rose-200'
-                              }`}
-                            >
-                              {isPayingMore
-                                ? `+₹${variant.difference!.toLocaleString('en-IN')} (We pay more)`
-                                : `-₹${Math.abs(variant.difference!).toLocaleString('en-IN')} (We pay less)`}
-                            </span>
-                          ) : (
-                            <span className="text-slate-300 font-mono text-xs">—</span>
+                        {/* 6. Margin Difference & Recommended Price (+3% rule) */}
+                        <td className="py-3 px-4">
+                          {hasCashifyPrice ? (() => {
+                            const cashifyP = variant.cashifyPrice!;
+                            const recPrice = Math.round(cashifyP * 1.03);
+                            const currentDiff = variant.difference ?? (variant.rephonixPrice - cashifyP);
+                            const diffPct = ((variant.rephonixPrice - cashifyP) / cashifyP) * 100;
+                            const meetsTarget = variant.rephonixPrice >= recPrice;
+                            const isFixing = fixingVariantKey === variant.variantKey;
+
+                            return (
+                              <div className="space-y-1.5 min-w-[200px]">
+                                {/* Current Margin Diff Badge */}
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span
+                                    className={`px-2 py-0.5 rounded-md font-mono text-xs font-bold inline-flex items-center gap-1 ${
+                                      currentDiff > 0
+                                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                        : currentDiff < 0
+                                        ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                                        : 'bg-slate-100 text-slate-700 border border-slate-200'
+                                    }`}
+                                  >
+                                    {currentDiff > 0
+                                      ? `+₹${currentDiff.toLocaleString('en-IN')} (${diffPct >= 0 ? '+' : ''}${diffPct.toFixed(1)}%)`
+                                      : currentDiff < 0
+                                      ? `-₹${Math.abs(currentDiff).toLocaleString('en-IN')} (${diffPct.toFixed(1)}%)`
+                                      : `₹0 (0.0%)`}
+                                  </span>
+
+                                  {meetsTarget && (
+                                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold font-mono bg-emerald-100/90 text-emerald-800 border border-emerald-300 inline-flex items-center gap-0.5 shadow-2xs">
+                                      <Check className="w-2.5 h-2.5 stroke-[3]" />
+                                      <span>+3% Met</span>
+                                    </span>
+                                  )}
+                                </div>
+
+                                {/* Recommended Price Box & 1-Click Fix Button */}
+                                <div className={`p-1.5 rounded-lg border text-xs ${
+                                  meetsTarget 
+                                    ? 'bg-emerald-50/40 border-emerald-100' 
+                                    : 'bg-amber-50/60 border-amber-200 shadow-2xs'
+                                }`}>
+                                  <div className="flex items-center justify-between gap-1 text-[11px]">
+                                    <span className="text-slate-500 font-medium font-sans">Recommended (+3%):</span>
+                                    <span className="font-extrabold font-mono text-indigo-950">
+                                      ₹{recPrice.toLocaleString('en-IN')}
+                                    </span>
+                                  </div>
+
+                                  {!meetsTarget ? (
+                                    <button
+                                      type="button"
+                                      disabled={isFixing || isBulkFixing}
+                                      onClick={() => handleApplyRecommendedPrice(variant, recPrice)}
+                                      className="mt-1.5 w-full flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-md bg-gradient-to-r from-indigo-600 to-cobalt hover:from-indigo-700 hover:to-cobalt-hover active:scale-95 text-white text-[11px] font-bold shadow-xs transition-all cursor-pointer disabled:opacity-50"
+                                      title={`Fix Rephonix payout to recommended ₹${recPrice.toLocaleString('en-IN')} (3% above Cashify)`}
+                                    >
+                                      {isFixing ? (
+                                        <>
+                                          <RefreshCw className="w-3 h-3 animate-spin text-white" />
+                                          <span>Applying...</span>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Zap className="w-3 h-3 fill-amber-300 text-amber-300" />
+                                          <span>Fix to ₹{recPrice.toLocaleString('en-IN')}</span>
+                                        </>
+                                      )}
+                                    </button>
+                                  ) : (
+                                    <div className="mt-1 flex items-center justify-between text-[10px] text-emerald-700 font-mono">
+                                      <span className="flex items-center gap-0.5">
+                                        <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                        <span>Optimal Payout</span>
+                                      </span>
+                                      <button
+                                        type="button"
+                                        disabled={isFixing || isBulkFixing}
+                                        onClick={() => handleApplyRecommendedPrice(variant, recPrice)}
+                                        className="text-slate-400 hover:text-indigo-600 underline cursor-pointer text-[10px]"
+                                        title={`Reset price to exact +3% (₹${recPrice.toLocaleString('en-IN')})`}
+                                      >
+                                        set exact
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })() : (
+                            <span className="text-slate-400 font-mono text-xs italic">— (Pending scan)</span>
                           )}
                         </td>
 
@@ -700,7 +1080,7 @@ export const CashifyMonitorTab: React.FC = () => {
                               <button
                                 onClick={() => handleSaveUrl(variant.variantKey)}
                                 disabled={savingUrl}
-                                className="p-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-bold cursor-pointer transition-all flex items-center gap-1"
+                                className="p-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-bold cursor-pointer transition-all flex items-center gap-1 shadow-xs"
                                 title="Save Custom URL for this Variant"
                               >
                                 <Check className="w-3.5 h-3.5" />
@@ -714,14 +1094,25 @@ export const CashifyMonitorTab: React.FC = () => {
                               </button>
                             </div>
                           ) : (
-                            <button
-                              onClick={() => handleStartEdit(variant)}
-                              className="px-2.5 py-1 text-xs border border-ice-border hover:border-cobalt hover:bg-cobalt/5 text-ink-slate hover:text-cobalt rounded font-medium transition-all cursor-pointer flex items-center gap-1.5 ml-auto"
-                              title="Edit specific Cashify URL for this RAM/Storage variant"
-                            >
-                              <Edit2 className="w-3 h-3" />
-                              <span>{variant.cashifyUrl ? 'Edit URL' : 'Set URL'}</span>
-                            </button>
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={() => handleOpenEditSpecs(variant)}
+                                className="px-2.5 py-1 text-xs bg-cobalt/10 hover:bg-cobalt/20 text-cobalt border border-cobalt/20 hover:border-cobalt/40 rounded font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-xs"
+                                title="Edit specs, RAM/Storage matrix and Rephonix buyback prices"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                                <span>Edit Specs & Prices</span>
+                              </button>
+
+                              <button
+                                onClick={() => handleStartEdit(variant)}
+                                className="px-2.5 py-1 text-xs border border-ice-border hover:border-slate-400 hover:bg-slate-50 text-ink-slate rounded font-medium transition-all cursor-pointer flex items-center gap-1.5"
+                                title="Edit specific Cashify URL for this RAM/Storage variant"
+                              >
+                                <ExternalLink className="w-3 h-3 text-slate-400" />
+                                <span>{variant.cashifyUrl ? 'Edit URL' : 'Set URL'}</span>
+                              </button>
+                            </div>
                           )}
                         </td>
                       </tr>
@@ -836,6 +1227,21 @@ export const CashifyMonitorTab: React.FC = () => {
             </table>
           </div>
         </div>
+      )}
+
+      {/* Edit Specs & Prices Modal (Reused directly from CatalogTab) */}
+      {editingModelForSpecs && (
+        <EditSpecsAndPricesModal
+          isOpen={Boolean(editingModelForSpecs)}
+          model={editingModelForSpecs}
+          highlightVariant={highlightSpecVariant}
+          cashifyPrices={editingModelCashifyPrices}
+          onClose={() => {
+            setEditingModelForSpecs(null);
+            setHighlightSpecVariant(null);
+          }}
+          onSaveSuccess={handleSpecsSaveSuccess}
+        />
       )}
     </div>
   );
