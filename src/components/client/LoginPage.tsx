@@ -85,8 +85,8 @@ export default function LoginPage({ onLoginSuccess, onNavigate, redirectParam }:
 
         {/* Error Alert */}
         {error && (
-          <div className="p-3 bg-crimson/10 border border-crimson/20 rounded-sm flex items-start gap-2 text-crimson text-xs">
-            <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+          <div className="p-3 bg-red-500/10 border border-red-500/25 rounded-sm flex items-start gap-2 text-red-600 text-xs font-medium">
+            <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 text-red-500" />
             <div className="flex-1">{error}</div>
           </div>
         )}

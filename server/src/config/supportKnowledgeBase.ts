@@ -20,7 +20,7 @@ Rephonix is a company that buys used smartphones from customers, providing insta
 
 ## Order Issues
 If a user asks about an existing order or pickup:
-- First, check if they have provided their Booking ID (begins with STC-...) and phone number.
+- First, check if they have provided their Booking ID (begins with RPX-...) and phone number.
 - If not, politely ask for them.
 - Once provided, inform them you will connect them to a human agent to look into the specifics, as you cannot view live order status yourself yet.
 `;

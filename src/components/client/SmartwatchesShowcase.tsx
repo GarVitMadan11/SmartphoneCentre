@@ -310,17 +310,17 @@ export const SmartwatchesShowcase: React.FC<SmartwatchesShowcaseProps> = ({
                     </div>
                   </div>
 
-                  {/* Live Calculated Trade-In Price Banner */}
-                  <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200/80 rounded-xl p-4 flex items-center justify-between">
+                  {/* Estimated Payout Banner */}
+                  <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-300/90 rounded-xl p-4 flex items-center justify-between shadow-xs">
                     <div>
-                      <span className="text-[10px] font-mono font-bold text-emerald-800 uppercase block tracking-wider">
-                        Live Estimated Payout
+                      <span className="text-[10px] font-mono font-bold text-emerald-950 uppercase block tracking-wider mb-0.5">
+                        Estimated Payout
                       </span>
-                      <span className="text-xs font-mono text-emerald-700">
-                        Spec: {selectedStorage}GB Internal Storage
+                      <span className="text-xs font-mono font-semibold text-emerald-900">
+                        {selectedStorage}GB Internal Storage
                       </span>
                     </div>
-                    <span className="text-2xl font-black text-emerald-700 font-mono">
+                    <span className="text-2xl font-black text-emerald-700 font-outfit">
                       {formatPrice(calculatedPrice)}
                     </span>
                   </div>

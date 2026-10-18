@@ -17,6 +17,8 @@ export interface ValuationBreakdown {
   isCritical: boolean;
   blockedReason?: string;
   finalPrice: number;
+  devicePriceBeforeFees?: number;
+  doorstepProcessingFee?: number;
   retentionPercentage: number;
   adjustedBenchmark?: number;
   isSpecialPartsCategory?: boolean;
@@ -76,16 +78,25 @@ export function calculateValuation(
     totalDeducted: Math.abs(adj.impactAmount)
   }));
 
+  // Platform Doorstep Processing Fee (₹99) - Deducted only at the final checkout/scheduling step
+  const DOORSTEP_PROCESSING_FEE = 99;
+  const pureFinalPrice = result.isCritical ? 0 : result.finalPrice;
+
   return {
     basePrice: result.basePrice,
     deductions,
     isCritical: result.isCritical,
     blockedReason: result.blockedReason,
-    finalPrice: result.finalPrice,
-    retentionPercentage: Math.max(0, Math.min(100, Math.round((result.finalPrice / result.basePrice) * 100))),
+    finalPrice: pureFinalPrice,
+    devicePriceBeforeFees: pureFinalPrice,
+    doorstepProcessingFee: DOORSTEP_PROCESSING_FEE,
+    retentionPercentage: Math.max(0, Math.min(100, Math.round((pureFinalPrice / result.basePrice) * 100))),
     adjustedBenchmark: result.adjustedBenchmark,
     isSpecialPartsCategory: result.isSpecialPartsCategory,
     auditTrail: result.auditTrail,
-    customerSummary: result.customerSummary
+    customerSummary: result.customerSummary ? {
+      ...result.customerSummary,
+      finalOffer: pureFinalPrice
+    } : undefined
   };
 }

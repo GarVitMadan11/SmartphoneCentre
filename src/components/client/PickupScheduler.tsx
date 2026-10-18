@@ -156,7 +156,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
   selectedDefects,
   selectedModel,
   selectedVariant,
-  onEditDevice,
+  onEditDevice: _onEditDevice,
   currentUser,
   onNavigate
 }) => {
@@ -266,11 +266,15 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
   };
   // ────────────────────────────────────────────────────────
 
-  /** Generate a cryptographically random confirmation ID (not Math.random) */
+  /** Generate a human-friendly confirmation ID: RPXDDMMXXXX (e.g. RPX19104821) */
   const generateConfirmationId = (): string => {
-    const arr = new Uint32Array(1);
+    const d = new Date();
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const arr = new Uint16Array(1);
     crypto.getRandomValues(arr);
-    return `STC-${arr[0].toString(16).toUpperCase().padStart(8, '0').slice(0, 8)}`;
+    const randomDigits = 1000 + (arr[0] % 9000);
+    return `RPX${dd}${mm}${randomDigits}`;
   };
 
   // Stable confirmation ID for the success screen
@@ -362,7 +366,12 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
     return isAddressValid && isDelhiPincodeValid && isDateInRange && selectedTimeSlot !== '';
   }, [isAddressValid, isDelhiPincodeValid, isDateInRange, selectedTimeSlot]);
 
-  const totalPayoutVal = finalPrice;
+  const DOORSTEP_FEE = 99;
+  const netDoorsidePayout = useMemo(() => {
+    return finalPrice > 0 ? Math.max(0, finalPrice - DOORSTEP_FEE) : 0;
+  }, [finalPrice]);
+
+  const totalPayoutVal = netDoorsidePayout;
 
   const isSubmittingRef = useRef(false);
 
@@ -426,7 +435,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
     setIsSubmitting(true);
     recordSubmitAttempt();
 
-    const finalPayoutAmt = finalPrice;
+    const finalPayoutAmt = netDoorsidePayout;
     const payoutInfoStr = 'Instant Doorside Transfer via UPI / Bank Transfer upon physical inspection';
 
     // Build template parameters for EmailJS
@@ -469,7 +478,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
       payoutMethodName: 'Instant Doorside Payout',
       bonusPercentage: 0,
       bonusAmount: 0,
-      finalPayoutAmount: finalPrice,
+      finalPayoutAmount: netDoorsidePayout,
       payoutDetails: {},
       inspectionStatus: 'pending',
       payoutStatus: 'pending',
@@ -818,7 +827,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                             type="text"
                             value={landmark}
                             onChange={e => setLandmark(e.target.value)}
-                            placeholder="e.g. Near AS Coaching Centre / Opposite Metro Pillar 450"
+                            placeholder="e.g. Near Apollo Pharmacy / Opposite Metro Pillar 450"
                             className={`w-full p-3 rounded-sm border bg-canvas-pure text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all font-light ${
                               landmark.trim() ? 'border-emerald-400' : 'border-ice-border'
                             }`}
@@ -827,8 +836,8 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                         </div>
 
                         {address && isAddressValid && (
-                          <span className="text-[10px] text-emerald-500 mt-1 flex items-center gap-1 font-semibold">
-                            ✓ Formatted Address: <span className="text-ink-navy font-normal">{address}</span>
+                          <span className="text-xs text-emerald-700 dark:text-emerald-400 mt-1.5 flex items-center gap-1.5 font-bold">
+                            ✓ Formatted Address: <span className="text-slate-900 dark:text-white font-medium">{address}</span>
                           </span>
                         )}
                       </div>
@@ -873,16 +882,16 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
 
                         {/* Live Delhi Locality Match Banner with Green Checkmark */}
                         {pincode && isDelhiPincodeValid && pincodeLocality && (
-                          <div className="mt-2 p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-sm text-xs text-emerald-700 dark:text-emerald-300 flex items-center gap-2.5 animate-fadeIn">
-                            <div className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-bold flex-shrink-0 shadow-sm">
+                          <div className="mt-2 p-3.5 bg-emerald-50 dark:bg-emerald-950 border-2 border-emerald-400 dark:border-emerald-600 rounded-xl text-xs flex items-center gap-3 animate-fadeIn shadow-xs">
+                            <div className="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0 shadow-sm">
                               ✓
                             </div>
                             <div>
-                              <span className="font-bold text-emerald-800 dark:text-emerald-200 block text-[11px] uppercase font-mono tracking-wider">
+                              <span className="font-extrabold text-emerald-950 dark:text-emerald-100 block text-[11px] uppercase font-mono tracking-wider">
                                 Verified Delhi Service Area (Pincode {pincode})
                               </span>
-                              <span className="text-[11px] font-normal text-emerald-700 dark:text-emerald-300 block mt-0.5">
-                                📍 Locality: <strong>{pincodeLocality}</strong>, Delhi NCT
+                              <span className="text-xs font-medium text-emerald-900 dark:text-emerald-100 block mt-0.5">
+                                📍 Locality: <strong className="font-extrabold text-emerald-950 dark:text-white underline decoration-emerald-500 decoration-1 underline-offset-2">{pincodeLocality}</strong>, Delhi NCT
                               </span>
                             </div>
                           </div>
@@ -890,16 +899,16 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
 
                         {/* Non-Delhi Pincode Warning Banner */}
                         {pincode && pincode.length === 6 && !isDelhiPincodeValid && (
-                          <div className="mt-2 p-3 bg-red-500/10 border border-red-500/30 rounded-sm text-xs text-red-700 dark:text-red-300 flex items-start gap-2.5 animate-fadeIn">
-                            <div className="w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
+                          <div className="mt-2 p-3.5 bg-red-50 dark:bg-red-950 border-2 border-red-400 dark:border-red-600 rounded-xl text-xs flex items-start gap-3 animate-fadeIn shadow-xs">
+                            <div className="w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5 shadow-sm">
                               ✗
                             </div>
                             <div>
-                              <strong className="block text-[11px] uppercase font-mono tracking-wider text-red-800 dark:text-red-200">
+                              <strong className="block text-[11px] uppercase font-mono tracking-wider text-red-950 dark:text-red-100 font-extrabold">
                                 Service Unavailable for Pincode {pincode}
                               </strong>
-                              <span className="text-[11px] font-light leading-relaxed block mt-0.5">
-                                Doorstep pickup is currently exclusive to <strong>Delhi NCR (110xxx pincodes)</strong>. Please enter a valid 6-digit Delhi pincode starting with 110.
+                              <span className="text-xs font-medium text-red-900 dark:text-red-100 leading-relaxed block mt-0.5">
+                                Doorstep pickup is currently exclusive to <strong className="font-extrabold text-red-950 dark:text-white">Delhi NCR (110xxx pincodes)</strong>. Please enter a valid 6-digit Delhi pincode starting with 110.
                               </span>
                             </div>
                           </div>
@@ -972,88 +981,63 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                         <h3 className="text-[11px] font-mono tracking-[0.25em] text-cobalt uppercase flex items-center gap-1.5 font-bold mb-3">
                           <CheckCircle className="w-3.5 h-3.5" /> 3. Final Review &amp; Confirmation
                         </h3>
-                        <p className="text-xs text-ink-muted leading-relaxed font-light">
+                        <p className="text-xs text-slate-600 dark:text-zinc-400 leading-relaxed font-normal">
                           Please verify your pickup address, contact details, and scheduled doorstep inspection time before submitting.
                         </p>
                       </div>
 
                       {/* Instant Doorside Payout Banner */}
-                      <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-md p-4 text-xs text-emerald-800 dark:text-emerald-300 space-y-1.5 animate-fadeIn">
-                        <div className="flex items-center gap-2 font-bold text-sm text-emerald-700 dark:text-emerald-300">
-                          <ShieldCheck className="w-5 h-5 text-emerald-500 flex-shrink-0" />
+                      <div className="bg-emerald-50 dark:bg-emerald-950 border-2 border-emerald-400 dark:border-emerald-600 rounded-xl p-4 sm:p-5 text-xs space-y-2 animate-fadeIn shadow-sm">
+                        <div className="flex items-center gap-2.5 font-extrabold text-sm sm:text-base text-emerald-950 dark:text-emerald-100">
+                          <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
                           <span>Instant Doorside Payout Guaranteed</span>
                         </div>
-                        <p className="font-light leading-relaxed">
-                          No upfront payment credentials required! Your full trade-in payout of <strong>{formatPrice(finalPrice)}</strong> will be transferred instantly via <strong>UPI or Bank Transfer</strong> directly at your doorstep after physical device inspection.
+                        <p className="font-semibold text-emerald-950 dark:text-emerald-50 leading-relaxed text-xs sm:text-sm">
+                          No upfront payment credentials required! Your full trade-in payout of <strong className="font-black text-emerald-950 dark:text-white underline decoration-emerald-500 decoration-2 underline-offset-2">{formatPrice(netDoorsidePayout)}</strong> will be transferred instantly via <strong className="font-black text-emerald-950 dark:text-white">UPI or Bank Transfer</strong> directly at your doorstep after physical device inspection.
                         </p>
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {/* Box 1: Client Specs */}
-                        <div className="border border-ice-border rounded-sm p-4 bg-canvas-white space-y-1.5">
-                          <span className="text-[8px] font-mono text-zinc-500 uppercase block font-bold">1. Contact Details</span>
-                          <div className="space-y-1 text-xs font-mono text-ink-navy">
-                            <div><strong>Name:</strong> {name}</div>
-                            <div><strong>Mobile:</strong> +91 {phone}</div>
-                            <div className="truncate"><strong>Email:</strong> {email}</div>
+                        <div className="border border-slate-300 dark:border-zinc-700 rounded-xl p-4 bg-slate-50 dark:bg-zinc-800 space-y-2 shadow-xs">
+                          <span className="text-[11px] font-mono tracking-widest text-slate-700 dark:text-zinc-200 uppercase block font-bold">1. Contact Details</span>
+                          <div className="space-y-1.5 text-xs text-slate-900 dark:text-zinc-100 font-medium">
+                            <div><span className="font-bold text-slate-700 dark:text-zinc-300">Name:</span> <span className="font-bold text-slate-950 dark:text-white">{name}</span></div>
+                            <div><span className="font-bold text-slate-700 dark:text-zinc-300">Mobile:</span> <span className="font-bold text-slate-950 dark:text-white">+91 {phone}</span></div>
+                            <div className="truncate"><span className="font-bold text-slate-700 dark:text-zinc-300">Email:</span> <span className="font-bold text-slate-950 dark:text-white">{email}</span></div>
                           </div>
                         </div>
 
                         {/* Box 2: Pickup Schedule */}
-                        <div className="border border-ice-border rounded-sm p-4 bg-canvas-white space-y-1.5">
-                          <span className="text-[8px] font-mono text-zinc-500 uppercase block font-bold">2. Doorside Pickup Schedule</span>
-                          <div className="space-y-1 text-xs font-mono text-ink-navy">
-                            <div><strong>Date:</strong> {selectedDate}</div>
-                            <div className="truncate"><strong>Window:</strong> {selectedTimeSlot}</div>
+                        <div className="border border-slate-300 dark:border-zinc-700 rounded-xl p-4 bg-slate-50 dark:bg-zinc-800 space-y-2 shadow-xs">
+                          <span className="text-[11px] font-mono tracking-widest text-slate-700 dark:text-zinc-200 uppercase block font-bold">2. Doorside Pickup Schedule</span>
+                          <div className="space-y-1.5 text-xs text-slate-900 dark:text-zinc-100 font-medium">
+                            <div><span className="font-bold text-slate-700 dark:text-zinc-300">Date:</span> <span className="font-bold text-slate-950 dark:text-white">{selectedDate}</span></div>
+                            <div className="truncate"><span className="font-bold text-slate-700 dark:text-zinc-300">Window:</span> <span className="font-bold text-slate-950 dark:text-white">{selectedTimeSlot}</span></div>
                           </div>
                         </div>
                       </div>
 
                       {/* Address detail */}
-                      <div className="border border-ice-border rounded-sm p-4 bg-canvas-white space-y-1.5">
-                        <span className="text-[8px] font-mono text-zinc-500 uppercase block font-bold">Pickup Address &amp; Locality</span>
-                        <p className="text-xs font-mono text-ink-navy leading-normal">{address}</p>
+                      <div className="border border-slate-300 dark:border-zinc-700 rounded-xl p-4 bg-slate-50 dark:bg-zinc-800 space-y-2 shadow-xs">
+                        <span className="text-[11px] font-mono tracking-widest text-slate-700 dark:text-zinc-200 uppercase block font-bold">Pickup Address &amp; Locality</span>
+                        <p className="text-xs text-slate-950 dark:text-white font-medium leading-relaxed">{address}</p>
                       </div>
 
                       {/* Final Financial summary box */}
-                      <div className="bg-slate-50 dark:bg-zinc-900/60 p-4 rounded-lg border border-slate-200 dark:border-zinc-800 space-y-2.5 font-sans shadow-xs">
-                        <div className="flex justify-between text-xs text-slate-600 dark:text-zinc-400 font-medium">
+                      <div className="bg-slate-50 dark:bg-zinc-800 p-4 rounded-xl border border-slate-300 dark:border-zinc-700 space-y-2.5 font-sans shadow-sm">
+                        <div className="flex justify-between text-xs text-slate-700 dark:text-zinc-200 font-semibold">
                           <span>Trade-In Valuation Price:</span>
-                          <span className="text-slate-900 dark:text-white font-semibold">{formatPrice(finalPrice)}</span>
+                          <span className="text-slate-950 dark:text-white font-bold">{formatPrice(finalPrice)}</span>
                         </div>
-                        <div className="flex justify-between text-xs text-emerald-700 dark:text-emerald-400 font-semibold">
-                          <span>Doorstep Inspection Fee:</span>
-                          <span>FREE (₹0)</span>
+                        <div className="flex justify-between text-xs text-slate-700 dark:text-zinc-200 font-semibold">
+                          <span>Doorstep Processing Fee:</span>
+                          <span className="text-red-500 dark:text-red-400 font-bold font-mono">-₹99</span>
                         </div>
-                        <div className="flex justify-between items-center text-sm font-bold text-slate-900 dark:text-white border-t border-slate-200 dark:border-zinc-800 pt-2.5 mt-2.5">
+                        <div className="flex justify-between items-center text-sm font-bold text-slate-950 dark:text-white border-t border-slate-300 dark:border-zinc-700 pt-2.5 mt-2.5">
                           <span>Instant Doorside Payout:</span>
-                          <span className="text-xl text-cobalt font-extrabold font-outfit">{formatPrice(finalPrice)}</span>
+                          <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-outfit tracking-tight">{formatPrice(netDoorsidePayout)}</span>
                         </div>
-                      </div>
-
-                      {/* Not satisfied with the price? Contact Us Banner */}
-                      <div className="mt-4 bg-[#f3f4f6] dark:bg-zinc-800/80 border border-slate-200/80 dark:border-zinc-700/60 rounded-2xl p-4 sm:px-6 sm:py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
-                        <div>
-                          <h4 className="font-bold text-slate-900 dark:text-white text-sm sm:text-base tracking-tight">
-                            Not satisfied with the price?
-                          </h4>
-                          <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-0.5 font-normal">
-                            Please connect with our team
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (onNavigate) {
-                              onNavigate('/contact');
-                            } else {
-                              window.location.href = '/contact';
-                            }
-                          }}
-                          className="text-cobalt dark:text-sky-400 hover:text-cobalt-hover dark:hover:text-sky-300 font-bold text-xs sm:text-sm hover:underline cursor-pointer transition-colors flex-shrink-0 self-end sm:self-auto"
-                        >
-                          Contact Us
-                        </button>
                       </div>
                     </div>
                   )}
@@ -1062,21 +1046,21 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
 
               {/* Inline form error banner */}
               {formError && (
-                <div className="flex items-start gap-2.5 p-3 bg-red-500/10 border border-red-500/20 rounded-sm text-xs text-red-400 font-mono mb-4 animate-fadeIn">
-                  <svg className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="flex items-start gap-3 p-3.5 bg-red-50 dark:bg-red-950 border-2 border-red-400 dark:border-red-600 rounded-xl text-xs text-red-950 dark:text-red-100 font-medium mb-4 animate-fadeIn shadow-xs">
+                  <svg className="w-4 h-4 flex-shrink-0 mt-0.5 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <span>{formError}</span>
-                  <button onClick={() => setFormError('')} className="ml-auto flex-shrink-0 text-red-400 hover:text-red-500" aria-label="Dismiss">✕</button>
+                  <span className="flex-1 font-semibold">{formError}</span>
+                  <button onClick={() => setFormError('')} className="ml-auto flex-shrink-0 text-red-700 dark:text-red-300 hover:text-red-950 font-bold" aria-label="Dismiss">✕</button>
                 </div>
               )}
 
               {/* Navigation CTAs */}
-              <div className="flex gap-3 border-t border-white/[0.04] pt-4 mt-8">
+              <div className="flex gap-3 border-t border-slate-200 dark:border-zinc-800 pt-4 mt-8">
                 <button
                   type="button"
                   onClick={handlePrevStep}
-                  className="px-5 py-3 rounded-sm border border-ice-border hover:bg-ice-gray text-ink-slate font-semibold text-sm transition-all"
+                  className="px-6 py-3 rounded-md border-2 border-slate-300 dark:border-zinc-700 bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 text-slate-900 dark:text-white font-extrabold text-sm transition-all shadow-xs"
                   style={{ minHeight: '48px' }}
                 >
                   {schedulerStep === 1 ? 'Back' : 'Previous'}
@@ -1089,7 +1073,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                     disabled={
                       schedulerStep === 1 ? !isStep1Valid : !isStep2Valid
                     }
-                    className={`flex-1 bg-cobalt hover:bg-cobalt-hover text-white py-3 rounded-sm font-bold text-sm transition-all flex items-center justify-center gap-2 ${
+                    className={`flex-1 bg-blue-600 hover:bg-blue-700 dark:bg-sky-600 dark:hover:bg-sky-500 text-white py-3 rounded-md font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-md ${
                       (schedulerStep === 1 ? !isStep1Valid : !isStep2Valid)
                         ? 'opacity-40 cursor-not-allowed'
                         : 'hover:scale-[1.01]'
@@ -1104,7 +1088,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                     type="button"
                     onClick={handleSubmit}
                     disabled={isSubmitting}
-                    className={`flex-1 bg-cobalt hover:bg-cobalt-hover text-white py-3 rounded-sm font-bold text-sm transition-all flex items-center justify-center gap-2 ${
+                    className={`flex-1 bg-blue-600 hover:bg-blue-700 dark:bg-sky-600 dark:hover:bg-sky-500 text-white py-3 rounded-md font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-md ${
                       isSubmitting
                         ? 'opacity-40 cursor-not-allowed'
                         : 'hover:scale-[1.01]'
@@ -1120,26 +1104,18 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
             {/* Right Column: Ticket Summary with Specific Deductions and Editing */}
             <div className="lg:col-span-5 space-y-4 sm:space-y-6">
               {/* Receipt Style Lock Summary */}
-              <div className="bg-canvas-pure rounded-sm border border-ice-border p-5 relative overflow-hidden shadow-premium">
-                <div className="pb-3 border-b border-ice-border mb-4 flex items-center justify-between">
-                  <div className="text-left">
-                    <span className="text-[10px] font-mono tracking-[0.2em] text-slate-500 uppercase block mb-1">Audit Ledger</span>
-                    <h3 className="text-lg font-light text-ink-navy">Specification Ledger</h3>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={onEditDevice}
-                    className="text-[10px] font-mono text-cobalt hover:underline uppercase"
-                  >
-                    [Edit Spec]
-                  </button>
+              <div className="bg-canvas-pure dark:bg-zinc-900 rounded-xl border border-ice-border dark:border-zinc-800 p-5 relative overflow-hidden shadow-premium">
+                <div className="pb-3 border-b border-ice-border dark:border-zinc-800 mb-4 text-left">
+                  <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white font-mono tracking-wider uppercase">
+                    Audit Ledger
+                  </h3>
                 </div>
 
                 <div className="space-y-3 text-xs font-sans text-left">
                   {/* Detailed breakdown list */}
                   <div className="flex justify-between items-center py-1 text-slate-700 dark:text-zinc-300 font-medium">
                     <span>Base Device Configuration</span>
-                    <span className="text-slate-600 dark:text-zinc-300 font-semibold">{selectedVariant.storageGb}GB</span>
+                    <span className="text-slate-900 dark:text-white font-bold">{selectedVariant.storageGb}GB</span>
                   </div>
 
                   {/* Declared conditions breakdown */}
@@ -1150,7 +1126,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                         <button
                           type="button"
                           onClick={onBack}
-                          className="text-cobalt hover:underline font-semibold normal-case"
+                          className="text-blue-600 dark:text-sky-400 hover:underline font-semibold normal-case"
                         >
                           Edit Defects
                         </button>
@@ -1163,29 +1139,52 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                       ))}
                     </div>
                   ) : (
-                    <div className="py-3 border-y border-slate-200 dark:border-zinc-800 border-dashed text-center text-xs text-emerald-700 dark:text-emerald-400 font-semibold italic">
+                    <div className="py-3 border-y border-slate-200 dark:border-zinc-800 border-dashed text-center text-xs text-emerald-600 dark:text-emerald-400 font-semibold italic">
                       [No defects declared. Maximum value applies.]
                     </div>
                   )}
 
-                  <div className="flex justify-between items-center bg-slate-100 dark:bg-zinc-900 p-3.5 rounded-lg border border-slate-200 dark:border-zinc-800 mt-4 shadow-xs">
+                  <div className="flex justify-between items-center bg-slate-50 dark:bg-zinc-800/90 p-4 rounded-xl border border-slate-200 dark:border-zinc-700 mt-4 shadow-sm">
                     <div>
-                      <span className="text-[9px] text-slate-600 dark:text-zinc-400 uppercase font-bold tracking-wider block">Total Estimated Payout</span>
-                      <span className="text-xl font-extrabold text-cobalt tracking-tight font-outfit">{formatPrice(totalPayoutVal)}</span>
+                      <span className="text-[10px] font-mono font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider block mb-1">Total Estimated Payout</span>
+                      <span className="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight font-outfit">{formatPrice(totalPayoutVal)}</span>
                     </div>
-                    <span className="text-[10px] bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 px-2.5 py-1 rounded-md border border-emerald-300 dark:border-emerald-500/30 font-extrabold uppercase tracking-wider">Locked</span>
+                    <span className="text-xs bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 px-3 py-1.5 rounded-full border border-emerald-500/30 font-extrabold uppercase tracking-wider shadow-xs">Locked</span>
                   </div>
                 </div>
               </div>
 
               {/* Side contact info summary */}
-              <div className="bg-canvas-pure rounded-sm border border-ice-border p-5 text-xs text-left shadow-premium space-y-2">
-                <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-1">Contact Summary</span>
-                {name && <div className="text-zinc-300 font-mono"><strong>Client:</strong> {name}</div>}
-                {phone && <div className="text-zinc-300 font-mono"><strong>WhatsApp:</strong> +91 {phone}</div>}
+              <div className="bg-white dark:bg-zinc-900 rounded-xl border border-slate-200 dark:border-zinc-800 p-5 text-xs text-left shadow-sm space-y-3">
+                <span className="text-xs font-mono font-bold tracking-wider text-slate-700 dark:text-zinc-300 uppercase block border-b border-slate-200 dark:border-zinc-800 pb-2">
+                  Contact Summary
+                </span>
+                {name && (
+                  <div className="flex items-center justify-between text-xs py-0.5">
+                    <span className="text-slate-600 dark:text-zinc-300 font-semibold">Client:</span>
+                    <span className="text-slate-950 dark:text-white font-bold text-sm">{name}</span>
+                  </div>
+                )}
+                {phone && (
+                  <div className="flex items-center justify-between text-xs py-0.5">
+                    <span className="text-slate-600 dark:text-zinc-300 font-semibold">WhatsApp:</span>
+                    <span className="text-slate-950 dark:text-white font-bold text-sm">+91 {phone}</span>
+                  </div>
+                )}
                 {selectedDate && (
-                  <div className="text-zinc-300 font-mono">
-                    <strong>Pickup:</strong> {selectedDate} @ {selectedTimeSlot ? selectedTimeSlot.split(' ')[0] + ' ' + selectedTimeSlot.split(' ')[1] : ''}
+                  <div className="border-t border-slate-200 dark:border-zinc-800 pt-2.5 space-y-2 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-600 dark:text-zinc-300 font-semibold">Pickup Date:</span>
+                      <span className="text-slate-950 dark:text-white font-bold">{selectedDate}</span>
+                    </div>
+                    {selectedTimeSlot && (
+                      <div className="flex items-start justify-between gap-2">
+                        <span className="text-slate-600 dark:text-zinc-300 font-semibold flex-shrink-0">Pickup Slot:</span>
+                        <span className="text-slate-950 dark:text-white font-bold text-right leading-tight">
+                          {selectedTimeSlot}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -1197,7 +1196,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
             key="success-card"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="max-w-xl mx-auto bg-canvas-pure border border-ice-border rounded-sm p-5 sm:p-8 text-center flex flex-col items-center justify-center relative overflow-hidden shadow-premium"
+            className="max-w-xl mx-auto bg-canvas-pure dark:bg-zinc-900 border border-ice-border dark:border-zinc-800 rounded-xl p-5 sm:p-8 text-center flex flex-col items-center justify-center relative overflow-hidden shadow-premium"
           >
             <div className="absolute -right-12 -top-12 w-32 h-32 bg-emerald-500/10 rounded-sm opacity-40 -z-10" />
 
@@ -1205,14 +1204,14 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
               <CheckCircle className="w-10 h-10 fill-emerald-500/10" />
             </div>
 
-            <h2 className="text-2xl font-light tracking-tight text-ink-navy">Trade-In Confirmed</h2>
+            <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Trade-In Confirmed</h2>
 
             {/* Receipt Details with declared defects summary & Side-by-side Phone Preview */}
             <div className="w-full my-6">
-              <div className="bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg p-5 text-xs space-y-3 font-sans text-left shadow-sm">
-                <div className="flex justify-between items-center font-bold border-b border-slate-200 dark:border-zinc-800 pb-2.5 mb-2.5 text-slate-900 dark:text-white text-sm">
+              <div className="bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-xl p-5 text-xs space-y-3 font-sans text-left shadow-sm">
+                <div className="flex justify-between items-center font-bold border-b border-slate-200 dark:border-zinc-700 pb-2.5 mb-2.5 text-slate-900 dark:text-white text-sm">
                   <span>Confirmation ID</span>
-                  <span className="text-cobalt font-extrabold font-mono text-base">#{confirmationId}</span>
+                  <span className="text-blue-600 dark:text-sky-400 font-extrabold font-mono text-base">#{confirmationId}</span>
                 </div>
                 
                 <div className="flex justify-between items-center">
@@ -1231,7 +1230,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                 </div>
                 
                 {/* Date time booking overview */}
-                <div className="flex justify-between items-center border-t border-slate-200 dark:border-zinc-800 pt-2.5">
+                <div className="flex justify-between items-center border-t border-slate-200 dark:border-zinc-700 pt-2.5">
                   <span className="text-slate-600 dark:text-zinc-400 font-medium">Scheduled Date</span>
                   <span className="text-slate-900 dark:text-slate-100 font-semibold">{selectedDate}</span>
                 </div>
@@ -1242,7 +1241,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                 </div>
 
                 {/* Declared defects summary on ticket receipt */}
-                <div className="border-t border-slate-200 dark:border-zinc-800 pt-2.5 space-y-1.5">
+                <div className="border-t border-slate-200 dark:border-zinc-700 pt-2.5 space-y-1.5">
                   <span className="text-slate-700 dark:text-zinc-300 font-semibold block">Declared Defects Summary:</span>
                   {selectedDefects.length > 0 ? (
                     <div className="space-y-1 pl-2 text-xs text-slate-800 dark:text-zinc-200 font-medium">
@@ -1253,20 +1252,20 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                       ))}
                     </div>
                   ) : (
-                    <span className="pl-2 text-xs text-emerald-700 dark:text-emerald-400 font-semibold italic">• No defects declared (Flawless Device)</span>
+                    <span className="pl-2 text-xs text-emerald-700 dark:text-emerald-400 font-semibold italic">• No defects declared (Perfect Device)</span>
                   )}
                 </div>
 
-                <div className="flex justify-between items-center border-t border-slate-200 dark:border-zinc-800 pt-2.5">
+                <div className="flex justify-between items-center border-t border-slate-200 dark:border-zinc-700 pt-2.5">
                   <span className="text-slate-600 dark:text-zinc-400 font-medium">Payout Destination</span>
                   <span className="text-emerald-700 dark:text-emerald-400 font-bold truncate max-w-[240px]">
                     Instant Doorside Payout (UPI / Bank)
                   </span>
                 </div>
                 
-                <div className="flex justify-between items-center border-t border-slate-200 dark:border-zinc-800 pt-3 mt-3 text-slate-900 dark:text-white">
+                <div className="flex justify-between items-center border-t border-slate-200 dark:border-zinc-700 pt-3 mt-3 text-slate-900 dark:text-white">
                   <span className="font-bold text-sm">Final Locked Payout</span>
-                  <span className="text-cobalt font-extrabold text-xl font-outfit">{formatPrice(totalPayoutVal)}</span>
+                  <span className="text-emerald-600 dark:text-emerald-400 font-extrabold text-2xl font-outfit">{formatPrice(totalPayoutVal)}</span>
                 </div>
               </div>
             </div>
@@ -1280,7 +1279,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
               <button
                 type="button"
                 onClick={onSuccess}
-                className="w-full bg-cobalt hover:bg-cobalt-hover text-white py-3.5 rounded-sm font-bold transition-all text-sm shadow-md cursor-pointer"
+                className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-sky-600 dark:hover:bg-sky-500 text-white py-3.5 rounded-md font-bold transition-all text-sm shadow-md cursor-pointer"
                 style={{ minHeight: '48px' }}
               >
                 Return to Catalog Homepage

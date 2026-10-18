@@ -811,13 +811,13 @@ export default function App() {
                 {/* Hero Call to Action */}
                 <div className="lg:col-span-7 flex flex-col items-start text-left">
                   <span className="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold bg-secondary/10 text-secondary mb-6 tracking-wide uppercase">
-                    ★ #1 Trusted Resale Partner
+                    ★ A Trusted Resale Partner
                   </span>
                   <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-ink-navy tracking-tight leading-none mb-6">
                     Sell Your Smartphone <br className="hidden sm:inline" />for the <span className="text-secondary">Best Price</span>
                   </h1>
                   <p className="text-base sm:text-lg text-ink-slate mb-8 max-w-xl font-light leading-relaxed">
-                    Get an instant valuation, free doorstep pickup, and instant cash payment. No hidden deductions, guaranteed.
+                    Get an instant valuation, free doorstep pickup, and instant online or UPI payment. No hidden deductions, guaranteed.
                   </p>
 
                   {/* Brand Logo Quick-Select Pills — 5 cols × 2 rows */}
@@ -1232,16 +1232,11 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* 4 Metric Columns */}
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 relative z-10 text-center sm:text-left">
+                  {/* 3 Metric Columns */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 relative z-10 text-center sm:text-left">
                     <div className="sm:border-r sm:border-white/10 sm:pr-4">
                       <div className="text-3xl sm:text-4xl font-black text-white tracking-tight font-outfit">Delhi NCR</div>
                       <div className="text-xs font-bold text-blue-300 uppercase tracking-wider mt-1">Exclusive Service Area</div>
-                    </div>
-
-                    <div className="lg:border-r lg:border-white/10 lg:pr-4">
-                      <div className="text-3xl sm:text-4xl font-black text-emerald-400 tracking-tight font-outfit">₹1.8 Cr+</div>
-                      <div className="text-xs font-bold text-emerald-300 uppercase tracking-wider mt-1">Paid to Sellers</div>
                     </div>
 
                     <div className="sm:border-r sm:border-white/10 sm:pr-4">
@@ -1267,29 +1262,29 @@ export default function App() {
                   {[
                     {
                       name: 'Priya Mehta',
-                      city: 'Mumbai',
+                      city: 'New Delhi',
                       avatar: 'PM',
                       rating: 5,
                       device: 'iPhone 14 Pro Max',
-                      quote: 'Got ₹48,000 for my iPhone in under 20 minutes. The agent was punctual, polite, and the UPI transfer hit my account before he even left!',
+                      quote: 'Booked my doorstep pickup online in under 2 minutes. The agent arrived right on schedule, inspected my iPhone, and transferred ₹48,000 directly via UPI to my account on the spot!',
                       color: 'bg-blue-100 text-blue-700',
                     },
                     {
                       name: 'Rohit Sharma',
-                      city: 'Bangalore',
+                      city: 'Gurugram',
                       avatar: 'RS',
                       rating: 5,
                       device: 'Samsung Galaxy S23 Ultra',
-                      quote: 'Skeptical at first, but they actually gave me ₹500 MORE than quoted because my condition was better than I described. Unbelievable honesty.',
+                      quote: 'Scheduled a pickup slot through the website. The executive visited, verified my phone condition, and completed the payment immediately via online bank transfer. Very smooth and transparent!',
                       color: 'bg-emerald-100 text-emerald-700',
                     },
                     {
                       name: 'Ananya Iyer',
-                      city: 'Chennai',
+                      city: 'Noida',
                       avatar: 'AI',
                       rating: 5,
                       device: 'OnePlus 12',
-                      quote: 'Sold 3 company phones through Rephonix for our office upgrade. Bulk pricing was great and the data wipe certificate gave us peace of mind.',
+                      quote: 'Booked online and picked my preferred slot. The agent came to my doorstep, completed a quick verification, and transferred the full amount instantly via UPI before leaving. Super convenient!',
                       color: 'bg-purple-100 text-purple-700',
                     },
                   ].map(t => (
@@ -1325,7 +1320,7 @@ export default function App() {
                     </p>
                     <div className="space-y-4">
                       {[
-                        { label: 'Base Price (Flawless)', desc: 'Market-calibrated anchor for your model + storage variant', color: 'bg-cobalt text-white' },
+                        { label: 'Base Price (Perfect)', desc: 'Market-calibrated anchor for your model + storage variant', color: 'bg-cobalt text-white' },
                         { label: '− Condition Deductions', desc: 'Fixed or % deductions per reported defect (screen, body, camera, battery)', color: 'bg-red-100 text-red-700' },
                         { label: '− Accessory Deductions', desc: 'Missing box, charger, or accessories deducted at fixed rates', color: 'bg-orange-100 text-orange-700' },
                         { label: '= Final Payout', desc: 'Protected by category caps so you always get ≥8% of base value', color: 'bg-emerald-100 text-emerald-700' },
@@ -1349,8 +1344,8 @@ export default function App() {
                     </div>
                     <div className="space-y-3">
                       {[
-                        { label: 'Base Price (256GB, Flawless)', value: '₹46,010', color: 'text-cobalt' },
-                        { label: '− Minor Screen Scratch (10%)', value: '− ₹4,601', color: 'text-red-500' },
+                        { label: 'Base Price (256GB, Perfect)', value: '₹46,010', color: 'text-cobalt' },
+                        { label: '− Minor Screen Scratch', value: '− ₹4,601', color: 'text-red-500' },
                         { label: '− Missing Original Charger / Cable', value: '− ₹1,500', color: 'text-orange-500' },
                         { label: '= Your Final Payout', value: '₹39,909', color: 'text-emerald-600', bold: true },
                       ].map(row => (
@@ -1386,7 +1381,6 @@ export default function App() {
                     >
                       Start Free Valuation →
                     </button>
-                    <p className="text-blue-200/60 text-[11px] mt-4 font-mono">No commitment. Quote valid for 7 days.</p>
                   </div>
                 </div>
               </div>

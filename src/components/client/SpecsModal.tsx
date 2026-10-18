@@ -111,7 +111,7 @@ export function SpecsModal({ isOpen, onClose }: SpecsModalProps) {
               Price_Final = Price_Base - Σ ( Deduction_Fixed + ( Price_Base × Deduction_Percentage ) )
             </div>
             <div className="text-xs space-y-1 font-light text-zinc-500">
-              <div>• <strong>Price_Base</strong>: Anchor price set for a flawless device variant.</div>
+              <div>• <strong>Price_Base</strong>: Anchor price set for a perfect device variant.</div>
               <div>• <strong>Deduction_Fixed</strong>: Cash deduction applied for accessories (e.g. missing box).</div>
               <div>• <strong>Deduction_Percentage</strong>: Proportional penalty for wear/damage (e.g. 28% for flagship screen crack).</div>
               <div>• <strong>Category Caps</strong>: Screen (Max 40%), Body (Max 20%), Camera (Max 18%), Battery (Max 8%), Accessories (Max 12%). Prevent compounding deductions from driving value below an 8% baseline resale floor.</div>

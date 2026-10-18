@@ -91,10 +91,25 @@ router.post('/track', trackingLimiter, async (req, res) => {
       return;
     }
 
-    const booking = await prisma.booking.findUnique({
-      where: { id: bookingId.trim().toUpperCase() },
+    const cleanId = bookingId.trim().toUpperCase();
+    let booking = await prisma.booking.findUnique({
+      where: { id: cleanId },
       include: { events: { orderBy: { createdAt: 'asc' } } },
     });
+    if (!booking) {
+      const stripped = cleanId.replace(/-/g, '');
+      const candidates = await prisma.booking.findMany({
+        where: {
+          OR: [
+            { id: cleanId },
+            { id: stripped }
+          ]
+        },
+        include: { events: { orderBy: { createdAt: 'asc' } } },
+        take: 5
+      });
+      booking = candidates.find(b => b.id.replace(/-/g, '').toUpperCase() === stripped) || null;
+    }
 
     const phoneMatch = booking &&
       (() => {
@@ -105,7 +120,7 @@ router.post('/track', trackingLimiter, async (req, res) => {
         } catch { return false; }
       })();
 
-    if (!phoneMatch) {
+    if (!booking || !phoneMatch) {
       res.status(404).json({ error: 'NotFound', message: 'No booking found matching the provided Booking ID and phone number.' });
       return;
     }
@@ -226,7 +241,13 @@ router.post('/', bookingLimiter, optionalCustomerAuth, async (req: Authenticated
     }
 
     const payout = payoutBonusFor(String(b.payoutMethod), estimatedPrice);
-    const bookingId = `STC-${randomBytes(6).toString('base64url').toUpperCase()}`;
+    const d = new Date();
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const randomDigits = 1000 + (randomBytes(2).readUInt16BE(0) % 9000);
+    const bookingId = (typeof b.id === 'string' && b.id.trim().toUpperCase().startsWith('RPX'))
+      ? b.id.trim().toUpperCase()
+      : `RPX${dd}${mm}${randomDigits}`;
 
     const rawPayoutDetails = (b.payoutDetails && typeof b.payoutDetails === 'object') ? (b.payoutDetails as Record<string, unknown>) : {};
     const encryptedPayoutJson = encryptPayoutDetails(rawPayoutDetails);

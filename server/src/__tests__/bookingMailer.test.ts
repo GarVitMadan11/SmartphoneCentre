@@ -3,7 +3,7 @@ import { sendBookingConfirmationEmail, sendAdminBookingNotificationEmail, sendAd
 
 describe('Booking Mailer & Admin Alert Email', () => {
   const sampleBooking = {
-    id: 'STC-TEST999',
+    id: 'RPX-2610-TEST',
     modelName: 'iPhone 15 Pro',
     storageGb: 256,
     customerName: 'Garvit Madan',

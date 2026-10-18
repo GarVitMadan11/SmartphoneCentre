@@ -1651,19 +1651,19 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                     </div>
                   </div>
 
-                  {/* Live Estimated Payout Banner */}
-                  <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200/80 rounded-xl p-4 flex items-center justify-between">
+                  {/* Estimated Payout Banner */}
+                  <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-300/90 rounded-xl p-4 flex items-center justify-between shadow-xs">
                     <div>
-                      <span className="text-[10px] font-mono font-bold text-emerald-800 uppercase block tracking-wider mb-0.5">
-                        Live Estimated Payout
+                      <span className="text-[10px] font-mono font-bold text-emerald-950 uppercase block tracking-wider mb-0.5">
+                        Estimated Payout
                       </span>
-                      <span className="text-xs font-mono text-emerald-700">
-                        Spec: {isTablet ? (selectedConnectivity === 'cellular' ? 'Wi-Fi + Cellular · ' : 'Wi-Fi Only · ') : ''}
+                      <span className="text-xs font-mono font-semibold text-emerald-900">
+                        {isTablet ? (selectedConnectivity === 'cellular' ? 'Wi-Fi + Cellular · ' : 'Wi-Fi Only · ') : ''}
                         {ramOptions.length > 0 && selectedRam ? `${selectedRam}GB RAM / ` : ''}
                         {selectedStorage ? (selectedStorage >= 1024 ? `${selectedStorage / 1024}TB` : `${selectedStorage}GB`) : ''}
                       </span>
                     </div>
-                    <span className="text-2xl font-black text-emerald-700 font-mono">
+                    <span className="text-2xl font-black text-emerald-700 font-outfit">
                       {formatPrice(tempVariant?.basePrice || getMaxVariantPrice(selectedModel))}
                     </span>
                   </div>

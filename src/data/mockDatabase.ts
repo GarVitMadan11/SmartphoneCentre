@@ -478,7 +478,7 @@ export function getDefectRulesForCategory(
       id: 'defect-charger-missing',
       category: 'accessories',
       description: 'Missing Original Charger / Cable',
-      subText: 'OEM charging brick or cable is not included.',
+      subText: 'Original charger or cable is not included.',
       deductionFixed: 1500,
       deductionPercentage: 0
     },

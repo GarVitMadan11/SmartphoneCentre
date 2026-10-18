@@ -243,7 +243,7 @@ export const SmartphoneMockup: React.FC<SmartphoneMockupProps> = ({ onSelect }) 
               <div className="p-2.5 rounded-lg card-glass">
                 <div className="flex justify-between text-[10px] mb-1.5 text-ink-slate items-center">
                   <span className="font-extrabold text-ink-navy truncate pr-2 tracking-tight">{previewData.title}</span>
-                  <span className="font-extrabold text-[8.5px] uppercase tracking-wider px-1.5 py-[2px] rounded-[3px] bg-emerald-500/10 text-emerald-600 border border-emerald-500/10">Flawless</span>
+                  <span className="font-extrabold text-[8.5px] uppercase tracking-wider px-1.5 py-[2px] rounded-[3px] bg-emerald-500/10 text-emerald-600 border border-emerald-500/10">Perfect</span>
                 </div>
                 <div className="w-full bg-slate-200/50 h-1.5 rounded-full overflow-hidden p-[0.5px]">
                   <div className={`h-full bg-gradient-to-r ${previewData.progressGradient} ${previewData.progressWidth} rounded-full transition-all duration-700 ease-out shadow-[0_0_8px_rgba(16,185,129,0.4)]`} />

@@ -275,16 +275,7 @@ export const SellYourDevice: React.FC<{
               </button>
             </div>
             
-            {/* Accepted Indian Payment Methods Bar */}
-            <div className="mt-5 pt-4 border-t border-ice-border/60 flex items-center gap-3">
-              <span className="text-[10px] font-mono font-bold text-ink-muted uppercase tracking-wider">Accepted Payouts:</span>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-mono font-extrabold bg-blue-500/10 text-blue-700 border border-blue-200 px-2 py-0.5 rounded">UPI</span>
-                <span className="text-[10px] font-mono font-extrabold bg-emerald-500/10 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded">GPay / PhonePe</span>
-                <span className="text-[10px] font-mono font-extrabold bg-indigo-500/10 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded">IMPS Bank Transfer</span>
-                <span className="text-[10px] font-mono font-extrabold bg-slate-100 text-slate-700 border border-slate-200 px-2 py-0.5 rounded">Doorstep Cash</span>
-              </div>
-            </div>
+
           </div>
 
           {/* Right — device composition */}

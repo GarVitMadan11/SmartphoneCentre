@@ -79,7 +79,7 @@ export async function sendAdminBookingNotificationEmail(booking: PDFBookingData,
 
   const defectListHtml = booking.defectDescriptions && booking.defectDescriptions.length > 0
     ? booking.defectDescriptions.join(', ')
-    : 'Flawless / No reported defects';
+    : 'Perfect / No reported defects';
 
   const htmlBody = `
     <div style="font-family: Arial, sans-serif; max-width: 650px; margin: 0 auto; background-color: #0f172a; border: 1px solid #334155; border-radius: 12px; overflow: hidden; color: #f8fafc;">
