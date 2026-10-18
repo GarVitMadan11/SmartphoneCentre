@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { Smartphone, Tablet, ChevronDown, Zap, Truck, Menu, X, User, Package, Search, ArrowRight, Sparkles, FileText } from 'lucide-react';
+import { Smartphone, Tablet, ChevronDown, Zap, Truck, Menu, X, User, Package, Search, ArrowRight, Sparkles, FileText, Bookmark } from 'lucide-react';
 import { ApiUser } from '../../utils/api';
 import { BRANDS as STATIC_BRANDS, Model, getDeviceImage, getMaxVariantPrice } from '../../data/mockDatabase';
 import { applyBrandOrder } from '../../utils/ordering';
@@ -372,6 +372,16 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                       <span>Invoices &amp; Receipts</span>
                     </button>
                     <button
+                      onClick={() => {
+                        setUserDropdownOpen(false);
+                        onNavigate('/profile?tab=saved');
+                      }}
+                      className="w-full text-left text-xs font-semibold p-2.5 rounded-xl hover:bg-slate-100 text-slate-700 hover:text-amber-600 transition-colors flex items-center gap-2.5 cursor-pointer"
+                    >
+                      <Bookmark className="w-4 h-4 text-amber-500" />
+                      <span>Saved Quotes</span>
+                    </button>
+                    <button
                       onClick={() => { setUserDropdownOpen(false); onNavigate('/profile?tab=profile'); }}
                       className="w-full text-left text-xs font-semibold p-2.5 rounded-xl hover:bg-slate-100 text-slate-700 hover:text-cobalt transition-colors flex items-center gap-2.5 cursor-pointer"
                     >
@@ -530,6 +540,13 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                   >
                     <FileText className="w-4 h-4 text-emerald-600" />
                     <span>Invoices &amp; Receipts</span>
+                  </button>
+                  <button
+                    onClick={() => { setMobileMenuOpen(false); onNavigate('/profile?tab=saved'); }}
+                    className="w-full text-left text-xs py-2.5 px-3 text-slate-700 font-semibold hover:bg-slate-100 rounded-xl flex items-center gap-2.5 cursor-pointer"
+                  >
+                    <Bookmark className="w-4 h-4 text-amber-500" />
+                    <span>Saved Quotes</span>
                   </button>
                   <button
                     onClick={() => { setMobileMenuOpen(false); onNavigate('/profile?tab=profile'); }}

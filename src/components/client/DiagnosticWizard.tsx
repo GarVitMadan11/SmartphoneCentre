@@ -6,13 +6,14 @@ import {
   ArrowLeft, Check, ChevronRight, Activity, Sparkles, 
   Smartphone, Box, Zap, ShieldCheck, Printer, Receipt,
   X, Lock, Eye, EyeOff, AlertCircle, Mail, User,
-  Phone, MessageSquare, ExternalLink, Headphones, Send
+  Phone, MessageSquare, ExternalLink, Headphones, Send, Bookmark
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getIllustration } from './Illustrations';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import emailjs from '@emailjs/browser';
 import { checkEmail, customerLogin, customerSignup, verifyOtp, requestPasswordResetOtp, resetPasswordWithOtp, sendQuoteAlertApi, sendPriceMatchAlertApi, ApiUser } from '../../utils/api';
+import { saveQuote, isQuoteAlreadySaved } from '../../utils/savedQuotes';
 
 const getEngineeringLabel = (description: string) => {
   const mapping: { [key: string]: string } = {
@@ -330,6 +331,45 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
   const [showPassword, setShowPassword] = useState(false);
   const [modalError, setModalError] = useState('');
   const [modalLoading, setModalLoading] = useState(false);
+
+  // Saved quote state
+  const [isQuoteSaved, setIsQuoteSaved] = useState(false);
+  const [saveToast, setSaveToast] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (step === 7) {
+      const alreadySaved = isQuoteAlreadySaved(
+        model.id,
+        variant.storageGb,
+        selectedDefects.map(d => d.id),
+        currentUser?.id
+      );
+      setIsQuoteSaved(alreadySaved);
+    }
+  }, [step, model.id, variant.storageGb, selectedDefects, currentUser?.id]);
+
+  const handleSaveQuote = () => {
+    saveQuote({
+      userId: currentUser?.id,
+      modelId: model.id,
+      modelName: model.name,
+      brandId: model.brandId,
+      category: model.category,
+      variantId: variant.id,
+      storageGb: variant.storageGb,
+      ramGb: variant.ramGb,
+      color: variant.color,
+      selectedDefectIds: selectedDefects.map(d => d.id),
+      selectedDefectDescriptions: selectedDefects.map(d => d.description),
+      savedBasePrice: variant.basePrice,
+      savedPayout: valuation.finalPrice,
+      savedRetentionPercentage: valuation.retentionPercentage,
+      refCode: `RPX${receiptRef}`,
+    });
+    setIsQuoteSaved(true);
+    setSaveToast('Quote successfully saved to your Profile! View and resume it anytime under "Saved".');
+    setTimeout(() => setSaveToast(null), 5000);
+  };
 
   React.useEffect(() => {
     if (forgotCooldown > 0) {
@@ -2132,11 +2172,32 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                     </p>
                   </div>
 
-                  <div className="flex gap-3 mt-4">
+                  {/* Saved Quote notification banner */}
+                  {saveToast && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: -6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-3 p-3 bg-emerald-50 border border-emerald-300 text-emerald-900 rounded-xl text-xs font-semibold flex items-center justify-between shadow-xs"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-600 stroke-[3] flex-shrink-0" />
+                        <span>{saveToast}</span>
+                      </div>
+                      <button 
+                        type="button" 
+                        onClick={() => setSaveToast(null)} 
+                        className="text-emerald-700 hover:text-emerald-950 font-bold ml-2 text-xs"
+                      >
+                        ✕
+                      </button>
+                    </motion.div>
+                  )}
+
+                  <div className="flex flex-wrap sm:flex-nowrap gap-2.5 sm:gap-3 mt-4">
                     <button
                       type="button"
                       onClick={() => setStep(6)}
-                      className="px-4 py-3 rounded-lg border-2 border-slate-300 bg-white hover:bg-slate-100 text-slate-900 hover:text-black font-bold text-xs transition-all flex items-center gap-1.5 shadow-xs"
+                      className="px-3.5 sm:px-4 py-3 rounded-lg border-2 border-slate-300 bg-white hover:bg-slate-100 text-slate-900 hover:text-black font-bold text-xs transition-all flex items-center gap-1.5 shadow-xs"
                     >
                       <ArrowLeft className="w-3.5 h-3.5" />
                       <span>Review</span>
@@ -2146,10 +2207,25 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                       type="button"
                       onClick={() => window.print()}
                       aria-label="Print diagnostic report and quote"
-                      className="flex-shrink-0 px-4 py-3 rounded-lg border-2 border-slate-300 bg-white hover:bg-slate-100 text-slate-900 hover:text-black transition-all flex items-center gap-2 text-xs font-bold shadow-xs"
+                      className="flex-shrink-0 px-3.5 sm:px-4 py-3 rounded-lg border-2 border-slate-300 bg-white hover:bg-slate-100 text-slate-900 hover:text-black transition-all flex items-center gap-1.5 sm:gap-2 text-xs font-bold shadow-xs"
                     >
                       <Printer className="w-4 h-4" aria-hidden="true" />
-                      <span>Print Quote</span>
+                      <span>Print</span>
+                    </button>
+
+                    {/* Save Quote Button */}
+                    <button
+                      type="button"
+                      onClick={handleSaveQuote}
+                      aria-label="Save quote to profile"
+                      className={`flex-shrink-0 px-3.5 sm:px-4 py-3 rounded-lg border-2 transition-all flex items-center gap-1.5 sm:gap-2 text-xs font-bold shadow-xs cursor-pointer ${
+                        isQuoteSaved 
+                          ? 'bg-amber-50 border-amber-400 text-amber-900 font-extrabold' 
+                          : 'border-slate-300 bg-white hover:bg-slate-100 text-slate-900 hover:text-black'
+                      }`}
+                    >
+                      <Bookmark className={`w-4 h-4 ${isQuoteSaved ? 'text-amber-600 fill-amber-500' : 'text-slate-600'}`} />
+                      <span>{isQuoteSaved ? 'Quote Saved' : 'Save Quote'}</span>
                     </button>
 
                     {isPriceLocked ? (

@@ -1,14 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { X, Search, CheckCircle2, Clock, AlertCircle, Package, Calendar, MapPin, Copy, Check, FileText, Download } from 'lucide-react';
+import {
+  X, Search, CheckCircle2, Clock, AlertCircle, Package, Calendar, MapPin,
+  Copy, Check, FileText, Download, Bookmark, Trash2, TrendingUp, TrendingDown, Sparkles, ArrowRight
+} from 'lucide-react';
 import { trackBookingOrder, fetchMyBookings, downloadBookingPdf, ApiTrackBooking, ApiBooking, ApiUser } from '../../utils/api';
 import { getDeviceImage, Model } from '../../data/mockDatabase';
+import {
+  SavedQuote,
+  EvaluatedSavedQuote,
+  getSavedQuotes,
+  removeSavedQuote,
+  evaluateSavedQuote
+} from '../../utils/savedQuotes';
 
 interface OrderTrackingModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentUser?: ApiUser | null;
   models?: Model[];
-  initialTab?: 'my_bookings' | 'track_search' | 'invoices';
+  initialTab?: 'my_bookings' | 'track_search' | 'invoices' | 'saved';
+  onResumeQuote?: (quote: SavedQuote) => void;
 }
 
 export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
@@ -17,13 +28,17 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
   currentUser,
   models = [],
   initialTab = 'my_bookings',
+  onResumeQuote,
 }) => {
-  const [activeTab, setActiveTab] = useState<'my_bookings' | 'track_search' | 'invoices'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'my_bookings' | 'track_search' | 'invoices' | 'saved'>(initialTab);
   
   // My Bookings list state
   const [myBookings, setMyBookings] = useState<ApiBooking[]>([]);
   const [fetchingMyBookings, setFetchingMyBookings] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Saved quotes state
+  const [savedQuotesList, setSavedQuotesList] = useState<EvaluatedSavedQuote[]>([]);
 
   // Manual lookup state
   const [bookingId, setBookingId] = useState('');
@@ -38,11 +53,25 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
       if (currentUser) {
         setActiveTab(initialTab || 'my_bookings');
         loadCustomerBookings();
+        loadSavedQuotes();
       } else {
-        setActiveTab('track_search');
+        setActiveTab(initialTab === 'saved' ? 'saved' : 'track_search');
+        loadSavedQuotes();
       }
     }
   }, [isOpen, currentUser, initialTab]);
+
+  const loadSavedQuotes = () => {
+    const rawQuotes = getSavedQuotes(currentUser?.id);
+    const evaluated = rawQuotes.map((q) => evaluateSavedQuote(q, models));
+    setSavedQuotesList(evaluated);
+  };
+
+  useEffect(() => {
+    const handleSync = () => loadSavedQuotes();
+    window.addEventListener('rephonix_saved_quotes_updated', handleSync);
+    return () => window.removeEventListener('rephonix_saved_quotes_updated', handleSync);
+  }, [currentUser, models]);
 
   const loadCustomerBookings = async () => {
     setFetchingMyBookings(true);
@@ -165,6 +194,19 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                 >
                   <FileText className="w-4 h-4 text-emerald-600" />
                   <span>Invoices &amp; Receipts</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('saved')}
+                  className={`pb-3 border-b-2 flex items-center gap-2 transition-all shrink-0 ${
+                    activeTab === 'saved'
+                      ? 'border-amber-500 text-amber-600 font-bold'
+                      : 'border-transparent text-ink-muted hover:text-ink-navy'
+                  }`}
+                >
+                  <Bookmark className="w-4 h-4 text-amber-500" />
+                  <span>Saved Quotes ({savedQuotesList.length})</span>
                 </button>
               </>
             )}
@@ -572,6 +614,132 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                       </div>
                     </div>
                   )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB 4: Saved Quotes */}
+          {activeTab === 'saved' && (
+            <div className="space-y-4 animate-fadeIn">
+              {savedQuotesList.length === 0 ? (
+                <div className="py-12 text-center text-ink-muted space-y-3 bg-slate-50 rounded-xl border border-dashed border-ice-border p-6">
+                  <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center mx-auto">
+                    <Bookmark className="w-6 h-6" />
+                  </div>
+                  <h4 className="font-bold text-sm text-ink-navy">No Saved Quotes Found</h4>
+                  <p className="text-xs text-ink-muted max-w-sm mx-auto">
+                    Save device diagnostic valuations while browsing to quickly resume bookings later and view live market price updates.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {savedQuotesList.map((q) => {
+                    const storageLabel = q.storageGb >= 1024 ? `${q.storageGb / 1024}TB` : `${q.storageGb}GB`;
+                    const deviceImg = getDeviceImage(q.modelId, q.brandId, q.color, q.imageUrl);
+
+                    return (
+                      <div
+                        key={q.id}
+                        className="bg-white border border-ice-border rounded-xl p-4 sm:p-5 shadow-xs hover:border-slate-300 transition-all text-left"
+                      >
+                        <div className="flex items-start justify-between gap-3 pb-3 border-b border-ice-border/60">
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-lg bg-slate-50 border border-ice-border p-1 flex items-center justify-center shrink-0">
+                              <img src={deviceImg} alt={q.modelName} className="w-full h-full object-contain" />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-bold text-sm text-ink-navy font-outfit">{q.modelName}</h4>
+                                <span className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] font-mono font-bold">
+                                  {storageLabel}
+                                </span>
+                              </div>
+                              <span className="text-[10px] font-mono text-slate-400">
+                                Ref: #{q.id.slice(-8).toUpperCase()} • {formatDate(q.createdAt)}
+                              </span>
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              removeSavedQuote(q.id);
+                              loadSavedQuotes();
+                            }}
+                            title="Remove Saved Quote"
+                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        {/* Price evaluation & change banner */}
+                        <div className="my-3 p-3 bg-slate-50 rounded-lg border border-slate-200/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                          <div>
+                            <span className="text-[10px] font-mono uppercase text-slate-500 font-bold block">
+                              Live Estimated Payout
+                            </span>
+                            <div className="flex items-baseline gap-2">
+                              <span className="text-xl font-extrabold text-emerald-700 font-outfit">
+                                {formatPrice(q.livePrice)}
+                              </span>
+                              {q.hasPriceChanged && (
+                                <span className="text-xs text-slate-400 line-through font-mono">
+                                  Was {formatPrice(q.originalPrice)}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {q.hasPriceChanged ? (
+                            q.priceDifference > 0 ? (
+                              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[11px] font-bold font-mono border border-emerald-300">
+                                <TrendingUp className="w-3 h-3 text-emerald-700" />
+                                <span>Live Update: +{formatPrice(q.priceDifference)}</span>
+                              </div>
+                            ) : (
+                              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-100 text-amber-900 text-[11px] font-bold font-mono border border-amber-300">
+                                <TrendingDown className="w-3 h-3 text-amber-700" />
+                                <span>Live Update: -{formatPrice(Math.abs(q.priceDifference))}</span>
+                              </div>
+                            )
+                          ) : (
+                            <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-white text-slate-600 text-[10px] font-medium font-mono border border-slate-200">
+                              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                              <span>Catalog Price Active</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Conditions summary */}
+                        <div className="text-xs text-slate-600 mb-3">
+                          {q.selectedDefects.length === 0 ? (
+                            <span className="text-[11px] text-emerald-700 font-medium inline-flex items-center gap-1">
+                              <Sparkles className="w-3.5 h-3.5" /> No defects declared (Max Payout Tier)
+                            </span>
+                          ) : (
+                            <span className="text-[11px] text-slate-600 font-medium">
+                              Declared Conditions: {q.selectedDefects.length} check item(s) recorded
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Resume button */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            onClose();
+                            onResumeQuote?.(q);
+                          }}
+                          className="w-full py-2.5 px-4 bg-cobalt hover:bg-cobalt-hover text-white rounded-xl font-bold text-xs shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                          <span>Resume &amp; Book Payout</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>

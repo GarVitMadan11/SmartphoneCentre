@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
   User, Phone, Mail, Calendar, ArrowLeft, LogOut, ShieldCheck, AlertCircle,
-  Package, FileText, Download, Copy, Check, CheckCircle2, MapPin, ArrowRight
+  Package, FileText, Download, Copy, Check, CheckCircle2, MapPin, ArrowRight,
+  Bookmark, Trash2, Sparkles, TrendingUp, TrendingDown
 } from 'lucide-react';
 import emailjs from '@emailjs/browser';
 import {
@@ -9,6 +10,13 @@ import {
   fetchMyBookings, downloadBookingPdf, ApiBooking
 } from '../../utils/api';
 import { getDeviceImage, Model } from '../../data/mockDatabase';
+import {
+  SavedQuote,
+  EvaluatedSavedQuote,
+  getSavedQuotes,
+  removeSavedQuote,
+  evaluateSavedQuote
+} from '../../utils/savedQuotes';
 
 interface ProfilePageProps {
   user: any;
@@ -16,7 +24,8 @@ interface ProfilePageProps {
   onUpdateUser: (updatedUser: any) => void;
   onNavigate: (path: string) => void;
   models?: Model[];
-  initialTab?: 'profile' | 'bookings' | 'invoices';
+  initialTab?: 'profile' | 'bookings' | 'invoices' | 'saved';
+  onResumeQuote?: (quote: SavedQuote) => void;
 }
 
 export default function ProfilePage({
@@ -26,13 +35,17 @@ export default function ProfilePage({
   onNavigate,
   models = [],
   initialTab,
+  onResumeQuote,
 }: ProfilePageProps) {
-  const [activeTab, setActiveTab] = useState<'profile' | 'bookings' | 'invoices'>('bookings');
+  const [activeTab, setActiveTab] = useState<'profile' | 'bookings' | 'invoices' | 'saved'>('bookings');
 
   // Bookings list state
   const [myBookings, setMyBookings] = useState<ApiBooking[]>([]);
   const [fetchingBookings, setFetchingBookings] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Saved quotes state
+  const [savedQuotesList, setSavedQuotesList] = useState<EvaluatedSavedQuote[]>([]);
 
   // Profile form state
   const [name, setName] = useState(user?.name || '');
@@ -51,16 +64,30 @@ export default function ProfilePage({
   const [verificationError, setVerificationError] = useState('');
   const [verificationSuccess, setVerificationSuccess] = useState('');
 
-  // Handle URL tab search param (e.g. /profile?tab=bookings)
+  // Handle URL tab search param (e.g. /profile?tab=saved)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tabParam = params.get('tab');
-    if (tabParam === 'bookings' || tabParam === 'invoices' || tabParam === 'profile') {
+    if (tabParam === 'bookings' || tabParam === 'invoices' || tabParam === 'profile' || tabParam === 'saved') {
       setActiveTab(tabParam);
     } else if (initialTab) {
       setActiveTab(initialTab);
     }
   }, [initialTab]);
+
+  // Load and evaluate saved quotes against live catalog
+  const loadSavedQuotes = () => {
+    const rawQuotes = getSavedQuotes(user?.id);
+    const evaluated = rawQuotes.map((q) => evaluateSavedQuote(q, models));
+    setSavedQuotesList(evaluated);
+  };
+
+  useEffect(() => {
+    loadSavedQuotes();
+    const handleSync = () => loadSavedQuotes();
+    window.addEventListener('rephonix_saved_quotes_updated', handleSync);
+    return () => window.removeEventListener('rephonix_saved_quotes_updated', handleSync);
+  }, [user, models]);
 
   // Load customer bookings on mount
   useEffect(() => {
@@ -292,6 +319,26 @@ export default function ProfilePage({
         >
           <FileText className="w-4 h-4" />
           <span>Invoices &amp; Receipts</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('saved')}
+          className={`px-4 py-2.5 rounded-xl border flex items-center gap-2 transition-all shrink-0 cursor-pointer ${
+            activeTab === 'saved'
+              ? 'bg-amber-500 text-white border-amber-500 shadow-sm font-bold'
+              : 'bg-canvas-pure text-ink-slate hover:text-ink-navy border-ice-border hover:bg-slate-50'
+          }`}
+        >
+          <Bookmark className="w-4 h-4" />
+          <span>Saved Quotes</span>
+          {savedQuotesList.length > 0 && (
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+              activeTab === 'saved' ? 'bg-white/20 text-white' : 'bg-amber-500/10 text-amber-700'
+            }`}>
+              {savedQuotesList.length}
+            </span>
+          )}
         </button>
 
         <button
@@ -850,6 +897,188 @@ export default function ProfilePage({
             )}
           </div>
 
+        </div>
+      )}
+
+      {/* TAB 4: SAVED QUOTES */}
+      {activeTab === 'saved' && (
+        <div className="space-y-6 animate-fadeIn">
+          {savedQuotesList.length === 0 ? (
+            <div className="py-16 text-center text-ink-muted space-y-4 bg-canvas-pure rounded-2xl border border-dashed border-ice-border p-8">
+              <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center mx-auto shadow-xs">
+                <Bookmark className="w-7 h-7" />
+              </div>
+              <div className="space-y-1">
+                <h4 className="font-extrabold text-lg text-ink-navy font-outfit">No Saved Quotes Yet</h4>
+                <p className="text-xs text-ink-muted max-w-md mx-auto font-light leading-relaxed">
+                  Save diagnostic quotes while checking your device value. If our catalog base prices update, your saved quotes automatically adjust to the latest market rate!
+                </p>
+              </div>
+              <button
+                onClick={() => onNavigate('/smartphones')}
+                className="mt-2 inline-flex items-center gap-2 px-6 py-3 bg-cobalt hover:bg-cobalt-hover text-white rounded-xl font-bold text-xs shadow-md transition-all cursor-pointer"
+              >
+                <span>Get Instant Valuation</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-ice-border/60">
+                <div>
+                  <h3 className="font-bold text-base text-ink-navy font-outfit">
+                    Saved Valuation Quotes ({savedQuotesList.length})
+                  </h3>
+                  <p className="text-xs text-ink-muted">
+                    Your quotes automatically reflect current catalog rates. Click &ldquo;Resume &amp; Book&rdquo; anytime without restarting the diagnostic questions!
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4">
+                {savedQuotesList.map((q) => {
+                  const storageLabel = q.storageGb >= 1024 ? `${q.storageGb / 1024}TB` : `${q.storageGb}GB`;
+                  const deviceImg = getDeviceImage(q.modelId, q.brandId, q.color, q.imageUrl);
+
+                  return (
+                    <div
+                      key={q.id}
+                      className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm hover:shadow-md transition-all text-left relative overflow-hidden"
+                    >
+                      {/* Top Bar: Device Info + Delete Action */}
+                      <div className="flex items-start justify-between gap-4 pb-4 border-b border-slate-100">
+                        <div className="flex items-center gap-3.5">
+                          <div className="w-16 h-16 rounded-xl bg-slate-50 border border-slate-200/80 p-1 flex items-center justify-center shrink-0">
+                            <img
+                              src={deviceImg}
+                              alt={q.modelName}
+                              className="w-full h-full object-contain"
+                            />
+                          </div>
+                          <div>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h4 className="font-extrabold text-base sm:text-lg text-slate-950 font-outfit">
+                                {q.modelName}
+                              </h4>
+                              <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-800 text-[11px] font-mono font-bold border border-slate-200">
+                                {storageLabel}
+                              </span>
+                            </div>
+                            <p className="text-xs text-slate-500 mt-1 font-mono">
+                              Saved on {formatDateStr(q.createdAt)} • Ref: #{q.id.slice(-8).toUpperCase()}
+                            </p>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeSavedQuote(q.id);
+                            loadSavedQuotes();
+                          }}
+                          title="Remove saved quote"
+                          className="p-2 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 border border-transparent hover:border-red-200 transition-colors cursor-pointer"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      {/* Valuation & Price Recalculation Alert */}
+                      <div className="my-4 bg-slate-50 rounded-xl p-4 border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                        <div className="space-y-1">
+                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500">
+                            Current Estimated Payout
+                          </span>
+                          <div className="flex items-baseline gap-3">
+                            <span className="text-2xl sm:text-3xl font-extrabold text-emerald-700 font-outfit">
+                              {formatPrice(q.livePrice)}
+                            </span>
+                            {q.hasPriceChanged && (
+                              <span className="text-xs text-slate-400 line-through font-mono">
+                                Was {formatPrice(q.originalPrice)}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Dynamic price update notification badge */}
+                          {q.hasPriceChanged ? (
+                            q.priceDifference > 0 ? (
+                              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-100/80 border border-emerald-300 text-emerald-800 text-xs font-bold font-mono">
+                                <TrendingUp className="w-3.5 h-3.5 text-emerald-700" />
+                                <span>Live Catalog Update: +{formatPrice(q.priceDifference)}</span>
+                              </div>
+                            ) : (
+                              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-100/80 border border-amber-300 text-amber-900 text-xs font-bold font-mono">
+                                <TrendingDown className="w-3.5 h-3.5 text-amber-700" />
+                                <span>Live Catalog Update: -{formatPrice(Math.abs(q.priceDifference))}</span>
+                              </div>
+                            )
+                          ) : (
+                            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-600 text-[11px] font-medium font-mono">
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                              <span>Live Catalog Base Rate Active (Unchanged)</span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="text-right sm:self-center">
+                          <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block font-bold">
+                            Value Retention
+                          </span>
+                          <span className="text-xs sm:text-sm font-bold text-slate-800 font-mono">
+                            {q.retentionPercentage}% Retained
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Declared Condition Summary */}
+                      <div className="mb-4 text-xs">
+                        <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 block mb-1.5">
+                          Audit Condition Declared
+                        </span>
+                        {q.selectedDefects.length === 0 ? (
+                          <div className="inline-flex items-center gap-1.5 text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2.5 py-1 rounded-md text-xs font-semibold">
+                            <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                            <span>No defects declared • Maximum payout tier applied</span>
+                          </div>
+                        ) : (
+                          <div className="flex flex-wrap gap-1.5">
+                            {q.selectedDefects.map((d, i) => (
+                              <span
+                                key={i}
+                                className="px-2.5 py-1 rounded-md bg-slate-100 border border-slate-200 text-slate-700 text-xs font-medium"
+                              >
+                                {d.description || 'Declared condition'}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Action buttons */}
+                      <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 pt-2 border-t border-slate-100">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (onResumeQuote) {
+                              onResumeQuote(q);
+                            } else {
+                              onNavigate('/');
+                            }
+                          }}
+                          className="flex-1 py-3 px-4 bg-cobalt hover:bg-cobalt-hover text-white rounded-xl font-bold text-xs sm:text-sm shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer group hover:scale-[1.01]"
+                        >
+                          <span>Resume &amp; Book Instant Doorstep Payout</span>
+                          <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

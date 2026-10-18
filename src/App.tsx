@@ -3,6 +3,8 @@ import { useState, useEffect, useRef, useMemo, Suspense, useCallback, startTrans
 import type { Model, Variant, DefectRule, Brand, Booking } from './data/mockDatabase';
 // Helper functions needed at startup — imported statically but lightweight
 import { generateVariantsForModel, getDeviceImage, getDefectRulesForCategory, getMaxVariantPrice } from './data/mockDatabase';
+import { calculateValuation } from './utils/valuation';
+import { SavedQuote } from './utils/savedQuotes';
 import { fetchBrands, fetchModels, getCachedModels, fetchBookings as apiFetchBookings, fetchCurrentUser, customerLogout, hasAdminToken, syncFirebaseUser, ApiUser } from './utils/api';
 import { subscribeToFirebaseAuth, checkRedirectAuthResult } from './services/firebaseAuth';
 import { applyBrandOrder } from './utils/ordering';
@@ -114,6 +116,7 @@ export default function App() {
   const [wizardStep, setWizardStep] = useState<number>(savedNav.current?.wizardStep ?? 0);
   const [isTrackOpen, setIsTrackOpen] = useState(false);
   const [path, setPath] = useState(window.location.pathname);
+  const isResumingQuoteRef = useRef(false);
 
   // Decoy admin route trap: Redirect probes like /admin, /wp-admin to homepage
   useEffect(() => {
@@ -449,6 +452,10 @@ export default function App() {
 
   // Deep-link / direct URL route matcher: e.g. /apple/iphone-17-pro-max/2tb or /samsung/galaxy-z-fold-8/16gb-512gb
   useEffect(() => {
+    if (isResumingQuoteRef.current) {
+      isResumingQuoteRef.current = false;
+      return;
+    }
     if (MODELS.length === 0) return;
     const clean = path.split('?')[0];
     const match = matchModelFromPath(clean, MODELS, BRANDS);
@@ -631,6 +638,47 @@ export default function App() {
     });
   };
 
+  const handleResumeQuote = (quote: SavedQuote) => {
+    const targetModel = MODELS.find(m => m.id === quote.modelId || m.name.toLowerCase() === quote.modelName.toLowerCase());
+    if (!targetModel) {
+      showToast('The saved model could not be found in the current catalog.', 'error');
+      return;
+    }
+
+    const variants = generateVariantsForModel(targetModel);
+    const matchedVariant = variants.find(v => v.id === quote.variantId || v.storageGb === quote.storageGb) || variants[0];
+    if (!matchedVariant) {
+      showToast('The requested variant is no longer available.', 'error');
+      return;
+    }
+
+    // Restore declared defects from category/model rules
+    const rules = getDefectRulesForCategory(targetModel.category, targetModel.brandId, targetModel.name, targetModel.id);
+    const matchedDefects = rules.filter(r => (quote.selectedDefectIds || []).includes(r.id));
+
+    // Dynamically evaluate against current catalog variant price
+    const valuation = calculateValuation(matchedVariant, matchedDefects, {
+      modelId: targetModel.id,
+      brandId: targetModel.brandId,
+      modelName: targetModel.name,
+      category: targetModel.category,
+    });
+
+    const targetPath = getPathForModel(targetModel, matchedVariant.storageGb, matchedVariant.ramGb);
+    isResumingQuoteRef.current = true;
+
+    startTransition(() => {
+      setSelectedModel(targetModel);
+      setSelectedVariant(matchedVariant);
+      setSelectedDefects(matchedDefects);
+      setFinalPrice(valuation.finalPrice);
+      setWizardStep(7); // Jump directly to Step 7 (Final Quote Certificate)
+      setActiveStage('diagnose');
+      setIsTrackOpen(false);
+      navigate(targetPath);
+    });
+  };
+
   const [selectedTabletBrand, setSelectedTabletBrand] = useState<'all' | 'apple' | 'samsung'>('all');
 
   const handleReset = () => {
@@ -735,6 +783,7 @@ export default function App() {
               onUpdateUser={(updatedUser) => setCurrentUser(updatedUser)}
               onNavigate={navigate}
               models={MODELS}
+              onResumeQuote={handleResumeQuote}
             />
           )}
 
@@ -804,7 +853,7 @@ export default function App() {
             </div>
           )}
 
-          {cleanPath === '/' && (
+          {cleanPath === '/' && !isWorkflow && (
             <div className="space-y-20 pt-4 pb-12 sm:pt-6 sm:pb-16">
               {/* 1. Hero Section */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
@@ -1682,7 +1731,14 @@ export default function App() {
         <FeedbackModal isOpen={isFeedbackModalOpen} onClose={() => setIsFeedbackModalOpen(false)} currentUser={currentUser} onNavigate={navigate} />
       )}
       <Suspense fallback={null}>
-        <OrderTrackingModal isOpen={isTrackOpen} onClose={() => setIsTrackOpen(false)} currentUser={currentUser} models={MODELS} initialTab={trackModalTab} />
+        <OrderTrackingModal
+          isOpen={isTrackOpen}
+          onClose={() => setIsTrackOpen(false)}
+          currentUser={currentUser}
+          models={MODELS}
+          initialTab={trackModalTab}
+          onResumeQuote={handleResumeQuote}
+        />
       </Suspense>
 
       {/* Toast notifications */}
