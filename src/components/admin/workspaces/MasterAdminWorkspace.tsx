@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { ShieldCheck, Eye, Sparkles } from 'lucide-react';
+import { ShieldCheck, Eye, Sparkles, Zap } from 'lucide-react';
 import FinanceWorkspace from './FinanceWorkspace';
 import OperationsWorkspace from './OperationsWorkspace';
 import CatalogWorkspace from './CatalogWorkspace';
+import CashifyMonitorTab from '../tabs/CashifyMonitorTab';
 import { Booking, Brand } from '../../../data/mockDatabase';
 import { ApiUser } from '../../../utils/api';
 
@@ -21,7 +22,7 @@ export const MasterAdminWorkspace: React.FC<MasterAdminWorkspaceProps> = ({
   onRefreshBookings,
   onRefreshCatalog,
 }) => {
-  const [previewRole, setPreviewRole] = useState<'SUPER_ADMIN' | 'FINANCE_APPROVER' | 'OPERATIONS_AGENT' | 'CATALOG_EDITOR'>('SUPER_ADMIN');
+  const [previewRole, setPreviewRole] = useState<'SUPER_ADMIN' | 'FINANCE_APPROVER' | 'OPERATIONS_AGENT' | 'CATALOG_EDITOR' | 'CASHIFY_MONITOR'>('SUPER_ADMIN');
 
   return (
     <div className="space-y-6 font-outfit">
@@ -82,6 +83,15 @@ export const MasterAdminWorkspace: React.FC<MasterAdminWorkspaceProps> = ({
           >
             Catalog
           </button>
+          <button
+            onClick={() => setPreviewRole('CASHIFY_MONITOR')}
+            className={`px-3 py-1.5 text-xs font-mono rounded-md font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              previewRole === 'CASHIFY_MONITOR' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-300 hover:text-white'
+            }`}
+          >
+            <Zap className="w-3 h-3 text-amber-300" />
+            Cashify Monitor
+          </button>
         </div>
       </div>
 
@@ -108,6 +118,10 @@ export const MasterAdminWorkspace: React.FC<MasterAdminWorkspaceProps> = ({
           currentUser={currentUser ? { ...currentUser, role: 'CATALOG_EDITOR' } : null}
           onRefreshCatalog={onRefreshCatalog}
         />
+      )}
+
+      {previewRole === 'CASHIFY_MONITOR' && (
+        <CashifyMonitorTab />
       )}
 
       {previewRole === 'SUPER_ADMIN' && (

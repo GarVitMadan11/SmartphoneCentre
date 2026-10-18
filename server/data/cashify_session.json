@@ -1,0 +1,65 @@
+{
+  "cookies": [
+    {
+      "name": "_cs__city-info__v1",
+      "value": "%7B%22ri%22%3A249%2C%22rn%22%3A%22Gurgaon%22%2C%22dp%22%3A122001%2C%22xmd%22%3A1%2C%22cs%22%3A%5B-1%5D%2C%22id%22%3Atrue%7D",
+      "domain": "www.cashify.in",
+      "path": "/",
+      "expires": 1807822310.019622,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_cs__pc__v1",
+      "value": "122001",
+      "domain": "www.cashify.in",
+      "path": "/",
+      "expires": 1807822310.019856,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_cs__user_auth__v1",
+      "value": "eyJhbGciOiJIUzI1NiJ9.eyJtbiI6IjkwMzQ5OTc3MTkiLCJ1aWQiOiI0OTk3MTU0OSIsInVuYW1lIjoiR2Fydml0IEt1bWFyIiwia2lkIjoiMTI0NTIiLCJjbGlkIjoiY3VzdG9tZXIiLCJjbHYiOiJ2MSIsImV4cCI6MTc5MzQ4MDA3MiwiY3AiOnsiY3JlYXRlZF9hdCI6IjIwMjYtMDgtMTQgMDk6NTU6MzUuMCIsInNvdXJjZSI6ImNhc2hpZnkifSwiZ3QiOiJvdHAiLCJ2dCI6MH0.4g_GRZRUxpy8svvXi8Gwvc4rqiCWVzCo1DuASvsZM5A",
+      "domain": ".cashify.in",
+      "path": "/",
+      "expires": 1793480076.474421,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_cs_cshReferralJourney_v1",
+      "value": "noref-direct",
+      "domain": "www.cashify.in",
+      "path": "/",
+      "expires": 1794862489.24756,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_cs_cashifyreferral_v1",
+      "value": "noref-direct",
+      "domain": "www.cashify.in",
+      "path": "/",
+      "expires": 1792875289.248942,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_cs___crg_v1",
+      "value": "direct",
+      "domain": "www.cashify.in",
+      "path": "/",
+      "expires": 1792875289.249367,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": []
+}

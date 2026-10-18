@@ -735,5 +735,135 @@ export function sendPriceMatchAlertApi(payload: PriceMatchAlertPayload): Promise
   });
 }
 
+// ── Cashify Price Monitor Admin APIs ──────────────────────────────────────────
+
+export interface CashifySummaryData {
+  totalModels: number;
+  totalVariants?: number;
+  verifiedUrls: number;
+  missingUrls: number;
+  verifiedVariants?: number;
+  missingVariants?: number;
+  auditedVariants?: number;
+  customOverrides: number;
+  lastAuditDate: string | null;
+  isScanRunning?: boolean;
+  session: {
+    hasSession: boolean;
+    cookiesCount: number;
+    lastModified?: string;
+  };
+  priceAlertsStats: {
+    increased: number;
+    decreased: number;
+    stable: number;
+    totalAudited: number;
+  };
+}
+
+export interface CashifyVariantItem {
+  variantKey: string;
+  modelId: string;
+  modelName: string;
+  brandName: string;
+  brandId: string;
+  releaseYear: number;
+  ramGb: number;
+  storageGb: number;
+  ramLabel: string;
+  storageLabel: string;
+  specLabel: string;
+  rephonixPrice: number;
+  cashifyPrice: number | null;
+  difference: number | null;
+  status: 'INCREASED' | 'DECREASED' | 'STABLE' | 'PENDING_SCAN';
+  changeAmount: number;
+  cashifyUrl: string;
+  isCustomOverride: boolean;
+  urlStatus: 'FOUND' | 'MISSING' | 'OVERRIDDEN';
+  lastAuditedDate?: string;
+}
+
+export interface CashifyModelItem {
+  id: string;
+  name: string;
+  brandName: string;
+  brandId: string;
+  releaseYear: number;
+  basePrice128GB: number;
+  supportedStorageGb: number[];
+  supportedRamGb: number[];
+  variantPrices: Record<string, number>;
+  cashifyUrl: string;
+  isCustomOverride: boolean;
+  urlStatus: 'FOUND' | 'MISSING' | 'OVERRIDDEN';
+  latestPrice?: {
+    cashifyPrice: number;
+    rephonixPrice: number;
+    difference: number;
+    status: 'INCREASED' | 'DECREASED' | 'STABLE';
+    changeAmount: number;
+    alertDate: string;
+  };
+}
+
+export interface CashifyPriceAlertItem {
+  id: string;
+  modelId: string;
+  modelName: string;
+  brandName: string;
+  ramGb: number;
+  storageGb: number;
+  rephonixPrice: number;
+  cashifyPrice: number;
+  difference: number;
+  status: 'INCREASED' | 'DECREASED' | 'STABLE';
+  changeAmount: number;
+  alertDate: string;
+  reviewed: boolean;
+}
+
+export function fetchCashifySummary(): Promise<CashifySummaryData> {
+  return apiFetch<CashifySummaryData>('/admin/cashify/summary', {}, true);
+}
+
+export function fetchCashifyVariants(): Promise<CashifyVariantItem[]> {
+  return apiFetch<CashifyVariantItem[]>('/admin/cashify/variants', {}, true);
+}
+
+export function fetchCashifyModels(): Promise<CashifyModelItem[]> {
+  return apiFetch<CashifyModelItem[]>('/admin/cashify/models', {}, true);
+}
+
+export function fetchCashifyPriceAlerts(): Promise<CashifyPriceAlertItem[]> {
+  return apiFetch<CashifyPriceAlertItem[]>('/admin/price-alerts', {}, true);
+}
+
+export function saveCashifyCustomUrl(keyOrModelId: string, customUrl: string): Promise<{ success: boolean; message: string }> {
+  return apiFetch<{ success: boolean; message: string }>('/admin/cashify/custom-url', {
+    method: 'POST',
+    body: JSON.stringify({ key: keyOrModelId, modelId: keyOrModelId, customUrl }),
+  }, true);
+}
+
+export function testCashifyUrlApi(url: string): Promise<{ url: string; status: number; ok: boolean; error?: string }> {
+  return apiFetch<{ url: string; status: number; ok: boolean; error?: string }>('/admin/cashify/test-url', {
+    method: 'POST',
+    body: JSON.stringify({ url }),
+  }, true);
+}
+
+export function triggerCashifyScan(limit: number = 0): Promise<{ success: boolean; message: string }> {
+  return apiFetch<{ success: boolean; message: string }>('/admin/cashify/trigger-scan', {
+    method: 'POST',
+    body: JSON.stringify({ limit }),
+  }, true);
+}
+
+export function fetchCashifyScanStatus(): Promise<{ isRunning: boolean }> {
+  return apiFetch<{ isRunning: boolean }>('/admin/cashify/scan-status', {}, true);
+}
+
+
 
 

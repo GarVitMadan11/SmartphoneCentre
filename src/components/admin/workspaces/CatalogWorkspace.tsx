@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { Smartphone, Tablet, Watch, ShieldAlert, Sparkles, Layers } from 'lucide-react';
 import CatalogTab from '../tabs/CatalogTab';
 import AuditLogTab from '../tabs/AuditLogTab';
+import CashifyMonitorTab from '../tabs/CashifyMonitorTab';
 import { Brand } from '../../../data/mockDatabase';
 import { ApiUser } from '../../../utils/api';
+import { Zap } from 'lucide-react';
 
 interface CatalogWorkspaceProps {
   brands: Brand[];
@@ -16,7 +18,7 @@ export const CatalogWorkspace: React.FC<CatalogWorkspaceProps> = ({
   currentUser,
   onRefreshCatalog,
 }) => {
-  const [activeTab, setActiveTab] = useState<'smartphones' | 'tablets' | 'smartwatches' | 'audit'>('smartphones');
+  const [activeTab, setActiveTab] = useState<'smartphones' | 'tablets' | 'smartwatches' | 'cashify' | 'audit'>('smartphones');
 
   return (
     <div className="space-y-6 font-outfit">
@@ -31,7 +33,7 @@ export const CatalogWorkspace: React.FC<CatalogWorkspaceProps> = ({
             <span className="text-xs text-ink-muted font-mono">• Logged in as {currentUser?.name || currentUser?.email || 'Catalog Manager'}</span>
           </div>
           <h2 className="text-2xl font-bold text-ink-navy tracking-tight">Product Catalog & Device Valuation Studio</h2>
-          <p className="text-xs text-ink-muted mt-0.5">Managing trade-in device models, base storage pricing, CSV bulk adjustments & series ordering.</p>
+          <p className="text-xs text-ink-muted mt-0.5">Managing trade-in device models, base storage pricing, Cashify market intelligence, CSV adjustments & series ordering.</p>
         </div>
 
         <div className="flex items-center gap-2 px-3 py-1.5 bg-purple-50 border border-purple-200 rounded-lg text-xs font-mono text-purple-700 shadow-xs">
@@ -52,6 +54,21 @@ export const CatalogWorkspace: React.FC<CatalogWorkspaceProps> = ({
         >
           <Smartphone className="w-4 h-4" />
           <span>Smartphones Catalog</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('cashify')}
+          className={`px-4 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            activeTab === 'cashify'
+              ? 'bg-indigo-600 text-white shadow-sm font-extrabold'
+              : 'text-ink-slate hover:text-ink-navy hover:bg-canvas-white'
+          }`}
+        >
+          <Zap className="w-4 h-4 text-amber-300" />
+          <span>Cashify Market Monitor</span>
+          <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-white/20 font-mono">
+            Live
+          </span>
         </button>
 
         <button
@@ -92,7 +109,11 @@ export const CatalogWorkspace: React.FC<CatalogWorkspaceProps> = ({
       </div>
 
       {/* Tab Content */}
-      {activeTab !== 'audit' && (
+      {activeTab === 'cashify' && (
+        <CashifyMonitorTab />
+      )}
+
+      {activeTab !== 'audit' && activeTab !== 'cashify' && (
         <CatalogTab
           category={activeTab}
           brands={brands}

@@ -1,0 +1,2753 @@
+{
+  "timestamp": "2026-10-18 03:33:36",
+  "total_models": 186,
+  "found_count": 184,
+  "not_found_count": 2,
+  "found": [
+    {
+      "id": "71e7ccb1-98d7-48b2-b984-81bdc726782f",
+      "brand": "Apple",
+      "model": "iPhone 11",
+      "year": 2019,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-apple-iphone-11",
+      "slug": "used-apple-iphone-11",
+      "candidates_tried": [
+        "used-apple-iphone-11",
+        "used-apple-iphone-11-5g",
+        "used-iphone-11"
+      ]
+    },
+    {
+      "id": "b9b4d813-4be2-4b0f-8fe0-88c09a8994bd",
+      "brand": "Apple",
+      "model": "iPhone 11 Pro",
+      "year": 2019,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-apple-iphone-11-pro",
+      "slug": "used-apple-iphone-11-pro",
+      "candidates_tried": [
+        "used-apple-iphone-11-pro",
+        "used-apple-iphone-11-pro-5g",
+        "used-iphone-11-pro"
+      ]
+    },
+    {
+      "id": "10267e44-a5cc-4994-a566-3aea4af4e243",
+      "brand": "Apple",
+      "model": "iPhone 11 Pro Max",
+      "year": 2019,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-apple-iphone-11-pro-max",
+      "slug": "used-apple-iphone-11-pro-max",
+      "candidates_tried": [
+        "used-apple-iphone-11-pro-max",
+        "used-apple-iphone-11-pro-max-5g",
+        "used-iphone-11-pro-max"
+      ]
+    },
+    {
+      "id": "56f65fb6-28a3-4f5d-bd88-fc1a373d23ac",
+      "brand": "Apple",
+      "model": "iPhone 12",
+      "year": 2020,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-apple-iphone-12",
+      "slug": "used-apple-iphone-12",
+      "candidates_tried": [
+        "used-apple-iphone-12",
+        "used-apple-iphone-12-5g",
+        "used-iphone-12"
+      ]
+    },
+    {
+      "id": "01d6b475-a339-4cb3-8d05-62c0e2895193",
+      "brand": "Apple",
+      "model": "iPhone 12 Pro",
+      "year": 2020,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-apple-iphone-12-pro",
+      "slug": "used-apple-iphone-12-pro",
+      "candidates_tried": [
+        "used-apple-iphone-12-pro",
+        "used-apple-iphone-12-pro-5g",
+        "used-iphone-12-pro"
+      ]
+    },
+    {
+      "id": "f6e45175-afc3-4d00-b4d6-d467a557678f",
+      "brand": "Apple",
+      "model": "iPhone 12 Pro Max",
+      "year": 2020,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-apple-iphone-12-pro-max",
+      "slug": "used-apple-iphone-12-pro-max",
+      "candidates_tried": [
+        "used-apple-iphone-12-pro-max",
+        "used-apple-iphone-12-pro-max-5g",
+        "used-iphone-12-pro-max"
+      ]
+    },
+    {
+      "id": "5f3de209-5255-498d-bf5b-138d7ced4126",
+      "brand": "Apple",
+      "model": "iPhone 12 mini",
+      "year": 2020,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-apple-iphone-12-mini",
+      "slug": "used-apple-iphone-12-mini",
+      "candidates_tried": [
+        "used-apple-iphone-12-mini",
+        "used-apple-iphone-12-mini-5g",
+        "used-iphone-12-mini"
+      ]
+    },
+    {
+      "id": "640c3b40-453c-481c-8895-cc2459917dfd",
+      "brand": "Apple",
+      "model": "iPhone 13",
+      "year": 2021,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-apple-iphone-13",
+      "slug": "used-apple-iphone-13",
+      "candidates_tried": [
+        "used-apple-iphone-13",
+        "used-apple-iphone-13-5g",
+        "used-iphone-13"
+      ]
+    },
+    {
+      "id": "7ca1c57f-458d-4c9f-ba77-f4aba95b12fc",
+      "brand": "Apple",
+      "model": "iPhone 13 Pro",
+      "year": 2021,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-apple-iphone-13-pro",
+      "slug": "used-apple-iphone-13-pro",
+      "candidates_tried": [
+        "used-apple-iphone-13-pro",
+        "used-apple-iphone-13-pro-5g",
+        "used-iphone-13-pro"
+      ]
+    },
+    {
+      "id": "6d1d47f7-1275-45f6-8ed9-6a556a983650",
+      "brand": "Apple",
+      "model": "iPhone 13 Pro Max",
+      "year": 2021,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-apple-iphone-13-pro-max",
+      "slug": "used-apple-iphone-13-pro-max",
+      "candidates_tried": [
+        "used-apple-iphone-13-pro-max",
+        "used-apple-iphone-13-pro-max-5g",
+        "used-iphone-13-pro-max"
+      ]
+    },
+    {
+      "id": "0581228d-e16d-4e48-940f-d8cddfca893d",
+      "brand": "Apple",
+      "model": "iPhone 13 mini",
+      "year": 2021,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-apple-iphone-13-mini",
+      "slug": "used-apple-iphone-13-mini",
+      "candidates_tried": [
+        "used-apple-iphone-13-mini",
+        "used-apple-iphone-13-mini-5g",
+        "used-iphone-13-mini"
+      ]
+    },
+    {
+      "id": "91affe4b-c6c1-48d7-99c0-68f3f2ab33d6",
+      "brand": "Apple",
+      "model": "iPhone 14",
+      "year": 2022,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-apple-iphone-14",
+      "slug": "used-apple-iphone-14",
+      "candidates_tried": [
+        "used-apple-iphone-14",
+        "used-apple-iphone-14-5g",
+        "used-iphone-14"
+      ]
+    },
+    {
+      "id": "1a8bc355-d690-4353-9423-40f6b56b0a93",
+      "brand": "Apple",
+      "model": "iPhone 14 Plus",
+      "year": 2022,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-apple-iphone-14-plus",
+      "slug": "used-apple-iphone-14-plus",
+      "candidates_tried": [
+        "used-apple-iphone-14-plus",
+        "used-apple-iphone-14-plus-5g",
+        "used-iphone-14-plus"
+      ]
+    },
+    {
+      "id": "67d07489-08e1-4186-9f20-cde328610d6b",
+      "brand": "Apple",
+      "model": "iPhone 14 Pro",
+      "year": 2022,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-apple-iphone-14-pro",
+      "slug": "used-apple-iphone-14-pro",
+      "candidates_tried": [
+        "used-apple-iphone-14-pro",
+        "used-apple-iphone-14-pro-5g",
+        "used-iphone-14-pro"
+      ]
+    },
+    {
+      "id": "ba77320d-3587-444c-8b1a-7cb554191949",
+      "brand": "Apple",
+      "model": "iPhone 14 Pro Max",
+      "year": 2022,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-apple-iphone-14-pro-max",
+      "slug": "used-apple-iphone-14-pro-max",
+      "candidates_tried": [
+        "used-apple-iphone-14-pro-max",
+        "used-apple-iphone-14-pro-max-5g",
+        "used-iphone-14-pro-max"
+      ]
+    },
+    {
+      "id": "b050cd6c-01a6-446e-9a71-5ca417f2fdc4",
+      "brand": "Apple",
+      "model": "iPhone 15",
+      "year": 2023,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-apple-iphone-15",
+      "slug": "used-apple-iphone-15",
+      "candidates_tried": [
+        "used-apple-iphone-15",
+        "used-apple-iphone-15-5g",
+        "used-iphone-15"
+      ]
+    },
+    {
+      "id": "47c51f43-a29e-4056-aa38-8b4e071b6a79",
+      "brand": "Apple",
+      "model": "iPhone 15 Plus",
+      "year": 2023,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-apple-iphone-15-plus",
+      "slug": "used-apple-iphone-15-plus",
+      "candidates_tried": [
+        "used-apple-iphone-15-plus",
+        "used-apple-iphone-15-plus-5g",
+        "used-iphone-15-plus"
+      ]
+    },
+    {
+      "id": "b49f52a9-e2e4-4a82-9e40-2741bfaf187b",
+      "brand": "Apple",
+      "model": "iPhone 15 Pro",
+      "year": 2023,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-apple-iphone-15-pro",
+      "slug": "used-apple-iphone-15-pro",
+      "candidates_tried": [
+        "used-apple-iphone-15-pro",
+        "used-apple-iphone-15-pro-5g",
+        "used-iphone-15-pro"
+      ]
+    },
+    {
+      "id": "aa0e36dc-d773-4d19-8b1c-8d940b3cefe1",
+      "brand": "Apple",
+      "model": "iPhone 15 Pro Max",
+      "year": 2023,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-apple-iphone-15-pro-max",
+      "slug": "used-apple-iphone-15-pro-max",
+      "candidates_tried": [
+        "used-apple-iphone-15-pro-max",
+        "used-apple-iphone-15-pro-max-5g",
+        "used-iphone-15-pro-max"
+      ]
+    },
+    {
+      "id": "a016c168-97c9-4771-8da4-848fc7e0cbf5",
+      "brand": "Apple",
+      "model": "iPhone 16",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-apple-iphone-16",
+      "slug": "used-apple-iphone-16",
+      "candidates_tried": [
+        "used-apple-iphone-16",
+        "used-apple-iphone-16-5g",
+        "used-iphone-16"
+      ]
+    },
+    {
+      "id": "6ca49652-9407-4bf0-8f99-70da734854a8",
+      "brand": "Apple",
+      "model": "iPhone 16 Plus",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-apple-iphone-16-plus",
+      "slug": "used-apple-iphone-16-plus",
+      "candidates_tried": [
+        "used-apple-iphone-16-plus",
+        "used-apple-iphone-16-plus-5g",
+        "used-iphone-16-plus"
+      ]
+    },
+    {
+      "id": "628a6a2b-5993-4901-868b-b868cbf68a2a",
+      "brand": "Apple",
+      "model": "iPhone 16 Pro",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-apple-iphone-16-pro",
+      "slug": "used-apple-iphone-16-pro",
+      "candidates_tried": [
+        "used-apple-iphone-16-pro",
+        "used-apple-iphone-16-pro-5g",
+        "used-iphone-16-pro"
+      ]
+    },
+    {
+      "id": "27926697-c6ba-43b9-befc-e6f4f3e40d35",
+      "brand": "Apple",
+      "model": "iPhone 16 Pro Max",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-apple-iphone-16-pro-max",
+      "slug": "used-apple-iphone-16-pro-max",
+      "candidates_tried": [
+        "used-apple-iphone-16-pro-max",
+        "used-apple-iphone-16-pro-max-5g",
+        "used-iphone-16-pro-max"
+      ]
+    },
+    {
+      "id": "ba990ad2-17a4-4d16-a33f-724b11bc0c87",
+      "brand": "Apple",
+      "model": "iPhone 16e",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-apple-iphone-16e",
+      "slug": "used-apple-iphone-16e",
+      "candidates_tried": [
+        "used-apple-iphone-16e",
+        "used-apple-iphone-16e-5g",
+        "used-iphone-16e"
+      ]
+    },
+    {
+      "id": "6c29c168-abbe-4bd3-9582-f874f04e3fcd",
+      "brand": "Apple",
+      "model": "iPhone 17",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-apple-iphone-17",
+      "slug": "used-apple-iphone-17",
+      "candidates_tried": [
+        "used-apple-iphone-17",
+        "used-apple-iphone-17-5g",
+        "used-iphone-17"
+      ]
+    },
+    {
+      "id": "09f8b510-d41d-49c2-9f07-6cd3390e9a02",
+      "brand": "Apple",
+      "model": "iPhone 17 Air",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-apple-iphone-17-air",
+      "slug": "used-apple-iphone-17-air",
+      "candidates_tried": [
+        "used-apple-iphone-17-air",
+        "used-apple-iphone-17-air-5g",
+        "used-iphone-17-air"
+      ]
+    },
+    {
+      "id": "d4cd1c0c-18bd-4f99-9bca-c8f71907e473",
+      "brand": "Apple",
+      "model": "iPhone 17 Pro",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-apple-iphone-17-pro",
+      "slug": "used-apple-iphone-17-pro",
+      "candidates_tried": [
+        "used-apple-iphone-17-pro",
+        "used-apple-iphone-17-pro-5g",
+        "used-iphone-17-pro"
+      ]
+    },
+    {
+      "id": "3145aa35-4688-4a1f-9a12-03892bb73bb7",
+      "brand": "Apple",
+      "model": "iPhone 17 Pro Max",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-apple-iphone-17-pro-max",
+      "slug": "used-apple-iphone-17-pro-max",
+      "candidates_tried": [
+        "used-apple-iphone-17-pro-max",
+        "used-apple-iphone-17-pro-max-5g",
+        "used-iphone-17-pro-max"
+      ]
+    },
+    {
+      "id": "0a0808d2-62f6-4c7d-a86e-0788f43e49bd",
+      "brand": "Apple",
+      "model": "iPhone 17e",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-apple-iphone-17e",
+      "slug": "used-apple-iphone-17e",
+      "candidates_tried": [
+        "used-apple-iphone-17e",
+        "used-apple-iphone-17e-5g",
+        "used-iphone-17e"
+      ]
+    },
+    {
+      "id": "2f256d97-a463-4f74-abbf-d294eaf1840d",
+      "brand": "Apple",
+      "model": "iPhone SE3",
+      "year": 2022,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-apple-iphone-se-2022",
+      "slug": "used-apple-iphone-se-2022",
+      "candidates_tried": [
+        "used-apple-iphone-se3",
+        "used-apple-iphone-se3-5g",
+        "used-iphone-se3",
+        "used-apple-iphone-se-2022",
+        "used-iphone-se-2022"
+      ]
+    },
+    {
+      "id": "2c521937-35a0-4c05-817f-f73a570dae7d",
+      "brand": "Google",
+      "model": "Pixel 10",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-google-pixel-10",
+      "slug": "used-google-pixel-10",
+      "candidates_tried": [
+        "used-google-pixel-10",
+        "used-google-pixel-10-5g",
+        "used-google-pixel-10-12-gb-256-gb",
+        "used-google-pixel-10-12-gb-256-gb-5g"
+      ]
+    },
+    {
+      "id": "285e4d2f-c536-4613-8ddf-a51d75ae3d1b",
+      "brand": "Google",
+      "model": "Pixel 10 Pro",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-google-pixel-10-pro",
+      "slug": "used-google-pixel-10-pro",
+      "candidates_tried": [
+        "used-google-pixel-10-pro",
+        "used-google-pixel-10-pro-5g",
+        "used-google-pixel-10-pro-16-gb-256-gb",
+        "used-google-pixel-10-pro-16-gb-256-gb-5g"
+      ]
+    },
+    {
+      "id": "a30d6821-5783-4827-9296-f446315a4601",
+      "brand": "Google",
+      "model": "Pixel 10 Pro Fold",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-google-pixel-10-pro-fold",
+      "slug": "used-google-pixel-10-pro-fold",
+      "candidates_tried": [
+        "used-google-pixel-10-pro-fold",
+        "used-google-pixel-10-pro-fold-5g",
+        "used-google-pixel-10-pro-fold-16-gb-256-gb",
+        "used-google-pixel-10-pro-fold-16-gb-256-gb-5g",
+        "used-vivo-pixel-10-pro-fold",
+        "used-vivo-pixel-10-pro-fold-5g"
+      ]
+    },
+    {
+      "id": "cf210b01-16cc-40bb-b732-10f4caf1fbe5",
+      "brand": "Google",
+      "model": "Pixel 10 Pro XL",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-google-pixel-10-pro-xl",
+      "slug": "used-google-pixel-10-pro-xl",
+      "candidates_tried": [
+        "used-google-pixel-10-pro-xl",
+        "used-google-pixel-10-pro-xl-5g",
+        "used-google-pixel-10-pro-xl-16-gb-256-gb",
+        "used-google-pixel-10-pro-xl-16-gb-256-gb-5g"
+      ]
+    },
+    {
+      "id": "999ae3ee-0e93-4f30-a2e7-167dcb6e01bf",
+      "brand": "Google",
+      "model": "Pixel 10a",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-google-pixel-10a",
+      "slug": "used-google-pixel-10a",
+      "candidates_tried": [
+        "used-google-pixel-10a",
+        "used-google-pixel-10a-5g",
+        "used-google-pixel-10a-8-gb-256-gb",
+        "used-google-pixel-10a-8-gb-256-gb-5g"
+      ]
+    },
+    {
+      "id": "a409e67d-7edf-4174-b721-635fb657084c",
+      "brand": "Google",
+      "model": "Pixel 7",
+      "year": 2022,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-google-pixel-7",
+      "slug": "used-google-pixel-7",
+      "candidates_tried": [
+        "used-google-pixel-7"
+      ]
+    },
+    {
+      "id": "23eb08f7-f575-441a-8021-f5540fb0695b",
+      "brand": "Google",
+      "model": "Pixel 7 Pro",
+      "year": 2022,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-google-pixel-7-pro",
+      "slug": "used-google-pixel-7-pro",
+      "candidates_tried": [
+        "used-google-pixel-7-pro"
+      ]
+    },
+    {
+      "id": "66557afc-9f65-4f8e-aab2-1b999768d62a",
+      "brand": "Google",
+      "model": "Pixel 7a",
+      "year": 2023,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-google-pixel-7a",
+      "slug": "used-google-pixel-7a",
+      "candidates_tried": [
+        "used-google-pixel-7a",
+        "used-google-pixel-7a-5g",
+        "used-google-pixel-7a-8-gb-128-gb",
+        "used-google-pixel-7a-8-gb-128-gb-5g"
+      ]
+    },
+    {
+      "id": "23e732e9-8cbe-45ec-9a78-caad94626e52",
+      "brand": "Google",
+      "model": "Pixel 8",
+      "year": 2023,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-google-pixel-8",
+      "slug": "used-google-pixel-8",
+      "candidates_tried": [
+        "used-google-pixel-8",
+        "used-google-pixel-8-5g"
+      ]
+    },
+    {
+      "id": "9dd2c4be-655b-4416-82c7-c12c668bfff2",
+      "brand": "Google",
+      "model": "Pixel 8 Pro",
+      "year": 2023,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-google-pixel-8-pro",
+      "slug": "used-google-pixel-8-pro",
+      "candidates_tried": [
+        "used-google-pixel-8-pro",
+        "used-google-pixel-8-pro-5g"
+      ]
+    },
+    {
+      "id": "ce948ad8-b89c-4fdc-a97c-4de7ebcfc615",
+      "brand": "Google",
+      "model": "Pixel 8a",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-google-pixel-8a",
+      "slug": "used-google-pixel-8a",
+      "candidates_tried": [
+        "used-google-pixel-8a",
+        "used-google-pixel-8a-5g"
+      ]
+    },
+    {
+      "id": "fada08b6-ecb2-4134-a388-33d1108bfec4",
+      "brand": "Google",
+      "model": "Pixel 9",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-google-pixel-9",
+      "slug": "used-google-pixel-9",
+      "candidates_tried": [
+        "used-google-pixel-9",
+        "used-google-pixel-9-5g",
+        "used-google-pixel-9-12-gb-256-gb",
+        "used-google-pixel-9-12-gb-256-gb-5g"
+      ]
+    },
+    {
+      "id": "ee8cc23b-54b7-4fb0-acba-c3616e98e1fd",
+      "brand": "Google",
+      "model": "Pixel 9 Pro",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-google-pixel-9-pro",
+      "slug": "used-google-pixel-9-pro",
+      "candidates_tried": [
+        "used-google-pixel-9-pro",
+        "used-google-pixel-9-pro-5g",
+        "used-google-pixel-9-pro-16-gb-256-gb",
+        "used-google-pixel-9-pro-16-gb-256-gb-5g"
+      ]
+    },
+    {
+      "id": "724364fa-0827-4af5-98b0-03cfce5c6927",
+      "brand": "Google",
+      "model": "Pixel 9 Pro Fold",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-google-pixel-9-pro-fold",
+      "slug": "used-google-pixel-9-pro-fold",
+      "candidates_tried": [
+        "used-google-pixel-9-pro-fold",
+        "used-google-pixel-9-pro-fold-5g",
+        "used-google-pixel-9-pro-fold-16-gb-256-gb",
+        "used-google-pixel-9-pro-fold-16-gb-256-gb-5g",
+        "used-vivo-pixel-9-pro-fold",
+        "used-vivo-pixel-9-pro-fold-5g"
+      ]
+    },
+    {
+      "id": "72af1f9d-f3e8-44f1-b460-c2b4874cdda0",
+      "brand": "Google",
+      "model": "Pixel 9 Pro XL",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-google-pixel-9-pro-xl",
+      "slug": "used-google-pixel-9-pro-xl",
+      "candidates_tried": [
+        "used-google-pixel-9-pro-xl",
+        "used-google-pixel-9-pro-xl-5g"
+      ]
+    },
+    {
+      "id": "c6b5ae16-a06b-41d6-8d6f-d70445b576aa",
+      "brand": "Google",
+      "model": "Pixel 9a",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-google-pixel-9a",
+      "slug": "used-google-pixel-9a",
+      "candidates_tried": [
+        "used-google-pixel-9a",
+        "used-google-pixel-9a-5g",
+        "used-google-pixel-9a-8-gb-256-gb",
+        "used-google-pixel-9a-8-gb-256-gb-5g"
+      ]
+    },
+    {
+      "id": "db88a466-2fda-4021-b793-f0188841b3c1",
+      "brand": "Motorola",
+      "model": "Motorola Edge 40",
+      "year": 2023,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-motorola-moto-edge-40-8-gb-256-gb",
+      "slug": "used-motorola-moto-edge-40-8-gb-256-gb",
+      "candidates_tried": [
+        "used-motorola-moto-edge-40-8-gb-256-gb",
+        "used-motorola-moto-edge-40-8-gb-256-gb-5g",
+        "used-motorola-moto-edge-40",
+        "used-motorola-moto-edge-40-5g",
+        "used-motorola-edge-40",
+        "used-motorola-edge-40-5g",
+        "used-motorola-edge-40-8-gb-256-gb",
+        "used-motorola-edge-40-8-gb-256-gb-5g"
+      ]
+    },
+    {
+      "id": "bef5d9ca-ce67-46c2-9159-f8ef23ec0004",
+      "brand": "Motorola",
+      "model": "Motorola Edge 50",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-motorola-moto-edge-50-8-gb-256-gb",
+      "slug": "used-motorola-moto-edge-50-8-gb-256-gb",
+      "candidates_tried": [
+        "used-motorola-moto-edge-50-8-gb-256-gb",
+        "used-motorola-moto-edge-50-8-gb-256-gb-5g",
+        "used-motorola-moto-edge-50",
+        "used-motorola-moto-edge-50-5g",
+        "used-motorola-edge-50",
+        "used-motorola-edge-50-5g",
+        "used-motorola-edge-50-8-gb-256-gb",
+        "used-motorola-edge-50-8-gb-256-gb-5g"
+      ]
+    },
+    {
+      "id": "4e5d92e4-187f-4c8b-8991-a5c56f26b825",
+      "brand": "Motorola",
+      "model": "Motorola Edge 50 Fusion",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-motorola-moto-edge-50-fusion-8-gb-128-gb",
+      "slug": "used-motorola-moto-edge-50-fusion-8-gb-128-gb",
+      "candidates_tried": [
+        "used-motorola-moto-edge-50-fusion-8-gb-128-gb",
+        "used-motorola-moto-edge-50-fusion-8-gb-128-gb-5g",
+        "used-motorola-moto-edge-50-fusion-12-gb-128-gb",
+        "used-motorola-moto-edge-50-fusion-12-gb-128-gb-5g",
+        "used-motorola-moto-edge-50-fusion-8-gb-256-gb",
+        "used-motorola-moto-edge-50-fusion-8-gb-256-gb-5g",
+        "used-motorola-moto-edge-50-fusion-12-gb-256-gb",
+        "used-motorola-moto-edge-50-fusion-12-gb-256-gb-5g",
+        "used-motorola-moto-edge-50-fusion",
+        "used-motorola-moto-edge-50-fusion-5g",
+        "used-motorola-edge-50-fusion",
+        "used-motorola-edge-50-fusion-5g"
+      ]
+    },
+    {
+      "id": "9f1f91c5-0d03-4b01-bb1a-074df7d5010f",
+      "brand": "Motorola",
+      "model": "Motorola Edge 50 Pro",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-motorola-moto-edge-50-pro-8-gb-256-gb",
+      "slug": "used-motorola-moto-edge-50-pro-8-gb-256-gb",
+      "candidates_tried": [
+        "used-motorola-moto-edge-50-pro-8-gb-256-gb",
+        "used-motorola-moto-edge-50-pro-8-gb-256-gb-5g",
+        "used-motorola-moto-edge-50-pro-12-gb-256-gb",
+        "used-motorola-moto-edge-50-pro-12-gb-256-gb-5g",
+        "used-motorola-moto-edge-50-pro",
+        "used-motorola-moto-edge-50-pro-5g",
+        "used-motorola-edge-50-pro",
+        "used-motorola-edge-50-pro-5g"
+      ]
+    },
+    {
+      "id": "d0caca37-b09c-4950-8520-1c26aecb3a54",
+      "brand": "Motorola",
+      "model": "Motorola Edge 50 Ultra",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-motorola-moto-edge-50-ultra-12-gb-512-gb",
+      "slug": "used-motorola-moto-edge-50-ultra-12-gb-512-gb",
+      "candidates_tried": [
+        "used-motorola-moto-edge-50-ultra-12-gb-512-gb",
+        "used-motorola-moto-edge-50-ultra-12-gb-512-gb-5g",
+        "used-motorola-moto-edge-50-ultra",
+        "used-motorola-moto-edge-50-ultra-5g",
+        "used-motorola-edge-50-ultra",
+        "used-motorola-edge-50-ultra-5g",
+        "used-motorola-edge-50-ultra-12-gb-512-gb",
+        "used-motorola-edge-50-ultra-12-gb-512-gb-5g"
+      ]
+    },
+    {
+      "id": "a266c432-c903-483f-92f0-70092a7efa84",
+      "brand": "Motorola",
+      "model": "Motorola Edge 60",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-motorola-moto-edge-60-12-gb-256-gb",
+      "slug": "used-motorola-moto-edge-60-12-gb-256-gb",
+      "candidates_tried": [
+        "used-motorola-moto-edge-60-12-gb-256-gb",
+        "used-motorola-moto-edge-60-12-gb-256-gb-5g",
+        "used-motorola-moto-edge-60",
+        "used-motorola-moto-edge-60-5g",
+        "used-motorola-edge-60",
+        "used-motorola-edge-60-5g",
+        "used-motorola-edge-60-12-gb-256-gb",
+        "used-motorola-edge-60-12-gb-256-gb-5g"
+      ]
+    },
+    {
+      "id": "1ce11a88-0788-4a18-a857-1a13ed50ef17",
+      "brand": "Motorola",
+      "model": "Motorola Edge 60 Fusion",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-motorola-moto-edge-60-fusion-8-gb-128-gb",
+      "slug": "used-motorola-moto-edge-60-fusion-8-gb-128-gb",
+      "candidates_tried": [
+        "used-motorola-moto-edge-60-fusion-8-gb-128-gb",
+        "used-motorola-moto-edge-60-fusion-8-gb-128-gb-5g",
+        "used-motorola-moto-edge-60-fusion-12-gb-128-gb",
+        "used-motorola-moto-edge-60-fusion-12-gb-128-gb-5g",
+        "used-motorola-moto-edge-60-fusion-8-gb-256-gb",
+        "used-motorola-moto-edge-60-fusion-8-gb-256-gb-5g",
+        "used-motorola-moto-edge-60-fusion-12-gb-256-gb",
+        "used-motorola-moto-edge-60-fusion-12-gb-256-gb-5g",
+        "used-motorola-moto-edge-60-fusion",
+        "used-motorola-moto-edge-60-fusion-5g",
+        "used-motorola-edge-60-fusion",
+        "used-motorola-edge-60-fusion-5g"
+      ]
+    },
+    {
+      "id": "ea18cc35-2c4a-4958-b502-c7d3d62da485",
+      "brand": "Motorola",
+      "model": "Motorola Edge 60 Pro",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-motorola-moto-edge-60-pro-8-gb-256-gb",
+      "slug": "used-motorola-moto-edge-60-pro-8-gb-256-gb",
+      "candidates_tried": [
+        "used-motorola-moto-edge-60-pro-8-gb-256-gb",
+        "used-motorola-moto-edge-60-pro-8-gb-256-gb-5g",
+        "used-motorola-moto-edge-60-pro-12-gb-256-gb",
+        "used-motorola-moto-edge-60-pro-12-gb-256-gb-5g",
+        "used-motorola-moto-edge-60-pro-16-gb-256-gb",
+        "used-motorola-moto-edge-60-pro-16-gb-256-gb-5g",
+        "used-motorola-moto-edge-60-pro-8-gb-512-gb",
+        "used-motorola-moto-edge-60-pro-8-gb-512-gb-5g",
+        "used-motorola-moto-edge-60-pro-12-gb-512-gb",
+        "used-motorola-moto-edge-60-pro-12-gb-512-gb-5g",
+        "used-motorola-moto-edge-60-pro-16-gb-512-gb",
+        "used-motorola-moto-edge-60-pro-16-gb-512-gb-5g",
+        "used-motorola-moto-edge-60-pro",
+        "used-motorola-moto-edge-60-pro-5g",
+        "used-motorola-edge-60-pro",
+        "used-motorola-edge-60-pro-5g"
+      ]
+    },
+    {
+      "id": "00aae985-6cf0-4290-b45f-aa72102dbbe8",
+      "brand": "Motorola",
+      "model": "Motorola Edge 70",
+      "year": 2026,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-motorola-moto-edge-70-8-gb-256-gb",
+      "slug": "used-motorola-moto-edge-70-8-gb-256-gb",
+      "candidates_tried": [
+        "used-motorola-moto-edge-70-8-gb-256-gb",
+        "used-motorola-moto-edge-70-8-gb-256-gb-5g",
+        "used-motorola-moto-edge-70",
+        "used-motorola-moto-edge-70-5g",
+        "used-motorola-edge-70",
+        "used-motorola-edge-70-5g",
+        "used-motorola-edge-70-8-gb-256-gb",
+        "used-motorola-edge-70-8-gb-256-gb-5g"
+      ]
+    },
+    {
+      "id": "e964cd52-8f77-4f8e-ac32-14ab7fc7ac80",
+      "brand": "Motorola",
+      "model": "Motorola Edge 70 Fusion+",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-motorola-moto-edge-70-fusion-plus",
+      "slug": "used-motorola-moto-edge-70-fusion-plus",
+      "candidates_tried": [
+        "used-motorola-moto-edge-70-fusion-plus-8-gb-128-gb",
+        "used-motorola-moto-edge-70-fusion-plus-8-gb-128-gb-5g",
+        "used-motorola-moto-edge-70-fusion-plus-12-gb-128-gb",
+        "used-motorola-moto-edge-70-fusion-plus-12-gb-128-gb-5g",
+        "used-motorola-moto-edge-70-fusion-plus-8-gb-256-gb",
+        "used-motorola-moto-edge-70-fusion-plus-8-gb-256-gb-5g",
+        "used-motorola-moto-edge-70-fusion-plus-12-gb-256-gb",
+        "used-motorola-moto-edge-70-fusion-plus-12-gb-256-gb-5g",
+        "used-motorola-moto-edge-70-fusion-plus",
+        "used-motorola-moto-edge-70-fusion-plus-5g",
+        "used-motorola-edge-70-fusion-plus",
+        "used-motorola-edge-70-fusion-plus-5g"
+      ]
+    },
+    {
+      "id": "b9d2a0c4-a44b-476d-93e5-4e6ee4b4423a",
+      "brand": "Motorola",
+      "model": "Motorola Edge 70 Pro+",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-motorola-moto-edge-70-pro-plus-5g",
+      "slug": "used-motorola-moto-edge-70-pro-plus-5g",
+      "candidates_tried": [
+        "used-motorola-moto-edge-70-pro-plus-12-gb-256-gb",
+        "used-motorola-moto-edge-70-pro-plus-12-gb-256-gb-5g",
+        "used-motorola-moto-edge-70-pro-plus",
+        "used-motorola-moto-edge-70-pro-plus-5g",
+        "used-motorola-edge-70-pro-plus",
+        "used-motorola-edge-70-pro-plus-5g",
+        "used-motorola-edge-70-pro-plus-12-gb-256-gb",
+        "used-motorola-edge-70-pro-plus-12-gb-256-gb-5g"
+      ]
+    },
+    {
+      "id": "30ae7a2a-5653-47f7-bb2c-e06402a71f7c",
+      "brand": "Motorola",
+      "model": "Motorola Razr 40 Ultra",
+      "year": 2023,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-motorola-moto-razr-40-ultra-8-gb-256-gb",
+      "slug": "used-motorola-moto-razr-40-ultra-8-gb-256-gb",
+      "candidates_tried": [
+        "used-motorola-moto-razr-40-ultra-8-gb-256-gb",
+        "used-motorola-moto-razr-40-ultra-8-gb-256-gb-5g",
+        "used-motorola-moto-razr-40-ultra",
+        "used-motorola-moto-razr-40-ultra-5g",
+        "used-motorola-razr-40-ultra",
+        "used-motorola-razr-40-ultra-5g",
+        "used-motorola-razr-40-ultra-8-gb-256-gb",
+        "used-motorola-razr-40-ultra-8-gb-256-gb-5g"
+      ]
+    },
+    {
+      "id": "1726d263-53ab-4698-a283-379f4cb61e6a",
+      "brand": "Motorola",
+      "model": "Motorola Razr 50",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-motorola-moto-razr-50-8-gb-256-gb",
+      "slug": "used-motorola-moto-razr-50-8-gb-256-gb",
+      "candidates_tried": [
+        "used-motorola-moto-razr-50-8-gb-256-gb",
+        "used-motorola-moto-razr-50-8-gb-256-gb-5g",
+        "used-motorola-moto-razr-50",
+        "used-motorola-moto-razr-50-5g",
+        "used-motorola-razr-50",
+        "used-motorola-razr-50-5g",
+        "used-motorola-razr-50-8-gb-256-gb",
+        "used-motorola-razr-50-8-gb-256-gb-5g"
+      ]
+    },
+    {
+      "id": "366b4d3c-afe2-44c8-84f2-8fccbd709045",
+      "brand": "Motorola",
+      "model": "Motorola Razr 50 Ultra",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-motorola-moto-razr-50-ultra-12-gb-512-gb",
+      "slug": "used-motorola-moto-razr-50-ultra-12-gb-512-gb",
+      "candidates_tried": [
+        "used-motorola-moto-razr-50-ultra-12-gb-512-gb",
+        "used-motorola-moto-razr-50-ultra-12-gb-512-gb-5g",
+        "used-motorola-moto-razr-50-ultra",
+        "used-motorola-moto-razr-50-ultra-5g",
+        "used-motorola-razr-50-ultra",
+        "used-motorola-razr-50-ultra-5g",
+        "used-motorola-razr-50-ultra-12-gb-512-gb",
+        "used-motorola-razr-50-ultra-12-gb-512-gb-5g"
+      ]
+    },
+    {
+      "id": "d417b131-d8a8-4c1a-9be1-67b1efc299a0",
+      "brand": "Motorola",
+      "model": "Motorola Razr 60",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-motorola-moto-razr-60-8-gb-256-gb",
+      "slug": "used-motorola-moto-razr-60-8-gb-256-gb",
+      "candidates_tried": [
+        "used-motorola-moto-razr-60-8-gb-256-gb",
+        "used-motorola-moto-razr-60-8-gb-256-gb-5g",
+        "used-motorola-moto-razr-60",
+        "used-motorola-moto-razr-60-5g",
+        "used-motorola-razr-60",
+        "used-motorola-razr-60-5g",
+        "used-motorola-razr-60-8-gb-256-gb",
+        "used-motorola-razr-60-8-gb-256-gb-5g"
+      ]
+    },
+    {
+      "id": "385cefcc-38aa-43af-b190-7a26c9009c92",
+      "brand": "Motorola",
+      "model": "Motorola Razr 60 Ultra",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-motorola-moto-razr-60-ultra-16-gb-512-gb",
+      "slug": "used-motorola-moto-razr-60-ultra-16-gb-512-gb",
+      "candidates_tried": [
+        "used-motorola-moto-razr-60-ultra-16-gb-512-gb",
+        "used-motorola-moto-razr-60-ultra-16-gb-512-gb-5g",
+        "used-motorola-moto-razr-60-ultra",
+        "used-motorola-moto-razr-60-ultra-5g",
+        "used-motorola-razr-60-ultra",
+        "used-motorola-razr-60-ultra-5g",
+        "used-motorola-razr-60-ultra-16-gb-512-gb",
+        "used-motorola-razr-60-ultra-16-gb-512-gb-5g"
+      ]
+    },
+    {
+      "id": "b769d2e6-4c90-456c-84e8-44d8271b676a",
+      "brand": "Nothing",
+      "model": "CMF Phone 1",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-cmf-by-nothing-phone-1",
+      "slug": "used-cmf-by-nothing-phone-1",
+      "candidates_tried": [
+        "used-nothing-cmf-phone-1",
+        "used-nothing-cmf-phone-1-5g",
+        "used-cmf-by-nothing-phone-1",
+        "used-cmf-by-nothing-phone-1-5g",
+        "used-cmf-phone-1"
+      ]
+    },
+    {
+      "id": "9e3d88ee-d551-4458-a1e8-2992ae1eb099",
+      "brand": "Nothing",
+      "model": "CMF Phone 2 Pro",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-cmf-by-nothing-phone-2-pro",
+      "slug": "used-cmf-by-nothing-phone-2-pro",
+      "candidates_tried": [
+        "used-nothing-cmf-phone-2-pro",
+        "used-nothing-cmf-phone-2-pro-5g",
+        "used-cmf-by-nothing-phone-2-pro",
+        "used-cmf-by-nothing-phone-2-pro-5g",
+        "used-cmf-phone-2-pro"
+      ]
+    },
+    {
+      "id": "6af42e82-0b09-4f9d-a5aa-60bb4bd68ae3",
+      "brand": "Nothing",
+      "model": "Nothing Phone (4a)",
+      "year": 2026,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-nothing-phone-4a",
+      "slug": "used-nothing-phone-4a",
+      "candidates_tried": [
+        "used-nothing-phone-4a",
+        "used-nothing-phone-4a-5g",
+        "used-cmf-by-nothing-phone-4a",
+        "used-cmf-by-nothing-phone-4a-5g",
+        "used-cmf-phone-4a"
+      ]
+    },
+    {
+      "id": "be7032e4-3c5e-44bc-bfd1-ec1ba4a5f884",
+      "brand": "Nothing",
+      "model": "Nothing Phone 1",
+      "year": 2022,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-nothing-phone-1",
+      "slug": "used-nothing-phone-1",
+      "candidates_tried": [
+        "used-nothing-phone-1",
+        "used-nothing-phone-1-5g",
+        "used-cmf-by-nothing-phone-1",
+        "used-cmf-by-nothing-phone-1-5g",
+        "used-cmf-phone-1"
+      ]
+    },
+    {
+      "id": "a821f864-b580-4a89-a22f-77ce031d21fb",
+      "brand": "Nothing",
+      "model": "Nothing Phone 2",
+      "year": 2023,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-nothing-phone-2",
+      "slug": "used-nothing-phone-2",
+      "candidates_tried": [
+        "used-nothing-phone-2",
+        "used-nothing-phone-2-5g",
+        "used-cmf-by-nothing-phone-2",
+        "used-cmf-by-nothing-phone-2-5g",
+        "used-cmf-phone-2"
+      ]
+    },
+    {
+      "id": "f0fccda0-eb9b-4a2d-bc58-97a16a9a230d",
+      "brand": "Nothing",
+      "model": "Nothing Phone 2a",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-nothing-phone-2a",
+      "slug": "used-nothing-phone-2a",
+      "candidates_tried": [
+        "used-nothing-phone-2a",
+        "used-nothing-phone-2a-5g",
+        "used-cmf-by-nothing-phone-2a",
+        "used-cmf-by-nothing-phone-2a-5g",
+        "used-cmf-phone-2a"
+      ]
+    },
+    {
+      "id": "0cb6d95a-33b2-46dc-9cc2-642338fd57c2",
+      "brand": "Nothing",
+      "model": "Nothing Phone 2a Plus",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-nothing-phone-2a-plus",
+      "slug": "used-nothing-phone-2a-plus",
+      "candidates_tried": [
+        "used-nothing-phone-2a-plus",
+        "used-nothing-phone-2a-plus-5g",
+        "used-cmf-by-nothing-phone-2a-plus",
+        "used-cmf-by-nothing-phone-2a-plus-5g",
+        "used-cmf-phone-2a-plus"
+      ]
+    },
+    {
+      "id": "f0f5c159-8ca2-45e1-b518-72000d84bd3a",
+      "brand": "Nothing",
+      "model": "Nothing Phone 3",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-nothing-phone-3",
+      "slug": "used-nothing-phone-3",
+      "candidates_tried": [
+        "used-nothing-phone-3",
+        "used-nothing-phone-3-5g",
+        "used-cmf-by-nothing-phone-3",
+        "used-cmf-by-nothing-phone-3-5g",
+        "used-cmf-phone-3"
+      ]
+    },
+    {
+      "id": "886c5129-ab64-4c0d-87c9-b75597a33055",
+      "brand": "Nothing",
+      "model": "Nothing Phone 3a",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-nothing-phone-3a",
+      "slug": "used-nothing-phone-3a",
+      "candidates_tried": [
+        "used-nothing-phone-3a",
+        "used-nothing-phone-3a-5g",
+        "used-cmf-by-nothing-phone-3a",
+        "used-cmf-by-nothing-phone-3a-5g",
+        "used-cmf-phone-3a"
+      ]
+    },
+    {
+      "id": "6d134f8c-e533-4317-9a9a-72a9dfaf327c",
+      "brand": "Nothing",
+      "model": "Nothing Phone 3a Lite",
+      "year": 2026,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-nothing-phone-3a-lite",
+      "slug": "used-nothing-phone-3a-lite",
+      "candidates_tried": [
+        "used-nothing-phone-3a-lite",
+        "used-nothing-phone-3a-lite-5g",
+        "used-cmf-by-nothing-phone-3a-lite",
+        "used-cmf-by-nothing-phone-3a-lite-5g",
+        "used-cmf-phone-3a-lite"
+      ]
+    },
+    {
+      "id": "97b32dd0-45e0-4cde-ab7d-da16279889e8",
+      "brand": "Nothing",
+      "model": "Nothing Phone 3a Pro",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-nothing-phone-3a-pro",
+      "slug": "used-nothing-phone-3a-pro",
+      "candidates_tried": [
+        "used-nothing-phone-3a-pro",
+        "used-nothing-phone-3a-pro-5g",
+        "used-cmf-by-nothing-phone-3a-pro",
+        "used-cmf-by-nothing-phone-3a-pro-5g",
+        "used-cmf-phone-3a-pro"
+      ]
+    },
+    {
+      "id": "1cc076b4-1407-47a9-b94c-47768f5621db",
+      "brand": "Nothing",
+      "model": "Nothing Phone 4a Pro",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-nothing-phone-4a-pro",
+      "slug": "used-nothing-phone-4a-pro",
+      "candidates_tried": [
+        "used-nothing-phone-4a-pro",
+        "used-nothing-phone-4a-pro-5g",
+        "used-cmf-by-nothing-phone-4a-pro",
+        "used-cmf-by-nothing-phone-4a-pro-5g",
+        "used-cmf-phone-4a-pro"
+      ]
+    },
+    {
+      "id": "f733f278-f294-4946-9051-2b60c3bd6d17",
+      "brand": "Nothing",
+      "model": "Nothing Phone 4b",
+      "year": 2026,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-nothing-phone-4b",
+      "slug": "used-nothing-phone-4b",
+      "candidates_tried": [
+        "used-nothing-phone-4b",
+        "used-nothing-phone-4b-5g",
+        "used-cmf-by-nothing-phone-4b",
+        "used-cmf-by-nothing-phone-4b-5g",
+        "used-cmf-phone-4b"
+      ]
+    },
+    {
+      "id": "d42c1ec8-da38-4fa5-9303-d42dfad789b0",
+      "brand": "OPPO",
+      "model": "OPPO Find X8",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-oppo-find-x8-5g",
+      "slug": "used-oppo-find-x8-5g",
+      "candidates_tried": [
+        "used-oppo-find-x8",
+        "used-oppo-find-x8-5g"
+      ]
+    },
+    {
+      "id": "9698e9bf-a68a-4967-9fd5-ad8fb1e410bb",
+      "brand": "OPPO",
+      "model": "OPPO Find X8 Pro",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-oppo-find-x8-pro-5g",
+      "slug": "used-oppo-find-x8-pro-5g",
+      "candidates_tried": [
+        "used-oppo-find-x8-pro",
+        "used-oppo-find-x8-pro-5g",
+        "used-oppo-find-x8-pro-16-gb-512-gb",
+        "used-oppo-find-x8-pro-16-gb-512-gb-5g"
+      ]
+    },
+    {
+      "id": "2fbad710-7a05-4247-9652-db118f77d4b4",
+      "brand": "OPPO",
+      "model": "OPPO Find X9",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-oppo-find-x9-5g",
+      "slug": "used-oppo-find-x9-5g",
+      "candidates_tried": [
+        "used-oppo-find-x9",
+        "used-oppo-find-x9-5g"
+      ]
+    },
+    {
+      "id": "c398dbe9-d19c-47ba-a49a-cf17003bcad5",
+      "brand": "OPPO",
+      "model": "OPPO Find X9 Pro",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-oppo-find-x9-pro",
+      "slug": "used-oppo-find-x9-pro",
+      "candidates_tried": [
+        "used-oppo-find-x9-pro",
+        "used-oppo-find-x9-pro-5g",
+        "used-oppo-find-x9-pro-16-gb-512-gb",
+        "used-oppo-find-x9-pro-16-gb-512-gb-5g"
+      ]
+    },
+    {
+      "id": "d0717ce0-ef8b-4506-bd38-fed6d3b042ab",
+      "brand": "OPPO",
+      "model": "OPPO Find X9 Ultra",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-oppo-find-x9-ultra",
+      "slug": "used-oppo-find-x9-ultra",
+      "candidates_tried": [
+        "used-oppo-find-x9-ultra",
+        "used-oppo-find-x9-ultra-5g",
+        "used-oppo-find-x9-ultra-12-gb-512-gb",
+        "used-oppo-find-x9-ultra-12-gb-512-gb-5g"
+      ]
+    },
+    {
+      "id": "313d4038-7785-4423-938b-dabcf4de33c5",
+      "brand": "OPPO",
+      "model": "OPPO Find X9s",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-oppo-find-x9s",
+      "slug": "used-oppo-find-x9s",
+      "candidates_tried": [
+        "used-oppo-find-x9s",
+        "used-oppo-find-x9s-5g"
+      ]
+    },
+    {
+      "id": "ef398b15-dba0-47d9-a497-da40641ddad4",
+      "brand": "OPPO",
+      "model": "OPPO Reno 14",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-oppo-reno14",
+      "slug": "used-oppo-reno14",
+      "candidates_tried": [
+        "used-oppo-reno-14",
+        "used-oppo-reno-14-5g",
+        "used-oppo-reno14",
+        "used-oppo-reno14-5g"
+      ]
+    },
+    {
+      "id": "aa9cc5cc-fde5-4589-8260-40b3316cc32d",
+      "brand": "OPPO",
+      "model": "OPPO Reno 14 Pro",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-oppo-reno14-pro",
+      "slug": "used-oppo-reno14-pro",
+      "candidates_tried": [
+        "used-oppo-reno-14-pro",
+        "used-oppo-reno-14-pro-5g",
+        "used-oppo-reno14-pro",
+        "used-oppo-reno14-pro-5g"
+      ]
+    },
+    {
+      "id": "3dd9a271-ba57-4df7-bd09-8784ec0b92ba",
+      "brand": "OPPO",
+      "model": "OPPO Reno 15",
+      "year": 2026,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-oppo-reno15",
+      "slug": "used-oppo-reno15",
+      "candidates_tried": [
+        "used-oppo-reno-15",
+        "used-oppo-reno-15-5g",
+        "used-oppo-reno15",
+        "used-oppo-reno15-5g"
+      ]
+    },
+    {
+      "id": "fc6c69d5-a93f-463b-b5a3-16010bcb7b32",
+      "brand": "OPPO",
+      "model": "OPPO Reno 15 Pro",
+      "year": 2026,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-oppo-reno15-pro",
+      "slug": "used-oppo-reno15-pro",
+      "candidates_tried": [
+        "used-oppo-reno-15-pro",
+        "used-oppo-reno-15-pro-5g",
+        "used-oppo-reno15-pro",
+        "used-oppo-reno15-pro-5g"
+      ]
+    },
+    {
+      "id": "d8420464-1f7e-4aa8-8e31-ee6f99738dc5",
+      "brand": "OPPO",
+      "model": "OPPO Reno 15 Pro Mini",
+      "year": 2026,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-oppo-reno15-pro-mini",
+      "slug": "used-oppo-reno15-pro-mini",
+      "candidates_tried": [
+        "used-oppo-reno-15-pro-mini",
+        "used-oppo-reno-15-pro-mini-5g",
+        "used-oppo-reno15-pro-mini",
+        "used-oppo-reno15-pro-mini-5g"
+      ]
+    },
+    {
+      "id": "d3c802b4-87d1-41d4-9578-bac988cf6ca0",
+      "brand": "OPPO",
+      "model": "OPPO Reno 15c",
+      "year": 2026,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-oppo-reno-15c",
+      "slug": "used-oppo-reno-15c",
+      "candidates_tried": [
+        "used-oppo-reno-15c",
+        "used-oppo-reno-15c-5g",
+        "used-oppo-reno15c",
+        "used-oppo-reno15c-5g"
+      ]
+    },
+    {
+      "id": "8edbfe0e-607f-40d0-b1f9-7957b260e55a",
+      "brand": "OPPO",
+      "model": "OPPO Reno 16",
+      "year": 2026,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-oppo-reno16",
+      "slug": "used-oppo-reno16",
+      "candidates_tried": [
+        "used-oppo-reno-16",
+        "used-oppo-reno-16-5g",
+        "used-oppo-reno16",
+        "used-oppo-reno16-5g"
+      ]
+    },
+    {
+      "id": "f6f96bc5-26a7-4f02-86b0-859e2c31bae5",
+      "brand": "OPPO",
+      "model": "OPPO Reno 16c",
+      "year": 2026,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-oppo-reno16c-5g",
+      "slug": "used-oppo-reno16c-5g",
+      "candidates_tried": [
+        "used-oppo-reno-16c",
+        "used-oppo-reno-16c-5g",
+        "used-oppo-reno16c",
+        "used-oppo-reno16c-5g"
+      ]
+    },
+    {
+      "id": "e3e974d6-a060-4b3e-a844-e0e9418aa1cc",
+      "brand": "OnePlus",
+      "model": "OnePlus 11",
+      "year": 2023,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-oneplus-11",
+      "slug": "used-oneplus-11",
+      "candidates_tried": [
+        "used-oneplus-11",
+        "used-oneplus-11-5g"
+      ]
+    },
+    {
+      "id": "d42f72c6-ea7a-467b-8b88-3d5895fd0787",
+      "brand": "OnePlus",
+      "model": "OnePlus 11R",
+      "year": 2023,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-oneplus-11r",
+      "slug": "used-oneplus-11r",
+      "candidates_tried": [
+        "used-oneplus-11r",
+        "used-oneplus-11r-5g"
+      ]
+    },
+    {
+      "id": "ee3b3b2a-264e-4520-8bf9-91eed8c0e0ee",
+      "brand": "OnePlus",
+      "model": "OnePlus 12",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-oneplus-12",
+      "slug": "used-oneplus-12",
+      "candidates_tried": [
+        "used-oneplus-12",
+        "used-oneplus-12-5g"
+      ]
+    },
+    {
+      "id": "aa722880-c35f-4750-9c1b-70447be4dc3c",
+      "brand": "OnePlus",
+      "model": "OnePlus 12R",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-oneplus-12r",
+      "slug": "used-oneplus-12r",
+      "candidates_tried": [
+        "used-oneplus-12r",
+        "used-oneplus-12r-5g"
+      ]
+    },
+    {
+      "id": "9127ea67-2744-4475-9ae2-cc0b8feb5ecc",
+      "brand": "OnePlus",
+      "model": "OnePlus 13",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-oneplus-13",
+      "slug": "used-oneplus-13",
+      "candidates_tried": [
+        "used-oneplus-13",
+        "used-oneplus-13-5g"
+      ]
+    },
+    {
+      "id": "3dddff53-ebfe-4943-b302-75923c8bd2e8",
+      "brand": "OnePlus",
+      "model": "OnePlus 13R",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-oneplus-13r",
+      "slug": "used-oneplus-13r",
+      "candidates_tried": [
+        "used-oneplus-13r",
+        "used-oneplus-13r-5g"
+      ]
+    },
+    {
+      "id": "6168db04-a1a4-4820-9dc0-a605ad5835f8",
+      "brand": "OnePlus",
+      "model": "OnePlus 13s",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-oneplus-13s",
+      "slug": "used-oneplus-13s",
+      "candidates_tried": [
+        "used-oneplus-13s",
+        "used-oneplus-13s-5g"
+      ]
+    },
+    {
+      "id": "fc2ba2be-22cf-4056-9a73-a31e08cae15f",
+      "brand": "OnePlus",
+      "model": "OnePlus 15",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-oneplus-15",
+      "slug": "used-oneplus-15",
+      "candidates_tried": [
+        "used-oneplus-15",
+        "used-oneplus-15-5g"
+      ]
+    },
+    {
+      "id": "d5677331-3ba0-482f-881c-12511ff86e1a",
+      "brand": "OnePlus",
+      "model": "OnePlus 15R",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-oneplus-15r",
+      "slug": "used-oneplus-15r",
+      "candidates_tried": [
+        "used-oneplus-15r",
+        "used-oneplus-15r-5g"
+      ]
+    },
+    {
+      "id": "72d3ef72-70b7-48a6-92b0-96bce9a770a2",
+      "brand": "OnePlus",
+      "model": "OnePlus Nord 3",
+      "year": 2023,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-oneplus-nord-3",
+      "slug": "used-oneplus-nord-3",
+      "candidates_tried": [
+        "used-oneplus-nord-3",
+        "used-oneplus-nord-3-5g"
+      ]
+    },
+    {
+      "id": "e9e48798-44b6-4fdf-b622-c147e25fc2fe",
+      "brand": "OnePlus",
+      "model": "OnePlus Nord 4",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-oneplus-nord-4",
+      "slug": "used-oneplus-nord-4",
+      "candidates_tried": [
+        "used-oneplus-nord-4",
+        "used-oneplus-nord-4-5g"
+      ]
+    },
+    {
+      "id": "acedd761-da37-45ec-b1b9-d3a956d595fe",
+      "brand": "OnePlus",
+      "model": "OnePlus Nord 5",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-oneplus-nord-5",
+      "slug": "used-oneplus-nord-5",
+      "candidates_tried": [
+        "used-oneplus-nord-5",
+        "used-oneplus-nord-5-5g"
+      ]
+    },
+    {
+      "id": "9f21b3f5-e373-4503-9b57-780940bba8ef",
+      "brand": "OnePlus",
+      "model": "OnePlus Nord 5 CE",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-oneplus-nord-5-ce-5g",
+      "slug": "used-oneplus-nord-5-ce-5g",
+      "candidates_tried": [
+        "used-oneplus-nord-5-ce",
+        "used-oneplus-nord-5-ce-5g"
+      ]
+    },
+    {
+      "id": "7e5cfa61-bc6b-4574-8602-55201510baae",
+      "brand": "OnePlus",
+      "model": "OnePlus Nord 6",
+      "year": 2026,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-oneplus-nord-6-5g",
+      "slug": "used-oneplus-nord-6-5g",
+      "candidates_tried": [
+        "used-oneplus-nord-6",
+        "used-oneplus-nord-6-5g"
+      ]
+    },
+    {
+      "id": "edc26230-a4fa-4ae7-9b6e-f33a4a8b67ab",
+      "brand": "OnePlus",
+      "model": "OnePlus Nord CE 3",
+      "year": 2023,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-oneplus-nord-ce-3-5g",
+      "slug": "used-oneplus-nord-ce-3-5g",
+      "candidates_tried": [
+        "used-oneplus-nord-ce-3",
+        "used-oneplus-nord-ce-3-5g"
+      ]
+    },
+    {
+      "id": "928ed024-c775-44ee-97f2-159b3f0caab0",
+      "brand": "OnePlus",
+      "model": "OnePlus Nord CE 3 Lite",
+      "year": 2023,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-oneplus-nord-ce-3-lite-5g",
+      "slug": "used-oneplus-nord-ce-3-lite-5g",
+      "candidates_tried": [
+        "used-oneplus-nord-ce-3-lite",
+        "used-oneplus-nord-ce-3-lite-5g"
+      ]
+    },
+    {
+      "id": "ab9d84d4-3dde-4ba3-a534-03f64f38a95e",
+      "brand": "OnePlus",
+      "model": "OnePlus Nord CE 4",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-oneplus-nord-ce-4-5g",
+      "slug": "used-oneplus-nord-ce-4-5g",
+      "candidates_tried": [
+        "used-oneplus-nord-ce-4",
+        "used-oneplus-nord-ce-4-5g"
+      ]
+    },
+    {
+      "id": "0bce7a66-9727-4896-a9c6-069965829e9a",
+      "brand": "OnePlus",
+      "model": "OnePlus Nord CE 4 Lite",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-oneplus-nord-ce-4-lite-5g",
+      "slug": "used-oneplus-nord-ce-4-lite-5g",
+      "candidates_tried": [
+        "used-oneplus-nord-ce-4-lite",
+        "used-oneplus-nord-ce-4-lite-5g"
+      ]
+    },
+    {
+      "id": "ccb8e578-c968-4532-b14f-dc7971dd85c7",
+      "brand": "OnePlus",
+      "model": "OnePlus Nord CE 6",
+      "year": 2026,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-oneplus-nord-ce-6-5g",
+      "slug": "used-oneplus-nord-ce-6-5g",
+      "candidates_tried": [
+        "used-oneplus-nord-ce-6",
+        "used-oneplus-nord-ce-6-5g"
+      ]
+    },
+    {
+      "id": "f7e73a54-5904-4d87-987b-8f3db6c7aaf4",
+      "brand": "OnePlus",
+      "model": "OnePlus Nord CE 6 Lite",
+      "year": 2026,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-oneplus-nord-ce-6-lite-5g",
+      "slug": "used-oneplus-nord-ce-6-lite-5g",
+      "candidates_tried": [
+        "used-oneplus-nord-ce-6-lite",
+        "used-oneplus-nord-ce-6-lite-5g"
+      ]
+    },
+    {
+      "id": "c5576936-f5be-4773-a5e5-89402c2e19a5",
+      "brand": "OnePlus",
+      "model": "OnePlus Open Fold",
+      "year": 2023,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-oneplus-open",
+      "slug": "used-oneplus-open",
+      "candidates_tried": [
+        "used-oneplus-open-fold",
+        "used-oneplus-open-fold-5g",
+        "used-oneplus-open-fold-16-gb-512-gb",
+        "used-oneplus-open-fold-16-gb-512-gb-5g",
+        "used-oneplus-open",
+        "used-oneplus-open-5g",
+        "used-vivo-open-fold",
+        "used-vivo-open-fold-5g"
+      ]
+    },
+    {
+      "id": "a1102c7a-6c14-45a5-b9a7-1553a70cb7ba",
+      "brand": "Samsung",
+      "model": "Galaxy S22",
+      "year": 2022,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-samsung-galaxy-s22",
+      "slug": "used-samsung-galaxy-s22",
+      "candidates_tried": [
+        "used-samsung-galaxy-s22",
+        "used-samsung-galaxy-s22-5g"
+      ]
+    },
+    {
+      "id": "b9a593fc-cede-4d89-a652-4c90dfa58f3d",
+      "brand": "Samsung",
+      "model": "Galaxy S22 Plus",
+      "year": 2022,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-samsung-galaxy-s22-plus",
+      "slug": "used-samsung-galaxy-s22-plus",
+      "candidates_tried": [
+        "used-samsung-galaxy-s22-plus",
+        "used-samsung-galaxy-s22-plus-5g"
+      ]
+    },
+    {
+      "id": "9fae73d0-e3d9-4ed3-a991-fb40e1329ff4",
+      "brand": "Samsung",
+      "model": "Galaxy S22 Ultra",
+      "year": 2022,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-samsung-galaxy-s22-ultra",
+      "slug": "used-samsung-galaxy-s22-ultra",
+      "candidates_tried": [
+        "used-samsung-galaxy-s22-ultra",
+        "used-samsung-galaxy-s22-ultra-5g"
+      ]
+    },
+    {
+      "id": "17901156-8def-4f08-884e-b965f309f5fe",
+      "brand": "Samsung",
+      "model": "Galaxy S23",
+      "year": 2023,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-samsung-galaxy-s23-5g",
+      "slug": "used-samsung-galaxy-s23-5g",
+      "candidates_tried": [
+        "used-samsung-galaxy-s23",
+        "used-samsung-galaxy-s23-5g"
+      ]
+    },
+    {
+      "id": "9e60d51c-2f36-4eca-800b-ec75203b273d",
+      "brand": "Samsung",
+      "model": "Galaxy S23 FE",
+      "year": 2023,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-samsung-galaxy-s23-fe-5g",
+      "slug": "used-samsung-galaxy-s23-fe-5g",
+      "candidates_tried": [
+        "used-samsung-galaxy-s23-fe",
+        "used-samsung-galaxy-s23-fe-5g"
+      ]
+    },
+    {
+      "id": "aaa79f93-216c-4d98-9b22-0c62c859ad90",
+      "brand": "Samsung",
+      "model": "Galaxy S23 Plus",
+      "year": 2023,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-samsung-galaxy-s23-plus-5g",
+      "slug": "used-samsung-galaxy-s23-plus-5g",
+      "candidates_tried": [
+        "used-samsung-galaxy-s23-plus",
+        "used-samsung-galaxy-s23-plus-5g"
+      ]
+    },
+    {
+      "id": "ba154c4a-c3f2-4f9b-b59e-650381bcade8",
+      "brand": "Samsung",
+      "model": "Galaxy S23 Ultra",
+      "year": 2023,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-samsung-galaxy-s23-ultra-5g",
+      "slug": "used-samsung-galaxy-s23-ultra-5g",
+      "candidates_tried": [
+        "used-samsung-galaxy-s23-ultra",
+        "used-samsung-galaxy-s23-ultra-5g"
+      ]
+    },
+    {
+      "id": "b7173b9f-aa99-4025-9d77-8d1d47a6ea22",
+      "brand": "Samsung",
+      "model": "Galaxy S24",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-samsung-galaxy-s24-5g",
+      "slug": "used-samsung-galaxy-s24-5g",
+      "candidates_tried": [
+        "used-samsung-galaxy-s24",
+        "used-samsung-galaxy-s24-5g"
+      ]
+    },
+    {
+      "id": "0131643c-3ad1-49f4-9e44-1124c6885963",
+      "brand": "Samsung",
+      "model": "Galaxy S24 FE",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-samsung-galaxy-s24-fe",
+      "slug": "used-samsung-galaxy-s24-fe",
+      "candidates_tried": [
+        "used-samsung-galaxy-s24-fe",
+        "used-samsung-galaxy-s24-fe-5g"
+      ]
+    },
+    {
+      "id": "12a21d64-095f-4a1b-bb66-ab3b512f3d95",
+      "brand": "Samsung",
+      "model": "Galaxy S24 Plus",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-samsung-galaxy-s24-plus-5g",
+      "slug": "used-samsung-galaxy-s24-plus-5g",
+      "candidates_tried": [
+        "used-samsung-galaxy-s24-plus",
+        "used-samsung-galaxy-s24-plus-5g"
+      ]
+    },
+    {
+      "id": "78e49fb1-902a-4ea4-8e2b-abccef0f5f00",
+      "brand": "Samsung",
+      "model": "Galaxy S24 Ultra",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-samsung-galaxy-s24-ultra",
+      "slug": "used-samsung-galaxy-s24-ultra",
+      "candidates_tried": [
+        "used-samsung-galaxy-s24-ultra",
+        "used-samsung-galaxy-s24-ultra-5g"
+      ]
+    },
+    {
+      "id": "067f7a08-cb2a-4ef6-a8f4-3407f7db363b",
+      "brand": "Samsung",
+      "model": "Galaxy S25",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-samsung-galaxy-s25",
+      "slug": "used-samsung-galaxy-s25",
+      "candidates_tried": [
+        "used-samsung-galaxy-s25",
+        "used-samsung-galaxy-s25-5g"
+      ]
+    },
+    {
+      "id": "fde89f0a-35d9-4a07-a521-16af6b6a3081",
+      "brand": "Samsung",
+      "model": "Galaxy S25 Edge",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-samsung-galaxy-s25-edge",
+      "slug": "used-samsung-galaxy-s25-edge",
+      "candidates_tried": [
+        "used-samsung-galaxy-s25-edge",
+        "used-samsung-galaxy-s25-edge-5g"
+      ]
+    },
+    {
+      "id": "2b408481-8e98-46a6-b124-6a1f0080d404",
+      "brand": "Samsung",
+      "model": "Galaxy S25 FE",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-samsung-galaxy-s25-fe",
+      "slug": "used-samsung-galaxy-s25-fe",
+      "candidates_tried": [
+        "used-samsung-galaxy-s25-fe",
+        "used-samsung-galaxy-s25-fe-5g"
+      ]
+    },
+    {
+      "id": "3c29281b-2538-403f-a877-2f56a8a1dbb6",
+      "brand": "Samsung",
+      "model": "Galaxy S25 Plus",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-samsung-galaxy-s25-plus",
+      "slug": "used-samsung-galaxy-s25-plus",
+      "candidates_tried": [
+        "used-samsung-galaxy-s25-plus",
+        "used-samsung-galaxy-s25-plus-5g"
+      ]
+    },
+    {
+      "id": "1d62a027-b1b8-41bd-8ad7-4d13771faf42",
+      "brand": "Samsung",
+      "model": "Galaxy S25 Ultra",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-samsung-galaxy-s25-ultra",
+      "slug": "used-samsung-galaxy-s25-ultra",
+      "candidates_tried": [
+        "used-samsung-galaxy-s25-ultra",
+        "used-samsung-galaxy-s25-ultra-5g"
+      ]
+    },
+    {
+      "id": "92de7785-4a7e-4bab-aab5-3d021f952a6a",
+      "brand": "Samsung",
+      "model": "Galaxy S26",
+      "year": 2026,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-samsung-galaxy-s26",
+      "slug": "used-samsung-galaxy-s26",
+      "candidates_tried": [
+        "used-samsung-galaxy-s26",
+        "used-samsung-galaxy-s26-5g"
+      ]
+    },
+    {
+      "id": "f6aca1f2-a16c-4506-b066-41f4183a6b0c",
+      "brand": "Samsung",
+      "model": "Galaxy S26 Plus",
+      "year": 2026,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-samsung-galaxy-s26-plus",
+      "slug": "used-samsung-galaxy-s26-plus",
+      "candidates_tried": [
+        "used-samsung-galaxy-s26-plus",
+        "used-samsung-galaxy-s26-plus-5g"
+      ]
+    },
+    {
+      "id": "b64733c0-1a3e-436f-b195-9c14c5a8890c",
+      "brand": "Samsung",
+      "model": "Galaxy S26 Ultra",
+      "year": 2026,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-samsung-galaxy-s26-ultra",
+      "slug": "used-samsung-galaxy-s26-ultra",
+      "candidates_tried": [
+        "used-samsung-galaxy-s26-ultra",
+        "used-samsung-galaxy-s26-ultra-5g"
+      ]
+    },
+    {
+      "id": "3f3444c0-c8bb-4a0d-ace0-7c6dc7a70c29",
+      "brand": "Samsung",
+      "model": "Galaxy Z Flip 4",
+      "year": 2022,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-samsung-galaxy-z-flip-4-5g",
+      "slug": "used-samsung-galaxy-z-flip-4-5g",
+      "candidates_tried": [
+        "used-samsung-galaxy-z-flip-4",
+        "used-samsung-galaxy-z-flip-4-5g"
+      ]
+    },
+    {
+      "id": "d26873c3-b704-4bff-9dc8-dc3bb636afb8",
+      "brand": "Samsung",
+      "model": "Galaxy Z Flip 5",
+      "year": 2023,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-samsung-galaxy-z-flip-5",
+      "slug": "used-samsung-galaxy-z-flip-5",
+      "candidates_tried": [
+        "used-samsung-galaxy-z-flip-5",
+        "used-samsung-galaxy-z-flip-5-5g"
+      ]
+    },
+    {
+      "id": "4d556104-788a-4567-8b1d-99a36c6753ad",
+      "brand": "Samsung",
+      "model": "Galaxy Z Flip 6",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-samsung-galaxy-z-flip-6-5g",
+      "slug": "used-samsung-galaxy-z-flip-6-5g",
+      "candidates_tried": [
+        "used-samsung-galaxy-z-flip-6",
+        "used-samsung-galaxy-z-flip-6-5g"
+      ]
+    },
+    {
+      "id": "5632d230-27bb-4227-86ba-274ee3b01216",
+      "brand": "Samsung",
+      "model": "Galaxy Z Flip 7",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-samsung-galaxy-z-flip-7",
+      "slug": "used-samsung-galaxy-z-flip-7",
+      "candidates_tried": [
+        "used-samsung-galaxy-z-flip-7",
+        "used-samsung-galaxy-z-flip-7-5g"
+      ]
+    },
+    {
+      "id": "68e666b0-399e-4b9f-a8f6-3f0e63861b3a",
+      "brand": "Samsung",
+      "model": "Galaxy Z Flip 7 FE",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-samsung-galaxy-z-flip-7-fe",
+      "slug": "used-samsung-galaxy-z-flip-7-fe",
+      "candidates_tried": [
+        "used-samsung-galaxy-z-flip-7-fe",
+        "used-samsung-galaxy-z-flip-7-fe-5g"
+      ]
+    },
+    {
+      "id": "c6f8825f-fe96-4877-bf42-05c804cdf59e",
+      "brand": "Samsung",
+      "model": "Galaxy Z Flip 8",
+      "year": 2026,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-samsung-galaxy-z-flip-8",
+      "slug": "used-samsung-galaxy-z-flip-8",
+      "candidates_tried": [
+        "used-samsung-galaxy-z-flip-8",
+        "used-samsung-galaxy-z-flip-8-5g"
+      ]
+    },
+    {
+      "id": "6c28e617-48f2-4aa9-b1d4-649d6949ccdf",
+      "brand": "Samsung",
+      "model": "Galaxy Z Flip3 5G",
+      "year": 2021,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-samsung-galaxy-z-flip3-5g",
+      "slug": "used-samsung-galaxy-z-flip3-5g",
+      "candidates_tried": [
+        "used-samsung-galaxy-z-flip3-5g"
+      ]
+    },
+    {
+      "id": "08ed5f26-c1f3-4ffd-81a2-eba5467695d4",
+      "brand": "Samsung",
+      "model": "Galaxy Z Fold 4",
+      "year": 2022,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-samsung-galaxy-z-fold-4-5g",
+      "slug": "used-samsung-galaxy-z-fold-4-5g",
+      "candidates_tried": [
+        "used-samsung-galaxy-z-fold-4",
+        "used-samsung-galaxy-z-fold-4-5g",
+        "used-vivo-galaxy-z-fold-4",
+        "used-vivo-galaxy-z-fold-4-5g"
+      ]
+    },
+    {
+      "id": "cbfa73ab-e398-411b-a2bb-85a66cf53fee",
+      "brand": "Samsung",
+      "model": "Galaxy Z Fold 5",
+      "year": 2023,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-samsung-galaxy-z-fold-5",
+      "slug": "used-samsung-galaxy-z-fold-5",
+      "candidates_tried": [
+        "used-samsung-galaxy-z-fold-5",
+        "used-samsung-galaxy-z-fold-5-5g",
+        "used-vivo-galaxy-z-fold-5",
+        "used-vivo-galaxy-z-fold-5-5g"
+      ]
+    },
+    {
+      "id": "70d04543-5c6b-4401-9b5a-0f8a0d88c7bb",
+      "brand": "Samsung",
+      "model": "Galaxy Z Fold 6",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-samsung-galaxy-z-fold-6-5g",
+      "slug": "used-samsung-galaxy-z-fold-6-5g",
+      "candidates_tried": [
+        "used-samsung-galaxy-z-fold-6",
+        "used-samsung-galaxy-z-fold-6-5g",
+        "used-vivo-galaxy-z-fold-6",
+        "used-vivo-galaxy-z-fold-6-5g"
+      ]
+    },
+    {
+      "id": "86e4eb48-3e31-4bbe-befb-83e19b58e317",
+      "brand": "Samsung",
+      "model": "Galaxy Z Fold 7",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-samsung-galaxy-z-fold-7",
+      "slug": "used-samsung-galaxy-z-fold-7",
+      "candidates_tried": [
+        "used-samsung-galaxy-z-fold-7",
+        "used-samsung-galaxy-z-fold-7-5g",
+        "used-vivo-galaxy-z-fold-7",
+        "used-vivo-galaxy-z-fold-7-5g"
+      ]
+    },
+    {
+      "id": "7c0f5236-9238-4c70-a4b0-867269c53dc8",
+      "brand": "Samsung",
+      "model": "Galaxy Z Fold 8",
+      "year": 2026,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-samsung-galaxy-z-fold-8",
+      "slug": "used-samsung-galaxy-z-fold-8",
+      "candidates_tried": [
+        "used-samsung-galaxy-z-fold-8",
+        "used-samsung-galaxy-z-fold-8-5g",
+        "used-vivo-galaxy-z-fold-8",
+        "used-vivo-galaxy-z-fold-8-5g"
+      ]
+    },
+    {
+      "id": "fb68000c-625a-4ad4-870c-b165d79a3bf9",
+      "brand": "Samsung",
+      "model": "Galaxy Z Fold 8 Ultra",
+      "year": 2026,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-samsung-galaxy-z-fold-8-ultra",
+      "slug": "used-samsung-galaxy-z-fold-8-ultra",
+      "candidates_tried": [
+        "used-samsung-galaxy-z-fold-8-ultra",
+        "used-samsung-galaxy-z-fold-8-ultra-5g",
+        "used-vivo-galaxy-z-fold-8-ultra",
+        "used-vivo-galaxy-z-fold-8-ultra-5g"
+      ]
+    },
+    {
+      "id": "5b4f7d9d-8027-4345-b1eb-b01a63caa614",
+      "brand": "Samsung",
+      "model": "Galaxy Z Fold3 5G",
+      "year": 2021,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-samsung-galaxy-z-fold3-5g",
+      "slug": "used-samsung-galaxy-z-fold3-5g",
+      "candidates_tried": [
+        "used-samsung-galaxy-z-fold3-5g",
+        "used-vivo-galaxy-z-fold-3-5g",
+        "used-vivo-galaxy-z-fold-3-5g-5g"
+      ]
+    },
+    {
+      "id": "795ee828-3e6a-4b1f-b276-63088dfbb70a",
+      "brand": "Xiaomi",
+      "model": "Xiaomi 13 Pro",
+      "year": 2023,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-xiaomi-13-pro",
+      "slug": "used-xiaomi-13-pro",
+      "candidates_tried": [
+        "used-xiaomi-13-pro",
+        "used-xiaomi-13-pro-5g",
+        "used-xiaomi-13-pro-12-gb-256-gb",
+        "used-xiaomi-13-pro-12-gb-256-gb-5g",
+        "used-mi-13-pro",
+        "used-mi-13-pro-5g",
+        "used-xiaomi-mi-13-pro-12-gb-256-gb"
+      ]
+    },
+    {
+      "id": "bd43a7f5-09a9-4513-b74e-9edf87b15c71",
+      "brand": "Xiaomi",
+      "model": "Xiaomi 14",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-xiaomi-14",
+      "slug": "used-xiaomi-14",
+      "candidates_tried": [
+        "used-xiaomi-14",
+        "used-xiaomi-14-5g",
+        "used-xiaomi-14-12-gb-512-gb",
+        "used-xiaomi-14-12-gb-512-gb-5g",
+        "used-mi-14",
+        "used-mi-14-5g",
+        "used-xiaomi-mi-14-12-gb-512-gb"
+      ]
+    },
+    {
+      "id": "8f21badb-82ba-4802-951a-b8649dc333d7",
+      "brand": "Xiaomi",
+      "model": "Xiaomi 14 Civi",
+      "year": 2026,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-xiaomi-14-civi",
+      "slug": "used-xiaomi-14-civi",
+      "candidates_tried": [
+        "used-xiaomi-14-civi",
+        "used-xiaomi-14-civi-5g",
+        "used-mi-14-civi",
+        "used-mi-14-civi-5g",
+        "used-xiaomi-mi-14-civi-8-gb-256-gb",
+        "used-xiaomi-14-civi-8-gb-256-gb",
+        "used-xiaomi-mi-14-civi-12-gb-256-gb",
+        "used-xiaomi-14-civi-12-gb-256-gb",
+        "used-xiaomi-mi-14-civi-8-gb-512-gb",
+        "used-xiaomi-14-civi-8-gb-512-gb",
+        "used-xiaomi-mi-14-civi-12-gb-512-gb",
+        "used-xiaomi-14-civi-12-gb-512-gb"
+      ]
+    },
+    {
+      "id": "0fee0034-944d-4b1e-814b-52f4df65784b",
+      "brand": "Xiaomi",
+      "model": "Xiaomi 14 Ultra",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-xiaomi-14-ultra",
+      "slug": "used-xiaomi-14-ultra",
+      "candidates_tried": [
+        "used-xiaomi-14-ultra",
+        "used-xiaomi-14-ultra-5g",
+        "used-xiaomi-14-ultra-16-gb-512-gb",
+        "used-xiaomi-14-ultra-16-gb-512-gb-5g",
+        "used-mi-14-ultra",
+        "used-mi-14-ultra-5g",
+        "used-xiaomi-mi-14-ultra-16-gb-512-gb"
+      ]
+    },
+    {
+      "id": "35380bdd-2fc3-4133-bf16-779050c219d1",
+      "brand": "Xiaomi",
+      "model": "Xiaomi 15",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-xiaomi-15",
+      "slug": "used-xiaomi-15",
+      "candidates_tried": [
+        "used-xiaomi-15",
+        "used-xiaomi-15-5g",
+        "used-xiaomi-15-12-gb-512-gb",
+        "used-xiaomi-15-12-gb-512-gb-5g",
+        "used-mi-15",
+        "used-mi-15-5g",
+        "used-xiaomi-mi-15-12-gb-512-gb"
+      ]
+    },
+    {
+      "id": "15bf7314-7440-4deb-b96f-f10321492455",
+      "brand": "Xiaomi",
+      "model": "Xiaomi 15 Ultra",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-xiaomi-15-ultra",
+      "slug": "used-xiaomi-15-ultra",
+      "candidates_tried": [
+        "used-xiaomi-15-ultra",
+        "used-xiaomi-15-ultra-5g",
+        "used-xiaomi-15-ultra-16-gb-512-gb",
+        "used-xiaomi-15-ultra-16-gb-512-gb-5g",
+        "used-mi-15-ultra",
+        "used-mi-15-ultra-5g",
+        "used-xiaomi-mi-15-ultra-16-gb-512-gb"
+      ]
+    },
+    {
+      "id": "d825463e-ba84-4709-974a-ff643dfe7965",
+      "brand": "Xiaomi",
+      "model": "Xiaomi 17",
+      "year": 2026,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-xiaomi-17",
+      "slug": "used-xiaomi-17",
+      "candidates_tried": [
+        "used-xiaomi-17",
+        "used-xiaomi-17-5g",
+        "used-mi-17",
+        "used-mi-17-5g",
+        "used-xiaomi-mi-17-12-gb-256-gb",
+        "used-xiaomi-17-12-gb-256-gb",
+        "used-xiaomi-mi-17-12-gb-512-gb",
+        "used-xiaomi-17-12-gb-512-gb"
+      ]
+    },
+    {
+      "id": "9b33aa4b-c5da-4089-8ce2-861801f0673e",
+      "brand": "Xiaomi",
+      "model": "Xiaomi 17 Ultra",
+      "year": 2026,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-xiaomi-17-ultra",
+      "slug": "used-xiaomi-17-ultra",
+      "candidates_tried": [
+        "used-xiaomi-17-ultra",
+        "used-xiaomi-17-ultra-5g",
+        "used-xiaomi-17-ultra-16-gb-512-gb",
+        "used-xiaomi-17-ultra-16-gb-512-gb-5g",
+        "used-mi-17-ultra",
+        "used-mi-17-ultra-5g",
+        "used-xiaomi-mi-17-ultra-16-gb-512-gb"
+      ]
+    },
+    {
+      "id": "52ac6079-8932-416d-9c98-5d6673f051bc",
+      "brand": "Xiaomi",
+      "model": "Xiaomi 17T",
+      "year": 2026,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-xiaomi-17t",
+      "slug": "used-xiaomi-17t",
+      "candidates_tried": [
+        "used-xiaomi-17t",
+        "used-xiaomi-17t-5g",
+        "used-mi-17t",
+        "used-mi-17t-5g",
+        "used-xiaomi-mi-17t-12-gb-256-gb",
+        "used-xiaomi-17t-12-gb-256-gb",
+        "used-xiaomi-mi-17t-12-gb-512-gb",
+        "used-xiaomi-17t-12-gb-512-gb"
+      ]
+    },
+    {
+      "id": "0113a0ca-1231-43f7-bfe1-d1993a6f97fa",
+      "brand": "vivo",
+      "model": "vivo V27",
+      "year": 2023,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-vivo-v27",
+      "slug": "used-vivo-v27",
+      "candidates_tried": [
+        "used-vivo-v27",
+        "used-vivo-v27-5g"
+      ]
+    },
+    {
+      "id": "77d3e70d-22b8-40ae-ae82-a456e820d7c9",
+      "brand": "vivo",
+      "model": "vivo V27 Pro",
+      "year": 2023,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-vivo-v27-pro",
+      "slug": "used-vivo-v27-pro",
+      "candidates_tried": [
+        "used-vivo-v27-pro",
+        "used-vivo-v27-pro-5g"
+      ]
+    },
+    {
+      "id": "00fc86a5-7523-4183-9ae1-67c0b78d4eff",
+      "brand": "vivo",
+      "model": "vivo V29",
+      "year": 2023,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-vivo-v29",
+      "slug": "used-vivo-v29",
+      "candidates_tried": [
+        "used-vivo-v29",
+        "used-vivo-v29-5g"
+      ]
+    },
+    {
+      "id": "da756fac-3ce6-4816-9923-516641179bc6",
+      "brand": "vivo",
+      "model": "vivo V29 Pro",
+      "year": 2023,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-vivo-v29-pro",
+      "slug": "used-vivo-v29-pro",
+      "candidates_tried": [
+        "used-vivo-v29-pro",
+        "used-vivo-v29-pro-5g"
+      ]
+    },
+    {
+      "id": "dadecd0b-e113-4b1c-b865-b86ad148ffe0",
+      "brand": "vivo",
+      "model": "vivo V30",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-vivo-v30",
+      "slug": "used-vivo-v30",
+      "candidates_tried": [
+        "used-vivo-v30",
+        "used-vivo-v30-5g"
+      ]
+    },
+    {
+      "id": "3dde74b3-d004-472d-84f6-b9abd431a229",
+      "brand": "vivo",
+      "model": "vivo V30 Pro",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-vivo-v30-pro",
+      "slug": "used-vivo-v30-pro",
+      "candidates_tried": [
+        "used-vivo-v30-pro",
+        "used-vivo-v30-pro-5g"
+      ]
+    },
+    {
+      "id": "30a0864f-8cce-4d43-964b-bc9db2f96cf2",
+      "brand": "vivo",
+      "model": "vivo V30e",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-vivo-v30e",
+      "slug": "used-vivo-v30e",
+      "candidates_tried": [
+        "used-vivo-v30e",
+        "used-vivo-v30e-5g"
+      ]
+    },
+    {
+      "id": "3c7ef228-2ec4-46f5-991a-6bd8d3c8f551",
+      "brand": "vivo",
+      "model": "vivo V40",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-vivo-v40",
+      "slug": "used-vivo-v40",
+      "candidates_tried": [
+        "used-vivo-v40",
+        "used-vivo-v40-5g"
+      ]
+    },
+    {
+      "id": "6025f4b2-4d79-4c17-a871-fe014b29ea31",
+      "brand": "vivo",
+      "model": "vivo V40 Pro",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-vivo-v40-pro",
+      "slug": "used-vivo-v40-pro",
+      "candidates_tried": [
+        "used-vivo-v40-pro",
+        "used-vivo-v40-pro-5g"
+      ]
+    },
+    {
+      "id": "a9028de8-bd6e-4018-ae59-83292d4d424e",
+      "brand": "vivo",
+      "model": "vivo V40e",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-vivo-v40e",
+      "slug": "used-vivo-v40e",
+      "candidates_tried": [
+        "used-vivo-v40e",
+        "used-vivo-v40e-5g"
+      ]
+    },
+    {
+      "id": "3b53dcee-558f-4194-98ca-db1769bd42d6",
+      "brand": "vivo",
+      "model": "vivo V50",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-vivo-v50",
+      "slug": "used-vivo-v50",
+      "candidates_tried": [
+        "used-vivo-v50",
+        "used-vivo-v50-5g"
+      ]
+    },
+    {
+      "id": "273afda4-279b-4ea0-9c85-a8026832b54b",
+      "brand": "vivo",
+      "model": "vivo V50e",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-vivo-v50e",
+      "slug": "used-vivo-v50e",
+      "candidates_tried": [
+        "used-vivo-v50e",
+        "used-vivo-v50e-5g"
+      ]
+    },
+    {
+      "id": "3ce19544-5500-4a13-99f9-9ca0793a0b4c",
+      "brand": "vivo",
+      "model": "vivo V60",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-vivo-v60",
+      "slug": "used-vivo-v60",
+      "candidates_tried": [
+        "used-vivo-v60",
+        "used-vivo-v60-5g"
+      ]
+    },
+    {
+      "id": "cf99fa69-c513-4c4d-8e6c-ec03b0e79e86",
+      "brand": "vivo",
+      "model": "vivo V60e",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-vivo-v60e",
+      "slug": "used-vivo-v60e",
+      "candidates_tried": [
+        "used-vivo-v60e",
+        "used-vivo-v60e-5g"
+      ]
+    },
+    {
+      "id": "fc774e7f-954a-46b9-8c70-9d356ca1567c",
+      "brand": "vivo",
+      "model": "vivo V70",
+      "year": 2026,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-vivo-v70",
+      "slug": "used-vivo-v70",
+      "candidates_tried": [
+        "used-vivo-v70",
+        "used-vivo-v70-5g"
+      ]
+    },
+    {
+      "id": "5191524e-2596-4b09-98c4-4b1b3d35b502",
+      "brand": "vivo",
+      "model": "vivo V70 Elite",
+      "year": 2026,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-vivo-v70-elite-5g",
+      "slug": "used-vivo-v70-elite-5g",
+      "candidates_tried": [
+        "used-vivo-v70-elite",
+        "used-vivo-v70-elite-5g"
+      ]
+    },
+    {
+      "id": "f95c20ac-2477-441b-b449-81b4a6f44294",
+      "brand": "vivo",
+      "model": "vivo V70 FE",
+      "year": 2026,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-vivo-v70-fe",
+      "slug": "used-vivo-v70-fe",
+      "candidates_tried": [
+        "used-vivo-v70-fe",
+        "used-vivo-v70-fe-5g"
+      ]
+    },
+    {
+      "id": "86aab584-4c42-4124-8093-4e95a02f6ad1",
+      "brand": "vivo",
+      "model": "vivo X Fold3 Pro",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-vivo-x-fold-3-pro",
+      "slug": "used-vivo-x-fold-3-pro",
+      "candidates_tried": [
+        "used-vivo-x-fold3-pro",
+        "used-vivo-x-fold3-pro-5g",
+        "used-vivo-x-fold3-pro-16-gb-512-gb",
+        "used-vivo-x-fold3-pro-16-gb-512-gb-5g",
+        "used-vivo-x-fold-3-pro",
+        "used-vivo-x-fold-3-pro-5g"
+      ]
+    },
+    {
+      "id": "40bc88bf-453f-4837-b1db-a73d9bb94eb6",
+      "brand": "vivo",
+      "model": "vivo X100",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-vivo-x100",
+      "slug": "used-vivo-x100",
+      "candidates_tried": [
+        "used-vivo-x100",
+        "used-vivo-x100-5g"
+      ]
+    },
+    {
+      "id": "aa9193d7-9486-4bee-be33-e11c347261cc",
+      "brand": "vivo",
+      "model": "vivo X100 Pro",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-vivo-x100-pro-5g",
+      "slug": "used-vivo-x100-pro-5g",
+      "candidates_tried": [
+        "used-vivo-x100-pro",
+        "used-vivo-x100-pro-5g",
+        "used-vivo-x100-pro-16-gb-512-gb",
+        "used-vivo-x100-pro-16-gb-512-gb-5g"
+      ]
+    },
+    {
+      "id": "7bf97a93-0dbb-485d-b4c8-4cf8feb704f2",
+      "brand": "vivo",
+      "model": "vivo X200",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-vivo-x200",
+      "slug": "used-vivo-x200",
+      "candidates_tried": [
+        "used-vivo-x200",
+        "used-vivo-x200-5g"
+      ]
+    },
+    {
+      "id": "d6044e09-e0e7-4feb-8850-7d13f0ae0add",
+      "brand": "vivo",
+      "model": "vivo X200 FE",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-vivo-x200-fe",
+      "slug": "used-vivo-x200-fe",
+      "candidates_tried": [
+        "used-vivo-x200-fe",
+        "used-vivo-x200-fe-5g"
+      ]
+    },
+    {
+      "id": "d747b2b5-3261-415f-8549-8a18e5ba7c6c",
+      "brand": "vivo",
+      "model": "vivo X200 Pro",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-vivo-x200-pro",
+      "slug": "used-vivo-x200-pro",
+      "candidates_tried": [
+        "used-vivo-x200-pro",
+        "used-vivo-x200-pro-5g",
+        "used-vivo-x200-pro-16-gb-512-gb",
+        "used-vivo-x200-pro-16-gb-512-gb-5g"
+      ]
+    },
+    {
+      "id": "be116f24-b8dc-4995-9554-ad99d4f11e54",
+      "brand": "vivo",
+      "model": "vivo X200 Pro Mini",
+      "year": 2024,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-vivo-x200-pro-mini",
+      "slug": "used-vivo-x200-pro-mini",
+      "candidates_tried": [
+        "used-vivo-x200-pro-mini",
+        "used-vivo-x200-pro-mini-5g"
+      ]
+    },
+    {
+      "id": "a22a6db9-ecf5-4877-b8c2-32b2257b7401",
+      "brand": "vivo",
+      "model": "vivo X300",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-vivo-x300",
+      "slug": "used-vivo-x300",
+      "candidates_tried": [
+        "used-vivo-x300",
+        "used-vivo-x300-5g"
+      ]
+    },
+    {
+      "id": "bcdcae7f-e1df-4b3a-883c-bbf181036bc3",
+      "brand": "vivo",
+      "model": "vivo X300 FE",
+      "year": 2026,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-vivo-x300-fe",
+      "slug": "used-vivo-x300-fe",
+      "candidates_tried": [
+        "used-vivo-x300-fe",
+        "used-vivo-x300-fe-5g"
+      ]
+    },
+    {
+      "id": "6533cb31-7e42-4def-b596-7698e6e37b56",
+      "brand": "vivo",
+      "model": "vivo X300 Pro",
+      "year": 2025,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-vivo-x300-pro",
+      "slug": "used-vivo-x300-pro",
+      "candidates_tried": [
+        "used-vivo-x300-pro",
+        "used-vivo-x300-pro-5g",
+        "used-vivo-x300-pro-16-gb-512-gb",
+        "used-vivo-x300-pro-16-gb-512-gb-5g"
+      ]
+    },
+    {
+      "id": "da845826-c9a7-4fd8-b02b-1f9e252b98b8",
+      "brand": "vivo",
+      "model": "vivo X300 Ultra",
+      "year": 2026,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-vivo-x300-ultra",
+      "slug": "used-vivo-x300-ultra",
+      "candidates_tried": [
+        "used-vivo-x300-ultra",
+        "used-vivo-x300-ultra-5g",
+        "used-vivo-x300-ultra-16-gb-512-gb",
+        "used-vivo-x300-ultra-16-gb-512-gb-5g"
+      ]
+    },
+    {
+      "id": "da4924a5-2f7c-44e1-9058-27bd03ecb3c5",
+      "brand": "vivo",
+      "model": "vivo X80",
+      "year": 2022,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-vivo-x80",
+      "slug": "used-vivo-x80",
+      "candidates_tried": [
+        "used-vivo-x80",
+        "used-vivo-x80-5g"
+      ]
+    },
+    {
+      "id": "05d68186-5223-49d2-95f6-9e86d1d7c47c",
+      "brand": "vivo",
+      "model": "vivo X80 Pro",
+      "year": 2022,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-vivo-x80-pro",
+      "slug": "used-vivo-x80-pro",
+      "candidates_tried": [
+        "used-vivo-x80-pro",
+        "used-vivo-x80-pro-5g",
+        "used-vivo-x80-pro-12-gb-256-gb",
+        "used-vivo-x80-pro-12-gb-256-gb-5g"
+      ]
+    },
+    {
+      "id": "5c6fb128-4b9b-4a02-896e-034f1050e41c",
+      "brand": "vivo",
+      "model": "vivo X90",
+      "year": 2023,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-vivo-x90-5g",
+      "slug": "used-vivo-x90-5g",
+      "candidates_tried": [
+        "used-vivo-x90",
+        "used-vivo-x90-5g"
+      ]
+    },
+    {
+      "id": "0ae6f81a-498c-423e-acf3-9e805ef60c0e",
+      "brand": "vivo",
+      "model": "vivo X90 Pro",
+      "year": 2023,
+      "status": "FOUND",
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-vivo-x90-pro",
+      "slug": "used-vivo-x90-pro",
+      "candidates_tried": [
+        "used-vivo-x90-pro",
+        "used-vivo-x90-pro-5g",
+        "used-vivo-x90-pro-12-gb-256-gb",
+        "used-vivo-x90-pro-12-gb-256-gb-5g"
+      ]
+    }
+  ],
+  "not_found": [
+    {
+      "id": "564a5050-16b2-4c8e-bede-24cec17a8450",
+      "brand": "Xiaomi",
+      "model": "Xiaomi 12 Pro",
+      "year": 2022,
+      "status": "NOT_FOUND",
+      "url": null,
+      "slug": null,
+      "candidates_tried": [
+        "used-xiaomi-12-pro",
+        "used-xiaomi-12-pro-5g",
+        "used-mi-12-pro",
+        "used-mi-12-pro-5g",
+        "used-xiaomi-mi-12-pro-8-gb-256-gb",
+        "used-xiaomi-12-pro-8-gb-256-gb",
+        "used-xiaomi-mi-12-pro-12-gb-256-gb",
+        "used-xiaomi-12-pro-12-gb-256-gb"
+      ]
+    },
+    {
+      "id": "0c7971e0-07c0-494a-a15c-50ab89f7efc2",
+      "brand": "vivo",
+      "model": "vivo X5 Fold",
+      "year": 2025,
+      "status": "NOT_FOUND",
+      "url": null,
+      "slug": null,
+      "candidates_tried": [
+        "used-vivo-x5-fold",
+        "used-vivo-x5-fold-5g",
+        "used-vivo-x5-fold-16-gb-512-gb",
+        "used-vivo-x5-fold-16-gb-512-gb-5g"
+      ]
+    }
+  ]
+}

@@ -227,3 +227,23 @@ model OtpVerification {
   expiresAt DateTime
   createdAt DateTime @default(now())
 }
+
+model CashifyPriceAlert {
+  id              String   @id @default(uuid())
+  modelId         String
+  modelName       String
+  brandName       String
+  ramGb           Int      @default(0)
+  storageGb       Int
+  rephonixPrice   Int
+  cashifyPrice    Int
+  difference      Int      // rephonixPrice - cashifyPrice
+  status          String   // 'INCREASED' | 'DECREASED' | 'STABLE'
+  changeAmount    Int      @default(0) // change compared to previous Cashify quote
+  alertDate       DateTime @default(now())
+  reviewed        Boolean  @default(false)
+
+  @@index([modelId])
+  @@index([status])
+  @@index([alertDate])
+}

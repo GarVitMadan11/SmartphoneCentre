@@ -398,5 +398,154 @@ router.get('/audit-logs', adminAuth, async (req: AuthenticatedRequest, res: Resp
   }
 });
 
+import {
+  getCashifySummary,
+  getCashifyModelsList,
+  getCashifyVariantsList,
+  saveCustomUrl,
+  triggerPriceScan,
+  isScanRunning,
+} from '../services/cashifyService.js';
+
+/**
+ * GET /api/admin/price-alerts
+ * Returns daily Cashify price comparison logs and price increase/decrease alerts.
+ */
+router.get('/price-alerts', adminAuth, async (_req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const alerts = await (prisma as any).cashifyPriceAlert.findMany({
+      orderBy: { alertDate: 'desc' },
+      take: 200,
+    });
+    res.json(alerts);
+  } catch (err) {
+    console.error('GET /api/admin/price-alerts error:', err);
+    res.status(500).json({ error: 'ServerError', message: 'Failed to fetch price comparison alerts.' });
+  }
+});
+
+/**
+ * GET /api/admin/cashify/summary
+ * Returns high-level metrics for the Cashify monitor dashboard.
+ */
+router.get('/cashify/summary', adminAuth, async (_req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const summary = await getCashifySummary();
+    res.json({ ...summary, isScanRunning: isScanRunning() });
+  } catch (err) {
+    console.error('GET /api/admin/cashify/summary error:', err);
+    res.status(500).json({ error: 'ServerError', message: 'Failed to fetch Cashify monitor summary.' });
+  }
+});
+
+/**
+ * GET /api/admin/cashify/variants
+ * Returns all active smartphone RAM & Storage variants (1 row per variant)
+ * with buyback price, competitor Cashify price, margin, and variant URL.
+ */
+router.get('/cashify/variants', adminAuth, async (_req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const list = await getCashifyVariantsList();
+    res.json(list);
+  } catch (err) {
+    console.error('GET /api/admin/cashify/variants error:', err);
+    res.status(500).json({ error: 'ServerError', message: 'Failed to fetch Cashify variants list.' });
+  }
+});
+
+/**
+ * GET /api/admin/cashify/models
+ * Returns all active models with their resolved or custom Cashify URLs and latest prices.
+ */
+router.get('/cashify/models', adminAuth, async (_req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const list = await getCashifyModelsList();
+    res.json(list);
+  } catch (err) {
+    console.error('GET /api/admin/cashify/models error:', err);
+    res.status(500).json({ error: 'ServerError', message: 'Failed to fetch Cashify models list.' });
+  }
+});
+
+/**
+ * POST /api/admin/cashify/custom-url
+ * Saves or updates a custom Cashify URL override for a variant or model.
+ */
+router.post('/cashify/custom-url', adminAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const { key, modelId, customUrl } = req.body;
+    const targetKey = key || modelId;
+    if (!targetKey || typeof customUrl !== 'string') {
+      res.status(400).json({ error: 'BadRequest', message: 'key (or modelId) and customUrl are required.' });
+      return;
+    }
+
+    saveCustomUrl(targetKey, customUrl);
+    await logAdminAudit({
+      adminUserId: req.user?.username,
+      action: 'CASHIFY_CUSTOM_URL_SET',
+      targetType: 'VariantOrModel',
+      targetId: targetKey,
+      payload: { customUrl },
+    });
+
+    res.json({ success: true, message: 'Custom Cashify URL saved successfully.' });
+  } catch (err) {
+    console.error('POST /api/admin/cashify/custom-url error:', err);
+    res.status(500).json({ error: 'ServerError', message: 'Failed to save custom Cashify URL.' });
+  }
+});
+
+/**
+ * POST /api/admin/cashify/test-url
+ * Fast live HEAD check for any Cashify URL.
+ */
+router.post('/cashify/test-url', adminAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const { url } = req.body;
+    if (!url || !url.startsWith('https://www.cashify.in')) {
+      res.status(400).json({ error: 'BadRequest', message: 'Valid https://www.cashify.in URL required.' });
+      return;
+    }
+
+    const resp = await fetch(url, {
+      method: 'HEAD',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+      },
+    });
+
+    res.json({
+      url,
+      status: resp.status,
+      ok: resp.status === 200,
+    });
+  } catch (err: any) {
+    res.json({ url: req.body.url, status: 0, ok: false, error: err.message });
+  }
+});
+
+/**
+ * POST /api/admin/cashify/trigger-scan
+ * Triggers background price scan.
+ */
+router.post('/cashify/trigger-scan', adminAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const limit = parseInt(String(req.body.limit || '0'), 10);
+    const result = triggerPriceScan(limit, true);
+    res.json(result);
+  } catch (err: any) {
+    console.error('POST /api/admin/cashify/trigger-scan error:', err);
+    res.status(500).json({ error: 'ServerError', message: err.message || 'Failed to trigger scan.' });
+  }
+});
+
+/**
+ * GET /api/admin/cashify/scan-status
+ */
+router.get('/cashify/scan-status', adminAuth, (_req: AuthenticatedRequest, res: Response): void => {
+  res.json({ isRunning: isScanRunning() });
+});
+
 export default router;
 
