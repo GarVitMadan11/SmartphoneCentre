@@ -12,6 +12,8 @@ export type DeviceCategory = 'flagship' | 'premium' | 'midrange' | 'budget';
 
 export interface Model {
   id: string;
+  legacyId?: string;
+  dbId?: string;
   brandId: string;
   name: string;
   category: DeviceCategory;

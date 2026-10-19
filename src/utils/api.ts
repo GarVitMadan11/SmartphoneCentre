@@ -280,7 +280,11 @@ export async function createModel(data: {
   const res = await apiFetch<ApiModel>('/models', { method: 'POST', body: JSON.stringify(data) }, true);
   try {
     const cached = getCachedModels();
-    saveCachedModels([res, ...cached]);
+    const filtered = cached.filter(m => m.id !== res.id && (m as any).legacyId !== res.id);
+    saveCachedModels([res, ...filtered]);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('stc_catalog_order_changed'));
+    }
   } catch {}
   return res;
 }
@@ -295,6 +299,9 @@ export async function updateModel(legacyId: string, data: Partial<Omit<ApiModel,
         cached[idx] = { ...cached[idx], ...data, ...res };
         saveCachedModels(cached);
       }
+    }
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('stc_catalog_order_changed'));
     }
   } catch {}
   return res;
@@ -312,6 +319,9 @@ export async function bulkUpdateModels(updates: Array<{ id: string; changes: Par
       });
       saveCachedModels(updatedList);
     }
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('stc_catalog_order_changed'));
+    }
   } catch {}
   return res;
 }
@@ -321,6 +331,9 @@ export async function deleteModel(legacyId: string): Promise<{ success: boolean 
   try {
     const cached = getCachedModels();
     saveCachedModels(cached.filter(m => m.id !== legacyId && (m as any).legacyId !== legacyId));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('stc_catalog_order_changed'));
+    }
   } catch {}
   return res;
 }
@@ -764,6 +777,7 @@ export interface CashifySummaryData {
 export interface CashifyVariantItem {
   variantKey: string;
   modelId: string;
+  legacyId?: string;
   modelName: string;
   brandName: string;
   brandId: string;
@@ -839,15 +853,47 @@ export function fetchCashifyPriceAlerts(): Promise<CashifyPriceAlertItem[]> {
   return apiFetch<CashifyPriceAlertItem[]>('/admin/price-alerts', {}, true);
 }
 
-export function saveCashifyCustomUrl(keyOrModelId: string, customUrl: string): Promise<{ success: boolean; message: string }> {
+export function saveCashifyCustomUrl(
+  keyOrModelId: string,
+  customUrl: string,
+  extractedPrice?: number | null,
+  rephonixPrice?: number | null
+): Promise<{ success: boolean; message: string }> {
   return apiFetch<{ success: boolean; message: string }>('/admin/cashify/custom-url', {
     method: 'POST',
-    body: JSON.stringify({ key: keyOrModelId, modelId: keyOrModelId, customUrl }),
+    body: JSON.stringify({ key: keyOrModelId, modelId: keyOrModelId, customUrl, extractedPrice, rephonixPrice }),
   }, true);
 }
 
-export function testCashifyUrlApi(url: string): Promise<{ url: string; status: number; ok: boolean; error?: string }> {
-  return apiFetch<{ url: string; status: number; ok: boolean; error?: string }>('/admin/cashify/test-url', {
+export interface RegisterApprovedCashifyVariantsPayload {
+  modelId?: string;
+  legacyId?: string;
+  modelName: string;
+  brandName?: string;
+  variants: Array<{
+    ramGb: number;
+    storageGb: number;
+    url: string;
+    extractedPrice?: number | null;
+    rephonixPrice?: number | null;
+  }>;
+}
+
+export function registerApprovedCashifyVariants(
+  payload: RegisterApprovedCashifyVariantsPayload
+): Promise<{ success: boolean; registeredCount: number; extractedCount: number; message: string }> {
+  return apiFetch<{ success: boolean; registeredCount: number; extractedCount: number; message: string }>(
+    '/admin/cashify/register-approved-variants',
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    },
+    true
+  );
+}
+
+export function testCashifyUrlApi(url: string): Promise<{ url: string; status: number; ok: boolean; extractedPrice?: number | null; error?: string }> {
+  return apiFetch<{ url: string; status: number; ok: boolean; extractedPrice?: number | null; error?: string }>('/admin/cashify/test-url', {
     method: 'POST',
     body: JSON.stringify({ url }),
   }, true);

@@ -69,6 +69,8 @@ router.get('/', async (req, res) => {
 
       return {
         id: m.legacyId,
+        legacyId: m.legacyId,
+        dbId: m.id,
         brandId: m.brandId,
         name: m.name,
         category: m.category,

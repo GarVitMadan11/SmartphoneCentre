@@ -468,12 +468,113 @@ router.get('/cashify/models', adminAuth, async (_req: AuthenticatedRequest, res:
 });
 
 /**
+ * Extracts live unmasked buyback price from Cashify variant HTML
+ */
+export function extractCashifyPriceFromHtml(htmlText: string): number | null {
+  if (!htmlText) return null;
+
+  // 1. Direct itemprop="price" content="XYZ"
+  const contentMatch =
+    htmlText.match(/itemprop=["']price["'][^>]*content=["'](\d+)["']/i) ||
+    htmlText.match(/content=["'](\d+)["'][^>]*itemprop=["']price["']/i);
+  if (contentMatch) {
+    const val = parseInt(contentMatch[1], 10);
+    if (val >= 500 && val <= 300000) return val;
+  }
+
+  // 2. <span itemprop="price">₹12,345</span>
+  const textMatch = htmlText.match(/<[^>]+itemprop=["']price["'][^>]*>([^<]+)<\/[^>]+>/i);
+  if (textMatch) {
+    const cleaned = textMatch[1].replace(/[^\d]/g, '');
+    const val = parseInt(cleaned, 10);
+    if (val >= 500 && val <= 300000) return val;
+  }
+
+  // 3. JSON-LD structured schema
+  const jsonLdRegex = /<script\s+type=["']application\/ld\+json["']>([\s\S]*?)<\/script>/gi;
+  let match;
+  while ((match = jsonLdRegex.exec(htmlText)) !== null) {
+    try {
+      const data = JSON.parse(match[1]);
+      if (data.offers?.price) {
+        const val = parseInt(String(data.offers.price).replace(/[^\d]/g, ''), 10);
+        if (val >= 500 && val <= 300000) return val;
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  // 4. Next.js __NEXT_DATA__
+  const nextDataMatch = htmlText.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/i);
+  if (nextDataMatch) {
+    try {
+      const nextData = JSON.parse(nextDataMatch[1]);
+      const pp = nextData.props?.pageProps;
+      if (pp) {
+        const price =
+          pp.priceDetails?.price ||
+          pp.deviceDetails?.price ||
+          pp.product?.price ||
+          pp.modelData?.price;
+        if (price) {
+          const val = parseInt(String(price).replace(/[^\d]/g, ''), 10);
+          if (val >= 500 && val <= 300000) return val;
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  // 5. Fallback regex on currency patterns on Cashify price headers
+  const priceRegex = /₹\s*([0-9]{1,3}(?:,[0-9]{2,3})+|\b[0-9]{4,6}\b)/g;
+  const foundPrices: number[] = [];
+  let pMatch;
+  while ((pMatch = priceRegex.exec(htmlText)) !== null) {
+    const num = parseInt(pMatch[1].replace(/[^\d]/g, ''), 10);
+    if (num >= 2000 && num <= 200000) {
+      foundPrices.push(num);
+    }
+  }
+  if (foundPrices.length > 0) {
+    return foundPrices[0];
+  }
+
+  return null;
+}
+
+/**
+ * Live HTTP fetch and price extraction helper
+ */
+export async function extractPriceFromCashifyUrl(url: string): Promise<number | null> {
+  if (!url || !url.startsWith('https://www.cashify.in')) return null;
+  try {
+    const resp = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      },
+    });
+    if (resp.status !== 200) return null;
+    const htmlText = await resp.text();
+    return extractCashifyPriceFromHtml(htmlText);
+  } catch (e) {
+    console.warn(`[CashifyExtract] Failed live extract for ${url}:`, e);
+    return null;
+  }
+}
+
+/**
  * POST /api/admin/cashify/custom-url
- * Saves or updates a custom Cashify URL override for a variant or model.
+ * Saves or updates a custom Cashify URL override for a variant or model,
+ * and automatically extracts live price into Cashify monitoring.
  */
 router.post('/cashify/custom-url', adminAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const { key, modelId, customUrl } = req.body;
+    const { key, modelId, customUrl, extractedPrice, rephonixPrice } = req.body;
     const targetKey = key || modelId;
     if (!targetKey || typeof customUrl !== 'string') {
       res.status(400).json({ error: 'BadRequest', message: 'key (or modelId) and customUrl are required.' });
@@ -481,6 +582,63 @@ router.post('/cashify/custom-url', adminAuth, async (req: AuthenticatedRequest, 
     }
 
     saveCustomUrl(targetKey, customUrl);
+
+    // If key format is {modelId}_{ram}_{storage}, link all model variations and record alert
+    const parts = targetKey.split('_');
+    if (parts.length >= 3) {
+      const idOrLegacy = parts[0];
+      const ram = parseInt(parts[1], 10) || 0;
+      const storage = parseInt(parts[2], 10) || 128;
+
+      const model = await prisma.model.findFirst({
+        where: {
+          OR: [
+            { id: idOrLegacy },
+            { legacyId: idOrLegacy },
+            { name: { equals: idOrLegacy, mode: 'insensitive' as any } },
+          ],
+        },
+        include: { brand: true },
+      });
+
+      if (model) {
+        saveCustomUrl(`${model.id}_${ram}_${storage}`, customUrl);
+        saveCustomUrl(`${model.legacyId}_${ram}_${storage}`, customUrl);
+        saveCustomUrl(`${model.name}_${ram}_${storage}`, customUrl);
+
+        let livePrice: number | null = (typeof extractedPrice === 'number' && extractedPrice > 0)
+          ? extractedPrice
+          : null;
+
+        if (!livePrice) {
+          livePrice = await extractPriceFromCashifyUrl(customUrl);
+        }
+
+        if (livePrice && livePrice > 0) {
+          const finalRephonixPrice = typeof rephonixPrice === 'number' && rephonixPrice > 0
+            ? rephonixPrice
+            : model.basePrice128GB;
+
+          await (prisma as any).cashifyPriceAlert.create({
+            data: {
+              modelId: model.id,
+              modelName: model.name,
+              brandName: model.brand?.name || 'Unknown',
+              ramGb: ram,
+              storageGb: storage,
+              rephonixPrice: finalRephonixPrice,
+              cashifyPrice: livePrice,
+              difference: finalRephonixPrice - livePrice,
+              status: 'STABLE',
+              changeAmount: 0,
+              alertDate: new Date(),
+              reviewed: true,
+            },
+          });
+        }
+      }
+    }
+
     await logAdminAudit({
       adminUserId: req.user?.username,
       action: 'CASHIFY_CUSTOM_URL_SET',
@@ -489,7 +647,7 @@ router.post('/cashify/custom-url', adminAuth, async (req: AuthenticatedRequest, 
       payload: { customUrl },
     });
 
-    res.json({ success: true, message: 'Custom Cashify URL saved successfully.' });
+    res.json({ success: true, message: 'Custom Cashify URL saved and price registered successfully.' });
   } catch (err) {
     console.error('POST /api/admin/cashify/custom-url error:', err);
     res.status(500).json({ error: 'ServerError', message: 'Failed to save custom Cashify URL.' });
@@ -497,8 +655,108 @@ router.post('/cashify/custom-url', adminAuth, async (req: AuthenticatedRequest, 
 });
 
 /**
+ * POST /api/admin/cashify/register-approved-variants
+ * Automatically registers approved Cashify links for a newly added or updated model,
+ * extracts live prices from Cashify (or uses verified prices),
+ * and creates CashifyPriceAlert records so the model is immediately active in the Cashify Monitor.
+ */
+router.post('/cashify/register-approved-variants', adminAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const { modelId, legacyId, modelName, brandName, variants } = req.body;
+    if (!modelName || !Array.isArray(variants) || variants.length === 0) {
+      res.status(400).json({ error: 'BadRequest', message: 'modelName and variants array are required.' });
+      return;
+    }
+
+    // 1. Resolve model in DB
+    const model = await prisma.model.findFirst({
+      where: {
+        OR: [
+          ...(modelId ? [{ id: modelId }] : []),
+          ...(legacyId ? [{ legacyId }] : []),
+          { name: { equals: modelName, mode: 'insensitive' as any } },
+        ],
+      },
+      include: { brand: true },
+    });
+
+    const resolvedModelId = model?.id || modelId || legacyId || modelName;
+    const resolvedLegacyId = model?.legacyId || legacyId || modelId || modelName;
+    const resolvedModelName = model?.name || modelName;
+    const resolvedBrandName = model?.brand?.name || brandName || 'Unknown';
+
+    let registeredCount = 0;
+    let extractedCount = 0;
+
+    for (const v of variants) {
+      if (!v.url || typeof v.url !== 'string') continue;
+      const ram = Number(v.ramGb) || 0;
+      const storage = Number(v.storageGb) || 128;
+      const cleanUrl = v.url.trim();
+
+      // Save custom URL under all variations so it can never be missed
+      saveCustomUrl(`${resolvedModelId}_${ram}_${storage}`, cleanUrl);
+      saveCustomUrl(`${resolvedLegacyId}_${ram}_${storage}`, cleanUrl);
+      saveCustomUrl(`${resolvedModelName}_${ram}_${storage}`, cleanUrl);
+      registeredCount++;
+
+      // Extract or retrieve price
+      let cashifyPrice: number | null = (typeof v.extractedPrice === 'number' && v.extractedPrice > 0)
+        ? v.extractedPrice
+        : null;
+
+      if (!cashifyPrice) {
+        cashifyPrice = await extractPriceFromCashifyUrl(cleanUrl);
+      }
+
+      if (cashifyPrice && cashifyPrice > 0) {
+        extractedCount++;
+        const rephonixPrice = Number(v.rephonixPrice) || model?.basePrice128GB || cashifyPrice;
+        const diff = rephonixPrice - cashifyPrice;
+
+        // Create alert entry for live monitoring
+        await (prisma as any).cashifyPriceAlert.create({
+          data: {
+            modelId: resolvedModelId,
+            modelName: resolvedModelName,
+            brandName: resolvedBrandName,
+            ramGb: ram,
+            storageGb: storage,
+            rephonixPrice,
+            cashifyPrice,
+            difference: diff,
+            status: 'STABLE',
+            changeAmount: 0,
+            alertDate: new Date(),
+            reviewed: true,
+          },
+        });
+      }
+    }
+
+    await logAdminAudit({
+      adminUserId: req.user?.username,
+      action: 'CASHIFY_APPROVED_VARIANTS_REGISTERED',
+      targetType: 'Model',
+      targetId: resolvedModelId,
+      payload: { modelName: resolvedModelName, registeredCount, extractedCount },
+    });
+
+    res.json({
+      success: true,
+      registeredCount,
+      extractedCount,
+      message: `Successfully registered and monitored ${registeredCount} variants (${extractedCount} live prices extracted).`,
+    });
+  } catch (err: any) {
+    console.error('POST /api/admin/cashify/register-approved-variants error:', err);
+    res.status(500).json({ error: 'ServerError', message: 'Failed to register approved variants: ' + (err.message || err) });
+  }
+});
+
+/**
  * POST /api/admin/cashify/test-url
- * Fast live HEAD check for any Cashify URL.
+ * Live check for Cashify URL and automatic live price extraction.
  */
 router.post('/cashify/test-url', adminAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
@@ -509,19 +767,35 @@ router.post('/cashify/test-url', adminAuth, async (req: AuthenticatedRequest, re
     }
 
     const resp = await fetch(url, {
-      method: 'HEAD',
+      method: 'GET',
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
       },
     });
+
+    if (resp.status !== 200) {
+      res.json({
+        url,
+        status: resp.status,
+        ok: false,
+        extractedPrice: null,
+      });
+      return;
+    }
+
+    const htmlText = await resp.text();
+    const extractedPrice = extractCashifyPriceFromHtml(htmlText);
 
     res.json({
       url,
       status: resp.status,
-      ok: resp.status === 200,
+      ok: true,
+      extractedPrice,
     });
   } catch (err: any) {
-    res.json({ url: req.body.url, status: 0, ok: false, error: err.message });
+    res.json({ url: req.body.url, status: 0, ok: false, extractedPrice: null, error: err.message });
   }
 });
 

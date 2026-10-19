@@ -2,6 +2,7 @@ import { Brand, Model, sortModelsByLaunchDesc } from '../data/mockDatabase';
 
 export const DEFAULT_SERIES_ORDER: Record<string, string[]> = {
   'brand-apple': [
+    'iPhone 18 Series',
     'iPhone 17 Series',
     'iPhone 16 Series',
     'iPhone 15 Series',
@@ -305,6 +306,12 @@ export function getSeriesHierarchyWeight(seriesName: string): number {
 export function sortSeriesByHierarchy(brandId: string, seriesList: string[]): string[] {
   const defaultList = DEFAULT_SERIES_ORDER[brandId];
   return [...seriesList].sort((a, b) => {
+    // 1. Hierarchy weight takes precedence for generational series (e.g. iPhone 18 > 17, Pixel 10 > 9)
+    const weightA = getSeriesHierarchyWeight(a);
+    const weightB = getSeriesHierarchyWeight(b);
+    if (weightB !== weightA) return weightB - weightA;
+
+    // 2. If hierarchy weights are equal, respect defaultList ordering if both are present
     if (defaultList) {
       const idxA = defaultList.indexOf(a);
       const idxB = defaultList.indexOf(b);
@@ -312,9 +319,7 @@ export function sortSeriesByHierarchy(brandId: string, seriesList: string[]): st
       if (idxA !== -1) return -1;
       if (idxB !== -1) return 1;
     }
-    const weightA = getSeriesHierarchyWeight(a);
-    const weightB = getSeriesHierarchyWeight(b);
-    if (weightB !== weightA) return weightB - weightA;
+
     return a.localeCompare(b);
   });
 }
@@ -327,6 +332,12 @@ export function applySeriesOrder(brandId: string, seriesList: string[]): string[
       const idxA = customOrder.indexOf(a);
       const idxB = customOrder.indexOf(b);
       if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+
+      // If one of the series is new and not in customOrder, check hierarchy weight first
+      const weightA = getSeriesHierarchyWeight(a);
+      const weightB = getSeriesHierarchyWeight(b);
+      if (weightB !== weightA) return weightB - weightA;
+
       if (idxA !== -1) return -1;
       if (idxB !== -1) return 1;
       return 0;

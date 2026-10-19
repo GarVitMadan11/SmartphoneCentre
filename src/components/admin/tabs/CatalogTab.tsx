@@ -26,9 +26,13 @@ import {
   Tag,
   RotateCcw,
   ShieldCheck,
+  ExternalLink,
+  Globe,
+  CheckCircle2,
+  Zap,
 } from 'lucide-react';
-import { Model, Brand, BRANDS, isSmartwatchDevice, isTabletDevice, buildVariantPricesForModel, isVariantAvailable } from '../../../data/mockDatabase';
-import { fetchModels, createModel, updateModel, deleteModel } from '../../../utils/api';
+import { Model, Brand, BRANDS, isSmartwatchDevice, isTabletDevice, buildVariantPricesForModel, isVariantAvailable, predictCashifyPrice } from '../../../data/mockDatabase';
+import { fetchModels, createModel, updateModel, deleteModel, testCashifyUrlApi, registerApprovedCashifyVariants } from '../../../utils/api';
 import {
   saveBrandOrder,
   resetBrandOrder,
@@ -42,6 +46,7 @@ import {
   shuffleArray,
   setBrandSkipSeries,
   isBrandSeriesSkipped,
+  DEFAULT_SERIES_ORDER,
 } from '../../../utils/ordering';
 
 interface CatalogTabProps {
@@ -1273,8 +1278,11 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
       <EditSpecsAndPricesModal
         isOpen={Boolean(editingModel || isAddingNew)}
         model={editingModel}
+        catalogCategory={category}
         isAddingNew={isAddingNew}
         brands={orderedBrands.length > 0 ? orderedBrands : initialBrands}
+        models={models}
+        existingSeries={availableSeriesList}
         onClose={() => {
           setEditingModel(null);
           setIsAddingNew(false);
@@ -1295,11 +1303,81 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
   );
 };
 
+export function generateCashifyVariantUrl(
+  brandName: string,
+  modelName: string,
+  ramGb: number,
+  storageGb: number
+): string {
+  const brandLower = (brandName || '').toLowerCase().trim();
+  let modelLower = (modelName || '').toLowerCase().trim();
+
+  // Strip brand prefix if already part of modelName
+  if (brandLower && modelLower.startsWith(brandLower)) {
+    modelLower = modelLower.slice(brandLower.length).trim();
+  }
+
+  const slugify = (text: string) => {
+    return text
+      .toLowerCase()
+      .replace(/\+/g, '-plus')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+  };
+
+  const isApple = brandLower === 'apple' || modelLower.includes('iphone');
+  const brandSlug = isApple ? 'apple' : slugify(brandName || 'phone');
+  const cleanModelSlug = slugify(modelLower);
+
+  const storageSuffix = storageGb >= 1024 ? `${storageGb / 1024}-tb` : `${storageGb}-gb`;
+
+  let baseSlug = '';
+  if (isApple) {
+    baseSlug = `used-apple-${cleanModelSlug}`;
+  } else {
+    baseSlug = `used-${brandSlug}-${cleanModelSlug}`;
+  }
+
+  if (isApple || ramGb === 0) {
+    return `https://www.cashify.in/sell-old-mobile-phone/${baseSlug}-${storageSuffix}`;
+  } else {
+    return `https://www.cashify.in/sell-old-mobile-phone/${baseSlug}-${ramGb}-gb-${storageSuffix}`;
+  }
+}
+
+export function predictCashifyVariantPrice(
+  brandId: string,
+  name: string,
+  category: 'flagship' | 'premium' | 'midrange' | 'budget',
+  releaseYear: number,
+  ramGb: number,
+  storageGb: number,
+  basePriceAnchor?: number
+): number {
+  try {
+    const baseStoragePrice = predictCashifyPrice(brandId, name, category, releaseYear, storageGb);
+    if (baseStoragePrice && baseStoragePrice > 0) {
+      const isApple = brandId.toLowerCase().includes('apple') || name.toLowerCase().includes('iphone');
+      const ramAdd = isApple ? 0 : ramGb >= 16 ? 1500 : ramGb >= 12 ? 1000 : ramGb >= 8 ? 500 : 0;
+      return Math.round(baseStoragePrice + ramAdd);
+    }
+  } catch {
+    // Fallback if prediction fails or unknown model
+  }
+  const anchor = basePriceAnchor && basePriceAnchor > 0 ? basePriceAnchor : 25000;
+  const storageMult = storageGb >= 1024 ? 1.35 : storageGb === 512 ? 1.25 : storageGb === 256 ? 1.12 : 1.0;
+  const ramAdd = ramGb >= 16 ? 1500 : ramGb >= 12 ? 1000 : ramGb >= 8 ? 500 : 0;
+  return Math.round((anchor * storageMult + ramAdd) / 1.03);
+}
+
 export interface EditSpecsAndPricesModalProps {
   isOpen: boolean;
   model: Model | null;
+  catalogCategory?: 'smartphones' | 'tablets' | 'smartwatches';
   isAddingNew?: boolean;
   brands?: Brand[];
+  models?: Model[];
+  existingSeries?: string[];
   highlightVariant?: { ram: number; storage: number } | null;
   cashifyPrices?: Record<string, number>;
   onClose: () => void;
@@ -1309,14 +1387,28 @@ export interface EditSpecsAndPricesModalProps {
 export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = ({
   isOpen,
   model,
+  catalogCategory,
   isAddingNew = false,
   brands = [],
+  models = [],
+  existingSeries,
   highlightVariant,
   cashifyPrices,
   onClose,
   onSaveSuccess,
 }) => {
   const availableBrands = brands.length > 0 ? brands : BRANDS;
+  const [allModels, setAllModels] = useState<Model[]>(models || []);
+
+  useEffect(() => {
+    if (models && models.length > 0) {
+      setAllModels(models);
+    } else if (isOpen) {
+      fetchModels()
+        .then((m) => setAllModels(m as Model[]))
+        .catch(() => {});
+    }
+  }, [models, isOpen]);
 
   const [formData, setFormData] = useState<{
     id: string;
@@ -1353,10 +1445,105 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Series selection mode: false = dropdown from existing, true = manual text input
+  const [isCustomSeriesInput, setIsCustomSeriesInput] = useState(false);
+
+  const resolvedCategory =
+    catalogCategory ||
+    (model
+      ? isSmartwatchDevice(model.brandId, model.name, model.id)
+        ? 'smartwatches'
+        : isTabletDevice(model.brandId, model.name, model.id)
+        ? 'tablets'
+        : 'smartphones'
+      : 'smartphones');
+
+  const matchesCatalogCategory = (
+    brandId?: string,
+    modelName?: string,
+    modelId?: string,
+    seriesName?: string
+  ): boolean => {
+    const sLower = (seriesName || '').toLowerCase();
+    const mLower = (modelName || '').toLowerCase();
+
+    if (resolvedCategory === 'smartphones') {
+      if (sLower.includes('watch') || mLower.includes('watch')) return false;
+      if (sLower.includes('ipad') || mLower.includes('ipad')) return false;
+      if (sLower.includes('tab') && !sLower.includes('ultra')) return false;
+      return !isTabletDevice(brandId, modelName, modelId) && !isSmartwatchDevice(brandId, modelName, modelId);
+    }
+
+    if (resolvedCategory === 'tablets') {
+      if (sLower.includes('watch') || mLower.includes('watch')) return false;
+      if (sLower.includes('iphone') || mLower.includes('iphone')) return false;
+      return isTabletDevice(brandId, modelName, modelId) || sLower.includes('ipad') || sLower.includes('tab');
+    }
+
+    if (resolvedCategory === 'smartwatches') {
+      if (sLower.includes('ipad') || sLower.includes('tab')) return false;
+      if (sLower.includes('iphone') || mLower.includes('iphone')) return false;
+      return isSmartwatchDevice(brandId, modelName, modelId) || sLower.includes('watch');
+    }
+
+    return true;
+  };
+
+  // Calculate existing series for the currently selected brand and catalogue category
+  const brandExistingSeries = useMemo(() => {
+    const seriesSet = new Set<string>();
+
+    // 1. From database models matching category
+    (allModels || []).forEach((m) => {
+      if (m.brandId === formData.brandId && m.series && m.series.trim()) {
+        if (matchesCatalogCategory(m.brandId, m.name, m.id, m.series)) {
+          seriesSet.add(m.series.trim());
+        }
+      }
+    });
+
+    // 2. From default series order for this brand (smartphones only)
+    if (resolvedCategory === 'smartphones') {
+      const defaults = DEFAULT_SERIES_ORDER[formData.brandId] || [];
+      defaults.forEach((s) => {
+        if (s && s.trim() && matchesCatalogCategory(formData.brandId, undefined, undefined, s)) {
+          seriesSet.add(s.trim());
+        }
+      });
+    }
+
+    // 3. From explicit existingSeries prop if passed
+    if (existingSeries) {
+      existingSeries.forEach((s) => {
+        if (s && s.trim() && matchesCatalogCategory(formData.brandId, undefined, undefined, s)) {
+          seriesSet.add(s.trim());
+        }
+      });
+    }
+
+    const rawList = Array.from(seriesSet);
+    return applySeriesOrder(formData.brandId, rawList);
+  }, [allModels, existingSeries, formData.brandId, resolvedCategory]);
+
+  // Cashify variant links, live benchmark prices & approval states
+  const [variantCashifyUrls, setVariantCashifyUrls] = useState<Record<string, string>>({});
+  const [manuallyEditedUrls, setManuallyEditedUrls] = useState<Record<string, boolean>>({});
+  const [variantCashifyPrices, setVariantCashifyPrices] = useState<Record<string, number>>({});
+  const [variantApproved, setVariantApproved] = useState<Record<string, boolean>>({});
+  const [editingUrlKey, setEditingUrlKey] = useState<string | null>(null);
+  const [tempUrlInput, setTempUrlInput] = useState<string>('');
+  const [testingUrlKey, setTestingUrlKey] = useState<string | null>(null);
+  const [urlTestResults, setUrlTestResults] = useState<
+    Record<string, { ok: boolean; status: number; extractedPrice?: number | null }>
+  >({});
+  const [extractedCashifyPrices, setExtractedCashifyPrices] = useState<Record<string, number>>({});
+  const [isVerifyingAll, setIsVerifyingAll] = useState<boolean>(false);
+
   useEffect(() => {
     if (!isOpen) return;
 
     if (model) {
+      const sVal = model.series || '';
       setFormData({
         id: model.id,
         legacyId: (model as any).legacyId || model.id,
@@ -1365,7 +1552,7 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
         category: model.category || 'premium',
         releaseYear: model.releaseYear || new Date().getFullYear(),
         basePrice128GB: model.basePrice128GB || 0,
-        series: model.series || '',
+        series: sVal,
         imageUrl: model.imageUrl || '',
         supportedStorageGb:
           model.supportedStorageGb && model.supportedStorageGb.length > 0
@@ -1380,6 +1567,9 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
         supportsWarrantyQuestion:
           model.supportsWarrantyQuestion ?? ((model.releaseYear || 2024) >= 2023),
       });
+      setIsCustomSeriesInput(Boolean(sVal && !brandExistingSeries.includes(sVal)));
+      setUrlTestResults({});
+      setExtractedCashifyPrices({});
       setError(null);
     } else if (isAddingNew) {
       setFormData({
@@ -1398,9 +1588,79 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
         hidden: false,
         supportsWarrantyQuestion: true,
       });
+      setIsCustomSeriesInput(false);
+      setVariantApproved({});
+      setVariantCashifyUrls({});
+      setVariantCashifyPrices({});
+      setManuallyEditedUrls({});
+      setUrlTestResults({});
+      setExtractedCashifyPrices({});
       setError(null);
     }
   }, [isOpen, model, isAddingNew, availableBrands]);
+
+  // Auto-generate Cashify URLs and benchmark prices for variants
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const brandObj = availableBrands.find((b) => b.id === formData.brandId);
+    const brandName = brandObj ? brandObj.name : 'Apple';
+
+    const validRams =
+      formData.supportedRamGb.length === 1 && formData.supportedRamGb[0] === 0
+        ? [0]
+        : formData.supportedRamGb;
+
+    setVariantCashifyUrls((prevUrls) => {
+      const nextUrls = { ...prevUrls };
+      validRams.forEach((ram) => {
+        formData.supportedStorageGb.forEach((storage) => {
+          const key = `${ram}_${storage}`;
+          if (!nextUrls[key] || !manuallyEditedUrls[key]) {
+            nextUrls[key] = generateCashifyVariantUrl(brandName, formData.name, ram, storage);
+          }
+        });
+      });
+      return nextUrls;
+    });
+
+    setVariantCashifyPrices((prevPrices) => {
+      const nextPrices = { ...prevPrices };
+      validRams.forEach((ram) => {
+        formData.supportedStorageGb.forEach((storage) => {
+          const key = `${ram}_${storage}`;
+          if (!nextPrices[key]) {
+            if (cashifyPrices && cashifyPrices[key] && cashifyPrices[key] > 0) {
+              nextPrices[key] = cashifyPrices[key];
+            } else {
+              nextPrices[key] = predictCashifyVariantPrice(
+                formData.brandId,
+                formData.name,
+                formData.category,
+                formData.releaseYear,
+                ram,
+                storage,
+                formData.basePrice128GB
+              );
+            }
+          }
+        });
+      });
+      return nextPrices;
+    });
+  }, [
+    isOpen,
+    formData.name,
+    formData.brandId,
+    formData.supportedStorageGb,
+    formData.supportedRamGb,
+    formData.category,
+    formData.releaseYear,
+    formData.basePrice128GB,
+    availableBrands,
+    cashifyPrices,
+    manuallyEditedUrls,
+  ]);
 
   if (!isOpen) return null;
 
@@ -1459,6 +1719,190 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
       const minPrice = activePrices.length > 0 ? Math.min(...activePrices) : prev.basePrice128GB;
       return { ...prev, variantPrices: nextMap, basePrice128GB: minPrice };
     });
+  };
+
+  const handleApproveVariant = (ram: number, storage: number) => {
+    const key = `${ram}_${storage}`;
+    const cPrice =
+      variantCashifyPrices[key] ||
+      predictCashifyVariantPrice(
+        formData.brandId,
+        formData.name,
+        formData.category,
+        formData.releaseYear,
+        ram,
+        storage,
+        formData.basePrice128GB
+      );
+    const targetPlus3Price = Math.round(cPrice * 1.03);
+
+    setVariantApproved((prev) => ({ ...prev, [key]: true }));
+
+    // Automatically apply +3% to Rephonix price for this specific variant
+    setFormData((prev) => {
+      const nextMap = { ...prev.variantPrices, [key]: targetPlus3Price };
+      const activePrices = Object.values(nextMap).filter(
+        (v): v is number => typeof v === 'number' && v > 0
+      );
+      const minPrice = activePrices.length > 0 ? Math.min(...activePrices) : prev.basePrice128GB;
+      return { ...prev, variantPrices: nextMap, basePrice128GB: minPrice };
+    });
+  };
+
+  const handleRevokeApproval = (ram: number, storage: number) => {
+    const key = `${ram}_${storage}`;
+    setVariantApproved((prev) => ({ ...prev, [key]: false }));
+  };
+
+  const handleApproveAllVariants = () => {
+    const nextApproved: Record<string, boolean> = { ...variantApproved };
+    const nextPrices: Record<string, number> = { ...formData.variantPrices };
+
+    const validRams =
+      formData.supportedRamGb.length === 1 && formData.supportedRamGb[0] === 0
+        ? [0]
+        : formData.supportedRamGb;
+
+    validRams.forEach((ram) => {
+      formData.supportedStorageGb.forEach((storage) => {
+        const key = `${ram}_${storage}`;
+        nextApproved[key] = true;
+        const cPrice =
+          variantCashifyPrices[key] ||
+          predictCashifyVariantPrice(
+            formData.brandId,
+            formData.name,
+            formData.category,
+            formData.releaseYear,
+            ram,
+            storage,
+            formData.basePrice128GB
+          );
+        nextPrices[key] = Math.round(cPrice * 1.03);
+      });
+    });
+
+    setVariantApproved(nextApproved);
+    setFormData((prev) => {
+      const activePrices = Object.values(nextPrices).filter(
+        (v): v is number => typeof v === 'number' && v > 0
+      );
+      const minPrice = activePrices.length > 0 ? Math.min(...activePrices) : prev.basePrice128GB;
+      return { ...prev, variantPrices: nextPrices, basePrice128GB: minPrice };
+    });
+  };
+
+  const handleCashifyPriceChange = (ram: number, storage: number, valStr: string) => {
+    const key = `${ram}_${storage}`;
+    const price = parseInt(valStr, 10);
+    const cleanPrice = isNaN(price) ? 0 : price;
+    setVariantCashifyPrices((prev) => ({ ...prev, [key]: cleanPrice }));
+
+    // If already approved, auto-recalculate Rephonix price with +3%
+    if (variantApproved[key] && cleanPrice > 0) {
+      const targetPlus3Price = Math.round(cleanPrice * 1.03);
+      setFormData((prev) => {
+        const nextMap = { ...prev.variantPrices, [key]: targetPlus3Price };
+        const activePrices = Object.values(nextMap).filter(
+          (v): v is number => typeof v === 'number' && v > 0
+        );
+        const minPrice = activePrices.length > 0 ? Math.min(...activePrices) : prev.basePrice128GB;
+        return { ...prev, variantPrices: nextMap, basePrice128GB: minPrice };
+      });
+    }
+  };
+
+  const handleSaveEditedUrl = (key: string) => {
+    if (tempUrlInput.trim()) {
+      setVariantCashifyUrls((prev) => ({ ...prev, [key]: tempUrlInput.trim() }));
+      setManuallyEditedUrls((prev) => ({ ...prev, [key]: true }));
+    }
+    setEditingUrlKey(null);
+  };
+
+  const handleTestUrl = async (key: string, url: string) => {
+    if (!url) return;
+    setTestingUrlKey(key);
+    try {
+      const res = await testCashifyUrlApi(url);
+      setUrlTestResults((prev) => ({
+        ...prev,
+        [key]: { ok: res.ok, status: res.status, extractedPrice: res.extractedPrice },
+      }));
+
+      // If price was successfully extracted from Cashify, auto-update Cashify Listed price and Target (+3%)
+      if (res.ok && res.extractedPrice && res.extractedPrice > 0) {
+        const livePrice = res.extractedPrice;
+        setExtractedCashifyPrices((prev) => ({ ...prev, [key]: livePrice }));
+        setVariantCashifyPrices((prev) => ({ ...prev, [key]: livePrice }));
+
+        // If this variant is already approved, immediately update Rephonix payout price with +3%
+        if (variantApproved[key]) {
+          const targetPlus3Price = Math.round(livePrice * 1.03);
+          setFormData((prev) => {
+            const nextMap = { ...prev.variantPrices, [key]: targetPlus3Price };
+            const activePrices = Object.values(nextMap).filter(
+              (v): v is number => typeof v === 'number' && v > 0
+            );
+            const minPrice = activePrices.length > 0 ? Math.min(...activePrices) : prev.basePrice128GB;
+            return { ...prev, variantPrices: nextMap, basePrice128GB: minPrice };
+          });
+        }
+      }
+    } catch {
+      setUrlTestResults((prev) => ({ ...prev, [key]: { ok: false, status: 0 } }));
+    } finally {
+      setTestingUrlKey(null);
+    }
+  };
+
+  const handleVerifyAllUrls = async () => {
+    setIsVerifyingAll(true);
+    const validRams =
+      formData.supportedRamGb.length === 1 && formData.supportedRamGb[0] === 0
+        ? [0]
+        : formData.supportedRamGb;
+
+    const tasks: { key: string; url: string }[] = [];
+    validRams.forEach((ram) => {
+      formData.supportedStorageGb.forEach((storage) => {
+        const key = `${ram}_${storage}`;
+        const url = variantCashifyUrls[key];
+        if (url) tasks.push({ key, url });
+      });
+    });
+
+    await Promise.allSettled(
+      tasks.map(async ({ key, url }) => {
+        try {
+          const res = await testCashifyUrlApi(url);
+          setUrlTestResults((prev) => ({
+            ...prev,
+            [key]: { ok: res.ok, status: res.status, extractedPrice: res.extractedPrice },
+          }));
+          if (res.ok && res.extractedPrice && res.extractedPrice > 0) {
+            const livePrice = res.extractedPrice;
+            setExtractedCashifyPrices((prev) => ({ ...prev, [key]: livePrice }));
+            setVariantCashifyPrices((prev) => ({ ...prev, [key]: livePrice }));
+
+            if (variantApproved[key]) {
+              const targetPlus3Price = Math.round(livePrice * 1.03);
+              setFormData((prev) => {
+                const nextMap = { ...prev.variantPrices, [key]: targetPlus3Price };
+                const activePrices = Object.values(nextMap).filter(
+                  (v): v is number => typeof v === 'number' && v > 0
+                );
+                const minPrice = activePrices.length > 0 ? Math.min(...activePrices) : prev.basePrice128GB;
+                return { ...prev, variantPrices: nextMap, basePrice128GB: minPrice };
+              });
+            }
+          }
+        } catch {
+          setUrlTestResults((prev) => ({ ...prev, [key]: { ok: false, status: 0 } }));
+        }
+      })
+    );
+    setIsVerifyingAll(false);
   };
 
   const handleImageFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1538,6 +1982,56 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
         result = await updateModel(legacyId, payload);
       }
 
+      // Register all approved or customized Cashify variant URLs for immediate monitoring & extraction
+      const approvedVariantsPayload: Array<{
+        ramGb: number;
+        storageGb: number;
+        url: string;
+        extractedPrice?: number | null;
+        rephonixPrice?: number | null;
+      }> = [];
+
+      validRams.forEach((ram) => {
+        validStorages.forEach((storage) => {
+          const key = `${ram}_${storage}`;
+          const url = variantCashifyUrls[key];
+          if (url && (variantApproved[key] || manuallyEditedUrls[key] || urlTestResults[key]?.ok)) {
+            const extPrice =
+              extractedCashifyPrices[key] ||
+              urlTestResults[key]?.extractedPrice ||
+              variantCashifyPrices[key] ||
+              null;
+            const repPrice =
+              cleanedVariantPrices[key] ||
+              Number(formData.basePrice128GB) ||
+              null;
+
+            approvedVariantsPayload.push({
+              ramGb: ram,
+              storageGb: storage,
+              url,
+              extractedPrice: extPrice,
+              rephonixPrice: repPrice,
+            });
+          }
+        });
+      });
+
+      if (approvedVariantsPayload.length > 0) {
+        const brandObj = availableBrands.find((b: Brand) => b.id === formData.brandId);
+        try {
+          await registerApprovedCashifyVariants({
+            modelId: (result as any)?.dbId || (result as any)?.id,
+            legacyId: (result as any)?.legacyId || legacyId,
+            modelName: (result as any)?.name || formData.name.trim(),
+            brandName: brandObj?.name || 'Unknown',
+            variants: approvedVariantsPayload,
+          });
+        } catch (regErr) {
+          console.warn('Failed to register approved Cashify variants for monitoring:', regErr);
+        }
+      }
+
       window.dispatchEvent(new CustomEvent('stc_catalog_order_changed'));
       onSaveSuccess(result);
       onClose();
@@ -1559,7 +2053,7 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
 
   return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-canvas-white border border-ice-border rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+      <div className="bg-canvas-white border border-ice-border rounded-xl shadow-2xl w-full max-w-6xl max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
         {/* Modal Header */}
         <div className="px-6 py-4 bg-zinc-900 text-white flex justify-between items-center">
           <div>
@@ -1611,7 +2105,21 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
               </label>
               <select
                 value={formData.brandId}
-                onChange={(e) => setFormData({ ...formData, brandId: e.target.value })}
+                onChange={(e) => {
+                  const newBrandId = e.target.value;
+                  const isApple = newBrandId.toLowerCase().includes('apple');
+                  setFormData((prev) => ({
+                    ...prev,
+                    brandId: newBrandId,
+                    series: '',
+                    supportedRamGb: isApple
+                      ? [0]
+                      : prev.supportedRamGb.length === 1 && prev.supportedRamGb[0] === 0
+                      ? [8, 12]
+                      : prev.supportedRamGb,
+                  }));
+                  setIsCustomSeriesInput(false);
+                }}
                 className="w-full px-3 py-2 bg-white border border-ice-border rounded font-semibold text-ink-navy focus:border-cobalt focus:outline-none cursor-pointer"
               >
                 {availableBrands.map((b) => (
@@ -1623,16 +2131,111 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
             </div>
 
             <div>
-              <label className="block text-[11px] font-bold text-ink-navy mb-1 uppercase font-mono">
-                Series / Sub-Name
-              </label>
-              <input
-                type="text"
-                value={formData.series}
-                onChange={(e) => setFormData({ ...formData, series: e.target.value })}
-                placeholder="e.g. iPhone 16 Series"
-                className="w-full px-3 py-2 bg-white border border-ice-border rounded text-ink-navy focus:border-cobalt focus:outline-none"
-              />
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-[11px] font-bold text-ink-navy uppercase font-mono flex items-center gap-1.5">
+                  <Folder className="w-3.5 h-3.5 text-cobalt" />
+                  <span>Series / Sub-Name</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setIsCustomSeriesInput(!isCustomSeriesInput)}
+                  className="text-[10px] text-cobalt hover:text-blue-700 hover:underline font-semibold flex items-center gap-1 cursor-pointer transition-colors"
+                  title={isCustomSeriesInput ? 'Switch to dropdown of existing series' : 'Type a custom series name'}
+                >
+                  {isCustomSeriesInput ? (
+                    <span>↩ Select from existing</span>
+                  ) : (
+                    <span>+ Type new</span>
+                  )}
+                </button>
+              </div>
+
+              {isCustomSeriesInput ? (
+                <div className="space-y-1.5">
+                  <div className="flex gap-1.5">
+                    <input
+                      type="text"
+                      list="existing-series-datalist"
+                      value={formData.series}
+                      onChange={(e) => setFormData({ ...formData, series: e.target.value })}
+                      placeholder="e.g. iPhone 17 Series"
+                      autoFocus
+                      className="flex-1 px-3 py-2 bg-white border border-cobalt ring-1 ring-cobalt/20 rounded font-semibold text-ink-navy focus:border-cobalt focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setIsCustomSeriesInput(false)}
+                      className="px-2.5 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded text-[11px] font-semibold cursor-pointer border border-zinc-200 transition-colors whitespace-nowrap"
+                      title="Back to dropdown"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                  <datalist id="existing-series-datalist">
+                    {brandExistingSeries.map((s) => (
+                      <option key={s} value={s} />
+                    ))}
+                  </datalist>
+                  <span className="text-[10px] text-zinc-400 font-mono block">
+                    Type a new series name or pick from datalist suggestions.
+                  </span>
+                </div>
+              ) : (
+                <div className="space-y-1.5">
+                  <select
+                    value={
+                      brandExistingSeries.includes(formData.series)
+                        ? formData.series
+                        : formData.series
+                        ? '__custom_val__'
+                        : ''
+                    }
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === '__custom__') {
+                        setIsCustomSeriesInput(true);
+                      } else if (val === '__custom_val__') {
+                        // Keep current custom value
+                      } else {
+                        setFormData({ ...formData, series: val });
+                      }
+                    }}
+                    className="w-full px-3 py-2 bg-white border border-ice-border rounded font-semibold text-ink-navy focus:border-cobalt focus:outline-none cursor-pointer"
+                  >
+                    <option value="">-- Select Existing Series (or None) --</option>
+                    {brandExistingSeries.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                    {formData.series && !brandExistingSeries.includes(formData.series) && (
+                      <option value="__custom_val__">{formData.series} (Custom)</option>
+                    )}
+                    <option value="__custom__">+ Type New Series Name...</option>
+                  </select>
+
+                  {/* Quick Select Chips for top series of selected brand */}
+                  {brandExistingSeries.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-1 pt-0.5">
+                      <span className="text-[9px] text-zinc-400 font-mono">Quick pick:</span>
+                      {brandExistingSeries.slice(0, 4).map((s) => (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => setFormData({ ...formData, series: s })}
+                          className={`px-1.5 py-0.5 rounded text-[9.5px] font-mono font-semibold transition-all cursor-pointer ${
+                            formData.series === s
+                              ? 'bg-cobalt text-white shadow-xs'
+                              : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700'
+                          }`}
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <div>
@@ -1812,169 +2415,434 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
             </div>
           </div>
 
-          {/* RAM x Storage Price Matrix */}
-          <div className="p-4 bg-canvas-pure border border-ice-border rounded-lg space-y-3">
-            <div className="flex justify-between items-center">
-              <label className="block text-[11px] font-bold text-ink-navy uppercase font-mono flex items-center gap-1.5">
-                <Grid className="w-4 h-4 text-emerald-600" />
-                <span>Variant Price Matrix (INR ₹)</span>
-              </label>
-              <span className="text-[10px] font-mono text-zinc-500">
-                Set Rephonix payout price for each RAM x Storage combination stored in DB
-              </span>
-            </div>
+          {/* RAM x Storage Price Matrix with Cashify Link Generation & Approval Engine */}
+          {(() => {
+            const validRamsForStats =
+              formData.supportedRamGb.length === 1 && formData.supportedRamGb[0] === 0
+                ? [0]
+                : formData.supportedRamGb;
 
-            <div className="overflow-x-auto border border-ice-border rounded-lg bg-white">
-              <table className="w-full text-xs font-mono border-collapse">
-                <thead>
-                  <tr className="bg-zinc-100/70 border-b border-ice-border text-zinc-600 text-[10px] uppercase font-bold">
-                    {!(formData.supportedRamGb.length === 1 && formData.supportedRamGb[0] === 0) && (
-                      <th className="p-2 text-left border-r border-ice-border">RAM \ Storage</th>
-                    )}
-                    {formData.supportedStorageGb.map((s) => (
-                      <th key={s} className="p-2 text-center border-r border-ice-border min-w-[120px]">
-                        {s >= 1024 ? `${s / 1024} TB` : `${s} GB`}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-ice-border">
-                  {(formData.supportedRamGb.length === 1 && formData.supportedRamGb[0] === 0
-                    ? [0]
-                    : formData.supportedRamGb
-                  ).map((ram) => (
-                    <tr key={ram} className="hover:bg-zinc-50/50">
-                      {!(formData.supportedRamGb.length === 1 && formData.supportedRamGb[0] === 0) && (
-                        <td className="p-2.5 font-bold text-purple-700 bg-purple-50/50 border-r border-ice-border whitespace-nowrap">
-                          {ram} GB RAM
-                        </td>
+            let totalActive = 0;
+            let totalApproved = 0;
+
+            validRamsForStats.forEach((ram) => {
+              formData.supportedStorageGb.forEach((storage) => {
+                const key = `${ram}_${storage}`;
+                if (formData.variantPrices[key] !== undefined) {
+                  totalActive++;
+                  if (variantApproved[key]) {
+                    totalApproved++;
+                  }
+                }
+              });
+            });
+
+            return (
+              <div className="p-4 bg-canvas-pure border border-ice-border rounded-lg space-y-3">
+                {/* Cashify Variant Auto-Pricing & Approval Control Banner */}
+                <div className="p-3 bg-gradient-to-r from-emerald-50 via-teal-50 to-indigo-50 border border-emerald-200/80 rounded-lg flex flex-wrap items-center justify-between gap-3 shadow-xs">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center shadow-xs">
+                      <Sparkles className="w-4 h-4 text-emerald-100" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-xs text-ink-navy font-mono">
+                          Cashify Variant Intelligence Engine
+                        </span>
+                        <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                          +3% Target Payout
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-zinc-600 mt-0.5">
+                        Specific Cashify variant link & benchmark price generated automatically. Rephonix +3% payout is only applied when approved by you.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <div className="text-[10px] font-mono font-semibold text-zinc-600 bg-white/80 px-2.5 py-1 rounded-md border border-ice-border shadow-xs">
+                      Approved: <span className="font-bold text-emerald-700">{totalApproved}</span> / {totalActive} active variants
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleVerifyAllUrls}
+                      disabled={isVerifyingAll}
+                      className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold rounded-lg shadow-sm transition-all flex items-center gap-1.5 cursor-pointer hover:shadow disabled:opacity-50"
+                      title="Verify all active variant links and automatically extract live buyback prices from Cashify"
+                    >
+                      {isVerifyingAll ? (
+                        <>
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          <span>Extracting Live Prices...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Zap className="w-3.5 h-3.5 text-amber-300" />
+                          <span>Verify & Extract All Prices</span>
+                        </>
                       )}
-                      {formData.supportedStorageGb.map((storage) => {
-                        const key = `${ram}_${storage}`;
-                        const priceVal = formData.variantPrices[key];
-                        const isEnabled = priceVal !== undefined;
-                        const isHighlighted =
-                          highlightVariant &&
-                          (highlightVariant.ram === ram || (ram === 0 && !highlightVariant.ram)) &&
-                          highlightVariant.storage === storage;
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleApproveAllVariants}
+                      className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold rounded-lg shadow-sm transition-all flex items-center gap-1.5 cursor-pointer hover:shadow"
+                      title="Approve all active variant links and apply +3% to all Rephonix prices"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>Approve All Variants (+3%)</span>
+                    </button>
+                  </div>
+                </div>
 
-                        return (
-                          <td
-                            key={storage}
-                            className={`p-2 text-center border-r border-ice-border transition-all ${
-                              isHighlighted
-                                ? 'bg-amber-50/70 ring-2 ring-inset ring-amber-400'
-                                : !isEnabled
-                                ? 'bg-zinc-50/80 opacity-75'
-                                : ''
-                            }`}
-                          >
-                            <div className="flex items-center justify-between gap-1 mb-1.5 px-0.5">
-                              <span
-                                className={`text-[9px] font-bold font-mono uppercase ${
-                                  isEnabled ? 'text-emerald-600' : 'text-zinc-400'
-                                }`}
-                              >
-                                {isHighlighted ? (
-                                  <span className="text-amber-800 bg-amber-200/80 px-1 rounded text-[8px] font-extrabold mr-1">
-                                    CURRENT
-                                  </span>
-                                ) : null}
-                                {isEnabled ? '● Active' : '○ Off (N/A)'}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => handleToggleVariant(ram, storage, !isEnabled)}
-                                className={`relative inline-flex h-4 w-7 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                                  isEnabled ? 'bg-emerald-500' : 'bg-zinc-300'
-                                }`}
-                                title={
-                                  isEnabled
-                                    ? 'Click to disable variant (Turn OFF)'
-                                    : 'Click to enable variant (Turn ON)'
-                                }
-                              >
-                                <span
-                                  className={`pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                                    isEnabled ? 'translate-x-3' : 'translate-x-0'
-                                  }`}
-                                />
-                              </button>
+                <div className="flex justify-between items-center">
+                  <label className="block text-[11px] font-bold text-ink-navy uppercase font-mono flex items-center gap-1.5">
+                    <Grid className="w-4 h-4 text-emerald-600" />
+                    <span>Variant Price & Cashify Matrix (INR ₹)</span>
+                  </label>
+                  <span className="text-[10px] font-mono text-zinc-500">
+                    Verify Cashify link & listed price per variant • Approve link to activate +3% payout
+                  </span>
+                </div>
+
+                <div className="overflow-x-auto border border-ice-border rounded-lg bg-white shadow-xs">
+                  <table className="w-full text-xs font-mono border-collapse">
+                    <thead>
+                      <tr className="bg-zinc-100/80 border-b border-ice-border text-zinc-600 text-[10px] uppercase font-bold">
+                        {!(formData.supportedRamGb.length === 1 && formData.supportedRamGb[0] === 0) && (
+                          <th className="p-3 text-left border-r border-ice-border w-28 bg-zinc-200/50">
+                            RAM
+                          </th>
+                        )}
+                        {formData.supportedStorageGb.map((s) => (
+                          <th key={s} className="p-3 text-center border-r border-ice-border min-w-[280px]">
+                            <div className="font-bold text-ink-navy text-xs">
+                              {s >= 1024 ? `${s / 1024} TB` : `${s} GB`} Storage
                             </div>
+                            <div className="text-[9px] text-zinc-500 font-normal font-mono mt-0.5">
+                              Cashify Variant Benchmark & +3%
+                            </div>
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-ice-border">
+                      {(formData.supportedRamGb.length === 1 && formData.supportedRamGb[0] === 0
+                        ? [0]
+                        : formData.supportedRamGb
+                      ).map((ram) => (
+                        <tr key={ram} className="hover:bg-zinc-50/30">
+                          {!(formData.supportedRamGb.length === 1 && formData.supportedRamGb[0] === 0) && (
+                            <td className="p-3 font-bold text-purple-700 bg-purple-50/40 border-r border-ice-border whitespace-nowrap align-top">
+                              <div className="flex items-center gap-1.5 sticky top-2">
+                                <Cpu className="w-3.5 h-3.5 text-purple-600" />
+                                <span>{ram} GB RAM</span>
+                              </div>
+                            </td>
+                          )}
+                          {formData.supportedStorageGb.map((storage) => {
+                            const key = `${ram}_${storage}`;
+                            const priceVal = formData.variantPrices[key];
+                            const isEnabled = priceVal !== undefined;
+                            const isHighlighted =
+                              highlightVariant &&
+                              (highlightVariant.ram === ram || (ram === 0 && !highlightVariant.ram)) &&
+                              highlightVariant.storage === storage;
 
-                            {isEnabled ? (
-                              <div>
-                                <div className="relative">
-                                  <span className="absolute left-2.5 top-2 text-zinc-400 text-[10px] font-bold">
-                                    ₹
-                                  </span>
-                                  <input
-                                    type="number"
-                                    value={priceVal === 0 ? '' : priceVal}
-                                    placeholder="0"
-                                    autoFocus={Boolean(isHighlighted)}
-                                    onChange={(e) =>
-                                      handleVariantPriceChange(ram, storage, e.target.value)
-                                    }
-                                    className={`w-full pl-6 pr-2 py-1 bg-white border rounded font-mono font-bold text-ink-navy text-right text-xs focus:outline-none shadow-xs ${
-                                      isHighlighted
-                                        ? 'border-amber-400 ring-2 ring-amber-200'
-                                        : 'border-ice-border focus:border-cobalt'
-                                    }`}
-                                  />
-                                </div>
-                                {Boolean(priceVal && priceVal > 0) && (
-                                  <span className="text-[9px] font-bold text-emerald-600 block mt-0.5">
-                                    {modalFormatPrice(Number(priceVal))}
-                                  </span>
-                                )}
-                                {Boolean(cashifyPrices && cashifyPrices[key] && cashifyPrices[key] > 0) && (() => {
-                                  const cPrice = cashifyPrices![key];
-                                  const recPrice = Math.round(cPrice * 1.03);
-                                  const isBelowTarget = !priceVal || Number(priceVal) < recPrice;
-                                  return (
-                                    <div className="mt-1 pt-1 border-t border-dashed border-zinc-200 text-[9px] font-mono leading-tight text-left">
-                                      <div className="text-zinc-500 flex justify-between">
-                                        <span>Cashify:</span>
-                                        <span className="font-semibold">₹{cPrice.toLocaleString('en-IN')}</span>
-                                      </div>
-                                      <div className="flex items-center justify-between mt-0.5">
-                                        <span className={isBelowTarget ? 'text-indigo-700 font-bold' : 'text-emerald-700 font-bold'}>
-                                          Rec (+3%): ₹{recPrice.toLocaleString('en-IN')}
+                            const cUrl = variantCashifyUrls[key] || '';
+                            const cPrice = variantCashifyPrices[key] || 0;
+                            const targetPlus3 = Math.round((cPrice || 10000) * 1.03);
+                            const isApproved = Boolean(variantApproved[key]);
+                            const testResult = urlTestResults[key];
+
+                            return (
+                              <td
+                                key={storage}
+                                className={`p-3 align-top border-r border-ice-border transition-all min-w-[280px] ${
+                                  isHighlighted
+                                    ? 'bg-amber-50/70 ring-2 ring-inset ring-amber-400'
+                                    : !isEnabled
+                                    ? 'bg-zinc-50/80 opacity-75'
+                                    : isApproved
+                                    ? 'bg-emerald-50/25'
+                                    : 'bg-white'
+                                }`}
+                              >
+                                {isEnabled ? (
+                                  <div className="space-y-2.5">
+                                    {/* Active Switch & Approval Status */}
+                                    <div className="flex items-center justify-between gap-1 pb-1.5 border-b border-zinc-100">
+                                      <div className="flex items-center gap-1.5">
+                                        <button
+                                          type="button"
+                                          onClick={() => handleToggleVariant(ram, storage, false)}
+                                          className="relative inline-flex h-4 w-7 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out bg-emerald-500"
+                                          title="Click to disable variant (Turn OFF)"
+                                        >
+                                          <span className="pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out translate-x-3" />
+                                        </button>
+                                        <span className="text-[9px] font-bold font-mono text-emerald-700 uppercase">
+                                          ● Active
                                         </span>
-                                        {isBelowTarget && (
+                                      </div>
+
+                                      {isApproved ? (
+                                        <span className="px-1.5 py-0.5 rounded text-[8.5px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1 shadow-xs">
+                                          <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" />
+                                          <span>Approved (+3%)</span>
+                                        </span>
+                                      ) : (
+                                        <span className="px-1.5 py-0.5 rounded text-[8.5px] font-bold bg-amber-50 text-amber-800 border border-amber-200 flex items-center gap-1">
+                                          <AlertCircle className="w-2.5 h-2.5 text-amber-600" />
+                                          <span>Awaiting Approval</span>
+                                        </span>
+                                      )}
+                                    </div>
+
+                                    {/* Cashify Exact Variant Link Card */}
+                                    <div className="bg-zinc-50 border border-zinc-200 rounded p-1.5 text-left text-[10px]">
+                                      <div className="flex items-center justify-between text-[9px] text-zinc-500 font-semibold mb-1">
+                                        <span className="flex items-center gap-1">
+                                          <Globe className="w-3 h-3 text-orange-600" />
+                                          <span>Cashify Link:</span>
+                                        </span>
+                                        <div className="flex items-center gap-1">
+                                          {editingUrlKey === key ? (
+                                            <button
+                                              type="button"
+                                              onClick={() => handleSaveEditedUrl(key)}
+                                              className="text-[8.5px] text-emerald-700 hover:text-emerald-900 font-bold underline cursor-pointer"
+                                            >
+                                              Done
+                                            </button>
+                                          ) : (
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                setEditingUrlKey(key);
+                                                setTempUrlInput(cUrl);
+                                              }}
+                                              className="text-[8.5px] text-zinc-500 hover:text-zinc-800 flex items-center gap-0.5 cursor-pointer"
+                                              title="Edit custom URL for this variant"
+                                            >
+                                              <Edit2 className="w-2.5 h-2.5" />
+                                              <span>Edit</span>
+                                            </button>
+                                          )}
+                                        </div>
+                                      </div>
+
+                                      {editingUrlKey === key ? (
+                                        <div className="space-y-1">
+                                          <input
+                                            type="url"
+                                            value={tempUrlInput}
+                                            onChange={(e) => setTempUrlInput(e.target.value)}
+                                            className="w-full px-1.5 py-1 text-[9.5px] bg-white border border-cobalt rounded font-mono text-zinc-800 focus:outline-none"
+                                            placeholder="https://www.cashify.in/sell-old-mobile-phone/..."
+                                          />
+                                          <div className="flex justify-end gap-1">
+                                            <button
+                                              type="button"
+                                              onClick={() => setEditingUrlKey(null)}
+                                              className="px-1.5 py-0.5 text-[8.5px] bg-zinc-200 rounded text-zinc-700 cursor-pointer"
+                                            >
+                                              Cancel
+                                            </button>
+                                            <button
+                                              type="button"
+                                              onClick={() => handleSaveEditedUrl(key)}
+                                              className="px-1.5 py-0.5 text-[8.5px] bg-emerald-600 text-white rounded font-bold cursor-pointer"
+                                            >
+                                              Save
+                                            </button>
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        <div>
+                                          <div className="flex items-center gap-1">
+                                            <a
+                                              href={cUrl}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="flex-1 truncate font-mono text-[9px] text-blue-600 hover:underline hover:text-blue-800 flex items-center gap-1"
+                                              title={cUrl || 'Auto-generating link...'}
+                                            >
+                                              <ExternalLink className="w-2.5 h-2.5 flex-shrink-0 text-blue-500" />
+                                              <span className="truncate">
+                                                {cUrl
+                                                  ? cUrl.replace('https://www.cashify.in/sell-old-mobile-phone/', '')
+                                                  : 'Auto-generating...'}
+                                              </span>
+                                            </a>
+                                          </div>
+
+                                          <div className="flex items-center justify-between mt-1 pt-1 border-t border-zinc-200/60">
+                                            <button
+                                              type="button"
+                                              onClick={() => handleTestUrl(key, cUrl)}
+                                              disabled={testingUrlKey === key || !cUrl}
+                                              className="text-[8.5px] font-semibold text-zinc-600 hover:text-zinc-900 bg-white hover:bg-zinc-100 px-1.5 py-0.5 rounded border border-zinc-200 flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                                              title="Test if URL exists on Cashify and extract live buyback price"
+                                            >
+                                              {testingUrlKey === key ? (
+                                                <>
+                                                  <RefreshCw className="w-2.5 h-2.5 animate-spin text-cobalt" />
+                                                  <span>Extracting...</span>
+                                                </>
+                                              ) : (
+                                                <span>Verify Link</span>
+                                              )}
+                                            </button>
+
+                                            {testResult && (
+                                              <div className="flex items-center gap-1">
+                                                <span
+                                                  className={`text-[8.5px] font-bold px-1.5 py-0.5 rounded ${
+                                                    testResult.ok
+                                                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                                                      : 'bg-rose-100 text-rose-800 border border-rose-200'
+                                                  }`}
+                                                >
+                                                  {testResult.ok ? '✓ 200 OK' : `⚠ ${testResult.status || 'Failed'}`}
+                                                </span>
+                                                {testResult.ok && testResult.extractedPrice ? (
+                                                  <span
+                                                    className="text-[8.5px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200 px-1 py-0.5 rounded flex items-center gap-0.5 shadow-2xs"
+                                                    title="Live Buyback Price extracted from Cashify"
+                                                  >
+                                                    ⚡ ₹{testResult.extractedPrice.toLocaleString('en-IN')}
+                                                  </span>
+                                                ) : null}
+                                              </div>
+                                            )}
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    {/* Cashify Benchmark Price & Target (+3%) Calculation */}
+                                    <div className="bg-slate-50 border border-slate-200 rounded p-1.5 text-left text-[10px] space-y-1">
+                                      <div className="flex items-center justify-between text-zinc-600">
+                                        <div className="flex items-center gap-1">
+                                          <span className="font-semibold text-[9px]">Cashify Listed:</span>
+                                          {extractedCashifyPrices[key] ? (
+                                            <span className="text-[7.5px] font-bold text-emerald-700 bg-emerald-100/90 border border-emerald-300 px-1 py-0.2 rounded uppercase">
+                                              Live Extracted
+                                            </span>
+                                          ) : null}
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                          <span className="text-[9px] text-zinc-400 font-bold">₹</span>
+                                          <input
+                                            type="number"
+                                            value={cPrice === 0 ? '' : cPrice}
+                                            onChange={(e) => handleCashifyPriceChange(ram, storage, e.target.value)}
+                                            className={`w-20 px-1 py-0.5 bg-white border rounded font-mono font-bold text-right text-[10px] focus:outline-none focus:border-cobalt ${
+                                              extractedCashifyPrices[key]
+                                                ? 'border-emerald-400 text-emerald-800 ring-1 ring-emerald-200'
+                                                : 'border-zinc-300 text-zinc-800'
+                                            }`}
+                                            placeholder="0"
+                                          />
+                                        </div>
+                                      </div>
+
+                                      <div className="flex items-center justify-between text-indigo-900 bg-indigo-50/80 px-1.5 py-1 rounded border border-indigo-100 font-mono text-[9px]">
+                                        <span className="font-bold flex items-center gap-0.5">
+                                          <Sparkles className="w-2.5 h-2.5 text-indigo-600" />
+                                          <span>Target (+3%):</span>
+                                        </span>
+                                        <span className="font-extrabold text-[10px] text-indigo-700">
+                                          ₹{targetPlus3.toLocaleString('en-IN')}
+                                        </span>
+                                      </div>
+                                    </div>
+
+                                    {/* Rephonix Payout Price & Approval Action */}
+                                    <div className="pt-0.5">
+                                      <div className="text-left mb-1 flex items-center justify-between">
+                                        <label className="text-[9px] font-bold text-ink-navy font-mono">
+                                          Rephonix Payout Price:
+                                        </label>
+                                        {isApproved && (
                                           <button
                                             type="button"
-                                            onClick={() => handleVariantPriceChange(ram, storage, String(recPrice))}
-                                            className="text-[9px] font-bold text-indigo-700 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-1 py-0.5 rounded border border-indigo-200 cursor-pointer ml-1 transition-colors"
-                                            title={`Set price to recommended ₹${recPrice.toLocaleString('en-IN')} (+3%)`}
+                                            onClick={() => handleRevokeApproval(ram, storage)}
+                                            className="text-[8px] text-zinc-500 hover:text-rose-600 underline cursor-pointer"
+                                            title="Unapprove and allow manual override"
                                           >
-                                            ⚡ Set
+                                            Revoke Approval
                                           </button>
                                         )}
                                       </div>
+
+                                      <div className="relative">
+                                        <span className="absolute left-2.5 top-1.5 text-zinc-400 text-[10px] font-bold">
+                                          ₹
+                                        </span>
+                                        <input
+                                          type="number"
+                                          value={priceVal === 0 ? '' : priceVal}
+                                          placeholder="0"
+                                          autoFocus={Boolean(isHighlighted)}
+                                          onChange={(e) =>
+                                            handleVariantPriceChange(ram, storage, e.target.value)
+                                          }
+                                          className={`w-full pl-6 pr-2 py-1 bg-white border rounded font-mono font-bold text-ink-navy text-right text-xs focus:outline-none shadow-xs ${
+                                            isApproved
+                                              ? 'border-emerald-500 bg-emerald-50/20 ring-1 ring-emerald-300'
+                                              : isHighlighted
+                                              ? 'border-amber-400 ring-2 ring-amber-200'
+                                              : 'border-ice-border focus:border-cobalt'
+                                          }`}
+                                        />
+                                      </div>
+
+                                      {priceVal > 0 && (
+                                        <span className="text-[9px] font-bold text-emerald-600 block mt-0.5 text-right font-mono">
+                                          {modalFormatPrice(Number(priceVal))}
+                                        </span>
+                                      )}
+
+                                      {!isApproved ? (
+                                        <button
+                                          type="button"
+                                          onClick={() => handleApproveVariant(ram, storage)}
+                                          className="w-full mt-2 py-1.5 px-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md font-bold text-[9.5px] font-mono flex items-center justify-center gap-1.5 shadow-sm transition-all cursor-pointer hover:shadow"
+                                          title={`Approve Cashify link and apply +3% price (₹${targetPlus3.toLocaleString('en-IN')})`}
+                                        >
+                                          <Sparkles className="w-3 h-3 text-amber-200" />
+                                          <span>Approve Link & Apply +3%</span>
+                                        </button>
+                                      ) : (
+                                        <div className="mt-1.5 text-[8.5px] font-mono font-semibold text-emerald-700 flex items-center justify-center gap-1 bg-emerald-100/60 py-1 rounded border border-emerald-200">
+                                          <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" />
+                                          <span>+3% Payout Approved & Active</span>
+                                        </div>
+                                      )}
                                     </div>
-                                  );
-                                })()}
-                              </div>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => handleToggleVariant(ram, storage, true)}
-                                className="w-full py-1 px-1.5 bg-zinc-100 hover:bg-emerald-50 text-zinc-400 hover:text-emerald-600 border border-dashed border-zinc-300 hover:border-emerald-400 rounded text-[9px] font-mono font-bold transition-all cursor-pointer"
-                              >
-                                + Enable
-                              </button>
-                            )}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+                                  </div>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleVariant(ram, storage, true)}
+                                    className="w-full py-2 px-1.5 bg-zinc-100 hover:bg-emerald-50 text-zinc-400 hover:text-emerald-600 border border-dashed border-zinc-300 hover:border-emerald-400 rounded text-[10px] font-mono font-bold transition-all cursor-pointer"
+                                  >
+                                    + Enable Variant
+                                  </button>
+                                )}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Brand Warranty Question Switch */}
           <div className="p-4 bg-canvas-pure border border-ice-border rounded-lg flex items-center justify-between">

@@ -45,6 +45,7 @@ export interface CashifyModelItem {
 export interface CashifyVariantItem {
   variantKey: string;
   modelId: string;
+  legacyId?: string;
   modelName: string;
   brandName: string;
   brandId: string;
@@ -191,6 +192,10 @@ export async function getCashifyVariantsList(): Promise<CashifyVariantItem[]> {
     if (!alertMap.has(key)) {
       alertMap.set(key, a);
     }
+    const nameKey = `${a.modelName.toLowerCase().trim()}_${a.ramGb}_${a.storageGb}`;
+    if (!alertMap.has(nameKey)) {
+      alertMap.set(nameKey, a);
+    }
   }
 
   const variantItems: CashifyVariantItem[] = [];
@@ -265,23 +270,28 @@ export async function getCashifyVariantsList(): Promise<CashifyVariantItem[]> {
         let urlStatus: 'FOUND' | 'MISSING' | 'OVERRIDDEN' = 'MISSING';
 
         const customKeyVariant = `${m.id}_${ram}_${storage}`;
+        const customKeyLegacy = `${m.legacyId}_${ram}_${storage}`;
         const customKeyNamed = `${m.name}_${ram}_${storage}`;
 
         if (customUrls[customKeyVariant]) {
           cashifyUrl = customUrls[customKeyVariant];
           isCustomOverride = true;
           urlStatus = 'OVERRIDDEN';
+        } else if (customUrls[customKeyLegacy]) {
+          cashifyUrl = customUrls[customKeyLegacy];
+          isCustomOverride = true;
+          urlStatus = 'OVERRIDDEN';
         } else if (customUrls[customKeyNamed]) {
           cashifyUrl = customUrls[customKeyNamed];
           isCustomOverride = true;
           urlStatus = 'OVERRIDDEN';
-        } else if (customUrls[m.id] || customUrls[m.name]) {
-          const baseCustom = customUrls[m.id] || customUrls[m.name];
+        } else if (customUrls[m.id] || customUrls[m.legacyId] || customUrls[m.name]) {
+          const baseCustom = customUrls[m.id] || customUrls[m.legacyId] || customUrls[m.name];
           cashifyUrl = baseCustom.includes(varSuffix) ? baseCustom : `${baseCustom}${varSuffix}`;
           isCustomOverride = true;
           urlStatus = 'OVERRIDDEN';
-        } else if (auditFoundMap.has(m.id)) {
-          let baseAuditUrl = auditFoundMap.get(m.id)!;
+        } else if (auditFoundMap.has(m.id) || auditFoundMap.has(m.legacyId)) {
+          let baseAuditUrl = auditFoundMap.get(m.id) || auditFoundMap.get(m.legacyId)!;
           if (isGoogle && baseAuditUrl.endsWith('-5g')) {
             baseAuditUrl = baseAuditUrl.slice(0, -3);
           }
@@ -290,7 +300,16 @@ export async function getCashifyVariantsList(): Promise<CashifyVariantItem[]> {
         }
 
         // Cashify Alert Price
-        const alertRecord = alertMap.get(`${m.id}_${ram}_${storage}`) || (!isApple ? alertMap.get(`${m.id}_0_${storage}`) : undefined);
+        const modelCleanName = m.name.toLowerCase().trim();
+        const alertRecord =
+          alertMap.get(`${m.id}_${ram}_${storage}`) ||
+          alertMap.get(`${m.legacyId}_${ram}_${storage}`) ||
+          alertMap.get(`${modelCleanName}_${ram}_${storage}`) ||
+          (!isApple
+            ? alertMap.get(`${m.id}_0_${storage}`) ||
+              alertMap.get(`${m.legacyId}_0_${storage}`) ||
+              alertMap.get(`${modelCleanName}_0_${storage}`)
+            : undefined);
         let cashifyPrice: number | null = null;
         let diff: number | null = null;
         let status: 'INCREASED' | 'DECREASED' | 'STABLE' | 'PENDING_SCAN' = 'PENDING_SCAN';
@@ -308,6 +327,7 @@ export async function getCashifyVariantsList(): Promise<CashifyVariantItem[]> {
         variantItems.push({
           variantKey,
           modelId: m.id,
+          legacyId: m.legacyId,
           modelName: m.name,
           brandName: m.brand.name,
           brandId: m.brandId,

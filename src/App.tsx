@@ -272,11 +272,28 @@ export default function App() {
 
   const [orderVersion, setOrderVersion] = useState(0);
 
+  const refreshCatalog = useCallback(async () => {
+    try {
+      const [brandsRes, modelsRes] = await Promise.allSettled([fetchBrands(), fetchModels()]);
+      if (brandsRes.status === 'fulfilled' && brandsRes.value.length > 0) {
+        setBrands(brandsRes.value);
+      }
+      if (modelsRes.status === 'fulfilled' && modelsRes.value.length > 0) {
+        setModels(modelsRes.value as Model[]);
+      }
+    } catch {
+      console.info('[App] API unavailable, using static catalog data');
+    }
+  }, []);
+
   useEffect(() => {
-    const handleOrderChange = () => setOrderVersion(v => v + 1);
+    const handleOrderChange = () => {
+      setOrderVersion(v => v + 1);
+      refreshCatalog();
+    };
     window.addEventListener('stc_catalog_order_changed', handleOrderChange);
     return () => window.removeEventListener('stc_catalog_order_changed', handleOrderChange);
-  }, []);
+  }, [refreshCatalog]);
 
   const orderedBrands = useMemo(() => {
     return applyBrandOrder(BRANDS);
@@ -351,19 +368,6 @@ export default function App() {
   }, [path, activeStage]);
 
 
-  const refreshCatalog = useCallback(async () => {
-    try {
-      const [brandsRes, modelsRes] = await Promise.allSettled([fetchBrands(), fetchModels()]);
-      if (brandsRes.status === 'fulfilled' && brandsRes.value.length > 0) {
-        setBrands(brandsRes.value);
-      }
-      if (modelsRes.status === 'fulfilled' && modelsRes.value.length > 0) {
-        setModels(modelsRes.value as Model[]);
-      }
-    } catch {
-      console.info('[App] API unavailable, using static catalog data');
-    }
-  }, []);
 
   const refreshBookings = useCallback(async () => {
     if (!hasAdminToken()) return;

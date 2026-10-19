@@ -93,25 +93,44 @@ export const CashifyMonitorTab: React.FC = () => {
     }
   }, []);
 
-  const handleOpenEditSpecs = async (variant: CashifyVariantItem) => {
-    let target = models.find(
+  const findTargetModel = (variant: CashifyVariantItem, modelList: Model[]): Model | undefined => {
+    // 1. Direct ID match (dbId, legacyId, or id)
+    const direct = modelList.find(
       (m) =>
+        (m as any).dbId === variant.modelId ||
         m.id === variant.modelId ||
         (m as any).legacyId === variant.modelId ||
-        m.name.toLowerCase() === variant.modelName.toLowerCase()
+        (variant.legacyId && (
+          m.id === variant.legacyId ||
+          (m as any).legacyId === variant.legacyId ||
+          (m as any).dbId === variant.legacyId
+        ))
     );
+    if (direct) return direct;
+
+    // 2. Active (non-hidden) model by exact name match
+    const activeByName = modelList.find(
+      (m) =>
+        !m.hidden &&
+        m.name.trim().toLowerCase() === variant.modelName.trim().toLowerCase()
+    );
+    if (activeByName) return activeByName;
+
+    // 3. Fallback to any model by name
+    return modelList.find(
+      (m) => m.name.trim().toLowerCase() === variant.modelName.trim().toLowerCase()
+    );
+  };
+
+  const handleOpenEditSpecs = async (variant: CashifyVariantItem) => {
+    let target = findTargetModel(variant, models);
 
     if (!target) {
       try {
         const freshModels = await fetchModels();
         if (freshModels && Array.isArray(freshModels)) {
           setModels(freshModels as Model[]);
-          target = freshModels.find(
-            (m) =>
-              m.id === variant.modelId ||
-              (m as any).legacyId === variant.modelId ||
-              m.name.toLowerCase() === variant.modelName.toLowerCase()
-          ) as Model | undefined;
+          target = findTargetModel(variant, freshModels as Model[]);
         }
       } catch (err) {
         console.error('Failed to fetch models for specs edit:', err);
@@ -120,8 +139,8 @@ export const CashifyMonitorTab: React.FC = () => {
 
     if (!target) {
       target = {
-        id: variant.modelId,
-        legacyId: variant.modelId,
+        id: variant.legacyId || variant.modelId,
+        legacyId: variant.legacyId || variant.modelId,
         brandId: variant.brandId || 'brand-apple',
         name: variant.modelName,
         category: 'premium',
@@ -148,27 +167,17 @@ export const CashifyMonitorTab: React.FC = () => {
     if (fixingVariantKey || isBulkFixing) return;
     setFixingVariantKey(variant.variantKey);
     try {
-      let target = models.find(
-        (m) =>
-          m.id === variant.modelId ||
-          (m as any).legacyId === variant.modelId ||
-          m.name.toLowerCase() === variant.modelName.toLowerCase()
-      );
+      let target = findTargetModel(variant, models);
 
       if (!target) {
         const freshModels = await fetchModels();
         if (freshModels && Array.isArray(freshModels)) {
           setModels(freshModels as Model[]);
-          target = freshModels.find(
-            (m) =>
-              m.id === variant.modelId ||
-              (m as any).legacyId === variant.modelId ||
-              m.name.toLowerCase() === variant.modelName.toLowerCase()
-          ) as Model | undefined;
+          target = findTargetModel(variant, freshModels as Model[]);
         }
       }
 
-      const legacyId = (target as any)?.legacyId || target?.id || variant.modelId;
+      const legacyId = (target as any)?.legacyId || target?.id || variant.legacyId || variant.modelId;
       const key = `${variant.ramGb}_${variant.storageGb}`;
       const currentVariantPrices = target?.variantPrices ? { ...target.variantPrices } : {};
       currentVariantPrices[key] = recommendedPrice;
@@ -200,7 +209,12 @@ export const CashifyMonitorTab: React.FC = () => {
 
       setModels((prev) =>
         prev.map((m) => {
-          if (m.id === legacyId || (m as any).legacyId === legacyId) {
+          if (
+            m.id === legacyId ||
+            (m as any).legacyId === legacyId ||
+            (m as any).dbId === legacyId ||
+            (target && m.id === target.id)
+          ) {
             return {
               ...m,
               variantPrices: currentVariantPrices,
@@ -245,17 +259,15 @@ export const CashifyMonitorTab: React.FC = () => {
       const modelUpdatesMap = new Map<string, Record<string, number>>();
 
       variantsToFix.forEach((v) => {
-        const legacyId = v.modelId;
+        const existingTarget = findTargetModel(v, models);
+        const resolvedLegacyId =
+          (existingTarget as any)?.legacyId ||
+          existingTarget?.id ||
+          v.legacyId ||
+          v.modelId;
+
         const key = `${v.ramGb}_${v.storageGb}`;
         const recPrice = Math.round(v.cashifyPrice! * 1.03);
-
-        const existingTarget = models.find(
-          (m) =>
-            m.id === legacyId ||
-            (m as any).legacyId === legacyId ||
-            m.name.toLowerCase() === v.modelName.toLowerCase()
-        );
-        const resolvedLegacyId = (existingTarget as any)?.legacyId || existingTarget?.id || legacyId;
 
         const currentPrices =
           modelUpdatesMap.get(resolvedLegacyId) ||
@@ -332,6 +344,8 @@ export const CashifyMonitorTab: React.FC = () => {
       if (
         (v.modelId === editingModelForSpecs.id ||
           v.modelId === (editingModelForSpecs as any).legacyId ||
+          v.modelId === (editingModelForSpecs as any).dbId ||
+          (v.legacyId && (v.legacyId === editingModelForSpecs.id || v.legacyId === (editingModelForSpecs as any).legacyId)) ||
           v.modelName.toLowerCase() === editingModelForSpecs.name.toLowerCase()) &&
         v.cashifyPrice !== null &&
         v.cashifyPrice > 0
