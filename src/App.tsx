@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo, Suspense, useCallback, startTrans
 // Types only — no heavy data arrays in this import (keeps initial bundle lean)
 import type { Model, Variant, DefectRule, Brand, Booking } from './data/mockDatabase';
 // Helper functions needed at startup — imported statically but lightweight
-import { generateVariantsForModel, getDeviceImage, getDefectRulesForCategory, getMaxVariantPrice } from './data/mockDatabase';
+import { generateVariantsForModel, getDeviceImage, getDefectRulesForCategory, getMaxVariantPrice, isTabletDevice } from './data/mockDatabase';
 import { calculateValuation } from './utils/valuation';
 import { SavedQuote } from './utils/savedQuotes';
 import { fetchBrands, fetchModels, getCachedModels, fetchBookings as apiFetchBookings, fetchCurrentUser, customerLogout, hasAdminToken, syncFirebaseUser, ApiUser } from './utils/api';
@@ -465,6 +465,11 @@ export default function App() {
     const match = matchModelFromPath(clean, MODELS, BRANDS);
     if (match) {
       const model = match.model;
+      if (isTabletDevice(model.brandId, model.name, model.id) && (!match.variant || !match.variant.storageGb)) {
+        setPendingModelId(model.id);
+        navigate('/tablets?model=' + model.id);
+        return;
+      }
       setSelectedModel(model);
       const variants = generateVariantsForModel(model);
       if (variants && variants.length > 0) {
@@ -587,6 +592,12 @@ export default function App() {
   const handleHeroSearchSelect = (model: Model) => {
     setHeroSearch('');
     setHeroSearchOpen(false);
+    if (isTabletDevice(model.brandId, model.name, model.id)) {
+      handleReset();
+      setPendingModelId(model.id);
+      navigate('/tablets?model=' + model.id);
+      return;
+    }
     setPendingModelId(model.id);
     const targetPath = getPathForModel(model);
     handleReset();
@@ -627,6 +638,12 @@ export default function App() {
   const handleDirectSelectModel = (modelId: string) => {
     const model = MODELS.find(m => m.id === modelId && !m.hidden);
     if (model) {
+      if (isTabletDevice(model.brandId, model.name, model.id)) {
+        handleReset();
+        setPendingModelId(model.id);
+        navigate('/tablets?model=' + model.id);
+        return;
+      }
       const variants = generateVariantsForModel(model);
       if (variants && variants.length > 0) {
         handleVariantSelected(model, variants[0]);
@@ -806,6 +823,8 @@ export default function App() {
             <TabletsShowcase
               models={MODELS}
               onSelectVariant={handleVariantSelected}
+              defaultModelId={pendingModelId}
+              onDefaultModelConsumed={() => setPendingModelId(null)}
               onModelClick={(model) => {
                 window.history.pushState({}, '', getPathForModel(model));
               }}

@@ -55,7 +55,14 @@ export const CashifyMonitorTab: React.FC = () => {
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const [editUrlValue, setEditUrlValue] = useState<string>('');
   const [testingUrl, setTestingUrl] = useState<boolean>(false);
-  const [testResult, setTestResult] = useState<{ ok: boolean; status: number } | null>(null);
+  const [testResult, setTestResult] = useState<{
+    ok: boolean;
+    status: number;
+    extractedPrice?: number | null;
+    error?: string;
+    is404?: boolean;
+    isUnserviceable?: boolean;
+  } | null>(null);
   const [savingUrl, setSavingUrl] = useState<boolean>(false);
 
   // Recommended price fixing states
@@ -237,20 +244,26 @@ export const CashifyMonitorTab: React.FC = () => {
     }
   };
 
-  // Bulk Apply Recommended Price (+3%) to all visible variants below target
+  // Bulk Apply Recommended Price (Exact +3%) to all visible variants not at target
   const handleBulkFixAllRecommended = async () => {
     if (isBulkFixing || fixingVariantKey) return;
     const variantsToFix = filteredVariants.filter(
-      (v) => v.cashifyPrice !== null && v.cashifyPrice > 0 && v.rephonixPrice < Math.round(v.cashifyPrice * 1.03)
+      (v) => v.cashifyPrice !== null && v.cashifyPrice > 0 && v.rephonixPrice !== Math.round(v.cashifyPrice * 1.03)
     );
 
     if (variantsToFix.length === 0) {
-      alert('All currently visible variants already meet or exceed the +3% Cashify target!');
+      alert('All currently visible variants are already set to exact +3% above Cashify!');
       return;
     }
 
+    const belowCount = variantsToFix.filter(v => v.rephonixPrice < Math.round(v.cashifyPrice! * 1.03)).length;
+    const aboveCount = variantsToFix.filter(v => v.rephonixPrice > Math.round(v.cashifyPrice! * 1.03)).length;
+
     const confirm = window.confirm(
-      `Apply recommended +3% prices to all ${variantsToFix.length} visible variants below target?\n\nThis will update buyback prices directly in the database.`
+      `Fix prices to exact +3% above Cashify for all ${variantsToFix.length} visible variants?\n` +
+      (belowCount > 0 ? `\n• ${belowCount} below target (will increase to +3%)` : '') +
+      (aboveCount > 0 ? `\n• ${aboveCount} above target (will adjust to exact +3%)` : '') +
+      `\n\nThis will update buyback prices directly in the database.`
     );
     if (!confirm) return;
 
@@ -292,7 +305,7 @@ export const CashifyMonitorTab: React.FC = () => {
       await bulkUpdateModels(updatesPayload);
 
       setSuccessNotification(
-        `✓ Successfully updated ${variantsToFix.length} variants across ${modelUpdatesMap.size} models to +3% above Cashify!`
+        `✓ Successfully aligned ${variantsToFix.length} variants across ${modelUpdatesMap.size} models to exact +3% above Cashify!`
       );
       window.dispatchEvent(new CustomEvent('stc_catalog_order_changed'));
       await loadData();
@@ -329,10 +342,24 @@ export const CashifyMonitorTab: React.FC = () => {
     return Array.from(set).sort((a, b) => a - b);
   }, [variants]);
 
+  // Count of all variants with a Cashify quote that are NOT at exact +3% target (both below and above)
+  const notExactTargetTotalCount = useMemo(() => {
+    return variants.filter(
+      (v) => v.cashifyPrice !== null && v.cashifyPrice > 0 && v.rephonixPrice !== Math.round(v.cashifyPrice * 1.03)
+    ).length;
+  }, [variants]);
+
   // Count of all variants with a Cashify quote that are below +3% target
   const belowTargetTotalCount = useMemo(() => {
     return variants.filter(
       (v) => v.cashifyPrice !== null && v.cashifyPrice > 0 && v.rephonixPrice < Math.round(v.cashifyPrice * 1.03)
+    ).length;
+  }, [variants]);
+
+  // Count of all variants with a Cashify quote that are above +3% target
+  const aboveTargetTotalCount = useMemo(() => {
+    return variants.filter(
+      (v) => v.cashifyPrice !== null && v.cashifyPrice > 0 && v.rephonixPrice > Math.round(v.cashifyPrice * 1.03)
     ).length;
   }, [variants]);
 
@@ -371,15 +398,25 @@ export const CashifyMonitorTab: React.FC = () => {
       if (statusFilter === 'OVERRIDDEN' && !v.isCustomOverride) return false;
       if (statusFilter === 'HAS_PRICE' && v.cashifyPrice === null) return false;
       if (statusFilter === 'PENDING' && v.cashifyPrice !== null) return false;
+      if (statusFilter === 'NOT_EXACT_TARGET') {
+        if (v.cashifyPrice === null || v.cashifyPrice <= 0) return false;
+        const rec = Math.round(v.cashifyPrice * 1.03);
+        if (v.rephonixPrice === rec) return false;
+      }
       if (statusFilter === 'BELOW_TARGET') {
         if (v.cashifyPrice === null || v.cashifyPrice <= 0) return false;
         const rec = Math.round(v.cashifyPrice * 1.03);
         if (v.rephonixPrice >= rec) return false;
       }
-      if (statusFilter === 'MEETS_TARGET') {
+      if (statusFilter === 'ABOVE_TARGET') {
         if (v.cashifyPrice === null || v.cashifyPrice <= 0) return false;
         const rec = Math.round(v.cashifyPrice * 1.03);
-        if (v.rephonixPrice < rec) return false;
+        if (v.rephonixPrice <= rec) return false;
+      }
+      if (statusFilter === 'EXACT_TARGET' || statusFilter === 'MEETS_TARGET') {
+        if (v.cashifyPrice === null || v.cashifyPrice <= 0) return false;
+        const rec = Math.round(v.cashifyPrice * 1.03);
+        if (v.rephonixPrice !== rec) return false;
       }
 
       if (searchQuery.trim()) {
@@ -427,9 +464,16 @@ export const CashifyMonitorTab: React.FC = () => {
     setTestResult(null);
     try {
       const res = await testCashifyUrlApi(editUrlValue.trim());
-      setTestResult({ ok: res.ok, status: res.status });
-    } catch {
-      setTestResult({ ok: false, status: 0 });
+      setTestResult({
+        ok: res.ok,
+        status: res.status,
+        extractedPrice: res.extractedPrice,
+        error: res.error,
+        is404: res.is404,
+        isUnserviceable: res.isUnserviceable,
+      });
+    } catch (err: any) {
+      setTestResult({ ok: false, status: 0, error: err.message || 'Connection failed' });
     } finally {
       setTestingUrl(false);
     }
@@ -721,8 +765,10 @@ export const CashifyMonitorTab: React.FC = () => {
               className="px-2.5 py-1.5 border border-ice-border bg-canvas-white rounded-lg text-xs font-semibold text-ink-navy focus:outline-none focus:border-cobalt shadow-xs cursor-pointer"
             >
               <option value="ALL">All Statuses</option>
+              <option value="NOT_EXACT_TARGET">⚠️ Needs Alignment to +3% ({notExactTargetTotalCount})</option>
               <option value="BELOW_TARGET">🚨 Below +3% Target ({belowTargetTotalCount})</option>
-              <option value="MEETS_TARGET">🎯 Meets +3% Target</option>
+              <option value="ABOVE_TARGET">📈 Above +3% Target ({aboveTargetTotalCount})</option>
+              <option value="EXACT_TARGET">🎯 Exact +3% Target</option>
               <option value="VERIFIED">✅ Verified URL</option>
               <option value="MISSING">⚠️ Missing URL</option>
               <option value="OVERRIDDEN">⭐ Custom Overridden</option>
@@ -743,20 +789,20 @@ export const CashifyMonitorTab: React.FC = () => {
           )}
 
           {/* Quick Auto-Fix All to +3% Target Button */}
-          {activeSubTab === 'variants' && belowTargetTotalCount > 0 && (
+          {activeSubTab === 'variants' && notExactTargetTotalCount > 0 && (
             <button
               type="button"
               onClick={handleBulkFixAllRecommended}
               disabled={isBulkFixing || !!fixingVariantKey}
               className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 active:scale-95 text-white rounded-lg text-xs font-bold shadow-xs flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 whitespace-nowrap"
-              title={`Automatically update all ${belowTargetTotalCount} underpriced variants to +3% above Cashify`}
+              title={`Automatically align all ${notExactTargetTotalCount} variants to exact +3% above Cashify (${belowTargetTotalCount} below, ${aboveTargetTotalCount} above)`}
             >
               {isBulkFixing ? (
                 <RefreshCw className="w-3.5 h-3.5 animate-spin" />
               ) : (
                 <Zap className="w-3.5 h-3.5 fill-current text-white" />
               )}
-              <span>Auto-Fix All to +3% ({belowTargetTotalCount})</span>
+              <span>Auto-Fix All to +3% ({notExactTargetTotalCount})</span>
             </button>
           )}
 
@@ -905,7 +951,8 @@ export const CashifyMonitorTab: React.FC = () => {
                             const recPrice = Math.round(cashifyP * 1.03);
                             const currentDiff = variant.difference ?? (variant.rephonixPrice - cashifyP);
                             const diffPct = ((variant.rephonixPrice - cashifyP) / cashifyP) * 100;
-                            const meetsTarget = variant.rephonixPrice >= recPrice;
+                            const isExact = variant.rephonixPrice === recPrice;
+                            const isBelow = variant.rephonixPrice < recPrice;
                             const isFixing = fixingVariantKey === variant.variantKey;
 
                             return (
@@ -928,34 +975,42 @@ export const CashifyMonitorTab: React.FC = () => {
                                       : `₹0 (0.0%)`}
                                   </span>
 
-                                  {meetsTarget && (
+                                  {isExact ? (
                                     <span className="px-1.5 py-0.5 rounded text-[10px] font-bold font-mono bg-emerald-100/90 text-emerald-800 border border-emerald-300 inline-flex items-center gap-0.5 shadow-2xs">
                                       <Check className="w-2.5 h-2.5 stroke-[3]" />
-                                      <span>+3% Met</span>
+                                      <span>+3% Exact</span>
+                                    </span>
+                                  ) : isBelow ? (
+                                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold font-mono bg-rose-100/90 text-rose-800 border border-rose-300 inline-flex items-center gap-0.5 shadow-2xs">
+                                      <span>Below +3%</span>
+                                    </span>
+                                  ) : (
+                                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold font-mono bg-indigo-100/90 text-indigo-800 border border-indigo-300 inline-flex items-center gap-0.5 shadow-2xs">
+                                      <span>Above +3% ({diffPct > 3 ? `+${(diffPct - 3).toFixed(1)}%` : ''})</span>
                                     </span>
                                   )}
                                 </div>
 
                                 {/* Recommended Price Box & 1-Click Fix Button */}
                                 <div className={`p-1.5 rounded-lg border text-xs ${
-                                  meetsTarget 
+                                  isExact 
                                     ? 'bg-emerald-50/40 border-emerald-100' 
                                     : 'bg-amber-50/60 border-amber-200 shadow-2xs'
                                 }`}>
                                   <div className="flex items-center justify-between gap-1 text-[11px]">
-                                    <span className="text-slate-500 font-medium font-sans">Recommended (+3%):</span>
+                                    <span className="text-slate-500 font-medium font-sans">Target (Exact +3%):</span>
                                     <span className="font-extrabold font-mono text-indigo-950">
                                       ₹{recPrice.toLocaleString('en-IN')}
                                     </span>
                                   </div>
 
-                                  {!meetsTarget ? (
+                                  {!isExact ? (
                                     <button
                                       type="button"
                                       disabled={isFixing || isBulkFixing}
                                       onClick={() => handleApplyRecommendedPrice(variant, recPrice)}
                                       className="mt-1.5 w-full flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-md bg-gradient-to-r from-indigo-600 to-cobalt hover:from-indigo-700 hover:to-cobalt-hover active:scale-95 text-white text-[11px] font-bold shadow-xs transition-all cursor-pointer disabled:opacity-50"
-                                      title={`Fix Rephonix payout to recommended ₹${recPrice.toLocaleString('en-IN')} (3% above Cashify)`}
+                                      title={`Fix Rephonix payout to exact +3% (₹${recPrice.toLocaleString('en-IN')})`}
                                     >
                                       {isFixing ? (
                                         <>
@@ -973,17 +1028,8 @@ export const CashifyMonitorTab: React.FC = () => {
                                     <div className="mt-1 flex items-center justify-between text-[10px] text-emerald-700 font-mono">
                                       <span className="flex items-center gap-0.5">
                                         <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                                        <span>Optimal Payout</span>
+                                        <span>Optimal Payout (Exact +3%)</span>
                                       </span>
-                                      <button
-                                        type="button"
-                                        disabled={isFixing || isBulkFixing}
-                                        onClick={() => handleApplyRecommendedPrice(variant, recPrice)}
-                                        className="text-slate-400 hover:text-indigo-600 underline cursor-pointer text-[10px]"
-                                        title={`Reset price to exact +3% (₹${recPrice.toLocaleString('en-IN')})`}
-                                      >
-                                        set exact
-                                      </button>
                                     </div>
                                   )}
                                 </div>
@@ -1041,13 +1087,41 @@ export const CashifyMonitorTab: React.FC = () => {
                                   Cancel
                                 </button>
                                 {testResult && (
-                                  <span
-                                    className={`text-[11px] font-mono font-bold px-1.5 py-0.5 rounded ${
-                                      testResult.ok ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
-                                    }`}
-                                  >
-                                    {testResult.ok ? `✓ HTTP ${testResult.status} (Valid)` : `✗ Error (${testResult.status})`}
-                                  </span>
+                                  <div className="w-full mt-1 flex flex-col gap-1">
+                                    <span
+                                      className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded inline-flex items-center gap-1 max-w-full ${
+                                        testResult.ok
+                                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                                          : testResult.is404
+                                          ? 'bg-rose-100 text-rose-800 border border-rose-300'
+                                          : testResult.isUnserviceable
+                                          ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                                          : 'bg-rose-100 text-rose-800 border border-rose-300'
+                                      }`}
+                                    >
+                                      {testResult.ok ? (
+                                        <>
+                                          <span>✓ Verified</span>
+                                          {testResult.extractedPrice ? (
+                                            <span className="font-extrabold text-emerald-950">
+                                              (Live: ₹{testResult.extractedPrice.toLocaleString('en-IN')})
+                                            </span>
+                                          ) : null}
+                                        </>
+                                      ) : testResult.is404 ? (
+                                        <span>✗ 404: Page Not Found on Cashify</span>
+                                      ) : testResult.isUnserviceable ? (
+                                        <span>⚠️ Cashify not purchasing in this location (Gurgaon / Delhi / etc.)</span>
+                                      ) : (
+                                        <span>✗ {testResult.error || `HTTP ${testResult.status} Error`}</span>
+                                      )}
+                                    </span>
+                                    {!testResult.ok && testResult.error && !testResult.is404 && !testResult.isUnserviceable && (
+                                      <span className="text-[10px] text-rose-600 font-sans leading-tight">
+                                        {testResult.error}
+                                      </span>
+                                    )}
+                                  </div>
                                 )}
                               </div>
                               <span className="text-[10px] text-slate-500 font-mono block">Tip: Press <b>Enter</b> to save or <b>Esc</b> to cancel</span>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { TABLET_MODELS, Model, Variant, getModelSupportedRam, getModelSupportedStorage, getVariantPrice, sortModelsByLaunchDesc, isTabletDevice, getMaxVariantPrice } from '../../data/mockDatabase';
+import { TABLET_MODELS, Model, Variant, getModelSupportedRam, getModelSupportedStorage, getVariantPrice, sortModelsByLaunchDesc, isTabletDevice, getMaxVariantPrice, isAppleDevice } from '../../data/mockDatabase';
 import { applyModelOrder } from '../../utils/ordering';
 import { Tablet, Sparkles, ArrowRight, Search, X, Cpu, HardDrive, CheckCircle2, Wifi, Radio } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -10,6 +10,8 @@ interface TabletsShowcaseProps {
   onSelectVariant: (model: Model, variant: Variant) => void;
   onBackToHome: () => void;
   defaultBrand?: 'all' | 'apple' | 'samsung';
+  defaultModelId?: string | null;
+  onDefaultModelConsumed?: () => void;
   onModelClick?: (model: Model) => void;
   onModelDismiss?: () => void;
   onVariantChange?: (model: Model, storageGb: number, ramGb?: number) => void;
@@ -20,6 +22,8 @@ export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
   onSelectVariant,
   onBackToHome,
   defaultBrand,
+  defaultModelId,
+  onDefaultModelConsumed,
   onModelClick,
   onModelDismiss,
   onVariantChange,
@@ -61,18 +65,45 @@ export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
 
     const sorted = sortModelsByLaunchDesc(list);
     const targetBrand = selectedBrand === 'apple' ? 'brand-apple' : selectedBrand === 'samsung' ? 'brand-samsung' : 'brand-apple';
-    return applyModelOrder(targetBrand, sorted);
+    return applyModelOrder(targetBrand, sorted, 'tablets');
   }, [selectedBrand, searchQuery, tabletModelsList]);
 
-  const ramOptions = useMemo(() => {
-    if (!selectedModelForSpec) return [];
-    return getModelSupportedRam(selectedModelForSpec).filter(r => r > 0);
+  // Check if current tablet is Apple (iPads feature unified memory, no RAM selection)
+  const isApple = useMemo(() => {
+    if (!selectedModelForSpec) return false;
+    return selectedModelForSpec.brandId === 'brand-apple' || isAppleDevice(selectedModelForSpec.brandId, selectedModelForSpec.name);
   }, [selectedModelForSpec]);
+
+  // RAM options only available for non-Apple tablets
+  const ramOptions = useMemo(() => {
+    if (!selectedModelForSpec || isApple) return [];
+    return getModelSupportedRam(selectedModelForSpec).filter(r => r > 0);
+  }, [selectedModelForSpec, isApple]);
 
   const storageOptions = useMemo(() => {
     if (!selectedModelForSpec) return [128, 256, 512];
     return getModelSupportedStorage(selectedModelForSpec);
   }, [selectedModelForSpec]);
+
+  // Automatically open spec modal when defaultModelId is passed or URL ?model= is set
+  useEffect(() => {
+    if (defaultModelId && tabletModelsList.length > 0) {
+      const found = tabletModelsList.find(m => m.id === defaultModelId);
+      if (found) {
+        handleOpenSpecModal(found);
+        onDefaultModelConsumed?.();
+      }
+    } else if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const urlModel = params.get('model');
+      if (urlModel && tabletModelsList.length > 0) {
+        const found = tabletModelsList.find(m => m.id === urlModel);
+        if (found && (!selectedModelForSpec || selectedModelForSpec.id !== found.id)) {
+          handleOpenSpecModal(found);
+        }
+      }
+    }
+  }, [defaultModelId, tabletModelsList]);
 
   // Sync selected RAM and Storage when model changes
   useEffect(() => {
@@ -89,14 +120,13 @@ export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
   const calculatedPrice = useMemo(() => {
     if (!selectedModelForSpec) return 0;
     const effectiveRam = ramOptions.length > 0 ? selectedRam : 0;
-    const baseVal = getVariantPrice(selectedModelForSpec, effectiveRam, selectedStorage);
-    // Wi-Fi only models have ~8% lower base trade-in value than Cellular (SIM) models
-    return connectivity === 'wifi' ? Math.max(1000, Math.round(baseVal * 0.92)) : baseVal;
+    return getVariantPrice(selectedModelForSpec, effectiveRam, selectedStorage, connectivity);
   }, [selectedModelForSpec, selectedRam, selectedStorage, ramOptions, connectivity]);
 
   const handleOpenSpecModal = (model: Model) => {
     onModelClick?.(model);
-    const defaultRams = getModelSupportedRam(model).filter(r => r > 0);
+    const isApp = model.brandId === 'brand-apple' || isAppleDevice(model.brandId, model.name);
+    const defaultRams = isApp ? [] : getModelSupportedRam(model).filter(r => r > 0);
     const defaultStorages = model.supportedStorageGb && model.supportedStorageGb.length > 0 ? model.supportedStorageGb : [128, 256, 512];
     const initialRam = defaultRams.length > 0 ? defaultRams[0] : 0;
     const initialStorage = defaultStorages[0];
@@ -117,6 +147,7 @@ export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
       storageGb: selectedStorage,
       color: connectivity === 'cellular' ? 'Wi-Fi + Cellular (SIM)' : 'Wi-Fi Only',
       basePrice: calculatedPrice,
+      connectivity: connectivity,
     };
     const targetModel = selectedModelForSpec;
     setSelectedModelForSpec(null);
@@ -316,104 +347,32 @@ export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
                 {/* Modal Body */}
                 <div className="p-6 space-y-6 text-left overflow-y-auto flex-1">
                   
-                  {/* 1. Network & SIM Connectivity Selector */}
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-mono font-bold text-ink-navy uppercase tracking-wider flex items-center gap-1.5">
-                        <Wifi className="w-4 h-4 text-cobalt" /> Select Network &amp; Connectivity
-                      </span>
-                      <span className="text-[10px] text-zinc-400 font-mono">SIM / Cellular Specs</span>
+                  {/* Step Pills Navigation Summary */}
+                  <div className="flex flex-wrap items-center gap-2 pb-3 border-b border-ice-border/60">
+                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-violet-50 text-violet-700 border border-violet-200">
+                      <HardDrive className="w-3.5 h-3.5 text-violet-600" />
+                      <span>1. Storage: {selectedStorage >= 1024 ? `${selectedStorage / 1024}TB` : `${selectedStorage}GB`}</span>
                     </div>
-                    <div className="grid grid-cols-2 gap-2.5">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setConnectivity('cellular');
-                          if (selectedModelForSpec) {
-                            onVariantChange?.(selectedModelForSpec, selectedStorage, selectedRam > 0 ? selectedRam : undefined);
-                          }
-                        }}
-                        className={`py-3.5 px-3.5 rounded-xl border text-xs font-bold font-mono transition-all flex items-center justify-between ${
-                          connectivity === 'cellular'
-                            ? 'bg-cobalt text-white border-cobalt shadow-md shadow-cobalt/20'
-                            : 'bg-canvas-white text-ink-slate border-ice-border hover:border-cobalt/40'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <Radio className="w-4 h-4" />
-                          <div className="text-left">
-                            <span className="block font-bold text-xs">Wi-Fi + Cellular</span>
-                            <span className={`text-[9px] ${connectivity === 'cellular' ? 'text-white/80' : 'text-zinc-400'}`}>Has SIM Slot / 5G / 4G</span>
-                          </div>
-                        </div>
-                        {connectivity === 'cellular' && <CheckCircle2 className="w-4 h-4 text-white" />}
-                      </button>
 
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setConnectivity('wifi');
-                          if (selectedModelForSpec) {
-                            onVariantChange?.(selectedModelForSpec, selectedStorage, selectedRam > 0 ? selectedRam : undefined);
-                          }
-                        }}
-                        className={`py-3.5 px-3.5 rounded-xl border text-xs font-bold font-mono transition-all flex items-center justify-between ${
-                          connectivity === 'wifi'
-                            ? 'bg-cobalt text-white border-cobalt shadow-md shadow-cobalt/20'
-                            : 'bg-canvas-white text-ink-slate border-ice-border hover:border-cobalt/40'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <Wifi className="w-4 h-4" />
-                          <div className="text-left">
-                            <span className="block font-bold text-xs">Wi-Fi Only</span>
-                            <span className={`text-[9px] ${connectivity === 'wifi' ? 'text-white/80' : 'text-zinc-400'}`}>No SIM Card Slot</span>
-                          </div>
-                        </div>
-                        {connectivity === 'wifi' && <CheckCircle2 className="w-4 h-4 text-white" />}
-                      </button>
+                    {!isApple && ramOptions.length > 0 && (
+                      <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                        <Cpu className="w-3.5 h-3.5 text-blue-600" />
+                        <span>2. RAM: {selectedRam}GB</span>
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                      {connectivity === 'cellular' ? <Radio className="w-3.5 h-3.5 text-emerald-600" /> : <Wifi className="w-3.5 h-3.5 text-emerald-600" />}
+                      <span>{!isApple && ramOptions.length > 0 ? '3' : '2'}. {connectivity === 'cellular' ? 'Wi-Fi + Cellular' : 'Wi-Fi Only'}</span>
                     </div>
                   </div>
 
-                  {/* 2. RAM Variant Selector (for Android Tablets e.g., Galaxy Tab) */}
-                  {ramOptions.length > 0 && (
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-mono font-bold text-ink-navy uppercase tracking-wider flex items-center gap-1.5">
-                          <Cpu className="w-4 h-4 text-cobalt" /> Select RAM Variant
-                        </span>
-                        <span className="text-[10px] text-zinc-400 font-mono">Memory Specs</span>
-                      </div>
-                      <div className="grid grid-cols-3 gap-2.5">
-                        {ramOptions.map(ram => (
-                          <button
-                            key={ram}
-                            type="button"
-                            onClick={() => {
-                              setSelectedRam(ram);
-                              if (selectedModelForSpec) {
-                                onVariantChange?.(selectedModelForSpec, selectedStorage, ram > 0 ? ram : undefined);
-                              }
-                            }}
-                            className={`py-3 px-3 rounded-xl border text-xs font-bold font-mono transition-all flex items-center justify-center gap-1.5 ${
-                              selectedRam === ram
-                                ? 'bg-cobalt text-white border-cobalt shadow-md shadow-cobalt/20'
-                                : 'bg-canvas-white text-ink-slate border-ice-border hover:border-cobalt/40'
-                            }`}
-                          >
-                            <span>{ram} GB RAM</span>
-                            {selectedRam === ram && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 3. Storage Capacity Selector */}
+                  {/* 1. Storage Capacity Selector (FIRST) */}
                   <div>
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center justify-between mb-2.5">
                       <span className="text-xs font-mono font-bold text-ink-navy uppercase tracking-wider flex items-center gap-1.5">
-                        <HardDrive className="w-4 h-4 text-violet-500" /> Select Storage Capacity
+                        <HardDrive className="w-4 h-4 text-violet-600" />
+                        <span>1. Select Storage Capacity</span>
                       </span>
                       <span className="text-[10px] text-zinc-400 font-mono">Internal Storage</span>
                     </div>
@@ -442,6 +401,115 @@ export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
                     </div>
                   </div>
 
+                  {/* 2. RAM Variant Selector (SECOND — ONLY FOR NON-APPLE TABLETS e.g., Samsung Galaxy Tab) */}
+                  {!isApple && ramOptions.length > 0 && (
+                    <div>
+                      <div className="flex items-center justify-between mb-2.5">
+                        <span className="text-xs font-mono font-bold text-ink-navy uppercase tracking-wider flex items-center gap-1.5">
+                          <Cpu className="w-4 h-4 text-cobalt" />
+                          <span>2. Select RAM Variant</span>
+                        </span>
+                        <span className="text-[10px] text-zinc-400 font-mono">Memory Specs</span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2.5">
+                        {ramOptions.map(ram => (
+                          <button
+                            key={ram}
+                            type="button"
+                            onClick={() => {
+                              setSelectedRam(ram);
+                              if (selectedModelForSpec) {
+                                onVariantChange?.(selectedModelForSpec, selectedStorage, ram > 0 ? ram : undefined);
+                              }
+                            }}
+                            className={`py-3 px-3 rounded-xl border text-xs font-bold font-mono transition-all flex items-center justify-center gap-1.5 ${
+                              selectedRam === ram
+                                ? 'bg-cobalt text-white border-cobalt shadow-md shadow-cobalt/20'
+                                : 'bg-canvas-white text-ink-slate border-ice-border hover:border-cobalt/40'
+                            }`}
+                          >
+                            <span>{ram} GB RAM</span>
+                            {selectedRam === ram && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 3. Wi-Fi Variant vs Wi-Fi + Cellular (THIRD) */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2.5">
+                      <span className="text-xs font-mono font-bold text-ink-navy uppercase tracking-wider flex items-center gap-1.5">
+                        <Wifi className="w-4 h-4 text-emerald-600" />
+                        <span>{!isApple && ramOptions.length > 0 ? '3' : '2'}. Select Wi-Fi or Wi-Fi + Cellular</span>
+                      </span>
+                      <span className="text-[10px] text-zinc-400 font-mono">SIM / Cellular Specs</span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {/* Wi-Fi Only */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setConnectivity('wifi');
+                          if (selectedModelForSpec) {
+                            onVariantChange?.(selectedModelForSpec, selectedStorage, selectedRam > 0 ? selectedRam : undefined);
+                          }
+                        }}
+                        className={`py-4 px-4 rounded-xl border text-xs font-bold font-mono transition-all flex items-center justify-between ${
+                          connectivity === 'wifi'
+                            ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-600/20'
+                            : 'bg-canvas-white text-ink-slate border-ice-border hover:border-emerald-500/50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
+                            connectivity === 'wifi' ? 'bg-white/20 text-white' : 'bg-emerald-50 text-emerald-600'
+                          }`}>
+                            <Wifi className="w-5 h-5" />
+                          </div>
+                          <div className="text-left">
+                            <span className="block font-bold text-sm">Wi-Fi Only</span>
+                            <span className={`text-[10px] block font-light mt-0.5 ${connectivity === 'wifi' ? 'text-white/85' : 'text-zinc-500'}`}>
+                              No SIM card slot or eSIM
+                            </span>
+                          </div>
+                        </div>
+                        {connectivity === 'wifi' && <CheckCircle2 className="w-4 h-4 text-white shrink-0 ml-2" />}
+                      </button>
+
+                      {/* Wi-Fi + Cellular */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setConnectivity('cellular');
+                          if (selectedModelForSpec) {
+                            onVariantChange?.(selectedModelForSpec, selectedStorage, selectedRam > 0 ? selectedRam : undefined);
+                          }
+                        }}
+                        className={`py-4 px-4 rounded-xl border text-xs font-bold font-mono transition-all flex items-center justify-between ${
+                          connectivity === 'cellular'
+                            ? 'bg-cobalt text-white border-cobalt shadow-md shadow-cobalt/20'
+                            : 'bg-canvas-white text-ink-slate border-ice-border hover:border-cobalt/50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
+                            connectivity === 'cellular' ? 'bg-white/20 text-white' : 'bg-cobalt/10 text-cobalt'
+                          }`}>
+                            <Radio className="w-5 h-5" />
+                          </div>
+                          <div className="text-left">
+                            <span className="block font-bold text-sm">Wi-Fi + Cellular</span>
+                            <span className={`text-[10px] block font-light mt-0.5 ${connectivity === 'cellular' ? 'text-white/85' : 'text-zinc-500'}`}>
+                              Has SIM tray / eSIM (5G/4G)
+                            </span>
+                          </div>
+                        </div>
+                        {connectivity === 'cellular' && <CheckCircle2 className="w-4 h-4 text-white shrink-0 ml-2" />}
+                      </button>
+                    </div>
+                  </div>
+
                   {/* Estimated Payout Banner */}
                   <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-300/90 rounded-xl p-4 flex items-center justify-between shadow-xs">
                     <div>
@@ -449,7 +517,9 @@ export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
                         Estimated Payout
                       </span>
                       <span className="text-xs font-mono font-semibold text-emerald-900">
-                        {connectivity === 'cellular' ? 'Wi-Fi + Cellular · ' : 'Wi-Fi Only · '}{ramOptions.length > 0 ? `${selectedRam}GB RAM / ` : ''}{selectedStorage >= 1024 ? `${selectedStorage / 1024}TB` : `${selectedStorage}GB`}
+                        {selectedStorage >= 1024 ? `${selectedStorage / 1024}TB` : `${selectedStorage}GB`}
+                        {!isApple && ramOptions.length > 0 ? ` · ${selectedRam}GB RAM` : ''}
+                        {` · ${connectivity === 'cellular' ? 'Wi-Fi + Cellular' : 'Wi-Fi Only'}`}
                       </span>
                     </div>
                     <span className="text-2xl font-black text-emerald-700 font-outfit">

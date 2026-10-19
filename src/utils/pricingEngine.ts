@@ -100,6 +100,20 @@ export function determineDeviceSegment(brandId: string, modelName: string, categ
   const isApple = isAppleBrand(brandId, modelName);
   const nameLower = modelName.toLowerCase();
 
+  // Tablet segment determination
+  if (nameLower.includes('ipad') || nameLower.includes('tab')) {
+    if (isApple) {
+      if (nameLower.includes('pro')) return 'apple_tablet_pro';
+      if (nameLower.includes('air')) return 'apple_tablet_air';
+      return 'apple_tablet_standard';
+    } else {
+      if (nameLower.includes('ultra') || nameLower.includes('plus') || category === 'flagship') {
+        return 'android_tablet_flagship';
+      }
+      return 'android_tablet_midrange';
+    }
+  }
+
   if (isApple) {
     if (nameLower.includes('pro max')) return 'apple_pro_max';
     if (nameLower.includes('pro')) return 'apple_pro';
@@ -285,39 +299,87 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
   const fVariant = config.variantFactors[variantKey] ?? 1.00;
 
   // 4. Severity Grouping for Condition Factor F_condition = F_cosmetic * F_display * F_functional * F_battery
+  const isTablet = input.modelName.toLowerCase().includes('ipad') || input.modelName.toLowerCase().includes('tab');
   
-  // Group A — Cosmetic (Body scratches, dents, back glass)
-  // Deduplicate within Group A by selecting the lowest cosmetic factor (highest penalty)
+  // Group A — Cosmetic (Body scratches, dents, bends, panels)
   const cosmeticDefects = input.selectedDefects.filter(d => d.category === 'body');
   let fCosmetic = 1.00;
 
-  cosmeticDefects.forEach(defect => {
-    const penalty = defect.deductionPercentage || (defect.deductionFixed > 0 ? defect.deductionFixed / basePrice : 0);
-    const factor = Math.max(0, 1.0 - penalty);
-    if (factor < fCosmetic) {
-      fCosmetic = factor;
-    }
-  });
+  if (isTablet) {
+    // For tablets: Structural (Bent/Loose), Back Panel Condition, and Surface Scratches/Dents
+    const surfaceDefects = cosmeticDefects.filter(d => d.id.includes('scratches') || d.id.includes('dents'));
+    let fSurface = 1.00;
+    surfaceDefects.forEach(d => {
+      const p = d.deductionPercentage || (d.deductionFixed > 0 ? d.deductionFixed / basePrice : 0);
+      fSurface = Math.min(fSurface, Math.max(0, 1.0 - p));
+    });
+
+    const structuralDefects = cosmeticDefects.filter(d => d.id.includes('bent') || d.id.includes('loose'));
+    let fStructural = 1.00;
+    structuralDefects.forEach(d => {
+      const p = d.deductionPercentage || 0;
+      fStructural = Math.min(fStructural, Math.max(0, 1.0 - p));
+    });
+
+    const panelDefects = cosmeticDefects.filter(d => d.id.includes('panel'));
+    let fPanel = 1.00;
+    panelDefects.forEach(d => {
+      const p = d.deductionPercentage || (d.deductionFixed > 0 ? d.deductionFixed / basePrice : 0);
+      fPanel = Math.min(fPanel, Math.max(0, 1.0 - p));
+    });
+
+    fCosmetic = fSurface * fStructural * fPanel;
+  } else {
+    // Phone logic
+    cosmeticDefects.forEach(defect => {
+      const penalty = defect.deductionPercentage || (defect.deductionFixed > 0 ? defect.deductionFixed / basePrice : 0);
+      const factor = Math.max(0, 1.0 - penalty);
+      if (factor < fCosmetic) {
+        fCosmetic = factor;
+      }
+    });
+  }
 
   // Group B — Display (Scratches, cracks, touch, OLED/LCD, non-OEM display)
-  // Deduplicate within Group B by selecting the single worst display factor
   const displayDefects = input.selectedDefects.filter(d => d.category === 'screen');
   let fDisplay = 1.00;
 
-  displayDefects.forEach(defect => {
-    let penalty = defect.deductionPercentage || 0;
-    if (defect.id === 'defect-screen-cracked' && penalty === 0) {
-      penalty = 0.28; // Standard ~28% display panel deduction
-    }
-    if (defect.deductionFixed > 0) {
-      const fixedPenalty = Math.min(0.30, defect.deductionFixed / basePrice);
-      penalty = Math.max(penalty, fixedPenalty);
-    }
-    const factor = Math.max(0, 1.0 - penalty);
-    if (factor < fDisplay) {
-      fDisplay = factor;
-    }
-  });
+  if (isTablet) {
+    // For tablets: separate into Physical Damage (scratches/cracks/spots/discoloration), Touch failure, and Non-original screen
+    const physicalDefects = displayDefects.filter(d => d.id !== 'defect-screen-touch' && d.id !== 'defect-screen-non-original');
+    let fPhysical = 1.00;
+    physicalDefects.forEach(defect => {
+      let penalty = defect.deductionPercentage || 0;
+      if (defect.deductionFixed > 0) {
+        penalty = Math.max(penalty, Math.min(0.35, defect.deductionFixed / basePrice));
+      }
+      fPhysical = Math.min(fPhysical, Math.max(0, 1.0 - penalty));
+    });
+
+    const hasTouchFail = displayDefects.some(d => d.id === 'defect-screen-touch');
+    const fTouch = hasTouchFail ? 0.75 : 1.00; // -25% digitizer penalty
+
+    const hasNonOriginal = displayDefects.some(d => d.id === 'defect-screen-non-original');
+    const fNonOrig = hasNonOriginal ? (segment.includes('pro') ? 0.65 : 0.72) : 1.00;
+
+    fDisplay = fPhysical * fTouch * fNonOrig;
+  } else {
+    // Phone logic
+    displayDefects.forEach(defect => {
+      let penalty = defect.deductionPercentage || 0;
+      if (defect.id === 'defect-screen-cracked' && penalty === 0) {
+        penalty = 0.28; // Standard ~28% display panel deduction
+      }
+      if (defect.deductionFixed > 0) {
+        const fixedPenalty = Math.min(0.30, defect.deductionFixed / basePrice);
+        penalty = Math.max(penalty, fixedPenalty);
+      }
+      const factor = Math.max(0, 1.0 - penalty);
+      if (factor < fDisplay) {
+        fDisplay = factor;
+      }
+    });
+  }
 
   // Group C — Functional (Camera, speaker, mic, charging port, biometrics)
   // Multiplicative stacking across distinct functional components (excluding battery)

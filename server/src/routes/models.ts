@@ -19,9 +19,10 @@ export function inferBrandId(legacyId: string, explicit?: string): string {
 // GET /api/models
 router.get('/', async (req, res) => {
   try {
-    const { brandId } = req.query;
+    const { brandId, deviceType } = req.query;
     const where: Record<string, unknown> = {};
     if (brandId && typeof brandId === 'string') where.brandId = brandId;
+    if (deviceType && typeof deviceType === 'string') where.deviceType = deviceType;
 
     let models: any[] = [];
     try {
@@ -74,6 +75,7 @@ router.get('/', async (req, res) => {
         brandId: m.brandId,
         name: m.name,
         category: m.category,
+        deviceType: (m as any).deviceType || 'smartphones',
         releaseYear: m.releaseYear,
         basePrice128GB: m.basePrice128GB,
         series: resolvedSeries,
@@ -94,7 +96,7 @@ router.get('/', async (req, res) => {
 // POST /api/models
 router.post('/', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITOR']), async (req, res) => {
   try {
-    const { legacyId, brandId, name, category, releaseYear, basePrice128GB,
+    const { legacyId, brandId, name, category, deviceType, releaseYear, basePrice128GB,
             series, imageUrl, supportedStorageGb, supportedRamGb, variantPrices, hidden, supportsWarrantyQuestion } = req.body;
     if (!legacyId || !brandId || !name || !category || !releaseYear || !basePrice128GB) {
       res.status(400).json({ error: 'BadRequest', message: 'Missing required fields' });
@@ -125,6 +127,7 @@ router.post('/', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITOR']), asyn
         brandId: String(brandId),
         name: String(name).trim(),
         category: String(category).trim(),
+        deviceType: deviceType ? String(deviceType).trim() : 'smartphones',
         releaseYear: Number(releaseYear),
         basePrice128GB: resolvedBase,
         series: series ? String(series).trim() : '',
@@ -270,7 +273,7 @@ router.patch('/:legacyId', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITO
     const legacyId = String(req.params.legacyId);
     const updates = req.body as Record<string, unknown>;
     const data: Record<string, unknown> = {};
-    for (const field of ['name', 'category']) {
+    for (const field of ['name', 'category', 'deviceType']) {
       if (updates[field] !== undefined && typeof updates[field] === 'string' && (updates[field] as string).trim().length > 0) {
         data[field] = (updates[field] as string).trim();
       }

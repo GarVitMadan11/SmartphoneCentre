@@ -30,6 +30,8 @@ import {
   Globe,
   CheckCircle2,
   Zap,
+  Wifi,
+  Radio,
 } from 'lucide-react';
 import { Model, Brand, BRANDS, isSmartwatchDevice, isTabletDevice, buildVariantPricesForModel, isVariantAvailable, predictCashifyPrice } from '../../../data/mockDatabase';
 import { fetchModels, createModel, updateModel, deleteModel, testCashifyUrlApi, registerApprovedCashifyVariants } from '../../../utils/api';
@@ -94,12 +96,12 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
   const [editingModel, setEditingModel] = useState<Model | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
 
-  // Load models from API (Database)
+  // Load models from API (Database) scoped to category
   const loadModels = async () => {
     try {
       setLoading(true);
       setError(null);
-      const apiModels = await fetchModels();
+      const apiModels = await fetchModels(undefined, category);
       setModels(apiModels as Model[]);
     } catch (err: any) {
       console.error('Failed to fetch models from DB:', err);
@@ -111,29 +113,37 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
 
   useEffect(() => {
     loadModels();
-  }, []);
+  }, [category]);
+
+  // Brands applicable to this category
+  const categoryBrands = useMemo(() => {
+    if (category === 'smartphones') return initialBrands;
+    const supportedBrandIds = new Set(['brand-apple', 'brand-samsung']);
+    models.forEach((m) => supportedBrandIds.add(m.brandId));
+    return initialBrands.filter((b) => supportedBrandIds.has(b.id));
+  }, [initialBrands, models, category]);
 
   // Initialize ordered brands
   useEffect(() => {
-    setOrderedBrands(applyBrandOrder(initialBrands));
-    if (initialBrands.length > 0) {
-      setReorderSeriesBrandId(initialBrands[0].id);
-      setReorderModelBrandId(initialBrands[0].id);
+    setOrderedBrands(applyBrandOrder(categoryBrands));
+    if (categoryBrands.length > 0) {
+      setReorderSeriesBrandId((prev) => (categoryBrands.some((b) => b.id === prev) ? prev : categoryBrands[0].id));
+      setReorderModelBrandId((prev) => (categoryBrands.some((b) => b.id === prev) ? prev : categoryBrands[0].id));
     }
-  }, [initialBrands]);
+  }, [categoryBrands]);
 
   // Derived Series List for active brand filter or active reorder brand
-  const activeBrandForSeries = selectedBrandFilter !== 'all' ? selectedBrandFilter : (initialBrands[0]?.id || 'brand-apple');
+  const activeBrandForSeries = selectedBrandFilter !== 'all' ? selectedBrandFilter : (categoryBrands[0]?.id || 'brand-apple');
 
   const availableSeriesList = useMemo(() => {
     const brandModels = models.filter((m) => {
       let matchesCat = false;
       if (category === 'smartphones') {
-        matchesCat = !isTabletDevice(m.brandId, m.name, m.id) && !isSmartwatchDevice(m.brandId, m.name, m.id);
+        matchesCat = (m as any).deviceType === 'smartphones' || (!isTabletDevice(m.brandId, m.name, m.id) && !isSmartwatchDevice(m.brandId, m.name, m.id));
       } else if (category === 'tablets') {
-        matchesCat = isTabletDevice(m.brandId, m.name, m.id);
+        matchesCat = (m as any).deviceType === 'tablets' || isTabletDevice(m.brandId, m.name, m.id);
       } else if (category === 'smartwatches') {
-        matchesCat = isSmartwatchDevice(m.brandId, m.name, m.id);
+        matchesCat = (m as any).deviceType === 'smartwatches' || isSmartwatchDevice(m.brandId, m.name, m.id);
       }
       if (!matchesCat) return false;
       if (selectedBrandFilter !== 'all' && m.brandId !== selectedBrandFilter) return false;
@@ -146,28 +156,45 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
     });
 
     const rawList = Array.from(seriesSet);
-    return applySeriesOrder(activeBrandForSeries, rawList);
+    return applySeriesOrder(activeBrandForSeries, rawList, category);
   }, [models, category, selectedBrandFilter, activeBrandForSeries]);
 
   // Initialize series list for Reorder Series Tab
   useEffect(() => {
-    const brandModels = models.filter((m) => m.brandId === reorderSeriesBrandId);
+    const brandModels = models.filter((m) => {
+      if (m.brandId !== reorderSeriesBrandId) return false;
+      if (category === 'smartphones') {
+        return (m as any).deviceType === 'smartphones' || (!isTabletDevice(m.brandId, m.name, m.id) && !isSmartwatchDevice(m.brandId, m.name, m.id));
+      } else if (category === 'tablets') {
+        return (m as any).deviceType === 'tablets' || isTabletDevice(m.brandId, m.name, m.id);
+      } else if (category === 'smartwatches') {
+        return (m as any).deviceType === 'smartwatches' || isSmartwatchDevice(m.brandId, m.name, m.id);
+      }
+      return true;
+    });
     const seriesSet = new Set<string>();
     brandModels.forEach((m) => {
       if (m.series) seriesSet.add(m.series);
     });
-    setOrderedSeries(applySeriesOrder(reorderSeriesBrandId, Array.from(seriesSet)));
-  }, [reorderSeriesBrandId, models]);
+    setOrderedSeries(applySeriesOrder(reorderSeriesBrandId, Array.from(seriesSet), category));
+  }, [reorderSeriesBrandId, models, category]);
 
   // Initialize models list for Reorder Models Tab
   useEffect(() => {
     const brandModels = models.filter((m) => {
       if (m.brandId !== reorderModelBrandId) return false;
       if (reorderModelSeries !== 'all' && m.series !== reorderModelSeries) return false;
+      if (category === 'smartphones') {
+        return (m as any).deviceType === 'smartphones' || (!isTabletDevice(m.brandId, m.name, m.id) && !isSmartwatchDevice(m.brandId, m.name, m.id));
+      } else if (category === 'tablets') {
+        return (m as any).deviceType === 'tablets' || isTabletDevice(m.brandId, m.name, m.id);
+      } else if (category === 'smartwatches') {
+        return (m as any).deviceType === 'smartwatches' || isSmartwatchDevice(m.brandId, m.name, m.id);
+      }
       return true;
     });
-    setOrderedModels(applyModelOrder(reorderModelBrandId, brandModels));
-  }, [reorderModelBrandId, reorderModelSeries, models, orderVersion]);
+    setOrderedModels(applyModelOrder(reorderModelBrandId, brandModels, category));
+  }, [reorderModelBrandId, reorderModelSeries, models, category, orderVersion]);
 
   // Filter and order models by category, search, series, and brand ordering
   const filteredModels = useMemo(() => {
@@ -206,7 +233,7 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
 
     // Apply custom model order per brand
     if (selectedBrandFilter !== 'all') {
-      list = applyModelOrder(selectedBrandFilter, list);
+      list = applyModelOrder(selectedBrandFilter, list, category);
     } else {
       const brandGroups = new Map<string, Model[]>();
       list.forEach((m) => {
@@ -218,12 +245,12 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
       brandOrder.forEach((b) => {
         const bModels = brandGroups.get(b.id);
         if (bModels && bModels.length > 0) {
-          reorderedList.push(...applyModelOrder(b.id, bModels));
+          reorderedList.push(...applyModelOrder(b.id, bModels, category));
         }
       });
       brandGroups.forEach((bModels, bId) => {
         if (!brandOrder.some((b) => b.id === bId)) {
-          reorderedList.push(...applyModelOrder(bId, bModels));
+          reorderedList.push(...applyModelOrder(bId, bModels, category));
         }
       });
       list = reorderedList;
@@ -244,7 +271,7 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
     });
 
     const activeBrand = selectedBrandFilter !== 'all' ? selectedBrandFilter : 'brand-apple';
-    const seriesOrder = applySeriesOrder(activeBrand, Array.from(map.keys()));
+    const seriesOrder = applySeriesOrder(activeBrand, Array.from(map.keys()), category);
 
     seriesOrder.forEach((sName) => {
       if (map.has(sName)) {
@@ -343,18 +370,18 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
   };
 
   const handleSaveSeriesOrder = () => {
-    saveSeriesOrder(reorderSeriesBrandId, orderedSeries);
+    saveSeriesOrder(reorderSeriesBrandId, orderedSeries, category);
     setSuccessMsg('Custom series display order saved successfully!');
   };
 
   const handleResetSeriesOrder = () => {
-    resetSeriesOrder(reorderSeriesBrandId);
+    resetSeriesOrder(reorderSeriesBrandId, category);
     const brandModels = models.filter((m) => m.brandId === reorderSeriesBrandId);
     const seriesSet = new Set<string>();
     brandModels.forEach((m) => {
       if (m.series) seriesSet.add(m.series);
     });
-    setOrderedSeries(applySeriesOrder(reorderSeriesBrandId, Array.from(seriesSet)));
+    setOrderedSeries(applySeriesOrder(reorderSeriesBrandId, Array.from(seriesSet), category));
     setSuccessMsg('Series order reset to default.');
   };
 
@@ -378,7 +405,7 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
       finalOrder = orderedModels.map((m) => m.id);
     } else {
       const allBrandModels = models.filter((m) => m.brandId === reorderModelBrandId);
-      const currentFullList = applyModelOrder(reorderModelBrandId, allBrandModels);
+      const currentFullList = applyModelOrder(reorderModelBrandId, allBrandModels, category);
       const reorderedIds = orderedModels.map((m) => m.id);
       const reorderedSet = new Set(reorderedIds);
 
@@ -393,14 +420,14 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
       });
     }
 
-    saveModelOrder(reorderModelBrandId, finalOrder);
+    saveModelOrder(reorderModelBrandId, finalOrder, category);
     setSuccessMsg('Custom model display order saved successfully!');
   };
 
   const handleResetModelOrder = () => {
-    resetModelOrder(reorderModelBrandId);
+    resetModelOrder(reorderModelBrandId, category);
     const brandModels = models.filter((m) => m.brandId === reorderModelBrandId);
-    setOrderedModels(applyModelOrder(reorderModelBrandId, brandModels));
+    setOrderedModels(applyModelOrder(reorderModelBrandId, brandModels, category));
     setSuccessMsg('Model order reset to default.');
   };
 
@@ -1237,6 +1264,17 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
                           <span className="text-[11px] font-bold text-ink-muted">Base Price (₹):</span>
                           <span className="text-sm font-extrabold text-emerald-700">{formatPrice(model.basePrice128GB)}</span>
                         </div>
+                        {isTabletDevice(model.brandId, model.name, model.id) && (
+                          <div className="flex items-center justify-between pt-1 border-t border-ice-border/40 text-[10px] font-mono">
+                            <span className="text-zinc-500 font-semibold flex items-center gap-1">
+                              <Radio className="w-3 h-3 text-blue-600" />
+                              <span>Dual Connectivity:</span>
+                            </span>
+                            <span className="font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                              Wi-Fi &amp; Cellular
+                            </span>
+                          </div>
+                        )}
                       </div>
 
                       {/* Card Action Toolbar */}
@@ -1307,7 +1345,8 @@ export function generateCashifyVariantUrl(
   brandName: string,
   modelName: string,
   ramGb: number,
-  storageGb: number
+  storageGb: number,
+  connectivity?: 'wifi' | 'cellular'
 ): string {
   const brandLower = (brandName || '').toLowerCase().trim();
   let modelLower = (modelName || '').toLowerCase().trim();
@@ -1325,9 +1364,18 @@ export function generateCashifyVariantUrl(
       .replace(/(^-|-$)/g, '');
   };
 
-  const isApple = brandLower === 'apple' || modelLower.includes('iphone');
+  const isApple = brandLower === 'apple' || modelLower.includes('iphone') || modelLower.includes('ipad');
+  const isTablet = modelLower.includes('ipad') || modelLower.includes('tab');
   const brandSlug = isApple ? 'apple' : slugify(brandName || 'phone');
-  const cleanModelSlug = slugify(modelLower);
+  let cleanModelSlug = slugify(modelLower);
+
+  if (isTablet && connectivity) {
+    if (connectivity === 'wifi' && !cleanModelSlug.includes('wi-fi') && !cleanModelSlug.includes('wifi')) {
+      cleanModelSlug += '-wi-fi';
+    } else if (connectivity === 'cellular' && !cleanModelSlug.includes('cellular')) {
+      cleanModelSlug += '-wi-fi-cellular';
+    }
+  }
 
   const storageSuffix = storageGb >= 1024 ? `${storageGb / 1024}-tb` : `${storageGb}-gb`;
 
@@ -1458,6 +1506,13 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
         : 'smartphones'
       : 'smartphones');
 
+  const isTablet =
+    resolvedCategory === 'tablets' ||
+    isTabletDevice(formData.brandId, formData.name, formData.id);
+  const isAppleTablet =
+    isTablet &&
+    (formData.brandId === 'brand-apple' || formData.name.toLowerCase().includes('ipad'));
+
   const matchesCatalogCategory = (
     brandId?: string,
     modelName?: string,
@@ -1534,7 +1589,7 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
   const [tempUrlInput, setTempUrlInput] = useState<string>('');
   const [testingUrlKey, setTestingUrlKey] = useState<string | null>(null);
   const [urlTestResults, setUrlTestResults] = useState<
-    Record<string, { ok: boolean; status: number; extractedPrice?: number | null }>
+    Record<string, { ok: boolean; status: number; extractedPrice?: number | null; error?: string; is404?: boolean; isUnserviceable?: boolean }>
   >({});
   const [extractedCashifyPrices, setExtractedCashifyPrices] = useState<Record<string, number>>({});
   const [isVerifyingAll, setIsVerifyingAll] = useState<boolean>(false);
@@ -1616,6 +1671,16 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
       validRams.forEach((ram) => {
         formData.supportedStorageGb.forEach((storage) => {
           const key = `${ram}_${storage}`;
+          if (isTablet) {
+            const cellKey = `${key}_cellular`;
+            const wifiKey = `${key}_wifi`;
+            if (!nextUrls[cellKey] || !manuallyEditedUrls[cellKey]) {
+              nextUrls[cellKey] = generateCashifyVariantUrl(brandName, formData.name, ram, storage, 'cellular');
+            }
+            if (!nextUrls[wifiKey] || !manuallyEditedUrls[wifiKey]) {
+              nextUrls[wifiKey] = generateCashifyVariantUrl(brandName, formData.name, ram, storage, 'wifi');
+            }
+          }
           if (!nextUrls[key] || !manuallyEditedUrls[key]) {
             nextUrls[key] = generateCashifyVariantUrl(brandName, formData.name, ram, storage);
           }
@@ -1629,19 +1694,30 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
       validRams.forEach((ram) => {
         formData.supportedStorageGb.forEach((storage) => {
           const key = `${ram}_${storage}`;
+          const defaultPredicted = predictCashifyVariantPrice(
+            formData.brandId,
+            formData.name,
+            formData.category,
+            formData.releaseYear,
+            ram,
+            storage,
+            formData.basePrice128GB
+          );
+          if (isTablet) {
+            const cellKey = `${key}_cellular`;
+            const wifiKey = `${key}_wifi`;
+            if (!nextPrices[cellKey]) {
+              nextPrices[cellKey] = (cashifyPrices && cashifyPrices[cellKey]) || defaultPredicted;
+            }
+            if (!nextPrices[wifiKey]) {
+              nextPrices[wifiKey] = (cashifyPrices && cashifyPrices[wifiKey]) || defaultPredicted;
+            }
+          }
           if (!nextPrices[key]) {
             if (cashifyPrices && cashifyPrices[key] && cashifyPrices[key] > 0) {
               nextPrices[key] = cashifyPrices[key];
             } else {
-              nextPrices[key] = predictCashifyVariantPrice(
-                formData.brandId,
-                formData.name,
-                formData.category,
-                formData.releaseYear,
-                ram,
-                storage,
-                formData.basePrice128GB
-              );
+              nextPrices[key] = defaultPredicted;
             }
           }
         });
@@ -1697,11 +1773,19 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
       const nextMap = { ...prev.variantPrices };
       if (!enable) {
         delete nextMap[key];
+        delete nextMap[`${key}_cellular`];
+        delete nextMap[`${key}_wifi`];
       } else {
         const baseAnchor = prev.basePrice128GB || 10000;
         const storageMult = storage >= 1024 ? 1.35 : storage === 512 ? 1.25 : storage === 256 ? 1.12 : 1.0;
         const ramAdd = ram >= 16 ? 1500 : ram >= 12 ? 1000 : ram >= 8 ? 500 : 0;
-        nextMap[key] = Math.round(baseAnchor * storageMult + ramAdd);
+        const calcPrice = Math.round(baseAnchor * storageMult + ramAdd);
+        nextMap[key] = calcPrice;
+        if (isTablet) {
+          nextMap[`${key}_cellular`] = calcPrice;
+          const wifiCPrice = variantCashifyPrices[`${key}_wifi`];
+          nextMap[`${key}_wifi`] = wifiCPrice ? Math.round(wifiCPrice * 1.03) : calcPrice;
+        }
       }
       return { ...prev, variantPrices: nextMap };
     });
@@ -1719,6 +1803,105 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
       const minPrice = activePrices.length > 0 ? Math.min(...activePrices) : prev.basePrice128GB;
       return { ...prev, variantPrices: nextMap, basePrice128GB: minPrice };
     });
+  };
+
+  const handleTabletConnectivityPriceChange = (
+    ram: number,
+    storage: number,
+    conn: 'cellular' | 'wifi',
+    valStr: string
+  ) => {
+    const connKey = `${ram}_${storage}_${conn}`;
+    const baseKey = `${ram}_${storage}`;
+    const price = parseInt(valStr, 10);
+    const cleanPrice = isNaN(price) ? 0 : price;
+
+    setFormData((prev) => {
+      const nextMap = { ...prev.variantPrices };
+      nextMap[connKey] = cleanPrice;
+      if (conn === 'cellular') {
+        nextMap[baseKey] = cleanPrice;
+      }
+      const activePrices = Object.values(nextMap).filter(
+        (v): v is number => typeof v === 'number' && v > 0
+      );
+      const minPrice = activePrices.length > 0 ? Math.min(...activePrices) : prev.basePrice128GB;
+      return { ...prev, variantPrices: nextMap, basePrice128GB: minPrice };
+    });
+  };
+
+  const handleApproveConnectivityVariant = (
+    ram: number,
+    storage: number,
+    conn: 'cellular' | 'wifi'
+  ) => {
+    const connKey = `${ram}_${storage}_${conn}`;
+    const baseKey = `${ram}_${storage}`;
+    const cPrice =
+      variantCashifyPrices[connKey] ||
+      variantCashifyPrices[baseKey] ||
+      predictCashifyVariantPrice(
+        formData.brandId,
+        formData.name,
+        formData.category,
+        formData.releaseYear,
+        ram,
+        storage,
+        formData.basePrice128GB
+      );
+    const targetPlus3Price = Math.round(cPrice * 1.03);
+
+    setVariantApproved((prev) => ({ ...prev, [connKey]: true }));
+
+    setFormData((prev) => {
+      const nextMap = { ...prev.variantPrices, [connKey]: targetPlus3Price };
+      if (conn === 'cellular') {
+        nextMap[baseKey] = targetPlus3Price;
+      }
+      const activePrices = Object.values(nextMap).filter(
+        (v): v is number => typeof v === 'number' && v > 0
+      );
+      const minPrice = activePrices.length > 0 ? Math.min(...activePrices) : prev.basePrice128GB;
+      return { ...prev, variantPrices: nextMap, basePrice128GB: minPrice };
+    });
+  };
+
+  const handleRevokeConnectivityApproval = (
+    ram: number,
+    storage: number,
+    conn: 'cellular' | 'wifi'
+  ) => {
+    const connKey = `${ram}_${storage}_${conn}`;
+    setVariantApproved((prev) => ({ ...prev, [connKey]: false }));
+  };
+
+  const handleConnectivityCashifyPriceChange = (
+    ram: number,
+    storage: number,
+    conn: 'cellular' | 'wifi',
+    valStr: string
+  ) => {
+    const connKey = `${ram}_${storage}_${conn}`;
+    const baseKey = `${ram}_${storage}`;
+    const price = parseInt(valStr, 10);
+    const cleanPrice = isNaN(price) ? 0 : price;
+    setVariantCashifyPrices((prev) => ({ ...prev, [connKey]: cleanPrice }));
+
+    // If already approved, auto-recalculate Rephonix price with +3%
+    if (variantApproved[connKey] && cleanPrice > 0) {
+      const targetPlus3Price = Math.round(cleanPrice * 1.03);
+      setFormData((prev) => {
+        const nextMap = { ...prev.variantPrices, [connKey]: targetPlus3Price };
+        if (conn === 'cellular') {
+          nextMap[baseKey] = targetPlus3Price;
+        }
+        const activePrices = Object.values(nextMap).filter(
+          (v): v is number => typeof v === 'number' && v > 0
+        );
+        const minPrice = activePrices.length > 0 ? Math.min(...activePrices) : prev.basePrice128GB;
+        return { ...prev, variantPrices: nextMap, basePrice128GB: minPrice };
+      });
+    }
   };
 
   const handleApproveVariant = (ram: number, storage: number) => {
@@ -1741,6 +1924,11 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
     // Automatically apply +3% to Rephonix price for this specific variant
     setFormData((prev) => {
       const nextMap = { ...prev.variantPrices, [key]: targetPlus3Price };
+      if (isTablet) {
+        nextMap[`${key}_cellular`] = targetPlus3Price;
+        const wifiCPrice = variantCashifyPrices[`${key}_wifi`] || cPrice;
+        nextMap[`${key}_wifi`] = Math.round(wifiCPrice * 1.03);
+      }
       const activePrices = Object.values(nextMap).filter(
         (v): v is number => typeof v === 'number' && v > 0
       );
@@ -1766,19 +1954,38 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
     validRams.forEach((ram) => {
       formData.supportedStorageGb.forEach((storage) => {
         const key = `${ram}_${storage}`;
-        nextApproved[key] = true;
-        const cPrice =
-          variantCashifyPrices[key] ||
-          predictCashifyVariantPrice(
-            formData.brandId,
-            formData.name,
-            formData.category,
-            formData.releaseYear,
-            ram,
-            storage,
-            formData.basePrice128GB
-          );
-        nextPrices[key] = Math.round(cPrice * 1.03);
+        const defaultPrice = predictCashifyVariantPrice(
+          formData.brandId,
+          formData.name,
+          formData.category,
+          formData.releaseYear,
+          ram,
+          storage,
+          formData.basePrice128GB
+        );
+
+        if (isTablet) {
+          const cellKey = `${key}_cellular`;
+          const wifiKey = `${key}_wifi`;
+          nextApproved[cellKey] = true;
+          nextApproved[wifiKey] = true;
+          nextApproved[key] = true;
+
+          const cellPrice = variantCashifyPrices[cellKey] || defaultPrice;
+          const wifiPrice = variantCashifyPrices[wifiKey] || defaultPrice;
+
+          const cellApprovedPrice = Math.round(cellPrice * 1.03);
+          const wifiApprovedPrice = Math.round(wifiPrice * 1.03);
+
+          nextPrices[cellKey] = cellApprovedPrice;
+          nextPrices[wifiKey] = wifiApprovedPrice;
+          nextPrices[key] = cellApprovedPrice;
+        } else {
+          nextApproved[key] = true;
+          const cPrice = variantCashifyPrices[key] || defaultPrice;
+          const approvedPrice = Math.round(cPrice * 1.03);
+          nextPrices[key] = approvedPrice;
+        }
       });
     });
 
@@ -1827,7 +2034,14 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
       const res = await testCashifyUrlApi(url);
       setUrlTestResults((prev) => ({
         ...prev,
-        [key]: { ok: res.ok, status: res.status, extractedPrice: res.extractedPrice },
+        [key]: {
+          ok: res.ok,
+          status: res.status,
+          extractedPrice: res.extractedPrice,
+          error: res.error,
+          is404: res.is404,
+          isUnserviceable: res.isUnserviceable,
+        },
       }));
 
       // If price was successfully extracted from Cashify, auto-update Cashify Listed price and Target (+3%)
@@ -1841,6 +2055,10 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
           const targetPlus3Price = Math.round(livePrice * 1.03);
           setFormData((prev) => {
             const nextMap = { ...prev.variantPrices, [key]: targetPlus3Price };
+            if (key.endsWith('_cellular')) {
+              const baseKey = key.replace('_cellular', '');
+              nextMap[baseKey] = targetPlus3Price;
+            }
             const activePrices = Object.values(nextMap).filter(
               (v): v is number => typeof v === 'number' && v > 0
             );
@@ -1867,8 +2085,15 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
     validRams.forEach((ram) => {
       formData.supportedStorageGb.forEach((storage) => {
         const key = `${ram}_${storage}`;
-        const url = variantCashifyUrls[key];
-        if (url) tasks.push({ key, url });
+        if (isTablet) {
+          const cellKey = `${key}_cellular`;
+          const wifiKey = `${key}_wifi`;
+          if (variantCashifyUrls[cellKey]) tasks.push({ key: cellKey, url: variantCashifyUrls[cellKey] });
+          if (variantCashifyUrls[wifiKey]) tasks.push({ key: wifiKey, url: variantCashifyUrls[wifiKey] });
+        } else {
+          const url = variantCashifyUrls[key];
+          if (url) tasks.push({ key, url });
+        }
       });
     });
 
@@ -1878,7 +2103,14 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
           const res = await testCashifyUrlApi(url);
           setUrlTestResults((prev) => ({
             ...prev,
-            [key]: { ok: res.ok, status: res.status, extractedPrice: res.extractedPrice },
+            [key]: {
+              ok: res.ok,
+              status: res.status,
+              extractedPrice: res.extractedPrice,
+              error: res.error,
+              is404: res.is404,
+              isUnserviceable: res.isUnserviceable,
+            },
           }));
           if (res.ok && res.extractedPrice && res.extractedPrice > 0) {
             const livePrice = res.extractedPrice;
@@ -1889,6 +2121,10 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
               const targetPlus3Price = Math.round(livePrice * 1.03);
               setFormData((prev) => {
                 const nextMap = { ...prev.variantPrices, [key]: targetPlus3Price };
+                if (key.endsWith('_cellular')) {
+                  const baseKey = key.replace('_cellular', '');
+                  nextMap[baseKey] = targetPlus3Price;
+                }
                 const activePrices = Object.values(nextMap).filter(
                   (v): v is number => typeof v === 'number' && v > 0
                 );
@@ -1951,9 +2187,9 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
           : [128];
 
       Object.entries(formData.variantPrices || {}).forEach(([k, v]) => {
-        const [rStr, sStr] = k.split('_');
-        const r = Number(rStr);
-        const s = Number(sStr);
+        const parts = k.split('_');
+        const r = Number(parts[0]);
+        const s = Number(parts[1]);
         if (typeof v === 'number' && v > 0 && validRams.includes(r) && validStorages.includes(s)) {
           cleanedVariantPrices[k] = v;
         }
@@ -1964,6 +2200,7 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
         brandId: formData.brandId,
         name: formData.name.trim(),
         category: formData.category,
+        deviceType: catalogCategory || 'smartphones',
         releaseYear: Number(formData.releaseYear),
         basePrice128GB: Number(formData.basePrice128GB),
         series: formData.series.trim(),
@@ -1994,25 +2231,52 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
       validRams.forEach((ram) => {
         validStorages.forEach((storage) => {
           const key = `${ram}_${storage}`;
-          const url = variantCashifyUrls[key];
-          if (url && (variantApproved[key] || manuallyEditedUrls[key] || urlTestResults[key]?.ok)) {
-            const extPrice =
-              extractedCashifyPrices[key] ||
-              urlTestResults[key]?.extractedPrice ||
-              variantCashifyPrices[key] ||
-              null;
-            const repPrice =
-              cleanedVariantPrices[key] ||
-              Number(formData.basePrice128GB) ||
-              null;
+          if (isTablet) {
+            (['cellular', 'wifi'] as const).forEach((conn) => {
+              const connKey = `${key}_${conn}`;
+              const url = variantCashifyUrls[connKey];
+              if (url && (variantApproved[connKey] || manuallyEditedUrls[connKey] || urlTestResults[connKey]?.ok)) {
+                const extPrice =
+                  extractedCashifyPrices[connKey] ||
+                  urlTestResults[connKey]?.extractedPrice ||
+                  variantCashifyPrices[connKey] ||
+                  null;
+                const repPrice =
+                  cleanedVariantPrices[connKey] ||
+                  cleanedVariantPrices[key] ||
+                  Number(formData.basePrice128GB) ||
+                  null;
 
-            approvedVariantsPayload.push({
-              ramGb: ram,
-              storageGb: storage,
-              url,
-              extractedPrice: extPrice,
-              rephonixPrice: repPrice,
+                approvedVariantsPayload.push({
+                  ramGb: ram,
+                  storageGb: storage,
+                  url,
+                  extractedPrice: extPrice,
+                  rephonixPrice: repPrice,
+                });
+              }
             });
+          } else {
+            const url = variantCashifyUrls[key];
+            if (url && (variantApproved[key] || manuallyEditedUrls[key] || urlTestResults[key]?.ok)) {
+              const extPrice =
+                extractedCashifyPrices[key] ||
+                urlTestResults[key]?.extractedPrice ||
+                variantCashifyPrices[key] ||
+                null;
+              const repPrice =
+                cleanedVariantPrices[key] ||
+                Number(formData.basePrice128GB) ||
+                null;
+
+              approvedVariantsPayload.push({
+                ramGb: ram,
+                storageGb: storage,
+                url,
+                extractedPrice: extPrice,
+                rephonixPrice: repPrice,
+              });
+            }
           }
         });
       });
@@ -2386,33 +2650,45 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
                 <span>Supported RAM Variants (GB)</span>
               </label>
               <span className="text-[10px] font-mono text-zinc-500">
-                {formData.supportedRamGb.length === 1 && formData.supportedRamGb[0] === 0
+                {isAppleTablet
+                  ? 'Unified Memory (Apple iPad)'
+                  : formData.supportedRamGb.length === 1 && formData.supportedRamGb[0] === 0
                   ? 'No RAM Variants (Apple-style / Fixed)'
                   : `Selected: ${formData.supportedRamGb.join(', ')} GB`}
               </span>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {Array.from(new Set([...STANDARD_RAM_OPTIONS, ...formData.supportedRamGb]))
-                .sort((a, b) => a - b)
-                .map((gb) => {
-                  const isSelected = formData.supportedRamGb.includes(gb);
-                  return (
-                    <button
-                      type="button"
-                      key={gb}
-                      onClick={() => handleToggleRamGb(gb)}
-                      className={`px-3 py-1.5 rounded-lg border text-xs font-mono font-bold transition-all cursor-pointer flex items-center gap-1 ${
-                        isSelected
-                          ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
-                          : 'bg-white text-ink-navy border-ice-border hover:border-purple-300'
-                      }`}
-                    >
-                      <span>{gb === 0 ? 'No RAM (Apple)' : `${gb} GB`}</span>
-                      {isSelected && <Check className="w-3 h-3" />}
-                    </button>
-                  );
-                })}
-            </div>
+            {isAppleTablet ? (
+              <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-lg text-xs font-mono text-blue-900 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Cpu className="w-4 h-4 text-blue-600 shrink-0" />
+                  <span>Apple iPad uses unified memory architecture. RAM is unified and omitted from trade-in specifications.</span>
+                </div>
+                <span className="px-2 py-0.5 rounded bg-blue-200/70 text-blue-800 font-bold text-[10px]">Unified RAM</span>
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {Array.from(new Set([...STANDARD_RAM_OPTIONS, ...formData.supportedRamGb]))
+                  .sort((a, b) => a - b)
+                  .map((gb) => {
+                    const isSelected = formData.supportedRamGb.includes(gb);
+                    return (
+                      <button
+                        type="button"
+                        key={gb}
+                        onClick={() => handleToggleRamGb(gb)}
+                        className={`px-3 py-1.5 rounded-lg border text-xs font-mono font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                          isSelected
+                            ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
+                            : 'bg-white text-ink-navy border-ice-border hover:border-purple-300'
+                        }`}
+                      >
+                        <span>{gb === 0 ? 'No RAM (Apple)' : `${gb} GB`}</span>
+                        {isSelected && <Check className="w-3 h-3" />}
+                      </button>
+                    );
+                  })}
+              </div>
+            )}
           </div>
 
           {/* RAM x Storage Price Matrix with Cashify Link Generation & Approval Engine */}
@@ -2429,9 +2705,15 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
               formData.supportedStorageGb.forEach((storage) => {
                 const key = `${ram}_${storage}`;
                 if (formData.variantPrices[key] !== undefined) {
-                  totalActive++;
-                  if (variantApproved[key]) {
-                    totalApproved++;
+                  if (isTablet) {
+                    totalActive += 2;
+                    if (variantApproved[`${key}_cellular`]) totalApproved++;
+                    if (variantApproved[`${key}_wifi`]) totalApproved++;
+                  } else {
+                    totalActive++;
+                    if (variantApproved[key]) {
+                      totalApproved++;
+                    }
                   }
                 }
               });
@@ -2515,12 +2797,12 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
                           </th>
                         )}
                         {formData.supportedStorageGb.map((s) => (
-                          <th key={s} className="p-3 text-center border-r border-ice-border min-w-[280px]">
+                          <th key={s} className={`p-3 text-center border-r border-ice-border ${isTablet ? 'min-w-[340px]' : 'min-w-[280px]'}`}>
                             <div className="font-bold text-ink-navy text-xs">
                               {s >= 1024 ? `${s / 1024} TB` : `${s} GB`} Storage
                             </div>
                             <div className="text-[9px] text-zinc-500 font-normal font-mono mt-0.5">
-                              Cashify Variant Benchmark & +3%
+                              {isTablet ? 'Dual Wi-Fi & Cellular Benchmark & +3%' : 'Cashify Variant Benchmark & +3%'}
                             </div>
                           </th>
                         ))}
@@ -2552,13 +2834,29 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
                             const cUrl = variantCashifyUrls[key] || '';
                             const cPrice = variantCashifyPrices[key] || 0;
                             const targetPlus3 = Math.round((cPrice || 10000) * 1.03);
-                            const isApproved = Boolean(variantApproved[key]);
                             const testResult = urlTestResults[key];
+
+                            const cellularPrice =
+                              formData.variantPrices[`${ram}_${storage}_cellular`] !== undefined
+                                ? formData.variantPrices[`${ram}_${storage}_cellular`]
+                                : priceVal || 0;
+                            const wifiPrice =
+                              formData.variantPrices[`${ram}_${storage}_wifi`] !== undefined
+                                ? formData.variantPrices[`${ram}_${storage}_wifi`]
+                                : cellularPrice || 0;
+
+                            const isCellularApproved = Boolean(variantApproved[`${key}_cellular`]);
+                            const isWifiApproved = Boolean(variantApproved[`${key}_wifi`]);
+                            const isApproved = isTablet
+                              ? isCellularApproved && isWifiApproved
+                              : Boolean(variantApproved[key]);
 
                             return (
                               <td
                                 key={storage}
-                                className={`p-3 align-top border-r border-ice-border transition-all min-w-[280px] ${
+                                className={`p-3 align-top border-r border-ice-border transition-all ${
+                                  isTablet ? 'min-w-[340px]' : 'min-w-[280px]'
+                                } ${
                                   isHighlighted
                                     ? 'bg-amber-50/70 ring-2 ring-inset ring-amber-400'
                                     : !isEnabled
@@ -2586,7 +2884,26 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
                                         </span>
                                       </div>
 
-                                      {isApproved ? (
+                                      {isTablet ? (
+                                        <div className="flex items-center gap-1">
+                                          <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold border flex items-center gap-0.5 ${
+                                            isCellularApproved
+                                              ? 'bg-blue-100 text-blue-800 border-blue-300'
+                                              : 'bg-zinc-100 text-zinc-600 border-zinc-200'
+                                          }`}>
+                                            <Radio className="w-2.5 h-2.5 text-blue-600" />
+                                            <span>Cellular {isCellularApproved ? '✓' : '—'}</span>
+                                          </span>
+                                          <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold border flex items-center gap-0.5 ${
+                                            isWifiApproved
+                                              ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                                              : 'bg-zinc-100 text-zinc-600 border-zinc-200'
+                                          }`}>
+                                            <Wifi className="w-2.5 h-2.5 text-emerald-600" />
+                                            <span>Wi-Fi {isWifiApproved ? '✓' : '—'}</span>
+                                          </span>
+                                        </div>
+                                      ) : isApproved ? (
                                         <span className="px-1.5 py-0.5 rounded text-[8.5px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1 shadow-xs">
                                           <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" />
                                           <span>Approved (+3%)</span>
@@ -2599,229 +2916,523 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
                                       )}
                                     </div>
 
-                                    {/* Cashify Exact Variant Link Card */}
-                                    <div className="bg-zinc-50 border border-zinc-200 rounded p-1.5 text-left text-[10px]">
-                                      <div className="flex items-center justify-between text-[9px] text-zinc-500 font-semibold mb-1">
-                                        <span className="flex items-center gap-1">
-                                          <Globe className="w-3 h-3 text-orange-600" />
-                                          <span>Cashify Link:</span>
-                                        </span>
-                                        <div className="flex items-center gap-1">
+                                    {isTablet ? (
+                                      <div className="space-y-2.5">
+                                        {(['cellular', 'wifi'] as const).map((conn) => {
+                                          const connKey = `${key}_${conn}`;
+                                          const isCell = conn === 'cellular';
+                                          const connUrl = variantCashifyUrls[connKey] || '';
+                                          const connCPrice = variantCashifyPrices[connKey] || 0;
+                                          const connTargetPlus3 = Math.round((connCPrice || 10000) * 1.03);
+                                          const connApproved = Boolean(variantApproved[connKey]);
+                                          const connTestResult = urlTestResults[connKey];
+                                          const connPayout = isCell ? cellularPrice : wifiPrice;
+
+                                          return (
+                                            <div
+                                              key={conn}
+                                              className={`p-2 rounded-lg border text-left text-[10px] space-y-1.5 transition-all ${
+                                                isCell
+                                                  ? 'bg-blue-50/60 border-blue-200'
+                                                  : 'bg-emerald-50/60 border-emerald-200'
+                                              }`}
+                                            >
+                                              {/* Connectivity Header */}
+                                              <div className="flex items-center justify-between pb-1 border-b border-black/5">
+                                                <div className="flex items-center gap-1 font-bold font-mono">
+                                                  {isCell ? (
+                                                    <>
+                                                      <Radio className="w-3 h-3 text-blue-600" />
+                                                      <span className="text-blue-950 text-[10px]">Wi-Fi + Cellular</span>
+                                                      <span className="text-[7.5px] font-semibold text-blue-700 bg-blue-100 px-1 py-0.2 rounded">SIM</span>
+                                                    </>
+                                                  ) : (
+                                                    <>
+                                                      <Wifi className="w-3 h-3 text-emerald-600" />
+                                                      <span className="text-emerald-950 text-[10px]">Wi-Fi Only</span>
+                                                      <span className="text-[7.5px] font-semibold text-emerald-700 bg-emerald-100 px-1 py-0.2 rounded">No SIM</span>
+                                                    </>
+                                                  )}
+                                                </div>
+                                                {connApproved ? (
+                                                  <div className="flex items-center gap-1">
+                                                    <span className="px-1.5 py-0.2 rounded text-[7.5px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-0.5">
+                                                      <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" />
+                                                      <span>Approved (+3%)</span>
+                                                    </span>
+                                                    <button
+                                                      type="button"
+                                                      onClick={() => handleRevokeConnectivityApproval(ram, storage, conn)}
+                                                      className="text-[7.5px] text-zinc-400 hover:text-rose-600 underline cursor-pointer"
+                                                      title="Revoke approval"
+                                                    >
+                                                      Revoke
+                                                    </button>
+                                                  </div>
+                                                ) : (
+                                                  <span className="px-1.5 py-0.2 rounded text-[7.5px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                                                    Awaiting Approval
+                                                  </span>
+                                                )}
+                                              </div>
+
+                                              {/* Cashify Link */}
+                                              <div className="bg-white/90 border border-black/10 rounded p-1.5 space-y-1">
+                                                <div className="flex items-center justify-between text-[8.5px] text-zinc-500 font-semibold">
+                                                  <span className="flex items-center gap-1">
+                                                    <Globe className={`w-2.5 h-2.5 ${isCell ? 'text-blue-600' : 'text-emerald-600'}`} />
+                                                    <span>Cashify Link:</span>
+                                                  </span>
+                                                  {editingUrlKey === connKey ? (
+                                                    <button
+                                                      type="button"
+                                                      onClick={() => handleSaveEditedUrl(connKey)}
+                                                      className="text-[8px] text-emerald-700 hover:text-emerald-900 font-bold underline cursor-pointer"
+                                                    >
+                                                      Done
+                                                    </button>
+                                                  ) : (
+                                                    <button
+                                                      type="button"
+                                                      onClick={() => {
+                                                        setEditingUrlKey(connKey);
+                                                        setTempUrlInput(connUrl);
+                                                      }}
+                                                      className="text-[8px] text-zinc-500 hover:text-zinc-800 flex items-center gap-0.5 cursor-pointer"
+                                                      title="Edit custom URL for this connectivity variant"
+                                                    >
+                                                      <Edit2 className="w-2 h-2" />
+                                                      <span>Edit</span>
+                                                    </button>
+                                                  )}
+                                                </div>
+
+                                                {editingUrlKey === connKey ? (
+                                                  <div className="space-y-1">
+                                                    <input
+                                                      type="url"
+                                                      value={tempUrlInput}
+                                                      onChange={(e) => setTempUrlInput(e.target.value)}
+                                                      className="w-full px-1.5 py-0.5 text-[8.5px] bg-white border border-cobalt rounded font-mono text-zinc-800 focus:outline-none"
+                                                      placeholder="https://www.cashify.in/sell-old-mobile-phone/..."
+                                                    />
+                                                    <div className="flex justify-end gap-1">
+                                                      <button
+                                                        type="button"
+                                                        onClick={() => setEditingUrlKey(null)}
+                                                        className="px-1.5 py-0.5 text-[8px] bg-zinc-200 rounded text-zinc-700 cursor-pointer"
+                                                      >
+                                                        Cancel
+                                                      </button>
+                                                      <button
+                                                        type="button"
+                                                        onClick={() => handleSaveEditedUrl(connKey)}
+                                                        className="px-1.5 py-0.5 text-[8px] bg-emerald-600 text-white rounded font-bold cursor-pointer"
+                                                      >
+                                                        Save
+                                                      </button>
+                                                    </div>
+                                                  </div>
+                                                ) : (
+                                                  <div>
+                                                    <a
+                                                      href={connUrl}
+                                                      target="_blank"
+                                                      rel="noopener noreferrer"
+                                                      className="truncate font-mono text-[8.5px] text-blue-600 hover:underline hover:text-blue-800 flex items-center gap-1"
+                                                      title={connUrl || 'Auto-generating link...'}
+                                                    >
+                                                      <ExternalLink className="w-2.5 h-2.5 flex-shrink-0 text-blue-500" />
+                                                      <span className="truncate">
+                                                        {connUrl
+                                                          ? connUrl.replace('https://www.cashify.in/sell-old-mobile-phone/', '')
+                                                          : 'Auto-generating...'}
+                                                      </span>
+                                                    </a>
+
+                                                    <div className="flex items-center justify-between mt-1 pt-1 border-t border-zinc-100">
+                                                      <button
+                                                        type="button"
+                                                        onClick={() => handleTestUrl(connKey, connUrl)}
+                                                        disabled={testingUrlKey === connKey || !connUrl}
+                                                        className="text-[8px] font-semibold text-zinc-600 hover:text-zinc-900 bg-white hover:bg-zinc-100 px-1 py-0.5 rounded border border-zinc-200 flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                                                      >
+                                                        {testingUrlKey === connKey ? (
+                                                          <>
+                                                            <RefreshCw className="w-2 h-2 animate-spin text-cobalt" />
+                                                            <span>Extracting...</span>
+                                                          </>
+                                                        ) : (
+                                                          <span>Verify Link</span>
+                                                        )}
+                                                      </button>
+
+                                                      {connTestResult && (
+                                                        <div className="flex flex-col items-end gap-0.5">
+                                                          <div className="flex items-center gap-1">
+                                                            <span
+                                                              className={`text-[8px] font-bold px-1 py-0.2 rounded ${
+                                                                connTestResult.ok
+                                                                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                                                                  : connTestResult.is404
+                                                                  ? 'bg-rose-100 text-rose-800 border border-rose-200'
+                                                                  : connTestResult.isUnserviceable
+                                                                  ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                                                                  : 'bg-rose-100 text-rose-800 border border-rose-200'
+                                                              }`}
+                                                              title={connTestResult.error || undefined}
+                                                            >
+                                                              {connTestResult.ok
+                                                                ? '✓ 200 OK'
+                                                                : connTestResult.is404
+                                                                ? '✗ 404 Not Found'
+                                                                : connTestResult.isUnserviceable
+                                                                ? '⚠ Not Buying (Gurgaon/Delhi)'
+                                                                : `⚠ ${connTestResult.status || 'Failed'}`}
+                                                            </span>
+                                                            {connTestResult.ok && connTestResult.extractedPrice ? (
+                                                              <span className="text-[7.5px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200 px-1 py-0.2 rounded">
+                                                                ⚡ ₹{connTestResult.extractedPrice.toLocaleString('en-IN')}
+                                                              </span>
+                                                            ) : null}
+                                                          </div>
+                                                          {!connTestResult.ok && connTestResult.error && !connTestResult.is404 && !connTestResult.isUnserviceable && (
+                                                            <span className="text-[7px] text-rose-600 truncate max-w-[150px]" title={connTestResult.error}>
+                                                              {connTestResult.error}
+                                                            </span>
+                                                          )}
+                                                        </div>
+                                                      )}
+                                                    </div>
+                                                  </div>
+                                                )}
+                                              </div>
+
+                                              {/* Cashify Listed Price & Target (+3%) */}
+                                              <div className="bg-white/80 border border-black/10 rounded p-1.5 space-y-1">
+                                                <div className="flex items-center justify-between text-zinc-600">
+                                                  <span className="font-semibold text-[8.5px]">Cashify Listed:</span>
+                                                  <div className="flex items-center gap-1">
+                                                    <span className="text-[8.5px] text-zinc-400 font-bold">₹</span>
+                                                    <input
+                                                      type="number"
+                                                      value={connCPrice === 0 ? '' : connCPrice}
+                                                      onChange={(e) => handleConnectivityCashifyPriceChange(ram, storage, conn, e.target.value)}
+                                                      className="w-18 px-1 py-0.5 bg-white border border-zinc-300 rounded font-mono font-bold text-right text-[9.5px] focus:outline-none focus:border-cobalt"
+                                                      placeholder="0"
+                                                    />
+                                                  </div>
+                                                </div>
+
+                                                <div className={`flex items-center justify-between px-1.5 py-0.5 rounded border font-mono text-[8.5px] ${
+                                                  isCell ? 'bg-blue-100/60 border-blue-200 text-blue-900' : 'bg-emerald-100/60 border-emerald-200 text-emerald-900'
+                                                }`}>
+                                                  <span className="font-bold flex items-center gap-0.5">
+                                                    <Sparkles className="w-2 h-2" />
+                                                    <span>Target (+3%):</span>
+                                                  </span>
+                                                  <span className="font-extrabold text-[9.5px]">
+                                                    ₹{connTargetPlus3.toLocaleString('en-IN')}
+                                                  </span>
+                                                </div>
+                                              </div>
+
+                                              {/* Rephonix Payout Price */}
+                                              <div className="space-y-0.5">
+                                                <label className="text-[8.5px] font-bold text-ink-navy font-mono block">
+                                                  Rephonix Payout Price:
+                                                </label>
+                                                <div className="relative">
+                                                  <span className="absolute left-2 top-1 text-zinc-400 text-[9px] font-bold">₹</span>
+                                                  <input
+                                                    type="number"
+                                                    value={connPayout === 0 ? '' : connPayout}
+                                                    placeholder="0"
+                                                    onChange={(e) =>
+                                                      handleTabletConnectivityPriceChange(ram, storage, conn, e.target.value)
+                                                    }
+                                                    className={`w-full pl-5 pr-1.5 py-0.5 bg-white border rounded font-mono font-bold text-ink-navy text-right text-[11px] focus:outline-none shadow-xs ${
+                                                      connApproved
+                                                        ? 'border-emerald-500 bg-emerald-50/20 ring-1 ring-emerald-300'
+                                                        : isCell
+                                                        ? 'border-blue-300 focus:border-cobalt'
+                                                        : 'border-emerald-300 focus:border-emerald-600'
+                                                    }`}
+                                                  />
+                                                </div>
+                                                {connPayout > 0 && (
+                                                  <span className="text-[8.5px] font-bold text-emerald-700 block text-right font-mono">
+                                                    {modalFormatPrice(connPayout)}
+                                                  </span>
+                                                )}
+                                              </div>
+
+                                              {/* Approval Action */}
+                                              {!connApproved ? (
+                                                <button
+                                                  type="button"
+                                                  onClick={() => handleApproveConnectivityVariant(ram, storage, conn)}
+                                                  className="w-full py-1 px-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-bold text-[8.5px] font-mono flex items-center justify-center gap-1 shadow-xs transition-all cursor-pointer hover:shadow"
+                                                  title={`Approve link and apply +3% (₹${connTargetPlus3.toLocaleString('en-IN')})`}
+                                                >
+                                                  <Sparkles className="w-2.5 h-2.5 text-amber-200" />
+                                                  <span>Approve Link & Apply +3%</span>
+                                                </button>
+                                              ) : (
+                                                <div className="text-[8px] font-mono font-semibold text-emerald-700 flex items-center justify-center gap-1 bg-emerald-100/70 py-0.5 rounded border border-emerald-200">
+                                                  <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" />
+                                                  <span>+3% Payout Approved & Active</span>
+                                                </div>
+                                              )}
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    ) : (
+                                      <>
+                                        {/* Cashify Exact Variant Link Card */}
+                                        <div className="bg-zinc-50 border border-zinc-200 rounded p-1.5 text-left text-[10px]">
+                                          <div className="flex items-center justify-between text-[9px] text-zinc-500 font-semibold mb-1">
+                                            <span className="flex items-center gap-1">
+                                              <Globe className="w-3 h-3 text-orange-600" />
+                                              <span>Cashify Link:</span>
+                                            </span>
+                                            <div className="flex items-center gap-1">
+                                              {editingUrlKey === key ? (
+                                                <button
+                                                  type="button"
+                                                  onClick={() => handleSaveEditedUrl(key)}
+                                                  className="text-[8.5px] text-emerald-700 hover:text-emerald-900 font-bold underline cursor-pointer"
+                                                >
+                                                  Done
+                                                </button>
+                                              ) : (
+                                                <button
+                                                  type="button"
+                                                  onClick={() => {
+                                                    setEditingUrlKey(key);
+                                                    setTempUrlInput(cUrl);
+                                                  }}
+                                                  className="text-[8.5px] text-zinc-500 hover:text-zinc-800 flex items-center gap-0.5 cursor-pointer"
+                                                  title="Edit custom URL for this variant"
+                                                >
+                                                  <Edit2 className="w-2.5 h-2.5" />
+                                                  <span>Edit</span>
+                                                </button>
+                                              )}
+                                            </div>
+                                          </div>
+
                                           {editingUrlKey === key ? (
-                                            <button
-                                              type="button"
-                                              onClick={() => handleSaveEditedUrl(key)}
-                                              className="text-[8.5px] text-emerald-700 hover:text-emerald-900 font-bold underline cursor-pointer"
-                                            >
-                                              Done
-                                            </button>
+                                            <div className="space-y-1">
+                                              <input
+                                                type="url"
+                                                value={tempUrlInput}
+                                                onChange={(e) => setTempUrlInput(e.target.value)}
+                                                className="w-full px-1.5 py-1 text-[9.5px] bg-white border border-cobalt rounded font-mono text-zinc-800 focus:outline-none"
+                                                placeholder="https://www.cashify.in/sell-old-mobile-phone/..."
+                                              />
+                                              <div className="flex justify-end gap-1">
+                                                <button
+                                                  type="button"
+                                                  onClick={() => setEditingUrlKey(null)}
+                                                  className="px-1.5 py-0.5 text-[8.5px] bg-zinc-200 rounded text-zinc-700 cursor-pointer"
+                                                >
+                                                  Cancel
+                                                </button>
+                                                <button
+                                                  type="button"
+                                                  onClick={() => handleSaveEditedUrl(key)}
+                                                  className="px-1.5 py-0.5 text-[8.5px] bg-emerald-600 text-white rounded font-bold cursor-pointer"
+                                                >
+                                                  Save
+                                                </button>
+                                              </div>
+                                            </div>
                                           ) : (
-                                            <button
-                                              type="button"
-                                              onClick={() => {
-                                                setEditingUrlKey(key);
-                                                setTempUrlInput(cUrl);
-                                              }}
-                                              className="text-[8.5px] text-zinc-500 hover:text-zinc-800 flex items-center gap-0.5 cursor-pointer"
-                                              title="Edit custom URL for this variant"
-                                            >
-                                              <Edit2 className="w-2.5 h-2.5" />
-                                              <span>Edit</span>
-                                            </button>
+                                            <div>
+                                              <div className="flex items-center gap-1">
+                                                <a
+                                                  href={cUrl}
+                                                  target="_blank"
+                                                  rel="noopener noreferrer"
+                                                  className="flex-1 truncate font-mono text-[9px] text-blue-600 hover:underline hover:text-blue-800 flex items-center gap-1"
+                                                  title={cUrl || 'Auto-generating link...'}
+                                                >
+                                                  <ExternalLink className="w-2.5 h-2.5 flex-shrink-0 text-blue-500" />
+                                                  <span className="truncate">
+                                                    {cUrl
+                                                      ? cUrl.replace('https://www.cashify.in/sell-old-mobile-phone/', '')
+                                                      : 'Auto-generating...'}
+                                                  </span>
+                                                </a>
+                                              </div>
+
+                                              <div className="flex items-center justify-between mt-1 pt-1 border-t border-zinc-200/60">
+                                                <button
+                                                  type="button"
+                                                  onClick={() => handleTestUrl(key, cUrl)}
+                                                  disabled={testingUrlKey === key || !cUrl}
+                                                  className="text-[8.5px] font-semibold text-zinc-600 hover:text-zinc-900 bg-white hover:bg-zinc-100 px-1.5 py-0.5 rounded border border-zinc-200 flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                                                  title="Test if URL exists on Cashify and extract live buyback price"
+                                                >
+                                                  {testingUrlKey === key ? (
+                                                    <>
+                                                      <RefreshCw className="w-2.5 h-2.5 animate-spin text-cobalt" />
+                                                      <span>Extracting...</span>
+                                                    </>
+                                                  ) : (
+                                                    <span>Verify Link</span>
+                                                  )}
+                                                </button>
+
+                                                {testResult && (
+                                                  <div className="flex flex-col items-end gap-0.5">
+                                                    <div className="flex items-center gap-1">
+                                                      <span
+                                                        className={`text-[8.5px] font-bold px-1.5 py-0.5 rounded ${
+                                                          testResult.ok
+                                                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                                                            : testResult.is404
+                                                            ? 'bg-rose-100 text-rose-800 border border-rose-200'
+                                                            : testResult.isUnserviceable
+                                                            ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                                                            : 'bg-rose-100 text-rose-800 border border-rose-200'
+                                                        }`}
+                                                        title={testResult.error || undefined}
+                                                      >
+                                                        {testResult.ok
+                                                          ? '✓ 200 OK'
+                                                          : testResult.is404
+                                                          ? '✗ 404 Not Found'
+                                                          : testResult.isUnserviceable
+                                                          ? '⚠ Not Buying (Gurgaon/Delhi)'
+                                                          : `⚠ ${testResult.status || 'Failed'}`}
+                                                      </span>
+                                                      {testResult.ok && testResult.extractedPrice ? (
+                                                        <span
+                                                          className="text-[8.5px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200 px-1 py-0.5 rounded flex items-center gap-0.5 shadow-2xs"
+                                                          title="Live Buyback Price extracted from Cashify"
+                                                        >
+                                                          ⚡ ₹{testResult.extractedPrice.toLocaleString('en-IN')}
+                                                        </span>
+                                                      ) : null}
+                                                    </div>
+                                                    {!testResult.ok && testResult.error && !testResult.is404 && !testResult.isUnserviceable && (
+                                                      <span className="text-[7.5px] text-rose-600 truncate max-w-[180px]" title={testResult.error}>
+                                                        {testResult.error}
+                                                      </span>
+                                                    )}
+                                                  </div>
+                                                )}
+                                              </div>
+                                            </div>
                                           )}
                                         </div>
-                                      </div>
 
-                                      {editingUrlKey === key ? (
-                                        <div className="space-y-1">
-                                          <input
-                                            type="url"
-                                            value={tempUrlInput}
-                                            onChange={(e) => setTempUrlInput(e.target.value)}
-                                            className="w-full px-1.5 py-1 text-[9.5px] bg-white border border-cobalt rounded font-mono text-zinc-800 focus:outline-none"
-                                            placeholder="https://www.cashify.in/sell-old-mobile-phone/..."
-                                          />
-                                          <div className="flex justify-end gap-1">
-                                            <button
-                                              type="button"
-                                              onClick={() => setEditingUrlKey(null)}
-                                              className="px-1.5 py-0.5 text-[8.5px] bg-zinc-200 rounded text-zinc-700 cursor-pointer"
-                                            >
-                                              Cancel
-                                            </button>
-                                            <button
-                                              type="button"
-                                              onClick={() => handleSaveEditedUrl(key)}
-                                              className="px-1.5 py-0.5 text-[8.5px] bg-emerald-600 text-white rounded font-bold cursor-pointer"
-                                            >
-                                              Save
-                                            </button>
+                                        {/* Cashify Benchmark Price & Target (+3%) Calculation */}
+                                        <div className="bg-slate-50 border border-slate-200 rounded p-1.5 text-left text-[10px] space-y-1">
+                                          <div className="flex items-center justify-between text-zinc-600">
+                                            <div className="flex items-center gap-1">
+                                              <span className="font-semibold text-[9px]">Cashify Listed:</span>
+                                              {extractedCashifyPrices[key] ? (
+                                                <span className="text-[7.5px] font-bold text-emerald-700 bg-emerald-100/90 border border-emerald-300 px-1 py-0.2 rounded uppercase">
+                                                  Live Extracted
+                                                </span>
+                                              ) : null}
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                              <span className="text-[9px] text-zinc-400 font-bold">₹</span>
+                                              <input
+                                                type="number"
+                                                value={cPrice === 0 ? '' : cPrice}
+                                                onChange={(e) => handleCashifyPriceChange(ram, storage, e.target.value)}
+                                                className={`w-20 px-1 py-0.5 bg-white border rounded font-mono font-bold text-right text-[10px] focus:outline-none focus:border-cobalt ${
+                                                  extractedCashifyPrices[key]
+                                                    ? 'border-emerald-400 text-emerald-800 ring-1 ring-emerald-200'
+                                                    : 'border-zinc-300 text-zinc-800'
+                                                }`}
+                                                placeholder="0"
+                                              />
+                                            </div>
+                                          </div>
+
+                                          <div className="flex items-center justify-between text-indigo-900 bg-indigo-50/80 px-1.5 py-1 rounded border border-indigo-100 font-mono text-[9px]">
+                                            <span className="font-bold flex items-center gap-0.5">
+                                              <Sparkles className="w-2.5 h-2.5 text-indigo-600" />
+                                              <span>Target (+3%):</span>
+                                            </span>
+                                            <span className="font-extrabold text-[10px] text-indigo-700">
+                                              ₹{targetPlus3.toLocaleString('en-IN')}
+                                            </span>
                                           </div>
                                         </div>
-                                      ) : (
-                                        <div>
-                                          <div className="flex items-center gap-1">
-                                            <a
-                                              href={cUrl}
-                                              target="_blank"
-                                              rel="noopener noreferrer"
-                                              className="flex-1 truncate font-mono text-[9px] text-blue-600 hover:underline hover:text-blue-800 flex items-center gap-1"
-                                              title={cUrl || 'Auto-generating link...'}
-                                            >
-                                              <ExternalLink className="w-2.5 h-2.5 flex-shrink-0 text-blue-500" />
-                                              <span className="truncate">
-                                                {cUrl
-                                                  ? cUrl.replace('https://www.cashify.in/sell-old-mobile-phone/', '')
-                                                  : 'Auto-generating...'}
-                                              </span>
-                                            </a>
-                                          </div>
 
-                                          <div className="flex items-center justify-between mt-1 pt-1 border-t border-zinc-200/60">
-                                            <button
-                                              type="button"
-                                              onClick={() => handleTestUrl(key, cUrl)}
-                                              disabled={testingUrlKey === key || !cUrl}
-                                              className="text-[8.5px] font-semibold text-zinc-600 hover:text-zinc-900 bg-white hover:bg-zinc-100 px-1.5 py-0.5 rounded border border-zinc-200 flex items-center gap-1 cursor-pointer disabled:opacity-50"
-                                              title="Test if URL exists on Cashify and extract live buyback price"
-                                            >
-                                              {testingUrlKey === key ? (
-                                                <>
-                                                  <RefreshCw className="w-2.5 h-2.5 animate-spin text-cobalt" />
-                                                  <span>Extracting...</span>
-                                                </>
-                                              ) : (
-                                                <span>Verify Link</span>
-                                              )}
-                                            </button>
-
-                                            {testResult && (
-                                              <div className="flex items-center gap-1">
-                                                <span
-                                                  className={`text-[8.5px] font-bold px-1.5 py-0.5 rounded ${
-                                                    testResult.ok
-                                                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                                                      : 'bg-rose-100 text-rose-800 border border-rose-200'
-                                                  }`}
-                                                >
-                                                  {testResult.ok ? '✓ 200 OK' : `⚠ ${testResult.status || 'Failed'}`}
-                                                </span>
-                                                {testResult.ok && testResult.extractedPrice ? (
-                                                  <span
-                                                    className="text-[8.5px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200 px-1 py-0.5 rounded flex items-center gap-0.5 shadow-2xs"
-                                                    title="Live Buyback Price extracted from Cashify"
-                                                  >
-                                                    ⚡ ₹{testResult.extractedPrice.toLocaleString('en-IN')}
-                                                  </span>
-                                                ) : null}
-                                              </div>
+                                        {/* Rephonix Payout Price & Approval Action */}
+                                        <div className="pt-0.5">
+                                          <div className="text-left mb-1 flex items-center justify-between">
+                                            <label className="text-[9px] font-bold text-ink-navy font-mono">
+                                              Rephonix Payout Price:
+                                            </label>
+                                            {isApproved && (
+                                              <button
+                                                type="button"
+                                                onClick={() => handleRevokeApproval(ram, storage)}
+                                                className="text-[8px] text-zinc-500 hover:text-rose-600 underline cursor-pointer"
+                                                title="Unapprove and allow manual override"
+                                              >
+                                                Revoke Approval
+                                              </button>
                                             )}
                                           </div>
-                                        </div>
-                                      )}
-                                    </div>
 
-                                    {/* Cashify Benchmark Price & Target (+3%) Calculation */}
-                                    <div className="bg-slate-50 border border-slate-200 rounded p-1.5 text-left text-[10px] space-y-1">
-                                      <div className="flex items-center justify-between text-zinc-600">
-                                        <div className="flex items-center gap-1">
-                                          <span className="font-semibold text-[9px]">Cashify Listed:</span>
-                                          {extractedCashifyPrices[key] ? (
-                                            <span className="text-[7.5px] font-bold text-emerald-700 bg-emerald-100/90 border border-emerald-300 px-1 py-0.2 rounded uppercase">
-                                              Live Extracted
+                                          <div className="relative">
+                                            <span className="absolute left-2.5 top-1.5 text-zinc-400 text-[10px] font-bold">
+                                              ₹
                                             </span>
-                                          ) : null}
+                                            <input
+                                              type="number"
+                                              value={priceVal === 0 ? '' : priceVal}
+                                              placeholder="0"
+                                              autoFocus={Boolean(isHighlighted)}
+                                              onChange={(e) =>
+                                                handleVariantPriceChange(ram, storage, e.target.value)
+                                              }
+                                              className={`w-full pl-6 pr-2 py-1 bg-white border rounded font-mono font-bold text-ink-navy text-right text-xs focus:outline-none shadow-xs ${
+                                                isApproved
+                                                  ? 'border-emerald-500 bg-emerald-50/20 ring-1 ring-emerald-300'
+                                                  : isHighlighted
+                                                  ? 'border-amber-400 ring-2 ring-amber-200'
+                                                  : 'border-ice-border focus:border-cobalt'
+                                              }`}
+                                            />
+                                          </div>
+
+                                          {priceVal > 0 && (
+                                            <span className="text-[9px] font-bold text-emerald-600 block mt-0.5 text-right font-mono">
+                                              {modalFormatPrice(Number(priceVal))}
+                                            </span>
+                                          )}
+
+                                          {!isApproved ? (
+                                            <button
+                                              type="button"
+                                              onClick={() => handleApproveVariant(ram, storage)}
+                                              className="w-full mt-2 py-1.5 px-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md font-bold text-[9.5px] font-mono flex items-center justify-center gap-1.5 shadow-sm transition-all cursor-pointer hover:shadow"
+                                              title={`Approve Cashify link and apply +3% price (₹${targetPlus3.toLocaleString('en-IN')})`}
+                                            >
+                                              <Sparkles className="w-3 h-3 text-amber-200" />
+                                              <span>Approve Link & Apply +3%</span>
+                                            </button>
+                                          ) : (
+                                            <div className="mt-1.5 text-[8.5px] font-mono font-semibold text-emerald-700 flex items-center justify-center gap-1 bg-emerald-100/60 py-1 rounded border border-emerald-200">
+                                              <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" />
+                                              <span>+3% Payout Approved & Active</span>
+                                            </div>
+                                          )}
                                         </div>
-                                        <div className="flex items-center gap-1">
-                                          <span className="text-[9px] text-zinc-400 font-bold">₹</span>
-                                          <input
-                                            type="number"
-                                            value={cPrice === 0 ? '' : cPrice}
-                                            onChange={(e) => handleCashifyPriceChange(ram, storage, e.target.value)}
-                                            className={`w-20 px-1 py-0.5 bg-white border rounded font-mono font-bold text-right text-[10px] focus:outline-none focus:border-cobalt ${
-                                              extractedCashifyPrices[key]
-                                                ? 'border-emerald-400 text-emerald-800 ring-1 ring-emerald-200'
-                                                : 'border-zinc-300 text-zinc-800'
-                                            }`}
-                                            placeholder="0"
-                                          />
-                                        </div>
-                                      </div>
-
-                                      <div className="flex items-center justify-between text-indigo-900 bg-indigo-50/80 px-1.5 py-1 rounded border border-indigo-100 font-mono text-[9px]">
-                                        <span className="font-bold flex items-center gap-0.5">
-                                          <Sparkles className="w-2.5 h-2.5 text-indigo-600" />
-                                          <span>Target (+3%):</span>
-                                        </span>
-                                        <span className="font-extrabold text-[10px] text-indigo-700">
-                                          ₹{targetPlus3.toLocaleString('en-IN')}
-                                        </span>
-                                      </div>
-                                    </div>
-
-                                    {/* Rephonix Payout Price & Approval Action */}
-                                    <div className="pt-0.5">
-                                      <div className="text-left mb-1 flex items-center justify-between">
-                                        <label className="text-[9px] font-bold text-ink-navy font-mono">
-                                          Rephonix Payout Price:
-                                        </label>
-                                        {isApproved && (
-                                          <button
-                                            type="button"
-                                            onClick={() => handleRevokeApproval(ram, storage)}
-                                            className="text-[8px] text-zinc-500 hover:text-rose-600 underline cursor-pointer"
-                                            title="Unapprove and allow manual override"
-                                          >
-                                            Revoke Approval
-                                          </button>
-                                        )}
-                                      </div>
-
-                                      <div className="relative">
-                                        <span className="absolute left-2.5 top-1.5 text-zinc-400 text-[10px] font-bold">
-                                          ₹
-                                        </span>
-                                        <input
-                                          type="number"
-                                          value={priceVal === 0 ? '' : priceVal}
-                                          placeholder="0"
-                                          autoFocus={Boolean(isHighlighted)}
-                                          onChange={(e) =>
-                                            handleVariantPriceChange(ram, storage, e.target.value)
-                                          }
-                                          className={`w-full pl-6 pr-2 py-1 bg-white border rounded font-mono font-bold text-ink-navy text-right text-xs focus:outline-none shadow-xs ${
-                                            isApproved
-                                              ? 'border-emerald-500 bg-emerald-50/20 ring-1 ring-emerald-300'
-                                              : isHighlighted
-                                              ? 'border-amber-400 ring-2 ring-amber-200'
-                                              : 'border-ice-border focus:border-cobalt'
-                                          }`}
-                                        />
-                                      </div>
-
-                                      {priceVal > 0 && (
-                                        <span className="text-[9px] font-bold text-emerald-600 block mt-0.5 text-right font-mono">
-                                          {modalFormatPrice(Number(priceVal))}
-                                        </span>
-                                      )}
-
-                                      {!isApproved ? (
-                                        <button
-                                          type="button"
-                                          onClick={() => handleApproveVariant(ram, storage)}
-                                          className="w-full mt-2 py-1.5 px-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md font-bold text-[9.5px] font-mono flex items-center justify-center gap-1.5 shadow-sm transition-all cursor-pointer hover:shadow"
-                                          title={`Approve Cashify link and apply +3% price (₹${targetPlus3.toLocaleString('en-IN')})`}
-                                        >
-                                          <Sparkles className="w-3 h-3 text-amber-200" />
-                                          <span>Approve Link & Apply +3%</span>
-                                        </button>
-                                      ) : (
-                                        <div className="mt-1.5 text-[8.5px] font-mono font-semibold text-emerald-700 flex items-center justify-center gap-1 bg-emerald-100/60 py-1 rounded border border-emerald-200">
-                                          <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" />
-                                          <span>+3% Payout Approved & Active</span>
-                                        </div>
-                                      )}
-                                    </div>
+                                      </>
+                                    )}
                                   </div>
                                 ) : (
                                   <button

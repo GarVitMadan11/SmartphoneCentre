@@ -14,6 +14,7 @@ import { useFocusTrap } from '../../hooks/useFocusTrap';
 import emailjs from '@emailjs/browser';
 import { checkEmail, customerLogin, customerSignup, verifyOtp, requestPasswordResetOtp, resetPasswordWithOtp, sendQuoteAlertApi, sendPriceMatchAlertApi, ApiUser } from '../../utils/api';
 import { saveQuote, isQuoteAlreadySaved } from '../../utils/savedQuotes';
+import { TabletDiagnosticFlow } from './TabletDiagnosticFlow';
 
 const getEngineeringLabel = (description: string) => {
   const mapping: { [key: string]: string } = {
@@ -74,7 +75,54 @@ const getEngineeringLabel = (description: string) => {
     'Missing Original Retail Watch Box':                 'OEM Watch Retail Packaging De-allocation',
     'Smartwatch Does Not Turn On':                       'Watch Logic Board Hardware Failure',
     'iCloud / Apple Watch Activation Locked':            'Activation Lock — Zero Resale Value',
-    'Samsung Account / Google Knox Lock Active':         'Knox Lock — Zero Resale Value'
+    'Samsung Account / Google Knox Lock Active':         'Knox Lock — Zero Resale Value',
+
+    // Tablet specific engineering fee labels
+    'Tablet Does Not Turn On':                           'Logic Board Hardware Failure',
+    'Cellular Network Not Working':                      'Baseband Cellular Modem Repair',
+    'SIM Tray Missing or Damaged':                       'SIM Tray Hardware Replacement',
+    'Touch Screen Not Working Properly':                 'Digitizer Layer Replacement',
+    'Screen Replaced at Local Shop (Non-Original)':      'Non-OEM Display Panel Deduction',
+    '1-2 Scratches on Screen':                           'Display Glass Micro-Polishing',
+    'More Than 2 Scratches on Screen':                   'Display Surface Resurfacing Fee',
+    'Chipped Outside Display Area':                      'Bevel Edge Glass Restoration',
+    'Screen Cracked / Glass Broken':                     'Display Glass Restoration Fee',
+    'Minor Discoloration on Screen':                     'Color Profile Recalibration Fee',
+    'Major Discoloration on Screen':                     'Display Panel Replacement Fee',
+    'Screen Shading / Fading':                           'Backlight Uniformity Restoration',
+    '1-2 Very Small White Spots on Screen':              'Diffuser Pressure Spot Repair',
+    '3 or More White Spots / Coloured Spots':            'Sub-Pixel Defect Recovery Fee',
+    'Lines Visible on Screen':                           'Display Driver IC / Panel Replacement',
+    'Light Leaks Around Edges of Display':               'Bezel Optical Gasket Re-sealing',
+    'Front Camera Not Working':                          'Front Camera Sensor Recalibration',
+    'Back Camera Not Working':                           'Rear Camera Sensor Replacement',
+    'Camera Glass Broken / Missing':                     'Camera Lens Glass Replacement',
+    'Finger / Touch ID Sensor Not Working':              'Biometric Touch ID Security Fee',
+    'Face Sensor (Face ID) Not Working':                 'TrueDepth Sensor Array Security Fee',
+    'Wi-Fi Not Working':                                 'Wi-Fi Transceiver Module Repair',
+    'GPS Not Working':                                   'GPS Satellite Receiver Repair',
+    'Bluetooth Not Working':                             'Bluetooth Antenna Array Repair',
+    'Audio Jack Not Working':                            '3.5mm Headphone Jack Assembly Fee',
+    'Volume Button Missing / Not Working':               'Volume Button Flex Cable Repair',
+    'Power Button Broken / Not Working / Missing':       'Power Button Hardware Replacement',
+    'Charging Defect; Unable to Charge':                 'USB-C / Power Port Repair',
+    'Battery Faulty or Not Working':                     'Battery Module Replacement',
+    'Microphone Not Working':                            'Microphone Array Assembly Fee',
+    'Speaker Not Working; Faulty or Cracked Sound':      'Speaker Chamber Replacement Fee',
+    '1-2 Scratches on Body':                             'Body Micro-Buffing & Clean Fee',
+    'More Than 2 Scratches on Body':                     'Chassis Surface Bead-Blasting',
+    '1-2 Minor Dents on Body':                           'Chassis Edge Re-contouring',
+    'Major Dent(s) or More Than 2 Dents':                'Chassis Structural Re-alignment',
+    'Body Bent':                                         'Chassis Unbending & Frame Trueing',
+    'Loose Screen':                                      'Display Frame Adhesive Re-bonding',
+    'Both Bent and Loose Screen':                        'Chassis Frame & Display Realignment',
+    'Visible Gap Between Body and Back Panel':           'Enclosure Seam Re-alignment',
+    'Back Panel Chipped on Edges':                       'Back Panel Edge Restoration',
+    'Back Panel Broken / Shattered':                     'Rear Enclosure Replacement Fee',
+    'Back Panel Missing':                                'Chassis Housing Replacement Fee',
+    'Missing Original Tablet Charger':                   'OEM Fast Charger De-allocation',
+    'Missing Box With Same IMEI / Serial':               'OEM Retail Box De-allocation',
+    'Missing GST Valid Bill With Same IMEI / Serial':     'GST Tax Compliance Verification Fee'
   };
   return mapping[description] || description;
 };
@@ -172,15 +220,30 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
     }
   }, [isScreenNonOriginal]);
 
-  const stepsList = useMemo(() => [
-    { title: isApple ? 'Boot & iCloud' : 'Boot & Lock', icon: ShieldCheck, desc: 'Power on & account lock gate' },
-    { title: 'Display Panel', icon: Smartphone, desc: 'Touch, screen glass & burn-in' },
-    { title: 'Body & Frame', icon: ShieldCheck, desc: 'Chassis, buttons, screws & seal' },
-    { title: 'Hardware', icon: Activity, desc: 'Cameras, biometrics & audio' },
-    { title: 'Connectivity', icon: Zap, desc: 'Battery, cellular, Wi-Fi & serial' },
-    { title: showWarrantyQuestion ? 'Docs & Warranty' : 'Packaging & Box', icon: Box, desc: showWarrantyQuestion ? 'Accessories, age & warranty' : 'Original box, accessories & invoice' },
-    { title: 'Review & Valuation', icon: Receipt, desc: 'Diagnostic review & breakdown' }
-  ], [isApple, showWarrantyQuestion]);
+  const reviewStepIndex = isTablet ? 5 : 6;
+  const finalReceiptIndex = isTablet ? 6 : 7;
+
+  const stepsList = useMemo(() => {
+    if (isTablet) {
+      return [
+        { title: 'Core Check', icon: ShieldCheck, desc: 'Power, network, SIM & warranty gate' },
+        { title: 'Screen Defects', icon: Smartphone, desc: 'Touch, originality, scratches & spots' },
+        { title: 'Hardware', icon: Activity, desc: 'Cameras, sensors, buttons & audio' },
+        { title: 'Body Defects', icon: ShieldCheck, desc: 'Scratches, dents, bends & panels' },
+        { title: 'Accessories & Age', icon: Box, desc: 'Charger, IMEI box & warranty age' },
+        { title: 'Review & Valuation', icon: Receipt, desc: 'Diagnostic review & live quote' }
+      ];
+    }
+    return [
+      { title: isApple ? 'Boot & iCloud' : 'Boot & Lock', icon: ShieldCheck, desc: 'Power on & account lock gate' },
+      { title: 'Display Panel', icon: Smartphone, desc: 'Touch, screen glass & burn-in' },
+      { title: 'Body & Frame', icon: ShieldCheck, desc: 'Chassis, buttons, screws & seal' },
+      { title: 'Hardware', icon: Activity, desc: 'Cameras, biometrics & audio' },
+      { title: 'Connectivity', icon: Zap, desc: 'Battery, cellular, Wi-Fi & serial' },
+      { title: showWarrantyQuestion ? 'Docs & Warranty' : 'Packaging & Box', icon: Box, desc: showWarrantyQuestion ? 'Accessories, age & warranty' : 'Original box, accessories & invoice' },
+      { title: 'Review & Valuation', icon: Receipt, desc: 'Diagnostic review & breakdown' }
+    ];
+  }, [isTablet, isApple, showWarrantyQuestion]);
 
   // Confirmation state — session only, never persisted to localStorage
   const [screenConfirmed, setScreenConfirmed] = useState(false);
@@ -225,6 +288,10 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
   // Validation check for current step
   const isStepValidated = useMemo(() => {
+    if (isTablet) {
+      if (step === 0) return !selectedDefects.some(d => d.id === 'defect-critical-power');
+      return true;
+    }
     if (step === 0) return icloudChecked !== null;
     if (step === 1) return screenConfirmed || selectedDefects.some(d => d.category === 'screen');
     if (step === 2) return bodyConfirmed || selectedDefects.some(d => d.category === 'body');
@@ -241,7 +308,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
       return accConfirmed || selectedDefects.some(d => ids.includes(d.id));
     }
     return true;
-  }, [step, icloudChecked, screenConfirmed, bodyConfirmed, funcConfirmed, connectConfirmed, accConfirmed, selectedDefects, rules]);
+  }, [isTablet, step, icloudChecked, screenConfirmed, bodyConfirmed, funcConfirmed, connectConfirmed, accConfirmed, selectedDefects, rules]);
 
   const [warrantyAge, setWarrantyAge] = useState<'under_3m' | '3_to_6m' | '6_to_11m' | 'out_of_warranty'>('out_of_warranty');
   const simType = 'dual_sim';
@@ -290,14 +357,14 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
       const defects: DefectRule[] = [powerDefect];
       if (icloudChecked === 'locked' && icloudDefect) defects.push(icloudDefect);
       setSelectedDefects(defects);
-      setStep(7); // Jump to zero value receipt
+      setStep(finalReceiptIndex); // Jump to zero value receipt
     } else {
       // Powers on — handle icloud status
       let next = selectedDefects.filter(d => d.id !== 'defect-critical-power');
       if (icloudChecked === 'locked' && icloudDefect) {
         next = [...next.filter(d => d.id !== 'defect-critical-icloud'), icloudDefect];
         setSelectedDefects(next);
-        setStep(7); // iCloud locked = zero value, skip to receipt
+        setStep(finalReceiptIndex); // iCloud locked = zero value, skip to receipt
       } else {
         setSelectedDefects(next.filter(d => d.id !== 'defect-critical-icloud'));
         setStep(1);
@@ -337,7 +404,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
   const [saveToast, setSaveToast] = useState<string | null>(null);
 
   React.useEffect(() => {
-    if (step === 7) {
+    if (step === finalReceiptIndex) {
       const alreadySaved = isQuoteAlreadySaved(
         model.id,
         variant.storageGb,
@@ -346,7 +413,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
       );
       setIsQuoteSaved(alreadySaved);
     }
-  }, [step, model.id, variant.storageGb, selectedDefects, currentUser?.id]);
+  }, [step, finalReceiptIndex, model.id, variant.storageGb, selectedDefects, currentUser?.id]);
 
   const handleSaveQuote = () => {
     saveQuote({
@@ -385,10 +452,10 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
   }, [currentUser]);
 
   React.useEffect(() => {
-    if (step === 6 && !currentUser) {
+    if (step === reviewStepIndex && !currentUser) {
       setLockModalOpen(true);
     }
-  }, [step, currentUser]);
+  }, [step, reviewStepIndex, currentUser]);
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -664,17 +731,17 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
   const handleNextStep = () => {
     if (!isStepValidated) return;
-    if (step < 6) {
+    if (step < reviewStepIndex) {
       setStep(prev => prev + 1);
     } else {
-      setStep(7); // Final verified receipt
+      setStep(finalReceiptIndex); // Final verified receipt
     }
   };
 
   const handlePrevStep = () => {
-    if (step === 7) {
-      setStep(6);
-    } else if (step === 6 && selectedDefects.some(d => d.isCriticalFailure)) {
+    if (step === finalReceiptIndex) {
+      setStep(reviewStepIndex);
+    } else if (step === reviewStepIndex && selectedDefects.some(d => d.isCriticalFailure)) {
       setStep(0);
     } else if (step > 0) {
       setStep(prev => prev - 1);
@@ -769,8 +836,24 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
               <div className="flex flex-wrap items-center gap-2 mt-1">
                 <h2 className="font-extrabold text-slate-950 text-xl sm:text-2xl tracking-tight truncate">{model.name}</h2>
                 <span className="text-[10px] font-mono font-black tracking-wider bg-slate-100 text-slate-800 px-2 py-0.5 rounded-md border border-slate-300 flex-shrink-0">
-                  {variant.storageGb >= 1024 ? '1TB' : `${variant.storageGb}GB`}
+                  {variant.storageGb >= 1024 ? `${variant.storageGb / 1024}TB` : `${variant.storageGb}GB`}
                 </span>
+                {isTablet && variant.ramGb && (
+                  <span className="text-[10px] font-mono font-black tracking-wider bg-blue-50 text-blue-800 px-2 py-0.5 rounded-md border border-blue-200 flex-shrink-0">
+                    {variant.ramGb}GB RAM
+                  </span>
+                )}
+                {isTablet && (
+                  <span className={`text-[10px] font-mono font-black tracking-wider px-2 py-0.5 rounded-md border flex-shrink-0 ${
+                    variant.connectivity === 'cellular' || variant.color?.toLowerCase().includes('cellular')
+                      ? 'bg-purple-50 text-purple-800 border-purple-200'
+                      : 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                  }`}>
+                    {variant.connectivity === 'cellular' || variant.color?.toLowerCase().includes('cellular')
+                      ? 'Wi-Fi + Cellular'
+                      : 'Wi-Fi Only'}
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -819,7 +902,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
             <div className="absolute top-[22px] -translate-y-1/2 left-6 right-6 h-1 bg-slate-200 z-0 rounded-full">
               <div 
                 className="h-full bg-gradient-to-r from-blue-600 via-emerald-500 to-emerald-600 transition-all duration-500 rounded-full"
-                style={{ width: `${(Math.min(step, 6) / 6) * 100}%` }}
+                style={{ width: `${(Math.min(step, reviewStepIndex) / reviewStepIndex) * 100}%` }}
               />
             </div>
 
@@ -827,15 +910,17 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
               const isCompleted = step > idx;
               const isActive = step === idx;
 
-              const stepLabels = [
-                'Boot',
-                'Display',
-                'Body',
-                'Hardware',
-                'Connectivity',
-                showWarrantyQuestion ? 'Docs & Age' : 'Packaging',
-                'Review'
-              ];
+              const stepLabels = isTablet
+                ? ['Core', 'Screen', 'Hardware', 'Body', 'Accessories', 'Review']
+                : [
+                    'Boot',
+                    'Display',
+                    'Body',
+                    'Hardware',
+                    'Connectivity',
+                    showWarrantyQuestion ? 'Docs & Age' : 'Packaging',
+                    'Review'
+                  ];
 
               return (
                 <div key={idx} className="relative z-10 flex flex-col items-center group cursor-pointer" onClick={() => isCompleted && setStep(idx)}>
@@ -874,8 +959,27 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
           className="bg-white rounded-xl border border-ice-border p-5 sm:p-7 min-h-[380px] sm:min-h-[440px] flex flex-col justify-between overflow-hidden shadow-xl"
         >
           <AnimatePresence mode="wait">
+            {/* Dedicated Tablet Diagnostic Flow (Cashify Question Set) */}
+            {isTablet && step < reviewStepIndex && (
+              <TabletDiagnosticFlow
+                key={`tablet-flow-step-${step}`}
+                model={model}
+                variant={variant}
+                step={step}
+                rules={rules}
+                selectedDefects={selectedDefects}
+                setSelectedDefects={setSelectedDefects}
+                warrantyAge={warrantyAge}
+                setWarrantyAge={setWarrantyAge}
+                showCriticalModal={showCriticalModal}
+                hasWarranty={hasWarranty}
+                setHasWarranty={setHasWarranty}
+                formatPrice={formatPrice}
+              />
+            )}
+
             {/* STEP 0: Boot & iCloud Check */}
-            {step === 0 && (
+            {!isTablet && step === 0 && (
               <motion.div
                 key="step-0"
                 initial={{ opacity: 0, x: -10 }}
@@ -987,7 +1091,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
             )}
 
             {/* STEP 1: Screen Condition */}
-            {step === 1 && (
+            {!isTablet && step === 1 && (
               <motion.div
                 key="step-1"
                 initial={{ opacity: 0, x: -10 }}
@@ -1200,7 +1304,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
             )}
 
             {/* STEP 2: Body Frame */}
-            {step === 2 && (
+            {!isTablet && step === 2 && (
               <motion.div
                 key="step-2"
                 initial={{ opacity: 0, x: -10 }}
@@ -1324,7 +1428,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
             )}
 
             {/* STEP 3: Hardware Diagnostics */}
-            {step === 3 && (
+            {!isTablet && step === 3 && (
               <motion.div
                 key="step-3"
                 initial={{ opacity: 0, x: -10 }}
@@ -1437,7 +1541,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
             )}
 
             {/* STEP 4: Connectivity & Verification */}
-            {step === 4 && (
+            {!isTablet && step === 4 && (
               <motion.div
                 key="step-4"
                 initial={{ opacity: 0, x: -10 }}
@@ -1550,7 +1654,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
             )}
 
             {/* STEP 5: Accessories & Documentation */}
-            {step === 5 && (
+            {!isTablet && step === 5 && (
               <motion.div
                 key="step-5"
                 initial={{ opacity: 0, x: -10 }}
@@ -1864,10 +1968,10 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
               </motion.div>
             )}
 
-            {/* STEP 6: Diagnostic Review Stage */}
-            {step === 6 && (
+            {/* Diagnostic Review Stage */}
+            {step === reviewStepIndex && (
               <motion.div
-                key="step-6-review"
+                key="step-review"
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 1, x: 10 }}
@@ -1875,11 +1979,11 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
               >
                 <div className="border-b border-ice-border pb-4">
                   <span className="text-[11px] font-mono tracking-[0.2em] text-slate-700 uppercase block mb-1.5 font-bold">
-                    Step 7 of 7 // Diagnostic Verification Review
+                    Step {reviewStepIndex + 1} of {reviewStepIndex + 1} // Diagnostic Verification Review
                   </span>
                   <h3 className="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight">Diagnostic Summary Review</h3>
                   <p className="text-xs sm:text-sm text-slate-800 mt-1.5 font-bold leading-relaxed">
-                    Review your completed 6-section diagnostic evaluation before generating your official trade-in quote.
+                    Review your completed {reviewStepIndex}-section diagnostic evaluation before generating your official trade-in quote.
                   </p>
                 </div>
 
@@ -1888,7 +1992,9 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                     <span className="text-[10px] font-mono text-slate-700 uppercase tracking-widest block mb-2 font-black">TARGET DEVICE</span>
                     <h4 className="font-black text-lg text-slate-950">{model.name}</h4>
                     <p className="text-xs text-blue-700 font-mono font-bold mt-0.5">
-                      {variant.storageGb >= 1024 ? '1TB' : `${variant.storageGb}GB`} Storage
+                      {variant.storageGb >= 1024 ? `${variant.storageGb / 1024}TB` : `${variant.storageGb}GB`} Storage
+                      {isTablet && variant.ramGb ? ` • ${variant.ramGb}GB RAM` : ''}
+                      {isTablet ? ` • ${variant.connectivity === 'cellular' || variant.color?.toLowerCase().includes('cellular') ? 'Wi-Fi + Cellular' : 'Wi-Fi Only'}` : ''}
                     </p>
                   </div>
 
@@ -1964,9 +2070,9 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
             )}
 
             {/* STEP 7: Obsidian Verified Valuation Ledger */}
-            {step === 7 && (
+            {step === finalReceiptIndex && (
               <motion.div
-                key="step-7-receipt"
+                key="step-receipt"
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.98 }}
@@ -2020,7 +2126,9 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           CONFIG &amp; STATUS
                         </span>
                         <span className="text-xs text-slate-900 print-text-dark font-mono font-bold block">
-                          {variant.storageGb >= 1024 ? '1TB' : `${variant.storageGb}GB`} • {isApple ? 'Apple iOS' : 'Android'}
+                          {variant.storageGb >= 1024 ? `${variant.storageGb / 1024}TB` : `${variant.storageGb}GB`}
+                          {isTablet && variant.ramGb ? ` • ${variant.ramGb}GB RAM` : ''}
+                          {isTablet ? ` • ${variant.connectivity === 'cellular' || variant.color?.toLowerCase().includes('cellular') ? 'Wi-Fi + Cellular' : 'Wi-Fi Only'}` : ` • ${isApple ? 'Apple iOS' : 'Android'}`}
                         </span>
                         <span className="hidden print:inline-block text-[10px] font-mono text-emerald-700 font-bold">
                           7-Day Price Lock
@@ -2031,7 +2139,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                     {/* 6-Gate Comprehensive Diagnostic Summary (Expanded for Print) */}
                     <div className="space-y-2.5 text-xs font-mono">
                       <div className="flex justify-between items-center py-1.5 text-slate-950 print-text-dark border-b border-slate-200 print-border">
-                        <span className="font-semibold">00. Base Specification ({variant.storageGb >= 1024 ? '1TB' : `${variant.storageGb}GB`})</span>
+                        <span className="font-semibold">00. Base Specification ({variant.storageGb >= 1024 ? `${variant.storageGb / 1024}TB` : `${variant.storageGb}GB`}{isTablet && variant.ramGb ? `/${variant.ramGb}GB` : ''}{isTablet ? ` • ${variant.connectivity === 'cellular' || variant.color?.toLowerCase().includes('cellular') ? 'Cellular' : 'Wi-Fi'}` : ''})</span>
                         <span className="text-emerald-700 print-text-emerald font-bold text-xs font-mono">Verified Spec</span>
                       </div>
 
@@ -2196,7 +2304,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   <div className="flex flex-wrap sm:flex-nowrap gap-2.5 sm:gap-3 mt-4">
                     <button
                       type="button"
-                      onClick={() => setStep(6)}
+                      onClick={() => setStep(reviewStepIndex)}
                       className="px-3.5 sm:px-4 py-3 rounded-lg border-2 border-slate-300 bg-white hover:bg-slate-100 text-slate-900 hover:text-black font-bold text-xs transition-all flex items-center gap-1.5 shadow-xs"
                     >
                       <ArrowLeft className="w-3.5 h-3.5" />
@@ -2253,7 +2361,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
           </AnimatePresence>
 
           {/* Navigation panel */}
-          {step < 6 && (
+          {step < reviewStepIndex && (
             <div className="flex flex-row justify-between items-center gap-3 border-t border-slate-200 pt-5 mt-6">
               <div className="flex items-center gap-2">
                 <button
@@ -2265,7 +2373,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   <span>Back</span>
                 </button>
                 <span className="hidden sm:inline-block text-[10px] font-mono text-slate-600 font-bold uppercase tracking-wider pl-2">
-                  Step {step + 1} of 7
+                  Step {step + 1} of {reviewStepIndex + 1}
                 </span>
               </div>
 
@@ -2277,7 +2385,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   !isStepValidated ? 'opacity-40 cursor-not-allowed' : 'hover:scale-[1.02] active:scale-[0.98]'
                 }`}
               >
-                <span>{step === 5 ? 'Review Diagnostics' : 'Next Step'}</span>
+                <span>{step === (reviewStepIndex - 1) ? 'Review Diagnostics' : 'Next Step'}</span>
                 <ChevronRight className="w-4 h-4" />
               </button>
             </div>

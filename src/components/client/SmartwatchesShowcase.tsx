@@ -53,7 +53,7 @@ export const SmartwatchesShowcase: React.FC<SmartwatchesShowcaseProps> = ({
 
     const sorted = sortModelsByLaunchDesc(list);
     const targetBrand = selectedBrand === 'apple' ? 'brand-apple' : selectedBrand === 'samsung' ? 'brand-samsung' : 'brand-apple';
-    return applyModelOrder(targetBrand, sorted);
+    return applyModelOrder(targetBrand, sorted, 'smartwatches');
   }, [selectedBrand, searchQuery, watchModelsList]);
 
   const storageOptions = useMemo(() => {

@@ -1102,8 +1102,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
       const ram = selectedRam ?? (ramOptions.length > 0 ? ramOptions[0] : 0);
       const vars = generateVariantsForModel(selectedModel);
       const baseVar = vars.find(v => v.storageGb === selectedStorage) || vars[0];
-      const baseVal = getVariantPrice(selectedModel, ram, selectedStorage);
-      const price = conn === 'wifi' ? Math.max(1000, Math.round(baseVal * 0.92)) : baseVal;
+      const price = getVariantPrice(selectedModel, ram, selectedStorage, conn);
       setTempVariant({
         ...baseVar,
         ramGb: ram,
@@ -1128,8 +1127,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
       const vars = generateVariantsForModel(selectedModel);
       const activeColor = isTablet ? (selectedConnectivity === 'cellular' ? 'Wi-Fi + Cellular (SIM)' : 'Wi-Fi Only') : (selectedColor || 'Standard');
       const baseVar = vars.find(v => v.storageGb === targetStorage && v.color === activeColor) || vars[0];
-      const baseVal = getVariantPrice(selectedModel, ram, targetStorage);
-      const price = isTablet && selectedConnectivity === 'wifi' ? Math.max(1000, Math.round(baseVal * 0.92)) : baseVal;
+      const price = getVariantPrice(selectedModel, ram, targetStorage, isTablet ? selectedConnectivity : undefined);
       setTempVariant({
         ...baseVar,
         ramGb: ram,
@@ -1152,8 +1150,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
         : 'Standard';
 
       const baseVar = vars.find(v => v.storageGb === storage) || vars[0];
-      const baseVal = getVariantPrice(selectedModel, ram, storage);
-      const price = isTablet && selectedConnectivity === 'wifi' ? Math.max(1000, Math.round(baseVal * 0.92)) : baseVal;
+      const price = getVariantPrice(selectedModel, ram, storage, isTablet ? selectedConnectivity : undefined);
       setTempVariant({
         ...baseVar,
         ramGb: ram,

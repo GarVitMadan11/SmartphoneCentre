@@ -3,6 +3,11 @@ export type DeviceSegment =
   | 'apple_pro'
   | 'apple_standard'
   | 'apple_older_se'
+  | 'apple_tablet_pro'
+  | 'apple_tablet_air'
+  | 'apple_tablet_standard'
+  | 'android_tablet_flagship'
+  | 'android_tablet_midrange'
   | 'android_ultra_premium'
   | 'android_premium_flagship'
   | 'android_upper_midrange'
@@ -194,6 +199,71 @@ export const DEFAULT_PRICING_RULES_CONFIG: PricingRulesConfig = {
         majorMin: 0.25,    majorMax: 0.35,
       }
     },
+    apple_tablet_pro: {
+      segmentId: 'apple_tablet_pro',
+      name: 'Apple iPad Pro',
+      brand: 'apple',
+      normalConditionCap: 0.35,
+      conditionBand: {
+        excellentMin: 0.0,  excellentMax: 0.02,
+        goodMin: 0.02,     goodMax: 0.05,
+        fairMin: 0.05,     fairMax: 0.10,
+        heavyMin: 0.10,    heavyMax: 0.18,
+        majorMin: 0.18,    majorMax: 0.30,
+      }
+    },
+    apple_tablet_air: {
+      segmentId: 'apple_tablet_air',
+      name: 'Apple iPad Air',
+      brand: 'apple',
+      normalConditionCap: 0.35,
+      conditionBand: {
+        excellentMin: 0.0,  excellentMax: 0.03,
+        goodMin: 0.03,     goodMax: 0.06,
+        fairMin: 0.06,     fairMax: 0.12,
+        heavyMin: 0.12,    heavyMax: 0.20,
+        majorMin: 0.20,    majorMax: 0.32,
+      }
+    },
+    apple_tablet_standard: {
+      segmentId: 'apple_tablet_standard',
+      name: 'Apple iPad Standard / mini',
+      brand: 'apple',
+      normalConditionCap: 0.38,
+      conditionBand: {
+        excellentMin: 0.0,  excellentMax: 0.03,
+        goodMin: 0.03,     goodMax: 0.07,
+        fairMin: 0.07,     fairMax: 0.14,
+        heavyMin: 0.14,    heavyMax: 0.24,
+        majorMin: 0.24,    majorMax: 0.36,
+      }
+    },
+    android_tablet_flagship: {
+      segmentId: 'android_tablet_flagship',
+      name: 'Android Tablet Flagship (Galaxy Tab S)',
+      brand: 'android',
+      normalConditionCap: 0.40,
+      conditionBand: {
+        excellentMin: 0.0,  excellentMax: 0.03,
+        goodMin: 0.03,     goodMax: 0.07,
+        fairMin: 0.07,     fairMax: 0.14,
+        heavyMin: 0.14,    heavyMax: 0.24,
+        majorMin: 0.24,    majorMax: 0.36,
+      }
+    },
+    android_tablet_midrange: {
+      segmentId: 'android_tablet_midrange',
+      name: 'Android Tablet Midrange (Galaxy Tab FE/A)',
+      brand: 'android',
+      normalConditionCap: 0.45,
+      conditionBand: {
+        excellentMin: 0.0,  excellentMax: 0.04,
+        goodMin: 0.04,     goodMax: 0.09,
+        fairMin: 0.09,     fairMax: 0.18,
+        heavyMin: 0.18,    heavyMax: 0.30,
+        majorMin: 0.30,    majorMax: 0.44,
+      }
+    },
     android_ultra_premium: {
       segmentId: 'android_ultra_premium',
       name: 'Android Ultra Premium',
@@ -293,6 +363,46 @@ export const DEFAULT_PRICING_RULES_CONFIG: PricingRulesConfig = {
       motherboardRepairCost: 6000,
       chargingPortRepairCost: 1500,
       speakerRepairCost: 1500,
+    },
+    apple_tablet_pro: {
+      displayRepairCost: 15000,
+      displayRiskAdjustment: 3000,
+      cameraRepairCost: 4000,
+      motherboardRepairCost: 18000,
+      chargingPortRepairCost: 3000,
+      speakerRepairCost: 3000,
+    },
+    apple_tablet_air: {
+      displayRepairCost: 11000,
+      displayRiskAdjustment: 2200,
+      cameraRepairCost: 3500,
+      motherboardRepairCost: 14000,
+      chargingPortRepairCost: 2500,
+      speakerRepairCost: 2500,
+    },
+    apple_tablet_standard: {
+      displayRepairCost: 7500,
+      displayRiskAdjustment: 1500,
+      cameraRepairCost: 2500,
+      motherboardRepairCost: 9000,
+      chargingPortRepairCost: 2000,
+      speakerRepairCost: 2000,
+    },
+    android_tablet_flagship: {
+      displayRepairCost: 13000,
+      displayRiskAdjustment: 2500,
+      cameraRepairCost: 3500,
+      motherboardRepairCost: 15000,
+      chargingPortRepairCost: 2500,
+      speakerRepairCost: 2500,
+    },
+    android_tablet_midrange: {
+      displayRepairCost: 6500,
+      displayRiskAdjustment: 1200,
+      cameraRepairCost: 2000,
+      motherboardRepairCost: 7000,
+      chargingPortRepairCost: 1800,
+      speakerRepairCost: 1800,
     },
     android_ultra_premium: {
       displayRepairCost: 11000,

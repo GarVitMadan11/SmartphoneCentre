@@ -61,6 +61,33 @@ export const DEFAULT_SERIES_ORDER: Record<string, string[]> = {
   ]
 };
 
+export const DEFAULT_TABLET_SERIES_ORDER: Record<string, string[]> = {
+  'brand-apple': [
+    'iPad Pro Series',
+    'iPad Air Series',
+    'iPad mini Series',
+    'iPad Series',
+  ],
+  'brand-samsung': [
+    'Galaxy Tab S Series',
+    'Galaxy Tab FE Series',
+    'Galaxy Tab A Series',
+  ],
+};
+
+export const DEFAULT_SMARTWATCH_SERIES_ORDER: Record<string, string[]> = {
+  'brand-apple': [
+    'Apple Watch Ultra Series',
+    'Apple Watch Series',
+    'Apple Watch SE Series',
+  ],
+  'brand-samsung': [
+    'Galaxy Watch Ultra Series',
+    'Galaxy Watch Series',
+    'Galaxy Watch Classic Series',
+  ],
+};
+
 export function getSavedBrandOrder(): string[] {
   try {
     const raw = localStorage.getItem('stc_brand_order');
@@ -114,41 +141,47 @@ export function resetBrandOrder(): void {
   }
 }
 
-export function getSavedSeriesOrder(brandId: string): string[] {
+export function getSavedSeriesOrder(brandId: string, category: string = 'smartphones'): string[] {
   try {
-    const raw = localStorage.getItem(`stc_series_order_${brandId}`);
+    const key = category === 'smartphones' ? `stc_series_order_${brandId}` : `stc_series_order_${category}_${brandId}`;
+    const raw = localStorage.getItem(key);
     return raw ? JSON.parse(raw) : [];
   } catch {
     return [];
   }
 }
 
-export function saveSeriesOrder(brandId: string, order: string[]): void {
+export function saveSeriesOrder(brandId: string, order: string[], category: string = 'smartphones'): void {
   try {
-    localStorage.setItem(`stc_series_order_${brandId}`, JSON.stringify(order));
+    const key = category === 'smartphones' ? `stc_series_order_${brandId}` : `stc_series_order_${category}_${brandId}`;
+    localStorage.setItem(key, JSON.stringify(order));
     window.dispatchEvent(new Event('stc_catalog_order_changed'));
   } catch (e) {
     console.error('Failed to save series order:', e);
   }
 }
 
-export function saveSeriesDefaultOrder(brandId: string, order: string[]): void {
+export function saveSeriesDefaultOrder(brandId: string, order: string[], category: string = 'smartphones'): void {
   try {
-    localStorage.setItem(`stc_default_series_order_${brandId}`, JSON.stringify(order));
-    localStorage.setItem(`stc_series_order_${brandId}`, JSON.stringify(order));
+    const defaultKey = category === 'smartphones' ? `stc_default_series_order_${brandId}` : `stc_default_series_order_${category}_${brandId}`;
+    const orderKey = category === 'smartphones' ? `stc_series_order_${brandId}` : `stc_series_order_${category}_${brandId}`;
+    localStorage.setItem(defaultKey, JSON.stringify(order));
+    localStorage.setItem(orderKey, JSON.stringify(order));
     window.dispatchEvent(new Event('stc_catalog_order_changed'));
   } catch (e) {
     console.error('Failed to save default series order:', e);
   }
 }
 
-export function resetSeriesOrder(brandId: string): void {
+export function resetSeriesOrder(brandId: string, category: string = 'smartphones'): void {
   try {
-    const customDefault = localStorage.getItem(`stc_default_series_order_${brandId}`);
+    const defaultKey = category === 'smartphones' ? `stc_default_series_order_${brandId}` : `stc_default_series_order_${category}_${brandId}`;
+    const orderKey = category === 'smartphones' ? `stc_series_order_${brandId}` : `stc_series_order_${category}_${brandId}`;
+    const customDefault = localStorage.getItem(defaultKey);
     if (customDefault) {
-      localStorage.setItem(`stc_series_order_${brandId}`, customDefault);
+      localStorage.setItem(orderKey, customDefault);
     } else {
-      localStorage.removeItem(`stc_series_order_${brandId}`);
+      localStorage.removeItem(orderKey);
     }
     window.dispatchEvent(new Event('stc_catalog_order_changed'));
   } catch (e) {
@@ -187,41 +220,47 @@ export function isBrandSeriesSkipped(brandId: string): boolean {
   return list.includes(brandId);
 }
 
-export function getSavedModelOrder(brandId: string): string[] {
+export function getSavedModelOrder(brandId: string, category: string = 'smartphones'): string[] {
   try {
-    const raw = localStorage.getItem(`stc_model_order_${brandId}`);
+    const key = category === 'smartphones' ? `stc_model_order_${brandId}` : `stc_model_order_${category}_${brandId}`;
+    const raw = localStorage.getItem(key);
     return raw ? JSON.parse(raw) : [];
   } catch {
     return [];
   }
 }
 
-export function saveModelOrder(brandId: string, order: string[]): void {
+export function saveModelOrder(brandId: string, order: string[], category: string = 'smartphones'): void {
   try {
-    localStorage.setItem(`stc_model_order_${brandId}`, JSON.stringify(order));
+    const key = category === 'smartphones' ? `stc_model_order_${brandId}` : `stc_model_order_${category}_${brandId}`;
+    localStorage.setItem(key, JSON.stringify(order));
     window.dispatchEvent(new Event('stc_catalog_order_changed'));
   } catch (e) {
     console.error('Failed to save model order:', e);
   }
 }
 
-export function saveModelDefaultOrder(brandId: string, order: string[]): void {
+export function saveModelDefaultOrder(brandId: string, order: string[], category: string = 'smartphones'): void {
   try {
-    localStorage.setItem(`stc_default_model_order_${brandId}`, JSON.stringify(order));
-    localStorage.setItem(`stc_model_order_${brandId}`, JSON.stringify(order));
+    const defaultKey = category === 'smartphones' ? `stc_default_model_order_${brandId}` : `stc_default_model_order_${category}_${brandId}`;
+    const orderKey = category === 'smartphones' ? `stc_model_order_${brandId}` : `stc_model_order_${category}_${brandId}`;
+    localStorage.setItem(defaultKey, JSON.stringify(order));
+    localStorage.setItem(orderKey, JSON.stringify(order));
     window.dispatchEvent(new Event('stc_catalog_order_changed'));
   } catch (e) {
     console.error('Failed to save default model order:', e);
   }
 }
 
-export function resetModelOrder(brandId: string): void {
+export function resetModelOrder(brandId: string, category: string = 'smartphones'): void {
   try {
-    const customDefault = localStorage.getItem(`stc_default_model_order_${brandId}`);
+    const defaultKey = category === 'smartphones' ? `stc_default_model_order_${brandId}` : `stc_default_model_order_${category}_${brandId}`;
+    const orderKey = category === 'smartphones' ? `stc_model_order_${brandId}` : `stc_model_order_${category}_${brandId}`;
+    const customDefault = localStorage.getItem(defaultKey);
     if (customDefault) {
-      localStorage.setItem(`stc_model_order_${brandId}`, customDefault);
+      localStorage.setItem(orderKey, customDefault);
     } else {
-      localStorage.removeItem(`stc_model_order_${brandId}`);
+      localStorage.removeItem(orderKey);
     }
     window.dispatchEvent(new Event('stc_catalog_order_changed'));
   } catch (e) {
@@ -303,8 +342,16 @@ export function getSeriesHierarchyWeight(seriesName: string): number {
   return baseWeight * 100 + numBonus;
 }
 
-export function sortSeriesByHierarchy(brandId: string, seriesList: string[]): string[] {
-  const defaultList = DEFAULT_SERIES_ORDER[brandId];
+export function sortSeriesByHierarchy(brandId: string, seriesList: string[], category: string = 'smartphones'): string[] {
+  let defaultList: string[] | undefined;
+  if (category === 'tablets') {
+    defaultList = DEFAULT_TABLET_SERIES_ORDER[brandId];
+  } else if (category === 'smartwatches') {
+    defaultList = DEFAULT_SMARTWATCH_SERIES_ORDER[brandId];
+  } else {
+    defaultList = DEFAULT_SERIES_ORDER[brandId];
+  }
+
   return [...seriesList].sort((a, b) => {
     // 1. Hierarchy weight takes precedence for generational series (e.g. iPhone 18 > 17, Pixel 10 > 9)
     const weightA = getSeriesHierarchyWeight(a);
@@ -325,8 +372,8 @@ export function sortSeriesByHierarchy(brandId: string, seriesList: string[]): st
 }
 
 // Utility to apply series order to an array of series strings
-export function applySeriesOrder(brandId: string, seriesList: string[]): string[] {
-  const customOrder = getSavedSeriesOrder(brandId);
+export function applySeriesOrder(brandId: string, seriesList: string[], category: string = 'smartphones'): string[] {
+  const customOrder = getSavedSeriesOrder(brandId, category);
   if (customOrder && customOrder.length > 0) {
     return [...seriesList].sort((a, b) => {
       const idxA = customOrder.indexOf(a);
@@ -344,12 +391,12 @@ export function applySeriesOrder(brandId: string, seriesList: string[]): string[
     });
   }
 
-  return sortSeriesByHierarchy(brandId, seriesList);
+  return sortSeriesByHierarchy(brandId, seriesList, category);
 }
 
 // Utility to apply model order to an array of Model objects
-export function applyModelOrder(brandId: string, modelsList: Model[]): Model[] {
-  const customOrder = getSavedModelOrder(brandId);
+export function applyModelOrder(brandId: string, modelsList: Model[], category: string = 'smartphones'): Model[] {
+  const customOrder = getSavedModelOrder(brandId, category);
   if (!customOrder || customOrder.length === 0) {
     return sortModelsByLaunchDesc(modelsList);
   }

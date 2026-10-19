@@ -1,5 +1,16 @@
 import phoneImages from './phoneImages.json';
 import actualPrices from './actualPrices.json';
+import activeModelIds from './activeModelIds.json';
+
+const ACTIVE_MODEL_ID_SET = new Set(activeModelIds as string[]);
+
+export function isModelActiveInCatalog(m: { id?: string; legacyId?: string; name?: string }): boolean {
+  if (m.id && ACTIVE_MODEL_ID_SET.has(m.id)) return true;
+  if (m.legacyId && ACTIVE_MODEL_ID_SET.has(m.legacyId)) return true;
+  const clean = (m.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  if (ACTIVE_MODEL_ID_SET.has(clean)) return true;
+  return false;
+}
 
 
 export interface Brand {
@@ -17,6 +28,7 @@ export interface Model {
   brandId: string;
   name: string;
   category: DeviceCategory;
+  deviceType?: 'smartphones' | 'tablets' | 'smartwatches';
   releaseYear: number;
   basePrice128GB: number; // Anchor price in INR (lowest variant or explicit)
   series?: string;        // Sub-category or series designation
@@ -35,6 +47,7 @@ export interface Variant {
   ramGb?: number;     // RAM capacity in GB (e.g. 4, 6, 8, 12, 16); 0 or undefined for Apple
   color: string;
   basePrice: number; // Calculated base price in INR
+  connectivity?: 'wifi' | 'cellular'; // Tablet & Smartwatch connectivity type
 }
 
 export interface DefectRule {
@@ -56,7 +69,7 @@ export function isAppleDevice(brandId?: string, modelName?: string): boolean {
 }
 
 export function isSmartwatchDevice(brandId?: string, modelName?: string, modelId?: string): boolean {
-  if (modelId && SMARTWATCH_MODELS.some(m => m.id === modelId)) return true;
+  if (modelId && SMARTWATCH_MODELS.some(m => m.id === modelId || m.legacyId === modelId)) return true;
   const b = (brandId || '').toLowerCase();
   const m = (modelName || '').toLowerCase();
   const id = (modelId || '').toLowerCase();
@@ -64,10 +77,10 @@ export function isSmartwatchDevice(brandId?: string, modelName?: string, modelId
 }
 
 export function isTabletDevice(_brandId?: string, modelName?: string, modelId?: string): boolean {
-  if (modelId && TABLET_MODELS.some(m => m.id === modelId)) return true;
+  if (modelId && TABLET_MODELS.some(m => m.id === modelId || m.legacyId === modelId)) return true;
   const m = (modelName || '').toLowerCase();
   const id = (modelId || '').toLowerCase();
-  return m.includes('ipad') || m.includes('tab') || id.includes('ipad') || id.includes('tab');
+  return m.includes('ipad') || m.includes('galaxy tab') || id.includes('ipad') || id.includes('tab-s') || id.includes('tab-a');
 }
 
 export function getSmartwatchDefectRules(
@@ -269,6 +282,411 @@ export function getSmartwatchDefectRules(
   ];
 }
 
+// 2.2 Dedicated Tablet Defect Rules (iPads & Galaxy Tabs)
+export function getTabletDefectRules(
+  category: DeviceCategory,
+  brandId?: string,
+  modelName?: string
+): DefectRule[] {
+  const isApple = isAppleDevice(brandId, modelName);
+  const screenPct = category === 'flagship' ? 0.32 : category === 'premium' ? 0.26 : 0.20;
+  const nonOriginalPct = category === 'flagship' ? 0.38 : category === 'premium' ? 0.30 : 0.24;
+
+  return [
+    // ── BOOT GATEKEEPER ───────────────────────────────────────────────────
+    {
+      id: 'defect-critical-power',
+      category: 'accessories',
+      description: 'Tablet Does Not Turn On',
+      subText: 'We currently only accept devices that switch on without any issues.',
+      deductionFixed: 0,
+      deductionPercentage: 1.0,
+      isCriticalFailure: true
+    },
+    {
+      id: 'defect-critical-icloud',
+      category: 'accessories',
+      description: isApple ? 'iCloud / Apple ID Activation Locked' : 'Google Account / FRP Locked',
+      subText: isApple
+        ? 'iPad is locked to an Apple ID or Activation Lock is active on iCloud.'
+        : 'Tablet has active Factory Reset Protection or Google account lock.',
+      deductionFixed: 0,
+      deductionPercentage: 1.0,
+      isCriticalFailure: true
+    },
+
+    // ── NETWORK & SIM TRAY ────────────────────────────────────────────────
+    {
+      id: 'defect-tablet-network-fail',
+      category: 'connectivity',
+      description: 'Cellular Network Not Working',
+      subText: 'SIM not detecting, no cellular network reception, or frequent mobile data disconnection.',
+      deductionFixed: 0,
+      deductionPercentage: 0.12
+    },
+    {
+      id: 'defect-tablet-missing-sim-tray',
+      category: 'accessories',
+      description: 'SIM Tray Missing or Damaged',
+      subText: 'SIM card ejector tray is missing, cracked, or jammed inside the frame.',
+      deductionFixed: 500,
+      deductionPercentage: 0
+    },
+
+    // ── SCREEN DEFECTS (Touch & Originality) ──────────────────────────────
+    {
+      id: 'defect-screen-touch',
+      category: 'screen',
+      description: 'Touch Screen Not Working Properly',
+      subText: 'Dead touch zones, ghost touches, or unresponsive digitizer when swiping or using stylus.',
+      deductionFixed: 0,
+      deductionPercentage: 0.25
+    },
+    {
+      id: 'defect-screen-non-original',
+      category: 'screen',
+      description: 'Screen Replaced at Local Shop (Non-Original)',
+      subText: 'Display panel was replaced at a local workshop / non-authorized service center.',
+      deductionFixed: 0,
+      deductionPercentage: nonOriginalPct
+    },
+
+    // ── SCREEN PHYSICAL CONDITION ─────────────────────────────────────────
+    {
+      id: 'defect-screen-scratches-minor',
+      category: 'screen',
+      description: '1-2 Scratches on Screen',
+      subText: 'Light hairline surface scratches visible only under direct reflected light.',
+      deductionFixed: 800,
+      deductionPercentage: 0.02
+    },
+    {
+      id: 'defect-screen-scratches-major',
+      category: 'screen',
+      description: 'More Than 2 Scratches on Screen',
+      subText: 'Multiple deep scratches felt with fingernail across the display glass.',
+      deductionFixed: 1500,
+      deductionPercentage: 0.04
+    },
+    {
+      id: 'defect-screen-chipped',
+      category: 'screen',
+      description: 'Chipped Outside Display Area',
+      subText: 'Minor glass chip or bevel nick outside the active pixel viewing area.',
+      deductionFixed: 0,
+      deductionPercentage: 0.12
+    },
+    {
+      id: 'defect-screen-cracked',
+      category: 'screen',
+      description: 'Screen Cracked / Glass Broken',
+      subText: 'Visible spider cracks, deep hairline fracture, or shattered front glass.',
+      deductionFixed: 0,
+      deductionPercentage: screenPct
+    },
+
+    // ── SCREEN DISCOLORATION ──────────────────────────────────────────────
+    {
+      id: 'defect-screen-discolor-minor',
+      category: 'screen',
+      description: 'Minor Discoloration on Screen',
+      subText: 'Faint yellow/pink tint or slight uneven warm patches along the screen edges.',
+      deductionFixed: 0,
+      deductionPercentage: 0.08
+    },
+    {
+      id: 'defect-screen-discolor-major',
+      category: 'screen',
+      description: 'Major Discoloration on Screen',
+      subText: 'Severe color shift, dark burn-in patches, or permanent pixel degradation.',
+      deductionFixed: 0,
+      deductionPercentage: 0.18
+    },
+    {
+      id: 'defect-screen-shading',
+      category: 'screen',
+      description: 'Screen Shading / Fading',
+      subText: 'Ghost image retention, faded contrast, or backlight gradient drop.',
+      deductionFixed: 0,
+      deductionPercentage: 0.14
+    },
+
+    // ── SPOTS ON SCREEN ───────────────────────────────────────────────────
+    {
+      id: 'defect-screen-spots-white-minor',
+      category: 'screen',
+      description: '1-2 Very Small White Spots on Screen',
+      subText: 'Pressure spots or minor diffuser bright spots visible on a clean white background.',
+      deductionFixed: 0,
+      deductionPercentage: 0.06
+    },
+    {
+      id: 'defect-screen-spots-multi',
+      category: 'screen',
+      description: '3 or More White Spots / Coloured Spots',
+      subText: 'Multiple pressure spots, stuck colored pixels, or noticeable liquid blemishes.',
+      deductionFixed: 0,
+      deductionPercentage: 0.16
+    },
+    {
+      id: 'defect-screen-lines',
+      category: 'screen',
+      description: 'Lines Visible on Screen',
+      subText: 'Permanent vertical or horizontal colored laser lines across display panel.',
+      deductionFixed: 0,
+      deductionPercentage: 0.28
+    },
+    {
+      id: 'defect-screen-light-leaks',
+      category: 'screen',
+      description: 'Light Leaks Around Edges of Display',
+      subText: 'Backlight bleed glowing noticeably along the perimeter bezel edges.',
+      deductionFixed: 0,
+      deductionPercentage: 0.10
+    },
+
+    // ── FUNCTIONAL OR PHYSICAL PROBLEMS ───────────────────────────────────
+    {
+      id: 'defect-func-front-camera',
+      category: 'camera',
+      description: 'Front Camera Not Working',
+      subText: 'Front FaceTime / selfie camera is blank, black, blurred, or fails to open.',
+      deductionFixed: 1200,
+      deductionPercentage: 0.08
+    },
+    {
+      id: 'defect-func-back-camera',
+      category: 'camera',
+      description: 'Back Camera Not Working',
+      subText: 'Rear primary camera sensor blurred, autofocus clicking, or black viewfinder.',
+      deductionFixed: 1800,
+      deductionPercentage: 0.10
+    },
+    {
+      id: 'defect-func-camera-glass',
+      category: 'camera',
+      description: 'Camera Glass Broken / Missing',
+      subText: 'Outer lens protective glass is cracked, scratched, or missing.',
+      deductionFixed: 1200,
+      deductionPercentage: 0
+    },
+    {
+      id: 'defect-func-touch-id',
+      category: 'functionality',
+      description: 'Finger / Touch ID Sensor Not Working',
+      subText: 'Biometric Touch ID sensor fails to register fingerprints or is greyed out.',
+      deductionFixed: 0,
+      deductionPercentage: 0.10
+    },
+    {
+      id: 'defect-func-face-id',
+      category: 'functionality',
+      description: 'Face Sensor (Face ID) Not Working',
+      subText: 'TrueDepth camera Face ID sensor disabled or shows "Face ID is Not Available".',
+      deductionFixed: 0,
+      deductionPercentage: 0.16
+    },
+    {
+      id: 'defect-func-wifi',
+      category: 'connectivity',
+      description: 'Wi-Fi Not Working',
+      subText: 'Wi-Fi toggle greyed out, cannot discover networks, or drops signal continuously.',
+      deductionFixed: 0,
+      deductionPercentage: 0.16
+    },
+    {
+      id: 'defect-func-gps',
+      category: 'connectivity',
+      description: 'GPS Not Working',
+      subText: 'Location services inaccurate, compass drifting, or satellite GPS lock fails.',
+      deductionFixed: 1000,
+      deductionPercentage: 0.05
+    },
+    {
+      id: 'defect-func-bluetooth',
+      category: 'connectivity',
+      description: 'Bluetooth Not Working',
+      subText: 'Cannot discover or pair Bluetooth accessories, headphones, or stylus.',
+      deductionFixed: 1000,
+      deductionPercentage: 0.05
+    },
+    {
+      id: 'defect-func-audio-jack',
+      category: 'functionality',
+      description: 'Audio Jack Not Working',
+      subText: '3.5mm headphone jack loose, distorted audio, or static buzz.',
+      deductionFixed: 800,
+      deductionPercentage: 0
+    },
+    {
+      id: 'defect-func-volume-buttons',
+      category: 'functionality',
+      description: 'Volume Button Missing / Not Working',
+      subText: 'Volume Up or Down physical button stuck, loose, missing, or unresponsive.',
+      deductionFixed: 1000,
+      deductionPercentage: 0
+    },
+    {
+      id: 'defect-func-power-button',
+      category: 'functionality',
+      description: 'Power Button Broken / Not Working / Missing',
+      subText: 'Top / Sleep power button does not click or fails to wake tablet.',
+      deductionFixed: 1500,
+      deductionPercentage: 0
+    },
+    {
+      id: 'defect-func-charging',
+      category: 'connectivity',
+      description: 'Charging Defect; Unable to Charge',
+      subText: 'USB-C / Lightning port loose, requires cable wiggling, or fails to charge tablet.',
+      deductionFixed: 0,
+      deductionPercentage: 0.14
+    },
+    {
+      id: 'defect-battery-low',
+      category: 'connectivity',
+      description: 'Battery Faulty or Not Working',
+      subText: 'Battery drains rapidly, shuts down under 20%, or swollen battery detected.',
+      deductionFixed: 2500,
+      deductionPercentage: 0.08
+    },
+    {
+      id: 'defect-func-mic',
+      category: 'functionality',
+      description: 'Microphone Not Working',
+      subText: 'Voice recording or video call microphone audio is muffled, quiet, or silent.',
+      deductionFixed: 1200,
+      deductionPercentage: 0.05
+    },
+    {
+      id: 'defect-func-speaker',
+      category: 'functionality',
+      description: 'Speaker Not Working; Faulty or Cracked Sound',
+      subText: 'Quad or stereo speaker assembly rattles, buzzes, or has crackling audio.',
+      deductionFixed: 1500,
+      deductionPercentage: 0.06
+    },
+
+    // ── BODY DEFECTS ──────────────────────────────────────────────────────
+    {
+      id: 'defect-body-scratches-minor',
+      category: 'body',
+      description: '1-2 Scratches on Body',
+      subText: 'Minor faint scuffs on the aluminum chassis from ordinary daily handling.',
+      deductionFixed: 600,
+      deductionPercentage: 0.015
+    },
+    {
+      id: 'defect-body-scratches-major',
+      category: 'body',
+      description: 'More Than 2 Scratches on Body',
+      subText: 'Noticeable abrasions or deep metal surface scratches on body housing.',
+      deductionFixed: 1200,
+      deductionPercentage: 0.03
+    },
+    {
+      id: 'defect-body-dents-minor',
+      category: 'body',
+      description: '1-2 Minor Dents on Body',
+      subText: 'Small cosmetic corner or rim dimples that do not affect internal assembly.',
+      deductionFixed: 1200,
+      deductionPercentage: 0.04
+    },
+    {
+      id: 'defect-body-dents-major',
+      category: 'body',
+      description: 'Major Dent(s) or More Than 2 Dents',
+      subText: 'Heavy frame dents, gouged corner metal, or structural impact marks.',
+      deductionFixed: 2500,
+      deductionPercentage: 0.08
+    },
+    {
+      id: 'defect-body-bent',
+      category: 'body',
+      description: 'Body Bent',
+      subText: 'Chassis visibly warped or curved when laid flat on a level tabletop.',
+      deductionFixed: 0,
+      deductionPercentage: 0.18
+    },
+    {
+      id: 'defect-body-screen-loose',
+      category: 'body',
+      description: 'Loose Screen',
+      subText: 'Screen lifting away from the metal frame adhesive along sides or corners.',
+      deductionFixed: 0,
+      deductionPercentage: 0.12
+    },
+    {
+      id: 'defect-body-bent-and-loose',
+      category: 'body',
+      description: 'Both Bent and Loose Screen',
+      subText: 'Severe structural bend causing the glass digitizer assembly to pop out.',
+      deductionFixed: 0,
+      deductionPercentage: 0.25
+    },
+
+    // ── DEVICE SIDE / BACK PANEL CONDITION ────────────────────────────────
+    {
+      id: 'defect-body-panel-gap',
+      category: 'body',
+      description: 'Visible Gap Between Body and Back Panel',
+      subText: 'Enclosure seam separation or swelling gap between rear shell and frame.',
+      deductionFixed: 0,
+      deductionPercentage: 0.10
+    },
+    {
+      id: 'defect-body-panel-chipped',
+      category: 'body',
+      description: 'Back Panel Chipped on Edges',
+      subText: 'Corner metal or composite back panel chipped/damaged from hard fall.',
+      deductionFixed: 1000,
+      deductionPercentage: 0.06
+    },
+    {
+      id: 'defect-body-panel-broken',
+      category: 'body',
+      description: 'Back Panel Broken / Shattered',
+      subText: 'Rear enclosure cracked, shattered, or severely deformed.',
+      deductionFixed: 0,
+      deductionPercentage: 0.18
+    },
+    {
+      id: 'defect-body-panel-missing',
+      category: 'body',
+      description: 'Back Panel Missing',
+      subText: 'Rear panel piece detached or internal battery/logic board exposed.',
+      deductionFixed: 0,
+      deductionPercentage: 0.25
+    },
+
+    // ── ACCESSORIES & INVOICE ─────────────────────────────────────────────
+    {
+      id: 'defect-acc-missing-charger',
+      category: 'accessories',
+      description: 'Missing Original Tablet Charger',
+      subText: 'Original high-wattage power adapter / USB-C fast charging brick not provided.',
+      deductionFixed: 1500,
+      deductionPercentage: 0
+    },
+    {
+      id: 'defect-acc-missing-box',
+      category: 'accessories',
+      description: 'Missing Box With Same IMEI / Serial',
+      subText: 'Original manufacturer retail box with matching serial barcode not available.',
+      deductionFixed: 800,
+      deductionPercentage: 0
+    },
+    {
+      id: 'defect-acc-missing-bill',
+      category: 'accessories',
+      description: 'Missing GST Valid Bill With Same IMEI / Serial',
+      subText: 'GST retail invoice with device serial/IMEI not provided (required for warranty claims).',
+      deductionFixed: 1000,
+      deductionPercentage: 0
+    }
+  ];
+}
+
 // 3. Dynamic Defect Rules tailored by model category and brand
 export function getDefectRulesForCategory(
   category: DeviceCategory, 
@@ -278,6 +696,9 @@ export function getDefectRulesForCategory(
 ): DefectRule[] {
   if (isSmartwatchDevice(brandId, modelName, modelId)) {
     return getSmartwatchDefectRules(category, brandId, modelName);
+  }
+  if (isTabletDevice(brandId, modelName, modelId)) {
+    return getTabletDefectRules(category, brandId, modelName);
   }
 
   const isApple = isAppleDevice(brandId, modelName);
@@ -901,7 +1322,7 @@ const makeCatalogModels = (brandId: string, series: string, releaseYear: number,
       series: resolvedSeries,
       supportedStorageGb: benchmark ? benchmark.supportedStorageGb : undefined,
       variantPrices: benchmark ? benchmark.variantPrices : undefined,
-      hidden: true,
+      hidden: !isModelActiveInCatalog({ id: catalogId(brandId, name), name }),
       supportsWarrantyQuestion: resolvedYear >= 2023,
     };
   });
@@ -1589,19 +2010,232 @@ const BASE_MODELS: Model[] = [
 // ─────────────────────────────────────────────────────────────────────────────
 export const TABLET_MODELS: Model[] = [
   // Apple iPads
-  { id: 'apple-ipad-pro-m4-13', brandId: 'brand-apple', name: 'iPad Pro 13" (M4)', category: 'flagship', releaseYear: 2024, basePrice128GB: 78000, series: 'iPad Pro', supportedStorageGb: [256, 512, 1024, 2048], supportedRamGb: [0], imageUrl: 'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-pro-13-select-wifi-spaceblack-202405?wid=940&hei=1112&fmt=p-jpg&qlt=95' },
-  { id: 'apple-ipad-pro-m4-11', brandId: 'brand-apple', name: 'iPad Pro 11" (M4)', category: 'flagship', releaseYear: 2024, basePrice128GB: 64000, series: 'iPad Pro', supportedStorageGb: [256, 512, 1024, 2048], supportedRamGb: [0], imageUrl: 'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-pro-11-select-wifi-spaceblack-202405?wid=940&hei=1112&fmt=p-jpg&qlt=95' },
-  { id: 'apple-ipad-air-m2-13', brandId: 'brand-apple', name: 'iPad Air 13" (M2)', category: 'premium', releaseYear: 2024, basePrice128GB: 48000, series: 'iPad Air', supportedStorageGb: [128, 256, 512, 1024], supportedRamGb: [0], imageUrl: 'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-air-13-select-wifi-blue-202405?wid=940&hei=1112&fmt=p-jpg&qlt=95' },
-  { id: 'apple-ipad-air-m2-11', brandId: 'brand-apple', name: 'iPad Air 11" (M2)', category: 'premium', releaseYear: 2024, basePrice128GB: 39000, series: 'iPad Air', supportedStorageGb: [128, 256, 512, 1024], supportedRamGb: [0], imageUrl: 'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-air-11-select-wifi-starlight-202405?wid=940&hei=1112&fmt=p-jpg&qlt=95' },
-  { id: 'apple-ipad-10gen', brandId: 'brand-apple', name: 'iPad (10th Generation)', category: 'midrange', releaseYear: 2022, basePrice128GB: 22000, series: 'iPad', supportedStorageGb: [64, 256], supportedRamGb: [0], imageUrl: 'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-10th-gen-finish-select-202212-blue?wid=940&hei=1112&fmt=p-jpg&qlt=95' },
-  { id: 'apple-ipad-mini-7', brandId: 'brand-apple', name: 'iPad mini 7 (A17 Pro)', category: 'premium', releaseYear: 2024, basePrice128GB: 34000, series: 'iPad mini', supportedStorageGb: [128, 256, 512], supportedRamGb: [0], imageUrl: 'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-mini-select-wifi-purple-202410?wid=940&hei=1112&fmt=p-jpg&qlt=95' },
+  {
+    id: 'apple-ipad-pro-m4-13',
+    legacyId: 'apple-ipad-pro-m4-13',
+    brandId: 'brand-apple',
+    name: 'iPad Pro 13" (M4)',
+    category: 'flagship',
+    deviceType: 'tablets',
+    releaseYear: 2024,
+    basePrice128GB: 78000,
+    series: 'iPad Pro Series',
+    imageUrl: 'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-pro-13-select-wifi-spaceblack-202405?wid=940&hei=1112&fmt=p-jpg&qlt=95',
+    supportedStorageGb: [256, 512, 1024, 2048],
+    supportedRamGb: [0],
+    variantPrices: { "0_256": 78000, "0_512": 88000, "0_1024": 99000, "0_2048": 115000 },
+    hidden: false
+  },
+  {
+    id: 'apple-ipad-pro-m4-11',
+    legacyId: 'apple-ipad-pro-m4-11',
+    brandId: 'brand-apple',
+    name: 'iPad Pro 11" (M4)',
+    category: 'flagship',
+    deviceType: 'tablets',
+    releaseYear: 2024,
+    basePrice128GB: 64000,
+    series: 'iPad Pro Series',
+    imageUrl: 'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-pro-11-select-wifi-spaceblack-202405?wid=940&hei=1112&fmt=p-jpg&qlt=95',
+    supportedStorageGb: [256, 512, 1024, 2048],
+    supportedRamGb: [0],
+    variantPrices: { "0_256": 64000, "0_512": 72000, "0_1024": 82000, "0_2048": 95000 },
+    hidden: false
+  },
+  {
+    id: 'apple-ipad-pro-12-9-6th',
+    legacyId: 'apple-ipad-pro-12-9-6th',
+    brandId: 'brand-apple',
+    name: 'iPad Pro 12.9" 6th Gen',
+    category: 'flagship',
+    deviceType: 'tablets',
+    releaseYear: 2022,
+    basePrice128GB: 62000,
+    series: 'iPad Pro Series',
+    imageUrl: 'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-pro-13-select-wifi-spaceblack-202405?wid=940&hei=1112&fmt=p-jpg&qlt=95',
+    supportedStorageGb: [128, 256, 512, 1024, 2048],
+    supportedRamGb: [0],
+    variantPrices: { "0_128": 62000, "0_256": 69000, "0_512": 78000, "0_1024": 88000, "0_2048": 98000 },
+    hidden: false
+  },
+  {
+    id: 'apple-ipad-pro-11-4th',
+    legacyId: 'apple-ipad-pro-11-4th',
+    brandId: 'brand-apple',
+    name: 'iPad Pro 11" 4th Gen',
+    category: 'flagship',
+    deviceType: 'tablets',
+    releaseYear: 2022,
+    basePrice128GB: 52000,
+    series: 'iPad Pro Series',
+    imageUrl: 'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-pro-11-select-wifi-spaceblack-202405?wid=940&hei=1112&fmt=p-jpg&qlt=95',
+    supportedStorageGb: [128, 256, 512, 1024, 2048],
+    supportedRamGb: [0],
+    variantPrices: { "0_128": 52000, "0_256": 58000, "0_512": 66000, "0_1024": 74000, "0_2048": 82000 },
+    hidden: false
+  },
+  {
+    id: 'apple-ipad-air-m2-13',
+    legacyId: 'apple-ipad-air-m2-13',
+    brandId: 'brand-apple',
+    name: 'iPad Air 13" (M2)',
+    category: 'premium',
+    deviceType: 'tablets',
+    releaseYear: 2024,
+    basePrice128GB: 48000,
+    series: 'iPad Air Series',
+    imageUrl: 'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-air-13-select-wifi-blue-202405?wid=940&hei=1112&fmt=p-jpg&qlt=95',
+    supportedStorageGb: [128, 256, 512, 1024],
+    supportedRamGb: [0],
+    variantPrices: { "0_128": 48000, "0_256": 54000, "0_512": 62000, "0_1024": 70000 },
+    hidden: false
+  },
+  {
+    id: 'apple-ipad-air-m2-11',
+    legacyId: 'apple-ipad-air-m2-11',
+    brandId: 'brand-apple',
+    name: 'iPad Air 11" (M2)',
+    category: 'premium',
+    deviceType: 'tablets',
+    releaseYear: 2024,
+    basePrice128GB: 39000,
+    series: 'iPad Air Series',
+    imageUrl: 'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-air-11-select-wifi-starlight-202405?wid=940&hei=1112&fmt=p-jpg&qlt=95',
+    supportedStorageGb: [128, 256, 512, 1024],
+    supportedRamGb: [0],
+    variantPrices: { "0_128": 39000, "0_256": 44000, "0_512": 51000, "0_1024": 58000 },
+    hidden: false
+  },
+  {
+    id: 'apple-ipad-air-5',
+    legacyId: 'apple-ipad-air-5',
+    brandId: 'brand-apple',
+    name: 'iPad Air 5th Gen',
+    category: 'premium',
+    deviceType: 'tablets',
+    releaseYear: 2022,
+    basePrice128GB: 28000,
+    series: 'iPad Air Series',
+    imageUrl: 'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-air-select-wifi-blue-202203?wid=940&hei=1112&fmt=p-jpg&qlt=95',
+    supportedStorageGb: [64, 256],
+    supportedRamGb: [0],
+    variantPrices: { "0_64": 28000, "0_256": 34000 },
+    hidden: false
+  },
+  {
+    id: 'apple-ipad-10gen',
+    legacyId: 'apple-ipad-10gen',
+    brandId: 'brand-apple',
+    name: 'iPad 10th Gen',
+    category: 'midrange',
+    deviceType: 'tablets',
+    releaseYear: 2022,
+    basePrice128GB: 22000,
+    series: 'iPad Series',
+    imageUrl: 'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-10th-gen-finish-select-202212-blue?wid=940&hei=1112&fmt=p-jpg&qlt=95',
+    supportedStorageGb: [64, 256],
+    supportedRamGb: [0],
+    variantPrices: { "0_64": 22000, "0_256": 27000 },
+    hidden: false
+  },
+  {
+    id: 'apple-ipad-mini-7',
+    legacyId: 'apple-ipad-mini-7',
+    brandId: 'brand-apple',
+    name: 'iPad mini 7 / A17 Pro',
+    category: 'premium',
+    deviceType: 'tablets',
+    releaseYear: 2024,
+    basePrice128GB: 34000,
+    series: 'iPad mini Series',
+    imageUrl: 'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-mini-select-wifi-purple-202410?wid=940&hei=1112&fmt=p-jpg&qlt=95',
+    supportedStorageGb: [128, 256, 512],
+    supportedRamGb: [0],
+    variantPrices: { "0_128": 34000, "0_256": 39000, "0_512": 45000 },
+    hidden: false
+  },
 
   // Samsung Galaxy Tabs
-  { id: 'samsung-tab-s10-ultra', brandId: 'brand-samsung', name: 'Galaxy Tab S10 Ultra', category: 'flagship', releaseYear: 2024, basePrice128GB: 72000, series: 'Galaxy Tab S', supportedStorageGb: [256, 512, 1024], supportedRamGb: [12, 16], imageUrl: 'https://images.samsung.com/is/image/samsung/p6pim/in/sm-x920nzaainu/gallery/in-galaxy-tab-s10-ultra-sm-x920-sm-x920nzaainu-543598501?$650_519_PNG$' },
-  { id: 'samsung-tab-s10-plus', brandId: 'brand-samsung', name: 'Galaxy Tab S10+', category: 'flagship', releaseYear: 2024, basePrice128GB: 58000, series: 'Galaxy Tab S', supportedStorageGb: [256, 512], supportedRamGb: [12], imageUrl: 'https://images.samsung.com/is/image/samsung/p6pim/in/sm-x820nzaainu/gallery/in-galaxy-tab-s10-plus-sm-x820-sm-x820nzaainu-543598462?$650_519_PNG$' },
-  { id: 'samsung-tab-s9-ultra', brandId: 'brand-samsung', name: 'Galaxy Tab S9 Ultra', category: 'flagship', releaseYear: 2023, basePrice128GB: 52000, series: 'Galaxy Tab S', supportedStorageGb: [256, 512, 1024], supportedRamGb: [12, 16], imageUrl: 'https://images.samsung.com/is/image/samsung/p6pim/in/sm-x910nzaainu/gallery/in-galaxy-tab-s9-ultra-sm-x910-sm-x910nzaainu-537466829?$650_519_PNG$' },
-  { id: 'samsung-tab-s9-fe', brandId: 'brand-samsung', name: 'Galaxy Tab S9 FE+', category: 'midrange', releaseYear: 2023, basePrice128GB: 26000, series: 'Galaxy Tab FE', supportedStorageGb: [128, 256], supportedRamGb: [8, 12], imageUrl: 'https://images.samsung.com/is/image/samsung/p6pim/in/sm-x610nzaainu/gallery/in-galaxy-tab-s9-fe-plus-sm-x610-sm-x610nzaainu-538466184?$650_519_PNG$' },
-  { id: 'samsung-tab-a9-plus', brandId: 'brand-samsung', name: 'Galaxy Tab A9+', category: 'budget', releaseYear: 2023, basePrice128GB: 12500, series: 'Galaxy Tab A', supportedStorageGb: [64, 128], supportedRamGb: [4, 8], imageUrl: 'https://images.samsung.com/is/image/samsung/p6pim/in/sm-x210nzaainu/gallery/in-galaxy-tab-a9-plus-sm-x210-sm-x210nzaainu-538622176?$650_519_PNG$' }
+  {
+    id: 'samsung-tab-s10-ultra',
+    legacyId: 'samsung-tab-s10-ultra',
+    brandId: 'brand-samsung',
+    name: 'Galaxy Tab S10 Ultra',
+    category: 'flagship',
+    deviceType: 'tablets',
+    releaseYear: 2024,
+    basePrice128GB: 72000,
+    series: 'Galaxy Tab S Series',
+    imageUrl: 'https://images.samsung.com/is/image/samsung/p6pim/in/sm-x920nzaainu/gallery/in-galaxy-tab-s10-ultra-sm-x920-sm-x920nzaainu-543598501?$650_519_PNG$',
+    supportedStorageGb: [256, 512, 1024],
+    supportedRamGb: [12, 16],
+    variantPrices: { "12_256": 72000, "12_512": 79000, "16_1024": 89000 },
+    hidden: false
+  },
+  {
+    id: 'samsung-tab-s10-plus',
+    legacyId: 'samsung-tab-s10-plus',
+    brandId: 'brand-samsung',
+    name: 'Galaxy Tab S10+',
+    category: 'flagship',
+    deviceType: 'tablets',
+    releaseYear: 2024,
+    basePrice128GB: 58000,
+    series: 'Galaxy Tab S Series',
+    imageUrl: 'https://images.samsung.com/is/image/samsung/p6pim/in/sm-x820nzaainu/gallery/in-galaxy-tab-s10-plus-sm-x820-sm-x820nzaainu-543598462?$650_519_PNG$',
+    supportedStorageGb: [256, 512],
+    supportedRamGb: [12],
+    variantPrices: { "12_256": 58000, "12_512": 64000 },
+    hidden: false
+  },
+  {
+    id: 'samsung-tab-s9-ultra',
+    legacyId: 'samsung-tab-s9-ultra',
+    brandId: 'brand-samsung',
+    name: 'Galaxy Tab S9 Ultra',
+    category: 'flagship',
+    deviceType: 'tablets',
+    releaseYear: 2023,
+    basePrice128GB: 52000,
+    series: 'Galaxy Tab S Series',
+    imageUrl: 'https://images.samsung.com/is/image/samsung/p6pim/in/sm-x910nzaainu/gallery/in-galaxy-tab-s9-ultra-sm-x910-sm-x910nzaainu-537466829?$650_519_PNG$',
+    supportedStorageGb: [256, 512, 1024],
+    supportedRamGb: [12, 16],
+    variantPrices: { "12_256": 52000, "12_512": 58000, "16_1024": 66000 },
+    hidden: false
+  },
+  {
+    id: 'samsung-tab-s9-fe',
+    legacyId: 'samsung-tab-s9-fe',
+    brandId: 'brand-samsung',
+    name: 'Galaxy Tab S9 FE+',
+    category: 'midrange',
+    deviceType: 'tablets',
+    releaseYear: 2023,
+    basePrice128GB: 26000,
+    series: 'Galaxy Tab FE Series',
+    imageUrl: 'https://images.samsung.com/is/image/samsung/p6pim/in/sm-x610nzaainu/gallery/in-galaxy-tab-s9-fe-plus-sm-x610-sm-x610nzaainu-538466184?$650_519_PNG$',
+    supportedStorageGb: [128, 256],
+    supportedRamGb: [8, 12],
+    variantPrices: { "8_128": 26000, "12_256": 30000 },
+    hidden: false
+  },
+  {
+    id: 'samsung-tab-a9-plus',
+    legacyId: 'samsung-tab-a9-plus',
+    brandId: 'brand-samsung',
+    name: 'Galaxy Tab A9+',
+    category: 'budget',
+    deviceType: 'tablets',
+    releaseYear: 2023,
+    basePrice128GB: 12500,
+    series: 'Galaxy Tab A Series',
+    imageUrl: 'https://images.samsung.com/is/image/samsung/p6pim/in/sm-x210nzaainu/gallery/in-galaxy-tab-a9-plus-sm-x210-sm-x210nzaainu-538622176?$650_519_PNG$',
+    supportedStorageGb: [64, 128],
+    supportedRamGb: [4, 8],
+    variantPrices: { "4_64": 12500, "8_128": 15500 },
+    hidden: false
+  }
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1609,16 +2243,136 @@ export const TABLET_MODELS: Model[] = [
 // ─────────────────────────────────────────────────────────────────────────────
 export const SMARTWATCH_MODELS: Model[] = [
   // Apple Watches
-  { id: 'apple-watch-ultra-2', brandId: 'brand-apple', name: 'Apple Watch Ultra 2', category: 'flagship', releaseYear: 2024, basePrice128GB: 46000, series: 'Apple Watch Ultra', supportedStorageGb: [64], supportedRamGb: [0], imageUrl: 'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ultra-black-titanium-select-202409?wid=940&hei=1112&fmt=p-jpg&qlt=95' },
-  { id: 'apple-watch-series-10', brandId: 'brand-apple', name: 'Apple Watch Series 10', category: 'flagship', releaseYear: 2024, basePrice128GB: 28000, series: 'Apple Watch Series 10', supportedStorageGb: [64], supportedRamGb: [0], imageUrl: 'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/s10-case-unselect-gallery-1-202409?wid=940&hei=1112&fmt=p-jpg&qlt=95' },
-  { id: 'apple-watch-series-9', brandId: 'brand-apple', name: 'Apple Watch Series 9', category: 'premium', releaseYear: 2023, basePrice128GB: 21000, series: 'Apple Watch Series 9', supportedStorageGb: [64], supportedRamGb: [0], imageUrl: 'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/s9-case-unselect-gallery-1-202309?wid=940&hei=1112&fmt=p-jpg&qlt=95' },
-  { id: 'apple-watch-se-2', brandId: 'brand-apple', name: 'Apple Watch SE (2nd Gen)', category: 'midrange', releaseYear: 2023, basePrice128GB: 13500, series: 'Apple Watch SE', supportedStorageGb: [32], supportedRamGb: [0], imageUrl: 'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/se-case-unselect-gallery-1-202309?wid=940&hei=1112&fmt=p-jpg&qlt=95' },
+  {
+    id: 'apple-watch-ultra-2',
+    legacyId: 'apple-watch-ultra-2',
+    brandId: 'brand-apple',
+    name: 'Apple Watch Ultra 2',
+    category: 'flagship',
+    deviceType: 'smartwatches',
+    releaseYear: 2024,
+    basePrice128GB: 46000,
+    series: 'Apple Watch Ultra Series',
+    imageUrl: 'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ultra-black-titanium-select-202409?wid=940&hei=1112&fmt=p-jpg&qlt=95',
+    supportedStorageGb: [64],
+    supportedRamGb: [0],
+    variantPrices: { "0_64": 46000 },
+    hidden: false
+  },
+  {
+    id: 'apple-watch-series-10',
+    legacyId: 'apple-watch-series-10',
+    brandId: 'brand-apple',
+    name: 'Apple Watch Series 10',
+    category: 'flagship',
+    deviceType: 'smartwatches',
+    releaseYear: 2024,
+    basePrice128GB: 28000,
+    series: 'Apple Watch Series',
+    imageUrl: 'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/s10-case-unselect-gallery-1-202409?wid=940&hei=1112&fmt=p-jpg&qlt=95',
+    supportedStorageGb: [64],
+    supportedRamGb: [0],
+    variantPrices: { "0_64": 28000 },
+    hidden: false
+  },
+  {
+    id: 'apple-watch-series-9',
+    legacyId: 'apple-watch-series-9',
+    brandId: 'brand-apple',
+    name: 'Apple Watch Series 9',
+    category: 'premium',
+    deviceType: 'smartwatches',
+    releaseYear: 2023,
+    basePrice128GB: 21000,
+    series: 'Apple Watch Series',
+    imageUrl: 'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/s9-case-unselect-gallery-1-202309?wid=940&hei=1112&fmt=p-jpg&qlt=95',
+    supportedStorageGb: [64],
+    supportedRamGb: [0],
+    variantPrices: { "0_64": 21000 },
+    hidden: false
+  },
+  {
+    id: 'apple-watch-se-2',
+    legacyId: 'apple-watch-se-2',
+    brandId: 'brand-apple',
+    name: 'Apple Watch SE (2nd Gen)',
+    category: 'midrange',
+    deviceType: 'smartwatches',
+    releaseYear: 2023,
+    basePrice128GB: 13500,
+    series: 'Apple Watch SE Series',
+    imageUrl: 'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/se-case-unselect-gallery-1-202309?wid=940&hei=1112&fmt=p-jpg&qlt=95',
+    supportedStorageGb: [32],
+    supportedRamGb: [0],
+    variantPrices: { "0_32": 13500 },
+    hidden: false
+  },
 
   // Samsung Galaxy Watches
-  { id: 'samsung-watch-ultra', brandId: 'brand-samsung', name: 'Galaxy Watch Ultra', category: 'flagship', releaseYear: 2024, basePrice128GB: 32000, series: 'Galaxy Watch Ultra', supportedStorageGb: [32], supportedRamGb: [2], imageUrl: 'https://images.samsung.com/is/image/samsung/p6pim/in/sm-l705fdaainu/gallery/in-galaxy-watch-ultra-sm-l705-sm-l705fdaainu-542385317?$650_519_PNG$' },
-  { id: 'samsung-watch-7', brandId: 'brand-samsung', name: 'Galaxy Watch 7', category: 'premium', releaseYear: 2024, basePrice128GB: 18500, series: 'Galaxy Watch 7', supportedStorageGb: [32], supportedRamGb: [2], imageUrl: 'https://images.samsung.com/is/image/samsung/p6pim/in/sm-l310nzaainu/gallery/in-galaxy-watch7-l310-sm-l310nzaainu-542385150?$650_519_PNG$' },
-  { id: 'samsung-watch-6-classic', brandId: 'brand-samsung', name: 'Galaxy Watch 6 Classic', category: 'premium', releaseYear: 2023, basePrice128GB: 14500, series: 'Galaxy Watch 6', supportedStorageGb: [16], supportedRamGb: [2], imageUrl: 'https://images.samsung.com/is/image/samsung/p6pim/in/sm-r950nzkainu/gallery/in-galaxy-watch6-classic-r950-sm-r950nzkainu-537424915?$650_519_PNG$' },
-  { id: 'samsung-watch-6', brandId: 'brand-samsung', name: 'Galaxy Watch 6', category: 'midrange', releaseYear: 2023, basePrice128GB: 11000, series: 'Galaxy Watch 6', supportedStorageGb: [16], supportedRamGb: [2], imageUrl: 'https://images.samsung.com/is/image/samsung/p6pim/in/sm-r930nzeainu/gallery/in-galaxy-watch6-r930-sm-r930nzeainu-537424785?$650_519_PNG$' }
+  {
+    id: 'samsung-watch-ultra',
+    legacyId: 'samsung-watch-ultra',
+    brandId: 'brand-samsung',
+    name: 'Galaxy Watch Ultra',
+    category: 'flagship',
+    deviceType: 'smartwatches',
+    releaseYear: 2024,
+    basePrice128GB: 32000,
+    series: 'Galaxy Watch Ultra Series',
+    imageUrl: 'https://images.samsung.com/is/image/samsung/p6pim/in/sm-l705fdaainu/gallery/in-galaxy-watch-ultra-sm-l705-sm-l705fdaainu-542385317?$650_519_PNG$',
+    supportedStorageGb: [32],
+    supportedRamGb: [2],
+    variantPrices: { "2_32": 32000 },
+    hidden: false
+  },
+  {
+    id: 'samsung-watch-7',
+    legacyId: 'samsung-watch-7',
+    brandId: 'brand-samsung',
+    name: 'Galaxy Watch 7',
+    category: 'premium',
+    deviceType: 'smartwatches',
+    releaseYear: 2024,
+    basePrice128GB: 18500,
+    series: 'Galaxy Watch Series',
+    imageUrl: 'https://images.samsung.com/is/image/samsung/p6pim/in/sm-l310nzaainu/gallery/in-galaxy-watch7-l310-sm-l310nzaainu-542385150?$650_519_PNG$',
+    supportedStorageGb: [32],
+    supportedRamGb: [2],
+    variantPrices: { "2_32": 18500 },
+    hidden: false
+  },
+  {
+    id: 'samsung-watch-6-classic',
+    legacyId: 'samsung-watch-6-classic',
+    brandId: 'brand-samsung',
+    name: 'Galaxy Watch 6 Classic',
+    category: 'premium',
+    deviceType: 'smartwatches',
+    releaseYear: 2023,
+    basePrice128GB: 14500,
+    series: 'Galaxy Watch Classic Series',
+    imageUrl: 'https://images.samsung.com/is/image/samsung/p6pim/in/sm-r950nzkainu/gallery/in-galaxy-watch6-classic-r950-sm-r950nzkainu-537424915?$650_519_PNG$',
+    supportedStorageGb: [16],
+    supportedRamGb: [2],
+    variantPrices: { "2_16": 14500 },
+    hidden: false
+  },
+  {
+    id: 'samsung-watch-6',
+    legacyId: 'samsung-watch-6',
+    brandId: 'brand-samsung',
+    name: 'Galaxy Watch 6',
+    category: 'midrange',
+    deviceType: 'smartwatches',
+    releaseYear: 2023,
+    basePrice128GB: 11000,
+    series: 'Galaxy Watch Series',
+    imageUrl: 'https://images.samsung.com/is/image/samsung/p6pim/in/sm-r930nzeainu/gallery/in-galaxy-watch6-r930-sm-r930nzeainu-537424785?$650_519_PNG$',
+    supportedStorageGb: [16],
+    supportedRamGb: [2],
+    variantPrices: { "2_16": 11000 },
+    hidden: false
+  }
 ];
 
 export function getModelTierWeight(model: Model): number {
@@ -1653,15 +2407,20 @@ const RAW_SMARTPHONE_MODELS: Model[] = sortModelsByLaunchDesc([
     const resolvedYear = resolveModelReleaseYear(m.brandId, m.name, m.releaseYear);
     return {
       ...m,
+      deviceType: 'smartphones' as const,
       releaseYear: resolvedYear,
-      hidden: true,
+      hidden: !isModelActiveInCatalog(m),
       supportsWarrantyQuestion: m.supportsWarrantyQuestion ?? (resolvedYear >= 2023),
     };
   }),
   ...CATALOG_ADDITIONS.filter((addition) => !BASE_MODELS.some((model) =>
     model.id === addition.id ||
     (model.brandId === addition.brandId && model.name.toLowerCase().trim() === addition.name.toLowerCase().trim())
-  )),
+  )).map(m => ({
+    ...m,
+    deviceType: 'smartphones' as const,
+    hidden: !isModelActiveInCatalog(m),
+  })),
 ].filter(m => !isTabletDevice(m.brandId, m.name, m.id) && !isSmartwatchDevice(m.brandId, m.name, m.id)));
 
 export const SMARTPHONE_MODELS: Model[] = sortModelsByLaunchDesc(RAW_SMARTPHONE_MODELS.map(m => {
@@ -1705,12 +2464,18 @@ export const MODELS: Model[] = sortModelsByLaunchDesc([
   const supportedStorageGb = getModelSupportedStorage(m);
   const supportedRamGb = getModelSupportedRam(m);
   const variantPrices = buildVariantPricesForModel(m);
+  const isTablet = isTabletDevice(m.brandId, m.name, m.id);
+  const isWatch = isSmartwatchDevice(m.brandId, m.name, m.id);
+  const isHidden = (isTablet || isWatch)
+    ? (m.hidden ?? false)
+    : (m.hidden !== undefined ? m.hidden : !isModelActiveInCatalog(m));
   return {
     ...m,
+    deviceType: m.deviceType || (isTablet ? 'tablets' : isWatch ? 'smartwatches' : 'smartphones'),
     supportedStorageGb,
     supportedRamGb,
     variantPrices,
-    hidden: true,
+    hidden: isHidden,
     supportsWarrantyQuestion: m.supportsWarrantyQuestion ?? (m.releaseYear >= 2023),
   };
 });
@@ -1769,6 +2534,42 @@ function getColorsForModel(model: Model): string[] {
 
 // Helper to programmatically generate variants for a model
 export function generateVariantsForModel(model: Model): Variant[] {
+  // Specialized variant generator for tablets / iPads (Storage, RAM for Android, and Wi-Fi / Cellular)
+  if (isTabletDevice(model.brandId, model.name, model.id)) {
+    const storages = getModelSupportedStorage(model);
+    const rams = getModelSupportedRam(model).filter(r => r > 0);
+    const effectiveRams = rams.length > 0 ? rams : [0];
+    const variants: Variant[] = [];
+
+    effectiveRams.forEach(ram => {
+      storages.forEach(storageGb => {
+        const cellularPrice = getVariantPrice(model, ram, storageGb, 'cellular');
+        const wifiPrice = getVariantPrice(model, ram, storageGb, 'wifi');
+        // Wi-Fi + Cellular variant
+        variants.push({
+          id: `var-${model.id}-${ram ? ram + 'gb-' : ''}${storageGb}gb-cellular`,
+          modelId: model.id,
+          ramGb: ram > 0 ? ram : undefined,
+          storageGb,
+          color: 'Wi-Fi + Cellular (SIM)',
+          connectivity: 'cellular',
+          basePrice: cellularPrice
+        });
+        // Wi-Fi Only variant
+        variants.push({
+          id: `var-${model.id}-${ram ? ram + 'gb-' : ''}${storageGb}gb-wifi`,
+          modelId: model.id,
+          ramGb: ram > 0 ? ram : undefined,
+          storageGb,
+          color: 'Wi-Fi Only',
+          connectivity: 'wifi',
+          basePrice: wifiPrice
+        });
+      });
+    });
+    return variants;
+  }
+
   // High-end flagships that start at 256GB in real life (Apple discontinued 128GB on Pro/Flagship models)
   const startsAt256GB = [
     'apple-17pm', 'apple-17p', 'apple-17air', 'apple-17',
@@ -2133,8 +2934,13 @@ export function isVariantAvailable(model: Model, ramGb: number, storageGb: numbe
   return prices[key] !== undefined && Number(prices[key]) > 0;
 }
 
-/** Get the admin-defined price for a specific RAM+Storage combo, or best-guess fallback */
-export function getVariantPrice(model: Model, ramGb: number, storageGb: number): number {
+/** Get the admin-defined price for a specific RAM+Storage combo and optional connectivity (wifi vs cellular), or best-guess fallback */
+export function getVariantPrice(
+  model: Model,
+  ramGb: number,
+  storageGb: number,
+  connectivity?: 'wifi' | 'cellular'
+): number {
   if (model && model.variantPrices) {
     let prices: Record<string, number> | null = null;
     if (typeof model.variantPrices === 'string') {
@@ -2143,6 +2949,15 @@ export function getVariantPrice(model: Model, ramGb: number, storageGb: number):
       prices = model.variantPrices as Record<string, number>;
     }
     if (prices) {
+      // 1. If explicit connectivity requested, check `${ramGb}_${storageGb}_${connectivity}`
+      if (connectivity) {
+        const connKey = `${ramGb}_${storageGb}_${connectivity}`;
+        if (prices[connKey] !== undefined && Number(prices[connKey]) > 0) {
+          return Number(prices[connKey]);
+        }
+      }
+
+      // 2. Check base key `${ramGb}_${storageGb}`
       const key = `${ramGb}_${storageGb}`;
       if (prices[key] !== undefined && Number(prices[key]) > 0) {
         return Number(prices[key]);
@@ -2151,7 +2966,9 @@ export function getVariantPrice(model: Model, ramGb: number, storageGb: number):
   }
   // Base storage calculation
   const variants = generateVariantsForModel(model);
-  const baseVar = variants.find(v => v.storageGb === storageGb) || variants[0];
+  const baseVar = variants.find(v => v.storageGb === storageGb && (!connectivity || v.connectivity === connectivity)) ||
+    variants.find(v => v.storageGb === storageGb) ||
+    variants[0];
   const baseStoragePrice = baseVar ? baseVar.basePrice : model.basePrice128GB;
 
   const ramOptions = getModelSupportedRam(model).filter(r => r > 0);
@@ -2161,7 +2978,8 @@ export function getVariantPrice(model: Model, ramGb: number, storageGb: number):
   const minRam = Math.min(...ramOptions);
   const stepCount = (ramGb - minRam) / 2;
   const ramBonus = Math.max(0, stepCount * 1250);
-  return Math.round(baseStoragePrice + ramBonus);
+  const total = Math.round(baseStoragePrice + ramBonus);
+  return total;
 }
 
 export function getPhoneImageForBrand(brandId: string): string {

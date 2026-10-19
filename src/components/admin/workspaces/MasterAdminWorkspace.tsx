@@ -22,7 +22,7 @@ export const MasterAdminWorkspace: React.FC<MasterAdminWorkspaceProps> = ({
   onRefreshBookings,
   onRefreshCatalog,
 }) => {
-  const [previewRole, setPreviewRole] = useState<'SUPER_ADMIN' | 'FINANCE_APPROVER' | 'OPERATIONS_AGENT' | 'CATALOG_EDITOR' | 'CASHIFY_MONITOR'>('SUPER_ADMIN');
+  const [previewRole, setPreviewRole] = useState<'CATALOG_EDITOR' | 'OPERATIONS_AGENT' | 'FINANCE_APPROVER' | 'CASHIFY_MONITOR'>('CATALOG_EDITOR');
 
   return (
     <div className="space-y-6 font-outfit">
@@ -52,20 +52,12 @@ export const MasterAdminWorkspace: React.FC<MasterAdminWorkspaceProps> = ({
             <Eye className="w-3.5 h-3.5 text-cobalt" /> View Mode:
           </span>
           <button
-            onClick={() => setPreviewRole('SUPER_ADMIN')}
+            onClick={() => setPreviewRole('CATALOG_EDITOR')}
             className={`px-3 py-1.5 text-xs font-mono rounded-md font-bold transition-all cursor-pointer ${
-              previewRole === 'SUPER_ADMIN' ? 'bg-cobalt text-white shadow-md' : 'text-slate-300 hover:text-white'
+              previewRole === 'CATALOG_EDITOR' ? 'bg-purple-600 text-white shadow-md' : 'text-slate-300 hover:text-white'
             }`}
           >
-            All Workspaces
-          </button>
-          <button
-            onClick={() => setPreviewRole('FINANCE_APPROVER')}
-            className={`px-3 py-1.5 text-xs font-mono rounded-md font-bold transition-all cursor-pointer ${
-              previewRole === 'FINANCE_APPROVER' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-300 hover:text-white'
-            }`}
-          >
-            Finance
+            Catalog
           </button>
           <button
             onClick={() => setPreviewRole('OPERATIONS_AGENT')}
@@ -76,12 +68,12 @@ export const MasterAdminWorkspace: React.FC<MasterAdminWorkspaceProps> = ({
             Operations
           </button>
           <button
-            onClick={() => setPreviewRole('CATALOG_EDITOR')}
+            onClick={() => setPreviewRole('FINANCE_APPROVER')}
             className={`px-3 py-1.5 text-xs font-mono rounded-md font-bold transition-all cursor-pointer ${
-              previewRole === 'CATALOG_EDITOR' ? 'bg-purple-600 text-white shadow-md' : 'text-slate-300 hover:text-white'
+              previewRole === 'FINANCE_APPROVER' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-300 hover:text-white'
             }`}
           >
-            Catalog
+            Finance
           </button>
           <button
             onClick={() => setPreviewRole('CASHIFY_MONITOR')}
@@ -96,11 +88,11 @@ export const MasterAdminWorkspace: React.FC<MasterAdminWorkspaceProps> = ({
       </div>
 
       {/* Render Workspace Based on Preview Role */}
-      {previewRole === 'FINANCE_APPROVER' && (
-        <FinanceWorkspace
-          bookings={bookings}
-          currentUser={currentUser ? { ...currentUser, role: 'FINANCE_APPROVER' } : null}
-          onRefreshBookings={onRefreshBookings}
+      {previewRole === 'CATALOG_EDITOR' && (
+        <CatalogWorkspace
+          brands={brands}
+          currentUser={currentUser ? { ...currentUser, role: 'CATALOG_EDITOR' } : null}
+          onRefreshCatalog={onRefreshCatalog}
         />
       )}
 
@@ -112,31 +104,16 @@ export const MasterAdminWorkspace: React.FC<MasterAdminWorkspaceProps> = ({
         />
       )}
 
-      {previewRole === 'CATALOG_EDITOR' && (
-        <CatalogWorkspace
-          brands={brands}
-          currentUser={currentUser ? { ...currentUser, role: 'CATALOG_EDITOR' } : null}
-          onRefreshCatalog={onRefreshCatalog}
+      {previewRole === 'FINANCE_APPROVER' && (
+        <FinanceWorkspace
+          bookings={bookings}
+          currentUser={currentUser ? { ...currentUser, role: 'FINANCE_APPROVER' } : null}
+          onRefreshBookings={onRefreshBookings}
         />
       )}
 
       {previewRole === 'CASHIFY_MONITOR' && (
         <CashifyMonitorTab />
-      )}
-
-      {previewRole === 'SUPER_ADMIN' && (
-        <div className="space-y-6">
-          <FinanceWorkspace
-            bookings={bookings}
-            currentUser={currentUser}
-            onRefreshBookings={onRefreshBookings}
-          />
-          <CatalogWorkspace
-            brands={brands}
-            currentUser={currentUser}
-            onRefreshCatalog={onRefreshCatalog}
-          />
-        </div>
       )}
     </div>
   );

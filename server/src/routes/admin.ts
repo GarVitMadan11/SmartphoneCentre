@@ -544,6 +544,198 @@ export function extractCashifyPriceFromHtml(htmlText: string): number | null {
   return null;
 }
 
+const UNSERVICEABLE_PATTERNS = [
+  /not\s+currently\s+purchasing/i,
+  /currently\s+not\s+purchasing/i,
+  /not\s+currently\s+buying/i,
+  /currently\s+not\s+buying/i,
+  /we\s+are\s+not\s+currently\s+purchasing/i,
+  /we['’]re\s+not\s+currently\s+purchasing/i,
+  /we\s+are\s+not\s+purchasing/i,
+  /we['’]re\s+not\s+purchasing/i,
+  /not\s+purchasing\s+in/i,
+  /not\s+buying\s+in/i,
+  /currently\s+unavailable\s+in\s+your\s+location/i,
+  /not\s+available\s+in\s+your\s+(?:location|city|area|pincode)/i,
+  /not\s+serviceable\s+in\s+your\s+(?:location|city|area|pincode)/i,
+  /not\s+serviceable/i,
+  /service\s+not\s+available/i,
+  /we\s+do\s+not\s+buy\s+this\s+device/i,
+  /we\s+don['’]t\s+buy\s+this\s+device/i,
+  /we\s+do\s+not\s+buy/i,
+  /we\s+don['’]t\s+buy/i,
+  /cannot\s+buy\s+this\s+device/i,
+  /out\s+of\s+service/i,
+  /temporarily\s+unavailable/i,
+  /we\s+are\s+not\s+servicing/i,
+  /buyback\s+(?:is\s+)?temporarily\s+(?:paused|unavailable)/i,
+  /unable\s+to\s+buy\s+this\s+device/i,
+  /we\s+are\s+not\s+accepting\s+quotes/i,
+];
+
+const NOT_FOUND_PATTERNS = [
+  /404\s*-\s*page\s+not\s+found/i,
+  /page\s+you\s+requested\s+could\s+not\s+be\s+found/i,
+  /we['’]re\s+sorry[,\s]+the\s+page\s+you\s+requested\s+could\s+not\s+be\s+found/i,
+  /could\s+not\s+be\s+found/i,
+  /page\s+not\s+found/i,
+];
+
+export interface CashifyUrlValidationResult {
+  ok: boolean;
+  status: number;
+  extractedPrice: number | null;
+  error?: string;
+  is404?: boolean;
+  isUnserviceable?: boolean;
+}
+
+export function validateCashifyHtml(htmlText: string, status: number, finalUrl?: string): CashifyUrlValidationResult {
+  // 1. Check HTTP Status code
+  if (status === 404) {
+    return {
+      ok: false,
+      status: 404,
+      is404: true,
+      extractedPrice: null,
+      error: '404 Page Not Found: This device page does not exist on Cashify.',
+    };
+  }
+
+  if (status >= 500) {
+    return {
+      ok: false,
+      status,
+      extractedPrice: null,
+      error: `Cashify Server Error (HTTP ${status}).`,
+    };
+  }
+
+  if (status === 403 || status === 401) {
+    return {
+      ok: false,
+      status,
+      extractedPrice: null,
+      error: `Access Blocked by Cashify (HTTP ${status}).`,
+    };
+  }
+
+  // Check URL redirect (soft 404 redirected to homepage or /404)
+  if (finalUrl) {
+    const isHome = finalUrl === 'https://www.cashify.in' || finalUrl === 'https://www.cashify.in/';
+    if (isHome) {
+      return {
+        ok: false,
+        status: 404,
+        is404: true,
+        extractedPrice: null,
+        error: '404 Error: Cashify redirected invalid link to home page.',
+      };
+    }
+    if (finalUrl.includes('/404') || finalUrl.includes('/not-found')) {
+      return {
+        ok: false,
+        status: 404,
+        is404: true,
+        extractedPrice: null,
+        error: '404 Error: Cashify redirected to 404 Not Found page.',
+      };
+    }
+  }
+
+  // 2. Check Next.js __NEXT_DATA__
+  const nextDataMatch = htmlText.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/i);
+  if (nextDataMatch) {
+    try {
+      const nextData = JSON.parse(nextDataMatch[1]);
+      if (
+        nextData.page === '/404' ||
+        nextData.page === '/_error' ||
+        nextData.props?.pageProps?.statusCode === 404 ||
+        nextData.props?.pageProps?.notFound === true
+      ) {
+        return {
+          ok: false,
+          status: 404,
+          is404: true,
+          extractedPrice: null,
+          error: '404 Error: Cashify page not found.',
+        };
+      }
+      const pageProps = nextData.props?.pageProps;
+      if (pageProps) {
+        if (pageProps.isServiceable === false || pageProps.serviceable === false || pageProps.isPurchasing === false) {
+          return {
+            ok: false,
+            status: 200,
+            isUnserviceable: true,
+            extractedPrice: null,
+            error: 'Cashify is not currently purchasing this device in this location (Gurgaon, Delhi, etc.).',
+          };
+        }
+      }
+    } catch {}
+  }
+
+  // 3. Check for 404 patterns in HTML
+  for (const pattern of NOT_FOUND_PATTERNS) {
+    if (pattern.test(htmlText)) {
+      return {
+        ok: false,
+        status: 404,
+        is404: true,
+        extractedPrice: null,
+        error: '404 Error: "We’re sorry, the page you requested could not be found."',
+      };
+    }
+  }
+
+  // 4. Check for Unserviceable / Not Purchasing patterns (Gurgaon, Delhi, location restrictions)
+  for (const pattern of UNSERVICEABLE_PATTERNS) {
+    if (pattern.test(htmlText)) {
+      return {
+        ok: false,
+        status: 200,
+        isUnserviceable: true,
+        extractedPrice: null,
+        error: 'Cashify is not currently purchasing this device in this location (Gurgaon, Delhi, etc.).',
+      };
+    }
+  }
+
+  // 5. Check if page is just a variant chooser/picker with no quote
+  const isPicker =
+    /choose\s+(?:a\s+)?variant/i.test(htmlText) ||
+    /select\s+(?:a\s+)?variant/i.test(htmlText) ||
+    /choose\s+your\s+variant/i.test(htmlText);
+
+  // 6. Extract price
+  const extractedPrice = extractCashifyPriceFromHtml(htmlText);
+  if (extractedPrice && extractedPrice > 0) {
+    return {
+      ok: true,
+      status: 200,
+      extractedPrice,
+    };
+  }
+
+  if (isPicker) {
+    return {
+      ok: false,
+      status: 200,
+      extractedPrice: null,
+      error: 'Generic model picker page: specific RAM/Storage variant not selected on Cashify.',
+    };
+  }
+
+  return {
+    ok: false,
+    status: 200,
+    extractedPrice: null,
+    error: 'No active buyback price quote available from Cashify for this URL.',
+  };
+}
+
 /**
  * Live HTTP fetch and price extraction helper
  */
@@ -560,7 +752,9 @@ export async function extractPriceFromCashifyUrl(url: string): Promise<number | 
     });
     if (resp.status !== 200) return null;
     const htmlText = await resp.text();
-    return extractCashifyPriceFromHtml(htmlText);
+    const validation = validateCashifyHtml(htmlText, resp.status, resp.url);
+    if (!validation.ok) return null;
+    return validation.extractedPrice;
   } catch (e) {
     console.warn(`[CashifyExtract] Failed live extract for ${url}:`, e);
     return null;
@@ -775,27 +969,26 @@ router.post('/cashify/test-url', adminAuth, async (req: AuthenticatedRequest, re
       },
     });
 
-    if (resp.status !== 200) {
-      res.json({
-        url,
-        status: resp.status,
-        ok: false,
-        extractedPrice: null,
-      });
-      return;
-    }
-
     const htmlText = await resp.text();
-    const extractedPrice = extractCashifyPriceFromHtml(htmlText);
+    const validation = validateCashifyHtml(htmlText, resp.status, resp.url);
 
     res.json({
       url,
-      status: resp.status,
-      ok: true,
-      extractedPrice,
+      status: validation.status,
+      ok: validation.ok,
+      extractedPrice: validation.extractedPrice,
+      error: validation.error,
+      is404: validation.is404,
+      isUnserviceable: validation.isUnserviceable,
     });
   } catch (err: any) {
-    res.json({ url: req.body.url, status: 0, ok: false, extractedPrice: null, error: err.message });
+    res.json({
+      url: req.body.url,
+      status: 0,
+      ok: false,
+      extractedPrice: null,
+      error: err.message || 'Failed to connect to Cashify.',
+    });
   }
 });
 

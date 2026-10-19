@@ -39,10 +39,17 @@ ENV_FILE = BASE_DIR / "server" / ".env"
 
 UNSERVICEABLE_PHRASES = [
     "not currently purchasing",
+    "currently not purchasing",
     "not currently buying",
     "currently not buying",
+    "we are not currently purchasing",
+    "we are not purchasing",
+    "not purchasing in",
+    "not buying in",
     "not buying in this location",
     "currently unavailable in your location",
+    "not available in your location",
+    "not available in your city",
     "we do not buy",
     "we don't buy",
     "cannot buy this device",
@@ -50,6 +57,12 @@ UNSERVICEABLE_PHRASES = [
     "service not available",
     "temporarily unavailable",
     "out of service",
+    "we are not servicing",
+    "could not be found",
+    "page not found",
+    "we're sorry, the page you requested could not be found",
+    "we’re sorry, the page you requested could not be found",
+    "404 - page not found",
 ]
 
 

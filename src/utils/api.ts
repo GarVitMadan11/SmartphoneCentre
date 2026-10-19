@@ -246,17 +246,24 @@ export function saveCachedModels(models: ApiModel[]): void {
   } catch {}
 }
 
-export async function fetchModels(brandId?: string): Promise<ApiModel[]> {
-  const qs = brandId ? `brandId=${encodeURIComponent(brandId)}&` : '';
+export async function fetchModels(brandId?: string, deviceType?: string): Promise<ApiModel[]> {
+  const params = new URLSearchParams();
+  if (brandId) params.set('brandId', brandId);
+  if (deviceType) params.set('deviceType', deviceType);
+  params.set('_t', String(Date.now()));
+  const qs = params.toString();
   try {
-    const data = await apiFetch<ApiModel[]>(`/models?${qs}_t=${Date.now()}`);
-    if (!brandId && Array.isArray(data) && data.length > 0) {
+    const data = await apiFetch<ApiModel[]>(`/models?${qs}`);
+    if (!brandId && !deviceType && Array.isArray(data) && data.length > 0) {
       saveCachedModels(data);
     }
     return data;
   } catch (err) {
     const cached = getCachedModels();
-    if (cached.length > 0) return cached;
+    if (cached.length > 0) {
+      if (deviceType) return cached.filter(m => (m as any).deviceType === deviceType);
+      return cached;
+    }
     console.info('[API] fetchModels rate limited / unavailable, fallback to local models');
     return [];
   }
@@ -267,6 +274,7 @@ export async function createModel(data: {
   brandId: string;
   name: string;
   category: string;
+  deviceType?: string;
   releaseYear: number;
   basePrice128GB: number;
   series?: string;
@@ -892,8 +900,24 @@ export function registerApprovedCashifyVariants(
   );
 }
 
-export function testCashifyUrlApi(url: string): Promise<{ url: string; status: number; ok: boolean; extractedPrice?: number | null; error?: string }> {
-  return apiFetch<{ url: string; status: number; ok: boolean; extractedPrice?: number | null; error?: string }>('/admin/cashify/test-url', {
+export function testCashifyUrlApi(url: string): Promise<{
+  url: string;
+  status: number;
+  ok: boolean;
+  extractedPrice?: number | null;
+  error?: string;
+  is404?: boolean;
+  isUnserviceable?: boolean;
+}> {
+  return apiFetch<{
+    url: string;
+    status: number;
+    ok: boolean;
+    extractedPrice?: number | null;
+    error?: string;
+    is404?: boolean;
+    isUnserviceable?: boolean;
+  }>('/admin/cashify/test-url', {
     method: 'POST',
     body: JSON.stringify({ url }),
   }, true);

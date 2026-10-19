@@ -23,6 +23,7 @@ model Model {
   brandId            String
   name               String
   category           String
+  deviceType         String   @default("smartphones")
   releaseYear        Int
   basePrice128GB     Int
   series             String   @default("")
@@ -36,6 +37,7 @@ model Model {
   brand              Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
 
   @@index([brandId])
+  @@index([deviceType])
   @@index([category])
   @@index([series])
   @@index([releaseYear])
