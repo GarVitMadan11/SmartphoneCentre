@@ -83,6 +83,32 @@ export function isTabletDevice(_brandId?: string, modelName?: string, modelId?: 
   return m.includes('ipad') || m.includes('galaxy tab') || id.includes('ipad') || id.includes('tab-s') || id.includes('tab-a');
 }
 
+// Helper to identify Samsung models that come bundled with an S-Pen (e.g. Galaxy S Series Ultra, Galaxy Note Series)
+export function hasSpenSupport(brandId?: string, modelName?: string, modelId?: string): boolean {
+  if (!brandId && !modelName && !modelId) return false;
+  const b = (brandId || '').toLowerCase();
+  const m = (modelName || '').toLowerCase();
+  const id = (modelId || '').toLowerCase();
+
+  const isSamsung = b === 'brand-samsung' || b.includes('samsung') || id.startsWith('sam-') || m.includes('samsung') || m.includes('galaxy');
+  if (!isSamsung) return false;
+
+  // Samsung Galaxy S Series Ultra: S21 Ultra, S22 Ultra, S23 Ultra, S24 Ultra, S25 Ultra, S26 Ultra
+  const isSSeriesUltra = (
+    m.includes('ultra') && (
+      m.includes('s21') || m.includes('s22') || m.includes('s23') || m.includes('s24') || m.includes('s25') || m.includes('s26') ||
+      m.includes('s-series') || m.includes('s series') ||
+      id.includes('s21u') || id.includes('s22u') || id.includes('s23u') || id.includes('s24u') || id.includes('s25u') || id.includes('s26u') ||
+      id.includes('s21-ultra') || id.includes('s22-ultra') || id.includes('s23-ultra') || id.includes('s24-ultra') || id.includes('s25-ultra') || id.includes('s26-ultra')
+    )
+  );
+
+  // Samsung Galaxy Note series (all Note models come with built-in S-Pen)
+  const isNote = m.includes('note') || id.includes('note');
+
+  return isSSeriesUltra || isNote;
+}
+
 export function getSmartwatchDefectRules(
   category: DeviceCategory,
   brandId?: string,
@@ -913,6 +939,14 @@ export function getDefectRulesForCategory(
       deductionFixed: 1500,
       deductionPercentage: 0
     },
+    ...(hasSpenSupport(brandId, modelName, modelId) ? [{
+      id: 'defect-spen-missing' as const,
+      category: 'accessories' as const,
+      description: 'Missing Original S-Pen',
+      subText: 'Original stylus S-Pen that came bundled with the device is missing, broken, or unresponsive.',
+      deductionFixed: 2000,
+      deductionPercentage: 0
+    }] : []),
 
     // ── CRITICAL FAILURES (Zero Value) ───────────────────────────────────
     {

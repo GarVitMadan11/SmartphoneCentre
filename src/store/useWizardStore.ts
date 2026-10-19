@@ -18,6 +18,7 @@ interface StoredNavState {
 }
 
 function loadNavState(): StoredNavState | null {
+  if (typeof window === 'undefined' || typeof localStorage === 'undefined') return null;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
@@ -35,12 +36,13 @@ function loadNavState(): StoredNavState | null {
     }
     return parsed;
   } catch {
-    localStorage.removeItem(STORAGE_KEY);
+    try { localStorage.removeItem(STORAGE_KEY); } catch {}
     return null;
   }
 }
 
 function saveNavState(state: Omit<StoredNavState, 'timestamp'>) {
+  if (typeof window === 'undefined' || typeof localStorage === 'undefined') return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...state, timestamp: Date.now() }));
   } catch {
@@ -49,7 +51,10 @@ function saveNavState(state: Omit<StoredNavState, 'timestamp'>) {
 }
 
 function clearNavState() {
-  localStorage.removeItem(STORAGE_KEY);
+  if (typeof window === 'undefined' || typeof localStorage === 'undefined') return;
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch {}
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -73,10 +78,10 @@ interface WizardState {
 
   // Setters
   setActiveStage: (stage: ActiveStage) => void;
-  setWizardStep: (step: number) => void;
+  setWizardStep: (step: number | ((prev: number) => number)) => void;
   setSelectedModel: (model: Model | null) => void;
   setSelectedVariant: (variant: Variant | null) => void;
-  setSelectedDefects: (defects: DefectRule[]) => void;
+  setSelectedDefects: (defects: DefectRule[] | ((prev: DefectRule[]) => DefectRule[])) => void;
   setFinalPrice: (price: number) => void;
   setSelectedTabletBrand: (brand: 'all' | 'apple' | 'samsung') => void;
 
@@ -109,14 +114,25 @@ export const useWizardStore = create<WizardState>((set, get) => ({
     get().persistNavState();
   },
 
-  setWizardStep: (step) => {
-    set({ wizardStep: step });
+  setWizardStep: (stepOrFn) => {
+    set((state) => ({
+      wizardStep: typeof stepOrFn === 'function' ? stepOrFn(state.wizardStep) : stepOrFn,
+    }));
     get().persistNavState();
   },
 
   setSelectedModel: (model) => set({ selectedModel: model }),
   setSelectedVariant: (variant) => set({ selectedVariant: variant }),
-  setSelectedDefects: (defects) => set({ selectedDefects: defects }),
+  setSelectedDefects: (defectsOrFn) => {
+    set((state) => {
+      const current = Array.isArray(state.selectedDefects) ? state.selectedDefects : [];
+      const next = typeof defectsOrFn === 'function' ? defectsOrFn(current) : defectsOrFn;
+      return {
+        selectedDefects: Array.isArray(next) ? next : [],
+      };
+    });
+    get().persistNavState();
+  },
   setFinalPrice: (price) => set({ finalPrice: price }),
   setSelectedTabletBrand: (brand) => set({ selectedTabletBrand: brand }),
 
@@ -152,14 +168,16 @@ export const useWizardStore = create<WizardState>((set, get) => ({
 
   persistNavState: () => {
     const { activeStage, wizardStep, selectedModel, selectedVariant, selectedDefects, finalPrice } = get();
+    const safeDefects = Array.isArray(selectedDefects) ? selectedDefects : [];
+    const safeStep = typeof wizardStep === 'number' ? wizardStep : 0;
     if (activeStage === 'diagnose' || activeStage === 'schedule') {
       if (selectedModel) {
         saveNavState({
           activeStage,
-          wizardStep,
+          wizardStep: safeStep,
           selectedModelId: selectedModel.id,
           selectedVariant: selectedVariant || undefined,
-          selectedDefectIds: selectedDefects.map((d) => d.id),
+          selectedDefectIds: safeDefects.map((d) => d.id),
           finalPrice,
         });
       }

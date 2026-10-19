@@ -90,7 +90,9 @@ export function calculateValuation(
     finalPrice: pureFinalPrice,
     devicePriceBeforeFees: pureFinalPrice,
     doorstepProcessingFee: DOORSTEP_PROCESSING_FEE,
-    retentionPercentage: Math.max(0, Math.min(100, Math.round((pureFinalPrice / result.basePrice) * 100))),
+    retentionPercentage: result.isCritical 
+      ? 0 
+      : Math.max(0, Math.min(100, Math.round((result.adjustedBenchmark / result.basePrice) * 100))),
     adjustedBenchmark: result.adjustedBenchmark,
     isSpecialPartsCategory: result.isSpecialPartsCategory,
     auditTrail: result.auditTrail,

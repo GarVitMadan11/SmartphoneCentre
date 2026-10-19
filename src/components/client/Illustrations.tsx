@@ -298,6 +298,25 @@ export const MissingDocsIllustration: React.FC = () => (
   </svg>
 );
 
+// 27. Missing S-Pen
+export const MissingSpenIllustration: React.FC = () => (
+  <svg viewBox="0 0 64 64" className="w-12 h-12" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <g transform="rotate(45 32 32)">
+      {/* Pen Body dashed */}
+      <rect x="29" y="14" width="6" height="30" rx="2" stroke="#EF4444" strokeWidth="1.5" strokeDasharray="3 2" fill="#18181B" fillOpacity="0.4" />
+      {/* Pen Tip dashed */}
+      <path d="M29 44L32 50L35 44Z" stroke="#EF4444" strokeWidth="1.5" fill="none" strokeDasharray="2 1" />
+      {/* Click button top */}
+      <rect x="30" y="10" width="4" height="4" rx="1" stroke="#EF4444" strokeWidth="1.2" />
+      {/* S-Pen button on shaft */}
+      <rect x="30.5" y="30" width="3" height="6" rx="0.8" fill="#EF4444" fillOpacity="0.7" />
+    </g>
+    {/* Alert symbol */}
+    <path d="M46 22C46 19.8 47.8 18 50 18C52.2 18 54 19.8 54 22C54 23.5 53.2 24.8 52 25.5V27.5" stroke="#EF4444" strokeWidth="1.5" strokeLinecap="round" />
+    <circle cx="52" cy="30" r="1.2" fill="#EF4444" />
+  </svg>
+);
+
 
 // ==================== SMARTWATCH SPECIFIC ILLUSTRATIONS ====================
 
@@ -777,6 +796,8 @@ export const getIllustration = (
       case 'defect-acc-nodocs':
       case 'defect-watch-bill-missing':
         return <MissingDocsIllustration />;
+      case 'defect-spen-missing':
+        return <MissingSpenIllustration />;
       default:
         return <WatchFlawlessFrameIllustration />;
     }
@@ -837,6 +858,8 @@ export const getIllustration = (
         return <TabletMissingChargerIllustration />;
       case 'defect-acc-nodocs':
         return <MissingDocsIllustration />;
+      case 'defect-spen-missing':
+        return <MissingSpenIllustration />;
       default:
         return <TabletFlawlessDisplayIllustration />;
     }
@@ -906,6 +929,8 @@ export const getIllustration = (
       return <MissingChargerIllustration />;
     case 'defect-acc-nodocs':
       return <MissingDocsIllustration />;
+    case 'defect-spen-missing':
+      return <MissingSpenIllustration />;
 
     // Warranty & Age
     case 'warranty-under-3m':

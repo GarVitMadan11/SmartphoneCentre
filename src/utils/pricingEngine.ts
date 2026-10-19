@@ -238,12 +238,12 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
 
   // 1. Age Factor F_age
   const nameLower = input.modelName.toLowerCase();
-  const isIphone17 = nameLower.includes('iphone 17');
+  const isIphone17or18 = nameLower.includes('iphone 17') || nameLower.includes('iphone 18');
   const isIphone15or16 = nameLower.includes('iphone 15') || nameLower.includes('iphone 16');
 
   let fAge = 1.00;
-  if (isIphone17) {
-    // iPhone 17 Series: 0% under 3m, 15% 3-6m, 20% 6-11m, 25% > 11m
+  if (isIphone17or18) {
+    // iPhone 17 & 18 Series: 0% under 3m, 15% 3-6m, 20% 6-11m, 25% > 11m
     let ageKey: AgeFactorKey = input.deviceAge || 'under_3m';
     if (!input.deviceAge && input.warrantyAge) {
       if (input.warrantyAge === 'under_3m') ageKey = 'under_3m';
@@ -412,34 +412,25 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
   // Calculate Pre-Accessory Valuation
   const preAccessoryValue = Math.round(basePrice * fAge * fMarket * fCondition * fVariant);
 
-  // Dual eSIM Deduction — Apple Pro / Pro Max iPhone 14 and above only
-  // iPhone 14/15/16 Pro/Pro Max: -5% | iPhone 17 Pro/Pro Max: -8%
-  const nameLowerEsim = input.modelName.toLowerCase();
-  const isAppleProOrProMax = isApple && (nameLowerEsim.includes('pro max') || nameLowerEsim.includes(' pro'));
-  const isIphone17ProSeries = isAppleProOrProMax && nameLowerEsim.includes('iphone 17');
-  const isIphone14to16ProSeries = isAppleProOrProMax && (
-    nameLowerEsim.includes('iphone 14') ||
-    nameLowerEsim.includes('iphone 15') ||
-    nameLowerEsim.includes('iphone 16')
-  );
-
+  // Dual eSIM Deduction — Apple iPhone models (eSIM only / no physical SIM tray)
+  // iPhone 14/15/16 series: -5% | iPhone 17 & 18 Pro/Pro Max (and 17/18 series): -8%
   let dualEsimDeduction = 0;
-  if (input.dualEsim === true) {
-    if (isIphone17ProSeries) {
+  if (input.dualEsim === true && isApple) {
+    if (isIphone17or18) {
       dualEsimDeduction = Math.round(preAccessoryValue * 0.08);
       adjustments.push({
-        id: 'dual-esim-deduction-17',
-        name: 'Dual eSIM Configuration Deduction (iPhone 17 Pro Series)',
+        id: 'dual-esim-deduction-17-18',
+        name: 'Dual eSIM Configuration Deduction (iPhone 17–18 Pro Series)',
         category: 'configuration',
         type: 'TYPE_A_PERCENT',
         rateOrValue: -0.08,
         impactAmount: -dualEsimDeduction
       });
-    } else if (isIphone14to16ProSeries) {
+    } else {
       dualEsimDeduction = Math.round(preAccessoryValue * 0.05);
       adjustments.push({
         id: 'dual-esim-deduction-14-16',
-        name: 'Dual eSIM Configuration Deduction (iPhone 14–16 Pro Series)',
+        name: 'Dual eSIM Configuration Deduction (Apple iPhone Series)',
         category: 'configuration',
         type: 'TYPE_A_PERCENT',
         rateOrValue: -0.05,
@@ -467,8 +458,22 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
   const maxAccessoryCap = Math.round(basePrice * config.accessoryMaxCapPercent);
   const dAccessoriesCapped = Math.min(dAccessoriesRaw, maxAccessoryCap);
 
-  // Calculate Pre-Vendor Adjusted Benchmark (includes dual eSIM deduction)
-  let adjustedBenchmark = preAccessoryValue - dualEsimDeduction - dAccessoriesCapped;
+  // Single SIM Adjustment — ₹500 regional variant deduction
+  let singleSimDeduction = 0;
+  if (input.simType === 'single_sim') {
+    singleSimDeduction = 500;
+    adjustments.push({
+      id: 'single-sim-deduction',
+      name: 'Single SIM Regional Variant Adjustment',
+      category: 'configuration',
+      type: 'TYPE_B_FIXED',
+      rateOrValue: -500,
+      impactAmount: -500
+    });
+  }
+
+  // Calculate Pre-Vendor Adjusted Benchmark (includes dual eSIM & single SIM deduction)
+  let adjustedBenchmark = preAccessoryValue - dualEsimDeduction - singleSimDeduction - dAccessoriesCapped;
 
   // Minimum Valuation / Salvage Floor Check
   const minimumRecycleFloor = Math.max(500, Math.round(basePrice * 0.08));

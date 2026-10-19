@@ -19,11 +19,12 @@ export class ErrorBoundary extends Component<Props, State> {
   };
 
   public static getDerivedStateFromError(error: Error): State {
+    const msg = error?.message || '';
     const isChunkError =
-      error instanceof TypeError ||
-      /failed to fetch/i.test(error?.message || '') ||
-      /dynamically imported module/i.test(error?.message || '') ||
-      /loading chunk/i.test(error?.message || '');
+      /dynamically imported module/i.test(msg) ||
+      /loading chunk/i.test(msg) ||
+      /chunkloaderror/i.test(error?.name || '') ||
+      (/failed to fetch/i.test(msg) && (error instanceof TypeError || /module|chunk|script/i.test(msg)));
 
     return { hasError: true, error, isChunkError };
   }
@@ -31,11 +32,12 @@ export class ErrorBoundary extends Component<Props, State> {
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('[ErrorBoundary] Uncaught React exception:', error, errorInfo);
 
+    const msg = error?.message || '';
     const isChunkError =
-      error instanceof TypeError ||
-      /failed to fetch/i.test(error?.message || '') ||
-      /dynamically imported module/i.test(error?.message || '') ||
-      /loading chunk/i.test(error?.message || '');
+      /dynamically imported module/i.test(msg) ||
+      /loading chunk/i.test(msg) ||
+      /chunkloaderror/i.test(error?.name || '') ||
+      (/failed to fetch/i.test(msg) && (error instanceof TypeError || /module|chunk|script/i.test(msg)));
 
     if (isChunkError) {
       const attempts = parseInt(sessionStorage.getItem('rex_chunk_eb_reload') || '0', 10);

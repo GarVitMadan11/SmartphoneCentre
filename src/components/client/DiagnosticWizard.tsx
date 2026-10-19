@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { Model, Variant, getDefectRulesForCategory, DefectRule, isAppleDevice, isSmartwatchDevice, isTabletDevice, getDeviceImage } from '../../data/mockDatabase';
+import { Model, Variant, getDefectRulesForCategory, DefectRule, isAppleDevice, isSmartwatchDevice, isTabletDevice, hasSpenSupport, getDeviceImage } from '../../data/mockDatabase';
 import { calculateValuation } from '../../utils/valuation';
 import type { AgeFactorKey } from '../../data/pricingRulesConfig';
 import { 
@@ -43,7 +43,14 @@ const getEngineeringLabel = (description: string) => {
     'Auto-Restart / Unstable Device':    'PMIC / Board-Level Stabilisation',
     'Missing Original Box':              'OEM Retail Box De-allocation',
     'Missing Original Charger / Cable':  'OEM Power Adapter De-allocation',
+    'Missing Original S-Pen':            'OEM S-Pen Stylus De-allocation',
     'Missing Bill / Customer Photo ID':  'Legal Compliance Documentation Fee',
+    'Single SIM Regional Variant Adjustment': 'Single SIM Variant Engineering Adjustment',
+    'Dual eSIM Configuration Deduction (iPhone 14–16 Pro Series)': 'US Model Dual eSIM Architecture Adjustment',
+    'Dual eSIM Configuration Deduction (iPhone 17 Pro Series)': 'US Model Dual eSIM Architecture Adjustment',
+    'Dual eSIM Configuration Deduction (iPhone 17–18 Pro Series)': 'US Model Dual eSIM Architecture Adjustment',
+    'Dual eSIM Configuration Deduction (iPhone 17–18 Series)': 'US Model Dual eSIM Architecture Adjustment',
+    'Dual eSIM Configuration Deduction (Apple iPhone Series)': 'US Model Dual eSIM Architecture Adjustment',
     'Device Does Not Turn On':           'Board-Level Hardware Failure',
     'iCloud / Apple ID Locked':                         'Activation Lock — Zero Resale Value',
     'Google Account / Factory Reset Protection Locked': 'Factory Reset Protection Lock — Zero Resale Value',
@@ -148,7 +155,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
   variant,
   onBack,
   onComplete,
-  selectedDefects,
+  selectedDefects: rawSelectedDefects,
   setSelectedDefects,
   step,
   setStep,
@@ -156,9 +163,11 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
   onLoginSuccess,
   onNavigate,
 }) => {
+  const selectedDefects = useMemo(() => Array.isArray(rawSelectedDefects) ? rawSelectedDefects : [], [rawSelectedDefects]);
   const isApple = useMemo(() => isAppleDevice(model.brandId, model.name), [model]);
   const isWatch = useMemo(() => isSmartwatchDevice(model.brandId, model.name, model.id), [model]);
   const isTablet = useMemo(() => isTabletDevice(model.brandId, model.name, model.id), [model]);
+  const hasSpen = useMemo(() => hasSpenSupport(model.brandId, model.name, model.id), [model]);
   const deviceType: 'phone' | 'watch' | 'tablet' = isWatch ? 'watch' : isTablet ? 'tablet' : 'phone';
 
   // Obtain rules based on model category, brand and model ID
@@ -240,10 +249,10 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
       { title: 'Body & Frame', icon: ShieldCheck, desc: 'Chassis, buttons, screws & seal' },
       { title: 'Hardware', icon: Activity, desc: 'Cameras, biometrics & audio' },
       { title: 'Connectivity', icon: Zap, desc: 'Battery, cellular, Wi-Fi & serial' },
-      { title: showWarrantyQuestion ? 'Docs & Warranty' : 'Packaging & Box', icon: Box, desc: showWarrantyQuestion ? 'Accessories, age & warranty' : 'Original box, accessories & invoice' },
+      { title: showWarrantyQuestion ? 'Docs & Warranty' : 'Packaging & Box', icon: Box, desc: showWarrantyQuestion ? (hasSpen ? 'S-Pen, accessories & warranty' : 'Accessories, age & warranty') : (hasSpen ? 'Box, S-Pen, charger & invoice' : 'Original box, accessories & invoice') },
       { title: 'Review & Valuation', icon: Receipt, desc: 'Diagnostic review & breakdown' }
     ];
-  }, [isTablet, isApple, showWarrantyQuestion]);
+  }, [isTablet, isApple, showWarrantyQuestion, hasSpen]);
 
   // Confirmation state — session only, never persisted to localStorage
   const [screenConfirmed, setScreenConfirmed] = useState(false);
@@ -334,7 +343,8 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
   // Toggle selection helper
   const handleToggleDefect = (defect: DefectRule, mutuallyExclusiveId?: string) => {
     setSelectedDefects(prev => {
-      let next = [...prev];
+      const current = Array.isArray(prev) ? prev : [];
+      let next = [...current];
 
       // Remove mutually exclusive option if present
       if (mutuallyExclusiveId) {
@@ -1664,7 +1674,9 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                 <div className="mb-6 text-left">
                   <span className="text-[11px] font-mono tracking-[0.2em] text-slate-700 uppercase block mb-1 font-bold">Step 6 of 6 // Packaging & Verification Docs</span>
                   <h3 className="text-2xl sm:text-3xl font-bold text-slate-950 tracking-tight">Accessories & Documentation</h3>
-                  <p className="text-xs sm:text-sm text-slate-800 mt-2 font-medium">Confirm if the original retail box, original charger/cable, and invoice are present.</p>
+                  <p className="text-xs sm:text-sm text-slate-800 mt-2 font-medium">
+                    Confirm if the original retail box, original charger/cable, {hasSpen ? 'original S-Pen stylus, ' : ''}and invoice are present.
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-6 text-left">
@@ -1705,7 +1717,9 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         </div>
                         <div className="flex-1 min-w-0">
                           <h4 className="font-bold text-sm text-ink-navy">All Accessories Included</h4>
-                          <p className="text-xs text-ink-muted mt-1 font-light leading-snug">Original box with matching IMEI, original charger/cable, and purchasing receipt are present.</p>
+                          <p className="text-xs text-ink-muted mt-1 font-light leading-snug">
+                            Original box with matching IMEI, original charger/cable, {hasSpen ? 'S-Pen stylus, ' : ''}and purchasing receipt are present.
+                          </p>
                         </div>
                         <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 mt-0.5 ${
                           isSelected ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-ice-border bg-white'
@@ -1908,24 +1922,19 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   </div>
                 )}
 
-                {/* Dual eSIM / Physical SIM Question — Apple Pro / Pro Max iPhone 14+ only */}
-                {(() => {
-                  const nm = model.name.toLowerCase();
-                  const isProOrProMax = nm.includes('pro max') || nm.includes(' pro');
-                  const isEligible = model.brandId === 'brand-apple' && isProOrProMax && (
-                    nm.includes('iphone 14') || nm.includes('iphone 15') ||
-                    nm.includes('iphone 16') || nm.includes('iphone 17')
-                  );
-                  if (!isEligible) return null;
-                  return (
-                    <div className="mt-5 text-left border-t border-ice-border/60 pt-5">
+                {/* Physical SIM / eSIM Question — Apple iPhone models only */}
+                {isApple && !isWatch && !isTablet && (
+                  <div className="mt-5 text-left border-t border-ice-border/60 pt-5">
                       <h4 className="text-xs font-bold text-ink-navy font-outfit uppercase tracking-wider mb-2.5">
                         Does your phone support physical SIM?
                       </h4>
 
                       <div className="grid grid-cols-2 gap-3">
                         <div
+                          role="button"
+                          tabIndex={0}
                           onClick={() => setDualEsim(false)}
+                          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setDualEsim(false); }}
                           className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center gap-3 ${
                             dualEsim === false
                               ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/30'
@@ -1944,27 +1953,29 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         </div>
 
                         <div
+                          role="button"
+                          tabIndex={0}
                           onClick={() => setDualEsim(true)}
+                          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setDualEsim(true); }}
                           className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center gap-3 ${
                             dualEsim === true
-                              ? 'border-indigo-400 bg-indigo-500/10 ring-1 ring-indigo-400/30'
-                              : 'border-ice-border bg-canvas-white hover:border-indigo-300 hover:bg-slate-50/50'
+                              ? 'border-rose-500 bg-rose-500/10 ring-1 ring-rose-500/30'
+                              : 'border-ice-border bg-canvas-white hover:border-rose-500/40 hover:bg-slate-50/50'
                           }`}
                         >
                           <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
-                            dualEsim === true ? 'bg-indigo-600 text-white' : 'bg-slate-100 border border-slate-200 text-slate-500'
+                            dualEsim === true ? 'bg-rose-600 text-white' : 'bg-slate-100 border border-slate-200 text-slate-500'
                           }`}>
                             <X className="w-4 h-4 stroke-[2.5]" />
                           </div>
                           <div>
                             <h5 className="font-bold text-xs text-ink-navy">No</h5>
                             <p className="text-[10px] text-ink-muted font-light mt-0.5">eSIM only (No physical tray)</p>
-                          </div>
                         </div>
                       </div>
                     </div>
-                  );
-                })()}
+                  </div>
+                )}
               </motion.div>
             )}
 
@@ -1994,7 +2005,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                     <p className="text-xs text-blue-700 font-mono font-bold mt-0.5">
                       {variant.storageGb >= 1024 ? `${variant.storageGb / 1024}TB` : `${variant.storageGb}GB`} Storage
                       {isTablet && variant.ramGb ? ` • ${variant.ramGb}GB RAM` : ''}
-                      {isTablet ? ` • ${variant.connectivity === 'cellular' || variant.color?.toLowerCase().includes('cellular') ? 'Wi-Fi + Cellular' : 'Wi-Fi Only'}` : ''}
+                      {isTablet ? ` • ${variant.connectivity === 'cellular' || variant.color?.toLowerCase().includes('cellular') ? 'Wi-Fi + Cellular' : 'Wi-Fi Only'}` : (isApple && dualEsim !== null ? ` • ${dualEsim === true ? 'eSIM Only (US Model)' : 'Physical SIM'}` : '')}
                     </p>
                   </div>
 
@@ -2128,7 +2139,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         <span className="text-xs text-slate-900 print-text-dark font-mono font-bold block">
                           {variant.storageGb >= 1024 ? `${variant.storageGb / 1024}TB` : `${variant.storageGb}GB`}
                           {isTablet && variant.ramGb ? ` • ${variant.ramGb}GB RAM` : ''}
-                          {isTablet ? ` • ${variant.connectivity === 'cellular' || variant.color?.toLowerCase().includes('cellular') ? 'Wi-Fi + Cellular' : 'Wi-Fi Only'}` : ` • ${isApple ? 'Apple iOS' : 'Android'}`}
+                          {isTablet ? ` • ${variant.connectivity === 'cellular' || variant.color?.toLowerCase().includes('cellular') ? 'Wi-Fi + Cellular' : 'Wi-Fi Only'}` : ` • ${isApple ? 'Apple iOS' : 'Android'}${isApple && dualEsim === true ? ' • eSIM Only (US Model)' : ''}`}
                         </span>
                         <span className="hidden print:inline-block text-[10px] font-mono text-emerald-700 font-bold">
                           7-Day Price Lock
@@ -2167,7 +2178,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                             <span className="text-emerald-700 font-bold text-[10px] font-mono">Operational Passed</span>
                           </div>
                           <div className="p-2 rounded bg-slate-50 border border-slate-200 flex justify-between items-center">
-                            <span className="font-semibold text-slate-800">6. OEM Accessories &amp; Box</span>
+                            <span className="font-semibold text-slate-800">{hasSpen ? '6. Box, S-Pen & Accessories' : '6. OEM Accessories & Box'}</span>
                             <span className="text-emerald-700 font-bold text-[10px] font-mono">Inventory Verified</span>
                           </div>
                         </div>

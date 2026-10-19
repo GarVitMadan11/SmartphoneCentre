@@ -29,11 +29,12 @@ export function safeLazy<T extends ComponentType<any> = ComponentType<any>>(
       } catch (error: any) {
         console.warn(`[safeLazy] Attempt ${attempt + 1} failed for module:`, error);
         
+        const msg = error?.message || '';
         const isChunkFetchError =
-          error instanceof TypeError ||
-          /failed to fetch/i.test(error?.message || '') ||
-          /loading chunk/i.test(error?.message || '') ||
-          /dynamically imported module/i.test(error?.message || '');
+          /dynamically imported module/i.test(msg) ||
+          /loading chunk/i.test(msg) ||
+          /chunkloaderror/i.test(error?.name || '') ||
+          (/failed to fetch/i.test(msg) && (error instanceof TypeError || /module|chunk|script/i.test(msg)));
 
         if (!isChunkFetchError && attempt === maxRetries) {
           throw error;

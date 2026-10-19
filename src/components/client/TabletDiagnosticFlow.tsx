@@ -28,7 +28,7 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
   variant,
   step,
   rules,
-  selectedDefects,
+  selectedDefects: rawSelectedDefects,
   setSelectedDefects,
   warrantyAge,
   setWarrantyAge,
@@ -36,6 +36,8 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
   hasWarranty,
   setHasWarranty,
 }) => {
+  const selectedDefects = Array.isArray(rawSelectedDefects) ? rawSelectedDefects : [];
+
   // Helpers to check and toggle defect rules
   const hasDefect = (id: string) => selectedDefects.some(d => d.id === id);
 
@@ -43,18 +45,20 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
     const rule = rules.find(r => r.id === id);
     if (!rule) return;
     setSelectedDefects(prev => {
-      const exists = prev.some(d => d.id === id);
+      const current = Array.isArray(prev) ? prev : [];
+      const exists = current.some(d => d.id === id);
       if (exists) {
-        return prev.filter(d => d.id !== id);
+        return current.filter(d => d.id !== id);
       } else {
-        return [...prev, rule];
+        return [...current, rule];
       }
     });
   };
 
   const setSingleChoiceDefect = (chosenId: string, groupIds: string[]) => {
     setSelectedDefects(prev => {
-      let next = prev.filter(d => !groupIds.includes(d.id));
+      const current = Array.isArray(prev) ? prev : [];
+      let next = current.filter(d => !groupIds.includes(d.id));
       if (chosenId && chosenId !== 'none') {
         const rule = rules.find(r => r.id === chosenId);
         if (rule) next.push(rule);

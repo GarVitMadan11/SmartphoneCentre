@@ -63,7 +63,7 @@ function rulesFor(category: DeviceCategory): Record<string, Defect> {
     'defect-func-audio': { category: 'functionality', fixed: 2800 }, 'defect-func-restart': { category: 'functionality', percentage: .15 },
     'defect-battery-low': { category: 'connectivity', fixed: 2500, percentage: .05 }, 'defect-battery-warning': { category: 'connectivity', fixed: 2000, percentage: .015 },
     'defect-func-network': { category: 'connectivity', percentage: .10 }, 'defect-func-wireless': { category: 'connectivity', percentage: .07 }, 'defect-func-partmatch': { category: 'connectivity', percentage: .12 },
-    'defect-box-missing': { category: 'accessories', fixed: box }, 'defect-charger-missing': { category: 'accessories', fixed: 1500 }, 'defect-acc-nodocs': { category: 'accessories', fixed: 1500 },
+    'defect-box-missing': { category: 'accessories', fixed: box }, 'defect-charger-missing': { category: 'accessories', fixed: 1500 }, 'defect-acc-nodocs': { category: 'accessories', fixed: 1500 }, 'defect-spen-missing': { category: 'accessories', fixed: 2000 },
     'defect-critical-power': { category: 'accessories', critical: true }, 'defect-critical-icloud': { category: 'accessories', critical: true },
     
     // Smartwatch specific defect rules
