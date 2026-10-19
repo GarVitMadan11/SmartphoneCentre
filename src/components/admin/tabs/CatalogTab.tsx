@@ -101,7 +101,7 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
     try {
       setLoading(true);
       setError(null);
-      const apiModels = await fetchModels(undefined, category);
+      const apiModels = await fetchModels(undefined, category, true);
       setModels(apiModels as Model[]);
     } catch (err: any) {
       console.error('Failed to fetch models from DB:', err);
@@ -1452,7 +1452,7 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
     if (models && models.length > 0) {
       setAllModels(models);
     } else if (isOpen) {
-      fetchModels()
+      fetchModels(undefined, undefined, true)
         .then((m) => setAllModels(m as Model[]))
         .catch(() => {});
     }

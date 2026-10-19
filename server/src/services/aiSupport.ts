@@ -37,22 +37,40 @@ CRITICAL INSTRUCTIONS:
 5. Return ONLY a JSON object with keys: "response" (string), "intent" (string), "shouldHandoff" (boolean), "handoffReason" (optional string).`;
 
     const contents = [
+      ...history.map(h => ({
+        role: (h.role === 'assistant' || h.role === 'model' || h.role === 'bot') ? 'model' : 'user',
+        parts: [{ text: h.content }]
+      })),
       {
         role: 'user',
-        parts: [{ text: `${systemPrompt}\n\nChat History:\n${history.map(h => `${h.role}: ${h.content}`).join('\n')}\n\nUser: ${userMessage}` }]
+        parts: [{ text: userMessage }]
       }
     ];
 
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`, {
+    const payload = {
+      systemInstruction: {
+        parts: [{ text: systemPrompt }]
+      },
+      contents,
+      generationConfig: {
+        responseMimeType: 'application/json'
+      }
+    };
+
+    let res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents,
-        generationConfig: {
-          responseMimeType: 'application/json'
-        }
-      })
+      body: JSON.stringify(payload)
     });
+
+    if (!res.ok) {
+      // Fallback to gemini-1.5-flash if 2.0-flash is unavailable
+      res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    }
 
     if (res.ok) {
       const data = await res.json() as any;

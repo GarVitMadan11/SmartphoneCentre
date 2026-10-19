@@ -63,20 +63,17 @@ export class ApiRequestError extends Error {
   }
 }
 
+let inMemoryAdminActive = false;
+
 export function hasAdminToken(): boolean {
-  try {
-    return Boolean(sessionStorage.getItem('rex_admin_token'));
-  } catch {
-    return false;
+  if (typeof document !== 'undefined') {
+    return document.cookie.includes('rex_admin_csrf=') || inMemoryAdminActive;
   }
+  return inMemoryAdminActive;
 }
 
 function getStoredAdminToken(): string | null {
-  try {
-    return sessionStorage.getItem('rex_admin_token');
-  } catch {
-    return null;
-  }
+  return null;
 }
 
 async function apiFetch<T>(path: string, options?: RequestInit, withAuth = false): Promise<T> {
@@ -140,25 +137,26 @@ export interface AdminUserSession {
 }
 
 export async function adminLogin(credentials: { pin?: string; username?: string; password?: string }): Promise<{ success: boolean; expiresAt: number; user?: AdminUserSession }> {
-  const data = await apiFetch<{ token?: string; expiresAt: number; user?: AdminUserSession }>(
+  const data = await apiFetch<{ success: boolean; expiresAt: number; user?: AdminUserSession }>(
     '/admin/auth',
     { method: 'POST', body: JSON.stringify(credentials) }
   );
-  if (data.token) {
-    try {
-      sessionStorage.setItem('rex_admin_token', data.token);
-    } catch { /* ignore storage error */ }
-  }
+  inMemoryAdminActive = true;
   return { success: true, expiresAt: data.expiresAt, user: data.user };
 }
 
 export async function adminLogout(): Promise<void> {
-  try {
-    sessionStorage.removeItem('rex_admin_token');
-  } catch { /* ignore */ }
+  inMemoryAdminActive = false;
   try {
     await apiFetch<{ success: boolean }>('/admin/logout', { method: 'POST' });
-  } catch { /* ignore */ }
+  } catch { /* ignore network errors during logout */ }
+}
+
+export function changeAdminPassword(passwords: { currentPassword: string; newPassword: string }): Promise<{ success: boolean; message: string }> {
+  return apiFetch<{ success: boolean; message: string }>('/admin/change-password', {
+    method: 'POST',
+    body: JSON.stringify(passwords),
+  }, true);
 }
 
 export function getCurrentAdminUser(): Promise<AdminUserSession> {
@@ -246,15 +244,16 @@ export function saveCachedModels(models: ApiModel[]): void {
   } catch {}
 }
 
-export async function fetchModels(brandId?: string, deviceType?: string): Promise<ApiModel[]> {
+export async function fetchModels(brandId?: string, deviceType?: string, includeHidden?: boolean): Promise<ApiModel[]> {
   const params = new URLSearchParams();
   if (brandId) params.set('brandId', brandId);
   if (deviceType) params.set('deviceType', deviceType);
+  if (includeHidden) params.set('includeHidden', 'true');
   params.set('_t', String(Date.now()));
   const qs = params.toString();
   try {
     const data = await apiFetch<ApiModel[]>(`/models?${qs}`);
-    if (!brandId && !deviceType && Array.isArray(data) && data.length > 0) {
+    if (!brandId && !deviceType && !includeHidden && Array.isArray(data) && data.length > 0) {
       saveCachedModels(data);
     }
     return data;

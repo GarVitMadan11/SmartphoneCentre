@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer';
 
 export interface SecurityEventData {
-  type: 'LOGIN_SUCCESS' | 'LOGIN_FAILED' | 'LOCKDOWN_TRIGGERED' | 'SYSTEM_UNLOCKED';
+  type: 'LOGIN_SUCCESS' | 'LOGIN_FAILED' | 'LOCKDOWN_TRIGGERED' | 'SYSTEM_UNLOCKED' | 'PASSWORD_RESET';
   username?: string;
   ipAddress: string;
   userAgent: string;
@@ -112,6 +112,11 @@ export async function sendAdminSecurityAlertEmail(event: SecurityEventData): Pro
       subject = `[SECURITY NOTICE] Admin Panel Unlocked`;
       badgeColor = '#3b82f6';
       badgeText = '🔓 SYSTEM UNLOCKED';
+      break;
+    case 'PASSWORD_RESET':
+      subject = `🔐 [SECURITY ALERT] Admin Password Changed for ${event.username || 'Admin'}`;
+      badgeColor = '#8b5cf6';
+      badgeText = '🔐 PASSWORD CHANGED';
       break;
   }
 

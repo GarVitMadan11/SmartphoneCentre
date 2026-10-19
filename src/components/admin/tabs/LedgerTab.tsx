@@ -88,7 +88,7 @@ export const LedgerTab: React.FC<LedgerTabProps> = ({
   const metrics = React.useMemo(() => {
     if (propsMetrics) return propsMetrics;
     const completed = bookings.filter(b => b.payoutStatus === 'completed');
-    const totalPaidAmt = completed.reduce((sum, b) => sum + (b.finalPrice || 0), 0);
+    const totalPaidAmt = completed.reduce((sum, b) => sum + (b.finalPayoutAmount ?? b.finalPrice ?? 0), 0);
     const pendingInspections = bookings.filter(b => b.inspectionStatus === 'pending').length;
     const verified = bookings.filter(b => b.verificationStatus === 'verified').length;
     return {

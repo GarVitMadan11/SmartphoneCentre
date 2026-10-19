@@ -1,6 +1,16 @@
 import nodemailer from 'nodemailer';
 import { generateBookingQuotationPDF, PDFBookingData } from './pdfGenerator.js';
 
+export function escapeHtml(str: any): string {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function getTransporter() {
   const host = process.env.SMTP_HOST || 'smtp.gmail.com';
   const port = parseInt(process.env.SMTP_PORT || '587', 10);
@@ -21,7 +31,7 @@ function getTransporter() {
 
 export async function sendAdminBookingNotificationEmail(booking: PDFBookingData, pdfBuffer: Buffer | null, baseUrl: string = 'http://localhost:4000'): Promise<boolean> {
   const adminRecipient = process.env.ADMIN_ALERT_EMAIL || 'garvitmadan511@gmail.com';
-  const pdfDownloadUrl = `${baseUrl}/api/bookings/${booking.id}/pdf`;
+  const pdfDownloadUrl = `${baseUrl}/api/bookings/${encodeURIComponent(booking.id)}/pdf`;
 
   // 1. Try EmailJS REST API if configured
   const serviceId = process.env.EMAILJS_SERVICE_ID || process.env.VITE_EMAILJS_SERVICE_ID;
@@ -78,15 +88,17 @@ export async function sendAdminBookingNotificationEmail(booking: PDFBookingData,
   }
 
   const defectListHtml = booking.defectDescriptions && booking.defectDescriptions.length > 0
-    ? booking.defectDescriptions.join(', ')
+    ? booking.defectDescriptions.map(d => escapeHtml(d)).join(', ')
     : 'Perfect / No reported defects';
+
+  const cleanPhone = String(booking.customerPhone || '').replace(/[^\d+]/g, '');
 
   const htmlBody = `
     <div style="font-family: Arial, sans-serif; max-width: 650px; margin: 0 auto; background-color: #0f172a; border: 1px solid #334155; border-radius: 12px; overflow: hidden; color: #f8fafc;">
       <div style="background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); padding: 24px; text-align: center; border-bottom: 1px solid #334155;">
         <span style="display: inline-block; padding: 4px 14px; background-color: #10b981; color: #ffffff; font-weight: bold; font-size: 11px; border-radius: 20px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">🔔 NEW BOOKING CONFIRMED</span>
         <h1 style="color: #ffffff; margin: 4px 0 0 0; font-size: 22px; font-weight: bold;">Rephonix Admin Booking Alert</h1>
-        <p style="color: #93c5fd; margin: 4px 0 0 0; font-size: 13px;">Booking ID: #${booking.id}</p>
+        <p style="color: #93c5fd; margin: 4px 0 0 0; font-size: 13px;">Booking ID: #${escapeHtml(booking.id)}</p>
       </div>
 
       <div style="padding: 24px; background-color: #1e293b;">
@@ -98,15 +110,15 @@ export async function sendAdminBookingNotificationEmail(booking: PDFBookingData,
           <table style="width: 100%; border-collapse: collapse; font-size: 13px; color: #e2e8f0;">
             <tr>
               <td style="padding: 6px 0; color: #94a3b8; width: 140px;">Customer Name:</td>
-              <td style="padding: 6px 0; font-weight: bold; color: #f8fafc;">${booking.customerName}</td>
+              <td style="padding: 6px 0; font-weight: bold; color: #f8fafc;">${escapeHtml(booking.customerName)}</td>
             </tr>
             <tr>
               <td style="padding: 6px 0; color: #94a3b8;">Phone Number:</td>
-              <td style="padding: 6px 0; font-weight: bold; color: #38bdf8;"><a href="tel:${booking.customerPhone}" style="color: #38bdf8; text-decoration: none;">+91 ${booking.customerPhone}</a></td>
+              <td style="padding: 6px 0; font-weight: bold; color: #38bdf8;"><a href="tel:${encodeURIComponent(cleanPhone)}" style="color: #38bdf8; text-decoration: none;">+91 ${escapeHtml(cleanPhone)}</a></td>
             </tr>
             <tr>
               <td style="padding: 6px 0; color: #94a3b8;">Email Address:</td>
-              <td style="padding: 6px 0; font-weight: bold; color: #f8fafc;"><a href="mailto:${booking.customerEmail}" style="color: #f8fafc; text-decoration: underline;">${booking.customerEmail}</a></td>
+              <td style="padding: 6px 0; font-weight: bold; color: #f8fafc;"><a href="mailto:${encodeURIComponent(booking.customerEmail)}" style="color: #f8fafc; text-decoration: underline;">${escapeHtml(booking.customerEmail)}</a></td>
             </tr>
           </table>
         </div>
@@ -117,15 +129,15 @@ export async function sendAdminBookingNotificationEmail(booking: PDFBookingData,
           <table style="width: 100%; border-collapse: collapse; font-size: 13px; color: #e2e8f0;">
             <tr>
               <td style="padding: 6px 0; color: #94a3b8; width: 140px;">Scheduled Date:</td>
-              <td style="padding: 6px 0; font-weight: bold; color: #fbbf24;">${booking.pickupDate}</td>
+              <td style="padding: 6px 0; font-weight: bold; color: #fbbf24;">${escapeHtml(booking.pickupDate)}</td>
             </tr>
             <tr>
               <td style="padding: 6px 0; color: #94a3b8;">Time Window:</td>
-              <td style="padding: 6px 0; font-weight: bold; color: #f8fafc;">${booking.pickupTimeSlot}</td>
+              <td style="padding: 6px 0; font-weight: bold; color: #f8fafc;">${escapeHtml(booking.pickupTimeSlot)}</td>
             </tr>
             <tr>
               <td style="padding: 6px 0; color: #94a3b8; vertical-align: top;">Pickup Address:</td>
-              <td style="padding: 6px 0; font-weight: bold; color: #f8fafc; line-height: 1.4;">${booking.address}</td>
+              <td style="padding: 6px 0; font-weight: bold; color: #f8fafc; line-height: 1.4;">${escapeHtml(booking.address)}</td>
             </tr>
           </table>
         </div>
@@ -136,7 +148,7 @@ export async function sendAdminBookingNotificationEmail(booking: PDFBookingData,
           <table style="width: 100%; border-collapse: collapse; font-size: 13px; color: #e2e8f0;">
             <tr>
               <td style="padding: 6px 0; color: #94a3b8; width: 140px;">Device Model:</td>
-              <td style="padding: 6px 0; font-weight: bold; color: #f8fafc;">${booking.modelName} (${booking.storageGb}GB)</td>
+              <td style="padding: 6px 0; font-weight: bold; color: #f8fafc;">${escapeHtml(booking.modelName)} (${Number(booking.storageGb)}GB)</td>
             </tr>
             <tr>
               <td style="padding: 6px 0; color: #94a3b8; vertical-align: top;">Reported Condition:</td>
@@ -144,14 +156,14 @@ export async function sendAdminBookingNotificationEmail(booking: PDFBookingData,
             </tr>
             <tr style="border-top: 1px solid #334155;">
               <td style="padding: 10px 0 4px 0; font-weight: bold; color: #94a3b8; font-size: 14px;">Agreed Payout:</td>
-              <td style="padding: 10px 0 4px 0; font-weight: bold; color: #4ade80; font-size: 20px;">₹${booking.finalPrice.toLocaleString('en-IN')}</td>
+              <td style="padding: 10px 0 4px 0; font-weight: bold; color: #4ade80; font-size: 20px;">₹${Number(booking.finalPrice).toLocaleString('en-IN')}</td>
             </tr>
           </table>
         </div>
 
         <!-- ACTION BUTTON -->
         <div style="text-align: center; margin: 24px 0 8px 0;">
-          <a href="${pdfDownloadUrl}" style="background-color: #2563eb; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 14px; display: inline-block;">📄 Download PDF Quotation</a>
+          <a href="${escapeHtml(pdfDownloadUrl)}" style="background-color: #2563eb; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 14px; display: inline-block;">📄 Download PDF Quotation</a>
         </div>
       </div>
 
@@ -261,34 +273,34 @@ export async function sendBookingConfirmationEmail(booking: PDFBookingData, base
       </div>
 
       <div style="padding: 24px;">
-        <p style="font-size: 15px; color: #1e293b; margin-top: 0;">Dear <strong>${booking.customerName}</strong>,</p>
+        <p style="font-size: 15px; color: #1e293b; margin-top: 0;">Dear <strong>${escapeHtml(booking.customerName)}</strong>,</p>
         <p style="font-size: 14px; color: #475569; line-height: 1.5;">Your trade-in booking has been successfully confirmed! Below are your locked quotation details and doorstep pickup schedule.</p>
 
         <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 18px; margin: 20px 0;">
           <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
             <tr>
               <td style="padding: 6px 0; color: #64748b;">Booking ID:</td>
-              <td style="padding: 6px 0; font-weight: bold; color: #1e3a8a; text-align: right;">#${booking.id}</td>
+              <td style="padding: 6px 0; font-weight: bold; color: #1e3a8a; text-align: right;">#${escapeHtml(booking.id)}</td>
             </tr>
             <tr>
               <td style="padding: 6px 0; color: #64748b;">Device Model:</td>
-              <td style="padding: 6px 0; font-weight: bold; color: #0f172a; text-align: right;">${booking.modelName} (${booking.storageGb}GB)</td>
+              <td style="padding: 6px 0; font-weight: bold; color: #0f172a; text-align: right;">${escapeHtml(booking.modelName)} (${Number(booking.storageGb)}GB)</td>
             </tr>
             <tr>
               <td style="padding: 6px 0; color: #64748b;">Pickup Address:</td>
-              <td style="padding: 6px 0; font-weight: bold; color: #0f172a; text-align: right;">${booking.address}</td>
+              <td style="padding: 6px 0; font-weight: bold; color: #0f172a; text-align: right;">${escapeHtml(booking.address)}</td>
             </tr>
             <tr>
               <td style="padding: 6px 0; color: #64748b;">Scheduled Date:</td>
-              <td style="padding: 6px 0; font-weight: bold; color: #0f172a; text-align: right;">${booking.pickupDate}</td>
+              <td style="padding: 6px 0; font-weight: bold; color: #0f172a; text-align: right;">${escapeHtml(booking.pickupDate)}</td>
             </tr>
             <tr>
               <td style="padding: 6px 0; color: #64748b;">Time Window:</td>
-              <td style="padding: 6px 0; font-weight: bold; color: #0f172a; text-align: right;">${booking.pickupTimeSlot}</td>
+              <td style="padding: 6px 0; font-weight: bold; color: #0f172a; text-align: right;">${escapeHtml(booking.pickupTimeSlot)}</td>
             </tr>
             <tr style="border-top: 1px solid #cbd5e1;">
               <td style="padding: 10px 0 4px 0; font-weight: bold; color: #0f172a; font-size: 14px;">Instant Doorside Payout:</td>
-              <td style="padding: 10px 0 4px 0; font-weight: bold; color: #1e3a8a; font-size: 18px; text-align: right;">₹${booking.finalPrice.toLocaleString('en-IN')}</td>
+              <td style="padding: 10px 0 4px 0; font-weight: bold; color: #1e3a8a; font-size: 18px; text-align: right;">₹${Number(booking.finalPrice).toLocaleString('en-IN')}</td>
             </tr>
           </table>
         </div>
@@ -299,7 +311,7 @@ export async function sendBookingConfirmationEmail(booking: PDFBookingData, base
         </div>
 
         <div style="text-align: center; margin: 28px 0;">
-          <a href="${pdfDownloadUrl}" style="background-color: #1e3a8a; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 14px; display: inline-block;">📄 Download Official PDF Quotation</a>
+          <a href="${escapeHtml(pdfDownloadUrl)}" style="background-color: #1e3a8a; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 14px; display: inline-block;">📄 Download Official PDF Quotation</a>
         </div>
       </div>
 
@@ -348,8 +360,70 @@ export async function sendAdminQuoteAlertEmail(data: QuoteAlertData): Promise<bo
   const adminRecipient = process.env.ADMIN_ALERT_EMAIL || 'garvitmadan511@gmail.com';
   const formattedPayout = `₹${data.estimatedPayout.toLocaleString('en-IN')}`;
   const defectText = data.defects && data.defects.length > 0
-    ? data.defects.join(', ')
+    ? data.defects.map(d => escapeHtml(d)).join(', ')
     : 'All hardware & screen diagnostics passed (Mint Condition / No Defects)';
+
+  const cleanPhone = String(data.customerPhone || '').replace(/[^\d+]/g, '');
+
+  const htmlBody = `
+    <div style="font-family: Arial, sans-serif; max-width: 650px; margin: 0 auto; background-color: #0f172a; border: 1px solid #334155; border-radius: 12px; overflow: hidden; color: #f8fafc;">
+      <div style="background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); padding: 24px; text-align: center; border-bottom: 1px solid #334155;">
+        <span style="display: inline-block; padding: 4px 14px; background-color: #3b82f6; color: #ffffff; font-weight: bold; font-size: 11px; border-radius: 20px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">📊 DIAGNOSTIC QUOTE GENERATED</span>
+        <h1 style="color: #ffffff; margin: 4px 0 0 0; font-size: 22px; font-weight: bold;">Rephonix Trade-In Quote Alert</h1>
+        <p style="color: #93c5fd; margin: 4px 0 0 0; font-size: 13px;">Reference Code: ${escapeHtml(data.refCode || 'SCH-QUOTE')}</p>
+      </div>
+
+      <div style="padding: 24px; background-color: #1e293b;">
+        <p style="font-size: 14px; color: #cbd5e1; margin-top: 0;">A logged-in user completed diagnostic evaluation and generated a trade-in quote:</p>
+
+        <!-- CUSTOMER DETAILS -->
+        <div style="margin-bottom: 20px; background-color: #0f172a; padding: 16px; border-radius: 8px; border: 1px solid #334155;">
+          <h3 style="margin: 0 0 12px 0; font-size: 13px; font-weight: bold; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.5px;">👤 Logged-In Customer Details</h3>
+          <table style="width: 100%; border-collapse: collapse; font-size: 13px; color: #e2e8f0;">
+            <tr>
+              <td style="padding: 6px 0; color: #94a3b8; width: 140px;">Customer Name:</td>
+              <td style="padding: 6px 0; font-weight: bold; color: #f8fafc;">${escapeHtml(data.customerName)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 6px 0; color: #94a3b8;">Phone Number:</td>
+              <td style="padding: 6px 0; font-weight: bold; color: #38bdf8;"><a href="tel:${encodeURIComponent(cleanPhone)}" style="color: #38bdf8; text-decoration: none;">+91 ${escapeHtml(cleanPhone)}</a></td>
+            </tr>
+            <tr>
+              <td style="padding: 6px 0; color: #94a3b8;">Email Address:</td>
+              <td style="padding: 6px 0; font-weight: bold; color: #f8fafc;"><a href="mailto:${encodeURIComponent(data.customerEmail)}" style="color: #f8fafc; text-decoration: underline;">${escapeHtml(data.customerEmail)}</a></td>
+            </tr>
+          </table>
+        </div>
+
+        <!-- TARGET DEVICE & ESTIMATED PAYOUT -->
+        <div style="margin-bottom: 20px; background-color: #0f172a; padding: 16px; border-radius: 8px; border: 1px solid #334155;">
+          <h3 style="margin: 0 0 12px 0; font-size: 13px; font-weight: bold; color: #4ade80; text-transform: uppercase; letter-spacing: 0.5px;">📱 Target Device & Valuation</h3>
+          <table style="width: 100%; border-collapse: collapse; font-size: 13px; color: #e2e8f0;">
+            <tr>
+              <td style="padding: 6px 0; color: #94a3b8; width: 140px;">Target Device:</td>
+              <td style="padding: 6px 0; font-weight: bold; color: #f8fafc;">${escapeHtml(data.modelName)} (${Number(data.storageGb) >= 1024 ? '1TB' : Number(data.storageGb) + 'GB'})</td>
+            </tr>
+            <tr>
+              <td style="padding: 6px 0; color: #94a3b8;">Value Retained:</td>
+              <td style="padding: 6px 0; font-weight: bold; color: #fbbf24;">${Number(data.retentionPercentage)}% Value Retained</td>
+            </tr>
+            <tr>
+              <td style="padding: 6px 0; color: #94a3b8; vertical-align: top;">Diagnostic Audit:</td>
+              <td style="padding: 6px 0; font-weight: bold; color: #cbd5e1; line-height: 1.4;">${defectText}</td>
+            </tr>
+            <tr style="border-top: 1px solid #334155;">
+              <td style="padding: 10px 0 4px 0; font-weight: bold; color: #94a3b8; font-size: 14px;">Estimated Payout:</td>
+              <td style="padding: 10px 0 4px 0; font-weight: bold; color: #4ade80; font-size: 22px;">${escapeHtml(formattedPayout)}</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <div style="background-color: #0f172a; padding: 16px; text-align: center; font-size: 11px; color: #64748b; border-top: 1px solid #334155;">
+        <p style="margin: 0;">Rephonix Diagnostic Engine Alert &bull; Confidential Customer Lead Notification</p>
+      </div>
+    </div>
+  `;
 
   // 1. Try EmailJS REST API if configured
   const serviceId = process.env.EMAILJS_SERVICE_ID || process.env.VITE_EMAILJS_SERVICE_ID;
@@ -399,66 +473,6 @@ export async function sendAdminQuoteAlertEmail(data: QuoteAlertData): Promise<bo
     console.log(`[Quote Mailer] SMTP credentials not set. Quote alert ready for ${adminRecipient}: ${data.modelName} by ${data.customerName} (${formattedPayout})`);
     return true;
   }
-
-  const htmlBody = `
-    <div style="font-family: Arial, sans-serif; max-width: 650px; margin: 0 auto; background-color: #0f172a; border: 1px solid #334155; border-radius: 12px; overflow: hidden; color: #f8fafc;">
-      <div style="background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); padding: 24px; text-align: center; border-bottom: 1px solid #334155;">
-        <span style="display: inline-block; padding: 4px 14px; background-color: #3b82f6; color: #ffffff; font-weight: bold; font-size: 11px; border-radius: 20px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">📊 DIAGNOSTIC QUOTE GENERATED</span>
-        <h1 style="color: #ffffff; margin: 4px 0 0 0; font-size: 22px; font-weight: bold;">Rephonix Trade-In Quote Alert</h1>
-        <p style="color: #93c5fd; margin: 4px 0 0 0; font-size: 13px;">Reference Code: ${data.refCode || 'SCH-QUOTE'}</p>
-      </div>
-
-      <div style="padding: 24px; background-color: #1e293b;">
-        <p style="font-size: 14px; color: #cbd5e1; margin-top: 0;">A logged-in user completed diagnostic evaluation and generated a trade-in quote:</p>
-
-        <!-- CUSTOMER DETAILS -->
-        <div style="margin-bottom: 20px; background-color: #0f172a; padding: 16px; border-radius: 8px; border: 1px solid #334155;">
-          <h3 style="margin: 0 0 12px 0; font-size: 13px; font-weight: bold; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.5px;">👤 Logged-In Customer Details</h3>
-          <table style="width: 100%; border-collapse: collapse; font-size: 13px; color: #e2e8f0;">
-            <tr>
-              <td style="padding: 6px 0; color: #94a3b8; width: 140px;">Customer Name:</td>
-              <td style="padding: 6px 0; font-weight: bold; color: #f8fafc;">${data.customerName}</td>
-            </tr>
-            <tr>
-              <td style="padding: 6px 0; color: #94a3b8;">Phone Number:</td>
-              <td style="padding: 6px 0; font-weight: bold; color: #38bdf8;"><a href="tel:${data.customerPhone}" style="color: #38bdf8; text-decoration: none;">+91 ${data.customerPhone}</a></td>
-            </tr>
-            <tr>
-              <td style="padding: 6px 0; color: #94a3b8;">Email Address:</td>
-              <td style="padding: 6px 0; font-weight: bold; color: #f8fafc;"><a href="mailto:${data.customerEmail}" style="color: #f8fafc; text-decoration: underline;">${data.customerEmail}</a></td>
-            </tr>
-          </table>
-        </div>
-
-        <!-- TARGET DEVICE & ESTIMATED PAYOUT -->
-        <div style="margin-bottom: 20px; background-color: #0f172a; padding: 16px; border-radius: 8px; border: 1px solid #334155;">
-          <h3 style="margin: 0 0 12px 0; font-size: 13px; font-weight: bold; color: #4ade80; text-transform: uppercase; letter-spacing: 0.5px;">📱 Target Device & Valuation</h3>
-          <table style="width: 100%; border-collapse: collapse; font-size: 13px; color: #e2e8f0;">
-            <tr>
-              <td style="padding: 6px 0; color: #94a3b8; width: 140px;">Target Device:</td>
-              <td style="padding: 6px 0; font-weight: bold; color: #f8fafc;">${data.modelName} (${data.storageGb >= 1024 ? '1TB' : data.storageGb + 'GB'})</td>
-            </tr>
-            <tr>
-              <td style="padding: 6px 0; color: #94a3b8;">Value Retained:</td>
-              <td style="padding: 6px 0; font-weight: bold; color: #fbbf24;">${data.retentionPercentage}% Value Retained</td>
-            </tr>
-            <tr>
-              <td style="padding: 6px 0; color: #94a3b8; vertical-align: top;">Diagnostic Audit:</td>
-              <td style="padding: 6px 0; font-weight: bold; color: #cbd5e1; line-height: 1.4;">${defectText}</td>
-            </tr>
-            <tr style="border-top: 1px solid #334155;">
-              <td style="padding: 10px 0 4px 0; font-weight: bold; color: #94a3b8; font-size: 14px;">Estimated Payout:</td>
-              <td style="padding: 10px 0 4px 0; font-weight: bold; color: #4ade80; font-size: 22px;">${formattedPayout}</td>
-            </tr>
-          </table>
-        </div>
-      </div>
-
-      <div style="background-color: #0f172a; padding: 16px; text-align: center; font-size: 11px; color: #64748b; border-top: 1px solid #334155;">
-        <p style="margin: 0;">Rephonix Diagnostic Engine Alert &bull; Confidential Customer Lead Notification</p>
-      </div>
-    </div>
-  `;
 
   try {
     await transporter.sendMail({
@@ -510,7 +524,7 @@ export async function sendAdminPriceMatchAlertEmail(data: PriceMatchAlertData): 
       <div style="background: linear-gradient(135deg, #78350f 0%, #b45309 50%, #1e3a8a 100%); padding: 24px; text-align: center; border-bottom: 1px solid #d97706;">
         <span style="display: inline-block; padding: 4px 14px; background-color: #f59e0b; color: #000000; font-weight: bold; font-size: 11px; border-radius: 20px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">🏷️ PRICE MATCH / CUSTOM QUOTE REQUEST</span>
         <h1 style="color: #ffffff; margin: 4px 0 0 0; font-size: 22px; font-weight: bold;">Rephonix Price Match Lead</h1>
-        <p style="color: #fef3c7; margin: 4px 0 0 0; font-size: 13px;">Ref Code: ${data.refCode || 'MATCH-REQUEST'}</p>
+        <p style="color: #fef3c7; margin: 4px 0 0 0; font-size: 13px;">Ref Code: ${escapeHtml(data.refCode || 'MATCH-REQUEST')}</p>
       </div>
 
       <div style="padding: 24px; background-color: #1e293b;">
@@ -522,17 +536,17 @@ export async function sendAdminPriceMatchAlertEmail(data: PriceMatchAlertData): 
           <table style="width: 100%; border-collapse: collapse; font-size: 13px; color: #e2e8f0;">
             <tr>
               <td style="padding: 6px 0; color: #94a3b8; width: 150px;">Mobile / WhatsApp:</td>
-              <td style="padding: 6px 0; font-weight: bold; color: #38bdf8; font-size: 16px;"><a href="${callUrl}" style="color: #38bdf8; text-decoration: none;">+91 ${data.customerPhone}</a></td>
+              <td style="padding: 6px 0; font-weight: bold; color: #38bdf8; font-size: 16px;"><a href="${escapeHtml(callUrl)}" style="color: #38bdf8; text-decoration: none;">+91 ${escapeHtml(phoneFormatted)}</a></td>
             </tr>
             ${data.customerName ? `
             <tr>
               <td style="padding: 6px 0; color: #94a3b8;">Customer Name:</td>
-              <td style="padding: 6px 0; font-weight: bold; color: #f8fafc;">${data.customerName}</td>
+              <td style="padding: 6px 0; font-weight: bold; color: #f8fafc;">${escapeHtml(data.customerName)}</td>
             </tr>` : ''}
             ${data.customerEmail ? `
             <tr>
               <td style="padding: 6px 0; color: #94a3b8;">Email Address:</td>
-              <td style="padding: 6px 0; font-weight: bold; color: #f8fafc;"><a href="mailto:${data.customerEmail}" style="color: #f8fafc; text-decoration: underline;">${data.customerEmail}</a></td>
+              <td style="padding: 6px 0; font-weight: bold; color: #f8fafc;"><a href="mailto:${encodeURIComponent(data.customerEmail)}" style="color: #f8fafc; text-decoration: underline;">${escapeHtml(data.customerEmail)}</a></td>
             </tr>` : ''}
           </table>
         </div>
@@ -543,27 +557,27 @@ export async function sendAdminPriceMatchAlertEmail(data: PriceMatchAlertData): 
           <table style="width: 100%; border-collapse: collapse; font-size: 13px; color: #e2e8f0;">
             <tr>
               <td style="padding: 6px 0; color: #94a3b8; width: 150px;">Target Device:</td>
-              <td style="padding: 6px 0; font-weight: bold; color: #f8fafc;">${data.modelName} (${data.storageGb >= 1024 ? '1TB' : data.storageGb + 'GB'})</td>
+              <td style="padding: 6px 0; font-weight: bold; color: #f8fafc;">${escapeHtml(data.modelName)} (${Number(data.storageGb) >= 1024 ? '1TB' : Number(data.storageGb) + 'GB'})</td>
             </tr>
             <tr>
               <td style="padding: 6px 0; color: #94a3b8;">Current System Quote:</td>
-              <td style="padding: 6px 0; font-weight: bold; color: #94a3b8; text-decoration: line-through;">${formattedCurrent}</td>
+              <td style="padding: 6px 0; font-weight: bold; color: #94a3b8; text-decoration: line-through;">${escapeHtml(formattedCurrent)}</td>
             </tr>
             <tr style="border-top: 1px solid #334155;">
               <td style="padding: 10px 0 4px 0; font-weight: bold; color: #fbbf24; font-size: 14px;">Customer Target Price:</td>
-              <td style="padding: 10px 0 4px 0; font-weight: bold; color: #f59e0b; font-size: 24px;">${formattedExpected}</td>
+              <td style="padding: 10px 0 4px 0; font-weight: bold; color: #f59e0b; font-size: 24px;">${escapeHtml(formattedExpected)}</td>
             </tr>
             <tr>
               <td style="padding: 10px 0 4px 0; color: #94a3b8; vertical-align: top;">Comments:</td>
-              <td style="padding: 10px 0 4px 0; font-weight: bold; color: #e2e8f0; line-height: 1.4;">${data.comments || 'No additional comments provided'}</td>
+              <td style="padding: 10px 0 4px 0; font-weight: bold; color: #e2e8f0; line-height: 1.4;">${escapeHtml(data.comments || 'No additional comments provided')}</td>
             </tr>
           </table>
         </div>
 
         <!-- ACTION BUTTONS -->
         <div style="text-align: center; margin: 24px 0 8px 0;">
-          <a href="${waUrl}" style="background-color: #10b981; color: #ffffff; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px; display: inline-block; margin-right: 8px;">💬 Open WhatsApp Chat</a>
-          <a href="${callUrl}" style="background-color: #2563eb; color: #ffffff; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px; display: inline-block;">📞 Call Customer Now</a>
+          <a href="${escapeHtml(waUrl)}" style="background-color: #10b981; color: #ffffff; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px; display: inline-block; margin-right: 8px;">💬 Open WhatsApp Chat</a>
+          <a href="${escapeHtml(callUrl)}" style="background-color: #2563eb; color: #ffffff; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px; display: inline-block;">📞 Call Customer Now</a>
         </div>
       </div>
 

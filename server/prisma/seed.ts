@@ -26,7 +26,12 @@ if (fs.existsSync(schemaPath) && dbUrl) {
 
 const prisma = new PrismaClient();
 
-const DEFAULT_ADMIN_PASSWORD_HASH = bcrypt.hashSync('AdminPass123!', 10);
+import { randomBytes } from 'node:crypto';
+
+// Resolve admin seed password from env, or generate a high-entropy random password
+const seedPassword = (process.env.ADMIN_SEED_PASSWORD ?? '').trim() || randomBytes(15).toString('base64url');
+const DEFAULT_ADMIN_PASSWORD_HASH = bcrypt.hashSync(seedPassword, 12);
+const isGeneratedPassword = !(process.env.ADMIN_SEED_PASSWORD ?? '').trim();
 
 const DEFAULT_ADMIN_USERS = [
   { username: 'superadmin', email: 'admin@smartphonecentre.com', passwordHash: DEFAULT_ADMIN_PASSWORD_HASH, role: 'SUPER_ADMIN', active: true },
@@ -100,6 +105,10 @@ async function main() {
     });
   }
   console.log(`  ✓ ${DEFAULT_ADMIN_USERS.length} admin staff accounts ready`);
+  if (isGeneratedPassword) {
+    console.log(`\n🔑 Initial Admin Staff Password generated: "${seedPassword}"`);
+    console.log('   Please log in and change your password immediately via the admin panel.\n');
+  }
 
   console.log('✅ Database sync complete!');
 }

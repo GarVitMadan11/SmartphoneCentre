@@ -82,7 +82,7 @@ export const CashifyMonitorTab: React.FC = () => {
         fetchCashifySummary().catch(() => null),
         fetchCashifyVariants().catch(() => []),
         fetchCashifyPriceAlerts().catch(() => []),
-        fetchModels().catch(() => []),
+        fetchModels(undefined, undefined, true).catch(() => []),
       ]);
       if (sumRes) {
         setSummary(sumRes);
@@ -134,7 +134,7 @@ export const CashifyMonitorTab: React.FC = () => {
 
     if (!target) {
       try {
-        const freshModels = await fetchModels();
+        const freshModels = await fetchModels(undefined, undefined, true);
         if (freshModels && Array.isArray(freshModels)) {
           setModels(freshModels as Model[]);
           target = findTargetModel(variant, freshModels as Model[]);
@@ -177,7 +177,7 @@ export const CashifyMonitorTab: React.FC = () => {
       let target = findTargetModel(variant, models);
 
       if (!target) {
-        const freshModels = await fetchModels();
+        const freshModels = await fetchModels(undefined, undefined, true);
         if (freshModels && Array.isArray(freshModels)) {
           setModels(freshModels as Model[]);
           target = findTargetModel(variant, freshModels as Model[]);

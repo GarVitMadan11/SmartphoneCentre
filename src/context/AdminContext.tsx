@@ -68,7 +68,7 @@ export const AdminContextProvider: React.FC<AdminContextProviderProps> = ({
   const refreshCatalog = useCallback(async () => {
     setLoadingModels(true);
     try {
-      const data = await fetchModels();
+      const data = await fetchModels(undefined, undefined, true);
       if (data && data.length > 0) {
         setModels(data as Model[]);
         setIsApiOffline(false);

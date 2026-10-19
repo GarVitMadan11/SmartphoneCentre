@@ -19,10 +19,13 @@ export function inferBrandId(legacyId: string, explicit?: string): string {
 // GET /api/models
 router.get('/', async (req, res) => {
   try {
-    const { brandId, deviceType } = req.query;
+    const { brandId, deviceType, includeHidden } = req.query;
     const where: Record<string, unknown> = {};
     if (brandId && typeof brandId === 'string') where.brandId = brandId;
     if (deviceType && typeof deviceType === 'string') where.deviceType = deviceType;
+    if (includeHidden !== 'true') {
+      where.hidden = false;
+    }
 
     let models: any[] = [];
     try {

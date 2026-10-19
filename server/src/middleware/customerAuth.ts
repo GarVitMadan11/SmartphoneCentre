@@ -89,11 +89,11 @@ export async function customerAuth(
         });
       }
 
-      // Step 3: Match by Verified Phone
+      // Step 3: Match by Verified Phone (safe linking: prevent taking over password-protected accounts with different email)
       if (!user && decodedFirebase.phone_number) {
         const rawPhone = decodedFirebase.phone_number.trim();
         const cleanPhone = rawPhone.replace(/^\+91/, '');
-        user = await prisma.user.findFirst({
+        const candidate = await prisma.user.findFirst({
           where: {
             OR: [
               { phone: rawPhone },
@@ -102,6 +102,14 @@ export async function customerAuth(
             ],
           },
         });
+        if (candidate) {
+          const hasPassword = Boolean(candidate.passwordHash);
+          const hasRealEmail = candidate.email && !candidate.email.endsWith('@phone.rephonix.in');
+          const emailMatches = decodedFirebase.email && candidate.email.toLowerCase() === decodedFirebase.email.trim().toLowerCase();
+          if (!hasPassword || emailMatches || !hasRealEmail) {
+            user = candidate;
+          }
+        }
       }
 
       // Step 4: If not found, create new PostgreSQL User record with exact Firebase UID

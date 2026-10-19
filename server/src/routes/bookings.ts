@@ -15,6 +15,7 @@ import {
 import {
   maximumQuoteFor,
   calculateServerValuation,
+  verifyQuoteSignature,
   DeviceCategory,
 } from '../services/valuation.js';
 import { generateBookingQuotationPDF } from '../services/pdfGenerator.js';
@@ -229,16 +230,36 @@ router.post('/', bookingLimiter, optionalCustomerAuth, async (req: Authenticated
     const defectIds = Array.isArray(b.defectIds) ? (b.defectIds as string[]) : [];
     const maxQuote = maximumQuoteFor(model.basePrice128GB, storageGb, model.variantPrices, ramGb);
 
-    const clientPrice = Number(b.finalPrice);
-    const hasValidClientPrice = (typeof b.finalPrice === 'number' || typeof b.finalPrice === 'string') && !isNaN(clientPrice) && clientPrice > 0;
-    const estimatedPrice = hasValidClientPrice
-      ? Math.round(clientPrice)
-      : (calculateServerValuation(maxQuote, model.category as DeviceCategory, defectIds) ?? maxQuote);
-
-    if (estimatedPrice === null || isNaN(estimatedPrice)) {
+    const calculatedPrice = calculateServerValuation(maxQuote, model.category as DeviceCategory, defectIds);
+    if (calculatedPrice === null || isNaN(calculatedPrice)) {
       res.status(400).json({ error: 'ValidationError', message: 'One or more declared device conditions are invalid.' });
       return;
     }
+
+    // Optional cryptographic quote signature verification
+    if (b.quoteId && typeof b.quoteId === 'string' && b.signature && typeof b.signature === 'string' && b.expiresAt && typeof b.expiresAt === 'string') {
+      const isValidSig = verifyQuoteSignature(
+        model.legacyId,
+        storageGb,
+        defectIds,
+        calculatedPrice,
+        String(b.expiresAt),
+        String(b.signature)
+      );
+      if (!isValidSig) {
+        res.status(400).json({ error: 'InvalidQuote', message: 'The provided quote signature is invalid or expired. Please refresh your quote.' });
+        return;
+      }
+    }
+
+    // Security Audit: Check if client attempted to tamper with finalPrice
+    const clientPrice = Number(b.finalPrice);
+    if (!isNaN(clientPrice) && clientPrice > 0 && Math.abs(clientPrice - calculatedPrice) > 2) {
+      console.warn(`[Security Alert] Booking price tampering prevented for ${model.legacyId}. Client submitted ₹${clientPrice}, server calculated ₹${calculatedPrice}. Overriding with server price.`);
+    }
+
+    // Server-authoritative price is ALWAYS used
+    const estimatedPrice = calculatedPrice;
 
     const payout = payoutBonusFor(String(b.payoutMethod), estimatedPrice);
     const d = new Date();

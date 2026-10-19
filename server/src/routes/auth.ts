@@ -25,23 +25,7 @@ router.get('/config', (_req, res) => {
 });
 
 
-interface EmailOtpSession {
-  email: string;
-  otp: string;
-  expiresAt: Date;
-  lastSentAt: Date;
-  attempts: number;
-}
-const emailOtpStore = new Map<string, EmailOtpSession>();
-
-interface ForgotPasswordSession {
-  email: string;
-  otp: string;
-  expiresAt: Date;
-  lastSentAt: Date;
-  attempts: number;
-}
-const forgotPasswordOtpStore = new Map<string, ForgotPasswordSession>();
+// Database-backed sessions are used for all OTP and password reset flows
 
 // -- Google OAuth2 client (singleton) --
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -193,11 +177,12 @@ router.post('/signup', async (req, res) => {
 
     const otp = randomInt(100000, 1000000).toString();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+    const otpHashed = createHash('sha256').update(`${cleanEmail}:${cleanPhone}:${otp}`).digest('hex');
 
     await prisma.otpVerification.upsert({
       where: { phone: cleanPhone },
-      create: { phone: cleanPhone, otp, expiresAt, attempts: 0 },
-      update: { otp, expiresAt, attempts: 0 },
+      create: { phone: cleanPhone, otp: otpHashed, expiresAt, attempts: 0 },
+      update: { otp: otpHashed, expiresAt, attempts: 0 },
     });
 
     // Securely dispatch verification code using the backend email service
@@ -261,8 +246,12 @@ router.post('/verify-otp', async (req, res) => {
       return;
     }
 
+    // Cryptographically verify OTP bound to both phone and email (with fallback for in-flight legacy codes)
+    const expectedOtpHash = createHash('sha256').update(`${cleanEmail}:${cleanPhone}:${otp.trim()}`).digest('hex');
+    const isOtpValid = otpRecord.otp === expectedOtpHash || otpRecord.otp === otp.trim();
+
     // OTP match check
-    if (otpRecord.otp !== otp.trim()) {
+    if (!isOtpValid) {
       const updatedRecord = await prisma.otpVerification.update({
         where: { phone: cleanPhone },
         data: { attempts: { increment: 1 } },
@@ -895,9 +884,13 @@ router.post('/send-email-otp', customerAuth, async (req: AuthenticatedCustomerRe
     }
 
     const cleanEmail = email.trim().toLowerCase();
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(cleanEmail)) {
+    if (!EMAIL_RE.test(cleanEmail)) {
       res.status(400).json({ error: 'ValidationError', message: 'Invalid email format.' });
+      return;
+    }
+
+    if (!req.userId) {
+      res.status(401).json({ error: 'Unauthorized', message: 'User not authenticated.' });
       return;
     }
 
@@ -915,29 +908,39 @@ router.post('/send-email-otp', customerAuth, async (req: AuthenticatedCustomerRe
     }
 
     // Cooldown check (60 seconds)
-    const existingSession = emailOtpStore.get(cleanEmail);
-    if (existingSession) {
-      const secondsSinceLastSent = (Date.now() - existingSession.lastSentAt.getTime()) / 1000;
-      if (secondsSinceLastSent < 60) {
-        const remaining = Math.ceil(60 - secondsSinceLastSent);
-        res.status(429).json({
-          error: 'RateLimitError',
-          message: `Please wait ${remaining} seconds before requesting a new code.`
-        });
-        return;
+    const recentToken = await prisma.emailVerificationToken.findFirst({
+      where: {
+        userId: req.userId,
+        createdAt: { gt: new Date(Date.now() - 60 * 1000) }
       }
+    });
+
+    if (recentToken) {
+      const elapsedSeconds = (Date.now() - recentToken.createdAt.getTime()) / 1000;
+      const remaining = Math.ceil(60 - elapsedSeconds);
+      res.status(429).json({
+        error: 'RateLimitError',
+        message: `Please wait ${remaining} seconds before requesting a new code.`
+      });
+      return;
     }
+
+    // Clean up existing tokens for this user
+    await prisma.emailVerificationToken.deleteMany({
+      where: { userId: req.userId }
+    });
 
     // Generate random 6-digit OTP
     const otp = randomInt(100000, 1000000).toString();
+    const tokenHash = createHash('sha256').update(`${req.userId}:${cleanEmail}:${otp}`).digest('hex');
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
 
-    emailOtpStore.set(cleanEmail, {
-      email: cleanEmail,
-      otp,
-      expiresAt,
-      lastSentAt: new Date(),
-      attempts: 0
+    await prisma.emailVerificationToken.create({
+      data: {
+        userId: req.userId,
+        tokenHash,
+        expiresAt
+      }
     });
 
     // Send the verification code to the customer email address
@@ -964,38 +967,29 @@ router.post('/verify-email-otp', customerAuth, async (req: AuthenticatedCustomer
       return;
     }
 
+    if (!req.userId) {
+      res.status(401).json({ error: 'Unauthorized', message: 'User not authenticated.' });
+      return;
+    }
+
     const cleanEmail = email.trim().toLowerCase();
     const cleanOtp = otp.trim();
 
-    const session = emailOtpStore.get(cleanEmail);
-    if (!session) {
-      res.status(400).json({ error: 'ValidationError', message: 'No verification session found for this email.' });
+    const expectedHash = createHash('sha256').update(`${req.userId}:${cleanEmail}:${cleanOtp}`).digest('hex');
+
+    const tokenRecord = await prisma.emailVerificationToken.findUnique({
+      where: { tokenHash: expectedHash }
+    });
+
+    if (!tokenRecord || tokenRecord.userId !== req.userId) {
+      res.status(400).json({ error: 'ValidationError', message: 'Invalid verification code.' });
       return;
     }
 
     // Expiry check
-    if (new Date() > session.expiresAt) {
-      emailOtpStore.delete(cleanEmail);
+    if (new Date() > tokenRecord.expiresAt) {
+      await prisma.emailVerificationToken.delete({ where: { id: tokenRecord.id } });
       res.status(400).json({ error: 'ValidationError', message: 'Verification code has expired. Please request a new one.' });
-      return;
-    }
-
-    // Max attempts check (3 attempts)
-    session.attempts += 1;
-    if (session.attempts > 3) {
-      emailOtpStore.delete(cleanEmail);
-      res.status(400).json({ error: 'ValidationError', message: 'Maximum verification attempts exceeded. Please request a new code.' });
-      return;
-    }
-
-    // OTP Match check
-    if (session.otp !== cleanOtp) {
-      const remainingAttempts = 3 - session.attempts;
-      emailOtpStore.set(cleanEmail, session); // update attempts count
-      res.status(400).json({
-        error: 'ValidationError',
-        message: `Invalid verification code. ${remainingAttempts} attempts remaining.`
-      });
       return;
     }
 
@@ -1004,12 +998,15 @@ router.post('/verify-email-otp', customerAuth, async (req: AuthenticatedCustomer
       where: { id: req.userId },
       data: {
         email: cleanEmail,
-        emailVerified: true
+        emailVerified: true,
+        emailVerifiedAt: new Date()
       }
     });
 
-    // Invalidate the session
-    emailOtpStore.delete(cleanEmail);
+    // Invalidate the tokens
+    await prisma.emailVerificationToken.deleteMany({
+      where: { userId: req.userId }
+    });
 
     res.status(200).json({
       success: true,
@@ -1039,34 +1036,48 @@ router.post('/forgot-password-request', async (req, res) => {
     // Verify if user exists
     const user = await prisma.user.findUnique({ where: { email: cleanEmail } });
     if (!user) {
-      res.status(400).json({ error: 'ValidationError', message: 'No account found with this email address.' });
+      // Return 200 to prevent account enumeration
+      res.status(200).json({
+        success: true,
+        email: cleanEmail,
+        message: 'If an account exists with this email, a verification code has been sent.'
+      });
       return;
     }
 
     // Cooldown check (60 seconds)
-    const existingSession = forgotPasswordOtpStore.get(cleanEmail);
-    if (existingSession) {
-      const secondsSinceLastSent = (Date.now() - existingSession.lastSentAt.getTime()) / 1000;
-      if (secondsSinceLastSent < 60) {
-        const remaining = Math.ceil(60 - secondsSinceLastSent);
-        res.status(429).json({
-          error: 'RateLimitError',
-          message: `Please wait ${remaining} seconds before requesting a new code.`
-        });
-        return;
+    const recentToken = await prisma.passwordResetToken.findFirst({
+      where: {
+        userId: user.id,
+        createdAt: { gt: new Date(Date.now() - 60 * 1000) }
       }
+    });
+
+    if (recentToken) {
+      const elapsedSeconds = (Date.now() - recentToken.createdAt.getTime()) / 1000;
+      const remaining = Math.ceil(60 - elapsedSeconds);
+      res.status(429).json({
+        error: 'RateLimitError',
+        message: `Please wait ${remaining} seconds before requesting a new code.`
+      });
+      return;
     }
+
+    // Clean up older reset tokens for user
+    await prisma.passwordResetToken.deleteMany({ where: { userId: user.id } });
 
     // Generate random 6-digit OTP
     const otp = randomInt(100000, 1000000).toString();
+    const tokenHash = createHash('sha256').update(`${user.id}:${cleanEmail}:${otp}`).digest('hex');
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
 
-    forgotPasswordOtpStore.set(cleanEmail, {
-      email: cleanEmail,
-      otp,
-      expiresAt,
-      lastSentAt: new Date(),
-      attempts: 0
+    await prisma.passwordResetToken.create({
+      data: {
+        userId: user.id,
+        tokenHash,
+        expiresAt,
+        used: false
+      }
     });
 
     // Send the verification code to the customer email address
@@ -1077,6 +1088,7 @@ router.post('/forgot-password-request', async (req, res) => {
     res.status(200).json({
       success: true,
       email: cleanEmail,
+      message: 'If an account exists with this email, a verification code has been sent.'
     });
   } catch (err) {
     console.error('Forgot password request error:', err);
@@ -1096,52 +1108,54 @@ router.post('/forgot-password-reset', async (req, res) => {
     const cleanEmail = email.trim().toLowerCase();
     const cleanOtp = otp.trim();
 
-    if (newPassword.length < 6) {
-      res.status(400).json({ error: 'ValidationError', message: 'Password must be at least 6 characters long.' });
+    if (newPassword.length < 8) {
+      res.status(400).json({ error: 'ValidationError', message: 'Password must be at least 8 characters long.' });
       return;
     }
 
-    const session = forgotPasswordOtpStore.get(cleanEmail);
-    if (!session) {
-      res.status(400).json({ error: 'ValidationError', message: 'No reset session found for this email.' });
+    const user = await prisma.user.findUnique({ where: { email: cleanEmail } });
+    if (!user) {
+      res.status(400).json({ error: 'ValidationError', message: 'Invalid email or verification code.' });
+      return;
+    }
+
+    const expectedHash = createHash('sha256').update(`${user.id}:${cleanEmail}:${cleanOtp}`).digest('hex');
+
+    const tokenRecord = await prisma.passwordResetToken.findFirst({
+      where: {
+        userId: user.id,
+        tokenHash: expectedHash,
+        used: false
+      }
+    });
+
+    if (!tokenRecord) {
+      res.status(400).json({ error: 'ValidationError', message: 'Invalid or expired verification code.' });
       return;
     }
 
     // Expiry check
-    if (new Date() > session.expiresAt) {
-      forgotPasswordOtpStore.delete(cleanEmail);
+    if (new Date() > tokenRecord.expiresAt) {
+      await prisma.passwordResetToken.delete({ where: { id: tokenRecord.id } });
       res.status(400).json({ error: 'ValidationError', message: 'Reset code has expired. Please request a new one.' });
       return;
     }
 
-    // Max attempts check (3 attempts)
-    session.attempts += 1;
-    if (session.attempts > 3) {
-      forgotPasswordOtpStore.delete(cleanEmail);
-      res.status(400).json({ error: 'ValidationError', message: 'Maximum reset attempts exceeded. Please request a new code.' });
-      return;
-    }
+    // Mark used
+    await prisma.passwordResetToken.update({
+      where: { id: tokenRecord.id },
+      data: { used: true }
+    });
 
-    // OTP match check
-    if (session.otp !== cleanOtp) {
-      const remainingAttempts = 3 - session.attempts;
-      forgotPasswordOtpStore.set(cleanEmail, session); // update attempts count
-      res.status(400).json({
-        error: 'ValidationError',
-        message: `Invalid verification code. ${remainingAttempts} attempts remaining.`
-      });
-      return;
-    }
-
-    // Success! Hash new password and update database
+    // Hash new password and update database
     const passwordHash = await bcrypt.hash(newPassword, 12);
     await prisma.user.update({
-      where: { email: cleanEmail },
+      where: { id: user.id },
       data: { passwordHash }
     });
 
-    // Invalidate the session
-    forgotPasswordOtpStore.delete(cleanEmail);
+    // Clean up reset tokens
+    await prisma.passwordResetToken.deleteMany({ where: { userId: user.id } });
 
     res.status(200).json({
       success: true,

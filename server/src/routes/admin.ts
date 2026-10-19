@@ -279,7 +279,7 @@ router.post('/auth', async (req: Request, res: Response): Promise<void> => {
   setAdminCookie(res, token);
 
   res.json({
-    token,
+    success: true,
     expiresAt: expiresAtMs,
     user: { id: sub, username: userUsername, role },
   });
@@ -316,6 +316,77 @@ router.get('/me', adminAuth, (req: AuthenticatedRequest, res: Response): void =>
     username: req.user?.username,
     role: req.user?.role,
   });
+});
+
+/**
+ * POST /api/admin/change-password
+ * Allows an authenticated admin to change their password securely.
+ */
+router.post('/change-password', adminAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || typeof currentPassword !== 'string' || !newPassword || typeof newPassword !== 'string') {
+      res.status(400).json({ error: 'ValidationError', message: 'Current password and new password are required.' });
+      return;
+    }
+
+    if (newPassword.length < 10) {
+      res.status(400).json({ error: 'ValidationError', message: 'New password must be at least 10 characters long.' });
+      return;
+    }
+
+    const adminUserId = req.user?.sub;
+    if (!adminUserId || adminUserId === 'superadmin-legacy') {
+      res.status(400).json({ error: 'BadRequest', message: 'PIN-authenticated session cannot change database user password. Log in with your admin username.' });
+      return;
+    }
+
+    const user = await prisma.adminUser.findUnique({ where: { id: adminUserId } });
+    if (!user) {
+      res.status(404).json({ error: 'NotFound', message: 'Admin user record not found.' });
+      return;
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!isMatch) {
+      res.status(401).json({ error: 'InvalidCredentials', message: 'Current password is incorrect.' });
+      return;
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+    await prisma.adminUser.update({
+      where: { id: user.id },
+      data: {
+        passwordHash,
+        failedLoginAttempts: 0,
+        lockedUntil: null,
+      },
+    });
+
+    await logAdminAudit({
+      adminUserId: user.id,
+      action: 'ADMIN_PASSWORD_CHANGED',
+      targetType: 'AdminUser',
+      targetId: user.id,
+      payload: { username: user.username },
+      ipAddress: String(req.ip ?? ''),
+      userAgent: String(req.headers['user-agent'] ?? ''),
+    });
+
+    sendAdminSecurityAlertEmail({
+      type: 'PASSWORD_RESET',
+      username: user.username,
+      ipAddress: String(req.ip ?? ''),
+      userAgent: String(req.headers['user-agent'] ?? ''),
+      timestamp: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) + ' IST',
+      details: 'Admin user password changed successfully.',
+    }).catch(err => console.error('Alert email error:', err));
+
+    res.json({ success: true, message: 'Password changed successfully.' });
+  } catch (err) {
+    console.error('POST /api/admin/change-password error:', err);
+    res.status(500).json({ error: 'ServerError', message: 'Failed to update password.' });
+  }
 });
 
 /**
