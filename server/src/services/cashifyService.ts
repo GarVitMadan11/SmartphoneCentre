@@ -456,6 +456,10 @@ export function triggerPriceScan(limit: number = 0, headless: boolean = true) {
   py.on('close', () => {
     activeScanProcess = null;
   });
+  py.on('error', (err) => {
+    console.error('[CashifyService] Failed to spawn python scan process:', err);
+    activeScanProcess = null;
+  });
 
   return { success: true, message: `Price scan initiated in background (limit: ${limit || 'all'}).` };
 }
