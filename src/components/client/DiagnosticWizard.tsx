@@ -15,6 +15,9 @@ import emailjs from '@emailjs/browser';
 import { checkEmail, customerLogin, customerSignup, verifyOtp, requestPasswordResetOtp, resetPasswordWithOtp, sendQuoteAlertApi, sendPriceMatchAlertApi, ApiUser } from '../../utils/api';
 import { saveQuote, isQuoteAlreadySaved } from '../../utils/savedQuotes';
 import { TabletDiagnosticFlow } from './TabletDiagnosticFlow';
+import { AnimatedPrice } from './wizard/AnimatedPrice';
+import { PriceDeltaBadge } from './wizard/PriceDeltaBadge';
+import { MobileBottomHUD } from './wizard/MobileBottomHUD';
 
 const getEngineeringLabel = (description: string) => {
   const mapping: { [key: string]: string } = {
@@ -217,7 +220,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
   const [deviceAge, setDeviceAge] = useState<AgeFactorKey>('under_3m');
   const [hasWarranty, setHasWarranty] = useState<boolean | null>(null);
   const [_warrantyStatus, setWarrantyStatus] = useState<'active' | 'expiring_soon' | 'expired' | 'unverified'>(
-    model.releaseYear >= 2025 ? 'active' : 'expired'
+    isEligibleForWarranty ? 'active' : 'expired'
   );
 
   React.useEffect(() => {
@@ -314,12 +317,14 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
     }
     if (step === 5) {
       const ids = rules.filter(r => r.category === 'accessories' && !r.isCriticalFailure).map(r => r.id);
-      return accConfirmed || selectedDefects.some(d => ids.includes(d.id));
+      const accOk = accConfirmed || selectedDefects.some(d => ids.includes(d.id));
+      const warrantyOk = !showWarrantyQuestion || hasWarranty !== null;
+      return accOk && warrantyOk;
     }
     return true;
-  }, [isTablet, step, icloudChecked, screenConfirmed, bodyConfirmed, funcConfirmed, connectConfirmed, accConfirmed, selectedDefects, rules]);
+  }, [isTablet, step, icloudChecked, screenConfirmed, bodyConfirmed, funcConfirmed, connectConfirmed, accConfirmed, selectedDefects, rules, showWarrantyQuestion, hasWarranty]);
 
-  const [warrantyAge, setWarrantyAge] = useState<'under_3m' | '3_to_6m' | '6_to_11m' | 'out_of_warranty'>('out_of_warranty');
+  const [warrantyAge, setWarrantyAge] = useState<'under_3m' | '3_to_6m' | '6_to_11m' | 'out_of_warranty'>('under_3m');
   const simType = 'dual_sim';
   const [dualEsim, setDualEsim] = useState<boolean | null>(null);
 
@@ -778,20 +783,22 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4"
           >
             <motion.div
               key="critical-modal-card"
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              initial={{ opacity: 0, scale: 0.95, y: 30 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              exit={{ opacity: 0, scale: 0.95, y: 30 }}
               transition={{ type: 'spring', stiffness: 300, damping: 28 }}
               role="dialog"
               aria-modal="true"
               aria-labelledby="critical-modal-title"
               ref={criticalModalRef}
-              className="bg-canvas-pure border border-red-500/30 rounded-sm p-6 max-w-sm w-full shadow-2xl text-center"
+              className="bg-canvas-pure border-t sm:border border-red-500/30 rounded-t-2xl sm:rounded-xl p-6 max-w-sm w-full shadow-2xl text-center pb-8 sm:pb-6"
             >
+              {/* Mobile Drag Pill */}
+              <div className="w-12 h-1 bg-slate-300 rounded-full mx-auto mb-4 sm:hidden" />
               <div className="w-14 h-14 mx-auto mb-4 rounded-sm bg-red-500/10 border border-red-500/20 flex items-center justify-center" aria-hidden="true">
                 <span className="text-2xl">&#128274;</span>
               </div>
@@ -827,11 +834,11 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
       </AnimatePresence>
 
       {/* Premium Evaluation Wizard Header */}
-      <div className="bg-white border border-ice-border rounded-xl p-4 sm:p-5 mb-6 shadow-sm space-y-5 text-left">
+      <div className="bg-white border border-ice-border rounded-xl p-4 sm:p-5 mb-6 shadow-sm space-y-5 text-left pb-24 sm:pb-5">
         {/* Top Header Row: Device Info + Live Payout HUD */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-ice-border/60">
-          <div className="flex items-center gap-3.5 min-w-0">
-            <div className="w-14 h-14 rounded-xl bg-slate-50 p-1.5 border border-slate-200 flex items-center justify-center flex-shrink-0 shadow-xs">
+        <div className="flex flex-row sm:items-center justify-between gap-3 sm:gap-4 pb-4 border-b border-ice-border/60">
+          <div className="flex items-center gap-3 sm:gap-3.5 min-w-0">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-slate-50 p-1.5 border border-slate-200 flex items-center justify-center flex-shrink-0 shadow-xs">
               <img 
                 src={getDeviceImage(model.id, model.brandId, variant?.color, model.imageUrl)} 
                 alt={model.name} 
@@ -840,11 +847,11 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
             </div>
 
             <div className="min-w-0">
-              <span className="text-[10px] font-mono tracking-[0.15em] text-slate-500 uppercase font-bold block">
+              <span className="text-[9px] sm:text-[10px] font-mono tracking-[0.15em] text-slate-500 uppercase font-bold block">
                 Evaluation Wizard
               </span>
-              <div className="flex flex-wrap items-center gap-2 mt-1">
-                <h2 className="font-extrabold text-slate-950 text-xl sm:text-2xl tracking-tight truncate">{model.name}</h2>
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mt-0.5 sm:mt-1">
+                <h2 className="font-extrabold text-slate-950 text-lg sm:text-2xl tracking-tight truncate">{model.name}</h2>
                 <span className="text-[10px] font-mono font-black tracking-wider bg-slate-100 text-slate-800 px-2 py-0.5 rounded-md border border-slate-300 flex-shrink-0">
                   {variant.storageGb >= 1024 ? `${variant.storageGb / 1024}TB` : `${variant.storageGb}GB`}
                 </span>
@@ -868,25 +875,40 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
             </div>
           </div>
 
-          {/* Real-Time Live Payout HUD Badge */}
-          {step < 6 && (
-            <div className="flex items-center gap-3 bg-emerald-50 border-2 border-emerald-400 px-4 py-2.5 rounded-xl shadow-sm flex-shrink-0 transition-all">
+          {/* Real-Time Live Payout HUD Badge (Desktop) */}
+          {step < reviewStepIndex && (
+            <div className="hidden sm:flex items-center gap-3 bg-emerald-50/90 border-2 border-emerald-400 px-4 py-2.5 rounded-xl shadow-sm flex-shrink-0 transition-all relative">
               <div>
-                <div className="flex items-center gap-1.5 mb-0.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
-                  <span className="text-[10px] font-mono tracking-widest text-emerald-950 uppercase block font-extrabold">
-                    LIVE ESTIMATED PAYOUT
-                  </span>
+                <div className="flex items-center justify-between gap-2 mb-0.5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
+                    <span className="text-[10px] font-mono tracking-widest text-emerald-950 uppercase block font-extrabold">
+                      LIVE ESTIMATED PAYOUT
+                    </span>
+                  </div>
+                  <PriceDeltaBadge currentPrice={valuation.finalPrice} disabled={!currentUser || valuation.isCritical} />
                 </div>
                 <div className="flex items-center gap-2.5 mt-0.5">
-                  <span className="text-xl sm:text-2xl font-black text-emerald-700 font-outfit tracking-tight">
-                    {!currentUser ? '₹ XX,XXX' : valuation.isCritical ? '₹ 0 (Locked)' : formatPrice(valuation.finalPrice)}
-                  </span>
+                  <AnimatedPrice
+                    value={valuation.finalPrice}
+                    isMasked={!currentUser}
+                    isCritical={valuation.isCritical}
+                    className="text-xl sm:text-2xl font-black text-emerald-700 font-outfit tracking-tight"
+                  />
                   <span className="text-[10px] font-bold bg-emerald-600 text-white px-2.5 py-0.5 rounded-full shadow-xs tracking-tight">
                     {valuation.retentionPercentage}% Retained
                   </span>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Quick Retention Chip for Mobile (Sleek, zero screen blocking) */}
+          {step < reviewStepIndex && (
+            <div className="flex sm:hidden items-center gap-1.5 self-center flex-shrink-0">
+              <span className="text-[10px] font-bold bg-emerald-600 text-white px-2 py-0.5 rounded-full shadow-xs tracking-tight">
+                {valuation.retentionPercentage}% Retained
+              </span>
             </div>
           )}
         </div>
@@ -1790,10 +1812,10 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         <div
                           onClick={() => {
                             setHasWarranty(true);
+                            setWarrantyStatus('active');
                             if (warrantyAge === 'out_of_warranty') {
                               setWarrantyAge('under_3m');
                               setDeviceAge('under_3m');
-                              setWarrantyStatus('active');
                             }
                           }}
                           className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center gap-3 ${
@@ -2011,9 +2033,10 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
                   <div className="p-4 rounded-xl border-2 border-emerald-500 bg-emerald-50 shadow-xs">
                     <span className="text-[10px] font-mono text-emerald-950 uppercase tracking-widest block mb-2 font-black">ESTIMATED PAYOUT</span>
-                    <h4 className="font-black text-2xl text-emerald-700 font-outfit">
-                      {formatPrice(valuation.finalPrice)}
-                    </h4>
+                    <AnimatedPrice
+                      value={valuation.finalPrice}
+                      className="font-black text-2xl text-emerald-700 font-outfit block"
+                    />
                     <p className="text-xs text-emerald-900 mt-0.5 font-bold">
                       {valuation.retentionPercentage}% Value Retained
                     </p>
@@ -2227,9 +2250,12 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         <span className="text-slate-600 print-text-muted uppercase block text-xs font-mono font-bold">TOTAL ESTIMATED PAYOUT</span>
                         <span className="text-xs text-emerald-700 print-text-emerald uppercase tracking-wider block font-mono font-bold mt-0.5">✓ Payout Rate Locked</span>
                       </div>
-                      <span className="text-3xl sm:text-4xl font-extrabold text-emerald-600 print-text-emerald tracking-tight font-mono font-outfit">
-                        {isPriceLocked ? '₹ XX,XXX' : formatPrice(valuation.finalPrice)}
-                      </span>
+                      <AnimatedPrice
+                        value={valuation.finalPrice}
+                        isMasked={isPriceLocked}
+                        isCritical={valuation.isCritical}
+                        className="text-3xl sm:text-4xl font-extrabold text-emerald-600 print-text-emerald tracking-tight font-mono font-outfit"
+                      />
                     </div>
 
                     {/* Print-Only Official Terms & Handover Sign-off Block */}
@@ -2406,8 +2432,10 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
       {/* Cashify-style Price Lock Modal */}
       {lockModalOpen && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200">
-          <div className="relative max-w-3xl w-full bg-white rounded-xl overflow-hidden shadow-2xl flex flex-col md:flex-row text-left border border-slate-200 animate-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
+          <div className="relative max-w-3xl w-full bg-white rounded-t-2xl sm:rounded-xl overflow-hidden shadow-2xl flex flex-col md:flex-row text-left border border-slate-200 animate-in slide-in-from-bottom sm:zoom-in-95 duration-200 max-h-[92vh] overflow-y-auto">
+            {/* Mobile Drag Indicator */}
+            <div className="w-12 h-1 bg-slate-300 rounded-full mx-auto my-2.5 sm:hidden flex-shrink-0" />
             {/* Close Button */}
             <button 
               type="button"
@@ -2884,8 +2912,10 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
       {/* Best Price Negotiation & Support Contact Modal */}
       {contactModalOpen && (
-        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200">
-          <div className="relative max-w-lg w-full bg-white rounded-2xl overflow-hidden shadow-2xl border border-slate-200 text-left p-6 sm:p-7">
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
+          <div className="relative max-w-lg w-full bg-white rounded-t-2xl sm:rounded-2xl overflow-hidden shadow-2xl border border-slate-200 text-left p-6 sm:p-7 animate-in slide-in-from-bottom sm:zoom-in-95 duration-200">
+            {/* Mobile Drag Indicator */}
+            <div className="w-12 h-1 bg-slate-300 rounded-full mx-auto mb-3 sm:hidden" />
             {/* Close button */}
             <button 
               type="button"
@@ -3071,6 +3101,20 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
           </div>
         </div>
       )}
+
+      {/* Mobile Floating Bottom HUD & Quick Action */}
+      <MobileBottomHUD
+        step={step}
+        finalPrice={valuation.finalPrice}
+        retentionPercentage={valuation.retentionPercentage}
+        isCritical={valuation.isCritical}
+        isLoggedIn={!!currentUser}
+        canProceed={isStepValidated}
+        onNext={handleNextStep}
+        onBack={handlePrevStep}
+        reviewStepIndex={reviewStepIndex}
+        nextLabel={step === (reviewStepIndex - 1) ? 'Review' : 'Next'}
+      />
     </div>
   );
 };

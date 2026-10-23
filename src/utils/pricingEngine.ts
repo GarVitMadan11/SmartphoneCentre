@@ -487,8 +487,13 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
 
   const rawCalculatedPrice = adjustedBenchmark * vendorMultiplier;
   
-  // 8. Customer-Facing Rounding Strategy (Strictly capped at basePrice so maximum retained is 100% for under 3m devices)
-  const unroundedCalculatedPrice = Math.min(basePrice, rawCalculatedPrice);
+  // 8. Customer-Facing Rounding Strategy
+  // If deductions or condition factors exist (adjustedBenchmark < basePrice), the price must strictly
+  // deduct from basePrice so that accessory, defect, and eSIM deductions are never swallowed by vendorMultiplier.
+  const calculatedPrice = (adjustedBenchmark < basePrice)
+    ? adjustedBenchmark
+    : rawCalculatedPrice;
+  const unroundedCalculatedPrice = Math.min(basePrice, calculatedPrice);
   const finalRephonixPrice = Math.min(basePrice, roundToCleanIndianPrice(unroundedCalculatedPrice, config.roundingStrategy));
 
   const isSpecialPartsCategory = fCondition < 0.55;
