@@ -93,15 +93,132 @@ export interface PricingRulesConfig {
     majorNonGenuineComponent: number; // 0.15 (15%)
   };
   roundingStrategy: 'clean_50' | 'clean_99' | 'nearest_100';
+  universalDeductions: UniversalDeductionsConfig;
+}
+
+export type DeviceCycleTier = 'TIER_1_WARRANTY_ACTIVE' | 'TIER_2_MATURED_BASELINE';
+
+export function resolveDeviceCycleTier(releaseYear?: number): DeviceCycleTier {
+  if (!releaseYear) return 'TIER_2_MATURED_BASELINE';
+  const currentYear = new Date().getFullYear();
+  // Models released in current or previous year (<= 1 year old) are Tier 1 (Active Warranty)
+  return (currentYear - releaseYear <= 1) ? 'TIER_1_WARRANTY_ACTIVE' : 'TIER_2_MATURED_BASELINE';
+}
+
+export interface UniversalDeductionsConfig {
+  spenMissing: number;
+  microphone: number;
+  vibrator: number;
+  buttons: number;
+  earpieceReceiver: number;
+  cameraGlass: number;
+  silentSwitch: number;
+  boxMissing: number;
+  chargerMissing: number;
+  chargerMissingFlagship: number;
+  outOfWarrantyPercentTier1: number;
+  outOfWarrantyPercentTier2: number;
+  wifiBluetoothMotherboardPercent: number;
+  callingDefectivePercent: number;
+  touchOrNonOriginalScreenSalvageFloor: number;
+  screenCrackedPercent: number;
+  screenLinesBleedPercent: number;
+  screenMinorScratches: number;
+  screenMajorScratches: number;
+  bodyMinorScratches: number;
+  bodyMajorScratches: number;
+  bodyMinorDents: number;
+  bodyMajorDents: number;
+  bodyBackGlassCracked: number;
+  bodyBentPercent: number;
+  bodyScreenLoosePercent: number;
+  speakerDeduction: {
+    apple: number;
+    android: number;
+  };
+  chargingPortDeduction: {
+    apple: number;
+    android: number;
+  };
+  biometricDeduction: {
+    appleFaceIdPercent: number;
+    androidFingerprintFixed: number;
+  };
+  rearCameraDeduction: {
+    apple: number;
+    androidFlagship: number;
+    androidBudget: number;
+  };
+  frontCameraDeduction: {
+    apple: number;
+    android: number;
+  };
+  batteryHealthDeduction: {
+    apple80to85Percent: number;
+    appleUnder80Percent: number;
+  };
 }
 
 export const DEFAULT_PRICING_RULES_CONFIG: PricingRulesConfig = {
   vendorThreshold: 50000,
-  vendorLowMultiplier: 1.02,  // +2% for <= ₹50,000
-  vendorHighMultiplier: 1.03, // +3% for > ₹50,000
-  ruleVersion: '2.0.0-stage1-multiplicative',
+  vendorLowMultiplier: 1.03,  // +3% guaranteed across all price points & multi-faults
+  vendorHighMultiplier: 1.03, // +3% guaranteed for premium/flagship
+  ruleVersion: '2.2.0-battery-multifault-parity',
   roundingStrategy: 'clean_50',
   accessoryMaxCapPercent: 0.10, // Cap total accessory deductions to 10% of B_market
+  universalDeductions: {
+    spenMissing: 2000,
+    microphone: 500,
+    vibrator: 500,
+    buttons: 500,
+    earpieceReceiver: 800,
+    cameraGlass: 1000,
+    silentSwitch: 600,
+    boxMissing: 800,
+    chargerMissing: 1000,
+    chargerMissingFlagship: 1500,
+    outOfWarrantyPercentTier1: 0.20,
+    outOfWarrantyPercentTier2: 0.00,
+    wifiBluetoothMotherboardPercent: 0.32,
+    callingDefectivePercent: 0.32,
+    touchOrNonOriginalScreenSalvageFloor: 1000,
+    screenCrackedPercent: 0.25,
+    screenLinesBleedPercent: 0.35,
+    screenMinorScratches: 500,
+    screenMajorScratches: 1000,
+    bodyMinorScratches: 500,
+    bodyMajorScratches: 1000,
+    bodyMinorDents: 800,
+    bodyMajorDents: 1800,
+    bodyBackGlassCracked: 1500,
+    bodyBentPercent: 0.18,
+    bodyScreenLoosePercent: 0.12,
+    speakerDeduction: {
+      apple: 2000,
+      android: 500
+    },
+    chargingPortDeduction: {
+      apple: 2000,
+      android: 1500
+    },
+    biometricDeduction: {
+      appleFaceIdPercent: 0.22,
+      androidFingerprintFixed: 1500
+    },
+    rearCameraDeduction: {
+      apple: 4500,
+      androidFlagship: 3500,
+      androidBudget: 2500
+    },
+    frontCameraDeduction: {
+      apple: 2500,
+      android: 1200
+    },
+    batteryHealthDeduction: {
+      apple80to85Percent: 0.03,
+      appleUnder80Percent: 0.08
+    }
+  },
 
   ageFactors: {
     under_3m: 1.00,  // 0% reduction (price remains same)

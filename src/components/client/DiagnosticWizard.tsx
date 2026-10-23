@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { Model, Variant, getDefectRulesForCategory, DefectRule, isAppleDevice, isSmartwatchDevice, isTabletDevice, hasSpenSupport, getDeviceImage } from '../../data/mockDatabase';
+import { Model, Variant, getDefectRulesForCategory, DefectRule, isAppleDevice, isSmartwatchDevice, isTabletDevice, hasSpenSupport, getBiometricType, getDeviceImage } from '../../data/mockDatabase';
 import { calculateValuation } from '../../utils/valuation';
 import type { AgeFactorKey } from '../../data/pricingRulesConfig';
 import { 
@@ -57,8 +57,17 @@ const getEngineeringLabel = (description: string) => {
     'Device Does Not Turn On':           'Board-Level Hardware Failure',
     'iCloud / Apple ID Locked':                         'Activation Lock — Zero Resale Value',
     'Google Account / Factory Reset Protection Locked': 'Factory Reset Protection Lock — Zero Resale Value',
-    'Biometrics Faulty (Face ID)':                      'Biometric Sensor Security Fee',
+    'Biometrics Faulty (Face ID)':                      'TrueDepth Sensor Array Security Fee',
+    'Biometrics Faulty (Touch ID)':                     'Touch ID Biometric Sensor Security Fee',
     'Biometrics Faulty (Fingerprint / Face Unlock)':    'Biometric Sensor Security Fee',
+    'Biometrics Faulty (Fingerprint Scanner)':          'Biometric Sensor Security Fee',
+    'Face ID (TrueDepth Sensor) Faulty':                'TrueDepth Sensor Array Security Fee',
+    'Touch ID (Home Button) Sensor Faulty':             'Touch ID Biometric Sensor Security Fee',
+    'Fingerprint Scanner / Biometrics Faulty':          'Biometric Sensor Security Fee',
+    'Battery Health 80% – 85%':                         'Battery Capacity Degradation Fee',
+    'Battery Health 80% – 85% (Moderate Drain)':        'Battery Capacity Degradation Fee',
+    'Battery Health < 80% (Service Alert)':             'Battery Module Replacement Fee',
+    'Battery Health < 80% / Heavy Drain':               'Battery Module Replacement Fee',
     
     // Smartwatch specific engineering fee labels
     'Cracked Watch Glass / Sapphire Dial':               'Watch Glass / Sapphire Dial Restoration',
@@ -171,15 +180,23 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
   const isWatch = useMemo(() => isSmartwatchDevice(model.brandId, model.name, model.id), [model]);
   const isTablet = useMemo(() => isTabletDevice(model.brandId, model.name, model.id), [model]);
   const hasSpen = useMemo(() => hasSpenSupport(model.brandId, model.name, model.id), [model]);
+  const biometricType = useMemo(() => getBiometricType(model.brandId, model.name, model.id), [model]);
   const deviceType: 'phone' | 'watch' | 'tablet' = isWatch ? 'watch' : isTablet ? 'tablet' : 'phone';
 
   // Obtain rules based on model category, brand and model ID
   const rules = useMemo(() => getDefectRulesForCategory(model.category, model.brandId, model.name, model.id), [model]);
 
   // Only ask for warranty if model.supportsWarrantyQuestion is true (or fallback for recent devices >= 2023)
+  // Dynamic Cycle Tier: Only ask for warranty if model is Tier 1 (Current/Recent Cycle <= 1 year old)
   const isEligibleForWarranty = useMemo(() => {
     if (model.supportsWarrantyQuestion !== undefined) {
       return model.supportsWarrantyQuestion;
+    }
+    const currentYear = new Date().getFullYear();
+    const resolvedYear = model.releaseYear ?? 2024;
+    // Current cycle (<= 1 year old)
+    if (currentYear - resolvedYear > 1) {
+      return false; // Matured baseline - no warranty question
     }
     const nm = model.name.toLowerCase();
     if (model.brandId === 'brand-apple' || nm.includes('iphone') || isApple) {
@@ -198,15 +215,9 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
       ) {
         return false;
       }
-      return (
-        nm.includes('iphone 15') ||
-        nm.includes('iphone 16') ||
-        nm.includes('iphone 17') ||
-        nm.includes('iphone 18') ||
-        (model.releaseYear ?? 2024) >= 2023
-      );
+      return true;
     }
-    return (model.releaseYear ?? 2024) >= 2023;
+    return (currentYear - resolvedYear) <= 1;
   }, [model, isApple]);
 
   const isScreenNonOriginal = useMemo(() => {
@@ -335,12 +346,14 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
       brandId: model.brandId,
       modelName: model.name,
       category: model.category,
+      releaseYear: model.releaseYear,
+      hasSpen,
       simType,
       warrantyAge: isScreenNonOriginal ? 'under_3m' : warrantyAge,
       deviceAge: isScreenNonOriginal ? 'under_3m' : deviceAge,
       dualEsim: dualEsim === true
     });
-  }, [variant, selectedDefects, model, simType, warrantyAge, deviceAge, dualEsim, isScreenNonOriginal]);
+  }, [variant, selectedDefects, model, simType, warrantyAge, deviceAge, dualEsim, isScreenNonOriginal, hasSpen]);
 
   // Stable receipt reference code — generated once per wizard session
   const receiptRef = useMemo(() => Math.random().toString(36).substr(2, 6).toUpperCase(), []);
@@ -1514,7 +1527,11 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         <div className="flex-1 min-w-0">
                           <h4 className="font-bold text-sm text-ink-navy">Hardware Works Perfectly</h4>
                           <p className="text-xs text-ink-muted mt-1 font-light leading-snug">
-                            Front/rear cameras, {isApple ? 'Face ID' : 'biometrics'}, speaker/mic, and system stability are perfect.
+                            Front/rear cameras, {
+                              biometricType === 'face_id' ? 'Face ID' :
+                              biometricType === 'touch_id' ? 'Touch ID' :
+                              'fingerprint scanner'
+                            }, speaker/mic, and system stability are perfect.
                           </p>
                         </div>
                         <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 mt-0.5 ${
@@ -1551,7 +1568,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         }`}
                       >
                         <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-gradient-to-br from-blue-500/15 to-indigo-500/10 border border-blue-500/20 flex items-center justify-center overflow-hidden shadow-xs">
-                          {getIllustration(defect.id, deviceType)}
+                          {getIllustration(defect.id, deviceType, biometricType)}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5 flex-wrap">
@@ -1627,7 +1644,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         <div className="flex-1 min-w-0">
                           <h4 className="font-bold text-sm text-ink-navy">Connectivity & Battery Healthy</h4>
                           <p className="text-xs text-ink-muted mt-1 font-light leading-snug">
-                            Battery is original/above 80%, cellular/Wi-Fi antennas are strong, and {isApple ? '3uTools checks pass' : 'hardware diagnostic checks pass'}.
+                            Battery is original/above 85%, cellular/Wi-Fi antennas are strong, and {isApple ? '3uTools checks pass' : 'hardware diagnostic checks pass'}.
                           </p>
                         </div>
                         <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 mt-0.5 ${
@@ -1643,6 +1660,11 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   {(() => {
                     return rules.filter(r => r.category === 'connectivity').map(defect => {
                       const isSelected = selectedDefects.some(d => d.id === defect.id);
+                      const mutId = defect.id === 'defect-battery-80-85'
+                        ? 'defect-battery-low'
+                        : defect.id === 'defect-battery-low'
+                        ? 'defect-battery-80-85'
+                        : undefined;
                       return (
                       <div
                         key={defect.id}
@@ -1650,11 +1672,11 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         tabIndex={0}
                         aria-checked={isSelected}
                         onKeyDown={e => handleKeyDown(e, () => {
-                          handleToggleDefect(defect);
+                          handleToggleDefect(defect, mutId);
                           setConnectConfirmed(false);
                         })}
                         onClick={() => {
-                          handleToggleDefect(defect);
+                          handleToggleDefect(defect, mutId);
                           setConnectConfirmed(false);
                         }}
                         className={`p-3.5 rounded-xl border cursor-pointer transition-all duration-300 flex items-start gap-3.5 text-left focus:outline-none focus:ring-2 focus:ring-rose-500 ${

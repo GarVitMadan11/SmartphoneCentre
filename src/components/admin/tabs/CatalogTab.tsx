@@ -33,7 +33,7 @@ import {
   Wifi,
   Radio,
 } from 'lucide-react';
-import { Model, Brand, BRANDS, isSmartwatchDevice, isTabletDevice, buildVariantPricesForModel, isVariantAvailable, predictCashifyPrice } from '../../../data/mockDatabase';
+import { Model, Brand, BRANDS, isSmartwatchDevice, isTabletDevice, buildVariantPricesForModel, isVariantAvailable, predictCashifyPrice, hasSpenSupport, getBiometricType } from '../../../data/mockDatabase';
 import { fetchModels, createModel, updateModel, deleteModel, testCashifyUrlApi, registerApprovedCashifyVariants } from '../../../utils/api';
 import {
   saveBrandOrder,
@@ -1188,12 +1188,27 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
                             {model.category}
                           </span>
                           <span className={`px-2 py-0.5 text-[10px] font-bold font-mono rounded border ${
-                            (model.supportsWarrantyQuestion ?? (model.releaseYear >= 2023))
-                              ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
-                              : 'text-zinc-500 bg-zinc-100 border-zinc-200'
+                            (model.supportsWarrantyQuestion ?? (model.releaseYear >= 2024))
+                              ? 'text-blue-700 bg-blue-50 border-blue-200'
+                              : 'text-zinc-600 bg-zinc-100 border-zinc-200'
                           }`}>
-                            Warranty Q: {(model.supportsWarrantyQuestion ?? (model.releaseYear >= 2023)) ? 'ON' : 'OFF'}
+                            {(model.supportsWarrantyQuestion ?? (model.releaseYear >= 2024)) ? 'Tier 1 (Warranty Active)' : 'Tier 2 (Matured Baseline)'}
                           </span>
+
+                          {hasSpenSupport(model.brandId, model.name, model.id) && (
+                            <span className="px-2 py-0.5 text-[10px] font-bold font-mono rounded border text-purple-700 bg-purple-50 border-purple-200 flex items-center gap-1">
+                              <Sparkles className="w-3 h-3 text-purple-500" />
+                              S-Pen
+                            </span>
+                          )}
+
+                          {getBiometricType(model.brandId, model.name, model.id) !== 'none' && (
+                            <span className="px-2 py-0.5 text-[10px] font-bold font-mono rounded border text-indigo-700 bg-indigo-50 border-indigo-200">
+                              {getBiometricType(model.brandId, model.name, model.id) === 'face_id' ? 'Face ID' :
+                               getBiometricType(model.brandId, model.name, model.id) === 'touch_id' ? 'Touch ID' :
+                               'Fingerprint'}
+                            </span>
+                          )}
                         </div>
 
                         {model.hidden ? (

@@ -109,6 +109,44 @@ export function hasSpenSupport(brandId?: string, modelName?: string, modelId?: s
   return isSSeriesUltra || isNote;
 }
 
+export type BiometricType = 'face_id' | 'touch_id' | 'fingerprint' | 'none';
+
+// Helper to identify biometric hardware security architecture
+export function getBiometricType(brandId?: string, modelName?: string, modelId?: string): BiometricType {
+  if (isSmartwatchDevice(brandId, modelName, modelId)) {
+    return 'none';
+  }
+
+  const isApple = isAppleDevice(brandId, modelName);
+  const m = (modelName || '').toLowerCase();
+  const id = (modelId || '').toLowerCase();
+
+  if (isApple) {
+    // Touch ID Apple devices:
+    // iPhone SE series (SE 1st gen, SE 2020 2nd gen, SE 2022 3rd gen)
+    // iPhone 8, 8 Plus, 7, 7 Plus, 6, 6s, 5s
+    // Non-Pro iPads (iPad base 5th-10th gen, iPad Air, iPad mini)
+    const isTouchIdIphone = (
+      m.includes('se') || id.includes('se') ||
+      m.includes('iphone 8') || id.includes('iphone-8') ||
+      m.includes('iphone 7') || id.includes('iphone-7') ||
+      m.includes('iphone 6') || id.includes('iphone-6') ||
+      m.includes('iphone 5') || id.includes('iphone-5')
+    );
+    const isTouchIdIpad = (m.includes('ipad') || id.includes('ipad')) && !m.includes('pro') && !id.includes('pro');
+
+    if (isTouchIdIphone || isTouchIdIpad) {
+      return 'touch_id';
+    }
+
+    // Modern iPhones (X, XR, XS, 11, 12, 13, 14, 15, 16, 17, 18) and iPad Pro have Face ID TrueDepth
+    return 'face_id';
+  }
+
+  // Android smartphones and tablets use Fingerprint Scanner (optical/ultrasonic in-display or physical capacitive)
+  return 'fingerprint';
+}
+
 export function getSmartwatchDefectRules(
   category: DeviceCategory,
   brandId?: string,
@@ -728,6 +766,7 @@ export function getDefectRulesForCategory(
   }
 
   const isApple = isAppleDevice(brandId, modelName);
+  const biometricType = getBiometricType(brandId, modelName, modelId);
   const screenPct   = category === 'flagship' ? 0.28 : category === 'premium' ? 0.22 : 0.18;
   const nonOriginalScreenPct = category === 'flagship' ? 0.40 : category === 'premium' ? 0.32 : 0.25;
   const bodyDentPct = category === 'flagship' ? 0.08 : category === 'premium' ? 0.07 : 0.06;
@@ -844,10 +883,16 @@ export function getDefectRulesForCategory(
     {
       id: 'defect-critical-security',
       category: 'functionality',
-      description: isApple ? 'Biometrics Faulty (Face ID)' : 'Biometrics Faulty (Fingerprint / Face Unlock)',
-      subText: isApple 
-        ? 'Face ID does not recognise face, fails to set up, or sensor has hardware failure.'
-        : 'Fingerprint scanner or Face Unlock fails to recognize, setup error, or hardware fault.',
+      description: 
+        biometricType === 'face_id' ? 'Biometrics Faulty (Face ID)' :
+        biometricType === 'touch_id' ? 'Biometrics Faulty (Touch ID)' :
+        'Biometrics Faulty (Fingerprint / Face Unlock)',
+      subText: 
+        biometricType === 'face_id'
+          ? 'Face ID does not recognise face, fails to set up, or TrueDepth sensor has hardware failure.'
+          : biometricType === 'touch_id'
+          ? 'Touch ID sensor fails to register fingerprints, setup error, or Home button sensor is unresponsive.'
+          : 'Fingerprint scanner or Face Unlock fails to recognize, setup error, or hardware fault.',
       deductionFixed: 0,
       deductionPercentage: 0.20
     },
@@ -870,10 +915,22 @@ export function getDefectRulesForCategory(
 
     // ── CONNECTIVITY & VERIFICATION (Step 4) ─────────────────────────────
     {
+      id: 'defect-battery-80-85',
+      category: 'connectivity',
+      description: isApple ? 'Battery Health 80% – 85%' : 'Battery Health 80% – 85% (Moderate Drain)',
+      subText: isApple 
+        ? 'Maximum capacity is between 80% and 85% in Settings → Battery → Battery Health.'
+        : 'Battery capacity shows 80% - 85% or phone requires mid-day recharge under normal usage.',
+      deductionFixed: isApple ? 1000 : 0,
+      deductionPercentage: isApple ? 0.025 : 0
+    },
+    {
       id: 'defect-battery-low',
       category: 'connectivity',
-      description: 'Battery Health < 80%',
-      subText: 'Device drains quickly, shows service warning, or battery health is below 80%.',
+      description: isApple ? 'Battery Health < 80% (Service Alert)' : 'Battery Health < 80% / Heavy Drain',
+      subText: isApple
+        ? 'Maximum capacity is below 80% or shows "Service" message in Settings → Battery.'
+        : 'Device drains quickly, shuts down randomly under 20%, or requires frequent charging.',
       deductionFixed: 2500,
       deductionPercentage: 0.05
     },

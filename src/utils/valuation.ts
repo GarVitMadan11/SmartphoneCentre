@@ -44,6 +44,8 @@ export function calculateValuation(
     brandId?: string;
     modelName?: string;
     category?: string;
+    releaseYear?: number;
+    hasSpen?: boolean;
     simType?: 'dual_sim' | 'single_sim';
     regionConfig?: 'indian' | 'imported';
     warrantyAge?: 'under_3m' | '3_to_6m' | '6_to_11m' | 'out_of_warranty';
@@ -58,6 +60,8 @@ export function calculateValuation(
     brandId: options?.brandId || 'brand-apple',
     modelName: options?.modelName || 'Smartphone Device',
     category: options?.category || 'flagship',
+    releaseYear: options?.releaseYear,
+    hasSpen: options?.hasSpen,
     variant,
     selectedDefects,
     simType: options?.simType || 'dual_sim',

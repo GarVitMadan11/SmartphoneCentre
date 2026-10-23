@@ -1,4 +1,5 @@
 import { calculateStage1Valuation, determineDeviceSegment } from '../utils/pricingEngine.ts';
+import { getBiometricType, getDefectRulesForCategory } from '../data/mockDatabase.ts';
 import type { Variant, DefectRule } from '../data/mockDatabase.ts';
 
 const makeVariant = (basePrice: number, storageGb = 256): Variant => ({
@@ -168,7 +169,7 @@ export function runPricingEngineTests(): { passed: number; total: number } {
     assert(res.auditTrail.preAccessoryValue === Math.round(30000 * 0.92), 'Value reflects weak demand factor');
   });
 
-  runTest('Test 9: Android Midrange Damaged (+2% vendor rule for <= 50k)', () => {
+  runTest('Test 9: Android Midrange Damaged (+3% uniform vendor rule)', () => {
     const res = calculateStage1Valuation({
       modelId: 'mod-redmi',
       brandId: 'brand-xiaomi',
@@ -177,7 +178,7 @@ export function runPricingEngineTests(): { passed: number; total: number } {
       selectedDefects: [makeDefect('defect-body-cracked', 'Dented Frame', 'body', 0, 0.15)],
       deviceAge: 'under_3m'
     });
-    assert(res.auditTrail.vendorMultiplier === 1.02, 'Multiplier +2%');
+    assert(res.auditTrail.vendorMultiplier === 1.03, 'Multiplier +3%');
     assert(res.finalPrice > 0, 'Final price > 0');
   });
 
@@ -190,7 +191,7 @@ export function runPricingEngineTests(): { passed: number; total: number } {
       selectedDefects: [makeDefect('defect-body-cracked', 'Dented Frame', 'body', 0, 0.18)],
       deviceAge: 'under_3m'
     });
-    assert(res.auditTrail.vendorMultiplier === 1.02, 'Multiplier +2%');
+    assert(res.auditTrail.vendorMultiplier === 1.03, 'Multiplier +3%');
     assert(res.finalPrice >= 500, 'Above recycle floor 500');
   });
 
@@ -283,7 +284,7 @@ export function runPricingEngineTests(): { passed: number; total: number } {
     assert(res.adjustedBenchmark === 75000, 'Benchmark 75,000');
   });
 
-  runTest('Test 18: Vendor Threshold EXACTLY ₹50,000 (+2% rule)', () => {
+  runTest('Test 18: Vendor Multiplier Uniform (+3% rule)', () => {
     const res = calculateStage1Valuation({
       modelId: 'mod-test-50k',
       brandId: 'brand-samsung',
@@ -293,9 +294,9 @@ export function runPricingEngineTests(): { passed: number; total: number } {
       deviceAge: 'under_3m'
     });
     assert(res.adjustedBenchmark === 50000, 'Benchmark 50,000');
-    assert(res.auditTrail.vendorMultiplier === 1.02, 'Multiplier +2%');
-    assert(res.auditTrail.vendorMultiplierPercentage === '+2%', 'Percentage tag +2%');
-    assert(res.finalPrice === 51000, '50,000 * 1.02 = 51,000');
+    assert(res.auditTrail.vendorMultiplier === 1.03, 'Multiplier +3%');
+    assert(res.auditTrail.vendorMultiplierPercentage === '+3%', 'Percentage tag +3%');
+    assert(res.finalPrice === 51500, '50,000 * 1.03 = 51,500');
   });
 
   runTest('Test 19: Vendor Threshold ₹50,001 (+3% rule)', () => {
@@ -332,7 +333,108 @@ export function runPricingEngineTests(): { passed: number; total: number } {
     assert(!res.isCritical, 'Not critical');
     assert(res.auditTrail.fAge === 0.94, 'fAge 0.94');
     assert(res.auditTrail.preAccessoryValue === 42672, 'preAccessoryValue matches calculation');
-    assert(res.finalPrice === 42000, 'Final price matches 42,000');
+    assert(res.finalPrice === 42400, 'Final price matches 42,400 (+3% vendor multiplier)');
+  });
+
+  runTest('Test 21: Samsung Galaxy Ultra with Missing S-Pen Stylus (-₹2,000)', () => {
+    const res = calculateStage1Valuation({
+      modelId: 'mod-s24u',
+      brandId: 'brand-samsung',
+      modelName: 'Galaxy S24 Ultra',
+      category: 'flagship',
+      releaseYear: 2024,
+      hasSpen: true,
+      variant: makeVariant(60000),
+      selectedDefects: [
+        makeDefect('defect-spen-missing', 'Missing Original S-Pen Stylus', 'accessories', 2000, 0)
+      ],
+      warrantyAge: 'under_3m'
+    });
+    assert(!res.isCritical, 'Not critical');
+    assert(res.auditTrail.dAccessoriesCapped === 2000, 'S-Pen deducted exactly 2,000');
+    assert(res.adjustedBenchmark === 58000, 'Benchmark after S-Pen deduction is 58,000');
+    // 58,000 * 1.03 vendor multiplier = 59,740 -> clean 50 = 59,750
+    assert(res.finalPrice === 59750, 'Final price matches vendor premium above Cashify');
+  });
+
+  runTest('Test 22: Tier 2 Matured Cycle (iPhone 13 Pro) Zero Warranty Penalty', () => {
+    const res = calculateStage1Valuation({
+      modelId: 'mod-13p',
+      brandId: 'brand-apple',
+      modelName: 'iPhone 13 Pro',
+      releaseYear: 2021,
+      variant: makeVariant(31000),
+      selectedDefects: [],
+      warrantyAge: 'out_of_warranty'
+    });
+    assert(res.auditTrail.fAge === 1.00, 'Tier 2 matured model receives 1.00 (0% warranty penalty)');
+    // 31,000 * 1.03 vendor multiplier = 31,930 -> clean 50 = 31,950
+    assert(res.finalPrice === 31950, 'Tier 2 quote is higher than Cashify (+3% edge)');
+  });
+
+  runTest('Test 23: Biometrics Dynamic Hardware Rule Detection (Face ID vs Touch ID vs Android)', () => {
+    // 1. iPhone 16 Pro Max has Face ID
+    const appleBio = getBiometricType('brand-apple', 'iPhone 16 Pro Max');
+    assert(appleBio === 'face_id', 'iPhone 16 Pro Max detects face_id');
+    const appleRules = getDefectRulesForCategory('flagship', 'brand-apple', 'iPhone 16 Pro Max');
+    const appleDefect = appleRules.find(r => r.id === 'defect-critical-security');
+    assert(appleDefect?.description === 'Biometrics Faulty (Face ID)', 'Apple modern rule has Face ID label');
+
+    // 2. iPhone SE 2022 has Touch ID
+    const seBio = getBiometricType('brand-apple', 'iPhone SE 2022');
+    assert(seBio === 'touch_id', 'iPhone SE detects touch_id');
+    const seRules = getDefectRulesForCategory('midrange', 'brand-apple', 'iPhone SE 2022');
+    const seDefect = seRules.find(r => r.id === 'defect-critical-security');
+    assert(seDefect?.description === 'Biometrics Faulty (Touch ID)', 'iPhone SE rule has Touch ID label');
+
+    // 3. Samsung Galaxy S24 Ultra has in-display fingerprint
+    const samBio = getBiometricType('brand-samsung', 'Galaxy S24 Ultra');
+    assert(samBio === 'fingerprint', 'Samsung Galaxy S24 Ultra detects fingerprint');
+    const samRules = getDefectRulesForCategory('flagship', 'brand-samsung', 'Galaxy S24 Ultra');
+    const samDefect = samRules.find(r => r.id === 'defect-critical-security');
+    assert(samDefect?.description === 'Biometrics Faulty (Fingerprint / Face Unlock)', 'Android rule has Fingerprint label');
+  });
+
+  runTest('Test 24: Multiple Faults Stacking Parity (+3% Invariant Preserved)', () => {
+    // iPhone 16 Pro Max with multiple faults: Speaker + Mic + Vibrator (Cashify Quote: 78,380)
+    const res = calculateStage1Valuation({
+      modelId: 'mod-16pm',
+      brandId: 'brand-apple',
+      modelName: 'iPhone 16 Pro Max',
+      category: 'flagship',
+      releaseYear: 2024,
+      variant: makeVariant(82080),
+      selectedDefects: [
+        makeDefect('defect-func-speaker', 'Speaker Faulty', 'functionality', 2500, 0),
+        makeDefect('defect-func-mic', 'Microphone not working', 'functionality', 600, 0),
+        makeDefect('defect-func-vibrator', 'Vibrator is not working', 'functionality', 600, 0)
+      ],
+      warrantyAge: 'under_3m'
+    });
+    assert(!res.isCritical, 'Not critical');
+    assert(res.finalPrice > 78380, 'Rephonix multi-fault quote strictly higher than Cashify (78,380)');
+    assert(res.auditTrail.vendorMultiplier === 1.03, 'Maintains full +3% multiplier on multi-fault');
+    assert(res.finalPrice >= 80700, 'Guarantees ~+Rs 2,370 difference above Cashify');
+  });
+
+  runTest('Test 25: Battery Health 80% – 85% Mild Degradation Rule', () => {
+    // Apple iPhone 15 Pro with Battery Health 80-85% (Cashify: 58,060)
+    const res = calculateStage1Valuation({
+      modelId: 'mod-15p',
+      brandId: 'brand-apple',
+      modelName: 'iPhone 15 Pro',
+      category: 'flagship',
+      releaseYear: 2023,
+      variant: makeVariant(59260),
+      selectedDefects: [
+        makeDefect('defect-battery-80-85', 'Battery Health 80% – 85%', 'connectivity', 1000, 0.02)
+      ],
+      warrantyAge: 'under_3m'
+    });
+    assert(!res.isCritical, 'Not critical');
+    assert(res.auditTrail.fBattery === 0.98, 'Battery factor 0.98 for 80-85% health');
+    assert(res.finalPrice > 58060, 'Rephonix quote strictly higher than Cashify (58,060)');
+    assert(res.auditTrail.vendorMultiplier === 1.03, 'Vendor multiplier is +3%');
   });
 
   console.log(`\n=== RESULTS: ${passed}/${total} TESTS PASSED ===`);

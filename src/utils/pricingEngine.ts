@@ -5,7 +5,8 @@ import {
   PricingRulesConfig,
   AgeFactorKey,
   MarketDemandKey,
-  VariantFactorKey
+  VariantFactorKey,
+  resolveDeviceCycleTier
 } from '../data/pricingRulesConfig.ts';
 
 export function isAppleBrand(brandId: string, modelName: string): boolean {
@@ -19,6 +20,8 @@ export interface PricingInput {
   brandId: string;
   modelName: string;
   category?: string;
+  releaseYear?: number;
+  hasSpen?: boolean;
   variant: Variant;
   selectedDefects: DefectRule[];
   simType?: 'dual_sim' | 'single_sim';
@@ -236,7 +239,8 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
     };
   }
 
-  // 1. Age Factor F_age
+  // 1. Age Factor F_age & Cycle Tier Resolution
+  const cycleTier = resolveDeviceCycleTier(input.releaseYear);
   const nameLower = input.modelName.toLowerCase();
   const isIphone17or18 = nameLower.includes('iphone 17') || nameLower.includes('iphone 18');
   const isIphone15or16 = nameLower.includes('iphone 15') || nameLower.includes('iphone 16');
@@ -253,22 +257,20 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
     }
     fAge = config.ageFactors[ageKey] ?? 1.00;
   } else if (isIphone15or16) {
-    // iPhone 15 & 16 Series: 0% under 3m, 6.0% 3-6m, 10.0% 6-11m, 25.0% out of warranty (>11m)
-    const wAge = input.warrantyAge || (
-      input.deviceAge === '3_to_6m' ? '3_to_6m' :
-      input.deviceAge === '6_to_12m' ? '6_to_11m' :
-      input.deviceAge === '1_to_2y' || input.deviceAge === '2_to_3y' || input.deviceAge === 'above_4y' ? 'out_of_warranty' :
-      'under_3m'
-    );
-    if (wAge === '3_to_6m') {
-      fAge = 0.94; // -6.0% reduction
-    } else if (wAge === '6_to_11m') {
-      fAge = 0.90; // -10.0% reduction
-    } else if (wAge === 'out_of_warranty' || input.deviceAge === '1_to_2y' || input.deviceAge === '2_to_3y' || input.deviceAge === 'above_4y') {
-      fAge = 0.75; // -25.0% reduction (out of warranty / above 11 months)
+    if (input.deviceAge === '1_to_2y') {
+      fAge = 0.88; // -12.0% reduction for 1-2 years
+    } else if (input.deviceAge === '6_to_12m' || input.warrantyAge === '6_to_11m') {
+      fAge = 0.94; // -6.0% reduction for 6-12 months
+    } else if (input.deviceAge === '3_to_6m' || input.warrantyAge === '3_to_6m') {
+      fAge = 0.97; // -3.0% reduction
+    } else if (input.warrantyAge === 'out_of_warranty' || input.deviceAge === '2_to_3y' || input.deviceAge === 'above_4y') {
+      fAge = 0.80; // -20.0% Cashify empirical out of warranty
     } else {
-      fAge = 1.00; // 0% reduction (under 3 months)
+      fAge = 1.00; // 0% under 3 months
     }
+  } else if (cycleTier === 'TIER_2_MATURED_BASELINE' && !input.deviceAge) {
+    // For older / matured models, baseline already reflects secondary market rate (0% warranty penalty)
+    fAge = 1.00;
   } else {
     // Other models apply age factors from config (under 3m: 1.00, 3-6m: 0.85, 6-11m: 0.80, >11m: 0.75)
     let ageKey: AgeFactorKey = input.deviceAge || 'under_3m';
@@ -402,7 +404,7 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
   const batteryDefects = input.selectedDefects.filter(d => d.id.includes('battery'));
   let fBattery = 1.00;
   batteryDefects.forEach(defect => {
-    const penalty = defect.deductionPercentage || 0.05;
+    const penalty = defect.deductionPercentage ?? 0.05;
     fBattery *= Math.max(0, 1.0 - penalty);
   });
 
@@ -482,19 +484,12 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
   }
 
   const isHighThreshold = adjustedBenchmark > config.vendorThreshold;
-  const vendorMultiplier = isHighThreshold ? config.vendorHighMultiplier : config.vendorLowMultiplier; // 1.03 vs 1.02
-  const vendorMultiplierPercentage = isHighThreshold ? '+3%' : '+2%';
+  const vendorMultiplier = isHighThreshold ? config.vendorHighMultiplier : config.vendorLowMultiplier;
+  const vendorMultiplierPercentage = vendorMultiplier >= 1.03 ? '+3%' : '+2%';
 
-  const rawCalculatedPrice = adjustedBenchmark * vendorMultiplier;
-  
-  // 8. Customer-Facing Rounding Strategy
-  // If deductions or condition factors exist (adjustedBenchmark < basePrice), the price must strictly
-  // deduct from basePrice so that accessory, defect, and eSIM deductions are never swallowed by vendorMultiplier.
-  const calculatedPrice = (adjustedBenchmark < basePrice)
-    ? adjustedBenchmark
-    : rawCalculatedPrice;
-  const unroundedCalculatedPrice = Math.min(basePrice, calculatedPrice);
-  const finalRephonixPrice = Math.min(basePrice, roundToCleanIndianPrice(unroundedCalculatedPrice, config.roundingStrategy));
+  // Rephonix Buyback Offer strictly applies the vendor multiplier (+2% or +3%)
+  const rawCalculatedPrice = Math.round(adjustedBenchmark * vendorMultiplier);
+  const finalRephonixPrice = roundToCleanIndianPrice(rawCalculatedPrice, config.roundingStrategy);
 
   const isSpecialPartsCategory = fCondition < 0.55;
 

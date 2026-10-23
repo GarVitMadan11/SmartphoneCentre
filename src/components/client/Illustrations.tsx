@@ -193,6 +193,19 @@ export const LowBatteryIllustration: React.FC = () => (
   </svg>
 );
 
+// 16a. Battery Health 80-85%
+export const Battery80to85Illustration: React.FC = () => (
+  <svg viewBox="0 0 64 64" className="w-12 h-12" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="16" y="24" width="28" height="16" rx="3" stroke="#A1A1AA" strokeWidth="2" fill="#18181B" />
+    <path d="M45 29V35" stroke="#A1A1AA" strokeWidth="2" strokeLinecap="round" />
+    <rect x="20" y="28" width="5" height="8" rx="1" fill="#F59E0B" />
+    <rect x="26" y="28" width="5" height="8" rx="1" fill="#F59E0B" />
+    <rect x="32" y="28" width="5" height="8" rx="1" fill="#F59E0B" />
+    <circle cx="48" cy="18" r="6" fill="#18181B" stroke="#F59E0B" strokeWidth="1.2" />
+    <text x="48" y="20.5" textAnchor="middle" fill="#F59E0B" fontSize="6.5" fontWeight="bold" fontFamily="sans-serif">85%</text>
+  </svg>
+);
+
 // 17. Battery Warning
 export const BatteryWarningIllustration: React.FC = () => (
   <svg viewBox="0 0 64 64" className="w-12 h-12" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -203,7 +216,7 @@ export const BatteryWarningIllustration: React.FC = () => (
   </svg>
 );
 
-// 18. Faulty Biometrics
+// 18. Faulty Biometrics (General Fallback)
 export const FaultyBiometricsIllustration: React.FC = () => (
   <svg viewBox="0 0 64 64" className="w-12 h-12" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M22 40C24 33 28 30 32 30C36 30 40 33 42 40" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" />
@@ -212,6 +225,53 @@ export const FaultyBiometricsIllustration: React.FC = () => (
     <path d="M40 16H46V22" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" />
     <path d="M32 18V24" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" />
     <circle cx="32" cy="27" r="1.5" fill="#EF4444" />
+  </svg>
+);
+
+// 18a. Faulty Face ID (Apple TrueDepth scanning reticle & facial mesh)
+export const FaultyFaceIdIllustration: React.FC = () => (
+  <svg viewBox="0 0 64 64" className="w-12 h-12" fill="none" xmlns="http://www.w3.org/2000/svg">
+    {/* Outer Scanning Reticle Corners */}
+    <path d="M16 22V16H22" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M42 16H48V22" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M16 42V48H22" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M48 42V48H42" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    
+    {/* TrueDepth Sensor Dot Projector Array */}
+    <rect x="25" y="11" width="14" height="4" rx="2" fill="#27272A" stroke="#EF4444" strokeWidth="1" />
+    <circle cx="28" cy="13" r="1" fill="#EF4444" />
+    <circle cx="36" cy="13" r="1" fill="#EF4444" />
+
+    {/* Stylized 3D Face Contour Mesh */}
+    <path d="M25 24C28 22 36 22 39 24" stroke="#EF4444" strokeWidth="1.5" strokeLinecap="round" opacity="0.6" />
+    <circle cx="26" cy="29" r="1.5" fill="#EF4444" />
+    <circle cx="38" cy="29" r="1.5" fill="#EF4444" />
+    <path d="M32 27V34" stroke="#EF4444" strokeWidth="1.5" strokeLinecap="round" />
+    <path d="M28 38C30 40 34 40 36 38" stroke="#EF4444" strokeWidth="1.8" strokeLinecap="round" />
+    
+    {/* Diagnostic Failure Alert Cross */}
+    <circle cx="48" cy="16" r="6" fill="#18181B" stroke="#EF4444" strokeWidth="1.5" />
+    <path d="M46 14L50 18M50 14L46 18" stroke="#EF4444" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
+);
+
+// 18b. Faulty Fingerprint / Touch ID (Capacitive & Ultrasonic in-display concentric rings)
+export const FaultyFingerprintIllustration: React.FC = () => (
+  <svg viewBox="0 0 64 64" className="w-12 h-12" fill="none" xmlns="http://www.w3.org/2000/svg">
+    {/* Concentric Fingerprint Ridges */}
+    <path d="M24 38C24 30 28 26 32 26C36 26 40 30 40 38" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" />
+    <path d="M20 39C20 27 25 21 32 21C39 21 44 27 44 39" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" opacity="0.8" />
+    <path d="M28 40C28 34 30 31 32 31C34 31 36 34 36 40" stroke="#EF4444" strokeWidth="1.8" strokeLinecap="round" opacity="0.9" />
+    <path d="M16 41C16 24 23 16 32 16C41 16 48 24 48 41" stroke="#EF4444" strokeWidth="1.8" strokeLinecap="round" opacity="0.4" />
+    <path d="M32 36V43" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" />
+    
+    {/* Target In-Display Sensor Ring */}
+    <circle cx="32" cy="32" r="22" stroke="#EF4444" strokeWidth="1" strokeDasharray="3 3" opacity="0.35" />
+    
+    {/* Sensor Error Exclamation Badge */}
+    <circle cx="47" cy="17" r="6" fill="#18181B" stroke="#EF4444" strokeWidth="1.5" />
+    <path d="M47 14.5V17.5" stroke="#EF4444" strokeWidth="1.5" strokeLinecap="round" />
+    <circle cx="47" cy="20" r="0.75" fill="#EF4444" />
   </svg>
 );
 
@@ -733,7 +793,8 @@ export const TabletMissingChargerIllustration: React.FC = () => (
 // Dispatcher function supporting device type variants
 export const getIllustration = (
   id: string,
-  deviceType: 'phone' | 'watch' | 'tablet' = 'phone'
+  deviceType: 'phone' | 'watch' | 'tablet' = 'phone',
+  biometricType?: 'face_id' | 'touch_id' | 'fingerprint' | 'none'
 ): React.ReactNode => {
   if (deviceType === 'watch') {
     switch (id) {
@@ -836,12 +897,20 @@ export const getIllustration = (
         return <TabletScrewsIllustration />;
       case 'defect-camera-faulty':
         return <TabletFaultyLensIllustration />;
+      case 'defect-battery-80-85':
+        return <Battery80to85Illustration />;
       case 'defect-battery-low':
         return <TabletLowBatteryIllustration />;
       case 'defect-battery-warning':
         return <TabletBatteryWarningIllustration />;
       case 'defect-critical-security':
+        if (biometricType === 'face_id') return <FaultyFaceIdIllustration />;
+        if (biometricType === 'touch_id' || biometricType === 'fingerprint') return <FaultyFingerprintIllustration />;
         return <TabletFaultyBiometricsIllustration />;
+      case 'defect-func-face-id':
+        return <FaultyFaceIdIllustration />;
+      case 'defect-func-touch-id':
+        return <FaultyFingerprintIllustration />;
       case 'defect-func-network':
         return <NetworkIssueIllustration />;
       case 'defect-func-wireless':
@@ -905,12 +974,24 @@ export const getIllustration = (
     // Hardware / Functionality
     case 'defect-camera-faulty':
       return <FaultyLensIllustration />;
+    case 'defect-battery-80-85':
+      return <Battery80to85Illustration />;
     case 'defect-battery-low':
       return <LowBatteryIllustration />;
     case 'defect-battery-warning':
       return <BatteryWarningIllustration />;
     case 'defect-critical-security':
+      if (biometricType === 'face_id') {
+        return <FaultyFaceIdIllustration />;
+      }
+      if (biometricType === 'touch_id' || biometricType === 'fingerprint') {
+        return <FaultyFingerprintIllustration />;
+      }
       return <FaultyBiometricsIllustration />;
+    case 'defect-func-face-id':
+      return <FaultyFaceIdIllustration />;
+    case 'defect-func-touch-id':
+      return <FaultyFingerprintIllustration />;
     case 'defect-func-network':
       return <NetworkIssueIllustration />;
     case 'defect-func-wireless':
