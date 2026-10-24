@@ -342,7 +342,7 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
     });
   }
 
-  // Group B — Display (Scratches, cracks, touch, OLED/LCD, non-OEM display)
+  // Group B — Display (Scratches, cracks, touch, OLED/LCD, non-original display)
   const displayDefects = input.selectedDefects.filter(d => d.category === 'screen');
   let fDisplay = 1.00;
 

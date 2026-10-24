@@ -262,7 +262,7 @@ export function getSmartwatchDefectRules(
       id: 'defect-watch-strap-damaged',
       category: 'body',
       description: 'Original Watch Band / Strap Missing or Heavy Damage',
-      subText: 'Original OEM sport band, loop, or leather strap is missing or torn.',
+      subText: 'Original branded sport band, loop, or leather strap is missing or torn.',
       deductionFixed: isApple ? 2000 : 1400,
       deductionPercentage: 0
     },
@@ -340,7 +340,7 @@ export function getSmartwatchDefectRules(
       id: 'defect-watch-charger-missing',
       category: 'accessories',
       description: 'Missing Original Magnetic Fast Charging Puck',
-      subText: 'Original OEM magnetic charging cable/puck is not included.',
+      subText: 'Original branded magnetic charging cable/puck is not included.',
       deductionFixed: isApple ? 1500 : 1200,
       deductionPercentage: 0
     },
@@ -830,7 +830,7 @@ export function getDefectRulesForCategory(
       description: isApple ? 'True Tone Not Working' : 'Display Calibration / Tint Issue',
       subText: isApple 
         ? 'True Tone toggle missing in Display settings — indicates non-original screen replacement.'
-        : 'Screen color profile sync or auto-brightness calibration failing — indicates non-OEM display.',
+        : 'Screen color profile sync or auto-brightness calibration failing — indicates non-original / duplicate display.',
       deductionFixed: category === 'flagship' ? 2500 : 1500,
       deductionPercentage: 0
     },
@@ -897,8 +897,8 @@ export function getDefectRulesForCategory(
       category: 'body',
       description: isApple ? 'Screws Stripped / Missing' : 'Bottom Screws Stripped / Missing',
       subText: isApple 
-        ? 'Bottom pentalobe screws are stripped, damaged, or replaced with non-OEM screws.'
-        : 'Bottom housing screws are stripped, damaged, or replaced with non-OEM hardware.',
+        ? 'Bottom pentalobe screws are stripped, damaged, or replaced with third-party screws.'
+        : 'Bottom housing screws are stripped, damaged, or replaced with third-party hardware.',
       deductionFixed: 700,
       deductionPercentage: 0
     },
@@ -948,33 +948,31 @@ export function getDefectRulesForCategory(
     },
 
     // ── CONNECTIVITY & VERIFICATION (Step 4) ─────────────────────────────
-    {
-      id: 'defect-battery-80-85',
-      category: 'connectivity',
-      description: isApple ? 'Battery Health 80% – 85%' : 'Battery Health 80% – 85% (Moderate Drain)',
-      subText: isApple 
-        ? 'Maximum capacity is between 80% and 85% in Settings → Battery → Battery Health.'
-        : 'Battery capacity shows 80% - 85% or phone requires mid-day recharge under normal usage.',
-      deductionFixed: isApple ? 1000 : 0,
-      deductionPercentage: isApple ? 0.025 : 0
-    },
+    ...(isApple ? [{
+      id: 'defect-battery-80-85' as const,
+      category: 'connectivity' as const,
+      description: 'Battery Health 80% – 85%',
+      subText: 'Maximum capacity is between 80% and 85% in Settings → Battery → Battery Health.',
+      deductionFixed: 1000,
+      deductionPercentage: 0.025
+    }] : []),
     {
       id: 'defect-battery-low',
       category: 'connectivity',
-      description: isApple ? 'Battery Health < 80% (Service Alert)' : 'Battery Health < 80% / Heavy Drain',
+      description: isApple ? 'Battery Health < 80% (Service Alert)' : 'Battery Faulty / Rapid Drain / Sudden Shutdown',
       subText: isApple
         ? 'Maximum capacity is below 80% or shows "Service" message in Settings → Battery.'
-        : 'Device drains quickly, shuts down randomly under 20%, or requires frequent charging.',
+        : 'Phone drains very quickly, shuts down unexpectedly under 20%, or battery is swollen.',
       deductionFixed: 2500,
       deductionPercentage: 0.05
     },
     {
       id: 'defect-battery-warning',
       category: 'connectivity',
-      description: isApple ? 'Non-Genuine Battery Warning' : 'Non-OEM / Battery Warning Alert',
+      description: isApple ? 'Non-Genuine Battery Warning' : 'Battery Replaced / Duplicate Battery',
       subText: isApple 
-        ? '"Important Battery Message" alert visible in Settings → Battery — battery is non-OEM.'
-        : 'Non-OEM battery alert or degraded battery controller alert in System Settings.',
+        ? '"Important Battery Message" alert visible in Settings → Battery (battery was replaced).'
+        : 'Battery was replaced from a local repair shop or is not original company battery.',
       deductionFixed: 2000,
       deductionPercentage: 0.015
     },

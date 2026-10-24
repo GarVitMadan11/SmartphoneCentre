@@ -26,7 +26,7 @@ const getEngineeringLabel = (description: string) => {
     'Screen Burn-in / Lines':            'Display Panel Replacement Fee',
     'Touch / Swipe Unresponsive':        'Digitizer / Touch Layer Repair',
     'True Tone Not Working':             'Original Display Certification Fee',
-    'Replaced / Non-Original Screen':    'Non-OEM Display Panel Deduction',
+    'Replaced / Non-Original Screen':    'Locally Replaced Screen Deduction',
     'Inner Display Crease Damage / Bubbling': 'Flexible Folding Display Panel & Crease Assembly Repair',
     'Display Calibration / Tint Issue':  'Display Panel Recalibration Levy',
     'Hinge Faulty / Does Not Fold Flat': 'Hinge Mechanism & Folding Chassis Restoration',
@@ -38,17 +38,20 @@ const getEngineeringLabel = (description: string) => {
     'Bottom Screws Stripped / Missing':  'Chassis Hardware Replacement',
     'Camera Faulty / Lens Blur':         'Optical Sensor Recalibration',
     'Battery Health < 80%':              'Battery Module Replacement',
-    'Non-Genuine Battery Warning':       'OEM Battery Compliance Levy',
-    'Non-OEM / Battery Warning Alert':   'Battery Controller Compliance Levy',
+    'Battery Health < 80% (Service Alert)': 'Battery Module Replacement Fee',
+    'Battery Faulty / Rapid Drain / Sudden Shutdown': 'Battery Module Replacement Fee',
+    'Non-Genuine Battery Warning':       'Original Battery Compliance Levy',
+    'Battery Replaced / Duplicate Battery': 'Non-Original Battery Fee',
+    'Non-OEM / Battery Warning Alert':   'Non-Original Battery Warning Levy',
     'Network, Calling & SIM Issues':     'Cellular Modem / SIM Tray Repair',
     'Wi-Fi & Bluetooth Issues':          'Antenna & Wireless Module Repair',
     '3uTools Serial Mismatch':           'Counterfeit Parts Detection Levy',
     'PC Diagnostic Serial Mismatch':     'Hardware Serial Mismatch Levy',
     'Speakers / Microphone Faulty':      'Audio Assembly Replacement Fee',
     'Auto-Restart / Unstable Device':    'PMIC / Board-Level Stabilisation',
-    'Missing Original Box':              'OEM Retail Box De-allocation',
-    'Missing Original Charger / Cable':  'OEM Power Adapter De-allocation',
-    'Missing Original S-Pen':            'OEM S-Pen Stylus De-allocation',
+    'Missing Original Box':              'Original Retail Box Missing Deduction',
+    'Missing Original Charger / Cable':  'Original Charger Missing Deduction',
+    'Missing Original S-Pen':            'Original S-Pen Stylus Missing Deduction',
     'Missing Bill / Customer Photo ID':  'Legal Compliance Documentation Fee',
     'Single SIM Regional Variant Adjustment': 'Single SIM Variant Engineering Adjustment',
     'Dual eSIM Configuration Deduction (iPhone 14–16 Pro Series)': 'US Model Dual eSIM Architecture Adjustment',
@@ -68,7 +71,6 @@ const getEngineeringLabel = (description: string) => {
     'Fingerprint Scanner / Biometrics Faulty':          'Biometric Sensor Security Fee',
     'Battery Health 80% – 85%':                         'Battery Capacity Degradation Fee',
     'Battery Health 80% – 85% (Moderate Drain)':        'Battery Capacity Degradation Fee',
-    'Battery Health < 80% (Service Alert)':             'Battery Module Replacement Fee',
     'Battery Health < 80% / Heavy Drain':               'Battery Module Replacement Fee',
     
     // Smartwatch specific engineering fee labels
@@ -82,7 +84,7 @@ const getEngineeringLabel = (description: string) => {
     'Digital Crown / Action Button Faulty':              'Digital Crown & Action Flex Repair',
     'Rotating Bezel / Home Button Faulty':               'Rotary Bezel Mechanism Repair',
     'Water Resistance Seal Fail (50m/100m)':             '50m/100m Swim Gasket & Seal Replacement',
-    'Original Watch Band / Strap Missing or Heavy Damage': 'OEM Watch Band De-allocation Fee',
+    'Original Watch Band / Strap Missing or Heavy Damage': 'Original Watch Band Missing Deduction',
     'PPG Heart Rate & SpO2 Sensor Faulty':               'PPG Health Sensor Array Recalibration',
     'ECG App / Electrical Heart Sensor Fail':            'ECG Electrode Controller Compliance Levy',
     'ECG / BIA Body Composition Sensor Fail':            'BIA Body Composition Sensor Recalibration',
@@ -92,8 +94,8 @@ const getEngineeringLabel = (description: string) => {
     'Wireless Magnetic Receiver Charge Faulty':          'Inductive Charging Receiver Coil Repair',
     'Cellular / LTE eSIM Functionality Faulty':          'eSIM Modem Transceiver Recalibration',
     'Wi-Fi, Bluetooth & Dual-Frequency GPS Fail':        'Wireless Antenna & GPS Array Repair',
-    'Missing Original Magnetic Fast Charging Puck':      'OEM Magnetic Fast Charger De-allocation',
-    'Missing Original Retail Watch Box':                 'OEM Watch Retail Packaging De-allocation',
+    'Missing Original Magnetic Fast Charging Puck':      'Original Magnetic Fast Charger Missing Deduction',
+    'Missing Original Retail Watch Box':                 'Original Watch Retail Box Missing Deduction',
     'Smartwatch Does Not Turn On':                       'Watch Logic Board Hardware Failure',
     'iCloud / Apple Watch Activation Locked':            'Activation Lock — Zero Resale Value',
     'Samsung Account / Google Knox Lock Active':         'Knox Lock — Zero Resale Value',
@@ -103,7 +105,7 @@ const getEngineeringLabel = (description: string) => {
     'Cellular Network Not Working':                      'Baseband Cellular Modem Repair',
     'SIM Tray Missing or Damaged':                       'SIM Tray Hardware Replacement',
     'Touch Screen Not Working Properly':                 'Digitizer Layer Replacement',
-    'Screen Replaced at Local Shop (Non-Original)':      'Non-OEM Display Panel Deduction',
+    'Screen Replaced at Local Shop (Non-Original)':      'Locally Replaced Screen Deduction',
     '1-2 Scratches on Screen':                           'Display Glass Micro-Polishing',
     'More Than 2 Scratches on Screen':                   'Display Surface Resurfacing Fee',
     'Chipped Outside Display Area':                      'Bevel Edge Glass Restoration',
@@ -141,8 +143,8 @@ const getEngineeringLabel = (description: string) => {
     'Back Panel Chipped on Edges':                       'Back Panel Edge Restoration',
     'Back Panel Broken / Shattered':                     'Rear Enclosure Replacement Fee',
     'Back Panel Missing':                                'Chassis Housing Replacement Fee',
-    'Missing Original Tablet Charger':                   'OEM Fast Charger De-allocation',
-    'Missing Box With Same IMEI / Serial':               'OEM Retail Box De-allocation',
+    'Missing Original Tablet Charger':                   'Original Tablet Fast Charger Missing Deduction',
+    'Missing Box With Same IMEI / Serial':               'Original Retail Box Missing Deduction',
     'Missing GST Valid Bill With Same IMEI / Serial':     'GST Tax Compliance Verification Fee'
   };
   return mapping[description] || description;
@@ -2225,7 +2227,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                             <span className="text-emerald-700 font-bold text-[10px] font-mono">Operational Passed</span>
                           </div>
                           <div className="p-2 rounded bg-slate-50 border border-slate-200 flex justify-between items-center">
-                            <span className="font-semibold text-slate-800">{hasSpen ? '6. Box, S-Pen & Accessories' : '6. OEM Accessories & Box'}</span>
+                            <span className="font-semibold text-slate-800">{hasSpen ? '6. Box, S-Pen & Accessories' : '6. Original Accessories & Box'}</span>
                             <span className="text-emerald-700 font-bold text-[10px] font-mono">Inventory Verified</span>
                           </div>
                         </div>

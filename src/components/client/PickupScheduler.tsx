@@ -124,8 +124,8 @@ const getEngineeringLabel = (description: string) => {
     'Scuffed Frame / Normal Wear': 'Frame Bead-Blasting & Refinishing',
     'Faulty Lens / Blur': 'Optical Sensor Recalibration',
     'Battery Health < 80%': 'Battery Module Replacement',
-    'Missing Original Box': 'OEM Retail Box De-allocation',
-    'Missing Original Charger / Cable': 'OEM Power Adapter De-allocation',
+    'Missing Original Box': 'Original Box Missing Deduction',
+    'Missing Original Charger / Cable': 'Original Charger Missing Deduction',
     'Device Does Not Turn On': 'Board-Level Hardware Failure',
     'Biometrics Faulty (FaceID/TouchID)': 'Biometric Sensor Security Fee'
   };

@@ -61,7 +61,7 @@ function rulesFor(category: DeviceCategory): Record<string, Defect> {
     'defect-body-airpass': { category: 'body', fixed: category === 'flagship' ? 1500 : 800 }, 'defect-body-buttons': { category: 'body', fixed: 1200 }, 'defect-body-screws': { category: 'body', fixed: 700 }, 'defect-body-hinge': { category: 'body', fixed: category === 'flagship' ? 2000 : 1500, percentage: category === 'flagship' ? .20 : .18 },
     'defect-camera-faulty': { category: 'camera', fixed: 1000, percentage: camera }, 'defect-critical-security': { category: 'functionality', percentage: .20 },
     'defect-func-audio': { category: 'functionality', fixed: 2800 }, 'defect-func-restart': { category: 'functionality', percentage: .15 },
-    'defect-battery-low': { category: 'connectivity', fixed: 2500, percentage: .05 }, 'defect-battery-warning': { category: 'connectivity', fixed: 2000, percentage: .015 },
+    'defect-battery-80-85': { category: 'connectivity', fixed: 1000, percentage: .025 }, 'defect-battery-low': { category: 'connectivity', fixed: 2500, percentage: .05 }, 'defect-battery-warning': { category: 'connectivity', fixed: 2000, percentage: .015 },
     'defect-func-network': { category: 'connectivity', percentage: .10 }, 'defect-func-wireless': { category: 'connectivity', percentage: .07 }, 'defect-func-partmatch': { category: 'connectivity', percentage: .12 },
     'defect-box-missing': { category: 'accessories', fixed: box }, 'defect-charger-missing': { category: 'accessories', fixed: 1500 }, 'defect-acc-nodocs': { category: 'accessories', fixed: 1500 }, 'defect-spen-missing': { category: 'accessories', fixed: 2000 },
     'defect-critical-power': { category: 'accessories', critical: true }, 'defect-critical-icloud': { category: 'accessories', critical: true },
