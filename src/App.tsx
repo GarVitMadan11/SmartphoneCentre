@@ -54,9 +54,9 @@ import {
   Truck, Lock, CheckCircle2, Sparkles, ArrowRight, Instagram
 } from 'lucide-react';
 
-import applePhoneImg from './assets/apple_phone.png';
-import samsungPhoneImg from './assets/samsung_phone.png';
-import oneplusPhoneImg from './assets/oneplus_phone.png';
+import applePhoneImg from './assets/apple_phone.webp';
+import samsungPhoneImg from './assets/samsung_phone.webp';
+import oneplusPhoneImg from './assets/oneplus_phone.webp';
 
 // ─────────────────────────────────────────────────────────────────────────────
 

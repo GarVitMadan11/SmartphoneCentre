@@ -270,6 +270,21 @@ router.post('/', bookingLimiter, optionalCustomerAuth, async (req: Authenticated
       ? b.id.trim().toUpperCase()
       : `RPX${dd}${mm}${randomDigits}`;
 
+    // Idempotency: Return existing booking if client already submitted this ID or Idempotency-Key
+    const idempotencyHeader = req.headers['idempotency-key'];
+    const idempotencyKey = (typeof idempotencyHeader === 'string' ? idempotencyHeader : '') || (typeof b.idempotencyKey === 'string' ? b.idempotencyKey : '');
+    const checkId = (typeof b.id === 'string' && b.id.trim().toUpperCase().startsWith('RPX')) ? b.id.trim().toUpperCase() : (idempotencyKey ? idempotencyKey.trim().toUpperCase() : '');
+    if (checkId) {
+      const existing = await prisma.booking.findUnique({
+        where: { id: checkId },
+        include: { events: { orderBy: { createdAt: 'desc' } } }
+      });
+      if (existing) {
+        res.status(200).json(mapBooking(existing, false));
+        return;
+      }
+    }
+
     const rawPayoutDetails = (b.payoutDetails && typeof b.payoutDetails === 'object') ? (b.payoutDetails as Record<string, unknown>) : {};
     const encryptedPayoutJson = encryptPayoutDetails(rawPayoutDetails);
 

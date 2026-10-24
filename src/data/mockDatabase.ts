@@ -109,6 +109,24 @@ export function hasSpenSupport(brandId?: string, modelName?: string, modelId?: s
   return isSSeriesUltra || isNote;
 }
 
+// Helper to identify Foldable and Flip smartphones (e.g. Galaxy Z Fold, Z Flip, Motorola Razr, OnePlus Open, Google Pixel Fold)
+export function isFoldableDevice(_brandId?: string, modelName?: string, modelId?: string): boolean {
+  if (!modelName && !modelId) return false;
+  const m = (modelName || '').toLowerCase();
+  const id = (modelId || '').toLowerCase();
+  return (
+    m.includes('fold') ||
+    m.includes('flip') ||
+    m.includes('razr') ||
+    m.includes('open') ||
+    m.includes('find n') ||
+    id.includes('fold') ||
+    id.includes('flip') ||
+    id.includes('razr') ||
+    id.includes('open')
+  );
+}
+
 export type BiometricType = 'face_id' | 'touch_id' | 'fingerprint' | 'none';
 
 // Helper to identify biometric hardware security architecture
@@ -766,6 +784,7 @@ export function getDefectRulesForCategory(
   }
 
   const isApple = isAppleDevice(brandId, modelName);
+  const isFoldable = isFoldableDevice(brandId, modelName, modelId);
   const biometricType = getBiometricType(brandId, modelName, modelId);
   const screenPct   = category === 'flagship' ? 0.28 : category === 'premium' ? 0.22 : 0.18;
   const nonOriginalScreenPct = category === 'flagship' ? 0.40 : category === 'premium' ? 0.32 : 0.25;
@@ -824,8 +843,24 @@ export function getDefectRulesForCategory(
       deductionFixed: 0,
       deductionPercentage: nonOriginalScreenPct
     },
+    ...(isFoldable ? [{
+      id: 'defect-screen-crease',
+      category: 'screen' as const,
+      description: 'Inner Display Crease Damage / Bubbling',
+      subText: 'Protective layer bubbling, discoloration, or dead line along the folding crease of the inner flexible display.',
+      deductionFixed: 1500,
+      deductionPercentage: 0.35
+    }] : []),
 
     // ── BODY ─────────────────────────────────────────────────────────────
+    ...(isFoldable ? [{
+      id: 'defect-body-hinge',
+      category: 'body' as const,
+      description: 'Hinge Faulty / Does Not Fold Flat',
+      subText: 'Hinge is loose, stiff, makes clicking/grinding sounds, or fails to open 180° / fold completely flat.',
+      deductionFixed: category === 'flagship' ? 2000 : 1500,
+      deductionPercentage: category === 'flagship' ? 0.20 : 0.18
+    }] : []),
     {
       id: 'defect-body-dented',
       category: 'body',

@@ -112,4 +112,11 @@ describe('Booking Body Input Validation', () => {
     payload6.payoutMethod = 'crypto';
     expect(validateBookingBody(payload6)).toContainEqual(expect.stringContaining('payoutMethod'));
   });
+
+  it('should accept valid booking payload containing an idempotencyKey', () => {
+    const payload = getValidBookingPayload();
+    payload.idempotencyKey = 'RPX24109999';
+    const errors = validateBookingBody(payload);
+    expect(errors).toHaveLength(0);
+  });
 });

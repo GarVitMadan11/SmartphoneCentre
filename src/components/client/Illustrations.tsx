@@ -174,6 +174,31 @@ export const ScrewsIllustration: React.FC = () => (
   </svg>
 );
 
+// 14b. Hinge Faulty / Folding Mechanism
+export const HingeFaultyIllustration: React.FC = () => (
+  <svg viewBox="0 0 64 64" className="w-12 h-12" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="14" y="10" width="16" height="44" rx="2" stroke="#EF4444" strokeWidth="1.5" fill="#1C1C1F" />
+    <rect x="34" y="10" width="16" height="44" rx="2" stroke="#EF4444" strokeWidth="1.5" fill="#1C1C1F" />
+    <rect x="29" y="8" width="6" height="48" rx="2" fill="#EF4444" fillOpacity="0.3" stroke="#EF4444" strokeWidth="1.5" />
+    <circle cx="32" cy="18" r="1.5" fill="#F87171" />
+    <circle cx="32" cy="32" r="1.5" fill="#F87171" />
+    <circle cx="32" cy="46" r="1.5" fill="#F87171" />
+    <path d="M28 26L36 38M36 26L28 38" stroke="#F59E0B" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
+);
+
+// 14c. Inner Screen Crease Damage
+export const InnerScreenCreaseIllustration: React.FC = () => (
+  <svg viewBox="0 0 64 64" className="w-12 h-12" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="12" y="10" width="40" height="44" rx="3" stroke="#A1A1AA" strokeWidth="2" fill="#18181B" />
+    <line x1="32" y1="11" x2="32" y2="53" stroke="#EF4444" strokeWidth="2" strokeDasharray="3 2" />
+    <circle cx="32" cy="22" r="3" fill="#F59E0B" fillOpacity="0.4" stroke="#F59E0B" strokeWidth="1" />
+    <circle cx="32" cy="36" r="2.5" fill="#F59E0B" fillOpacity="0.4" stroke="#F59E0B" strokeWidth="1" />
+    <circle cx="32" cy="44" r="2" fill="#EF4444" fillOpacity="0.6" />
+  </svg>
+);
+
+
 // 15. Faulty Camera Lens
 export const FaultyLensIllustration: React.FC = () => (
   <svg viewBox="0 0 64 64" className="w-12 h-12" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -956,10 +981,14 @@ export const getIllustration = (
     case 'defect-screen-truetone':
     case 'defect-screen-non-original':
       return <TrueToneIllustration />;
+    case 'defect-screen-crease':
+      return <InnerScreenCreaseIllustration />;
 
     // Body
     case 'body-flawless':
       return <FlawlessFrameIllustration />;
+    case 'defect-body-hinge':
+      return <HingeFaultyIllustration />;
     case 'defect-body-dented':
       return <DentedFrameIllustration />;
     case 'defect-body-scuffs':

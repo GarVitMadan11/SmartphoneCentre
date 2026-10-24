@@ -56,9 +56,9 @@ function rulesFor(category: DeviceCategory): Record<string, Defect> {
   const tone = category === 'flagship' ? 2500 : 1500;
   return {
     'defect-screen-cracked': { category: 'screen', percentage: screen }, 'defect-screen-scratches': { category: 'screen', fixed: 1000, percentage: .03 },
-    'defect-screen-burn': { category: 'screen', percentage: screen }, 'defect-screen-touch': { category: 'screen', percentage: .15 }, 'defect-screen-truetone': { category: 'screen', fixed: tone },
+    'defect-screen-burn': { category: 'screen', percentage: screen }, 'defect-screen-touch': { category: 'screen', percentage: .15 }, 'defect-screen-truetone': { category: 'screen', fixed: tone }, 'defect-screen-crease': { category: 'screen', fixed: 1500, percentage: .35 },
     'defect-body-dented': { category: 'body', fixed: 1000, percentage: dent }, 'defect-body-scuffs': { category: 'body', fixed: 800, percentage: .02 },
-    'defect-body-airpass': { category: 'body', fixed: category === 'flagship' ? 1500 : 800 }, 'defect-body-buttons': { category: 'body', fixed: 1200 }, 'defect-body-screws': { category: 'body', fixed: 700 },
+    'defect-body-airpass': { category: 'body', fixed: category === 'flagship' ? 1500 : 800 }, 'defect-body-buttons': { category: 'body', fixed: 1200 }, 'defect-body-screws': { category: 'body', fixed: 700 }, 'defect-body-hinge': { category: 'body', fixed: category === 'flagship' ? 2000 : 1500, percentage: category === 'flagship' ? .20 : .18 },
     'defect-camera-faulty': { category: 'camera', fixed: 1000, percentage: camera }, 'defect-critical-security': { category: 'functionality', percentage: .20 },
     'defect-func-audio': { category: 'functionality', fixed: 2800 }, 'defect-func-restart': { category: 'functionality', percentage: .15 },
     'defect-battery-low': { category: 'connectivity', fixed: 2500, percentage: .05 }, 'defect-battery-warning': { category: 'connectivity', fixed: 2000, percentage: .015 },
