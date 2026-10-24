@@ -10,7 +10,6 @@ import {
   RefreshCw,
   Grid,
   Download,
-  Calendar,
   HardDrive,
   Cpu,
   Sparkles,
@@ -32,8 +31,9 @@ import {
   Zap,
   Wifi,
   Radio,
+  ChevronDown,
 } from 'lucide-react';
-import { Model, Brand, BRANDS, isSmartwatchDevice, isTabletDevice, buildVariantPricesForModel, isVariantAvailable, predictCashifyPrice, hasSpenSupport, getBiometricType } from '../../../data/mockDatabase';
+import { Model, Brand, BRANDS, isSmartwatchDevice, isTabletDevice, buildVariantPricesForModel, isVariantAvailable, predictCashifyPrice, hasSpenSupport } from '../../../data/mockDatabase';
 import { fetchModels, createModel, updateModel, deleteModel, testCashifyUrlApi, registerApprovedCashifyVariants } from '../../../utils/api';
 import {
   saveBrandOrder,
@@ -71,6 +71,7 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
   const [selectedBrandFilter, setSelectedBrandFilter] = useState<string>('all');
   const [selectedSeriesFilter, setSelectedSeriesFilter] = useState<string>('all');
   const [showHiddenOnly, setShowHiddenOnly] = useState(false);
+  const [isUtilityMenuOpen, setIsUtilityMenuOpen] = useState(false);
 
   // Shuffle & Reorder Studio Mode State
   const [isReorderMode, setIsReorderMode] = useState(false);
@@ -673,46 +674,84 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
         </div>
 
         {/* Action Buttons & Reorder Mode Toggle */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 relative">
           <button
             onClick={() => setIsReorderMode(!isReorderMode)}
-            className={`px-3.5 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm ${
+            className={`px-3.5 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs ${
               isReorderMode
-                ? 'bg-sky-500 text-white shadow-sky-200 font-bold'
-                : 'bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200'
+                ? 'bg-slate-800 text-white shadow-sm'
+                : 'bg-canvas-pure hover:bg-zinc-100 text-ink-navy border border-ice-border'
             }`}
           >
-            <Shuffle className="w-3.5 h-3.5" />
-            <span>{isReorderMode ? 'Close Shuffle Mode' : 'Shuffle & Reorder Mode'}</span>
+            <Shuffle className="w-3.5 h-3.5 text-cobalt" />
+            <span>{isReorderMode ? 'Close Studio' : 'Shuffle & Reorder'}</span>
           </button>
 
-          <button
-            onClick={loadModels}
-            disabled={loading}
-            className="px-3 py-2 bg-zinc-100 hover:bg-zinc-200 text-ink-navy text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer"
-            title="Reload from Database"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-            <span>Sync DB</span>
-          </button>
+          {/* Export & Utilities Dropdown */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setIsUtilityMenuOpen(!isUtilityMenuOpen)}
+              className="px-3 py-2 bg-canvas-pure hover:bg-zinc-100 text-ink-navy border border-ice-border text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+              title="Data sync & export actions"
+            >
+              <Download className="w-3.5 h-3.5 text-ink-slate" />
+              <span>Actions & CSV</span>
+              <ChevronDown className="w-3.5 h-3.5 text-ink-muted" />
+            </button>
 
-          <button
-            onClick={handleExportCsv}
-            className="px-3 py-2 bg-zinc-100 hover:bg-zinc-200 text-ink-navy text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer"
-            title="Export model overview CSV"
-          >
-            <Download className="w-3.5 h-3.5 text-cobalt" />
-            <span>Export CSV</span>
-          </button>
+            {isUtilityMenuOpen && (
+              <>
+                <div
+                  className="fixed inset-0 z-20"
+                  onClick={() => setIsUtilityMenuOpen(false)}
+                />
+                <div className="absolute right-0 mt-1 w-64 bg-white border border-ice-border rounded-xl shadow-xl z-30 py-1.5 animate-in fade-in zoom-in-95 text-xs font-sans">
+                  <button
+                    onClick={() => {
+                      loadModels();
+                      setIsUtilityMenuOpen(false);
+                    }}
+                    disabled={loading}
+                    className="w-full px-3 py-2 text-left hover:bg-slate-50 flex items-center gap-2 text-ink-navy font-semibold cursor-pointer disabled:opacity-50"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 text-cobalt ${loading ? 'animate-spin' : ''}`} />
+                    <span>Sync Database Catalog</span>
+                  </button>
 
-          <button
-            onClick={handleExportActiveVariantsCsv}
-            className="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
-            title="Download CSV of all active models with RAM, Storage & Variant Prices"
-          >
-            <Download className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Export Active Prices CSV</span>
-          </button>
+                  <div className="my-1 border-t border-ice-border/60" />
+
+                  <button
+                    onClick={() => {
+                      handleExportCsv();
+                      setIsUtilityMenuOpen(false);
+                    }}
+                    className="w-full px-3 py-2 text-left hover:bg-slate-50 flex items-center gap-2 text-ink-navy font-semibold cursor-pointer"
+                  >
+                    <Download className="w-3.5 h-3.5 text-slate-500" />
+                    <div>
+                      <span className="block">Export Models CSV</span>
+                      <span className="text-[10px] text-ink-muted font-normal block font-mono">Overview schema with base prices</span>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      handleExportActiveVariantsCsv();
+                      setIsUtilityMenuOpen(false);
+                    }}
+                    className="w-full px-3 py-2 text-left hover:bg-slate-50 flex items-center gap-2 text-emerald-800 font-semibold cursor-pointer"
+                  >
+                    <Download className="w-3.5 h-3.5 text-emerald-600" />
+                    <div>
+                      <span className="block text-emerald-700">Export Variant Prices CSV</span>
+                      <span className="text-[10px] text-emerald-600/80 font-normal block font-mono">All RAM × Storage active payout rows</span>
+                    </div>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
 
           <button
             onClick={handleStartAdd}
@@ -1176,134 +1215,100 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
                   return (
                     <div
                       key={model.id}
-                      className={`bg-canvas-white border rounded-lg p-4 shadow-sm hover:shadow-md transition-all flex flex-col justify-between relative ${
-                        model.hidden ? 'border-amber-300 bg-amber-50/20' : 'border-ice-border'
+                      className={`bg-canvas-white border rounded-xl p-4 shadow-xs hover:shadow-md transition-all flex flex-col justify-between relative group ${
+                        model.hidden ? 'border-amber-300/80 bg-amber-50/15' : 'border-ice-border hover:border-cobalt/40'
                       }`}
                     >
-                      {/* Status & Series Badges */}
-                      <div className="flex justify-between items-start mb-3">
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          <span className="px-2 py-0.5 text-[10px] font-bold font-mono uppercase bg-cobalt/10 text-cobalt rounded border border-cobalt/20">
+                      {/* Top Header: Brand Tag & Status Pill */}
+                      <div className="flex justify-between items-center mb-3">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-0.5 text-[10px] font-bold font-mono uppercase bg-slate-100 text-ink-navy rounded border border-ice-border">
                             {brand?.name || model.brandId}
                           </span>
                           {model.series && (
-                            <span className="px-2 py-0.5 text-[10px] font-mono text-purple-700 bg-purple-50 rounded border border-purple-200">
+                            <span className="text-[11px] font-mono text-purple-700 font-semibold truncate max-w-[140px]">
                               {model.series}
-                            </span>
-                          )}
-                          <span className="px-2 py-0.5 text-[10px] font-mono text-zinc-600 bg-zinc-100 rounded">
-                            {model.category}
-                          </span>
-                          <span className={`px-2 py-0.5 text-[10px] font-bold font-mono rounded border ${
-                            (model.supportsWarrantyQuestion ?? (model.releaseYear >= 2024))
-                              ? 'text-blue-700 bg-blue-50 border-blue-200'
-                              : 'text-zinc-600 bg-zinc-100 border-zinc-200'
-                          }`}>
-                            {(model.supportsWarrantyQuestion ?? (model.releaseYear >= 2024)) ? 'Tier 1 (Warranty Active)' : 'Tier 2 (Matured Baseline)'}
-                          </span>
-
-                          {hasSpenSupport(model.brandId, model.name, model.id) && (
-                            <span className="px-2 py-0.5 text-[10px] font-bold font-mono rounded border text-purple-700 bg-purple-50 border-purple-200 flex items-center gap-1">
-                              <Sparkles className="w-3 h-3 text-purple-500" />
-                              S-Pen
-                            </span>
-                          )}
-
-                          {getBiometricType(model.brandId, model.name, model.id) !== 'none' && (
-                            <span className="px-2 py-0.5 text-[10px] font-bold font-mono rounded border text-indigo-700 bg-indigo-50 border-indigo-200">
-                              {getBiometricType(model.brandId, model.name, model.id) === 'face_id' ? 'Face ID' :
-                               getBiometricType(model.brandId, model.name, model.id) === 'touch_id' ? 'Touch ID' :
-                               'Fingerprint'}
                             </span>
                           )}
                         </div>
 
                         {model.hidden ? (
-                          <span className="px-2 py-0.5 text-[10px] font-bold text-amber-700 bg-amber-100 rounded border border-amber-300 flex items-center gap-1">
-                            <EyeOff className="w-3 h-3" />
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold text-amber-700 bg-amber-100/70 rounded-full border border-amber-300">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
                             Hidden
                           </span>
                         ) : (
-                          <span className="px-2 py-0.5 text-[10px] font-bold text-emerald-700 bg-emerald-100 rounded border border-emerald-300 flex items-center gap-1">
-                            <Eye className="w-3 h-3" />
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold text-emerald-700 bg-emerald-100/70 rounded-full border border-emerald-300">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                             Active
                           </span>
                         )}
                       </div>
 
-                      {/* Model Info Header */}
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-14 h-14 bg-zinc-50 border border-ice-border rounded-lg p-1 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                      {/* Main Device Block: Thumbnail & Info */}
+                      <div className="flex items-center gap-3.5 mb-3.5">
+                        <div className="w-14 h-14 bg-zinc-50 border border-ice-border rounded-xl p-1.5 flex items-center justify-center flex-shrink-0 overflow-hidden shadow-2xs">
                           {model.imageUrl ? (
                             <img src={model.imageUrl} alt={model.name} className="w-full h-full object-contain" />
                           ) : (
                             <ImageIcon className="w-6 h-6 text-zinc-300" />
                           )}
                         </div>
-                        <div>
-                          <h3 className="text-base font-bold text-ink-navy leading-tight">{model.name}</h3>
-                          <div className="flex items-center gap-2 mt-1 text-xs text-ink-muted font-mono">
-                            <span className="flex items-center gap-1">
-                              <Calendar className="w-3 h-3 text-zinc-400" />
-                              Year: {model.releaseYear || 'N/A'}
-                            </span>
+
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5">
+                            <h3 className="text-sm font-bold text-ink-navy leading-snug truncate" title={model.name}>
+                              {model.name}
+                            </h3>
+                            {hasSpenSupport(model.brandId, model.name, model.id) && (
+                              <span title="S-Pen Compatible">
+                                <Sparkles className="w-3.5 h-3.5 text-purple-500 flex-shrink-0" />
+                              </span>
+                            )}
                           </div>
-                          <span className="text-[10px] font-mono text-zinc-400 block mt-0.5">ID: {model.id}</span>
+                          <div className="flex items-center gap-2 mt-0.5 text-[11px] text-ink-muted font-mono">
+                            <span>{model.releaseYear || 'N/A'}</span>
+                            <span>•</span>
+                            <span className="capitalize">{model.category}</span>
+                            <span>•</span>
+                            <span className="truncate max-w-[90px]">{model.id}</span>
+                          </div>
                         </div>
                       </div>
 
-                      {/* Storage & RAM Badges */}
-                      <div className="space-y-2 bg-canvas-pure p-3 rounded-lg border border-ice-border/80 mb-4 text-xs font-mono">
-                        <div className="flex items-center gap-1.5 text-ink-slate">
-                          <HardDrive className="w-3.5 h-3.5 text-cobalt flex-shrink-0" />
-                          <span className="font-bold">Storage Tiers:</span>
-                          <div className="flex flex-wrap gap-1 ml-1">
-                            {storages.map((s) => (
-                              <span key={s} className="px-1.5 py-0.5 bg-white border border-ice-border rounded font-bold text-[10px] text-ink-navy">
-                                {s >= 1024 ? `${s / 1024}TB` : `${s}GB`}
-                              </span>
-                            ))}
-                          </div>
+                      {/* Compact Specs & Price Summary */}
+                      <div className="bg-canvas-pure p-3 rounded-lg border border-ice-border/70 mb-3 text-xs font-mono space-y-1.5">
+                        <div className="flex items-center justify-between text-ink-slate text-[11px]">
+                          <span className="text-zinc-500 font-semibold flex items-center gap-1">
+                            <HardDrive className="w-3 h-3 text-cobalt" />
+                            <span>Storage:</span>
+                          </span>
+                          <span className="font-bold text-ink-navy">
+                            {storages.length > 0 ? `${storages[0] >= 1024 ? `${storages[0]/1024}TB` : `${storages[0]}GB`} – ${storages[storages.length-1] >= 1024 ? `${storages[storages.length-1]/1024}TB` : `${storages[storages.length-1]}GB`} (${storages.length})` : '128GB – 512GB'}
+                          </span>
                         </div>
 
-                        <div className="flex items-center gap-1.5 text-ink-slate">
-                          <Cpu className="w-3.5 h-3.5 text-purple-600 flex-shrink-0" />
-                          <span className="font-bold">RAM Tiers:</span>
-                          <div className="flex flex-wrap gap-1 ml-1">
-                            {hasRamVariants ? (
-                              rams.map((r) => (
-                                <span key={r} className="px-1.5 py-0.5 bg-purple-50 border border-purple-200 rounded font-bold text-[10px] text-purple-700">
-                                  {r}GB
-                                </span>
-                              ))
-                            ) : (
-                              <span className="text-[10px] text-zinc-400 font-normal">None (Apple / Fixed)</span>
-                            )}
-                          </div>
+                        <div className="flex items-center justify-between text-ink-slate text-[11px]">
+                          <span className="text-zinc-500 font-semibold flex items-center gap-1">
+                            <Cpu className="w-3 h-3 text-purple-600" />
+                            <span>RAM:</span>
+                          </span>
+                          <span className="font-bold text-ink-navy">
+                            {hasRamVariants ? rams.map(r => `${r}GB`).join(' / ') : 'Unified / Fixed'}
+                          </span>
                         </div>
 
-                        <div className="flex items-center justify-between pt-1 border-t border-ice-border/60">
-                          <span className="text-[11px] font-bold text-ink-muted">Base Price (₹):</span>
+                        <div className="flex items-center justify-between pt-1.5 border-t border-ice-border/60">
+                          <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">Base Anchor</span>
                           <span className="text-sm font-extrabold text-emerald-700">{formatPrice(model.basePrice128GB)}</span>
                         </div>
-                        {isTabletDevice(model.brandId, model.name, model.id) && (
-                          <div className="flex items-center justify-between pt-1 border-t border-ice-border/40 text-[10px] font-mono">
-                            <span className="text-zinc-500 font-semibold flex items-center gap-1">
-                              <Radio className="w-3 h-3 text-blue-600" />
-                              <span>Dual Connectivity:</span>
-                            </span>
-                            <span className="font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                              Wi-Fi &amp; Cellular
-                            </span>
-                          </div>
-                        )}
                       </div>
 
                       {/* Card Action Toolbar */}
-                      <div className="flex items-center gap-2 pt-2 border-t border-ice-border">
+                      <div className="flex items-center gap-1.5 pt-2 border-t border-ice-border">
                         <button
                           onClick={() => handleStartEdit(model)}
-                          className="flex-1 py-1.5 px-2 bg-cobalt/10 hover:bg-cobalt/20 text-cobalt text-xs font-bold rounded flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                          className="flex-1 py-1.5 px-2 bg-cobalt/10 hover:bg-cobalt text-cobalt hover:text-white text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
                           <span>Edit Specs & Prices</span>
@@ -1311,18 +1316,18 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
 
                         <button
                           onClick={() => handleToggleHidden(model)}
-                          className="p-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded transition-all cursor-pointer"
-                          title={model.hidden ? 'Show Model in Public Store' : 'Hide Model from Store'}
+                          className="p-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-lg transition-all cursor-pointer"
+                          title={model.hidden ? 'Unhide Model in Store' : 'Hide Model from Store'}
                         >
-                          {model.hidden ? <Eye className="w-4 h-4 text-emerald-600" /> : <EyeOff className="w-4 h-4 text-amber-600" />}
+                          {model.hidden ? <Eye className="w-3.5 h-3.5 text-emerald-600" /> : <EyeOff className="w-3.5 h-3.5 text-amber-600" />}
                         </button>
 
                         <button
                           onClick={() => handleDeleteModel(model)}
-                          className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded transition-all cursor-pointer"
+                          className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg transition-all cursor-pointer"
                           title="Delete Model"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </div>

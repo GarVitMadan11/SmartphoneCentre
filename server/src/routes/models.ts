@@ -16,10 +16,30 @@ export function inferBrandId(legacyId: string, explicit?: string): string {
   return 'brand-apple';
 }
 
+// ── In-Memory Catalog Cache for High Read Throughput ───────────────────────
+interface ModelsCacheEntry {
+  data: any[];
+  timestamp: number;
+}
+const CACHE_TTL_MS = 60 * 1000; // 60s TTL; invalidated instantly on mutations
+const modelsCache = new Map<string, ModelsCacheEntry>();
+
+export function invalidateModelsCache(): void {
+  modelsCache.clear();
+}
+
 // GET /api/models
 router.get('/', async (req, res) => {
   try {
     const { brandId, deviceType, includeHidden } = req.query;
+    const cacheKey = `${brandId || ''}:${deviceType || ''}:${includeHidden === 'true'}`;
+    const cached = modelsCache.get(cacheKey);
+    if (cached && (Date.now() - cached.timestamp < CACHE_TTL_MS)) {
+      res.setHeader('X-Cache', 'HIT');
+      res.json(cached.data);
+      return;
+    }
+
     const where: Record<string, unknown> = {};
     if (brandId && typeof brandId === 'string') where.brandId = brandId;
     if (deviceType && typeof deviceType === 'string') where.deviceType = deviceType;
@@ -47,7 +67,7 @@ router.get('/', async (req, res) => {
       }
     }
 
-    res.json(models.map(m => {
+    const payload = models.map(m => {
       let parsedStorageGb: number[] | undefined;
       let parsedRamGb: number[] | undefined;
       let parsedVariantPrices: Record<string, number> | undefined;
@@ -89,7 +109,11 @@ router.get('/', async (req, res) => {
         hidden: Boolean((m as any).hidden ?? false),
         supportsWarrantyQuestion,
       };
-    }));
+    });
+
+    modelsCache.set(cacheKey, { data: payload, timestamp: Date.now() });
+    res.setHeader('X-Cache', 'MISS');
+    res.json(payload);
   } catch (err) {
     console.error('GET /api/models error:', err);
     res.status(500).json({ error: 'ServerError', message: 'Failed to fetch models' });
@@ -155,6 +179,8 @@ router.post('/', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITOR']), asyn
     const resSupportsWarrantyQuestion = createdVP._supportsWarrantyQuestion !== undefined
       ? Boolean(createdVP._supportsWarrantyQuestion)
       : (model.releaseYear >= 2023);
+
+    invalidateModelsCache();
 
     res.status(201).json({
       ...model,
@@ -262,6 +288,8 @@ router.post('/bulk-update', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDIT
       ipAddress: String(req.ip ?? ''),
       userAgent: String(req.headers['user-agent'] ?? ''),
     });
+
+    invalidateModelsCache();
 
     res.json({ success: true, updatedCount });
   } catch (err) {
@@ -399,6 +427,7 @@ router.patch('/:legacyId', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITO
     });
 
     const updatedVP = (model as any).variantPrices ? JSON.parse((model as any).variantPrices) : {};
+    invalidateModelsCache();
     res.json({
       ...model,
       id: model.legacyId,
@@ -424,6 +453,7 @@ router.delete('/:legacyId', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDIT
     });
     if (existing) {
       await prisma.model.delete({ where: { id: existing.id } });
+      invalidateModelsCache();
       logAdminAudit({
         adminUserId: (req as AuthenticatedRequest).user?.sub,
         action: 'delete_model',

@@ -528,28 +528,28 @@ export const CashifyMonitorTab: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* ── Top Header & Global Actions ── */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-6 rounded-2xl shadow-lg border border-indigo-900/50">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <span className="p-2 bg-indigo-500/20 rounded-xl border border-indigo-400/30">
-              <Zap className="w-5 h-5 text-indigo-400" />
-            </span>
-            <h2 className="text-xl font-bold tracking-tight text-white">Cashify Market Intelligence Monitor</h2>
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-indigo-500/25 text-indigo-200 border border-indigo-400/30">
-              Granular Variant Level
-            </span>
+      {/* ── Compact Header & Command Strip ── */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 text-white px-5 py-3.5 rounded-xl shadow-sm border border-slate-800">
+        <div className="flex items-center gap-3">
+          <div className="p-1.5 bg-indigo-500/20 rounded-lg border border-indigo-400/30">
+            <Zap className="w-4 h-4 text-indigo-400" />
           </div>
-          <p className="text-slate-300 text-xs mt-1.5 max-w-2xl leading-relaxed">
-            Live competitor price intelligence per individual RAM & Storage specification. Each row compares Rephonix buyback pricing against Cashify&apos;s real-time unmasked quotes.
-          </p>
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-bold tracking-tight text-white">Cashify Market Intelligence</h2>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
+                {variants.length} Variants
+              </span>
+            </div>
+            <p className="text-slate-400 text-[11px] font-mono">Real-time competitor parity tracking per RAM & Storage specification</p>
+          </div>
         </div>
 
         {/* Global Action Buttons */}
-        <div className="flex flex-wrap items-center gap-2.5 self-end md:self-auto">
+        <div className="flex items-center gap-2 self-end sm:self-auto">
           {/* Session Status Pill */}
           <div
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-semibold border ${
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-mono font-semibold border ${
               summary?.session.hasSession
                 ? 'bg-emerald-950/60 border-emerald-500/40 text-emerald-300'
                 : 'bg-rose-950/60 border-rose-500/40 text-rose-300'
@@ -560,40 +560,35 @@ export const CashifyMonitorTab: React.FC = () => {
                 : 'No session file found at server/data/cashify_session.json'
             }
           >
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span>
-              {summary?.session.hasSession
-                ? `Brave Auth Active (${summary.session.cookiesCount} ck)`
-                : 'No Session Found'}
-            </span>
+            <ShieldCheck className="w-3 h-3" />
+            <span>{summary?.session.hasSession ? 'Brave Active' : 'No Session'}</span>
           </div>
 
-          {/* Trigger Audit Buttons */}
           <button
             onClick={() => handleTriggerScan(10)}
             disabled={isScanning}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 text-white border border-white/15 transition-all cursor-pointer disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all cursor-pointer disabled:opacity-50"
             title="Crawl top 10 models quickly to test"
           >
-            <Play className="w-3.5 h-3.5 text-indigo-300" />
+            <Play className="w-3 h-3 text-indigo-400" />
             <span>Audit Top 10</span>
           </button>
 
           <button
             onClick={() => handleTriggerScan(0)}
             disabled={isScanning}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/30 transition-all cursor-pointer disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition-all cursor-pointer disabled:opacity-50"
             title="Start full background audit of all models"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isScanning ? 'animate-spin' : ''}`} />
-            <span>{isScanning ? 'Scanning Live...' : 'Run Full Price Audit'}</span>
+            <RefreshCw className={`w-3 h-3 ${isScanning ? 'animate-spin' : ''}`} />
+            <span>{isScanning ? 'Scanning...' : 'Run Full Audit'}</span>
           </button>
         </div>
       </div>
 
       {/* Background scan notification banner */}
       {scanMessage && (
-        <div className="flex items-center justify-between p-3.5 bg-indigo-50 border border-indigo-200 rounded-xl text-indigo-900 text-xs font-medium">
+        <div className="flex items-center justify-between p-3 bg-indigo-50 border border-indigo-200 rounded-xl text-indigo-900 text-xs font-medium">
           <div className="flex items-center gap-2">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
@@ -605,66 +600,47 @@ export const CashifyMonitorTab: React.FC = () => {
         </div>
       )}
 
-      {/* ── KPI Metric Stat Cards ── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3.5">
-        <div className="bg-canvas-white border border-ice-border rounded-xl p-4 shadow-xs">
-          <div className="flex items-center justify-between text-ink-muted text-xs mb-1">
-            <span>Total Variants</span>
-            <Layers className="w-4 h-4 text-slate-400" />
+      {/* ── Compact Metric Stat Strip (1 line, 4 cards) ── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="bg-canvas-white border border-ice-border rounded-lg p-3 shadow-2xs flex items-center justify-between">
+          <div>
+            <span className="text-[10px] font-mono uppercase text-ink-muted block">Catalog Coverage</span>
+            <span className="text-lg font-extrabold text-ink-navy">{variants.length} Variants</span>
+            <span className="text-[10px] text-ink-muted block font-mono">{summary?.totalModels ?? 186} Models</span>
           </div>
-          <div className="text-2xl font-extrabold text-ink-navy">
-            {variants.length}
-          </div>
-          <div className="text-[11px] text-ink-muted mt-1 font-mono">
-            Across {summary?.totalModels ?? 186} Models
-          </div>
+          <Layers className="w-5 h-5 text-slate-400" />
         </div>
 
-        <div className="bg-canvas-white border border-ice-border rounded-xl p-4 shadow-xs">
-          <div className="flex items-center justify-between text-emerald-700 text-xs mb-1">
-            <span>Verified Variant URLs</span>
-            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-          </div>
-          <div className="text-2xl font-extrabold text-emerald-600">
-            {variants.filter(v => v.urlStatus === 'FOUND' || v.urlStatus === 'OVERRIDDEN').length}
-            <span className="text-xs font-normal text-emerald-700 ml-1.5 font-mono">
-              ({variants.length > 0 ? ((variants.filter(v => v.urlStatus === 'FOUND' || v.urlStatus === 'OVERRIDDEN').length / variants.length) * 100).toFixed(1) : 0}%)
+        <div className="bg-canvas-white border border-ice-border rounded-lg p-3 shadow-2xs flex items-center justify-between">
+          <div>
+            <span className="text-[10px] font-mono uppercase text-emerald-700 block">Verified Endpoints</span>
+            <span className="text-lg font-extrabold text-emerald-600">
+              {variants.filter(v => v.urlStatus === 'FOUND' || v.urlStatus === 'OVERRIDDEN').length}
+              <span className="text-xs font-normal text-emerald-700 ml-1 font-mono">
+                ({variants.length > 0 ? ((variants.filter(v => v.urlStatus === 'FOUND' || v.urlStatus === 'OVERRIDDEN').length / variants.length) * 100).toFixed(0) : 0}%)
+              </span>
             </span>
+            <span className="text-[10px] text-emerald-600/80 block font-mono">200 OK Live</span>
           </div>
-          <div className="text-[11px] text-emerald-600/80 mt-1 font-mono">200 OK Direct Endpoints</div>
+          <CheckCircle2 className="w-5 h-5 text-emerald-500" />
         </div>
 
-        <div className="bg-canvas-white border border-ice-border rounded-xl p-4 shadow-xs">
-          <div className="flex items-center justify-between text-amber-700 text-xs mb-1">
-            <span>Custom Overrides</span>
-            <AlertTriangle className="w-4 h-4 text-amber-500" />
+        <div className="bg-canvas-white border border-ice-border rounded-lg p-3 shadow-2xs flex items-center justify-between">
+          <div>
+            <span className="text-[10px] font-mono uppercase text-blue-700 block">Competitor Drops (▼)</span>
+            <span className="text-lg font-extrabold text-blue-600">{summary?.priceAlertsStats?.decreased ?? 0}</span>
+            <span className="text-[10px] text-blue-600/80 block font-mono">Cashify Reduced Price</span>
           </div>
-          <div className="text-2xl font-extrabold text-amber-600">
-            {summary?.customOverrides ?? 0}
-          </div>
-          <div className="text-[11px] text-amber-600/80 mt-1 font-mono">Manually Tailored URLs</div>
+          <TrendingDown className="w-5 h-5 text-blue-500" />
         </div>
 
-        <div className="bg-canvas-white border border-ice-border rounded-xl p-4 shadow-xs">
-          <div className="flex items-center justify-between text-blue-700 text-xs mb-1">
-            <span>Market Drops (▼)</span>
-            <TrendingDown className="w-4 h-4 text-blue-500" />
+        <div className="bg-canvas-white border border-ice-border rounded-lg p-3 shadow-2xs flex items-center justify-between">
+          <div>
+            <span className="text-[10px] font-mono uppercase text-rose-700 block">Competitor Hikes (▲)</span>
+            <span className="text-lg font-extrabold text-rose-600">{summary?.priceAlertsStats?.increased ?? 0}</span>
+            <span className="text-[10px] text-rose-600/80 block font-mono">Cashify Raised Price</span>
           </div>
-          <div className="text-2xl font-extrabold text-blue-600">
-            {summary?.priceAlertsStats?.decreased ?? 0}
-          </div>
-          <div className="text-[11px] text-blue-600/80 mt-1 font-mono">Cashify Reduced Price</div>
-        </div>
-
-        <div className="bg-canvas-white border border-ice-border rounded-xl p-4 shadow-xs col-span-2 md:col-span-1">
-          <div className="flex items-center justify-between text-rose-700 text-xs mb-1">
-            <span>Market Hikes (▲)</span>
-            <TrendingUp className="w-4 h-4 text-rose-500" />
-          </div>
-          <div className="text-2xl font-extrabold text-rose-600">
-            {summary?.priceAlertsStats?.increased ?? 0}
-          </div>
-          <div className="text-[11px] text-rose-600/80 mt-1 font-mono">Cashify Raised Price</div>
+          <TrendingUp className="w-5 h-5 text-rose-500" />
         </div>
       </div>
 

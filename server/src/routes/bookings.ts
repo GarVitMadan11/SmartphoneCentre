@@ -321,24 +321,27 @@ router.post('/', bookingLimiter, optionalCustomerAuth, async (req: Authenticated
     const host = req.get('host') || 'localhost:4000';
     const baseUrl = `${protocol}://${host}`;
 
-    try {
-      await sendBookingConfirmationEmail({
-        id: booking.id,
-        modelName: booking.modelName,
-        storageGb: booking.storageGb,
-        customerName: booking.customerName,
-        customerPhone: booking.customerPhone,
-        customerEmail: booking.customerEmail,
-        address: booking.address,
-        pickupDate: booking.pickupDate,
-        pickupTimeSlot: booking.pickupTimeSlot,
-        finalPrice: booking.finalPrice,
-        defectDescriptions: defectIds,
-        dateCreated: booking.dateCreated,
-      }, baseUrl);
-    } catch (err) {
-      console.error('[POST /api/bookings] Failed to dispatch quotation email:', err);
-    }
+    // Non-blocking background email dispatch so the customer receives immediate confirmation without SMTP latency
+    setImmediate(async () => {
+      try {
+        await sendBookingConfirmationEmail({
+          id: booking.id,
+          modelName: booking.modelName,
+          storageGb: booking.storageGb,
+          customerName: booking.customerName,
+          customerPhone: booking.customerPhone,
+          customerEmail: booking.customerEmail,
+          address: booking.address,
+          pickupDate: booking.pickupDate,
+          pickupTimeSlot: booking.pickupTimeSlot,
+          finalPrice: booking.finalPrice,
+          defectDescriptions: defectIds,
+          dateCreated: booking.dateCreated,
+        }, baseUrl);
+      } catch (err) {
+        console.error('[POST /api/bookings] Failed to dispatch quotation email:', err);
+      }
+    });
 
     res.status(201).json({ success: true, id: booking.id });
   } catch (err) {

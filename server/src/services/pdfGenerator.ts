@@ -6,7 +6,12 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+let cachedLogoBuffer: Buffer | null = null;
+let logoAttempted = false;
+
 function getLogoBuffer(): Buffer | null {
+  if (logoAttempted) return cachedLogoBuffer;
+  logoAttempted = true;
   try {
     const possiblePaths = [
       path.join(process.cwd(), 'public', 'logo.svg'),
@@ -19,7 +24,8 @@ function getLogoBuffer(): Buffer | null {
         const svgContent = fs.readFileSync(p, 'utf8');
         const match = svgContent.match(/xlink:href="data:image\/jpeg;base64,([^"]+)"/);
         if (match && match[1]) {
-          return Buffer.from(match[1].trim(), 'base64');
+          cachedLogoBuffer = Buffer.from(match[1].trim(), 'base64');
+          return cachedLogoBuffer;
         }
       }
     }

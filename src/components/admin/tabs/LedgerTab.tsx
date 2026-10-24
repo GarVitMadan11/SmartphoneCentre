@@ -121,46 +121,46 @@ export const LedgerTab: React.FC<LedgerTabProps> = ({
   return (
     <>
       {/* KPI Ribbon */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-canvas-pure border border-ice-border rounded-sm p-4 sm:p-5 shadow-sm">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="bg-canvas-pure border border-ice-border rounded-xl p-4 shadow-2xs">
           <span className="text-[10px] font-mono tracking-wider text-zinc-500 uppercase block">Total Payouts Completed</span>
-          <div className="flex items-baseline gap-2 mt-2">
-            <span className="text-2xl sm:text-3xl font-bold text-emerald-500 tracking-tight">{formatPrice(metrics.totalPaidAmt)}</span>
+          <div className="flex items-baseline gap-2 mt-1">
+            <span className="text-2xl font-bold text-emerald-500 tracking-tight">{formatPrice(metrics.totalPaidAmt)}</span>
           </div>
-          <span className="text-[9px] text-zinc-400 block mt-1 font-mono">{metrics.completedPayouts} successful disbursements</span>
+          <span className="text-[10px] text-zinc-400 block mt-1 font-mono">{metrics.completedPayouts} disbursements</span>
         </div>
 
-        <div className="bg-canvas-pure border border-ice-border rounded-sm p-4 sm:p-5 shadow-sm">
+        <div className="bg-canvas-pure border border-ice-border rounded-xl p-4 shadow-2xs">
           <span className="text-[10px] font-mono tracking-wider text-zinc-500 uppercase block">Pending Inspections</span>
-          <div className="flex items-baseline gap-2 mt-2">
-            <span className="text-2xl sm:text-3xl font-bold text-amber-500 tracking-tight">{metrics.pendingInspections}</span>
+          <div className="flex items-baseline gap-2 mt-1">
+            <span className="text-2xl font-bold text-amber-500 tracking-tight">{metrics.pendingInspections}</span>
           </div>
-          <span className="text-[9px] text-zinc-400 block mt-1 font-mono">Requires doorstep agent check</span>
+          <span className="text-[10px] text-zinc-400 block mt-1 font-mono">Requires doorstep agent check</span>
         </div>
 
-        <div className="bg-canvas-pure border border-ice-border rounded-sm p-4 sm:p-5 shadow-sm">
+        <div className="bg-canvas-pure border border-ice-border rounded-xl p-4 shadow-2xs">
           <span className="text-[10px] font-mono tracking-wider text-zinc-500 uppercase block">Seller Verification Rate</span>
-          <div className="flex items-baseline gap-2 mt-2">
-            <span className="text-2xl sm:text-3xl font-bold text-cobalt tracking-tight">{metrics.verificationRate}%</span>
+          <div className="flex items-baseline gap-2 mt-1">
+            <span className="text-2xl font-bold text-cobalt tracking-tight">{metrics.verificationRate}%</span>
           </div>
-          <span className="text-[9px] text-zinc-400 block mt-1 font-mono">DigiLocker KYC success index</span>
+          <span className="text-[10px] text-zinc-400 block mt-1 font-mono">DigiLocker KYC index</span>
         </div>
 
-        <div className="bg-canvas-pure border border-ice-border rounded-sm p-4 sm:p-5 shadow-sm">
+        <div className="bg-canvas-pure border border-ice-border rounded-xl p-4 shadow-2xs">
           <span className="text-[10px] font-mono tracking-wider text-zinc-500 uppercase block">Disbursed Bookings</span>
-          <div className="flex items-baseline gap-2 mt-2">
-            <span className="text-2xl sm:text-3xl font-bold text-ink-navy tracking-tight">{metrics.completedPayouts} / {bookings.length}</span>
+          <div className="flex items-baseline gap-2 mt-1">
+            <span className="text-2xl font-bold text-ink-navy tracking-tight">{metrics.completedPayouts} / {bookings.length}</span>
           </div>
-          <span className="text-[9px] text-zinc-400 block mt-1 font-mono">Sourced inventory liquidations</span>
+          <span className="text-[10px] text-zinc-400 block mt-1 font-mono">Liquidated units</span>
         </div>
       </div>
 
       {/* Main Ledger workspace */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Side: Table Ledger */}
-        <div className={`bg-canvas-pure border border-ice-border rounded-sm p-4 sm:p-6 shadow-premium transition-all ${selectedBookingId ? 'lg:col-span-8' : 'lg:col-span-12'}`}>
-          <div className="flex flex-col sm:flex-row gap-4 justify-between items-stretch sm:items-center pb-4 mb-4 border-b border-white/[0.04]">
-            <h3 className="font-outfit font-light text-xl text-ink-navy">Transactions Ledger ({filteredBookings.length})</h3>
+      <div className="w-full">
+        {/* Full-width Table Ledger */}
+        <div className="bg-canvas-pure border border-ice-border rounded-xl p-4 sm:p-6 shadow-xs">
+          <div className="flex flex-col sm:flex-row gap-4 justify-between items-stretch sm:items-center pb-4 mb-4 border-b border-ice-border/60">
+            <h3 className="font-outfit font-bold text-lg text-ink-navy">Transactions Ledger ({filteredBookings.length})</h3>
             <div className="flex items-center gap-2 max-w-md w-full sm:w-auto">
               <div className="relative flex-1 sm:w-64">
                 <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-3" />
@@ -338,16 +338,25 @@ export const LedgerTab: React.FC<LedgerTabProps> = ({
           </div>
         </div>
 
-        {/* Right Side: Detail Drawer */}
+        {/* Right Side: Slide-over Detail Drawer */}
         <AnimatePresence>
           {selectedBookingId && selectedBooking && (
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              className="lg:col-span-4 bg-canvas-pure border border-ice-border rounded-sm p-4 sm:p-5 shadow-premium space-y-5 text-xs text-left"
-            >
-              {/* Drawer header */}
+            <div className="fixed inset-0 z-50 overflow-hidden flex justify-end">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setSelectedBookingId(null)}
+                className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs"
+              />
+              <motion.div
+                initial={{ opacity: 0, x: '100%' }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: '100%' }}
+                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                className="relative w-full max-w-xl bg-canvas-pure border-l border-ice-border p-6 shadow-2xl space-y-5 text-xs text-left overflow-y-auto z-50 h-full"
+              >
+                {/* Drawer header */}
               <div className="flex justify-between items-start border-b border-white/[0.04] pb-3">
                 <div>
                   <div className="flex items-center gap-1.5">
@@ -621,8 +630,9 @@ export const LedgerTab: React.FC<LedgerTabProps> = ({
                 );
               })()}
             </motion.div>
-          )}
-        </AnimatePresence>
+          </div>
+        )}
+      </AnimatePresence>
       </div>
     </>
   );
