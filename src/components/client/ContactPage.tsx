@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, Phone, MapPin, Sparkles, Send, Instagram } from 'lucide-react';
+import { Mail, Phone, Sparkles, Send, Instagram } from 'lucide-react';
 
 interface ContactPageProps {
   onShowToast: (message: string, type: 'success' | 'error' | 'info') => void;
@@ -94,19 +94,6 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onShowToast }) => {
               </div>
             </div>
 
-            <div className="flex items-start gap-4">
-              <div className="w-9 h-9 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-600 flex-shrink-0 mt-0.5">
-                <MapPin className="w-4 h-4" />
-              </div>
-              <div>
-                <span className="text-[10px] font-mono tracking-wider text-ink-muted uppercase block">Headquarters</span>
-                <p className="text-sm font-semibold text-ink-navy leading-relaxed">
-                  Rephonix Resale Pvt Ltd,<br />
-                  Tilak Nagar,<br />
-                  New Delhi - 110018
-                </p>
-              </div>
-            </div>
           </div>
         </div>
 
