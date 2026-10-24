@@ -450,6 +450,25 @@ export default function App() {
 
   if (import.meta.env.VITE_COMING_SOON === 'true') return <ComingSoon />;
 
+  // ── Dedicated Full-Screen Immersive Workspace for Admin Operations ───────────
+  if (path === SECRET_ADMIN_PATH) {
+    return (
+      <div className="w-full h-screen bg-slate-950 text-ink-navy flex flex-col font-sans overflow-hidden">
+        <Suspense fallback={<div className="flex items-center justify-center min-h-screen bg-slate-950 text-white" role="status"><div className="w-8 h-8 border-2 border-cobalt border-t-transparent rounded-full animate-spin" /></div>}>
+          <AdminPinGate onExit={() => { handleReset(); navigate('/'); }}>
+            <AdminPanel
+              onBack={() => { handleReset(); navigate('/'); }}
+              initialBookings={apiBookings}
+              brands={BRANDS}
+              onRefreshBookings={refreshBookings}
+              onRefreshCatalog={refreshCatalog}
+            />
+          </AdminPinGate>
+        </Suspense>
+      </div>
+    );
+  }
+
   // ─────────────────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-canvas-white text-ink-navy flex flex-col font-sans selection:bg-cobalt selection:text-white">
@@ -1046,20 +1065,7 @@ export default function App() {
             </Suspense>
           )}
 
-          {/* ── Admin Panel ── */}
-          {path === SECRET_ADMIN_PATH && (
-            <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]" role="status"><div className="w-8 h-8 border-2 border-cobalt border-t-transparent rounded-full animate-spin" /></div>}>
-              <AdminPinGate onExit={() => { handleReset(); navigate('/'); }}>
-                <AdminPanel
-                  onBack={() => { handleReset(); navigate('/'); }}
-                  initialBookings={apiBookings}
-                  brands={BRANDS}
-                  onRefreshBookings={refreshBookings}
-                  onRefreshCatalog={refreshCatalog}
-                />
-              </AdminPinGate>
-            </Suspense>
-          )}
+
 
           {/* ── Pilot Mode Feedback ── */}
           {PILOT_MODE_ENABLED && !isWorkflow && path === '/' && (

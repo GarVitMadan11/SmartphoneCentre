@@ -242,28 +242,30 @@ export const AdminPinGate: React.FC<AdminPinGateProps> = ({ children, onExit }) 
 
   if (isAuthenticated) {
     return (
-      <div>
-        {/* Admin session banner */}
-        <div className="flex items-center justify-between px-4 py-2 bg-amber-500/10 border border-amber-500/20 rounded-sm mb-4 text-xs font-mono">
-          <span className="flex items-center gap-2 text-amber-600">
+      <div className="w-full h-screen flex flex-col overflow-hidden bg-slate-950">
+        {/* Slim top Admin session banner */}
+        <div className="flex items-center justify-between px-4 py-1.5 bg-slate-900 border-b border-slate-800 text-xs font-mono flex-shrink-0 z-40">
+          <span className="flex items-center gap-2 text-amber-400">
             <ShieldAlert className="w-3.5 h-3.5" />
             <span>Admin session active — JWT authenticated</span>
             {sessionExpiry && (
-              <span className="flex items-center gap-1 text-amber-500/70">
+              <span className="flex items-center gap-1 text-slate-400 ml-2">
                 <Clock className="w-3 h-3" />
-                {formatExpiry(sessionExpiry)}
+                <span>Expires: {formatExpiry(sessionExpiry)}</span>
               </span>
             )}
           </span>
           <button
             onClick={handleSignOut}
-            className="flex items-center gap-1.5 text-amber-600 hover:text-amber-700 font-bold"
+            className="flex items-center gap-1.5 text-amber-400 hover:text-amber-300 font-bold transition-colors cursor-pointer"
           >
             <LogOut className="w-3.5 h-3.5" />
             Sign Out
           </button>
         </div>
-        {children}
+        <div className="flex-1 w-full min-h-0 overflow-hidden">
+          {children}
+        </div>
       </div>
     );
   }

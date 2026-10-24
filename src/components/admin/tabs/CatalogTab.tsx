@@ -773,360 +773,367 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
         </div>
       )}
 
-      {/* SHUFFLE / REORDER STUDIO DRAWER (Interactive Drag & Drop Reordering) */}
+      {/* SHUFFLE / REORDER STUDIO MODAL (Interactive Drag & Drop Reordering) */}
       {isReorderMode && (
-        <div className="bg-sky-600 text-white border border-sky-400 rounded-xl p-5 shadow-xl space-y-4 animate-in fade-in slide-in-from-top-4 duration-200">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 pb-3 border-b border-sky-400/40">
-            <div>
-              <h3 className="text-base font-bold flex items-center gap-2 text-white">
-                <Shuffle className="w-5 h-5 text-sky-200" />
-                <span>Catalog Shuffle & Drag-and-Drop Reorder Studio</span>
-              </h3>
-              <p className="text-xs text-sky-100 mt-0.5 font-mono">
-                Drag & drop or use arrow buttons to customize display sequences for Brands, Series, and Individual Models in the public store.
-              </p>
-            </div>
-
-            {/* Reorder Sub-Tabs */}
-            <div className="flex items-center gap-2 bg-sky-900/50 p-1 rounded-lg border border-sky-400/40">
-              <button
-                onClick={() => setReorderTab('brands')}
-                className={`px-3 py-1.5 rounded-md text-xs transition-all flex items-center gap-1.5 cursor-pointer ${
-                  reorderTab === 'brands' ? 'bg-white text-sky-900 font-bold shadow-md' : 'text-sky-100 hover:text-white font-semibold'
-                }`}
-              >
-                <Tag className="w-3.5 h-3.5" />
-                <span>1. Brands Order</span>
-              </button>
-              <button
-                onClick={() => setReorderTab('series')}
-                className={`px-3 py-1.5 rounded-md text-xs transition-all flex items-center gap-1.5 cursor-pointer ${
-                  reorderTab === 'series' ? 'bg-white text-sky-900 font-bold shadow-md' : 'text-sky-100 hover:text-white font-semibold'
-                }`}
-              >
-                <Folder className="w-3.5 h-3.5" />
-                <span>2. Series Order</span>
-              </button>
-              <button
-                onClick={() => setReorderTab('models')}
-                className={`px-3 py-1.5 rounded-md text-xs transition-all flex items-center gap-1.5 cursor-pointer ${
-                  reorderTab === 'models' ? 'bg-white text-sky-900 font-bold shadow-md' : 'text-sky-100 hover:text-white font-semibold'
-                }`}
-              >
-                <Smartphone className="w-3.5 h-3.5" />
-                <span>3. Models Order</span>
-              </button>
-            </div>
-          </div>
-
-          {/* TAB 1: BRANDS REORDER */}
-          {reorderTab === 'brands' && (
-            <div className="space-y-3">
-              <div className="flex justify-between items-center text-xs font-mono text-sky-100">
-                <span>Drag brand rows or use up/down arrows to shuffle sequence</span>
-                <button
-                  onClick={handleShuffleBrands}
-                  className="px-2.5 py-1 bg-sky-700 hover:bg-sky-800 text-white rounded text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-all border border-sky-400/50"
-                >
-                  <Shuffle className="w-3 h-3 text-sky-200" />
-                  <span>Random Shuffle</span>
-                </button>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-canvas-white border border-ice-border rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+            {/* Modal Header */}
+            <div className="px-6 py-4 bg-slate-900 text-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-800">
+              <div>
+                <h3 className="text-base font-bold flex items-center gap-2 text-white">
+                  <Shuffle className="w-5 h-5 text-cobalt" />
+                  <span>Catalog Sequence & Display Order Studio</span>
+                </h3>
+                <p className="text-xs text-slate-400 mt-0.5 font-mono">
+                  Customize the public display sequence for Brands, Series, and Individual Models.
+                </p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                {orderedBrands.map((brand, idx) => (
-                  <div
-                    key={brand.id}
-                    draggable
-                    onDragStart={() => handleDragStart(idx)}
-                    onDragOver={(e) => handleDragOver(e, idx)}
-                    onDragEnd={handleDragEnd}
-                    className={`p-2.5 bg-sky-700/80 border border-sky-400/50 rounded-lg flex items-center justify-between cursor-move hover:border-white transition-all shadow-xs ${
-                      draggedIndex === idx ? 'opacity-50 ring-2 ring-white bg-white/20' : ''
+              <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+                {/* Reorder Sub-Tabs */}
+                <div className="flex items-center gap-1 bg-slate-800 p-1 rounded-lg border border-slate-700">
+                  <button
+                    onClick={() => setReorderTab('brands')}
+                    className={`px-3 py-1.5 rounded-md text-xs transition-all flex items-center gap-1.5 cursor-pointer ${
+                      reorderTab === 'brands' ? 'bg-cobalt text-white font-bold shadow-sm' : 'text-slate-300 hover:text-white font-semibold'
                     }`}
                   >
-                    <div className="flex items-center gap-2">
-                      <GripVertical className="w-4 h-4 text-sky-200 flex-shrink-0" />
-                      <span className="w-5 text-center font-mono text-[10px] text-sky-200 font-bold">#{idx + 1}</span>
-                      <span className="font-bold text-xs text-white">{brand.name}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={() => handleMoveBrand(idx, 'up')}
-                        disabled={idx === 0}
-                        className="p-1 hover:bg-sky-500 text-sky-100 hover:text-white rounded disabled:opacity-30 cursor-pointer"
-                        title="Move Up"
-                      >
-                        <ArrowUp className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => handleMoveBrand(idx, 'down')}
-                        disabled={idx === orderedBrands.length - 1}
-                        className="p-1 hover:bg-sky-500 text-sky-100 hover:text-white rounded disabled:opacity-30 cursor-pointer"
-                        title="Move Down"
-                      >
-                        <ArrowDown className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
+                    <Tag className="w-3.5 h-3.5" />
+                    <span>1. Brands</span>
+                  </button>
+                  <button
+                    onClick={() => setReorderTab('series')}
+                    className={`px-3 py-1.5 rounded-md text-xs transition-all flex items-center gap-1.5 cursor-pointer ${
+                      reorderTab === 'series' ? 'bg-cobalt text-white font-bold shadow-sm' : 'text-slate-300 hover:text-white font-semibold'
+                    }`}
+                  >
+                    <Folder className="w-3.5 h-3.5" />
+                    <span>2. Series</span>
+                  </button>
+                  <button
+                    onClick={() => setReorderTab('models')}
+                    className={`px-3 py-1.5 rounded-md text-xs transition-all flex items-center gap-1.5 cursor-pointer ${
+                      reorderTab === 'models' ? 'bg-cobalt text-white font-bold shadow-sm' : 'text-slate-300 hover:text-white font-semibold'
+                    }`}
+                  >
+                    <Smartphone className="w-3.5 h-3.5" />
+                    <span>3. Models</span>
+                  </button>
+                </div>
+
+                <button
+                  onClick={() => setIsReorderMode(false)}
+                  className="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 cursor-pointer"
+                  title="Close Reorder Studio"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto flex-1 space-y-4 bg-slate-50 text-ink-navy text-xs">
+              {/* TAB 1: BRANDS REORDER */}
+              {reorderTab === 'brands' && (
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center bg-white p-3 border border-ice-border rounded-lg shadow-2xs font-mono text-ink-slate text-xs">
+                    <span>Drag brand rows or use up/down arrows to shuffle sequence</span>
+                    <button
+                      onClick={handleShuffleBrands}
+                      className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-ink-navy rounded text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all border border-ice-border"
+                    >
+                      <Shuffle className="w-3.5 h-3.5 text-cobalt" />
+                      <span>Random Shuffle</span>
+                    </button>
                   </div>
-                ))}
-              </div>
 
-              <div className="flex justify-end gap-2 pt-2 border-t border-sky-400/40">
-                <button
-                  onClick={handleResetBrandOrder}
-                  className="px-3 py-1.5 bg-sky-700 hover:bg-sky-800 text-white rounded text-xs font-bold cursor-pointer flex items-center gap-1 transition-all border border-sky-400/50"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  <span>Reset Default</span>
-                </button>
-                <button
-                  onClick={handleSaveBrandOrder}
-                  className="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded text-xs font-bold shadow-md cursor-pointer flex items-center gap-1 transition-all"
-                >
-                  <Check className="w-3.5 h-3.5" />
-                  <span>Save Brand Order</span>
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* TAB 2: SERIES REORDER */}
-          {reorderTab === 'series' && (
-            <div className="space-y-3">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-sky-100 font-semibold">Select Brand to Manage Series:</span>
-                  <select
-                    value={reorderSeriesBrandId}
-                    onChange={(e) => setReorderSeriesBrandId(e.target.value)}
-                    className="px-3 py-1.5 bg-sky-800 border border-sky-400 rounded text-xs text-white font-bold cursor-pointer focus:border-white focus:outline-none"
-                  >
-                    {orderedBrands.map((b) => (
-                      <option key={b.id} value={b.id}>
-                        {b.name}
-                      </option>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                    {orderedBrands.map((brand, idx) => (
+                      <div
+                        key={brand.id}
+                        draggable
+                        onDragStart={() => handleDragStart(idx)}
+                        onDragOver={(e) => handleDragOver(e, idx)}
+                        onDragEnd={handleDragEnd}
+                        className={`p-3 bg-white border border-ice-border rounded-lg flex items-center justify-between cursor-move hover:border-cobalt transition-all shadow-2xs ${
+                          draggedIndex === idx ? 'opacity-50 ring-2 ring-cobalt bg-cobalt/5' : ''
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <GripVertical className="w-4 h-4 text-ink-muted flex-shrink-0" />
+                          <span className="w-6 text-center font-mono text-xs text-cobalt font-extrabold bg-cobalt/10 rounded px-1">#{idx + 1}</span>
+                          <span className="font-bold text-xs text-ink-navy">{brand.name}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => handleMoveBrand(idx, 'up')}
+                            disabled={idx === 0}
+                            className="p-1 hover:bg-zinc-100 text-ink-slate hover:text-ink-navy rounded disabled:opacity-25 cursor-pointer"
+                            title="Move Up"
+                          >
+                            <ArrowUp className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleMoveBrand(idx, 'down')}
+                            disabled={idx === orderedBrands.length - 1}
+                            className="p-1 hover:bg-zinc-100 text-ink-slate hover:text-ink-navy rounded disabled:opacity-25 cursor-pointer"
+                            title="Move Down"
+                          >
+                            <ArrowDown className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
                     ))}
-                  </select>
-                </div>
+                  </div>
 
-                <button
-                  onClick={handleShuffleSeries}
-                  className="px-2.5 py-1 bg-sky-700 hover:bg-sky-800 text-white rounded text-[11px] font-bold flex items-center gap-1 cursor-pointer self-start sm:self-auto transition-all border border-sky-400/50"
-                >
-                  <Shuffle className="w-3 h-3 text-sky-200" />
-                  <span>Random Shuffle</span>
-                </button>
-              </div>
-
-              {/* Skip / Hide Series Step Toggle Banner for Brand */}
-              <div className="p-3 bg-sky-900/70 border border-sky-400/50 rounded-lg flex items-center justify-between gap-3 text-xs shadow-inner">
-                <div>
-                  <span className="font-bold text-white block font-outfit text-sm">
-                    ⚡ Bypass / Hide Series Step for {orderedBrands.find((b) => b.id === reorderSeriesBrandId)?.name || 'Selected Brand'}
-                  </span>
-                  <span className="text-[11px] text-sky-100 font-mono leading-relaxed block mt-0.5">
-                    When enabled, clicking this brand in the public store skips the series sub-category step and displays all models directly (e.g. Nothing).
-                  </span>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer shrink-0">
-                  <input
-                    type="checkbox"
-                    checked={isBrandSeriesSkipped(reorderSeriesBrandId)}
-                    onChange={(e) => {
-                      setBrandSkipSeries(reorderSeriesBrandId, e.target.checked);
-                      setOrderVersion((v) => v + 1);
-                      setSuccessMsg(
-                        e.target.checked
-                          ? `Series step bypassed for ${orderedBrands.find((b) => b.id === reorderSeriesBrandId)?.name || 'brand'}. Storefront will display all models directly!`
-                          : `Series step enabled for ${orderedBrands.find((b) => b.id === reorderSeriesBrandId)?.name || 'brand'}.`
-                      );
-                    }}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-sky-950 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
-                </label>
-              </div>
-
-              {orderedSeries.length === 0 ? (
-                <p className="text-xs text-sky-200 font-mono italic">No series found for this brand.</p>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                  {orderedSeries.map((sName, idx) => (
-                    <div
-                      key={sName}
-                      draggable
-                      onDragStart={() => handleDragStart(idx)}
-                      onDragOver={(e) => handleDragOver(e, idx)}
-                      onDragEnd={handleDragEnd}
-                      className={`p-2.5 bg-sky-700/80 border border-sky-400/50 rounded-lg flex items-center justify-between cursor-move hover:border-white transition-all shadow-xs ${
-                        draggedIndex === idx ? 'opacity-50 ring-2 ring-white bg-white/20' : ''
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <GripVertical className="w-4 h-4 text-sky-200 flex-shrink-0" />
-                        <span className="w-5 text-center font-mono text-[10px] text-sky-200 font-bold">#{idx + 1}</span>
-                        <span className="font-bold text-xs text-white truncate max-w-[150px]">{sName}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => handleMoveSeries(idx, 'up')}
-                          disabled={idx === 0}
-                          className="p-1 hover:bg-sky-500 text-sky-100 hover:text-white rounded disabled:opacity-30 cursor-pointer"
-                          title="Move Up"
-                        >
-                          <ArrowUp className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => handleMoveSeries(idx, 'down')}
-                          disabled={idx === orderedSeries.length - 1}
-                          className="p-1 hover:bg-sky-500 text-sky-100 hover:text-white rounded disabled:opacity-30 cursor-pointer"
-                          title="Move Down"
-                        >
-                          <ArrowDown className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
                 </div>
               )}
 
-              <div className="flex justify-end gap-2 pt-2 border-t border-sky-400/40">
-                <button
-                  onClick={handleResetSeriesOrder}
-                  className="px-3 py-1.5 bg-sky-700 hover:bg-sky-800 text-white rounded text-xs font-bold cursor-pointer flex items-center gap-1 transition-all border border-sky-400/50"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  <span>Reset Default</span>
-                </button>
-                <button
-                  onClick={handleSaveSeriesOrder}
-                  className="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded text-xs font-bold shadow-md cursor-pointer flex items-center gap-1 transition-all"
-                >
-                  <Check className="w-3.5 h-3.5" />
-                  <span>Save Series Order</span>
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* TAB 3: MODELS REORDER */}
-          {reorderTab === 'models' && (
-            <div className="space-y-3">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-mono text-sky-100 font-semibold">Brand:</span>
-                  <select
-                    value={reorderModelBrandId}
-                    onChange={(e) => {
-                      setReorderModelBrandId(e.target.value);
-                      setReorderModelSeries('all');
-                    }}
-                    className="px-3 py-1.5 bg-sky-800 border border-sky-400 rounded text-xs text-white font-bold cursor-pointer focus:border-white focus:outline-none"
-                  >
-                    {orderedBrands.map((b) => (
-                      <option key={b.id} value={b.id}>
-                        {b.name}
-                      </option>
-                    ))}
-                  </select>
-
-                  <span className="font-mono text-sky-100 font-semibold ml-2">Series:</span>
-                  <select
-                    value={reorderModelSeries}
-                    onChange={(e) => setReorderModelSeries(e.target.value)}
-                    className="px-3 py-1.5 bg-sky-800 border border-sky-400 rounded text-xs text-white font-bold cursor-pointer focus:border-white focus:outline-none"
-                  >
-                    <option value="all">All Series</option>
-                    {availableSeriesList.map((s) => (
-                      <option key={s} value={s}>
-                        {s}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <button
-                  onClick={handleShuffleModels}
-                  className="px-2.5 py-1 bg-sky-700 hover:bg-sky-800 text-white rounded text-[11px] font-bold flex items-center gap-1 cursor-pointer self-start sm:self-auto transition-all border border-sky-400/50"
-                >
-                  <Shuffle className="w-3 h-3 text-sky-200" />
-                  <span>Random Shuffle</span>
-                </button>
-              </div>
-
-              {orderedModels.length === 0 ? (
-                <p className="text-xs text-sky-200 font-mono italic">No models found for this brand & series filter.</p>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-[350px] overflow-y-auto pr-1">
-                  {orderedModels.map((model, idx) => (
-                    <div
-                      key={model.id}
-                      draggable
-                      onDragStart={() => handleDragStart(idx)}
-                      onDragOver={(e) => handleDragOver(e, idx)}
-                      onDragEnd={handleDragEnd}
-                      className={`p-2 bg-sky-700/80 border border-sky-400/50 rounded-lg flex items-center justify-between cursor-move hover:border-white transition-all shadow-xs ${
-                        draggedIndex === idx ? 'opacity-50 ring-2 ring-white bg-white/20' : ''
-                      }`}
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <GripVertical className="w-4 h-4 text-sky-200 flex-shrink-0" />
-                        <span className="w-6 text-center font-mono text-[10px] text-sky-200 font-bold flex-shrink-0">#{idx + 1}</span>
-                        <div className="w-8 h-8 bg-sky-900 rounded p-0.5 flex-shrink-0">
-                          {model.imageUrl ? (
-                            <img src={model.imageUrl} alt={model.name} className="w-full h-full object-contain" />
-                          ) : (
-                            <ImageIcon className="w-4 h-4 text-sky-300 m-auto" />
-                          )}
-                        </div>
-                        <div className="min-w-0 truncate">
-                          <span className="font-bold text-xs text-white truncate block">{model.name}</span>
-                          <span className="text-[10px] text-sky-200 font-mono block truncate">{model.series || model.id}</span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-1 flex-shrink-0">
-                        <button
-                          onClick={() => handleMoveModel(idx, 'up')}
-                          disabled={idx === 0}
-                          className="p-1 hover:bg-sky-500 text-sky-100 hover:text-white rounded disabled:opacity-30 cursor-pointer"
-                          title="Move Up"
-                        >
-                          <ArrowUp className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => handleMoveModel(idx, 'down')}
-                          disabled={idx === orderedModels.length - 1}
-                          className="p-1 hover:bg-sky-500 text-sky-100 hover:text-white rounded disabled:opacity-30 cursor-pointer"
-                          title="Move Down"
-                        >
-                          <ArrowDown className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
+              {/* TAB 2: SERIES REORDER */}
+              {reorderTab === 'series' && (
+                <div className="space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-white p-3 border border-ice-border rounded-lg shadow-2xs text-xs">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-ink-slate font-semibold">Select Brand:</span>
+                      <select
+                        value={reorderSeriesBrandId}
+                        onChange={(e) => setReorderSeriesBrandId(e.target.value)}
+                        className="px-3 py-1.5 bg-canvas-pure border border-ice-border rounded text-xs text-ink-navy font-bold cursor-pointer focus:border-cobalt focus:outline-none"
+                      >
+                        {orderedBrands.map((b) => (
+                          <option key={b.id} value={b.id}>
+                            {b.name}
+                          </option>
+                        ))}
+                      </select>
                     </div>
-                  ))}
+
+                    <button
+                      onClick={handleShuffleSeries}
+                      className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-ink-navy rounded text-xs font-bold flex items-center gap-1.5 cursor-pointer self-start sm:self-auto transition-all border border-ice-border"
+                    >
+                      <Shuffle className="w-3.5 h-3.5 text-cobalt" />
+                      <span>Random Shuffle</span>
+                    </button>
+                  </div>
+
+                  {/* Skip / Hide Series Step Toggle Banner for Brand */}
+                  <div className="p-3.5 bg-white border border-ice-border rounded-lg flex items-center justify-between gap-3 text-xs shadow-2xs">
+                    <div>
+                      <span className="font-bold text-ink-navy block font-outfit text-sm">
+                        ⚡ Bypass / Hide Series Step for {orderedBrands.find((b) => b.id === reorderSeriesBrandId)?.name || 'Selected Brand'}
+                      </span>
+                      <span className="text-[11px] text-ink-muted font-mono leading-relaxed block mt-0.5">
+                        When enabled, clicking this brand in the public store skips the series sub-category step and displays all models directly.
+                      </span>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                      <input
+                        type="checkbox"
+                        checked={isBrandSeriesSkipped(reorderSeriesBrandId)}
+                        onChange={(e) => {
+                          setBrandSkipSeries(reorderSeriesBrandId, e.target.checked);
+                          setOrderVersion((v) => v + 1);
+                          setSuccessMsg(
+                            e.target.checked
+                              ? `Series step bypassed for ${orderedBrands.find((b) => b.id === reorderSeriesBrandId)?.name || 'brand'}. Storefront will display all models directly!`
+                              : `Series step enabled for ${orderedBrands.find((b) => b.id === reorderSeriesBrandId)?.name || 'brand'}.`
+                          );
+                        }}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                    </label>
+                  </div>
+
+                  {orderedSeries.length === 0 ? (
+                    <div className="p-6 text-center bg-white rounded-lg border border-ice-border text-xs text-ink-muted font-mono italic">
+                      No series found for this brand.
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                      {orderedSeries.map((sName, idx) => (
+                        <div
+                          key={sName}
+                          draggable
+                          onDragStart={() => handleDragStart(idx)}
+                          onDragOver={(e) => handleDragOver(e, idx)}
+                          onDragEnd={handleDragEnd}
+                          className={`p-3 bg-white border border-ice-border rounded-lg flex items-center justify-between cursor-move hover:border-cobalt transition-all shadow-2xs ${
+                            draggedIndex === idx ? 'opacity-50 ring-2 ring-cobalt bg-cobalt/5' : ''
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <GripVertical className="w-4 h-4 text-ink-muted flex-shrink-0" />
+                            <span className="w-6 text-center font-mono text-xs text-purple-700 font-extrabold bg-purple-50 rounded px-1">#{idx + 1}</span>
+                            <span className="font-bold text-xs text-ink-navy truncate">{sName}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => handleMoveSeries(idx, 'up')}
+                              disabled={idx === 0}
+                              className="p-1 hover:bg-zinc-100 text-ink-slate hover:text-ink-navy rounded disabled:opacity-25 cursor-pointer"
+                              title="Move Up"
+                            >
+                              <ArrowUp className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleMoveSeries(idx, 'down')}
+                              disabled={idx === orderedSeries.length - 1}
+                              className="p-1 hover:bg-zinc-100 text-ink-slate hover:text-ink-navy rounded disabled:opacity-25 cursor-pointer"
+                              title="Move Down"
+                            >
+                              <ArrowDown className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
                 </div>
               )}
 
-              <div className="flex justify-end gap-2 pt-2 border-t border-sky-400/40">
+              {/* TAB 3: MODELS REORDER */}
+              {reorderTab === 'models' && (
+                <div className="space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-white p-3 border border-ice-border rounded-lg shadow-2xs text-xs">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-mono text-ink-slate font-semibold">Brand:</span>
+                      <select
+                        value={reorderModelBrandId}
+                        onChange={(e) => {
+                          setReorderModelBrandId(e.target.value);
+                          setReorderModelSeries('all');
+                        }}
+                        className="px-3 py-1.5 bg-canvas-pure border border-ice-border rounded text-xs text-ink-navy font-bold cursor-pointer focus:border-cobalt focus:outline-none"
+                      >
+                        {orderedBrands.map((b) => (
+                          <option key={b.id} value={b.id}>
+                            {b.name}
+                          </option>
+                        ))}
+                      </select>
+
+                      <span className="font-mono text-ink-slate font-semibold ml-2">Series:</span>
+                      <select
+                        value={reorderModelSeries}
+                        onChange={(e) => setReorderModelSeries(e.target.value)}
+                        className="px-3 py-1.5 bg-canvas-pure border border-ice-border rounded text-xs text-ink-navy font-bold cursor-pointer focus:border-cobalt focus:outline-none"
+                      >
+                        <option value="all">All Series</option>
+                        {availableSeriesList.map((s) => (
+                          <option key={s} value={s}>
+                            {s}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <button
+                      onClick={handleShuffleModels}
+                      className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-ink-navy rounded text-xs font-bold flex items-center gap-1.5 cursor-pointer self-start sm:self-auto transition-all border border-ice-border"
+                    >
+                      <Shuffle className="w-3.5 h-3.5 text-cobalt" />
+                      <span>Random Shuffle</span>
+                    </button>
+                  </div>
+
+                  {orderedModels.length === 0 ? (
+                    <div className="p-6 text-center bg-white rounded-lg border border-ice-border text-xs text-ink-muted font-mono italic">
+                      No models found for this brand & series filter.
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 max-h-[420px] overflow-y-auto pr-1">
+                      {orderedModels.map((model, idx) => (
+                        <div
+                          key={model.id}
+                          draggable
+                          onDragStart={() => handleDragStart(idx)}
+                          onDragOver={(e) => handleDragOver(e, idx)}
+                          onDragEnd={handleDragEnd}
+                          className={`p-2.5 bg-white border border-ice-border rounded-lg flex items-center justify-between cursor-move hover:border-cobalt transition-all shadow-2xs ${
+                            draggedIndex === idx ? 'opacity-50 ring-2 ring-cobalt bg-cobalt/5' : ''
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <GripVertical className="w-4 h-4 text-ink-muted flex-shrink-0" />
+                            <span className="w-7 text-center font-mono text-[11px] text-cobalt font-extrabold bg-cobalt/10 rounded px-1 flex-shrink-0">#{idx + 1}</span>
+                            <div className="w-9 h-9 bg-zinc-50 border border-ice-border rounded p-1 flex-shrink-0 flex items-center justify-center">
+                              {model.imageUrl ? (
+                                <img src={model.imageUrl} alt={model.name} className="w-full h-full object-contain" />
+                              ) : (
+                                <ImageIcon className="w-4 h-4 text-ink-muted" />
+                              )}
+                            </div>
+                            <div className="min-w-0 truncate">
+                              <span className="font-bold text-xs text-ink-navy truncate block">{model.name}</span>
+                              <span className="text-[10px] text-ink-muted font-mono block truncate">{model.series || model.id}</span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            <button
+                              onClick={() => handleMoveModel(idx, 'up')}
+                              disabled={idx === 0}
+                              className="p-1 hover:bg-zinc-100 text-ink-slate hover:text-ink-navy rounded disabled:opacity-25 cursor-pointer"
+                              title="Move Up"
+                            >
+                              <ArrowUp className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleMoveModel(idx, 'down')}
+                              disabled={idx === orderedModels.length - 1}
+                              className="p-1 hover:bg-zinc-100 text-ink-slate hover:text-ink-navy rounded disabled:opacity-25 cursor-pointer"
+                              title="Move Down"
+                            >
+                              <ArrowDown className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                </div>
+              )}
+            </div>
+
+            {/* Unified Sticky Modal Footer */}
+            <div className="px-6 py-3.5 bg-slate-900 border-t border-slate-800 flex flex-wrap justify-between items-center gap-3 text-xs">
+              <button
+                onClick={() => {
+                  if (reorderTab === 'brands') handleResetBrandOrder();
+                  else if (reorderTab === 'series') handleResetSeriesOrder();
+                  else handleResetModelOrder();
+                }}
+                className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-xs font-bold cursor-pointer flex items-center gap-1.5 transition-all border border-slate-700"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Reset {reorderTab === 'brands' ? 'Brands' : reorderTab === 'series' ? 'Series' : 'Models'} to Default</span>
+              </button>
+
+              <div className="flex items-center gap-2">
                 <button
-                  onClick={handleResetModelOrder}
-                  className="px-3 py-1.5 bg-sky-700 hover:bg-sky-800 text-white rounded text-xs font-bold cursor-pointer flex items-center gap-1 transition-all border border-sky-400/50"
+                  onClick={() => setIsReorderMode(false)}
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-xs font-semibold cursor-pointer transition-all"
                 >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  <span>Reset Default</span>
+                  Close Studio
                 </button>
                 <button
-                  onClick={handleSaveModelOrder}
-                  className="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded text-xs font-bold shadow-md cursor-pointer flex items-center gap-1 transition-all"
+                  onClick={() => {
+                    if (reorderTab === 'brands') handleSaveBrandOrder();
+                    else if (reorderTab === 'series') handleSaveSeriesOrder();
+                    else handleSaveModelOrder();
+                  }}
+                  className="px-4 py-2 bg-cobalt hover:bg-cobalt-hover text-white rounded-lg text-xs font-bold shadow-sm cursor-pointer flex items-center gap-1.5 transition-all"
                 >
                   <Check className="w-3.5 h-3.5" />
-                  <span>Save Model Order</span>
+                  <span>Save {reorderTab === 'brands' ? 'Brand' : reorderTab === 'series' ? 'Series' : 'Model'} Order</span>
                 </button>
               </div>
             </div>
-          )}
+          </div>
         </div>
       )}
 
@@ -1507,6 +1514,9 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Tabbed modal state: 'general' | 'variants' | 'pricing'
+  const [modalActiveTab, setModalActiveTab] = useState<'general' | 'variants' | 'pricing'>('general');
 
   // Series selection mode: false = dropdown from existing, true = manual text input
   const [isCustomSeriesInput, setIsCustomSeriesInput] = useState(false);
@@ -2353,17 +2363,66 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
           </button>
         </div>
 
-        {/* Modal Body / Form */}
-        <form onSubmit={handleSaveModel} className="p-6 space-y-6 overflow-y-auto flex-1 text-xs">
-          {error && (
-            <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-xs font-semibold flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
+        {/* Modal Tab Bar */}
+        <div className="bg-zinc-900 border-b border-zinc-800 px-6 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex gap-1">
+            <button
+              type="button"
+              onClick={() => setModalActiveTab('general')}
+              className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer ${
+                modalActiveTab === 'general'
+                  ? 'text-white border-cobalt bg-zinc-800/60'
+                  : 'text-zinc-400 border-transparent hover:text-zinc-200 hover:bg-zinc-800/30'
+              }`}
+            >
+              <Smartphone className="w-3.5 h-3.5 text-blue-400" />
+              <span>1. General & Image</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setModalActiveTab('variants')}
+              className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer ${
+                modalActiveTab === 'variants'
+                  ? 'text-white border-purple-500 bg-zinc-800/60'
+                  : 'text-zinc-400 border-transparent hover:text-zinc-200 hover:bg-zinc-800/30'
+              }`}
+            >
+              <Cpu className="w-3.5 h-3.5 text-purple-400" />
+              <span>2. Storage & RAM ({formData.supportedStorageGb.length} × {formData.supportedRamGb.length})</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setModalActiveTab('pricing')}
+              className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer ${
+                modalActiveTab === 'pricing'
+                  ? 'text-white border-emerald-500 bg-zinc-800/60'
+                  : 'text-zinc-400 border-transparent hover:text-zinc-200 hover:bg-zinc-800/30'
+              }`}
+            >
+              <Zap className="w-3.5 h-3.5 text-amber-400" />
+              <span>3. Pricing & Cashify Grid</span>
+            </button>
+          </div>
+          <div className="hidden sm:flex items-center gap-2 text-[11px] font-mono text-zinc-400">
+            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span>{formData.name || 'New Model Draft'}</span>
+          </div>
+        </div>
 
-          {/* Basic Info Section */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-canvas-pure border border-ice-border rounded-lg">
+        {/* Modal Body / Form */}
+        <form onSubmit={handleSaveModel} className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          <div className="p-6 space-y-6 overflow-y-auto flex-1 text-xs">
+            {error && (
+              <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-xs font-semibold flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            {modalActiveTab === 'general' && (
+              <>
+                {/* Basic Info Section */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-canvas-pure border border-ice-border rounded-lg">
             <div>
               <label className="block text-[11px] font-bold text-ink-navy mb-1 uppercase font-mono">
                 Model Name *
@@ -2622,6 +2681,54 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
             )}
           </div>
 
+          {/* Brand Warranty Question Switch */}
+          <div className="p-4 bg-canvas-pure border border-ice-border rounded-lg flex items-center justify-between">
+            <div>
+              <span className="font-bold text-ink-navy flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                <span>Enable Brand Warranty Question</span>
+              </span>
+              <span className="text-[11px] text-zinc-500 block mt-0.5">
+                When ON, the "Is your device under brand warranty?" question appears in customer diagnostics. When OFF, the question is skipped to avoid double penalties on out-of-warranty devices.
+              </span>
+            </div>
+            <input
+              type="checkbox"
+              checked={formData.supportsWarrantyQuestion}
+              onChange={(e) =>
+                setFormData({ ...formData, supportsWarrantyQuestion: e.target.checked })
+              }
+              className="w-5 h-5 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+            />
+          </div>
+
+          {/* Visibility Switch */}
+          <div className="p-4 bg-canvas-pure border border-ice-border rounded-lg flex items-center justify-between">
+            <div>
+              <span className="font-bold text-ink-navy flex items-center gap-1.5">
+                {formData.hidden ? (
+                  <EyeOff className="w-4 h-4 text-amber-600" />
+                ) : (
+                  <Eye className="w-4 h-4 text-emerald-600" />
+                )}
+                <span>Hide Model from Store</span>
+              </span>
+              <span className="text-[11px] text-zinc-500 block mt-0.5">
+                When enabled, this model will be hidden from public customers on the storefront.
+              </span>
+            </div>
+            <input
+              type="checkbox"
+              checked={formData.hidden}
+              onChange={(e) => setFormData({ ...formData, hidden: e.target.checked })}
+              className="w-5 h-5 rounded text-cobalt focus:ring-cobalt cursor-pointer"
+            />
+          </div>
+        </>
+      )}
+
+      {modalActiveTab === 'variants' && (
+        <>
           {/* Storage Variants Selector */}
           <div className="p-4 bg-canvas-pure border border-ice-border rounded-lg space-y-3">
             <div className="flex justify-between items-center">
@@ -2706,6 +2813,30 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
             )}
           </div>
 
+          {/* Variant Configuration Summary & Jump Action */}
+          <div className="p-4 bg-purple-50/70 border border-purple-200 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <span className="font-bold text-ink-navy flex items-center gap-2">
+                <Cpu className="w-4 h-4 text-purple-600" />
+                <span>{formData.supportedStorageGb.length * (formData.supportedRamGb.length || 1)} Hardware Variant Combinations Active</span>
+              </span>
+              <span className="text-[11px] text-zinc-600 block mt-0.5 font-mono">
+                Storage: {formData.supportedStorageGb.map((s) => `${s}GB`).join(', ')} • RAM: {isAppleTablet || (formData.supportedRamGb.length === 1 && formData.supportedRamGb[0] === 0) ? 'Unified / Fixed' : formData.supportedRamGb.map((r) => `${r}GB`).join(', ')}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setModalActiveTab('pricing')}
+              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold shadow-sm transition-all flex items-center gap-1.5 cursor-pointer self-start sm:self-auto"
+            >
+              <span>Configure Pricing & Cashify Grid →</span>
+            </button>
+          </div>
+        </>
+      )}
+
+      {modalActiveTab === 'pricing' && (
+        <>
           {/* RAM x Storage Price Matrix with Cashify Link Generation & Approval Engine */}
           {(() => {
             const validRamsForStats =
@@ -3469,70 +3600,66 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
               </div>
             );
           })()}
+        </>
+      )}
+    </div>
 
-          {/* Brand Warranty Question Switch */}
-          <div className="p-4 bg-canvas-pure border border-ice-border rounded-lg flex items-center justify-between">
-            <div>
-              <span className="font-bold text-ink-navy flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                <span>Enable Brand Warranty Question</span>
-              </span>
-              <span className="text-[11px] text-zinc-500 block mt-0.5">
-                When ON, the "Is your device under brand warranty?" question appears in customer diagnostics. When OFF, the question is skipped to avoid double penalties on out-of-warranty devices.
-              </span>
-            </div>
-            <input
-              type="checkbox"
-              checked={formData.supportsWarrantyQuestion}
-              onChange={(e) =>
-                setFormData({ ...formData, supportsWarrantyQuestion: e.target.checked })
-              }
-              className="w-5 h-5 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
-            />
-          </div>
+    {/* Modal Persistent Sticky Footer */}
+    <div className="px-6 py-3.5 bg-zinc-900 border-t border-zinc-800 flex flex-wrap items-center justify-between gap-3 text-xs">
+      <div className="flex items-center gap-2 text-zinc-400 font-mono text-[11px]">
+        <span className="text-zinc-200 font-bold">
+          {modalActiveTab === 'general' ? 'Tab 1: General Specs' : modalActiveTab === 'variants' ? 'Tab 2: Storage & RAM' : 'Tab 3: Pricing & Cashify Grid'}
+        </span>
+        <span>•</span>
+        <span>Base Anchor: {modalFormatPrice(formData.basePrice128GB)}</span>
+      </div>
 
-          {/* Visibility Switch */}
-          <div className="p-4 bg-canvas-pure border border-ice-border rounded-lg flex items-center justify-between">
-            <div>
-              <span className="font-bold text-ink-navy flex items-center gap-1.5">
-                {formData.hidden ? (
-                  <EyeOff className="w-4 h-4 text-amber-600" />
-                ) : (
-                  <Eye className="w-4 h-4 text-emerald-600" />
-                )}
-                <span>Hide Model from Store</span>
-              </span>
-              <span className="text-[11px] text-zinc-500 block mt-0.5">
-                When enabled, this model will be hidden from public customers on the storefront.
-              </span>
-            </div>
-            <input
-              type="checkbox"
-              checked={formData.hidden}
-              onChange={(e) => setFormData({ ...formData, hidden: e.target.checked })}
-              className="w-5 h-5 rounded text-cobalt focus:ring-cobalt cursor-pointer"
-            />
-          </div>
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={onClose}
+          className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white font-bold rounded-lg transition-all cursor-pointer"
+        >
+          Cancel
+        </button>
 
-          {/* Submit Buttons */}
-          <div className="flex justify-end gap-3 pt-4 border-t border-ice-border">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-ink-navy text-xs font-bold rounded-lg transition-all cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={saving}
-              className="px-6 py-2 bg-cobalt hover:bg-cobalt-hover text-white text-xs font-bold rounded-lg shadow-md transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
-            >
-              {saving && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
-              <span>{isAddingNew ? 'Create Model in DB' : 'Save Changes to DB'}</span>
-            </button>
-          </div>
-        </form>
+        {modalActiveTab !== 'general' && (
+          <button
+            type="button"
+            onClick={() => {
+              if (modalActiveTab === 'pricing') setModalActiveTab('variants');
+              else if (modalActiveTab === 'variants') setModalActiveTab('general');
+            }}
+            className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-bold rounded-lg transition-all cursor-pointer"
+          >
+            Previous
+          </button>
+        )}
+
+        {modalActiveTab !== 'pricing' && (
+          <button
+            type="button"
+            onClick={() => {
+              if (modalActiveTab === 'general') setModalActiveTab('variants');
+              else if (modalActiveTab === 'variants') setModalActiveTab('pricing');
+            }}
+            className="px-4 py-2 bg-cobalt hover:bg-cobalt-hover text-white font-bold rounded-lg shadow-sm transition-all cursor-pointer"
+          >
+            Next Step
+          </button>
+        )}
+
+        <button
+          type="submit"
+          disabled={saving}
+          className="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg shadow-md transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+        >
+          {saving && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
+          <span>{isAddingNew ? 'Create Model in DB' : 'Save Changes to DB'}</span>
+        </button>
+      </div>
+    </div>
+  </form>
       </div>
     </div>
   );
