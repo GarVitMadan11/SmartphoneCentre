@@ -3056,6 +3056,23 @@ export function getVariantPrice(
     }
   }
   // Base storage calculation
+  if (isTabletDevice(model.brandId, model.name, model.id)) {
+    const storageMultiplierMap: Record<number, number> = {
+      64: 0.88, 128: 1.00, 256: 1.15, 512: 1.32, 1024: 1.55, 2048: 1.80
+    };
+    const mult = storageMultiplierMap[storageGb] || 1.0;
+    const base = Math.round(model.basePrice128GB * mult);
+    const connBonus = connectivity === 'cellular' ? 3000 : 0;
+    const ramOptions = getModelSupportedRam(model).filter(r => r > 0);
+    if (ramOptions.length <= 1 || ramGb === 0 || !ramGb) {
+      return base + connBonus;
+    }
+    const minRam = Math.min(...ramOptions);
+    const stepCount = (ramGb - minRam) / 2;
+    const ramBonus = Math.max(0, stepCount * 1250);
+    return Math.round(base + connBonus + ramBonus);
+  }
+
   const variants = generateVariantsForModel(model);
   const baseVar = variants.find(v => v.storageGb === storageGb && (!connectivity || v.connectivity === connectivity)) ||
     variants.find(v => v.storageGb === storageGb) ||
