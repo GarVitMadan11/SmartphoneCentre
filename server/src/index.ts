@@ -68,17 +68,21 @@ app.use(compression());
 app.set('trust proxy', process.env.NODE_ENV === 'production' ? 'loopback, linklocal, uniquelocal' : 1);
 
 // ── Allowed Origins ────────────────────────────────────────────────────────
-const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? 'http://localhost:3000,http://localhost:5173')
+const configuredOrigins = (process.env.ALLOWED_ORIGINS ?? '')
   .split(',')
   .map(o => o.trim().replace(/\/$/, ''))
   .filter(Boolean);
 
-if (!ALLOWED_ORIGINS.includes('https://rephonix.in')) {
-  ALLOWED_ORIGINS.push('https://rephonix.in');
-}
-if (!ALLOWED_ORIGINS.includes('https://www.rephonix.in')) {
-  ALLOWED_ORIGINS.push('https://www.rephonix.in');
-}
+const ALLOWED_ORIGINS = Array.from(new Set([
+  ...configuredOrigins,
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:5173',
+  'https://smartphonecentre.onrender.com',
+  'https://rephonix.in',
+  'https://www.rephonix.in',
+]));
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SECURITY & BASE MIDDLEWARE
@@ -147,10 +151,10 @@ app.use(cors({
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
     if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
-    if (/^https?:\/\/localhost(:\d+)?$/.test(origin) || /^https?:\/\/127\.0\.0\.1(:\d+)?$/.test(origin)) {
+    if (process.env.NODE_ENV !== 'production' && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
       return callback(null, true);
     }
-    return callback(new Error(`CORS policy: origin ${origin} is not allowed`));
+    return callback(null, false);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],

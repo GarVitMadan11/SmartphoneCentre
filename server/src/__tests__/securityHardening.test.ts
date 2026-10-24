@@ -65,4 +65,42 @@ describe('Security Hardening & Input Sanitization', () => {
       expect(isValid).toBe(false);
     });
   });
+
+  describe('Customer Data Protection (IMEI Masking & Timing Safety)', () => {
+    it('should mask IMEI for customer-facing outputs and preserve it for admin outputs', async () => {
+      const { mapBooking } = await import('../routes/bookings.js');
+      const mockBooking = {
+        id: 'RPX-TEST-001',
+        modelLegacyId: 'apple-iphone-15-pro',
+        modelName: 'iPhone 15 Pro',
+        storageGb: 256,
+        color: 'Natural Titanium',
+        customerName: 'Garvit Madan',
+        customerPhone: '9876543210',
+        customerEmail: 'garvit@rephonix.in',
+        imei: '354891102938475',
+        address: 'Delhi, India',
+        pickupDate: '2026-10-25',
+        pickupTimeSlot: '10:00 AM - 01:00 PM',
+        finalPrice: 65000,
+        finalPayoutAmount: 65000,
+        verificationStatus: 'verified',
+        payoutMethod: 'UPI',
+        payoutMethodName: 'UPI Transfer',
+        inspectionStatus: 'approved',
+        payoutStatus: 'pending',
+        dateCreated: '2026-10-24',
+        payoutDetailsJson: '{}',
+      };
+
+      // Customer output (includeUnmasked = false)
+      const customerOutput = mapBooking(mockBooking, false);
+      expect(customerOutput.imei).toBe('•••••••••••8475');
+      expect(customerOutput.imei).not.toContain('35489110293');
+
+      // Admin output (includeUnmasked = true)
+      const adminOutput = mapBooking(mockBooking, true);
+      expect(adminOutput.imei).toBe('354891102938475');
+    });
+  });
 });

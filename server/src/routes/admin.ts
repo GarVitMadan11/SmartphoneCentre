@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { randomBytes } from 'node:crypto';
 import prisma from '../db.js';
-import { adminAuth, getJwtSecret, JWT_ISSUER, JWT_AUDIENCE, parseCookies, AuthenticatedRequest } from '../middleware/adminAuth.js';
+import { adminAuth, optionalAdminAuth, requireRole, getJwtSecret, JWT_ISSUER, JWT_AUDIENCE, parseCookies, AuthenticatedRequest } from '../middleware/adminAuth.js';
 import { getLockdownState, triggerEmergencyLockdown, unlockEmergencyLockdown } from '../services/lockdownService.js';
 import { sendAdminSecurityAlertEmail } from '../services/securityMailer.js';
 
@@ -56,6 +56,13 @@ router.post('/lockdown', adminAuth, async (req: AuthenticatedRequest, res: Respo
     masterUnlockKey: result.masterUnlockKey,
   });
 });
+
+// In-memory PIN rate limiting and brute-force lockout tracker (SEC-02)
+interface PinLockout {
+  attempts: number;
+  lockedUntil?: Date;
+}
+const pinAttempts = new Map<string, PinLockout>();
 
 // Maximum consecutive failed login attempts before account is temporarily locked
 const MAX_FAILED_ATTEMPTS = 5;
@@ -116,30 +123,41 @@ router.post('/auth', async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  const { pin, username, password } = req.body;
+  const { pin, username, email, identifier, password } = req.body;
   const ipAddress = String(req.headers['x-forwarded-for'] || req.ip || 'Unknown');
   const userAgent = String(req.headers['user-agent'] || 'Unknown');
   const formattedTime = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) + ' IST';
 
   let sub = 'admin';
   let userUsername = 'admin';
+  let userEmail = 'admin@smartphonecentre.com';
   let role: 'SUPER_ADMIN' | 'FINANCE_APPROVER' | 'OPERATIONS_AGENT' | 'CATALOG_EDITOR' | 'admin' = 'admin';
+  let userPermissions: string[] = [];
 
-  if (username && typeof username === 'string' && password && typeof password === 'string') {
-    // ── Named user account authentication ──────────────────────────────────
-    const user = await prisma.adminUser.findUnique({ where: { username: username.trim().toLowerCase() } });
+  const loginIdentifier = (email || username || identifier || '').trim().toLowerCase();
 
-    // Generic error — don't reveal whether the username exists
-    const invalidCredsResponse = { error: 'InvalidCredentials', message: 'Invalid username or password.' };
+  if (loginIdentifier && typeof loginIdentifier === 'string' && password && typeof password === 'string') {
+    // ── Email / Named user account authentication ───────────────────────────
+    const user = await prisma.adminUser.findFirst({
+      where: {
+        OR: [
+          { email: loginIdentifier },
+          { username: loginIdentifier },
+        ],
+      },
+    });
+
+    // Generic error — don't reveal whether the user exists
+    const invalidCredsResponse = { error: 'InvalidCredentials', message: 'Invalid email/username or password.' };
 
     if (!user || !user.active) {
       sendAdminSecurityAlertEmail({
         type: 'LOGIN_FAILED',
-        username: username,
+        username: loginIdentifier,
         ipAddress,
         userAgent,
         timestamp: formattedTime,
-        details: 'Attempted login with non-existent or inactive username.',
+        details: 'Attempted login with non-existent or inactive email/username.',
       }).catch(err => console.error('Alert email error:', err));
 
       res.status(401).json(invalidCredsResponse);
@@ -188,7 +206,7 @@ router.post('/auth', async (req: Request, res: Response): Promise<void> => {
 
       sendAdminSecurityAlertEmail({
         type: 'LOGIN_FAILED',
-        username: user.username,
+        username: user.email,
         ipAddress,
         userAgent,
         timestamp: formattedTime,
@@ -207,15 +225,46 @@ router.post('/auth', async (req: Request, res: Response): Promise<void> => {
 
     sub = user.id;
     userUsername = user.username;
+    userEmail = user.email;
     role = user.role as typeof role;
 
+    // Resolve service permissions
+    if (user.role === 'SUPER_ADMIN' || user.role === 'admin') {
+      userPermissions = ['smartphones', 'tablets', 'smartwatches', 'cashify', 'inspections', 'support', 'finance', 'audit', 'staff'];
+    } else {
+      try {
+        const parsed = JSON.parse((user as any).permissions || '[]');
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          userPermissions = parsed;
+        } else {
+          if (user.role === 'CATALOG_EDITOR') userPermissions = ['smartphones', 'tablets', 'smartwatches', 'cashify'];
+          else if (user.role === 'OPERATIONS_AGENT') userPermissions = ['inspections', 'support'];
+          else if (user.role === 'FINANCE_APPROVER') userPermissions = ['finance'];
+          else userPermissions = ['inspections'];
+        }
+      } catch {
+        userPermissions = ['inspections'];
+      }
+    }
+
   } else if (typeof pin === 'string' && pin.trim().length > 0) {
-    // ── PIN authentication ──────────────────────────────────────────────────
+    // ── PIN authentication with brute-force lockout (SEC-02) ─────────────────
+    const pinState = pinAttempts.get(ipAddress);
+    const now = new Date();
+    if (pinState?.lockedUntil && pinState.lockedUntil > now) {
+      const minutesLeft = Math.ceil((pinState.lockedUntil.getTime() - now.getTime()) / 60000);
+      res.status(429).json({
+        error: 'AccountLocked',
+        message: `Too many failed PIN attempts. Access locked for ${minutesLeft} minute(s).`,
+      });
+      return;
+    }
+
     const pinHashToUse = getAdminPinHash();
     if (!pinHashToUse) {
       res.status(400).json({
         error: 'BadRequest',
-        message: 'PIN authentication is not configured on this server. Use username/password.',
+        message: 'PIN authentication is not configured on this server. Use company email/password.',
       });
       return;
     }
@@ -228,40 +277,56 @@ router.post('/auth', async (req: Request, res: Response): Promise<void> => {
     }
 
     if (!isValid) {
+      const currentAttempts = (pinState?.attempts || 0) + 1;
+      const lockUntil = currentAttempts >= MAX_FAILED_ATTEMPTS
+        ? new Date(now.getTime() + LOCKOUT_MINUTES * 60 * 1000)
+        : undefined;
+
+      pinAttempts.set(ipAddress, {
+        attempts: currentAttempts,
+        lockedUntil: lockUntil,
+      });
+
       sendAdminSecurityAlertEmail({
         type: 'LOGIN_FAILED',
         username: 'PIN_AUTH_USER',
         ipAddress,
         userAgent,
         timestamp: formattedTime,
-        details: 'Incorrect Admin PIN entered.',
+        details: `Incorrect Admin PIN entered. Fail count: ${currentAttempts}/${MAX_FAILED_ATTEMPTS}`,
       }).catch(err => console.error('Alert email error:', err));
 
       res.status(401).json({ error: 'InvalidCredentials', message: 'Incorrect PIN.' });
       return;
     }
+
+    // Reset PIN lockout on success
+    pinAttempts.delete(ipAddress);
+
     sub = 'superadmin-legacy';
     userUsername = 'superadmin';
+    userEmail = 'admin@smartphonecentre.com';
     role = 'SUPER_ADMIN';
+    userPermissions = ['smartphones', 'tablets', 'smartwatches', 'cashify', 'inspections', 'support', 'finance', 'audit', 'staff'];
 
   } else {
-    res.status(400).json({ error: 'BadRequest', message: 'Provide PIN or username/password.' });
+    res.status(400).json({ error: 'BadRequest', message: 'Provide email/username and password or authorized PIN.' });
     return;
   }
 
   // Dispatch login success alert email
   sendAdminSecurityAlertEmail({
     type: 'LOGIN_SUCCESS',
-    username: userUsername,
+    username: userEmail || userUsername,
     ipAddress,
     userAgent,
     timestamp: formattedTime,
-    details: `Role: ${role}`,
+    details: `Role: ${role} | Services: ${userPermissions.join(', ')}`,
   }).catch(err => console.error('Alert email error:', err));
 
-  // Issue JWT with explicit issuer, audience, and algorithm
+  // Issue JWT with explicit issuer, audience, and permissions claim
   const token = jwt.sign(
-    { sub, username: userUsername, role },
+    { sub, username: userUsername, email: userEmail, role, permissions: userPermissions },
     getJwtSecret(),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     {
@@ -281,7 +346,7 @@ router.post('/auth', async (req: Request, res: Response): Promise<void> => {
   res.json({
     success: true,
     expiresAt: expiresAtMs,
-    user: { id: sub, username: userUsername, role },
+    user: { id: sub, username: userUsername, email: userEmail, role, permissions: userPermissions },
   });
 });
 
@@ -297,9 +362,22 @@ router.post('/logout', (_req: Request, res: Response): void => {
 
 /**
  * GET /api/admin/me
- * Returns current authenticated admin profile and role.
+ * Returns current authenticated admin profile, role, and granular service permissions.
+ * Uses optionalAdminAuth to gracefully return authenticated: false (HTTP 200) without throwing 401 in client console.
  */
-router.get('/me', adminAuth, (req: AuthenticatedRequest, res: Response): void => {
+router.get('/me', optionalAdminAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  if (!req.user) {
+    res.json({
+      authenticated: false,
+      user: null,
+      id: null,
+      username: null,
+      role: null,
+      permissions: [],
+    });
+    return;
+  }
+
   const cookies = parseCookies(req);
   if (!cookies['rex_admin_csrf']) {
     const isProd = process.env.NODE_ENV === 'production';
@@ -311,10 +389,48 @@ router.get('/me', adminAuth, (req: AuthenticatedRequest, res: Response): void =>
       path: '/',
     });
   }
+
+  let permissions = req.user.permissions || [];
+  let email = req.user.email || '';
+
+  if (req.user.sub && req.user.sub !== 'superadmin-legacy') {
+    const dbUser = await prisma.adminUser.findUnique({ where: { id: req.user.sub } }).catch(() => null);
+    if (dbUser) {
+      email = dbUser.email;
+      if (dbUser.role === 'SUPER_ADMIN' || dbUser.role === 'admin') {
+        permissions = ['smartphones', 'tablets', 'smartwatches', 'cashify', 'inspections', 'support', 'finance', 'audit', 'staff'];
+      } else {
+        try {
+          const parsed = JSON.parse((dbUser as any).permissions || '[]');
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            permissions = parsed;
+          } else {
+            if (dbUser.role === 'CATALOG_EDITOR') permissions = ['smartphones', 'tablets', 'smartwatches', 'cashify'];
+            else if (dbUser.role === 'OPERATIONS_AGENT') permissions = ['inspections', 'support'];
+            else if (dbUser.role === 'FINANCE_APPROVER') permissions = ['finance'];
+            else permissions = ['inspections'];
+          }
+        } catch {}
+      }
+    }
+  } else if (req.user.role === 'SUPER_ADMIN' || req.user.role === 'admin') {
+    permissions = ['smartphones', 'tablets', 'smartwatches', 'cashify', 'inspections', 'support', 'finance', 'audit', 'staff'];
+  }
+
   res.json({
-    id: req.user?.sub,
-    username: req.user?.username,
-    role: req.user?.role,
+    authenticated: true,
+    user: {
+      id: req.user.sub,
+      username: req.user.username,
+      email: email || req.user.username,
+      role: req.user.role,
+      permissions,
+    },
+    id: req.user.sub,
+    username: req.user.username,
+    email: email || req.user.username,
+    role: req.user.role,
+    permissions,
   });
 });
 
@@ -421,6 +537,207 @@ export async function logAdminAudit(params: {
     console.error('Failed to log admin audit event:', err);
   }
 }
+
+/**
+ * ── Master Admin: Staff & Granular Role Management ─────────────────────────
+ */
+
+// GET /api/admin/staff — Master Admin Only
+router.get('/staff', adminAuth, requireRole(['SUPER_ADMIN']), async (_req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const users = await prisma.adminUser.findMany({
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        role: true,
+        permissions: true,
+        active: true,
+        failedLoginAttempts: true,
+        lastLoginAt: true,
+        createdAt: true,
+      },
+    });
+
+    const formatted = users.map(u => ({
+      ...u,
+      permissions: (() => {
+        try {
+          const p = JSON.parse((u as any).permissions || '[]');
+          return Array.isArray(p) ? p : [];
+        } catch {
+          return [];
+        }
+      })(),
+    }));
+
+    res.json(formatted);
+  } catch (err) {
+    console.error('GET /api/admin/staff error:', err);
+    res.status(500).json({ error: 'ServerError', message: 'Failed to retrieve staff members.' });
+  }
+});
+
+// POST /api/admin/staff — Master Admin Only
+router.post('/staff', adminAuth, requireRole(['SUPER_ADMIN']), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const { username, email, password, role = 'OPERATIONS_AGENT', permissions = [] } = req.body;
+    if (!username || !email || !password) {
+      res.status(400).json({ error: 'ValidationError', message: 'Username, company email, and initial password are required.' });
+      return;
+    }
+
+    const cleanEmail = String(email).trim().toLowerCase();
+    const cleanUsername = String(username).trim().toLowerCase();
+
+    const existing = await prisma.adminUser.findFirst({
+      where: {
+        OR: [{ email: cleanEmail }, { username: cleanUsername }],
+      },
+    });
+
+    if (existing) {
+      res.status(400).json({ error: 'ValidationError', message: 'A staff member with this email or username already exists.' });
+      return;
+    }
+
+    const passwordHash = await bcrypt.hash(String(password), 12);
+    const permissionsJson = JSON.stringify(Array.isArray(permissions) ? permissions : []);
+
+    const newUser = await prisma.adminUser.create({
+      data: {
+        username: cleanUsername,
+        email: cleanEmail,
+        passwordHash,
+        role: String(role),
+        permissions: permissionsJson,
+        active: true,
+      },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        role: true,
+        permissions: true,
+        active: true,
+        createdAt: true,
+      },
+    });
+
+    await logAdminAudit({
+      adminUserId: req.user?.sub,
+      action: 'staff_created',
+      targetType: 'adminUser',
+      targetId: newUser.id,
+      payload: { email: cleanEmail, role, permissions },
+      ipAddress: String(req.ip ?? ''),
+      userAgent: String(req.headers['user-agent'] ?? ''),
+    });
+
+    res.status(201).json({
+      ...newUser,
+      permissions: Array.isArray(permissions) ? permissions : [],
+    });
+  } catch (err) {
+    console.error('POST /api/admin/staff error:', err);
+    res.status(500).json({ error: 'ServerError', message: 'Failed to create staff account.' });
+  }
+});
+
+// PATCH /api/admin/staff/:id — Master Admin Only
+router.patch('/staff/:id', adminAuth, requireRole(['SUPER_ADMIN']), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const id = String(req.params.id);
+    const { role, permissions, active, password } = req.body;
+
+    const data: Record<string, unknown> = {};
+    if (role !== undefined) data.role = String(role);
+    if (active !== undefined) data.active = Boolean(active);
+    if (permissions !== undefined && Array.isArray(permissions)) {
+      data.permissions = JSON.stringify(permissions);
+    }
+    if (password && typeof password === 'string' && password.trim().length >= 8) {
+      data.passwordHash = await bcrypt.hash(password.trim(), 12);
+      data.failedLoginAttempts = 0;
+      data.lockedUntil = null;
+    }
+
+    const updated = await prisma.adminUser.update({
+      where: { id },
+      data: data as any,
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        role: true,
+        permissions: true,
+        active: true,
+        failedLoginAttempts: true,
+        lastLoginAt: true,
+        updatedAt: true,
+      },
+    });
+
+    await logAdminAudit({
+      adminUserId: req.user?.sub,
+      action: 'staff_updated',
+      targetType: 'adminUser',
+      targetId: id,
+      payload: { updates: Object.keys(data) },
+      ipAddress: String(req.ip ?? ''),
+      userAgent: String(req.headers['user-agent'] ?? ''),
+    });
+
+    res.json({
+      ...updated,
+      permissions: (() => {
+        try {
+          return JSON.parse((updated as any).permissions || '[]');
+        } catch {
+          return [];
+        }
+      })(),
+    });
+  } catch (err) {
+    console.error('PATCH /api/admin/staff/:id error:', err);
+    res.status(500).json({ error: 'ServerError', message: 'Failed to update staff member.' });
+  }
+});
+
+// DELETE /api/admin/staff/:id — Master Admin Only
+router.delete('/staff/:id', adminAuth, requireRole(['SUPER_ADMIN']), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const id = String(req.params.id);
+    if (id === req.user?.sub) {
+      res.status(400).json({ error: 'BadRequest', message: 'You cannot remove your own active Master Admin account.' });
+      return;
+    }
+
+    const target = await prisma.adminUser.findUnique({ where: { id } });
+    if (!target) {
+      res.status(404).json({ error: 'NotFound', message: 'Staff member not found.' });
+      return;
+    }
+
+    await prisma.adminUser.delete({ where: { id } });
+
+    await logAdminAudit({
+      adminUserId: req.user?.sub,
+      action: 'staff_deleted',
+      targetType: 'adminUser',
+      targetId: id,
+      payload: { username: target.username, email: target.email },
+      ipAddress: String(req.ip ?? ''),
+      userAgent: String(req.headers['user-agent'] ?? ''),
+    });
+
+    res.json({ success: true, message: `Staff member ${target.email} removed.` });
+  } catch (err) {
+    console.error('DELETE /api/admin/staff/:id error:', err);
+    res.status(500).json({ error: 'ServerError', message: 'Failed to delete staff member.' });
+  }
+});
 
 /**
  * GET /api/admin/audit-logs

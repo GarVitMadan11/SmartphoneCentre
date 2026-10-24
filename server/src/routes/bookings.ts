@@ -48,9 +48,18 @@ export function decryptImei(raw: string): string {
   }
 }
 
+function maskImei(imei: string): string {
+  if (!imei) return '';
+  const clean = imei.trim();
+  if (clean.length <= 4) return clean;
+  return '•'.repeat(clean.length - 4) + clean.slice(-4);
+}
+
 export function mapBooking(b: any, includeUnmaskedPayout = false) {
   const rawDetails = decryptPayoutDetails(b.payoutDetailsJson);
   const safeDetails = includeUnmaskedPayout ? rawDetails : maskPayoutDetails(rawDetails);
+  const decryptedImei = decryptImei(b.imei || '');
+  const safeImei = includeUnmaskedPayout ? decryptedImei : maskImei(decryptedImei);
 
   return {
     id: b.id,
@@ -61,7 +70,7 @@ export function mapBooking(b: any, includeUnmaskedPayout = false) {
     customerName: b.customerName,
     customerPhone: b.customerPhone,
     customerEmail: b.customerEmail,
-    imei: decryptImei(b.imei || ''),
+    imei: safeImei,
     address: b.address,
     pickupDate: b.pickupDate,
     pickupTimeSlot: b.pickupTimeSlot,

@@ -128,15 +128,35 @@ async function apiFetch<T>(path: string, options?: RequestInit, withAuth = false
   return res.json() as Promise<T>;
 }
 
-// ── Admin Authentication ──────────────────────────────────────────────────
+// ── Admin Authentication & Granular Access Control ─────────────────────────
 
 export interface AdminUserSession {
   id: string;
   username: string;
+  email?: string;
   role: 'SUPER_ADMIN' | 'FINANCE_APPROVER' | 'OPERATIONS_AGENT' | 'CATALOG_EDITOR' | 'admin';
+  permissions?: string[];
 }
 
-export async function adminLogin(credentials: { pin?: string; username?: string; password?: string }): Promise<{ success: boolean; expiresAt: number; user?: AdminUserSession }> {
+export interface AdminStaffUser {
+  id: string;
+  username: string;
+  email: string;
+  role: 'SUPER_ADMIN' | 'FINANCE_APPROVER' | 'OPERATIONS_AGENT' | 'CATALOG_EDITOR' | 'admin';
+  permissions: string[];
+  active: boolean;
+  failedLoginAttempts: number;
+  lastLoginAt: string | null;
+  createdAt: string;
+}
+
+export async function adminLogin(credentials: {
+  pin?: string;
+  email?: string;
+  username?: string;
+  identifier?: string;
+  password?: string;
+}): Promise<{ success: boolean; expiresAt: number; user?: AdminUserSession }> {
   const data = await apiFetch<{ success: boolean; expiresAt: number; user?: AdminUserSession }>(
     '/admin/auth',
     { method: 'POST', body: JSON.stringify(credentials) }
@@ -159,8 +179,52 @@ export function changeAdminPassword(passwords: { currentPassword: string; newPas
   }, true);
 }
 
-export function getCurrentAdminUser(): Promise<AdminUserSession> {
-  return apiFetch<AdminUserSession>('/admin/me', undefined, true);
+export async function getCurrentAdminUser(): Promise<AdminUserSession | null> {
+  try {
+    const data = await apiFetch<any>('/admin/me', undefined, true);
+    if (!data) return null;
+    if (data.authenticated === false) return null;
+    if (data.user && data.user.id) return data.user as AdminUserSession;
+    if (data.id && data.role) return data as AdminUserSession;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchAdminStaff(): Promise<AdminStaffUser[]> {
+  return apiFetch<AdminStaffUser[]>('/admin/staff', undefined, true);
+}
+
+export async function createAdminStaff(data: {
+  username: string;
+  email: string;
+  password: string;
+  role?: string;
+  permissions: string[];
+}): Promise<AdminStaffUser> {
+  return apiFetch<AdminStaffUser>('/admin/staff', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }, true);
+}
+
+export async function updateAdminStaff(id: string, updates: {
+  role?: string;
+  permissions?: string[];
+  active?: boolean;
+  password?: string;
+}): Promise<AdminStaffUser> {
+  return apiFetch<AdminStaffUser>(`/admin/staff/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(updates),
+  }, true);
+}
+
+export async function deleteAdminStaff(id: string): Promise<{ success: boolean; message: string }> {
+  return apiFetch<{ success: boolean; message: string }>(`/admin/staff/${id}`, {
+    method: 'DELETE',
+  }, true);
 }
 
 export interface AdminSecurityStatus {

@@ -1,7 +1,7 @@
 import { Router, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { randomBytes, createHash, randomInt } from 'node:crypto';
+import { randomBytes, createHash, randomInt, timingSafeEqual } from 'node:crypto';
 import { OAuth2Client } from 'google-auth-library';
 import prisma from '../db.js';
 import { getJwtSecret, JWT_ISSUER } from '../middleware/adminAuth.js';
@@ -246,9 +246,11 @@ router.post('/verify-otp', async (req, res) => {
       return;
     }
 
-    // Cryptographically verify OTP bound to both phone and email (with fallback for in-flight legacy codes)
+    // Cryptographically verify OTP bound to both phone and email using constant-time comparison
     const expectedOtpHash = createHash('sha256').update(`${cleanEmail}:${cleanPhone}:${otp.trim()}`).digest('hex');
-    const isOtpValid = otpRecord.otp === expectedOtpHash || otpRecord.otp === otp.trim();
+    const storedBuf = Buffer.from(otpRecord.otp, 'utf8');
+    const expectedBuf = Buffer.from(expectedOtpHash, 'utf8');
+    const isOtpValid = storedBuf.length === expectedBuf.length && timingSafeEqual(storedBuf, expectedBuf);
 
     // OTP match check
     if (!isOtpValid) {

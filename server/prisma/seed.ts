@@ -74,7 +74,7 @@ async function main() {
         supportedStorageGb: JSON.stringify(storageArr),
         supportedRamGb: JSON.stringify(ramArr),
         variantPrices: JSON.stringify(variantPricesObj),
-        hidden: true,
+        hidden: m.hidden ?? false,
       };
 
       try {
@@ -95,6 +95,15 @@ async function main() {
     }));
   }
   console.log(`  ✓ ${MODELS.length} catalog models synced`);
+
+  // 2b. Clean up any obsolete models not in master fallback
+  const validLegacyIds = MODELS.map(m => m.id);
+  const deleted = await prisma.model.deleteMany({
+    where: { legacyId: { notIn: validLegacyIds } }
+  });
+  if (deleted.count > 0) {
+    console.log(`  ✓ Removed ${deleted.count} obsolete models`);
+  }
 
   // 3. Sync Admin Users
   for (const adminUser of DEFAULT_ADMIN_USERS) {

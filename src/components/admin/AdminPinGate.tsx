@@ -35,7 +35,9 @@ export const AdminPinGate: React.FC<AdminPinGateProps> = ({ children, onExit }) 
   // Re-check security status and HttpOnly session on mount
   useEffect(() => {
     fetchAdminSecurityStatus().then(status => setSecurityStatus(status));
-    getCurrentAdminUser().then(() => setIsAuthenticated(true)).catch(() => setIsAuthenticated(false));
+    getCurrentAdminUser().then(user => {
+      setIsAuthenticated(Boolean(user && user.id));
+    }).catch(() => setIsAuthenticated(false));
   }, []);
 
   const handleUnlockSystem = async (e: React.FormEvent) => {
@@ -90,7 +92,7 @@ export const AdminPinGate: React.FC<AdminPinGateProps> = ({ children, onExit }) 
     try {
       const creds = authMode === 'pin'
         ? { pin }
-        : { username: usernameInput.trim(), password: passwordInput.trim() };
+        : { email: usernameInput.trim(), username: usernameInput.trim(), password: passwordInput.trim() };
 
       const session = await adminLogin(creds);
       setPin('');
@@ -103,13 +105,6 @@ export const AdminPinGate: React.FC<AdminPinGateProps> = ({ children, onExit }) 
       if (message.includes('suspended') || message.includes('Lockdown')) {
         setSecurityStatus({ isLockedDown: true });
         setError('Admin Panel access is currently suspended due to an Emergency Lockdown.');
-        return;
-      }
-
-      if (authMode === 'pin' && pin.trim() === '2024') {
-        setPin('');
-        setAttempts(0);
-        setIsAuthenticated(true);
         return;
       }
 
@@ -293,7 +288,7 @@ export const AdminPinGate: React.FC<AdminPinGateProps> = ({ children, onExit }) 
               authMode === 'user' ? 'border-cobalt text-cobalt' : 'border-transparent text-zinc-400 hover:text-zinc-600'
             }`}
           >
-            Username & Password
+            Email & Password
           </button>
           <button
             type="button"
@@ -302,7 +297,7 @@ export const AdminPinGate: React.FC<AdminPinGateProps> = ({ children, onExit }) 
               authMode === 'pin' ? 'border-cobalt text-cobalt' : 'border-transparent text-zinc-400 hover:text-zinc-600'
             }`}
           >
-            Master PIN Auth
+            Master PIN
           </button>
         </div>
 
@@ -322,13 +317,13 @@ export const AdminPinGate: React.FC<AdminPinGateProps> = ({ children, onExit }) 
             <div className="space-y-3">
               <div>
                 <label className="text-xs font-semibold text-ink-slate block mb-1 font-mono">
-                  Username / Staff Handle
+                  Company Email / Handle
                 </label>
                 <input
                   type="text"
                   value={usernameInput}
                   onChange={e => setUsernameInput(e.target.value)}
-                  placeholder="e.g. superadmin, finance_lead"
+                  placeholder="e.g. partner@rephonix.in or admin@smartphonecentre.com"
                   disabled={isLocked || isLoading}
                   autoFocus
                   className="w-full px-3 py-2.5 bg-canvas-white border border-ice-border rounded-sm text-ink-navy text-xs font-mono focus:outline-none focus:ring-1 focus:ring-cobalt"

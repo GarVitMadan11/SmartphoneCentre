@@ -3,15 +3,16 @@ import { Booking, Brand, Model } from '../../data/mockDatabase';
 import { 
   ArrowLeft, RefreshCw, ShieldAlert, Cpu, Smartphone, Tablet, Watch, 
   Zap, Truck, MessageSquare, CreditCard, ChevronLeft, ChevronRight, 
-  Menu, X, ShieldCheck, Eye, Layers
+  Menu, X, ShieldCheck, Eye, Layers, Users
 } from 'lucide-react';
-import { fetchBookings, triggerAdminLockdown, fetchCurrentUser, ApiUser } from '../../utils/api';
+import { fetchBookings, triggerAdminLockdown, fetchCurrentUser, getCurrentAdminUser, AdminUserSession, ApiUser } from '../../utils/api';
 import { AdminContextProvider } from '../../context/AdminContext';
 import CatalogTab from './tabs/CatalogTab';
 import CashifyMonitorTab from './tabs/CashifyMonitorTab';
 import LedgerTab from './tabs/LedgerTab';
 import SupportTab from './tabs/SupportTab';
 import AuditLogTab from './tabs/AuditLogTab';
+import StaffTab from './tabs/StaffTab';
 
 export type AdminNavKey = 
   | 'smartphones' 
@@ -21,7 +22,8 @@ export type AdminNavKey =
   | 'inspections' 
   | 'support' 
   | 'finance' 
-  | 'audit';
+  | 'audit'
+  | 'staff';
 
 interface AdminPanelProps {
   onBack: () => void;
@@ -48,17 +50,50 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  const [adminUser, setAdminUser] = useState<AdminUserSession | null>(null);
+
   // Super Admin Role Preview Mode
   const [previewRole, setPreviewRole] = useState<'SUPER_ADMIN' | 'CATALOG_EDITOR' | 'OPERATIONS_AGENT' | 'FINANCE_APPROVER'>('SUPER_ADMIN');
 
   useEffect(() => {
+    getCurrentAdminUser().then(u => {
+      setAdminUser(u);
+    }).catch(() => setAdminUser(null));
     fetchCurrentUser().then(res => {
       setCurrentUser(res.user);
     }).catch(() => setCurrentUser(null));
   }, []);
 
-  const realRole = currentUser?.role ?? 'SUPER_ADMIN';
+  const realRole = adminUser?.role ?? (currentUser?.role as any) ?? 'SUPER_ADMIN';
   const effectiveRole = realRole === 'SUPER_ADMIN' ? previewRole : realRole;
+
+  // Granular Service-based Access Check
+  const hasAccessTo = useCallback((serviceKey: string) => {
+    if (effectiveRole === 'SUPER_ADMIN') return true;
+    if (effectiveRole === 'CATALOG_EDITOR') {
+      return ['smartphones', 'tablets', 'smartwatches', 'cashify'].includes(serviceKey);
+    }
+    if (effectiveRole === 'OPERATIONS_AGENT') {
+      return ['inspections', 'support'].includes(serviceKey);
+    }
+    if (effectiveRole === 'FINANCE_APPROVER') {
+      return ['finance'].includes(serviceKey);
+    }
+    const perms = adminUser?.permissions || [];
+    return perms.includes(serviceKey);
+  }, [effectiveRole, adminUser]);
+
+  // Auto-switch navigation if current active item is prohibited by permissions
+  useEffect(() => {
+    if (effectiveRole === 'SUPER_ADMIN') return;
+    if (!hasAccessTo(activeNav)) {
+      const allServices: AdminNavKey[] = ['smartphones', 'tablets', 'smartwatches', 'cashify', 'inspections', 'support', 'finance'];
+      const firstAllowed = allServices.find(s => hasAccessTo(s));
+      if (firstAllowed) {
+        setActiveNav(firstAllowed);
+      }
+    }
+  }, [effectiveRole, activeNav, hasAccessTo]);
 
   // Sync bookings from props
   useEffect(() => {
@@ -120,23 +155,6 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
     [bookings]
   );
 
-  // Auto-switch navigation if current active item is prohibited by effective role
-  useEffect(() => {
-    if (effectiveRole === 'CATALOG_EDITOR') {
-      if (!['smartphones', 'tablets', 'smartwatches', 'cashify', 'audit'].includes(activeNav)) {
-        setActiveNav('smartphones');
-      }
-    } else if (effectiveRole === 'OPERATIONS_AGENT') {
-      if (!['inspections', 'support'].includes(activeNav)) {
-        setActiveNav('inspections');
-      }
-    } else if (effectiveRole === 'FINANCE_APPROVER') {
-      if (!['finance', 'audit'].includes(activeNav)) {
-        setActiveNav('finance');
-      }
-    }
-  }, [effectiveRole, activeNav]);
-
   // Breadcrumbs text helper
   const breadcrumbInfo = useMemo(() => {
     switch (activeNav) {
@@ -156,6 +174,8 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
         return { section: 'Finance & Ledger', title: 'Payouts & Ledger', icon: CreditCard };
       case 'audit':
         return { section: 'Security & Governance', title: 'System Audit Logs', icon: ShieldCheck };
+      case 'staff':
+        return { section: 'Security & Governance', title: 'Staff & Access Control', icon: Users };
       default:
         return { section: 'Control Studio', title: 'Admin Overview', icon: Layers };
     }
@@ -244,8 +264,8 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
           {/* Navigation Links Grouped by Domain */}
           <div className="p-3 space-y-4 overflow-y-auto max-h-[calc(100vh-250px)]">
             
-            {/* Group A: Inventory & Valuation (Catalog Editor, Super Admin) */}
-            {(effectiveRole === 'SUPER_ADMIN' || effectiveRole === 'CATALOG_EDITOR') && (
+            {/* Group A: Inventory & Valuation */}
+            {(hasAccessTo('smartphones') || hasAccessTo('tablets') || hasAccessTo('smartwatches') || hasAccessTo('cashify')) && (
               <div>
                 {!sidebarCollapsed && (
                   <div className="px-3 pb-1.5 text-[10px] font-mono font-bold tracking-wider uppercase text-slate-400">
@@ -253,22 +273,24 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
                   </div>
                 )}
                 <div className="space-y-1">
-                  <NavItem navKey="smartphones" label="Smartphones" icon={Smartphone} />
-                  <NavItem navKey="tablets" label="Tablets" icon={Tablet} />
-                  <NavItem navKey="smartwatches" label="Smartwatches" icon={Watch} />
-                  <NavItem 
-                    navKey="cashify" 
-                    label="Cashify Monitor" 
-                    icon={Zap} 
-                    badge="Live" 
-                    badgeColor="bg-amber-400/20 text-amber-300" 
-                  />
+                  {hasAccessTo('smartphones') && <NavItem navKey="smartphones" label="Smartphones" icon={Smartphone} />}
+                  {hasAccessTo('tablets') && <NavItem navKey="tablets" label="Tablets" icon={Tablet} />}
+                  {hasAccessTo('smartwatches') && <NavItem navKey="smartwatches" label="Smartwatches" icon={Watch} />}
+                  {hasAccessTo('cashify') && (
+                    <NavItem 
+                      navKey="cashify" 
+                      label="Cashify Monitor" 
+                      icon={Zap} 
+                      badge="Live" 
+                      badgeColor="bg-amber-400/20 text-amber-300" 
+                    />
+                  )}
                 </div>
               </div>
             )}
 
-            {/* Group B: Operations & Logistics (Operations Agent, Super Admin) */}
-            {(effectiveRole === 'SUPER_ADMIN' || effectiveRole === 'OPERATIONS_AGENT') && (
+            {/* Group B: Operations & Logistics */}
+            {(hasAccessTo('inspections') || hasAccessTo('support')) && (
               <div>
                 {!sidebarCollapsed && (
                   <div className="px-3 pb-1.5 text-[10px] font-mono font-bold tracking-wider uppercase text-slate-400">
@@ -276,20 +298,22 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
                   </div>
                 )}
                 <div className="space-y-1">
-                  <NavItem 
-                    navKey="inspections" 
-                    label="Doorstep Pickups" 
-                    icon={Truck} 
-                    badge={pendingInspections > 0 ? pendingInspections : undefined}
-                    badgeColor="bg-blue-500/20 text-blue-300"
-                  />
-                  <NavItem navKey="support" label="Support Desk" icon={MessageSquare} />
+                  {hasAccessTo('inspections') && (
+                    <NavItem 
+                      navKey="inspections" 
+                      label="Doorstep Pickups" 
+                      icon={Truck} 
+                      badge={pendingInspections > 0 ? pendingInspections : undefined}
+                      badgeColor="bg-blue-500/20 text-blue-300"
+                    />
+                  )}
+                  {hasAccessTo('support') && <NavItem navKey="support" label="Support Desk" icon={MessageSquare} />}
                 </div>
               </div>
             )}
 
-            {/* Group C: Finance & Ledger (Finance Approver, Super Admin) */}
-            {(effectiveRole === 'SUPER_ADMIN' || effectiveRole === 'FINANCE_APPROVER') && (
+            {/* Group C: Finance & Ledger */}
+            {hasAccessTo('finance') && (
               <div>
                 {!sidebarCollapsed && (
                   <div className="px-3 pb-1.5 text-[10px] font-mono font-bold tracking-wider uppercase text-slate-400">
@@ -308,15 +332,18 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
               </div>
             )}
 
-            {/* Group D: System & Security */}
+            {/* Group D: System & Governance */}
             {(effectiveRole === 'SUPER_ADMIN' || effectiveRole === 'CATALOG_EDITOR' || effectiveRole === 'FINANCE_APPROVER') && (
               <div>
                 {!sidebarCollapsed && (
                   <div className="px-3 pb-1.5 text-[10px] font-mono font-bold tracking-wider uppercase text-slate-400">
-                    Governance
+                    Governance & Team
                   </div>
                 )}
                 <div className="space-y-1">
+                  {effectiveRole === 'SUPER_ADMIN' && (
+                    <NavItem navKey="staff" label="Staff & Roles" icon={Users} />
+                  )}
                   <NavItem navKey="audit" label="Audit Trail" icon={ShieldCheck} />
                 </div>
               </div>
@@ -544,6 +571,11 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
           {/* Governance: Audit Trail */}
           {activeNav === 'audit' && (
             <AuditLogTab />
+          )}
+
+          {/* Team & Role Access Control */}
+          {activeNav === 'staff' && (
+            <StaffTab />
           )}
         </main>
       </div>

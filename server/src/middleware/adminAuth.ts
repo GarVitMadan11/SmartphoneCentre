@@ -23,7 +23,9 @@ export const JWT_AUDIENCE = 'smartphone-centre-admin';
 export interface AdminPayload {
   sub: string;       // adminUserId
   username: string;
+  email?: string;
   role: 'SUPER_ADMIN' | 'FINANCE_APPROVER' | 'OPERATIONS_AGENT' | 'CATALOG_EDITOR' | 'admin';
+  permissions?: string[];
   iss: string;
   aud: string;
 }
