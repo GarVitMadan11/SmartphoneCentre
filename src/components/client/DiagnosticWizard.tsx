@@ -70,6 +70,7 @@ const getEngineeringLabel = (description: string) => {
     'Touch ID (Home Button) Sensor Faulty':             'Touch ID Biometric Sensor Security Fee',
     'Fingerprint Scanner / Biometrics Faulty':          'Biometric Sensor Security Fee',
     'Battery Health 80% – 85%':                         'Battery Capacity Degradation Fee',
+    'Original Battery Health 80% – 85%':                'Battery Capacity Degradation Fee',
     'Battery Health 80% – 85% (Moderate Drain)':        'Battery Capacity Degradation Fee',
     'Battery Health < 80% / Heavy Drain':               'Battery Module Replacement Fee',
     
@@ -1604,7 +1605,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                 <div className="mb-6 text-left">
                   <span className="text-[11px] font-mono tracking-[0.2em] text-slate-700 uppercase block mb-1 font-bold">Step 5 of 6 // Wireless, Power & Authenticity</span>
                   <h3 className="text-2xl sm:text-3xl font-bold text-slate-950 tracking-tight">Connectivity & Verification</h3>
-                  <p className="text-xs sm:text-sm text-slate-800 mt-2 font-medium">Verify battery condition, cellular/Wi-Fi antennas, and motherboard serial mappings.</p>
+                  <p className="text-xs sm:text-sm text-slate-800 mt-2 font-medium">Verify original company battery condition, cellular/Wi-Fi antennas, and motherboard serial mappings.</p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-6 text-left">
@@ -1646,9 +1647,13 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           <ShieldCheck className="w-7 h-7 text-emerald-600" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-bold text-sm text-ink-navy">Connectivity & Battery Healthy</h4>
+                          <h4 className="font-bold text-sm text-ink-navy">
+                            {isApple ? 'Original Battery (>85%) & Connectivity Healthy' : 'Original Company Battery & Connectivity Healthy'}
+                          </h4>
                           <p className="text-xs text-ink-muted mt-1 font-light leading-snug">
-                            Battery is original/above 85%, cellular/Wi-Fi antennas are strong, and {isApple ? '3uTools checks pass' : 'hardware diagnostic checks pass'}.
+                            {isApple 
+                              ? 'Battery is 100% original company-fitted & above 85% health (not a duplicate showing 100%), cellular/Wi-Fi antennas are strong, and all 3uTools checks pass.' 
+                              : 'Battery is 100% original company-fitted (never replaced with duplicate/local battery), cellular/Wi-Fi antennas are strong, and hardware diagnostic checks pass.'}
                           </p>
                         </div>
                         <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 mt-0.5 ${

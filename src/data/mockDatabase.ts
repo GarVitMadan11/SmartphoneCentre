@@ -951,8 +951,8 @@ export function getDefectRulesForCategory(
     ...(isApple ? [{
       id: 'defect-battery-80-85' as const,
       category: 'connectivity' as const,
-      description: 'Battery Health 80% – 85%',
-      subText: 'Maximum capacity is between 80% and 85% in Settings → Battery → Battery Health.',
+      description: 'Original Battery Health 80% – 85%',
+      subText: 'Maximum capacity is between 80% and 85% in Settings → Battery → Battery Health (Original Battery).',
       deductionFixed: 1000,
       deductionPercentage: 0.025
     }] : []),
@@ -969,10 +969,10 @@ export function getDefectRulesForCategory(
     {
       id: 'defect-battery-warning',
       category: 'connectivity',
-      description: isApple ? 'Non-Genuine Battery Warning' : 'Battery Replaced / Duplicate Battery',
+      description: 'Battery Replaced / Duplicate Battery',
       subText: isApple 
-        ? '"Important Battery Message" alert visible in Settings → Battery (battery was replaced).'
-        : 'Battery was replaced from a local repair shop or is not original company battery.',
+        ? 'Battery was replaced at a local repair shop (even if currently showing 100% capacity) or shows "Important Battery Message" in Settings.'
+        : 'Battery was replaced from a local repair shop or is not original company battery (even if showing 100% charge).',
       deductionFixed: 2000,
       deductionPercentage: 0.015
     },
