@@ -244,8 +244,8 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
   React.useEffect(() => {
     if (isScreenNonOriginal) {
       setHasWarranty(false);
-      setWarrantyAge('under_3m');
-      setDeviceAge('under_3m');
+      setWarrantyAge('out_of_warranty');
+      setDeviceAge('1_to_2y');
       setWarrantyStatus('expired');
     }
   }, [isScreenNonOriginal]);
@@ -356,8 +356,8 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
       releaseYear: model.releaseYear,
       hasSpen,
       simType,
-      warrantyAge: isScreenNonOriginal ? 'under_3m' : warrantyAge,
-      deviceAge: isScreenNonOriginal ? 'under_3m' : deviceAge,
+      warrantyAge: isScreenNonOriginal ? 'out_of_warranty' : warrantyAge,
+      deviceAge: isScreenNonOriginal ? '1_to_2y' : deviceAge,
       dualEsim: dualEsim === true
     });
   }, [variant, selectedDefects, model, simType, warrantyAge, deviceAge, dualEsim, isScreenNonOriginal, hasSpen]);

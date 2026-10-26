@@ -416,8 +416,9 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
 
   // Dual eSIM Deduction — Apple iPhone models (eSIM only / no physical SIM tray)
   // iPhone 14/15/16 series: -5% | iPhone 17 & 18 Pro/Pro Max (and 17/18 series): -8%
+  // Only applies if not already factored into fVariant (imported_esim_only)
   let dualEsimDeduction = 0;
-  if (input.dualEsim === true && isApple) {
+  if (input.dualEsim === true && isApple && variantKey !== 'imported_esim_only') {
     if (isIphone17or18) {
       dualEsimDeduction = Math.round(preAccessoryValue * 0.08);
       adjustments.push({
@@ -461,8 +462,9 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
   const dAccessoriesCapped = Math.min(dAccessoriesRaw, maxAccessoryCap);
 
   // Single SIM Adjustment — ₹500 regional variant deduction
+  // Only applies if not already factored into fVariant (imported_esim_only) and not dualEsim
   let singleSimDeduction = 0;
-  if (input.simType === 'single_sim') {
+  if (input.simType === 'single_sim' && variantKey !== 'imported_esim_only' && !input.dualEsim) {
     singleSimDeduction = 500;
     adjustments.push({
       id: 'single-sim-deduction',
@@ -493,6 +495,10 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
 
   const isSpecialPartsCategory = fCondition < 0.55;
 
+  const totalConditionDeductions = Math.round(basePrice * (1.0 - fCondition));
+  const totalFixedAdjustments = -(dAccessoriesCapped + dualEsimDeduction + singleSimDeduction);
+  const configurationAdjustments = Math.round(adjustedBenchmark - (basePrice - totalConditionDeductions));
+
   // Construct Audit Trail
   const auditTrail: PricingAuditTrail = {
     deviceId: input.modelId,
@@ -516,9 +522,9 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
     dAccessories: dAccessoriesRaw,
     dAccessoriesCapped,
     adjustments,
-    totalFixedAdjustments: -dAccessoriesCapped,
+    totalFixedAdjustments,
     totalWarrantyBonus: 0,
-    totalConditionDeductions: basePrice - preAccessoryValue,
+    totalConditionDeductions,
     totalRepairCostDeductions: 0,
     adjustedBenchmark,
     vendorMultiplier,
@@ -539,8 +545,8 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
     auditTrail,
     customerSummary: {
       baseDeviceValue: basePrice,
-      configurationAdjustments: Math.round(preAccessoryValue - basePrice),
-      conditionAdjustments: -dAccessoriesCapped,
+      conditionAdjustments: -totalConditionDeductions,
+      configurationAdjustments,
       finalOffer: finalRephonixPrice
     }
   };
