@@ -11,16 +11,44 @@ export function escapeHtml(str: any): string {
     .replace(/'/g, '&#39;');
 }
 
-function cleanEnv(val: string | undefined): string {
-  if (!val) return '';
-  return val.trim().replace(/^["']|["']$/g, '').trim();
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+function getEnvValue(key: string): string {
+  const envVal = process.env[key];
+  if (envVal && envVal.trim()) {
+    return envVal.trim().replace(/^["']|["']$/g, '').trim();
+  }
+  try {
+    const candidates = [
+      path.resolve(__dirname, '../../.env'),
+      path.resolve(process.cwd(), 'server/.env'),
+      path.resolve(process.cwd(), '.env'),
+    ];
+    for (const cand of candidates) {
+      if (fs.existsSync(cand)) {
+        const text = fs.readFileSync(cand, 'utf8');
+        const re = new RegExp(`^\\s*${key}\\s*=\\s*(.*)$`, 'm');
+        const m = text.match(re);
+        if (m && m[1]) {
+          const val = m[1].trim().replace(/^["']|["']$/g, '').trim();
+          if (val) return val;
+        }
+      }
+    }
+  } catch {}
+  return '';
 }
 
 function getTransporter() {
-  const host = cleanEnv(process.env.SMTP_HOST) || 'smtp.gmail.com';
-  const port = parseInt(cleanEnv(process.env.SMTP_PORT) || '587', 10);
-  const user = cleanEnv(process.env.SMTP_USER || process.env.SECURITY_SMTP_USER || process.env.EMAIL_USER || process.env.MAIL_USER || process.env.ADMIN_ALERT_EMAIL) || 'garvitmadan511@gmail.com';
-  const pass = cleanEnv(process.env.SMTP_PASS || process.env.SECURITY_SMTP_PASS || process.env.EMAIL_PASS || process.env.MAIL_PASS || process.env.EMAIL_PASSWORD);
+  const host = getEnvValue('SMTP_HOST') || 'smtp.hostinger.com';
+  const port = parseInt(getEnvValue('SMTP_PORT') || '465', 10);
+  const user = getEnvValue('SMTP_USER') || getEnvValue('SECURITY_SMTP_USER') || getEnvValue('EMAIL_USER') || getEnvValue('MAIL_USER') || 'support@rephonix.in';
+  const pass = getEnvValue('SMTP_PASS') || getEnvValue('SECURITY_SMTP_PASS') || getEnvValue('EMAIL_PASS') || getEnvValue('MAIL_PASS') || getEnvValue('EMAIL_PASSWORD');
 
   if (!user || !pass) {
     return null;
@@ -29,15 +57,15 @@ function getTransporter() {
   return nodemailer.createTransport({
     host,
     port,
-    secure: port === 465,
+    secure: port === 465 || getEnvValue('SMTP_SECURE') === 'true',
     auth: { user, pass },
     tls: { rejectUnauthorized: false },
   });
 }
 
 function getFromAddress(): string {
-  const user = cleanEnv(process.env.SMTP_USER || process.env.SECURITY_SMTP_USER || process.env.EMAIL_USER) || 'garvitmadan511@gmail.com';
-  const rawFrom = cleanEnv(process.env.EMAIL_FROM);
+  const user = getEnvValue('SMTP_USER') || getEnvValue('SECURITY_SMTP_USER') || getEnvValue('EMAIL_USER') || 'support@rephonix.in';
+  const rawFrom = getEnvValue('EMAIL_FROM');
   if (rawFrom) {
     if (rawFrom.includes('<') && rawFrom.includes('>')) {
       return rawFrom;
