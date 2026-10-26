@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, Lock, Mail, ArrowLeft, AlertCircle, Phone, User, Loader2 } from 'lucide-react';
-import emailjs from '@emailjs/browser';
 import { customerSignup, verifyOtp, ApiUser } from '../../utils/api';
 import { signupWithEmail, loginWithEmail } from '../../services/firebaseAuth';
 
@@ -50,28 +49,7 @@ export default function SignupPage({ onSignupSuccess, onNavigate, redirectParam 
       if (response.status === 'otp_sent') {
         if (response.otp) {
           console.log(`🔑 [Verification Code]: ${response.otp}`);
-          const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
-          const templateId = import.meta.env.VITE_EMAILJS_OTP_TEMPLATE_ID;
-          const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
-
-          if (!serviceId || !templateId || !publicKey) {
-            throw new Error('EmailJS environment variables are not configured in the browser.');
-          }
-
-          const templateParams = {
-            email: email.trim(),
-            passcode: response.otp,
-            time: '10 minutes',
-          };
-
-          try {
-            await emailjs.send(serviceId, templateId, templateParams, publicKey);
-          } catch (mailErr: any) {
-            console.error('EmailJS signup send failed:', mailErr);
-            throw new Error('Unable to send verification code. Please try again.');
-          }
         }
-
         setMode('otp');
       }
     } catch (err: any) {

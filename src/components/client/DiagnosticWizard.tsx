@@ -11,7 +11,6 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { getIllustration } from './Illustrations';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
-import emailjs from '@emailjs/browser';
 import { checkEmail, customerLogin, customerSignup, verifyOtp, requestPasswordResetOtp, resetPasswordWithOtp, sendQuoteAlertApi, sendPriceMatchAlertApi, ApiUser } from '../../utils/api';
 import { saveQuote, isQuoteAlreadySaved } from '../../utils/savedQuotes';
 import { TabletDiagnosticFlow } from './TabletDiagnosticFlow';
@@ -562,21 +561,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
     try {
       const res = await requestPasswordResetOtp(cleanEmail);
       if (res && (res as any).otp) {
-        const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
-        const templateId = import.meta.env.VITE_EMAILJS_OTP_TEMPLATE_ID;
-        const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
-
-        if (serviceId && templateId && publicKey) {
-          try {
-            await emailjs.send(serviceId, templateId, {
-              email: cleanEmail,
-              passcode: (res as any).otp,
-              time: '10 minutes',
-            }, publicKey);
-          } catch (e) {
-            console.error('EmailJS forgot password send notice:', e);
-          }
-        }
+        console.log(`🔑 [Password Reset OTP]: ${(res as any).otp}`);
       }
       setForgotOtpInput('');
       setForgotNewPassword('');
@@ -601,21 +586,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
     try {
       const res = await requestPasswordResetOtp(cleanEmail);
       if (res && (res as any).otp) {
-        const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
-        const templateId = import.meta.env.VITE_EMAILJS_OTP_TEMPLATE_ID;
-        const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
-
-        if (serviceId && templateId && publicKey) {
-          try {
-            await emailjs.send(serviceId, templateId, {
-              email: cleanEmail,
-              passcode: (res as any).otp,
-              time: '10 minutes',
-            }, publicKey);
-          } catch (e) {
-            console.error('EmailJS resend notice:', e);
-          }
-        }
+        console.log(`🔑 [Resend Password Reset OTP]: ${(res as any).otp}`);
       }
       setForgotSuccess('A new verification code has been sent to your email.');
       setForgotCooldown(60);
@@ -695,28 +666,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
       if (res.status === 'otp_sent') {
         if (res.otp) {
           console.log(`🔑 [Verification Code]: ${res.otp}`);
-          const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
-          const templateId = import.meta.env.VITE_EMAILJS_OTP_TEMPLATE_ID;
-          const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
-
-          if (!serviceId || !templateId || !publicKey) {
-            throw new Error('EmailJS environment variables are not configured in the browser.');
-          }
-
-          const templateParams = {
-            email: emailInput.trim(),
-            passcode: res.otp,
-            time: '10 minutes',
-          };
-
-          try {
-            await emailjs.send(serviceId, templateId, templateParams, publicKey);
-          } catch (mailErr: any) {
-            console.error('EmailJS signup send failed:', mailErr);
-            throw new Error('Unable to send verification code. Please try again.');
-          }
         }
-
         setModalStage('otp');
       }
     } catch (err: any) {

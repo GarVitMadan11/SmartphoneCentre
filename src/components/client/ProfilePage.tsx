@@ -4,7 +4,6 @@ import {
   Package, FileText, Download, Copy, Check, CheckCircle2, MapPin, ArrowRight,
   Bookmark, Trash2, Sparkles, TrendingUp, TrendingDown
 } from 'lucide-react';
-import emailjs from '@emailjs/browser';
 import {
   updateCustomerProfile, sendEmailOtp, verifyEmailOtp,
   fetchMyBookings, downloadBookingPdf, ApiBooking
@@ -168,26 +167,6 @@ export default function ProfilePage({
       const response = await sendEmailOtp(newEmail.trim());
       if (response.otp) {
         console.log(`🔑 [Email Change OTP]: ${response.otp}`);
-        const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
-        const templateId = import.meta.env.VITE_EMAILJS_OTP_TEMPLATE_ID;
-        const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
-
-        if (!serviceId || !templateId || !publicKey) {
-          throw new Error('EmailJS environment variables are not configured in the browser.');
-        }
-
-        const templateParams = {
-          email: newEmail.trim(),
-          passcode: response.otp,
-          time: '10 minutes',
-        };
-
-        try {
-          await emailjs.send(serviceId, templateId, templateParams, publicKey);
-        } catch (mailErr: any) {
-          console.error('EmailJS profile send failed:', mailErr);
-          throw new Error('Unable to send verification code. Please try again.');
-        }
       }
 
       setVerificationSuccess('Verification code sent successfully to your email.');

@@ -138,7 +138,7 @@ export async function sendSecurityEmail(to: string, name: string, action: string
 export async function sendOtpEmail(to: string, name: string, otp: string): Promise<void> {
   const transporter = getTransporter();
   if (!transporter) {
-    console.warn(`[Email Service] SMTP_PASS not set. Skipping SMTP send to ${to}. OTP is returned to client for EmailJS delivery.`);
+    console.warn(`[Email Service] ⚠️ SMTP_PASS is not set in environment. Cannot send OTP email via Hostinger SMTP to ${to}.`);
     return;
   }
   const body = '<p class="greeting">Hi ' + escapeHtml(name) + ',</p>'
@@ -149,7 +149,8 @@ export async function sendOtpEmail(to: string, name: string, otp: string): Promi
     + '<p class="note">If you did not request this code, you can safely ignore this email.</p>';
   const html = buildEmailHtml('Your Rephonix Verification Code', body);
   const text = 'Hi ' + name + ',\n\nYour verification code is: ' + otp + '\n\nValid for 10 minutes.\n\n-- The Rephonix Team';
-  await transporter.sendMail({ from: FROM_ADDRESS, to, subject: 'Your Rephonix Verification Code', html, text });
+  const info = await transporter.sendMail({ from: FROM_ADDRESS, to, subject: 'Your Rephonix Verification Code', html, text });
+  console.log(`[Email Service] ✅ Verification code successfully sent to ${to} from ${FROM_ADDRESS} (MessageID: ${info.messageId})`);
 }
 
 export async function sendPilotFeedbackEmail(

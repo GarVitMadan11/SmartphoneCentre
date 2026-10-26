@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Mail, Lock, Eye, EyeOff, ArrowLeft, AlertCircle, ShieldCheck, Loader2 } from 'lucide-react';
-import emailjs from '@emailjs/browser';
 import { requestPasswordResetOtp, resetPasswordWithOtp } from '../../utils/api';
 
 interface ForgotPasswordPageProps {
@@ -46,26 +45,6 @@ export default function ForgotPasswordPage({ onNavigate }: ForgotPasswordPagePro
       const response = await requestPasswordResetOtp(cleanEmail);
       if (response.otp) {
         console.log(`🔑 [Password Reset OTP]: ${response.otp}`);
-        const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
-        const templateId = import.meta.env.VITE_EMAILJS_OTP_TEMPLATE_ID;
-        const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
-
-        if (!serviceId || !templateId || !publicKey) {
-          throw new Error('EmailJS environment variables are not configured in the browser.');
-        }
-
-        const templateParams = {
-          email: cleanEmail,
-          passcode: response.otp,
-          time: '10 minutes',
-        };
-
-        try {
-          await emailjs.send(serviceId, templateId, templateParams, publicKey);
-        } catch (mailErr: any) {
-          console.error('EmailJS forgot password send failed:', mailErr);
-          throw new Error('Unable to send verification code. Please try again.');
-        }
       }
 
       setSuccess('Verification code sent successfully to your email.');
