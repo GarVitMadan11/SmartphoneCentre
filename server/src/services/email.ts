@@ -8,7 +8,8 @@ import nodemailer from 'nodemailer';
 let cachedTransporter: nodemailer.Transporter | null = null;
 
 export function getTransporter(): nodemailer.Transporter | null {
-  const pass = process.env.SMTP_PASS || process.env.EMAIL_PASS || process.env.MAIL_PASS || process.env.EMAIL_PASSWORD;
+  const user = process.env.SMTP_USER || 'support@rephonix.in';
+  const pass = process.env.SMTP_PASS || process.env.EMAIL_PASS || process.env.MAIL_PASS || process.env.EMAIL_PASSWORD || 'Rephonix@152026';
   if (!pass) {
     return null;
   }
@@ -17,14 +18,13 @@ export function getTransporter(): nodemailer.Transporter | null {
   }
   const host = process.env.SMTP_HOST || 'smtp.hostinger.com';
   const port = parseInt(process.env.SMTP_PORT || '465', 10);
-  const secure = process.env.SMTP_SECURE !== 'false';
+  const secure = port === 465 || process.env.SMTP_SECURE === 'true';
   cachedTransporter = nodemailer.createTransport({
-    host, port, secure,
-    auth: {
-      user: process.env.SMTP_USER || 'support@rephonix.in',
-      pass,
-    },
-    tls: { rejectUnauthorized: process.env.NODE_ENV === 'production' },
+    host,
+    port,
+    secure,
+    auth: { user, pass },
+    tls: { rejectUnauthorized: false },
   });
   return cachedTransporter;
 }
@@ -149,8 +149,23 @@ export async function sendOtpEmail(to: string, name: string, otp: string): Promi
     + '<p class="note">If you did not request this code, you can safely ignore this email.</p>';
   const html = buildEmailHtml('Your Rephonix Verification Code', body);
   const text = 'Hi ' + name + ',\n\nYour verification code is: ' + otp + '\n\nValid for 10 minutes.\n\n-- The Rephonix Team';
-  const info = await transporter.sendMail({ from: FROM_ADDRESS, to, subject: 'Your Rephonix Verification Code', html, text });
-  console.log(`[Email Service] ✅ Verification code successfully sent to ${to} from ${FROM_ADDRESS} (MessageID: ${info.messageId})`);
+  try {
+    const info = await transporter.sendMail({ from: FROM_ADDRESS, to, subject: 'Your Rephonix Verification Code', html, text });
+    console.log(`[Email Service] ✅ Verification code successfully sent to ${to} from ${FROM_ADDRESS} (MessageID: ${info.messageId})`);
+  } catch (primaryErr: any) {
+    console.warn(`[Email Service] Primary port 465 failed (${primaryErr.message}). Retrying via port 587 STARTTLS...`);
+    const user = process.env.SMTP_USER || 'support@rephonix.in';
+    const pass = process.env.SMTP_PASS || process.env.EMAIL_PASS || process.env.MAIL_PASS || process.env.EMAIL_PASSWORD || 'Rephonix@152026';
+    const fallbackTransporter = nodemailer.createTransport({
+      host: 'smtp.hostinger.com',
+      port: 587,
+      secure: false,
+      auth: { user, pass },
+      tls: { rejectUnauthorized: false },
+    });
+    const info = await fallbackTransporter.sendMail({ from: FROM_ADDRESS, to, subject: 'Your Rephonix Verification Code', html, text });
+    console.log(`[Email Service] ✅ Verification code successfully sent via port 587 to ${to} (MessageID: ${info.messageId})`);
+  }
 }
 
 export async function sendPilotFeedbackEmail(
