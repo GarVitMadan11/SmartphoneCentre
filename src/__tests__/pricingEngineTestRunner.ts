@@ -437,6 +437,23 @@ export function runPricingEngineTests(): { passed: number; total: number } {
     assert(res.auditTrail.vendorMultiplier === 1.03, 'Vendor multiplier is +3%');
   });
 
+  runTest('Test 26: iPhone 16 Pro Out of Warranty Receives 20% Penalty (fAge === 0.80)', () => {
+    const res = calculateStage1Valuation({
+      modelId: 'mod-16p',
+      brandId: 'brand-apple',
+      modelName: 'iPhone 16 Pro',
+      releaseYear: 2024,
+      variant: makeVariant(75705),
+      selectedDefects: [],
+      warrantyAge: 'out_of_warranty',
+      deviceAge: '1_to_2y'
+    });
+    assert(!res.isCritical, 'Not critical');
+    assert(res.auditTrail.fAge === 0.80, 'Age factor is 0.80 (20% out-of-warranty penalty)');
+    assert(res.adjustedBenchmark === Math.round(75705 * 0.80), 'Benchmark reflects 20% warranty deduction');
+    assert(res.finalPrice === roundToCleanIndianPrice(Math.round(75705 * 0.80 * 1.03)), 'Offer preserves +3% vendor edge over Cashify');
+  });
+
   console.log(`\n=== RESULTS: ${passed}/${total} TESTS PASSED ===`);
   return { passed, total };
 }

@@ -35,6 +35,7 @@ import {
 } from 'lucide-react';
 import { Model, Brand, BRANDS, isSmartwatchDevice, isTabletDevice, buildVariantPricesForModel, isVariantAvailable, predictCashifyPrice, hasSpenSupport } from '../../../data/mockDatabase';
 import { fetchModels, createModel, updateModel, deleteModel, testCashifyUrlApi, registerApprovedCashifyVariants } from '../../../utils/api';
+import cashifyCustomUrlsData from '../../../data/cashifyCustomUrls.json';
 import {
   saveBrandOrder,
   resetBrandOrder,
@@ -1368,21 +1369,506 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
   );
 };
 
+export const TABLET_CANONICAL_SLUGS: Record<string, { wifi?: string; cellular?: string; base: string }> = {
+  // Apple iPads
+  'apple-ipad-pro-m4-13': {
+    wifi: 'used-ipad-pro-m4-13-wi-fi-only',
+    cellular: 'used-ipad-pro-m4-13-wi-fi-cellular',
+    base: 'used-apple-ipad-pro-13-2024',
+  },
+  'apple-ipad-pro-m4-13-wifi': {
+    wifi: 'used-ipad-pro-m4-13-wi-fi-only',
+    base: 'used-ipad-pro-m4-13-wi-fi-only',
+  },
+  'apple-ipad-pro-m4-13-cellular': {
+    cellular: 'used-ipad-pro-m4-13-wi-fi-cellular',
+    base: 'used-ipad-pro-m4-13-wi-fi-cellular',
+  },
+  'apple-ipad-pro-m4-11': {
+    wifi: 'used-ipad-pro-m4-11-wi-fi-only',
+    cellular: 'used-ipad-pro-m4-11-wi-fi-cellular',
+    base: 'used-apple-ipad-pro-11-2024',
+  },
+  'apple-ipad-pro-m4-11-wifi': {
+    wifi: 'used-ipad-pro-m4-11-wi-fi-only',
+    base: 'used-ipad-pro-m4-11-wi-fi-only',
+  },
+  'apple-ipad-pro-m4-11-cellular': {
+    cellular: 'used-ipad-pro-m4-11-wi-fi-cellular',
+    base: 'used-ipad-pro-m4-11-wi-fi-cellular',
+  },
+  'apple-ipad-pro-12-9-6th': {
+    wifi: 'used-ipad-pro-12-9-5th-gen-wi-fi-only',
+    cellular: 'used-ipad-pro-12-9-5th-gen-wi-fi-cellular',
+    base: 'used-apple-ipad-pro-12-9-2022',
+  },
+  'apple-ipad-pro-11-4th': {
+    wifi: 'used-apple-ipad-pro-11-2022',
+    cellular: 'used-apple-ipad-pro-11-2022',
+    base: 'used-apple-ipad-pro-11-2022',
+  },
+  'apple-ipad-pro-12-9-5th': {
+    wifi: 'used-ipad-pro-12-9-5th-gen-wi-fi-only',
+    cellular: 'used-ipad-pro-12-9-5th-gen-wi-fi-cellular',
+    base: 'used-apple-ipad-pro-12-9-2021',
+  },
+  'apple-ipad-pro-11-3rd': {
+    wifi: 'used-apple-ipad-pro-11-2021',
+    cellular: 'used-apple-ipad-pro-11-2021',
+    base: 'used-apple-ipad-pro-11-2021',
+  },
+  'apple-ipad-pro-12-9-4th': {
+    wifi: 'used-ipad-pro-12-9-4th-gen-wi-fi-only',
+    cellular: 'used-ipad-pro-12-9-4th-gen-wi-fi-cellular',
+    base: 'used-apple-ipad-pro-12-9-2020',
+  },
+  'apple-ipad-pro-11-2nd': {
+    wifi: 'used-apple-ipad-pro-11-2020',
+    cellular: 'used-apple-ipad-pro-11-2020',
+    base: 'used-apple-ipad-pro-11-2020',
+  },
+  'apple-ipad-pro-12-9-3rd': {
+    wifi: 'used-ipad-pro-12-9-3rd-gen-wi-fi-only',
+    cellular: 'used-ipad-pro-12-9-3rd-gen-wi-fi-cellular',
+    base: 'used-apple-ipad-pro-12-9-2018',
+  },
+  'apple-ipad-pro-11-1st': {
+    wifi: 'used-apple-ipad-pro-11',
+    cellular: 'used-apple-ipad-pro-11',
+    base: 'used-apple-ipad-pro-11',
+  },
+  'apple-ipad-pro-10-5': {
+    wifi: 'used-ipad-pro-10-5-wi-fi-only',
+    cellular: 'used-ipad-pro-10-5-wi-fi-cellular',
+    base: 'used-ipad-pro-10-5-wi-fi-only',
+  },
+  'apple-ipad-pro-9-7': {
+    wifi: 'used-ipad-pro-9-7-wi-fi-only',
+    cellular: 'used-ipad-pro-9-7-wi-fi-cellular',
+    base: 'used-apple-ipad-pro-9-7',
+  },
+  'apple-ipad-air-m2-13': {
+    wifi: 'used-ipad-air-m2-13-wi-fi-only',
+    cellular: 'used-ipad-air-m2-13-wi-fi-cellular',
+    base: 'used-apple-ipad-air-13-2024',
+  },
+  'apple-ipad-air-m2-11': {
+    wifi: 'used-ipad-air-m2-11-wi-fi-only',
+    cellular: 'used-ipad-air-m2-11-wi-fi-cellular',
+    base: 'used-apple-ipad-air-11-2024',
+  },
+  'apple-ipad-air-5': {
+    wifi: 'used-apple-ipad-air-2022',
+    cellular: 'used-apple-ipad-air-2022',
+    base: 'used-apple-ipad-air-2022',
+  },
+  'apple-ipad-air-4': {
+    wifi: 'used-ipad-air-4th-gen-wi-fi-only',
+    cellular: 'used-ipad-air-4th-gen-wi-fi-cellular',
+    base: 'used-apple-ipad-air-2020',
+  },
+  'apple-ipad-air-3': {
+    wifi: 'used-ipad-air-3rd-gen-wi-fi-only',
+    cellular: 'used-ipad-air-3rd-gen-wi-fi-cellular',
+    base: 'used-apple-ipad-air-2019',
+  },
+  'apple-ipad-air-2': {
+    wifi: 'used-ipad-air-2-wi-fi-only',
+    cellular: 'used-ipad-air-2-wi-fi-cellular',
+    base: 'used-ipad-air-2-wi-fi-only',
+  },
+  'apple-ipad-mini-7': {
+    wifi: 'used-apple-ipad-mini-7',
+    cellular: 'used-apple-ipad-mini-7',
+    base: 'used-apple-ipad-mini-7',
+  },
+  'apple-ipad-mini-6': {
+    wifi: 'used-ipad-mini-6th-gen-wi-fi-only',
+    cellular: 'used-ipad-mini-6th-gen-wi-fi-cellular',
+    base: 'used-apple-ipad-mini-6',
+  },
+  'apple-ipad-mini-5': {
+    wifi: 'used-ipad-mini-5th-gen-wi-fi-only',
+    cellular: 'used-ipad-mini-5th-gen-wi-fi-cellular',
+    base: 'used-apple-ipad-mini-5',
+  },
+  'apple-ipad-mini-4': {
+    wifi: 'used-ipad-mini-4-wi-fi-only',
+    cellular: 'used-ipad-mini-4-wi-fi-cellular',
+    base: 'used-ipad-mini-4-wi-fi-only',
+  },
+  'apple-ipad-10gen': {
+    wifi: 'used-ipad-10-9-64-gb-wifi-only-2022',
+    cellular: 'used-apple-ipad-10-9-2022',
+    base: 'used-apple-ipad-10-9-2022',
+  },
+  'apple-ipad-9gen': {
+    wifi: 'used-ipad-10-2-64gb-wifi-only-2021',
+    cellular: 'used-apple-ipad-10-2-2021',
+    base: 'used-apple-ipad-10-2-2021',
+  },
+  'apple-ipad-8gen': {
+    wifi: 'used-ipad-10-2-32-gb-wifi-only-2020',
+    cellular: 'used-apple-ipad-10-2-2020',
+    base: 'used-apple-ipad-10-2-2020',
+  },
+  'apple-ipad-7gen': {
+    wifi: 'used-ipad-10-2-7th-gen-wi-fi-only',
+    cellular: 'used-ipad-10-2-7th-gen-wi-fi-cellular',
+    base: 'used-ipad-10-2-32-gb-wifi-only-2019',
+  },
+  'apple-ipad-6gen': {
+    wifi: 'used-ipad-9-7-6th-gen-wi-fi-only',
+    cellular: 'used-ipad-9-7-6th-gen-wi-fi-cellular',
+    base: 'used-apple-ipad-9-7-32-gb-wifi-only-2018',
+  },
+  'apple-ipad-5gen': {
+    wifi: 'used-ipad-9-7-5th-gen-wi-fi-only',
+    cellular: 'used-ipad-9-7-5th-gen-wi-fi-cellular',
+    base: 'used-apple-ipad-9-7-32gb-wifi-only-2017',
+  },
+
+  // Samsung Galaxy Tabs
+  'samsung-tab-s10-ultra': {
+    wifi: 'used-samsung-galaxy-tab-s10-ultra',
+    cellular: 'used-samsung-galaxy-tab-s10-ultra',
+    base: 'used-samsung-galaxy-tab-s10-ultra',
+  },
+  'samsung-tab-s10-plus': {
+    wifi: 'used-samsung-galaxy-tab-s10-plus',
+    cellular: 'used-samsung-galaxy-tab-s10-plus',
+    base: 'used-samsung-galaxy-tab-s10-plus',
+  },
+  'samsung-tab-s9-ultra': {
+    wifi: 'used-samsung-galaxy-tab-s9-ultra',
+    cellular: 'used-samsung-galaxy-tab-s9-ultra',
+    base: 'used-samsung-galaxy-tab-s9-ultra',
+  },
+  'samsung-tab-s9-plus': {
+    wifi: 'used-samsung-galaxy-tab-s9-plus',
+    cellular: 'used-samsung-galaxy-tab-s9-plus',
+    base: 'used-samsung-galaxy-tab-s9-plus',
+  },
+  'samsung-tab-s9': {
+    wifi: 'used-samsung-galaxy-tab-s9',
+    cellular: 'used-samsung-galaxy-tab-s9',
+    base: 'used-samsung-galaxy-tab-s9',
+  },
+  'samsung-tab-s9-fe-plus': {
+    wifi: 'used-samsung-galaxy-tab-s9-fe-plus',
+    cellular: 'used-samsung-galaxy-tab-s9-fe-plus',
+    base: 'used-samsung-galaxy-tab-s9-fe-plus',
+  },
+  'samsung-tab-s9-fe': {
+    wifi: 'used-samsung-galaxy-tab-s9-fe',
+    cellular: 'used-samsung-galaxy-tab-s9-fe',
+    base: 'used-samsung-galaxy-tab-s9-fe',
+  },
+  'samsung-tab-s8-ultra': {
+    wifi: 'used-samsung-galaxy-tab-s8-ultra-wifi-256gb',
+    cellular: 'used-samsung-galaxy-tab-s8-ultra-5g-256gb',
+    base: 'used-samsung-galaxy-tab-s8-ultra',
+  },
+  'samsung-tab-s8-plus': {
+    wifi: 'used-samsung-galaxy-tab-s8-plus-wifi-only-128gb',
+    cellular: 'used-samsung-galaxy-tab-s8-plus-5g-128gb',
+    base: 'used-samsung-galaxy-tab-s8-plus',
+  },
+  'samsung-tab-s8': {
+    wifi: 'used-samsung-galaxy-tab-s8-wifi-only-128gb',
+    cellular: 'used-samsung-galaxy-tab-s8-5g-128gb',
+    base: 'used-samsung-galaxy-tab-s8',
+  },
+  'samsung-tab-s7-plus': {
+    wifi: 'used-samsung-galaxy-tab-s7-plus-wifi-128gb',
+    cellular: 'used-samsung-galaxy-tab-s7-plus-lte-128gb',
+    base: 'used-samsung-galaxy-tab-s7-plus',
+  },
+  'samsung-tab-s7': {
+    wifi: 'used-samsung-galaxy-tab-s7-wifi-128gb',
+    cellular: 'used-samsung-galaxy-tab-s7-lte-128gb',
+    base: 'used-samsung-galaxy-tab-s7',
+  },
+  'samsung-tab-s7-fe': {
+    wifi: 'used-samsung-galaxy-tab-s7-fe-wifi-64gb',
+    cellular: 'used-samsung-galaxy-tab-s7-fe-lte',
+    base: 'used-samsung-galaxy-tab-s7-fe-lte',
+  },
+  'samsung-tab-s6': {
+    wifi: 'used-samsung-galaxy-tab-s6-wi-fi-6-gb-128-gb',
+    cellular: 'used-samsung-galaxy-tab-s6-lte-6-gb-128-gb',
+    base: 'used-samsung-galaxy-tab-s6',
+  },
+  'samsung-tab-s6-lite': {
+    wifi: 'used-samsung-galaxy-tab-s6-lite-wifi-64gb',
+    cellular: 'used-samsung-galaxy-tab-s6-lite-lte-64gb',
+    base: 'used-samsung-galaxy-tab-s6-lite',
+  },
+  'samsung-tab-s5e': {
+    wifi: 'used-samsung-galaxy-tab-s5e-wi-fi-4-gb-64-gb',
+    cellular: 'used-samsung-galaxy-tab-s5e-lte-4-gb-64-gb',
+    base: 'used-samsung-galaxy-tab-s5e',
+  },
+  'samsung-tab-a9-plus': {
+    wifi: 'used-samsung-galaxy-tab-a9-plus',
+    cellular: 'used-samsung-galaxy-tab-a9-plus',
+    base: 'used-samsung-galaxy-tab-a9-plus',
+  },
+  'samsung-tab-a9': {
+    wifi: 'used-samsung-galaxy-tab-a9',
+    cellular: 'used-samsung-galaxy-tab-a9-lte-64gb',
+    base: 'used-samsung-galaxy-tab-a9',
+  },
+  'samsung-tab-a8-10-5': {
+    wifi: 'used-samsung-galaxy-tab-a8-10-5-2021-32gb-wifi-only',
+    cellular: 'used-samsung-galaxy-tab-a8-10-5-2021-32gb-lte',
+    base: 'used-samsung-galaxy-tab-a8-2021',
+  },
+  'samsung-tab-a7-10-4': {
+    wifi: 'used-samsung-galaxy-tab-a7-10-4-2020-wifi-32gb',
+    cellular: 'used-samsung-galaxy-tab-a7-lte-3-gb-32-gb-10-4-inch-wi-fi-4g',
+    base: 'used-samsung-galaxy-tab-a7-2020',
+  },
+  'samsung-tab-a7-lite': {
+    wifi: 'used-samsung-galaxy-tab-a7-lite-wifi-32gb',
+    cellular: 'used-samsung-galaxy-tab-a7-lite-lte-32gb',
+    base: 'used-samsung-galaxy-tab-a7-lite',
+  },
+  'samsung-tab-a-10-1': {
+    wifi: 'used-samsung-galaxy-tab-a-10-1-wi-fi',
+    cellular: 'used-samsung-galaxy-tab-a-10-1-lte-2-gb-32-gb',
+    base: 'used-samsung-galaxy-tab-a-10-1-2019',
+  },
+};
+
+export function getAppleDeviceRam(modelName: string, releaseYear?: number): number {
+  const m = (modelName || '').toLowerCase();
+  if (m.includes('17') || m.includes('18') || (m.includes('air') && m.includes('iphone'))) return 12;
+  if (m.includes('16')) return 8;
+  if (m.includes('15 pro') || m.includes('15-pro')) return 8;
+  if (m.includes('15')) return 6;
+  if (m.includes('14')) return 6;
+  if (m.includes('13 pro') || m.includes('13-pro')) return 6;
+  if (m.includes('13')) return 4;
+  if (m.includes('12 pro') || m.includes('12-pro')) return 6;
+  if (m.includes('12')) return 4;
+  if (m.includes('11 pro') || m.includes('11-pro')) return 4;
+  if (m.includes('11')) return 4;
+  if (m.includes('se') && (m.includes('2022') || m.includes('3rd') || (releaseYear && releaseYear >= 2022))) return 4;
+  if (m.includes('se')) return 3;
+  if (m.includes('xs')) return 4;
+  if (m.includes('xr') || m.includes('iphone x') || m.includes('8 plus')) return 3;
+  if (m.includes('iphone 8') || m.includes('iphone 7')) return 2;
+  if (releaseYear && releaseYear >= 2024) return 8;
+  if (releaseYear && releaseYear >= 2021) return 6;
+  return 4;
+}
+
 export function generateCashifyVariantUrl(
   brandName: string,
   modelName: string,
   ramGb: number,
   storageGb: number,
-  connectivity?: 'wifi' | 'cellular'
+  connectivity?: 'wifi' | 'cellular',
+  modelId?: string,
+  releaseYear?: number
 ): string {
   const brandLower = (brandName || '').toLowerCase().trim();
   let modelLower = (modelName || '').toLowerCase().trim();
+  const idLower = (modelId || '').toLowerCase().trim();
 
-  // Strip brand prefix if already part of modelName
-  if (brandLower && modelLower.startsWith(brandLower)) {
-    modelLower = modelLower.slice(brandLower.length).trim();
+  // 1. Check custom verified overrides first (cashifyCustomUrls.json)
+  const customUrlsMap: Record<string, string> = cashifyCustomUrlsData as any;
+  if (customUrlsMap) {
+    const normName = modelLower.replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const cleanId = idLower.replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const keysToCheck = [
+      `${idLower}_${ramGb}_${storageGb}${connectivity ? `_${connectivity}` : ''}`,
+      `${idLower}_${ramGb}_${storageGb}`,
+      `${idLower}_0_${storageGb}${connectivity ? `_${connectivity}` : ''}`,
+      `${idLower}_0_${storageGb}`,
+      `${cleanId}_${ramGb}_${storageGb}${connectivity ? `_${connectivity}` : ''}`,
+      `${cleanId}_${ramGb}_${storageGb}`,
+      `${cleanId}_0_${storageGb}${connectivity ? `_${connectivity}` : ''}`,
+      `${cleanId}_0_${storageGb}`,
+      `${normName}_${ramGb}_${storageGb}${connectivity ? `_${connectivity}` : ''}`,
+      `${normName}_${ramGb}_${storageGb}`,
+      `${normName}_0_${storageGb}${connectivity ? `_${connectivity}` : ''}`,
+      `${normName}_0_${storageGb}`,
+      `${modelLower}_${ramGb}_${storageGb}${connectivity ? `_${connectivity}` : ''}`,
+      `${modelLower}_${ramGb}_${storageGb}`,
+      `${modelName}_${ramGb}_${storageGb}`,
+    ];
+    for (const k of keysToCheck) {
+      if (customUrlsMap[k]) return customUrlsMap[k];
+    }
   }
 
+  const storageSuffix = storageGb >= 1024 ? `${storageGb / 1024}-tb` : `${storageGb}-gb`;
+  const compactStorage = storageGb >= 1024 ? `${storageGb / 1024}tb` : `${storageGb}gb`;
+
+  const isApple = brandLower === 'apple' || modelLower.includes('iphone') || modelLower.includes('ipad');
+  const isTablet =
+    modelLower.includes('ipad') ||
+    modelLower.includes('tab') ||
+    idLower.includes('ipad') ||
+    idLower.includes('tab');
+
+  if (isTablet) {
+    const effectiveConn =
+      connectivity ||
+      (modelLower.includes('cellular') || modelLower.includes('5g') || modelLower.includes('lte') || idLower.includes('cellular')
+        ? 'cellular'
+        : modelLower.includes('wi-fi') || modelLower.includes('wifi') || idLower.includes('wifi')
+        ? 'wifi'
+        : undefined);
+
+    // 2. Specific variant URLs for modern iPads
+    if (modelLower.includes('ipad pro 13') || idLower.includes('ipad-pro-m4-13')) {
+      if (effectiveConn === 'wifi') {
+        const slug = compactStorage === '2tb' ? 'used-ipad-pro-13-inch-m4-wi-fi-2tb' : `used-ipad-pro-13-inch-m4-wi-fi-only-${compactStorage}`;
+        return `https://www.cashify.in/sell-old-tablet/${slug}`;
+      }
+      return `https://www.cashify.in/sell-old-tablet/used-ipad-pro-13-inch-m4-wi-fi-cellular-${compactStorage}`;
+    }
+    if (modelLower.includes('ipad pro 11') || idLower.includes('ipad-pro-m4-11')) {
+      if (effectiveConn === 'wifi') {
+        const slug = compactStorage === '2tb' ? 'used-ipad-pro-11-inch-m4-wi-fi-2tb' : `used-ipad-pro-11-inch-m4-wi-fi-only-${compactStorage}`;
+        return `https://www.cashify.in/sell-old-tablet/${slug}`;
+      }
+      return `https://www.cashify.in/sell-old-tablet/used-ipad-pro-11-inch-m4-wi-fi-cellular-${compactStorage}`;
+    }
+    if (modelLower.includes('ipad air 13') || idLower.includes('ipad-air-m2-13')) {
+      const mode = effectiveConn === 'wifi' ? 'wi-fi-only' : 'wi-fi-cellular';
+      return `https://www.cashify.in/sell-old-tablet/used-ipad-air-13-inch-m2-${mode}-${compactStorage}`;
+    }
+    if (modelLower.includes('ipad air 11') || idLower.includes('ipad-air-m2-11')) {
+      const mode = effectiveConn === 'wifi' ? 'wi-fi-only' : 'wi-fi-cellular';
+      return `https://www.cashify.in/sell-old-tablet/used-ipad-air-11-inch-m2-${mode}-${compactStorage}`;
+    }
+    if (modelLower.includes('10th gen') || idLower.includes('ipad-10gen')) {
+      if (connectivity === 'wifi') {
+        return `https://www.cashify.in/sell-old-tablet/used-ipad-10-9-${storageSuffix}-wifi-only-2022`;
+      }
+      return `https://www.cashify.in/sell-old-tablet/used-apple-ipad-10-9-2022`;
+    }
+    if (modelLower.includes('9th gen') || idLower.includes('ipad-9gen')) {
+      if (connectivity === 'wifi') {
+        return `https://www.cashify.in/sell-old-tablet/used-ipad-10-2-${compactStorage}-wifi-only-2021`;
+      }
+      return `https://www.cashify.in/sell-old-tablet/used-apple-ipad-10-2-2021`;
+    }
+    if (modelLower.includes('8th gen') || idLower.includes('ipad-8gen')) {
+      return `https://www.cashify.in/sell-old-tablet/used-ipad-10-2-${storageSuffix}-wifi-only-2020`;
+    }
+    if (modelLower.includes('7th gen') || idLower.includes('ipad-7gen')) {
+      return `https://www.cashify.in/sell-old-tablet/used-ipad-10-2-${storageSuffix}-wifi-only-2019`;
+    }
+    if (modelLower.includes('6th gen') || idLower.includes('ipad-6gen')) {
+      return `https://www.cashify.in/sell-old-tablet/used-apple-ipad-9-7-${storageSuffix}-wifi-only-2018`;
+    }
+    if (modelLower.includes('5th gen') || idLower.includes('ipad-5gen')) {
+      return `https://www.cashify.in/sell-old-tablet/used-apple-ipad-9-7-${compactStorage}-wifi-only-2017`;
+    }
+
+    // 3. Specific variant URLs for Samsung Galaxy Tabs
+    if (modelLower.includes('tab s9 plus') || idLower.includes('tab-s9-plus')) {
+      const mode = connectivity === 'wifi' ? 'wi-fi-only' : '5g';
+      return `https://www.cashify.in/sell-old-tablet/used-samsung-galaxy-tab-s9-plus-${mode}-${compactStorage}`;
+    }
+    if (modelLower.includes('tab s9 fe plus') || idLower.includes('tab-s9-fe-plus')) {
+      const mode = connectivity === 'wifi' ? 'wi-fi-only' : '5g';
+      return `https://www.cashify.in/sell-old-tablet/used-samsung-galaxy-tab-s9-fe-plus-${mode}-${compactStorage}`;
+    }
+    if (modelLower.includes('tab s9 fe') || idLower.includes('tab-s9-fe')) {
+      const mode = connectivity === 'wifi' ? 'wi-fi-only' : '5g';
+      return `https://www.cashify.in/sell-old-tablet/used-samsung-galaxy-tab-s9-fe-${mode}-${compactStorage}`;
+    }
+    if (modelLower.includes('tab s9') && !modelLower.includes('ultra')) {
+      const mode = connectivity === 'wifi' ? 'wi-fi-only' : '5g';
+      return `https://www.cashify.in/sell-old-tablet/used-samsung-galaxy-tab-s9-${mode}-${compactStorage}`;
+    }
+    if (modelLower.includes('tab s8 ultra') || idLower.includes('tab-s8-ultra')) {
+      const mode = connectivity === 'wifi' ? 'wifi' : '5g';
+      return `https://www.cashify.in/sell-old-tablet/used-samsung-galaxy-tab-s8-ultra-${mode}-${compactStorage}`;
+    }
+    if (modelLower.includes('tab s8 plus') || idLower.includes('tab-s8-plus')) {
+      const mode = connectivity === 'wifi' ? 'wifi-only' : '5g';
+      return `https://www.cashify.in/sell-old-tablet/used-samsung-galaxy-tab-s8-plus-${mode}-${compactStorage}`;
+    }
+    if (modelLower.includes('tab s8') || idLower.includes('tab-s8')) {
+      const mode = connectivity === 'wifi' ? 'wifi-only' : '5g';
+      return `https://www.cashify.in/sell-old-tablet/used-samsung-galaxy-tab-s8-${mode}-${compactStorage}`;
+    }
+    if (modelLower.includes('tab s7 plus') || idLower.includes('tab-s7-plus')) {
+      const mode = connectivity === 'wifi' ? 'wifi' : 'lte';
+      return `https://www.cashify.in/sell-old-tablet/used-samsung-galaxy-tab-s7-plus-${mode}-${compactStorage}`;
+    }
+    if (modelLower.includes('tab s7 fe') || idLower.includes('tab-s7-fe')) {
+      const mode = connectivity === 'wifi' ? 'wifi' : 'lte';
+      return `https://www.cashify.in/sell-old-tablet/used-samsung-galaxy-tab-s7-fe-${mode}-${compactStorage}`;
+    }
+    if (modelLower.includes('tab s7') || idLower.includes('tab-s7')) {
+      const mode = connectivity === 'wifi' ? 'wifi' : 'lte';
+      return `https://www.cashify.in/sell-old-tablet/used-samsung-galaxy-tab-s7-${mode}-${compactStorage}`;
+    }
+    if (modelLower.includes('tab s6 lite') || idLower.includes('tab-s6-lite')) {
+      const mode = connectivity === 'wifi' ? 'wifi' : 'lte';
+      return `https://www.cashify.in/sell-old-tablet/used-samsung-galaxy-tab-s6-lite-${mode}-${compactStorage}`;
+    }
+    if (modelLower.includes('tab s6') || idLower.includes('tab-s6')) {
+      const mode = connectivity === 'wifi' ? 'wi-fi' : 'lte';
+      const rStr = ramGb > 0 ? `${ramGb}-gb-` : '6-gb-';
+      return `https://www.cashify.in/sell-old-tablet/used-samsung-galaxy-tab-s6-${mode}-${rStr}${storageSuffix}`;
+    }
+    if (modelLower.includes('tab a8') || idLower.includes('tab-a8')) {
+      const mode = connectivity === 'wifi' ? 'wifi-only' : 'lte';
+      return `https://www.cashify.in/sell-old-tablet/used-samsung-galaxy-tab-a8-10-5-2021-${compactStorage}-${mode}`;
+    }
+    if (modelLower.includes('tab a7 lite') || idLower.includes('tab-a7-lite')) {
+      const mode = connectivity === 'wifi' ? 'wifi' : 'lte';
+      return `https://www.cashify.in/sell-old-tablet/used-samsung-galaxy-tab-a7-lite-${mode}-${compactStorage}`;
+    }
+
+    // 4. Tablet Canonical Dictionary Fallback
+    const lookupKey = idLower || modelLower.replace(/[^a-z0-9]/g, '');
+    let tabletEntry = TABLET_CANONICAL_SLUGS[idLower];
+    if (!tabletEntry) {
+      const foundId = Object.keys(TABLET_CANONICAL_SLUGS).find((k) => {
+        const normK = k.replace(/[^a-z0-9]/g, '');
+        return idLower.includes(k) || normK.includes(lookupKey) || lookupKey.includes(normK);
+      });
+      if (foundId) tabletEntry = TABLET_CANONICAL_SLUGS[foundId];
+    }
+
+    if (tabletEntry) {
+      let slug =
+        connectivity === 'wifi'
+          ? tabletEntry.wifi || tabletEntry.base
+          : connectivity === 'cellular'
+          ? tabletEntry.cellular || tabletEntry.base
+          : tabletEntry.base;
+      // Ensure variant-specific storage suffix is included
+      if (!slug.includes(compactStorage) && !slug.includes(storageSuffix)) {
+        slug = `${slug}-${compactStorage}`;
+      }
+      return `https://www.cashify.in/sell-old-tablet/${slug}`;
+    }
+
+    const slugify = (text: string) =>
+      text
+        .toLowerCase()
+        .replace(/\+/g, '-plus')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
+    let cleanModel = slugify(modelLower.replace(/^(apple|samsung)\s+/i, ''));
+    if (connectivity === 'wifi') cleanModel += '-wi-fi-only';
+    else if (connectivity === 'cellular') cleanModel += '-wi-fi-cellular';
+    const brandPrefix = isApple ? 'apple' : 'samsung';
+    return `https://www.cashify.in/sell-old-tablet/used-${brandPrefix}-${cleanModel}-${compactStorage}`;
+  }
+
+  // 5. Smartphones
   const slugify = (text: string) => {
     return text
       .toLowerCase()
@@ -1391,32 +1877,21 @@ export function generateCashifyVariantUrl(
       .replace(/(^-|-$)/g, '');
   };
 
-  const isApple = brandLower === 'apple' || modelLower.includes('iphone') || modelLower.includes('ipad');
-  const isTablet = modelLower.includes('ipad') || modelLower.includes('tab');
+  if (brandLower && modelLower.startsWith(brandLower)) {
+    modelLower = modelLower.slice(brandLower.length).trim();
+  }
+
   const brandSlug = isApple ? 'apple' : slugify(brandName || 'phone');
   let cleanModelSlug = slugify(modelLower);
 
-  if (isTablet && connectivity) {
-    if (connectivity === 'wifi' && !cleanModelSlug.includes('wi-fi') && !cleanModelSlug.includes('wifi')) {
-      cleanModelSlug += '-wi-fi';
-    } else if (connectivity === 'cellular' && !cleanModelSlug.includes('cellular')) {
-      cleanModelSlug += '-wi-fi-cellular';
-    }
-  }
-
-  const storageSuffix = storageGb >= 1024 ? `${storageGb / 1024}-tb` : `${storageGb}-gb`;
-
-  let baseSlug = '';
   if (isApple) {
-    baseSlug = `used-apple-${cleanModelSlug}`;
+    const effectiveRam = ramGb > 0 ? ramGb : getAppleDeviceRam(modelName, releaseYear);
+    return `https://www.cashify.in/sell-old-mobile-phone/used-apple-${cleanModelSlug}-${effectiveRam}-gb-${storageSuffix}`;
   } else {
-    baseSlug = `used-${brandSlug}-${cleanModelSlug}`;
-  }
-
-  if (isApple || ramGb === 0) {
-    return `https://www.cashify.in/sell-old-mobile-phone/${baseSlug}-${storageSuffix}`;
-  } else {
-    return `https://www.cashify.in/sell-old-mobile-phone/${baseSlug}-${ramGb}-gb-${storageSuffix}`;
+    if (ramGb === 0) {
+      return `https://www.cashify.in/sell-old-mobile-phone/used-${brandSlug}-${cleanModelSlug}-${storageSuffix}`;
+    }
+    return `https://www.cashify.in/sell-old-mobile-phone/used-${brandSlug}-${cleanModelSlug}-${ramGb}-gb-${storageSuffix}`;
   }
 }
 
@@ -1629,6 +2104,21 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
 
     if (model) {
       const sVal = model.series || '';
+      const vPrices = model.variantPrices ? { ...model.variantPrices } : {};
+      const rams =
+        model.supportedRamGb && model.supportedRamGb.length > 0
+          ? [...model.supportedRamGb]
+          : [0];
+      const storages =
+        model.supportedStorageGb && model.supportedStorageGb.length > 0
+          ? [...model.supportedStorageGb]
+          : [128, 256, 512];
+
+      const modelIsTablet =
+        model.deviceType === 'tablets' ||
+        catalogCategory === 'tablets' ||
+        isTabletDevice(model.brandId, model.name, model.id);
+
       setFormData({
         id: model.id,
         legacyId: (model as any).legacyId || model.id,
@@ -1639,15 +2129,9 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
         basePrice128GB: model.basePrice128GB || 0,
         series: sVal,
         imageUrl: model.imageUrl || '',
-        supportedStorageGb:
-          model.supportedStorageGb && model.supportedStorageGb.length > 0
-            ? [...model.supportedStorageGb]
-            : [128, 256, 512],
-        supportedRamGb:
-          model.supportedRamGb && model.supportedRamGb.length > 0
-            ? [...model.supportedRamGb]
-            : [0],
-        variantPrices: model.variantPrices ? { ...model.variantPrices } : {},
+        supportedStorageGb: storages,
+        supportedRamGb: rams,
+        variantPrices: vPrices,
         hidden: Boolean(model.hidden),
         supportsWarrantyQuestion:
           model.supportsWarrantyQuestion ?? ((model.releaseYear || 2024) >= 2023),
@@ -1656,6 +2140,123 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
       setUrlTestResults({});
       setExtractedCashifyPrices({});
       setError(null);
+
+      // Pre-populate verified Cashify variant URLs, real calibrated benchmark prices, and approval states
+      const brandObj = availableBrands.find((b) => b.id === model.brandId);
+      const brandName = brandObj ? brandObj.name : 'Apple';
+      const validRams = rams.length === 1 && rams[0] === 0 ? [0] : rams;
+
+      const initUrls: Record<string, string> = {};
+      const initPrices: Record<string, number> = {};
+      const initApproved: Record<string, boolean> = {};
+
+      validRams.forEach((ram) => {
+        storages.forEach((storage) => {
+          const key = `${ram}_${storage}`;
+          const existingPrice = vPrices[key];
+
+          if (modelIsTablet) {
+            const cellKey = `${key}_cellular`;
+            const wifiKey = `${key}_wifi`;
+
+            initUrls[cellKey] = generateCashifyVariantUrl(
+              brandName,
+              model.name,
+              ram,
+              storage,
+              'cellular',
+              model.id,
+              model.releaseYear
+            );
+            initUrls[wifiKey] = generateCashifyVariantUrl(
+              brandName,
+              model.name,
+              ram,
+              storage,
+              'wifi',
+              model.id,
+              model.releaseYear
+            );
+            initUrls[key] = generateCashifyVariantUrl(
+              brandName,
+              model.name,
+              ram,
+              storage,
+              undefined,
+              model.id,
+              model.releaseYear
+            );
+
+            const modelNameLower = (model.name || '').toLowerCase();
+            const isModelWifiOnly = (modelNameLower.includes('wi-fi') || modelNameLower.includes('wifi')) && !modelNameLower.includes('cellular') && !modelNameLower.includes('5g') && !modelNameLower.includes('lte');
+
+            const cellPrice = vPrices[cellKey] || (isModelWifiOnly ? 0 : existingPrice);
+            const wifiPrice =
+              vPrices[wifiKey] || (isModelWifiOnly ? existingPrice : (existingPrice ? Math.round(existingPrice * 0.9) : 0));
+
+            if (cellPrice && cellPrice > 0) {
+              initPrices[cellKey] = Math.round(cellPrice / 1.03);
+              initApproved[cellKey] = true;
+            } else {
+              initPrices[cellKey] = predictCashifyVariantPrice(
+                model.brandId,
+                model.name,
+                model.category,
+                model.releaseYear,
+                ram,
+                storage,
+                model.basePrice128GB
+              );
+            }
+
+            if (wifiPrice && wifiPrice > 0) {
+              initPrices[wifiKey] = Math.round(wifiPrice / 1.03);
+              initApproved[wifiKey] = true;
+            } else {
+              initPrices[wifiKey] = Math.round((initPrices[cellKey] || 10000) * 0.9);
+              if (existingPrice && existingPrice > 0) {
+                initApproved[wifiKey] = true;
+              }
+            }
+
+            if (existingPrice && existingPrice > 0) {
+              initPrices[key] = Math.round(existingPrice / 1.03);
+              initApproved[key] = true;
+            } else {
+              initPrices[key] = isModelWifiOnly ? initPrices[wifiKey] : initPrices[cellKey];
+            }
+          } else {
+            initUrls[key] = generateCashifyVariantUrl(
+              brandName,
+              model.name,
+              ram,
+              storage,
+              undefined,
+              model.id,
+              model.releaseYear
+            );
+            if (existingPrice && existingPrice > 0) {
+              initPrices[key] = Math.round(existingPrice / 1.03);
+              initApproved[key] = true;
+            } else {
+              initPrices[key] = predictCashifyVariantPrice(
+                model.brandId,
+                model.name,
+                model.category,
+                model.releaseYear,
+                ram,
+                storage,
+                model.basePrice128GB
+              );
+            }
+          }
+        });
+      });
+
+      setVariantCashifyUrls(initUrls);
+      setVariantCashifyPrices(initPrices);
+      setVariantApproved(initApproved);
+      setManuallyEditedUrls({});
     } else if (isAddingNew) {
       setFormData({
         id: '',
@@ -1682,7 +2283,7 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
       setExtractedCashifyPrices({});
       setError(null);
     }
-  }, [isOpen, model, isAddingNew, availableBrands]);
+  }, [isOpen, model, isAddingNew, availableBrands, catalogCategory]);
 
   // Auto-generate Cashify URLs and benchmark prices for variants
   useEffect(() => {
@@ -1705,14 +2306,38 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
             const cellKey = `${key}_cellular`;
             const wifiKey = `${key}_wifi`;
             if (!nextUrls[cellKey] || !manuallyEditedUrls[cellKey]) {
-              nextUrls[cellKey] = generateCashifyVariantUrl(brandName, formData.name, ram, storage, 'cellular');
+              nextUrls[cellKey] = generateCashifyVariantUrl(
+                brandName,
+                formData.name,
+                ram,
+                storage,
+                'cellular',
+                formData.id || formData.legacyId,
+                formData.releaseYear
+              );
             }
             if (!nextUrls[wifiKey] || !manuallyEditedUrls[wifiKey]) {
-              nextUrls[wifiKey] = generateCashifyVariantUrl(brandName, formData.name, ram, storage, 'wifi');
+              nextUrls[wifiKey] = generateCashifyVariantUrl(
+                brandName,
+                formData.name,
+                ram,
+                storage,
+                'wifi',
+                formData.id || formData.legacyId,
+                formData.releaseYear
+              );
             }
           }
           if (!nextUrls[key] || !manuallyEditedUrls[key]) {
-            nextUrls[key] = generateCashifyVariantUrl(brandName, formData.name, ram, storage);
+            nextUrls[key] = generateCashifyVariantUrl(
+              brandName,
+              formData.name,
+              ram,
+              storage,
+              undefined,
+              formData.id || formData.legacyId,
+              formData.releaseYear
+            );
           }
         });
       });
@@ -1724,6 +2349,7 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
       validRams.forEach((ram) => {
         formData.supportedStorageGb.forEach((storage) => {
           const key = `${ram}_${storage}`;
+          const existingPayout = formData.variantPrices[key];
           const defaultPredicted = predictCashifyVariantPrice(
             formData.brandId,
             formData.name,
@@ -1737,15 +2363,27 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
             const cellKey = `${key}_cellular`;
             const wifiKey = `${key}_wifi`;
             if (!nextPrices[cellKey]) {
-              nextPrices[cellKey] = (cashifyPrices && cashifyPrices[cellKey]) || defaultPredicted;
+              const cellPayout = formData.variantPrices[cellKey] || existingPayout;
+              nextPrices[cellKey] =
+                (cashifyPrices && cashifyPrices[cellKey]) ||
+                (cellPayout && cellPayout > 0 ? Math.round(cellPayout / 1.03) : defaultPredicted);
             }
             if (!nextPrices[wifiKey]) {
-              nextPrices[wifiKey] = (cashifyPrices && cashifyPrices[wifiKey]) || defaultPredicted;
+              const wifiPayout =
+                formData.variantPrices[wifiKey] ||
+                (existingPayout ? Math.round(existingPayout * 0.9) : 0);
+              nextPrices[wifiKey] =
+                (cashifyPrices && cashifyPrices[wifiKey]) ||
+                (wifiPayout && wifiPayout > 0
+                  ? Math.round(wifiPayout / 1.03)
+                  : Math.round(defaultPredicted * 0.9));
             }
           }
           if (!nextPrices[key]) {
             if (cashifyPrices && cashifyPrices[key] && cashifyPrices[key] > 0) {
               nextPrices[key] = cashifyPrices[key];
+            } else if (existingPayout && existingPayout > 0) {
+              nextPrices[key] = Math.round(existingPayout / 1.03);
             } else {
               nextPrices[key] = defaultPredicted;
             }
@@ -2007,9 +2645,13 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
           const cellApprovedPrice = Math.round(cellPrice * 1.03);
           const wifiApprovedPrice = Math.round(wifiPrice * 1.03);
 
+          const mName = (formData.name || '').toLowerCase();
+          const isExplicitCellular = mName.includes('cellular') || mName.includes('5g') || mName.includes('lte');
+          const isExplicitWifi = (mName.includes('wi-fi') || mName.includes('wifi')) && !isExplicitCellular;
+
           nextPrices[cellKey] = cellApprovedPrice;
           nextPrices[wifiKey] = wifiApprovedPrice;
-          nextPrices[key] = cellApprovedPrice;
+          nextPrices[key] = isExplicitWifi ? wifiApprovedPrice : cellApprovedPrice;
         } else {
           nextApproved[key] = true;
           const cPrice = variantCashifyPrices[key] || defaultPrice;
@@ -2085,8 +2727,15 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
           const targetPlus3Price = Math.round(livePrice * 1.03);
           setFormData((prev) => {
             const nextMap = { ...prev.variantPrices, [key]: targetPlus3Price };
-            if (key.endsWith('_cellular')) {
+            const mName = (prev.name || '').toLowerCase();
+            const isExplicitCellular = mName.includes('cellular') || mName.includes('5g') || mName.includes('lte');
+            const isExplicitWifi = (mName.includes('wi-fi') || mName.includes('wifi')) && !isExplicitCellular;
+
+            if (key.endsWith('_cellular') && !isExplicitWifi) {
               const baseKey = key.replace('_cellular', '');
+              nextMap[baseKey] = targetPlus3Price;
+            } else if (key.endsWith('_wifi') && isExplicitWifi) {
+              const baseKey = key.replace('_wifi', '');
               nextMap[baseKey] = targetPlus3Price;
             }
             const activePrices = Object.values(nextMap).filter(
@@ -2987,6 +3636,10 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
                             const targetPlus3 = Math.round((cPrice || 10000) * 1.03);
                             const testResult = urlTestResults[key];
 
+                            const mNameLower = (formData.name || '').toLowerCase();
+                            const isModelExplicitCellular = mNameLower.includes('cellular') || mNameLower.includes('5g') || mNameLower.includes('lte');
+                            const isModelExplicitWifi = (mNameLower.includes('wi-fi') || mNameLower.includes('wifi')) && !isModelExplicitCellular;
+
                             const cellularPrice =
                               formData.variantPrices[`${ram}_${storage}_cellular`] !== undefined
                                 ? formData.variantPrices[`${ram}_${storage}_cellular`]
@@ -2994,12 +3647,18 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
                             const wifiPrice =
                               formData.variantPrices[`${ram}_${storage}_wifi`] !== undefined
                                 ? formData.variantPrices[`${ram}_${storage}_wifi`]
+                                : isModelExplicitWifi
+                                ? priceVal || 0
                                 : cellularPrice || 0;
 
                             const isCellularApproved = Boolean(variantApproved[`${key}_cellular`]);
                             const isWifiApproved = Boolean(variantApproved[`${key}_wifi`]);
                             const isApproved = isTablet
-                              ? isCellularApproved && isWifiApproved
+                              ? isModelExplicitWifi
+                                ? isWifiApproved
+                                : isModelExplicitCellular
+                                ? isCellularApproved
+                                : isCellularApproved && isWifiApproved
                               : Boolean(variantApproved[key]);
 
                             return (
@@ -3037,22 +3696,26 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
 
                                       {isTablet ? (
                                         <div className="flex items-center gap-1">
-                                          <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold border flex items-center gap-0.5 ${
-                                            isCellularApproved
-                                              ? 'bg-blue-100 text-blue-800 border-blue-300'
-                                              : 'bg-zinc-100 text-zinc-600 border-zinc-200'
-                                          }`}>
-                                            <Radio className="w-2.5 h-2.5 text-blue-600" />
-                                            <span>Cellular {isCellularApproved ? '✓' : '—'}</span>
-                                          </span>
-                                          <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold border flex items-center gap-0.5 ${
-                                            isWifiApproved
-                                              ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
-                                              : 'bg-zinc-100 text-zinc-600 border-zinc-200'
-                                          }`}>
-                                            <Wifi className="w-2.5 h-2.5 text-emerald-600" />
-                                            <span>Wi-Fi {isWifiApproved ? '✓' : '—'}</span>
-                                          </span>
+                                          {!((formData.name || '').toLowerCase().includes('wi-fi') && !(formData.name || '').toLowerCase().includes('cellular')) && (
+                                            <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold border flex items-center gap-0.5 ${
+                                              isCellularApproved
+                                                ? 'bg-blue-100 text-blue-800 border-blue-300'
+                                                : 'bg-zinc-100 text-zinc-600 border-zinc-200'
+                                            }`}>
+                                              <Radio className="w-2.5 h-2.5 text-blue-600" />
+                                              <span>Cellular {isCellularApproved ? '✓' : '—'}</span>
+                                            </span>
+                                          )}
+                                          {!((formData.name || '').toLowerCase().includes('cellular') || (formData.name || '').toLowerCase().includes('5g') || (formData.name || '').toLowerCase().includes('lte')) && (
+                                            <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold border flex items-center gap-0.5 ${
+                                              isWifiApproved
+                                                ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                                                : 'bg-zinc-100 text-zinc-600 border-zinc-200'
+                                            }`}>
+                                              <Wifi className="w-2.5 h-2.5 text-emerald-600" />
+                                              <span>Wi-Fi {isWifiApproved ? '✓' : '—'}</span>
+                                            </span>
+                                          )}
                                         </div>
                                       ) : isApproved ? (
                                         <span className="px-1.5 py-0.5 rounded text-[8.5px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1 shadow-xs">
@@ -3069,7 +3732,16 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
 
                                     {isTablet ? (
                                       <div className="space-y-2.5">
-                                        {(['cellular', 'wifi'] as const).map((conn) => {
+                                        {(['cellular', 'wifi'] as const)
+                                          .filter((conn) => {
+                                            const mName = (formData.name || '').toLowerCase();
+                                            const isExplicitCellular = mName.includes('cellular') || mName.includes('5g') || mName.includes('lte');
+                                            const isExplicitWifi = (mName.includes('wi-fi') || mName.includes('wifi')) && !isExplicitCellular;
+                                            if (isExplicitCellular) return conn === 'cellular';
+                                            if (isExplicitWifi) return conn === 'wifi';
+                                            return true;
+                                          })
+                                          .map((conn) => {
                                           const connKey = `${key}_${conn}`;
                                           const isCell = conn === 'cellular';
                                           const connUrl = variantCashifyUrls[connKey] || '';
@@ -3165,7 +3837,7 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
                                                       value={tempUrlInput}
                                                       onChange={(e) => setTempUrlInput(e.target.value)}
                                                       className="w-full px-1.5 py-0.5 text-[8.5px] bg-white border border-cobalt rounded font-mono text-zinc-800 focus:outline-none"
-                                                      placeholder="https://www.cashify.in/sell-old-mobile-phone/..."
+                                                      placeholder="https://www.cashify.in/sell-old-tablet/..."
                                                     />
                                                     <div className="flex justify-end gap-1">
                                                       <button
@@ -3196,7 +3868,9 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
                                                       <ExternalLink className="w-2.5 h-2.5 flex-shrink-0 text-blue-500" />
                                                       <span className="truncate">
                                                         {connUrl
-                                                          ? connUrl.replace('https://www.cashify.in/sell-old-mobile-phone/', '')
+                                                          ? connUrl
+                                                              .replace('https://www.cashify.in/sell-old-mobile-phone/', '')
+                                                              .replace('https://www.cashify.in/sell-old-tablet/', '')
                                                           : 'Auto-generating...'}
                                                       </span>
                                                     </a>
@@ -3413,7 +4087,9 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
                                                   <ExternalLink className="w-2.5 h-2.5 flex-shrink-0 text-blue-500" />
                                                   <span className="truncate">
                                                     {cUrl
-                                                      ? cUrl.replace('https://www.cashify.in/sell-old-mobile-phone/', '')
+                                                      ? cUrl
+                                                          .replace('https://www.cashify.in/sell-old-mobile-phone/', '')
+                                                          .replace('https://www.cashify.in/sell-old-tablet/', '')
                                                       : 'Auto-generating...'}
                                                   </span>
                                                 </a>

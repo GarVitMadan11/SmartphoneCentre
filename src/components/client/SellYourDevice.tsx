@@ -15,7 +15,7 @@ const FloatingComposition: React.FC<{ currentUser?: ApiUser | null }> = ({ curre
     fetchModels().then((rawModels) => {
       if (!mounted) return;
       const models = rawModels as unknown as Model[];
-      const ipad = models.find((m) => m.id === 'apple-ipad-pro-m4-13' || m.name.toLowerCase().includes('ipad pro 13'));
+      const ipad = models.find((m) => m.id === 'apple-ipad-pro-m4-13' || m.id === 'apple-ipad-pro-m4-13-cellular' || m.name.toLowerCase().includes('ipad pro 13'));
       const iphone = models.find((m) => m.id === 'apple-16pm' || m.name.toLowerCase().includes('iphone 16 pro max'));
 
       if (ipad) setIpadMaxPrice(getMaxVariantPrice(ipad));

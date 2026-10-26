@@ -7137,37 +7137,6 @@
     "supportsWarrantyQuestion": true
   },
   {
-    "id": "apple-ipad-pro-m4-13",
-    "legacyId": "apple-ipad-pro-m4-13",
-    "dbId": "2827e30e-988e-4c7e-8047-b3b2ae2af7a5",
-    "brandId": "brand-apple",
-    "name": "iPad Pro 13\" (M4)",
-    "category": "flagship",
-    "deviceType": "tablets",
-    "releaseYear": 2024,
-    "basePrice128GB": 78000,
-    "series": "iPad Pro Series",
-    "imageUrl": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-pro-13-select-wifi-spaceblack-202405?wid=940&hei=1112&fmt=p-jpg&qlt=95",
-    "supportedStorageGb": [
-      256,
-      512,
-      1024,
-      2048
-    ],
-    "supportedRamGb": [
-      0
-    ],
-    "variantPrices": {
-      "0_256": 78000,
-      "0_512": 88000,
-      "0_1024": 99000,
-      "0_2048": 115000,
-      "_supportsWarrantyQuestion": true
-    },
-    "hidden": true,
-    "supportsWarrantyQuestion": true
-  },
-  {
     "id": "apple-16p",
     "legacyId": "apple-16p",
     "dbId": "628a6a2b-5993-4901-868b-b868cbf68a2a",
@@ -7200,35 +7169,6 @@
       "0_1024": 81741
     },
     "hidden": false,
-    "supportsWarrantyQuestion": true
-  },
-  {
-    "id": "samsung-tab-s10-ultra",
-    "legacyId": "samsung-tab-s10-ultra",
-    "dbId": "acc37d96-599a-43ad-9962-37398703c92c",
-    "brandId": "brand-samsung",
-    "name": "Galaxy Tab S10 Ultra",
-    "category": "flagship",
-    "deviceType": "tablets",
-    "releaseYear": 2024,
-    "basePrice128GB": 72000,
-    "series": "Galaxy Tab S Series",
-    "imageUrl": "https://images.samsung.com/is/image/samsung/p6pim/in/sm-x920nzaainu/gallery/in-galaxy-tab-s10-ultra-sm-x920-sm-x920nzaainu-543598501?$650_519_PNG$",
-    "supportedStorageGb": [
-      256,
-      512,
-      1024
-    ],
-    "supportedRamGb": [
-      12,
-      16
-    ],
-    "variantPrices": {
-      "12_256": 72000,
-      "12_512": 79000,
-      "16_1024": 89000
-    },
-    "hidden": true,
     "supportsWarrantyQuestion": true
   },
   {
@@ -7283,36 +7223,6 @@
       "12_1024": 71142
     },
     "hidden": false,
-    "supportsWarrantyQuestion": true
-  },
-  {
-    "id": "apple-ipad-pro-m4-11",
-    "legacyId": "apple-ipad-pro-m4-11",
-    "dbId": "cff2b22d-7a06-4250-a7bb-93a408fa44f0",
-    "brandId": "brand-apple",
-    "name": "iPad Pro 11\" (M4)",
-    "category": "flagship",
-    "deviceType": "tablets",
-    "releaseYear": 2024,
-    "basePrice128GB": 64000,
-    "series": "iPad Pro Series",
-    "imageUrl": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-pro-11-select-wifi-spaceblack-202405?wid=940&hei=1112&fmt=p-jpg&qlt=95",
-    "supportedStorageGb": [
-      256,
-      512,
-      1024,
-      2048
-    ],
-    "supportedRamGb": [
-      0
-    ],
-    "variantPrices": {
-      "0_256": 64000,
-      "0_512": 72000,
-      "0_1024": 82000,
-      "0_2048": 95000
-    },
-    "hidden": true,
     "supportsWarrantyQuestion": true
   },
   {
@@ -7403,32 +7313,6 @@
       "16_512": 60646
     },
     "hidden": false,
-    "supportsWarrantyQuestion": true
-  },
-  {
-    "id": "samsung-tab-s10-plus",
-    "legacyId": "samsung-tab-s10-plus",
-    "dbId": "28c113ad-06c4-4b69-89b9-b39250fdac19",
-    "brandId": "brand-samsung",
-    "name": "Galaxy Tab S10+",
-    "category": "flagship",
-    "deviceType": "tablets",
-    "releaseYear": 2024,
-    "basePrice128GB": 58000,
-    "series": "Galaxy Tab S Series",
-    "imageUrl": "https://images.samsung.com/is/image/samsung/p6pim/in/sm-x820nzaainu/gallery/in-galaxy-tab-s10-plus-sm-x820-sm-x820nzaainu-543598462?$650_519_PNG$",
-    "supportedStorageGb": [
-      256,
-      512
-    ],
-    "supportedRamGb": [
-      12
-    ],
-    "variantPrices": {
-      "12_256": 58000,
-      "12_512": 64000
-    },
-    "hidden": true,
     "supportsWarrantyQuestion": true
   },
   {
@@ -7642,36 +7526,6 @@
       "0_512": 56805
     },
     "hidden": false,
-    "supportsWarrantyQuestion": true
-  },
-  {
-    "id": "apple-ipad-air-m2-13",
-    "legacyId": "apple-ipad-air-m2-13",
-    "dbId": "b398dcdb-b412-4c0c-ba31-57fd7e8f585c",
-    "brandId": "brand-apple",
-    "name": "iPad Air 13\" (M2)",
-    "category": "premium",
-    "deviceType": "tablets",
-    "releaseYear": 2024,
-    "basePrice128GB": 48000,
-    "series": "iPad Air Series",
-    "imageUrl": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-air-13-select-wifi-blue-202405?wid=940&hei=1112&fmt=p-jpg&qlt=95",
-    "supportedStorageGb": [
-      128,
-      256,
-      512,
-      1024
-    ],
-    "supportedRamGb": [
-      0
-    ],
-    "variantPrices": {
-      "0_128": 48000,
-      "0_256": 54000,
-      "0_512": 62000,
-      "0_1024": 70000
-    },
-    "hidden": true,
     "supportsWarrantyQuestion": true
   },
   {
@@ -7911,36 +7765,6 @@
     "supportsWarrantyQuestion": true
   },
   {
-    "id": "apple-ipad-air-m2-11",
-    "legacyId": "apple-ipad-air-m2-11",
-    "dbId": "31fdd2a9-2db6-4f69-a3f7-fe3f76a826f7",
-    "brandId": "brand-apple",
-    "name": "iPad Air 11\" (M2)",
-    "category": "premium",
-    "deviceType": "tablets",
-    "releaseYear": 2024,
-    "basePrice128GB": 39000,
-    "series": "iPad Air Series",
-    "imageUrl": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-air-11-select-wifi-starlight-202405?wid=940&hei=1112&fmt=p-jpg&qlt=95",
-    "supportedStorageGb": [
-      128,
-      256,
-      512,
-      1024
-    ],
-    "supportedRamGb": [
-      0
-    ],
-    "variantPrices": {
-      "0_128": 39000,
-      "0_256": 44000,
-      "0_512": 51000,
-      "0_1024": 58000
-    },
-    "hidden": true,
-    "supportsWarrantyQuestion": true
-  },
-  {
     "id": "goog-9",
     "legacyId": "goog-9",
     "dbId": "fada08b6-ecb2-4134-a388-33d1108bfec4",
@@ -8052,34 +7876,6 @@
       "16_512": 39192
     },
     "hidden": false,
-    "supportsWarrantyQuestion": true
-  },
-  {
-    "id": "apple-ipad-mini-7",
-    "legacyId": "apple-ipad-mini-7",
-    "dbId": "6f758ec6-a769-4bf4-9784-51a347b1a30d",
-    "brandId": "brand-apple",
-    "name": "iPad mini 7 / A17 Pro",
-    "category": "premium",
-    "deviceType": "tablets",
-    "releaseYear": 2024,
-    "basePrice128GB": 34000,
-    "series": "iPad mini Series",
-    "imageUrl": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-mini-select-wifi-purple-202410?wid=940&hei=1112&fmt=p-jpg&qlt=95",
-    "supportedStorageGb": [
-      128,
-      256,
-      512
-    ],
-    "supportedRamGb": [
-      0
-    ],
-    "variantPrices": {
-      "0_128": 34000,
-      "0_256": 39000,
-      "0_512": 45000
-    },
-    "hidden": true,
     "supportsWarrantyQuestion": true
   },
   {
@@ -12342,35 +12138,6 @@
     "supportsWarrantyQuestion": true
   },
   {
-    "id": "samsung-tab-s9-ultra",
-    "legacyId": "samsung-tab-s9-ultra",
-    "dbId": "c7f92060-df98-45bc-ad1b-77a808a45905",
-    "brandId": "brand-samsung",
-    "name": "Galaxy Tab S9 Ultra",
-    "category": "flagship",
-    "deviceType": "tablets",
-    "releaseYear": 2023,
-    "basePrice128GB": 52000,
-    "series": "Galaxy Tab S Series",
-    "imageUrl": "https://images.samsung.com/is/image/samsung/p6pim/in/sm-x910nzaainu/gallery/in-galaxy-tab-s9-ultra-sm-x910-sm-x910nzaainu-537466829?$650_519_PNG$",
-    "supportedStorageGb": [
-      256,
-      512,
-      1024
-    ],
-    "supportedRamGb": [
-      12,
-      16
-    ],
-    "variantPrices": {
-      "12_256": 52000,
-      "12_512": 58000,
-      "16_1024": 66000
-    },
-    "hidden": true,
-    "supportsWarrantyQuestion": true
-  },
-  {
     "id": "catalog-samsung-galaxy-z-fold5",
     "legacyId": "catalog-samsung-galaxy-z-fold5",
     "dbId": "e635ce80-aa30-4de2-a3b7-b74d0b1ede13",
@@ -12900,33 +12667,6 @@
     },
     "hidden": false,
     "supportsWarrantyQuestion": false
-  },
-  {
-    "id": "samsung-tab-s9-fe",
-    "legacyId": "samsung-tab-s9-fe",
-    "dbId": "4cf1f247-bbe0-4247-89b4-830d52c8c316",
-    "brandId": "brand-samsung",
-    "name": "Galaxy Tab S9 FE+",
-    "category": "midrange",
-    "deviceType": "tablets",
-    "releaseYear": 2023,
-    "basePrice128GB": 26000,
-    "series": "Galaxy Tab FE Series",
-    "imageUrl": "https://images.samsung.com/is/image/samsung/p6pim/in/sm-x610nzaainu/gallery/in-galaxy-tab-s9-fe-plus-sm-x610-sm-x610nzaainu-538466184?$650_519_PNG$",
-    "supportedStorageGb": [
-      128,
-      256
-    ],
-    "supportedRamGb": [
-      8,
-      12
-    ],
-    "variantPrices": {
-      "8_128": 26000,
-      "12_256": 30000
-    },
-    "hidden": true,
-    "supportsWarrantyQuestion": true
   },
   {
     "id": "goog-8",
@@ -13784,33 +13524,6 @@
       "12_128": 27707,
       "12_256": 33887,
       "12_512": 39552
-    },
-    "hidden": true,
-    "supportsWarrantyQuestion": true
-  },
-  {
-    "id": "samsung-tab-a9-plus",
-    "legacyId": "samsung-tab-a9-plus",
-    "dbId": "4a52a6d5-392c-4aad-822f-27280cae1dec",
-    "brandId": "brand-samsung",
-    "name": "Galaxy Tab A9+",
-    "category": "budget",
-    "deviceType": "tablets",
-    "releaseYear": 2023,
-    "basePrice128GB": 12500,
-    "series": "Galaxy Tab A Series",
-    "imageUrl": "https://images.samsung.com/is/image/samsung/p6pim/in/sm-x210nzaainu/gallery/in-galaxy-tab-a9-plus-sm-x210-sm-x210nzaainu-538622176?$650_519_PNG$",
-    "supportedStorageGb": [
-      64,
-      128
-    ],
-    "supportedRamGb": [
-      4,
-      8
-    ],
-    "variantPrices": {
-      "4_64": 12500,
-      "8_128": 15500
     },
     "hidden": true,
     "supportsWarrantyQuestion": true
@@ -15866,70 +15579,6 @@
     "supportsWarrantyQuestion": true
   },
   {
-    "id": "apple-ipad-pro-12-9-6th",
-    "legacyId": "apple-ipad-pro-12-9-6th",
-    "dbId": "28fb6d13-9415-4619-aac5-6d335cb3adbd",
-    "brandId": "brand-apple",
-    "name": "iPad Pro 12.9\" 6th Gen",
-    "category": "flagship",
-    "deviceType": "tablets",
-    "releaseYear": 2022,
-    "basePrice128GB": 62000,
-    "series": "iPad Pro Series",
-    "imageUrl": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-pro-13-select-wifi-spaceblack-202405?wid=940&hei=1112&fmt=p-jpg&qlt=95",
-    "supportedStorageGb": [
-      128,
-      256,
-      512,
-      1024,
-      2048
-    ],
-    "supportedRamGb": [
-      0
-    ],
-    "variantPrices": {
-      "0_128": 62000,
-      "0_256": 69000,
-      "0_512": 78000,
-      "0_1024": 88000,
-      "0_2048": 98000
-    },
-    "hidden": true,
-    "supportsWarrantyQuestion": false
-  },
-  {
-    "id": "apple-ipad-pro-11-4th",
-    "legacyId": "apple-ipad-pro-11-4th",
-    "dbId": "32946624-ef96-4c9d-806b-2ee390144d8f",
-    "brandId": "brand-apple",
-    "name": "iPad Pro 11\" 4th Gen",
-    "category": "flagship",
-    "deviceType": "tablets",
-    "releaseYear": 2022,
-    "basePrice128GB": 52000,
-    "series": "iPad Pro Series",
-    "imageUrl": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-pro-11-select-wifi-spaceblack-202405?wid=940&hei=1112&fmt=p-jpg&qlt=95",
-    "supportedStorageGb": [
-      128,
-      256,
-      512,
-      1024,
-      2048
-    ],
-    "supportedRamGb": [
-      0
-    ],
-    "variantPrices": {
-      "0_128": 52000,
-      "0_256": 58000,
-      "0_512": 66000,
-      "0_1024": 74000,
-      "0_2048": 82000
-    },
-    "hidden": true,
-    "supportsWarrantyQuestion": false
-  },
-  {
     "id": "catalog-oppo-find-x5",
     "legacyId": "catalog-oppo-find-x5",
     "dbId": "121d42bf-a791-40e2-a5ed-3d4b0f2c0cb8",
@@ -16140,32 +15789,6 @@
     "supportsWarrantyQuestion": false
   },
   {
-    "id": "apple-ipad-air-5",
-    "legacyId": "apple-ipad-air-5",
-    "dbId": "cbfa4a1d-f77a-4c4b-a4e1-de2b975ecbc0",
-    "brandId": "brand-apple",
-    "name": "iPad Air 5th Gen",
-    "category": "premium",
-    "deviceType": "tablets",
-    "releaseYear": 2022,
-    "basePrice128GB": 28000,
-    "series": "iPad Air Series",
-    "imageUrl": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-air-select-wifi-blue-202203?wid=940&hei=1112&fmt=p-jpg&qlt=95",
-    "supportedStorageGb": [
-      64,
-      256
-    ],
-    "supportedRamGb": [
-      0
-    ],
-    "variantPrices": {
-      "0_64": 28000,
-      "0_256": 34000
-    },
-    "hidden": true,
-    "supportsWarrantyQuestion": false
-  },
-  {
     "id": "catalog-motorola-motorola-edge-30-pro",
     "legacyId": "catalog-motorola-motorola-edge-30-pro",
     "dbId": "4d757cb1-4a02-47c1-9bf6-6a6c904908bf",
@@ -16349,32 +15972,6 @@
       "12_1024": 28438
     },
     "hidden": false,
-    "supportsWarrantyQuestion": false
-  },
-  {
-    "id": "apple-ipad-10gen",
-    "legacyId": "apple-ipad-10gen",
-    "dbId": "64ad98a3-8957-4f6c-af7c-ded776713b09",
-    "brandId": "brand-apple",
-    "name": "iPad 10th Gen",
-    "category": "midrange",
-    "deviceType": "tablets",
-    "releaseYear": 2022,
-    "basePrice128GB": 22000,
-    "series": "iPad Series",
-    "imageUrl": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-10th-gen-finish-select-202212-blue?wid=940&hei=1112&fmt=p-jpg&qlt=95",
-    "supportedStorageGb": [
-      64,
-      256
-    ],
-    "supportedRamGb": [
-      0
-    ],
-    "variantPrices": {
-      "0_64": 22000,
-      "0_256": 27000
-    },
-    "hidden": true,
     "supportsWarrantyQuestion": false
   },
   {
@@ -19973,6 +19570,1468 @@
       "0_256": 15162
     },
     "hidden": false,
+    "supportsWarrantyQuestion": false
+  },
+  {
+    "id": "apple-ipad-pro-m4-13-wifi",
+    "legacyId": "apple-ipad-pro-m4-13-wifi",
+    "brandId": "brand-apple",
+    "name": "iPad Pro 13\" (M4) Wi-Fi",
+    "category": "flagship",
+    "deviceType": "tablets",
+    "releaseYear": 2024,
+    "basePrice128GB": 70350,
+    "series": "iPad Pro Series",
+    "imageUrl": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-pro-13-select-wifi-spaceblack-202405?wid=940&hei=1112&fmt=p-jpg&qlt=95",
+    "supportedStorageGb": [
+      256,
+      512,
+      1024,
+      2048
+    ],
+    "supportedRamGb": [
+      0
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "0_256": 70350,
+      "0_256_wifi": 70350,
+      "0_512": 76530,
+      "0_512_wifi": 76530,
+      "0_1024": 81470,
+      "0_1024_wifi": 81470,
+      "0_2048": 86520,
+      "0_2048_wifi": 86520
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": true
+  },
+  {
+    "id": "apple-ipad-pro-m4-13-cellular",
+    "legacyId": "apple-ipad-pro-m4-13-cellular",
+    "brandId": "brand-apple",
+    "name": "iPad Pro 13\" (M4) Wi-Fi + Cellular",
+    "category": "flagship",
+    "deviceType": "tablets",
+    "releaseYear": 2024,
+    "basePrice128GB": 77350,
+    "series": "iPad Pro Series",
+    "imageUrl": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-pro-13-select-wifi-spaceblack-202405?wid=940&hei=1112&fmt=p-jpg&qlt=95",
+    "supportedStorageGb": [
+      256,
+      512,
+      1024,
+      2048
+    ],
+    "supportedRamGb": [
+      0
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "0_256": 77350,
+      "0_256_cellular": 77350,
+      "0_512": 85700,
+      "0_512_cellular": 85700,
+      "0_1024": 89820,
+      "0_1024_cellular": 89820,
+      "0_2048": 93730,
+      "0_2048_cellular": 93730
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": true
+  },
+  {
+    "id": "apple-ipad-pro-m4-11-wifi",
+    "legacyId": "apple-ipad-pro-m4-11-wifi",
+    "brandId": "brand-apple",
+    "name": "iPad Pro 11\" (M4) Wi-Fi",
+    "category": "flagship",
+    "deviceType": "tablets",
+    "releaseYear": 2024,
+    "basePrice128GB": 54900,
+    "series": "iPad Pro Series",
+    "imageUrl": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-pro-11-select-wifi-spaceblack-202405?wid=940&hei=1112&fmt=p-jpg&qlt=95",
+    "supportedStorageGb": [
+      256,
+      512,
+      1024,
+      2048
+    ],
+    "supportedRamGb": [
+      0
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "0_256": 54900,
+      "0_256_wifi": 54900,
+      "0_512": 61180,
+      "0_512_wifi": 61180,
+      "0_1024": 66850,
+      "0_1024_wifi": 66850,
+      "0_2048": 72100,
+      "0_2048_wifi": 72100
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": true
+  },
+  {
+    "id": "apple-ipad-pro-m4-11-cellular",
+    "legacyId": "apple-ipad-pro-m4-11-cellular",
+    "brandId": "brand-apple",
+    "name": "iPad Pro 11\" (M4) Wi-Fi + Cellular",
+    "category": "flagship",
+    "deviceType": "tablets",
+    "releaseYear": 2024,
+    "basePrice128GB": 61390,
+    "series": "iPad Pro Series",
+    "imageUrl": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-pro-11-select-wifi-spaceblack-202405?wid=940&hei=1112&fmt=p-jpg&qlt=95",
+    "supportedStorageGb": [
+      256,
+      512,
+      1024,
+      2048
+    ],
+    "supportedRamGb": [
+      0
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "0_256": 61390,
+      "0_256_cellular": 61390,
+      "0_512": 68910,
+      "0_512_cellular": 68910,
+      "0_1024": 74570,
+      "0_1024_cellular": 74570,
+      "0_2048": 79210,
+      "0_2048_cellular": 79210
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": true
+  },
+  {
+    "id": "apple-ipad-pro-12-9-6th",
+    "legacyId": "apple-ipad-pro-12-9-6th",
+    "brandId": "brand-apple",
+    "name": "iPad Pro 12.9\" 6th Gen",
+    "category": "flagship",
+    "deviceType": "tablets",
+    "releaseYear": 2022,
+    "basePrice128GB": 52000,
+    "series": "iPad Pro Series",
+    "imageUrl": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-pro-13-select-wifi-spaceblack-202405?wid=940&hei=1112&fmt=p-jpg&qlt=95",
+    "supportedStorageGb": [
+      128,
+      256,
+      512,
+      1024,
+      2048
+    ],
+    "supportedRamGb": [
+      0
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "0_128": 52000,
+      "0_256": 59800,
+      "0_512": 67600,
+      "0_1024": 78000,
+      "0_2048": 88400
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": false
+  },
+  {
+    "id": "apple-ipad-pro-11-4th",
+    "legacyId": "apple-ipad-pro-11-4th",
+    "brandId": "brand-apple",
+    "name": "iPad Pro 11\" 4th Gen",
+    "category": "flagship",
+    "deviceType": "tablets",
+    "releaseYear": 2022,
+    "basePrice128GB": 44000,
+    "series": "iPad Pro Series",
+    "imageUrl": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-pro-11-select-wifi-spaceblack-202405?wid=940&hei=1112&fmt=p-jpg&qlt=95",
+    "supportedStorageGb": [
+      128,
+      256,
+      512,
+      1024,
+      2048
+    ],
+    "supportedRamGb": [
+      0
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "0_128": 44000,
+      "0_256": 50600,
+      "0_512": 57200,
+      "0_1024": 66000,
+      "0_2048": 74800
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": false
+  },
+  {
+    "id": "apple-ipad-pro-12-9-5th",
+    "legacyId": "apple-ipad-pro-12-9-5th",
+    "brandId": "brand-apple",
+    "name": "iPad Pro 12.9\" 5th Gen",
+    "category": "flagship",
+    "deviceType": "tablets",
+    "releaseYear": 2021,
+    "basePrice128GB": 42000,
+    "series": "iPad Pro Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/apple-ipad-10-2022.jpg",
+    "supportedStorageGb": [
+      128,
+      256,
+      512,
+      1024,
+      2048
+    ],
+    "supportedRamGb": [
+      0
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "0_128": 42000,
+      "0_256": 48300,
+      "0_512": 54600,
+      "0_1024": 63000,
+      "0_2048": 71400
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": false
+  },
+  {
+    "id": "apple-ipad-pro-11-3rd",
+    "legacyId": "apple-ipad-pro-11-3rd",
+    "brandId": "brand-apple",
+    "name": "iPad Pro 11\" 3rd Gen",
+    "category": "flagship",
+    "deviceType": "tablets",
+    "releaseYear": 2021,
+    "basePrice128GB": 35000,
+    "series": "iPad Pro Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/apple-ipad-10-2022.jpg",
+    "supportedStorageGb": [
+      128,
+      256,
+      512,
+      1024,
+      2048
+    ],
+    "supportedRamGb": [
+      0
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "0_128": 35000,
+      "0_256": 40250,
+      "0_512": 45500,
+      "0_1024": 52500,
+      "0_2048": 59500
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": false
+  },
+  {
+    "id": "apple-ipad-pro-12-9-4th",
+    "legacyId": "apple-ipad-pro-12-9-4th",
+    "brandId": "brand-apple",
+    "name": "iPad Pro 12.9\" 4th Gen",
+    "category": "premium",
+    "deviceType": "tablets",
+    "releaseYear": 2020,
+    "basePrice128GB": 33000,
+    "series": "iPad Pro Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/apple-ipad-10-2022.jpg",
+    "supportedStorageGb": [
+      128,
+      256,
+      512,
+      1024
+    ],
+    "supportedRamGb": [
+      0
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "0_128": 33000,
+      "0_256": 37950,
+      "0_512": 42900,
+      "0_1024": 49500
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": false
+  },
+  {
+    "id": "apple-ipad-pro-11-2nd",
+    "legacyId": "apple-ipad-pro-11-2nd",
+    "brandId": "brand-apple",
+    "name": "iPad Pro 11\" 2nd Gen",
+    "category": "premium",
+    "deviceType": "tablets",
+    "releaseYear": 2020,
+    "basePrice128GB": 28000,
+    "series": "iPad Pro Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/apple-ipad-10-2022.jpg",
+    "supportedStorageGb": [
+      128,
+      256,
+      512,
+      1024
+    ],
+    "supportedRamGb": [
+      0
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "0_128": 28000,
+      "0_256": 32200,
+      "0_512": 36400,
+      "0_1024": 42000
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": false
+  },
+  {
+    "id": "apple-ipad-pro-12-9-3rd",
+    "legacyId": "apple-ipad-pro-12-9-3rd",
+    "brandId": "brand-apple",
+    "name": "iPad Pro 12.9\" 3rd Gen",
+    "category": "premium",
+    "deviceType": "tablets",
+    "releaseYear": 2018,
+    "basePrice128GB": 24000,
+    "series": "iPad Pro Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/apple-ipad-10-2022.jpg",
+    "supportedStorageGb": [
+      64,
+      256,
+      512,
+      1024
+    ],
+    "supportedRamGb": [
+      0
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "0_64": 24000,
+      "0_256": 31200,
+      "0_512": 36000,
+      "0_1024": 40800
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": false
+  },
+  {
+    "id": "apple-ipad-pro-11-1st",
+    "legacyId": "apple-ipad-pro-11-1st",
+    "brandId": "brand-apple",
+    "name": "iPad Pro 11\" 1st Gen",
+    "category": "premium",
+    "deviceType": "tablets",
+    "releaseYear": 2018,
+    "basePrice128GB": 20000,
+    "series": "iPad Pro Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/apple-ipad-10-2022.jpg",
+    "supportedStorageGb": [
+      64,
+      256,
+      512,
+      1024
+    ],
+    "supportedRamGb": [
+      0
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "0_64": 20000,
+      "0_256": 26000,
+      "0_512": 30000,
+      "0_1024": 34000
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": false
+  },
+  {
+    "id": "apple-ipad-pro-10-5",
+    "legacyId": "apple-ipad-pro-10-5",
+    "brandId": "brand-apple",
+    "name": "iPad Pro 10.5\"",
+    "category": "midrange",
+    "deviceType": "tablets",
+    "releaseYear": 2017,
+    "basePrice128GB": 13500,
+    "series": "iPad Pro Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/apple-ipad-10-2022.jpg",
+    "supportedStorageGb": [
+      64,
+      256,
+      512
+    ],
+    "supportedRamGb": [
+      0
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "0_64": 13500,
+      "0_256": 17550,
+      "0_512": 20250
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": false
+  },
+  {
+    "id": "apple-ipad-pro-9-7",
+    "legacyId": "apple-ipad-pro-9-7",
+    "brandId": "brand-apple",
+    "name": "iPad Pro 9.7\"",
+    "category": "midrange",
+    "deviceType": "tablets",
+    "releaseYear": 2016,
+    "basePrice128GB": 9500,
+    "series": "iPad Pro Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/apple-ipad-10-2022.jpg",
+    "supportedStorageGb": [
+      32,
+      128,
+      256
+    ],
+    "supportedRamGb": [
+      0
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "0_32": 9500,
+      "0_128": 12350,
+      "0_256": 14250
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": false
+  },
+  {
+    "id": "apple-ipad-air-m2-13",
+    "legacyId": "apple-ipad-air-m2-13",
+    "brandId": "brand-apple",
+    "name": "iPad Air 13\" (M2)",
+    "category": "flagship",
+    "deviceType": "tablets",
+    "releaseYear": 2024,
+    "basePrice128GB": 46000,
+    "series": "iPad Air Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/apple-ipad-air-13-2024.jpg",
+    "supportedStorageGb": [
+      128,
+      256,
+      512,
+      1024
+    ],
+    "supportedRamGb": [
+      0
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "0_128": 46000,
+      "0_256": 52900,
+      "0_512": 59800,
+      "0_1024": 69000
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": true
+  },
+  {
+    "id": "apple-ipad-air-m2-11",
+    "legacyId": "apple-ipad-air-m2-11",
+    "brandId": "brand-apple",
+    "name": "iPad Air 11\" (M2)",
+    "category": "premium",
+    "deviceType": "tablets",
+    "releaseYear": 2024,
+    "basePrice128GB": 36000,
+    "series": "iPad Air Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/apple-ipad-air-11-2024.jpg",
+    "supportedStorageGb": [
+      128,
+      256,
+      512,
+      1024
+    ],
+    "supportedRamGb": [
+      0
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "0_128": 36000,
+      "0_256": 41400,
+      "0_512": 46800,
+      "0_1024": 54000
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": true
+  },
+  {
+    "id": "apple-ipad-air-5",
+    "legacyId": "apple-ipad-air-5",
+    "brandId": "brand-apple",
+    "name": "iPad Air 5th Gen",
+    "category": "premium",
+    "deviceType": "tablets",
+    "releaseYear": 2022,
+    "basePrice128GB": 27500,
+    "series": "iPad Air Series",
+    "imageUrl": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-air-select-wifi-blue-202203?wid=940&hei=1112&fmt=p-jpg&qlt=95",
+    "supportedStorageGb": [
+      64,
+      256
+    ],
+    "supportedRamGb": [
+      0
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "0_64": 27500,
+      "0_256": 35750
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": false
+  },
+  {
+    "id": "apple-ipad-air-4",
+    "legacyId": "apple-ipad-air-4",
+    "brandId": "brand-apple",
+    "name": "iPad Air 4th Gen",
+    "category": "premium",
+    "deviceType": "tablets",
+    "releaseYear": 2020,
+    "basePrice128GB": 21000,
+    "series": "iPad Air Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/apple-ipad-10-2022.jpg",
+    "supportedStorageGb": [
+      64,
+      256
+    ],
+    "supportedRamGb": [
+      0
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "0_64": 21000,
+      "0_256": 27300
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": false
+  },
+  {
+    "id": "apple-ipad-air-3",
+    "legacyId": "apple-ipad-air-3",
+    "brandId": "brand-apple",
+    "name": "iPad Air 3rd Gen",
+    "category": "midrange",
+    "deviceType": "tablets",
+    "releaseYear": 2019,
+    "basePrice128GB": 14000,
+    "series": "iPad Air Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/apple-ipad-10-2022.jpg",
+    "supportedStorageGb": [
+      64,
+      256
+    ],
+    "supportedRamGb": [
+      0
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "0_64": 14000,
+      "0_256": 18200
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": false
+  },
+  {
+    "id": "apple-ipad-air-2",
+    "legacyId": "apple-ipad-air-2",
+    "brandId": "brand-apple",
+    "name": "iPad Air 2",
+    "category": "midrange",
+    "deviceType": "tablets",
+    "releaseYear": 2014,
+    "basePrice128GB": 5500,
+    "series": "iPad Air Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/apple-ipad-10-2022.jpg",
+    "supportedStorageGb": [
+      16,
+      32,
+      64,
+      128
+    ],
+    "supportedRamGb": [
+      0
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "0_16": 5500,
+      "0_32": 6300,
+      "0_64": 7150,
+      "0_128": 8250
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": false
+  },
+  {
+    "id": "apple-ipad-mini-7",
+    "legacyId": "apple-ipad-mini-7",
+    "brandId": "brand-apple",
+    "name": "iPad mini 7 / A17 Pro",
+    "category": "premium",
+    "deviceType": "tablets",
+    "releaseYear": 2024,
+    "basePrice128GB": 34000,
+    "series": "iPad mini Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/apple-ipad-mini-2024.jpg",
+    "supportedStorageGb": [
+      128,
+      256,
+      512
+    ],
+    "supportedRamGb": [
+      0
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "0_128": 34000,
+      "0_256": 39100,
+      "0_512": 44200
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": true
+  },
+  {
+    "id": "apple-ipad-mini-6",
+    "legacyId": "apple-ipad-mini-6",
+    "brandId": "brand-apple",
+    "name": "iPad mini 6",
+    "category": "premium",
+    "deviceType": "tablets",
+    "releaseYear": 2021,
+    "basePrice128GB": 24000,
+    "series": "iPad mini Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/apple-ipad-10-2022.jpg",
+    "supportedStorageGb": [
+      64,
+      256
+    ],
+    "supportedRamGb": [
+      0
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "0_64": 24000,
+      "0_256": 31200
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": false
+  },
+  {
+    "id": "apple-ipad-mini-5",
+    "legacyId": "apple-ipad-mini-5",
+    "brandId": "brand-apple",
+    "name": "iPad mini 5",
+    "category": "midrange",
+    "deviceType": "tablets",
+    "releaseYear": 2019,
+    "basePrice128GB": 13500,
+    "series": "iPad mini Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/apple-ipad-10-2022.jpg",
+    "supportedStorageGb": [
+      64,
+      256
+    ],
+    "supportedRamGb": [
+      0
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "0_64": 13500,
+      "0_256": 17550
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": false
+  },
+  {
+    "id": "apple-ipad-mini-4",
+    "legacyId": "apple-ipad-mini-4",
+    "brandId": "brand-apple",
+    "name": "iPad mini 4",
+    "category": "midrange",
+    "deviceType": "tablets",
+    "releaseYear": 2015,
+    "basePrice128GB": 6000,
+    "series": "iPad mini Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/apple-ipad-10-2022.jpg",
+    "supportedStorageGb": [
+      16,
+      32,
+      64,
+      128
+    ],
+    "supportedRamGb": [
+      0
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "0_16": 6000,
+      "0_32": 6900,
+      "0_64": 7800,
+      "0_128": 9000
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": false
+  },
+  {
+    "id": "apple-ipad-10gen",
+    "legacyId": "apple-ipad-10gen",
+    "brandId": "brand-apple",
+    "name": "iPad 10th Gen",
+    "category": "midrange",
+    "deviceType": "tablets",
+    "releaseYear": 2022,
+    "basePrice128GB": 18500,
+    "series": "iPad Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/apple-ipad-10-2022.jpg",
+    "supportedStorageGb": [
+      64,
+      256
+    ],
+    "supportedRamGb": [
+      0
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "0_64": 18500,
+      "0_256": 24050
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": false
+  },
+  {
+    "id": "apple-ipad-9gen",
+    "legacyId": "apple-ipad-9gen",
+    "brandId": "brand-apple",
+    "name": "iPad 9th Gen",
+    "category": "midrange",
+    "deviceType": "tablets",
+    "releaseYear": 2021,
+    "basePrice128GB": 13000,
+    "series": "iPad Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/apple-ipad-10-2022.jpg",
+    "supportedStorageGb": [
+      64,
+      256
+    ],
+    "supportedRamGb": [
+      0
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "0_64": 13000,
+      "0_256": 16900
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": false
+  },
+  {
+    "id": "apple-ipad-8gen",
+    "legacyId": "apple-ipad-8gen",
+    "brandId": "brand-apple",
+    "name": "iPad 8th Gen",
+    "category": "midrange",
+    "deviceType": "tablets",
+    "releaseYear": 2020,
+    "basePrice128GB": 9500,
+    "series": "iPad Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/apple-ipad-10-2022.jpg",
+    "supportedStorageGb": [
+      32,
+      128
+    ],
+    "supportedRamGb": [
+      0
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "0_32": 9500,
+      "0_128": 12350
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": false
+  },
+  {
+    "id": "apple-ipad-7gen",
+    "legacyId": "apple-ipad-7gen",
+    "brandId": "brand-apple",
+    "name": "iPad 7th Gen",
+    "category": "midrange",
+    "deviceType": "tablets",
+    "releaseYear": 2019,
+    "basePrice128GB": 8000,
+    "series": "iPad Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/apple-ipad-10-2022.jpg",
+    "supportedStorageGb": [
+      32,
+      128
+    ],
+    "supportedRamGb": [
+      0
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "0_32": 8000,
+      "0_128": 10400
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": false
+  },
+  {
+    "id": "apple-ipad-6gen",
+    "legacyId": "apple-ipad-6gen",
+    "brandId": "brand-apple",
+    "name": "iPad 6th Gen",
+    "category": "midrange",
+    "deviceType": "tablets",
+    "releaseYear": 2018,
+    "basePrice128GB": 6500,
+    "series": "iPad Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/apple-ipad-10-2022.jpg",
+    "supportedStorageGb": [
+      32,
+      128
+    ],
+    "supportedRamGb": [
+      0
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "0_32": 6500,
+      "0_128": 8450
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": false
+  },
+  {
+    "id": "apple-ipad-5gen",
+    "legacyId": "apple-ipad-5gen",
+    "brandId": "brand-apple",
+    "name": "iPad 5th Gen",
+    "category": "midrange",
+    "deviceType": "tablets",
+    "releaseYear": 2017,
+    "basePrice128GB": 5000,
+    "series": "iPad Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/apple-ipad-10-2022.jpg",
+    "supportedStorageGb": [
+      32,
+      128
+    ],
+    "supportedRamGb": [
+      0
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "0_32": 5000,
+      "0_128": 6500
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": false
+  },
+  {
+    "id": "samsung-tab-s10-ultra",
+    "legacyId": "samsung-tab-s10-ultra",
+    "brandId": "brand-samsung",
+    "name": "Galaxy Tab S10 Ultra",
+    "category": "flagship",
+    "deviceType": "tablets",
+    "releaseYear": 2024,
+    "basePrice128GB": 62000,
+    "series": "Galaxy Tab S Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-tab-s10-ultra.jpg",
+    "supportedStorageGb": [
+      256,
+      512,
+      1024
+    ],
+    "supportedRamGb": [
+      12
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "12_256": 62000,
+      "12_512": 71300,
+      "12_1024": 80600
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": true
+  },
+  {
+    "id": "samsung-tab-s10-plus",
+    "legacyId": "samsung-tab-s10-plus",
+    "brandId": "brand-samsung",
+    "name": "Galaxy Tab S10+",
+    "category": "flagship",
+    "deviceType": "tablets",
+    "releaseYear": 2024,
+    "basePrice128GB": 48000,
+    "series": "Galaxy Tab S Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-tab-s10-plus.jpg",
+    "supportedStorageGb": [
+      256,
+      512
+    ],
+    "supportedRamGb": [
+      12
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "12_256": 48000,
+      "12_512": 55200
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": true
+  },
+  {
+    "id": "samsung-tab-s9-ultra",
+    "legacyId": "samsung-tab-s9-ultra",
+    "brandId": "brand-samsung",
+    "name": "Galaxy Tab S9 Ultra",
+    "category": "flagship",
+    "deviceType": "tablets",
+    "releaseYear": 2023,
+    "basePrice128GB": 44000,
+    "series": "Galaxy Tab S Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-tab-s9-ultra.jpg",
+    "supportedStorageGb": [
+      256,
+      512,
+      1024
+    ],
+    "supportedRamGb": [
+      12
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "12_256": 44000,
+      "12_512": 50600,
+      "12_1024": 57200
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": true
+  },
+  {
+    "id": "samsung-tab-s9-plus",
+    "legacyId": "samsung-tab-s9-plus",
+    "brandId": "brand-samsung",
+    "name": "Galaxy Tab S9+",
+    "category": "flagship",
+    "deviceType": "tablets",
+    "releaseYear": 2023,
+    "basePrice128GB": 36000,
+    "series": "Galaxy Tab S Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-tab-s9-fe.jpg",
+    "supportedStorageGb": [
+      256,
+      512
+    ],
+    "supportedRamGb": [
+      12
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "12_256": 36000,
+      "12_512": 41400
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": true
+  },
+  {
+    "id": "samsung-tab-s9",
+    "legacyId": "samsung-tab-s9",
+    "brandId": "brand-samsung",
+    "name": "Galaxy Tab S9",
+    "category": "premium",
+    "deviceType": "tablets",
+    "releaseYear": 2023,
+    "basePrice128GB": 28000,
+    "series": "Galaxy Tab S Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-tab-s9-fe.jpg",
+    "supportedStorageGb": [
+      128,
+      256
+    ],
+    "supportedRamGb": [
+      8
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "8_128": 28000,
+      "8_256": 32200
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": true
+  },
+  {
+    "id": "samsung-tab-s9-fe-plus",
+    "legacyId": "samsung-tab-s9-fe-plus",
+    "brandId": "brand-samsung",
+    "name": "Galaxy Tab S9 FE+",
+    "category": "premium",
+    "deviceType": "tablets",
+    "releaseYear": 2023,
+    "basePrice128GB": 22000,
+    "series": "Galaxy Tab S Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-tab-s9-fe-plus.jpg",
+    "supportedStorageGb": [
+      128,
+      256
+    ],
+    "supportedRamGb": [
+      8
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "8_128": 22000,
+      "8_256": 25300
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": true
+  },
+  {
+    "id": "samsung-tab-s9-fe",
+    "legacyId": "samsung-tab-s9-fe",
+    "brandId": "brand-samsung",
+    "name": "Galaxy Tab S9 FE",
+    "category": "premium",
+    "deviceType": "tablets",
+    "releaseYear": 2023,
+    "basePrice128GB": 17500,
+    "series": "Galaxy Tab S Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-tab-s9-fe.jpg",
+    "supportedStorageGb": [
+      128,
+      256
+    ],
+    "supportedRamGb": [
+      6
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "6_128": 17500,
+      "6_256": 20150
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": true
+  },
+  {
+    "id": "samsung-tab-s8-ultra",
+    "legacyId": "samsung-tab-s8-ultra",
+    "brandId": "brand-samsung",
+    "name": "Galaxy Tab S8 Ultra",
+    "category": "flagship",
+    "deviceType": "tablets",
+    "releaseYear": 2022,
+    "basePrice128GB": 32000,
+    "series": "Galaxy Tab S Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-tab-s9-fe.jpg",
+    "supportedStorageGb": [
+      128,
+      256,
+      512
+    ],
+    "supportedRamGb": [
+      12
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "12_128": 32000,
+      "12_256": 36800,
+      "12_512": 41600
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": false
+  },
+  {
+    "id": "samsung-tab-s8-plus",
+    "legacyId": "samsung-tab-s8-plus",
+    "brandId": "brand-samsung",
+    "name": "Galaxy Tab S8+",
+    "category": "flagship",
+    "deviceType": "tablets",
+    "releaseYear": 2022,
+    "basePrice128GB": 26000,
+    "series": "Galaxy Tab S Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-tab-s9-fe.jpg",
+    "supportedStorageGb": [
+      128,
+      256
+    ],
+    "supportedRamGb": [
+      8
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "8_128": 26000,
+      "8_256": 29900
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": false
+  },
+  {
+    "id": "samsung-tab-s8",
+    "legacyId": "samsung-tab-s8",
+    "brandId": "brand-samsung",
+    "name": "Galaxy Tab S8",
+    "category": "premium",
+    "deviceType": "tablets",
+    "releaseYear": 2022,
+    "basePrice128GB": 20000,
+    "series": "Galaxy Tab S Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-tab-s9-fe.jpg",
+    "supportedStorageGb": [
+      128,
+      256
+    ],
+    "supportedRamGb": [
+      8
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "8_128": 20000,
+      "8_256": 23000
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": false
+  },
+  {
+    "id": "samsung-tab-s7-plus",
+    "legacyId": "samsung-tab-s7-plus",
+    "brandId": "brand-samsung",
+    "name": "Galaxy Tab S7+",
+    "category": "premium",
+    "deviceType": "tablets",
+    "releaseYear": 2020,
+    "basePrice128GB": 16000,
+    "series": "Galaxy Tab S Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-tab-s9-fe.jpg",
+    "supportedStorageGb": [
+      128,
+      256,
+      512
+    ],
+    "supportedRamGb": [
+      6
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "6_128": 16000,
+      "6_256": 18400,
+      "6_512": 20800
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": false
+  },
+  {
+    "id": "samsung-tab-s7",
+    "legacyId": "samsung-tab-s7",
+    "brandId": "brand-samsung",
+    "name": "Galaxy Tab S7",
+    "category": "premium",
+    "deviceType": "tablets",
+    "releaseYear": 2020,
+    "basePrice128GB": 13000,
+    "series": "Galaxy Tab S Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-tab-s9-fe.jpg",
+    "supportedStorageGb": [
+      128,
+      256,
+      512
+    ],
+    "supportedRamGb": [
+      6
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "6_128": 13000,
+      "6_256": 14950,
+      "6_512": 16900
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": false
+  },
+  {
+    "id": "samsung-tab-s7-fe",
+    "legacyId": "samsung-tab-s7-fe",
+    "brandId": "brand-samsung",
+    "name": "Galaxy Tab S7 FE",
+    "category": "midrange",
+    "deviceType": "tablets",
+    "releaseYear": 2021,
+    "basePrice128GB": 11500,
+    "series": "Galaxy Tab S Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-tab-s9-fe.jpg",
+    "supportedStorageGb": [
+      64,
+      128,
+      256
+    ],
+    "supportedRamGb": [
+      4
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "4_64": 11500,
+      "4_128": 13200,
+      "4_256": 14950
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": false
+  },
+  {
+    "id": "samsung-tab-s6",
+    "legacyId": "samsung-tab-s6",
+    "brandId": "brand-samsung",
+    "name": "Galaxy Tab S6",
+    "category": "premium",
+    "deviceType": "tablets",
+    "releaseYear": 2019,
+    "basePrice128GB": 8620,
+    "series": "Galaxy Tab S Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-tab-s9-fe.jpg",
+    "supportedStorageGb": [
+      128,
+      256
+    ],
+    "supportedRamGb": [
+      6
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "6_128": 8600,
+      "6_256": 9900
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": false
+  },
+  {
+    "id": "samsung-tab-s6-lite",
+    "legacyId": "samsung-tab-s6-lite",
+    "brandId": "brand-samsung",
+    "name": "Galaxy Tab S6 Lite",
+    "category": "midrange",
+    "deviceType": "tablets",
+    "releaseYear": 2022,
+    "basePrice128GB": 8000,
+    "series": "Galaxy Tab S Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-tab-s9-fe.jpg",
+    "supportedStorageGb": [
+      64,
+      128
+    ],
+    "supportedRamGb": [
+      4
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "4_64": 8000,
+      "4_128": 9200
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": false
+  },
+  {
+    "id": "samsung-tab-s5e",
+    "legacyId": "samsung-tab-s5e",
+    "brandId": "brand-samsung",
+    "name": "Galaxy Tab S5e",
+    "category": "midrange",
+    "deviceType": "tablets",
+    "releaseYear": 2019,
+    "basePrice128GB": 6500,
+    "series": "Galaxy Tab S Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-tab-s9-fe.jpg",
+    "supportedStorageGb": [
+      64,
+      128
+    ],
+    "supportedRamGb": [
+      4
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "4_64": 6500,
+      "4_128": 7450
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": false
+  },
+  {
+    "id": "samsung-tab-a9-plus",
+    "legacyId": "samsung-tab-a9-plus",
+    "brandId": "brand-samsung",
+    "name": "Galaxy Tab A9+",
+    "category": "midrange",
+    "deviceType": "tablets",
+    "releaseYear": 2023,
+    "basePrice128GB": 7500,
+    "series": "Galaxy Tab A Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-tab-a9-plus.jpg",
+    "supportedStorageGb": [
+      64,
+      128
+    ],
+    "supportedRamGb": [
+      4
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "4_64": 7500,
+      "4_128": 8650
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": true
+  },
+  {
+    "id": "samsung-tab-a9",
+    "legacyId": "samsung-tab-a9",
+    "brandId": "brand-samsung",
+    "name": "Galaxy Tab A9",
+    "category": "midrange",
+    "deviceType": "tablets",
+    "releaseYear": 2023,
+    "basePrice128GB": 5500,
+    "series": "Galaxy Tab A Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-tab-s9-fe.jpg",
+    "supportedStorageGb": [
+      64,
+      128
+    ],
+    "supportedRamGb": [
+      4
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "4_64": 5500,
+      "4_128": 6300
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": true
+  },
+  {
+    "id": "samsung-tab-a8-10-5",
+    "legacyId": "samsung-tab-a8-10-5",
+    "brandId": "brand-samsung",
+    "name": "Galaxy Tab A8 10.5",
+    "category": "midrange",
+    "deviceType": "tablets",
+    "releaseYear": 2021,
+    "basePrice128GB": 5000,
+    "series": "Galaxy Tab A Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-tab-s9-fe.jpg",
+    "supportedStorageGb": [
+      32,
+      64,
+      128
+    ],
+    "supportedRamGb": [
+      3
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "3_32": 5000,
+      "3_64": 5750,
+      "3_128": 6500
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": false
+  },
+  {
+    "id": "samsung-tab-a7-10-4",
+    "legacyId": "samsung-tab-a7-10-4",
+    "brandId": "brand-samsung",
+    "name": "Galaxy Tab A7 10.4",
+    "category": "midrange",
+    "deviceType": "tablets",
+    "releaseYear": 2020,
+    "basePrice128GB": 4200,
+    "series": "Galaxy Tab A Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-tab-s9-fe.jpg",
+    "supportedStorageGb": [
+      32,
+      64
+    ],
+    "supportedRamGb": [
+      3
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "3_32": 4200,
+      "3_64": 4850
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": false
+  },
+  {
+    "id": "samsung-tab-a7-lite",
+    "legacyId": "samsung-tab-a7-lite",
+    "brandId": "brand-samsung",
+    "name": "Galaxy Tab A7 Lite",
+    "category": "midrange",
+    "deviceType": "tablets",
+    "releaseYear": 2021,
+    "basePrice128GB": 3500,
+    "series": "Galaxy Tab A Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-tab-s9-fe.jpg",
+    "supportedStorageGb": [
+      32,
+      64
+    ],
+    "supportedRamGb": [
+      3
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "3_32": 3500,
+      "3_64": 4000
+    },
+    "hidden": true,
+    "supportsWarrantyQuestion": false
+  },
+  {
+    "id": "samsung-tab-a-10-1",
+    "legacyId": "samsung-tab-a-10-1",
+    "brandId": "brand-samsung",
+    "name": "Galaxy Tab A 10.1",
+    "category": "midrange",
+    "deviceType": "tablets",
+    "releaseYear": 2019,
+    "basePrice128GB": 3200,
+    "series": "Galaxy Tab A Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-tab-s9-fe.jpg",
+    "supportedStorageGb": [
+      32,
+      64,
+      128
+    ],
+    "supportedRamGb": [
+      2
+    ],
+    "variantPrices": {
+      "_supportsWarrantyQuestion": true,
+      "2_32": 3200,
+      "2_64": 3700,
+      "2_128": 4150
+    },
+    "hidden": true,
     "supportsWarrantyQuestion": false
   }
 ]

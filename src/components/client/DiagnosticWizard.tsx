@@ -52,6 +52,8 @@ const getEngineeringLabel = (description: string) => {
     'Missing Original Box':              'Original Retail Box Missing Deduction',
     'Missing Original Charger / Cable':  'Original Charger Missing Deduction',
     'Missing Original S-Pen':            'Original S-Pen Stylus Missing Deduction',
+    'Missing Original S-Pen / Stylus':   'Original S-Pen Stylus Missing Deduction',
+    'Missing Apple Pencil':              'Apple Pencil Stylus Missing Deduction',
     'Missing Bill / Customer Photo ID':  'Legal Compliance Documentation Fee',
     'Single SIM Regional Variant Adjustment': 'Single SIM Variant Engineering Adjustment',
     'Dual eSIM Configuration Deduction (iPhone 14–16 Pro Series)': 'US Model Dual eSIM Architecture Adjustment',

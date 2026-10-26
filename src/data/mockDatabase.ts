@@ -764,6 +764,16 @@ export function getTabletDefectRules(
       subText: 'GST retail invoice with device serial/IMEI not provided (required for warranty claims).',
       deductionFixed: 1000,
       deductionPercentage: 0
+    },
+    {
+      id: 'defect-spen-missing',
+      category: 'accessories',
+      description: isApple ? 'Missing Apple Pencil' : 'Missing Original S-Pen / Stylus',
+      subText: isApple
+        ? 'Original Apple Pencil stylus not provided with the tablet.'
+        : 'Original Samsung S-Pen stylus not provided with the tablet.',
+      deductionFixed: isApple ? 2500 : 2000,
+      deductionPercentage: 0
     }
   ];
 }

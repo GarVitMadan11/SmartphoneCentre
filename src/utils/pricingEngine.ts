@@ -257,14 +257,14 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
     }
     fAge = config.ageFactors[ageKey] ?? 1.00;
   } else if (isIphone15or16) {
-    if (input.deviceAge === '1_to_2y') {
+    if (input.warrantyAge === 'out_of_warranty' || input.deviceAge === '2_to_3y' || input.deviceAge === 'above_4y') {
+      fAge = 1.0 - (config.universalDeductions.outOfWarrantyPercentTier1 ?? 0.20); // -20.0% Cashify empirical out of warranty
+    } else if (input.deviceAge === '1_to_2y') {
       fAge = 0.88; // -12.0% reduction for 1-2 years
     } else if (input.deviceAge === '6_to_12m' || input.warrantyAge === '6_to_11m') {
       fAge = 0.94; // -6.0% reduction for 6-12 months
     } else if (input.deviceAge === '3_to_6m' || input.warrantyAge === '3_to_6m') {
       fAge = 0.97; // -3.0% reduction
-    } else if (input.warrantyAge === 'out_of_warranty' || input.deviceAge === '2_to_3y' || input.deviceAge === 'above_4y') {
-      fAge = 0.80; // -20.0% Cashify empirical out of warranty
     } else {
       fAge = 1.00; // 0% under 3 months
     }

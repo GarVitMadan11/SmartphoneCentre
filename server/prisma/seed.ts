@@ -5,7 +5,7 @@ import bcrypt from 'bcryptjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { BRANDS, MODELS, getDeviceImage, buildVariantPricesForModel, getModelSupportedStorage, getModelSupportedRam } from '../../src/data/mockDatabase';
+import { BRANDS, MODELS, getDeviceImage, buildVariantPricesForModel, getModelSupportedStorage, getModelSupportedRam, isTabletDevice, isSmartwatchDevice } from '../../src/data/mockDatabase';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -67,6 +67,7 @@ async function main() {
         brandId: m.brandId,
         name: m.name,
         category: m.category,
+        deviceType: (m.deviceType || (isTabletDevice(m.brandId, m.name, m.id) ? 'tablets' : isSmartwatchDevice(m.brandId, m.name, m.id) ? 'smartwatches' : 'smartphones')),
         releaseYear: m.releaseYear,
         basePrice128GB: m.basePrice128GB,
         series: m.series || '',
