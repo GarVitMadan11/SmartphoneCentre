@@ -49,6 +49,7 @@ export default function SignupPage({ onSignupSuccess, onNavigate, redirectParam 
       const response = await customerSignup(name.trim(), email.trim(), phone.trim(), password);
       if (response.status === 'otp_sent') {
         if (response.otp) {
+          console.log(`🔑 [Verification Code]: ${response.otp}`);
           const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
           const templateId = import.meta.env.VITE_EMAILJS_OTP_TEMPLATE_ID;
           const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;

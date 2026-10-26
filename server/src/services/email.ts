@@ -5,21 +5,30 @@
 
 import nodemailer from 'nodemailer';
 
-function createTransporter() {
+let cachedTransporter: nodemailer.Transporter | null = null;
+
+export function getTransporter(): nodemailer.Transporter | null {
+  const pass = process.env.SMTP_PASS || process.env.EMAIL_PASS || process.env.MAIL_PASS || process.env.EMAIL_PASSWORD;
+  if (!pass) {
+    return null;
+  }
+  if (cachedTransporter) {
+    return cachedTransporter;
+  }
   const host = process.env.SMTP_HOST || 'smtp.hostinger.com';
   const port = parseInt(process.env.SMTP_PORT || '465', 10);
   const secure = process.env.SMTP_SECURE !== 'false';
-  return nodemailer.createTransport({
+  cachedTransporter = nodemailer.createTransport({
     host, port, secure,
     auth: {
       user: process.env.SMTP_USER || 'support@rephonix.in',
-      pass: process.env.SMTP_PASS || '',
+      pass,
     },
     tls: { rejectUnauthorized: process.env.NODE_ENV === 'production' },
   });
+  return cachedTransporter;
 }
 
-const transporter = createTransporter();
 const FROM_ADDRESS = process.env.EMAIL_FROM || 'Rephonix <support@rephonix.in>';
 const FRONTEND_URL = (process.env.FRONTEND_URL || 'https://www.rephonix.in').replace(/\/$/, '');
 
@@ -41,11 +50,21 @@ function buildEmailHtml(title: string, bodyHtml: string): string {
 }
 
 export async function verifySmtpConnection(): Promise<void> {
+  const transporter = getTransporter();
+  if (!transporter) {
+    console.warn('[Email Service] SMTP is not configured (SMTP_PASS missing).');
+    return;
+  }
   await transporter.verify();
   console.log('SMTP connection verified');
 }
 
 export async function sendVerificationEmail(to: string, name: string, rawToken: string): Promise<void> {
+  const transporter = getTransporter();
+  if (!transporter) {
+    console.warn(`[Email Service] SMTP_PASS not set. Cannot send verification email to ${to}.`);
+    return;
+  }
   const link = FRONTEND_URL + '/verify-email?token=' + encodeURIComponent(rawToken);
   const safeLink = link.replace(/$('&')/g, '&amp;');
   const body = '<p class="greeting">Hi ' + escapeHtml(name) + ',</p>'
@@ -61,6 +80,11 @@ export async function sendVerificationEmail(to: string, name: string, rawToken: 
 }
 
 export async function sendPasswordResetEmail(to: string, name: string, rawToken: string): Promise<void> {
+  const transporter = getTransporter();
+  if (!transporter) {
+    console.warn(`[Email Service] SMTP_PASS not set. Cannot send password reset email to ${to}.`);
+    return;
+  }
   const link = FRONTEND_URL + '/reset-password?token=' + encodeURIComponent(rawToken);
   const safeLink = link.replace(/$('&')/g, '&amp;');
   const body = '<p class="greeting">Hi ' + escapeHtml(name) + ',</p>'
@@ -76,6 +100,11 @@ export async function sendPasswordResetEmail(to: string, name: string, rawToken:
 }
 
 export async function sendWelcomeEmail(to: string, name: string): Promise<void> {
+  const transporter = getTransporter();
+  if (!transporter) {
+    console.warn(`[Email Service] SMTP_PASS not set. Cannot send welcome email to ${to}.`);
+    return;
+  }
   const body = '<p class="greeting">Welcome aboard, ' + escapeHtml(name) + '!</p>'
     + '<p class="text">Your Rephonix account is ready. Get instant trade-in quotes, free doorstep pickup, and fast payouts.</p>'
     + '<div class="btn-wrap"><a href="' + FRONTEND_URL + '" class="btn">Get Your Trade-In Quote</a></div>'
@@ -87,6 +116,11 @@ export async function sendWelcomeEmail(to: string, name: string): Promise<void> 
 }
 
 export async function sendSecurityEmail(to: string, name: string, action: string): Promise<void> {
+  const transporter = getTransporter();
+  if (!transporter) {
+    console.warn(`[Email Service] SMTP_PASS not set. Cannot send security email to ${to}.`);
+    return;
+  }
   const msgs: Record<string, { title: string; desc: string }> = {
     password_reset: { title: 'Your password was changed', desc: 'Your Rephonix account password was successfully changed.' },
     google_linked: { title: 'Google account linked', desc: 'A Google account was linked to your Rephonix account.' },
@@ -102,6 +136,11 @@ export async function sendSecurityEmail(to: string, name: string, action: string
 }
 
 export async function sendOtpEmail(to: string, name: string, otp: string): Promise<void> {
+  const transporter = getTransporter();
+  if (!transporter) {
+    console.warn(`[Email Service] SMTP_PASS not set. Skipping SMTP send to ${to}. OTP is returned to client for EmailJS delivery.`);
+    return;
+  }
   const body = '<p class="greeting">Hi ' + escapeHtml(name) + ',</p>'
     + '<p class="text">Here is your verification code to complete your security check and proceed:</p>'
     + '<div class="btn-wrap"><span class="btn" style="font-size: 24px; letter-spacing: 4px; padding: 12px 24px; color: #fff;">' + escapeHtml(otp) + '</span></div>'
@@ -119,6 +158,11 @@ export async function sendPilotFeedbackEmail(
   category: string,
   feedbackText: string
 ): Promise<void> {
+  const transporter = getTransporter();
+  if (!transporter) {
+    console.warn('[Email Service] SMTP_PASS not set. Skipping pilot feedback email send.');
+    return;
+  }
   const targetEmail = 'support@rephonix.in';
   const categoryLabels: Record<string, string> = {
     suggestion: 'Feature Idea / Suggestion',
@@ -149,6 +193,11 @@ export async function sendPilotFeedbackEmail(
     + 'Category: ' + categoryName + '\n'
     + 'Submitted: ' + timestamp + ' IST\n\n'
     + 'Feedback:\n' + feedbackText + '\n';
+
+  if (!transporter) {
+    console.warn('[Email Service] SMTP_PASS not set. Skipping pilot feedback email send.');
+    return;
+  }
 
   await transporter.sendMail({
     from: FROM_ADDRESS,

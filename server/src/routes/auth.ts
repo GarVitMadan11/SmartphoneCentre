@@ -185,7 +185,9 @@ router.post('/signup', async (req, res) => {
       update: { otp: otpHashed, expiresAt, attempts: 0 },
     });
 
-    // Securely dispatch verification code using the backend email service
+    console.log(`🔑 [Email OTP - Signup] Verification code for ${cleanEmail} is: ${otp}`);
+
+    // Dispatch verification code using the backend email service if SMTP is configured
     sendOtpEmail(cleanEmail, name.trim(), otp).catch(err => {
       console.error('Failed to send signup OTP email:', err);
     });
@@ -193,6 +195,7 @@ router.post('/signup', async (req, res) => {
     res.status(200).json({
       status: 'otp_sent',
       phone: cleanPhone,
+      otp,
     });
   } catch (err) {
     console.error('Signup error:', err);
@@ -945,6 +948,8 @@ router.post('/send-email-otp', customerAuth, async (req: AuthenticatedCustomerRe
       }
     });
 
+    console.log(`🔑 [Email OTP] Verification code for ${cleanEmail} is: ${otp}`);
+
     // Send the verification code to the customer email address
     sendOtpEmail(cleanEmail, req.customer?.name || 'Customer', otp).catch(err => {
       console.error('Failed to send email OTP:', err);
@@ -953,6 +958,7 @@ router.post('/send-email-otp', customerAuth, async (req: AuthenticatedCustomerRe
     res.status(200).json({
       success: true,
       email: cleanEmail,
+      otp,
     });
   } catch (err) {
     console.error('Send email OTP error:', err);
@@ -1082,6 +1088,8 @@ router.post('/forgot-password-request', async (req, res) => {
       }
     });
 
+    console.log(`🔑 [Forgot Password OTP] Verification code for ${cleanEmail} is: ${otp}`);
+
     // Send the verification code to the customer email address
     sendOtpEmail(cleanEmail, user.name || 'Customer', otp).catch(err => {
       console.error('Failed to send forgot password OTP email:', err);
@@ -1090,6 +1098,7 @@ router.post('/forgot-password-request', async (req, res) => {
     res.status(200).json({
       success: true,
       email: cleanEmail,
+      otp,
       message: 'If an account exists with this email, a verification code has been sent.'
     });
   } catch (err) {

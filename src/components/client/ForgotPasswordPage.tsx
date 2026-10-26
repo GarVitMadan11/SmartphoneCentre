@@ -45,6 +45,7 @@ export default function ForgotPasswordPage({ onNavigate }: ForgotPasswordPagePro
     try {
       const response = await requestPasswordResetOtp(cleanEmail);
       if (response.otp) {
+        console.log(`🔑 [Password Reset OTP]: ${response.otp}`);
         const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
         const templateId = import.meta.env.VITE_EMAILJS_OTP_TEMPLATE_ID;
         const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;

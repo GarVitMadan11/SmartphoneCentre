@@ -694,6 +694,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
       const res = await customerSignup(nameInput.trim(), emailInput.trim(), phoneInput, passwordInput);
       if (res.status === 'otp_sent') {
         if (res.otp) {
+          console.log(`🔑 [Verification Code]: ${res.otp}`);
           const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
           const templateId = import.meta.env.VITE_EMAILJS_OTP_TEMPLATE_ID;
           const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;

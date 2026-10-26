@@ -167,6 +167,7 @@ export default function ProfilePage({
     try {
       const response = await sendEmailOtp(newEmail.trim());
       if (response.otp) {
+        console.log(`🔑 [Email Change OTP]: ${response.otp}`);
         const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
         const templateId = import.meta.env.VITE_EMAILJS_OTP_TEMPLATE_ID;
         const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
