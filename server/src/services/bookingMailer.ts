@@ -14,8 +14,8 @@ export function escapeHtml(str: any): string {
 function getTransporter() {
   const host = process.env.SMTP_HOST || 'smtp.gmail.com';
   const port = parseInt(process.env.SMTP_PORT || '587', 10);
-  const user = process.env.SMTP_USER || process.env.EMAIL_USER || process.env.MAIL_USER || process.env.ADMIN_ALERT_EMAIL;
-  const pass = process.env.SMTP_PASS || process.env.EMAIL_PASS || process.env.MAIL_PASS || process.env.EMAIL_PASSWORD;
+  const user = process.env.SMTP_USER || process.env.SECURITY_SMTP_USER || process.env.EMAIL_USER || process.env.MAIL_USER || process.env.ADMIN_ALERT_EMAIL || 'garvitmadan511@gmail.com';
+  const pass = process.env.SMTP_PASS || process.env.SECURITY_SMTP_PASS || process.env.EMAIL_PASS || process.env.MAIL_PASS || process.env.EMAIL_PASSWORD;
 
   if (!user || !pass) {
     return null;
@@ -26,61 +26,27 @@ function getTransporter() {
     port,
     secure: port === 465,
     auth: { user, pass },
+    tls: { rejectUnauthorized: false },
   });
+}
+
+function getFromAddress(): string {
+  const user = process.env.SMTP_USER || process.env.SECURITY_SMTP_USER || process.env.EMAIL_USER || 'garvitmadan511@gmail.com';
+  if (process.env.EMAIL_FROM && process.env.EMAIL_FROM.trim()) {
+    const raw = process.env.EMAIL_FROM.trim();
+    if (raw.includes('<') && raw.includes('>')) {
+      return raw;
+    }
+    return `"Rephonix" <${raw}>`;
+  }
+  return `"Rephonix" <${user}>`;
 }
 
 export async function sendAdminBookingNotificationEmail(booking: PDFBookingData, pdfBuffer: Buffer | null, baseUrl: string = 'http://localhost:4000'): Promise<boolean> {
   const adminRecipient = process.env.ADMIN_ALERT_EMAIL || 'garvitmadan511@gmail.com';
   const pdfDownloadUrl = `${baseUrl}/api/bookings/${encodeURIComponent(booking.id)}/pdf`;
 
-  // 1. Try EmailJS REST API if configured
-  const serviceId = process.env.EMAILJS_SERVICE_ID || process.env.VITE_EMAILJS_SERVICE_ID;
-  const templateId = process.env.EMAILJS_TEMPLATE_ID || process.env.VITE_EMAILJS_TEMPLATE_ID;
-  const publicKey = process.env.EMAILJS_PUBLIC_KEY || process.env.VITE_EMAILJS_PUBLIC_KEY;
-  const privateKey = process.env.EMAILJS_PRIVATE_KEY;
-
-  if (serviceId && templateId && publicKey && !serviceId.includes('xxxxxxx') && !publicKey.includes('your_public')) {
-    try {
-      const payload = {
-        service_id: serviceId,
-        template_id: templateId,
-        user_id: publicKey,
-        ...(privateKey ? { accessToken: privateKey } : {}),
-        template_params: {
-          to_name: 'Admin / Owner',
-          to_email: adminRecipient,
-          email: adminRecipient,
-          customer_name: booking.customerName,
-          customer_phone: `+91 ${booking.customerPhone}`,
-          customer_email: booking.customerEmail,
-          phone: `+91 ${booking.customerPhone}`,
-          model_name: `${booking.modelName} (${booking.storageGb}GB)`,
-          address: booking.address,
-          pickup_date: booking.pickupDate,
-          time_slot: booking.pickupTimeSlot,
-          payment_method: 'INSTANT DOORSIDE PAYOUT (UPI / BANK TRANSFER)',
-          payout_amount: `₹${booking.finalPrice.toLocaleString('en-IN')}`,
-          confirmation_id: booking.id,
-          pdf_url: pdfDownloadUrl,
-          subject: `🔔 [NEW BOOKING] #${booking.id} - ${booking.customerName} (${booking.modelName})`,
-        },
-      };
-
-      const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (response.ok) {
-        console.log(`[Booking Mailer] EmailJS admin notification sent to ${adminRecipient}`);
-      }
-    } catch (err) {
-      console.warn('[Booking Mailer] EmailJS admin alert failed:', err);
-    }
-  }
-
-  // 2. Try Nodemailer SMTP if configured
+  // Direct Nodemailer SMTP
   const transporter = getTransporter();
   if (!transporter) {
     console.log(`[Booking Mailer] SMTP credentials not set. Admin alert ready for ${adminRecipient}. Booking #${booking.id}`);
@@ -175,7 +141,7 @@ export async function sendAdminBookingNotificationEmail(booking: PDFBookingData,
 
   try {
     await transporter.sendMail({
-      from: `"Rephonix System" <${process.env.SMTP_USER || process.env.EMAIL_USER || 'no-reply@rephonix.in'}>`,
+      from: getFromAddress(),
       to: adminRecipient,
       subject: `🔔 [NEW BOOKING CONFIRMED] #${booking.id} - ${booking.customerName} (${booking.modelName})`,
       html: htmlBody,
@@ -215,50 +181,7 @@ export async function sendBookingConfirmationEmail(booking: PDFBookingData, base
     console.error('[Booking Mailer] Error sending admin notification email:', err);
   }
 
-  // 2. Try EmailJS REST API if configured for Customer
-  const serviceId = process.env.EMAILJS_SERVICE_ID || process.env.VITE_EMAILJS_SERVICE_ID;
-  const templateId = process.env.EMAILJS_TEMPLATE_ID || process.env.VITE_EMAILJS_TEMPLATE_ID;
-  const publicKey = process.env.EMAILJS_PUBLIC_KEY || process.env.VITE_EMAILJS_PUBLIC_KEY;
-  const privateKey = process.env.EMAILJS_PRIVATE_KEY;
-
-  if (serviceId && templateId && publicKey && !serviceId.includes('xxxxxxx') && !publicKey.includes('your_public')) {
-    try {
-      const payload = {
-        service_id: serviceId,
-        template_id: templateId,
-        user_id: publicKey,
-        ...(privateKey ? { accessToken: privateKey } : {}),
-        template_params: {
-          to_name: booking.customerName,
-          to_email: recipientEmail,
-          email: recipientEmail,
-          phone: `+91 ${booking.customerPhone}`,
-          model_name: `${booking.modelName} (${booking.storageGb}GB)`,
-          address: booking.address,
-          pickup_date: booking.pickupDate,
-          time_slot: booking.pickupTimeSlot,
-          payment_method: 'INSTANT DOORSIDE PAYOUT (UPI / BANK TRANSFER)',
-          payout_amount: `₹${booking.finalPrice.toLocaleString('en-IN')}`,
-          confirmation_id: booking.id,
-          pdf_url: pdfDownloadUrl,
-        },
-      };
-
-      const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (response.ok) {
-        console.log(`[Booking Mailer] EmailJS confirmation sent to ${recipientEmail}`);
-      }
-    } catch (err) {
-      console.warn('[Booking Mailer] EmailJS call failed:', err);
-    }
-  }
-
-  // 3. Try Nodemailer SMTP if configured for Customer
+  // Direct Nodemailer SMTP for Customer
   const transporter = getTransporter();
   if (!transporter) {
     console.log(`[Booking Mailer] SMTP credentials not set. Booking quotation email ready via API for ${recipientEmail}. Link: ${pdfDownloadUrl}`);
@@ -323,7 +246,7 @@ export async function sendBookingConfirmationEmail(booking: PDFBookingData, base
 
   try {
     await transporter.sendMail({
-      from: `"Rephonix" <${process.env.SMTP_USER || process.env.EMAIL_USER || 'no-reply@rephonix.in'}>`,
+      from: getFromAddress(),
       to: recipientEmail,
       subject: `[Trade-In Confirmed] Quotation Receipt #${booking.id} - ${booking.modelName}`,
       html: htmlBody,
@@ -425,49 +348,7 @@ export async function sendAdminQuoteAlertEmail(data: QuoteAlertData): Promise<bo
     </div>
   `;
 
-  // 1. Try EmailJS REST API if configured
-  const serviceId = process.env.EMAILJS_SERVICE_ID || process.env.VITE_EMAILJS_SERVICE_ID;
-  const templateId = process.env.EMAILJS_TEMPLATE_ID || process.env.VITE_EMAILJS_TEMPLATE_ID;
-  const publicKey = process.env.EMAILJS_PUBLIC_KEY || process.env.VITE_EMAILJS_PUBLIC_KEY;
-  const privateKey = process.env.EMAILJS_PRIVATE_KEY;
-
-  if (serviceId && templateId && publicKey && !serviceId.includes('xxxxxxx') && !publicKey.includes('your_public')) {
-    try {
-      const payload = {
-        service_id: serviceId,
-        template_id: templateId,
-        user_id: publicKey,
-        ...(privateKey ? { accessToken: privateKey } : {}),
-        template_params: {
-          to_name: 'Admin / Owner',
-          to_email: adminRecipient,
-          email: adminRecipient,
-          customer_name: data.customerName,
-          customer_phone: `+91 ${data.customerPhone}`,
-          customer_email: data.customerEmail,
-          phone: `+91 ${data.customerPhone}`,
-          model_name: `${data.modelName} (${data.storageGb >= 1024 ? '1TB' : data.storageGb + 'GB'})`,
-          payout_amount: formattedPayout,
-          ref_code: data.refCode || 'SCH-QUOTE',
-          subject: `📊 [QUOTE GENERATED] ${data.modelName} - ${data.customerName} (${formattedPayout})`,
-        },
-      };
-
-      const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (response.ok) {
-        console.log(`[Quote Mailer] EmailJS quote alert sent to ${adminRecipient}`);
-      }
-    } catch (err) {
-      console.warn('[Quote Mailer] EmailJS quote alert failed:', err);
-    }
-  }
-
-  // 2. Try Nodemailer SMTP if configured
+  // Direct Nodemailer SMTP
   const transporter = getTransporter();
   if (!transporter) {
     console.log(`[Quote Mailer] SMTP credentials not set. Quote alert ready for ${adminRecipient}: ${data.modelName} by ${data.customerName} (${formattedPayout})`);
@@ -476,7 +357,7 @@ export async function sendAdminQuoteAlertEmail(data: QuoteAlertData): Promise<bo
 
   try {
     await transporter.sendMail({
-      from: `"Rephonix System" <${process.env.SMTP_USER || process.env.EMAIL_USER || 'no-reply@rephonix.in'}>`,
+      from: getFromAddress(),
       to: adminRecipient,
       subject: `📊 [QUOTE GENERATED] ${data.modelName} (${data.storageGb >= 1024 ? '1TB' : data.storageGb + 'GB'}) - ${data.customerName} (${formattedPayout})`,
       html: htmlBody,
@@ -589,7 +470,7 @@ export async function sendAdminPriceMatchAlertEmail(data: PriceMatchAlertData): 
 
   try {
     await transporter.sendMail({
-      from: `"Rephonix Deals" <${process.env.SMTP_USER || process.env.EMAIL_USER || 'no-reply@rephonix.in'}>`,
+      from: getFromAddress(),
       to: adminRecipient,
       subject: `🏷️ [PRICE MATCH REQUEST] ${data.modelName} (${data.storageGb >= 1024 ? '1TB' : data.storageGb + 'GB'}) - Target: ${formattedExpected} (Phone: ${data.customerPhone})`,
       html: htmlBody,

@@ -5,7 +5,6 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import emailjs from '@emailjs/browser';
 import { Model, Variant, DefectRule, Booking } from '../../data/mockDatabase';
 import { createBooking, ApiUser } from '../../utils/api';
 
@@ -22,13 +21,6 @@ interface PickupSchedulerProps {
   onNavigate?: (path: string) => void;
 }
 
-// L-2: Agent phone numbers are placeholder / demo only.
-// In production, these should be fetched server-side — never hardcoded in the bundle.
-const AGENTS = [
-  { name: 'Amit Sharma', rating: 4.9, reviews: 312, avatar: '👤', phone: '+91 XXXXX XXXXX' },
-  { name: 'Rahul Verma', rating: 4.8, reviews: 245, avatar: '👤', phone: '+91 XXXXX XXXXX' },
-  { name: 'Priya Patel', rating: 5.0, reviews: 189, avatar: '👤', phone: '+91 XXXXX XXXXX' }
-];
 
 const DELHI_PINCODES: Record<string, string> = {
   '110001': 'Connaught Place, Mandi House, Gole Market',
@@ -305,10 +297,6 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
     'Evening (03:00 PM - 07:00 PM)'
   ];
 
-  // Assign a random agent for the pickup
-  const assignedAgent = useMemo(() => {
-    return AGENTS[Math.floor(Math.random() * AGENTS.length)];
-  }, []);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -435,25 +423,6 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
     setIsSubmitting(true);
     recordSubmitAttempt();
 
-    const finalPayoutAmt = netDoorsidePayout;
-    const payoutInfoStr = 'Instant Doorside Transfer via UPI / Bank Transfer upon physical inspection';
-
-    // Build template parameters for EmailJS
-    const templateParams = {
-      to_name: name.trim().slice(0, 80),
-      to_email: email.trim(),
-      phone: `+91 ${phone}`,
-      imei: imei || 'Not provided',
-      address: `${address.trim().slice(0, 500)} (Pincode: ${pincode.trim()})`,
-      pickup_date: selectedDate,
-      time_slot: selectedTimeSlot,
-      payment_method: 'INSTANT DOORSIDE PAYOUT',
-      payment_details: payoutInfoStr,
-      payout_amount: new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(finalPayoutAmt),
-      agent_name: assignedAgent.name,
-      confirmation_id: confirmationId,
-    };
-
     // Save booking to SQLite DB via API
     const newBooking: Booking = {
       id: confirmationId,
@@ -497,19 +466,6 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
       }
       setFormError('Failed to submit booking to server: ' + (err as Error).message);
       return;
-    }
-
-    try {
-      const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
-      const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
-      const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
-
-      if (serviceId && templateId && publicKey &&
-          !serviceId.includes('xxxxxxx') && !publicKey.includes('your_public')) {
-        await emailjs.send(serviceId, templateId, templateParams, publicKey);
-      }
-    } catch (err) {
-      console.warn('EmailJS not configured — booking confirmed locally only.', err);
     }
 
     setIsSubmitting(false);

@@ -5,31 +5,36 @@
 
 import nodemailer from 'nodemailer';
 
-let cachedTransporter: nodemailer.Transporter | null = null;
-
 export function getTransporter(): nodemailer.Transporter | null {
-  const user = process.env.SMTP_USER || 'support@rephonix.in';
-  const pass = process.env.SMTP_PASS || process.env.EMAIL_PASS || process.env.MAIL_PASS || process.env.EMAIL_PASSWORD || 'Rephonix@152026';
-  if (!pass) {
+  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
+  const port = parseInt(process.env.SMTP_PORT || '587', 10);
+  const user = process.env.SMTP_USER || process.env.EMAIL_USER || process.env.SECURITY_SMTP_USER || process.env.ADMIN_ALERT_EMAIL || 'garvitmadan511@gmail.com';
+  const pass = process.env.SMTP_PASS || process.env.SECURITY_SMTP_PASS || process.env.EMAIL_PASS || process.env.SECURITY_EMAIL_PASS || process.env.MAIL_PASS || process.env.EMAIL_PASSWORD;
+  if (!user || !pass) {
     return null;
   }
-  if (cachedTransporter) {
-    return cachedTransporter;
-  }
-  const host = process.env.SMTP_HOST || 'smtp.hostinger.com';
-  const port = parseInt(process.env.SMTP_PORT || '465', 10);
   const secure = port === 465 || process.env.SMTP_SECURE === 'true';
-  cachedTransporter = nodemailer.createTransport({
+  return nodemailer.createTransport({
     host,
     port,
     secure,
     auth: { user, pass },
     tls: { rejectUnauthorized: false },
   });
-  return cachedTransporter;
 }
 
-const FROM_ADDRESS = process.env.EMAIL_FROM || 'Rephonix <support@rephonix.in>';
+export function getFromAddress(): string {
+  const user = process.env.SMTP_USER || process.env.SECURITY_SMTP_USER || process.env.EMAIL_USER || 'garvitmadan511@gmail.com';
+  if (process.env.EMAIL_FROM && process.env.EMAIL_FROM.trim()) {
+    const raw = process.env.EMAIL_FROM.trim();
+    if (raw.includes('<') && raw.includes('>')) {
+      return raw;
+    }
+    return `"Rephonix" <${raw}>`;
+  }
+  return `"Rephonix" <${user}>`;
+}
+
 const FRONTEND_URL = (process.env.FRONTEND_URL || 'https://www.rephonix.in').replace(/\/$/, '');
 
 function escapeHtml(str: string): string {
@@ -76,13 +81,13 @@ export async function sendVerificationEmail(to: string, name: string, rawToken: 
     + '<p class="note">Expires in <strong>24 hours</strong>. If you did not create this account, ignore this email.</p>';
   const html = buildEmailHtml('Verify your Rephonix email address', body);
   const text = 'Hi ' + name + ',\n\nVerify your email:\n' + link + '\n\nExpires in 24 hours.\n\n-- The Rephonix Team';
-  await transporter.sendMail({ from: FROM_ADDRESS, to, subject: 'Verify your Rephonix email address', html, text });
+  await transporter.sendMail({ from: getFromAddress(), to, subject: 'Verify your Rephonix email address', html, text });
 }
 
 export async function sendPasswordResetEmail(to: string, name: string, rawToken: string): Promise<void> {
   const transporter = getTransporter();
   if (!transporter) {
-    console.warn(`[Email Service] SMTP_PASS not set. Cannot send password reset email to ${to}.`);
+    console.warn(`[Email Service] SMTP credentials not set. Cannot send password reset email to ${to}.`);
     return;
   }
   const link = FRONTEND_URL + '/reset-password?token=' + encodeURIComponent(rawToken);
@@ -96,13 +101,13 @@ export async function sendPasswordResetEmail(to: string, name: string, rawToken:
     + '<p class="note">Expires in <strong>1 hour</strong>. If you did not request this, ignore this email -- your password remains unchanged.</p>';
   const html = buildEmailHtml('Reset your Rephonix password', body);
   const text = 'Hi ' + name + ',\n\nReset your password:\n' + link + '\n\nExpires in 1 hour.\n\n-- The Rephonix Team';
-  await transporter.sendMail({ from: FROM_ADDRESS, to, subject: 'Reset your Rephonix password', html, text });
+  await transporter.sendMail({ from: getFromAddress(), to, subject: 'Reset your Rephonix password', html, text });
 }
 
 export async function sendWelcomeEmail(to: string, name: string): Promise<void> {
   const transporter = getTransporter();
   if (!transporter) {
-    console.warn(`[Email Service] SMTP_PASS not set. Cannot send welcome email to ${to}.`);
+    console.warn(`[Email Service] SMTP credentials not set. Cannot send welcome email to ${to}.`);
     return;
   }
   const body = '<p class="greeting">Welcome aboard, ' + escapeHtml(name) + '!</p>'
@@ -112,13 +117,13 @@ export async function sendWelcomeEmail(to: string, name: string): Promise<void> 
     + '<p class="note">Questions? <a href="mailto:support@rephonix.in">support@rephonix.in</a></p>';
   const html = buildEmailHtml('Welcome to Rephonix!', body);
   const text = 'Welcome to Rephonix, ' + name + '!\n\nVisit ' + FRONTEND_URL + ' to get started.\n\n-- The Rephonix Team';
-  await transporter.sendMail({ from: FROM_ADDRESS, to, subject: 'Welcome to Rephonix!', html, text });
+  await transporter.sendMail({ from: getFromAddress(), to, subject: 'Welcome to Rephonix!', html, text });
 }
 
 export async function sendSecurityEmail(to: string, name: string, action: string): Promise<void> {
   const transporter = getTransporter();
   if (!transporter) {
-    console.warn(`[Email Service] SMTP_PASS not set. Cannot send security email to ${to}.`);
+    console.warn(`[Email Service] SMTP credentials not set. Cannot send security email to ${to}.`);
     return;
   }
   const msgs: Record<string, { title: string; desc: string }> = {
@@ -132,15 +137,16 @@ export async function sendSecurityEmail(to: string, name: string, action: string
     + '<p class="text">If you did <strong>not</strong> make this change, contact us at <a href="mailto:support@rephonix.in">support@rephonix.in</a>.</p>';
   const html = buildEmailHtml('Security Alert: ' + msg.title, body);
   const text = 'Hi ' + name + ',\n\n' + msg.desc + '\n\nIf you did not do this, contact us at support@rephonix.in\n\n-- The Rephonix Team';
-  await transporter.sendMail({ from: FROM_ADDRESS, to, subject: 'Security Alert: ' + msg.title, html, text });
+  await transporter.sendMail({ from: getFromAddress(), to, subject: 'Security Alert: ' + msg.title, html, text });
 }
 
 export async function sendOtpEmail(to: string, name: string, otp: string): Promise<void> {
   const transporter = getTransporter();
   if (!transporter) {
-    console.warn(`[Email Service] ⚠️ SMTP_PASS is not set in environment. Cannot send OTP email via Hostinger SMTP to ${to}.`);
+    console.warn(`[Email Service] ⚠️ SMTP credentials not set (SMTP_USER or SMTP_PASS missing). Cannot send OTP email to ${to}.`);
     return;
   }
+  const fromAddress = getFromAddress();
   const body = '<p class="greeting">Hi ' + escapeHtml(name) + ',</p>'
     + '<p class="text">Here is your verification code to complete your security check and proceed:</p>'
     + '<div class="btn-wrap"><span class="btn" style="font-size: 24px; letter-spacing: 4px; padding: 12px 24px; color: #fff;">' + escapeHtml(otp) + '</span></div>'
@@ -149,22 +155,13 @@ export async function sendOtpEmail(to: string, name: string, otp: string): Promi
     + '<p class="note">If you did not request this code, you can safely ignore this email.</p>';
   const html = buildEmailHtml('Your Rephonix Verification Code', body);
   const text = 'Hi ' + name + ',\n\nYour verification code is: ' + otp + '\n\nValid for 10 minutes.\n\n-- The Rephonix Team';
+
   try {
-    const info = await transporter.sendMail({ from: FROM_ADDRESS, to, subject: 'Your Rephonix Verification Code', html, text });
-    console.log(`[Email Service] ✅ Verification code successfully sent to ${to} from ${FROM_ADDRESS} (MessageID: ${info.messageId})`);
-  } catch (primaryErr: any) {
-    console.warn(`[Email Service] Primary port 465 failed (${primaryErr.message}). Retrying via port 587 STARTTLS...`);
-    const user = process.env.SMTP_USER || 'support@rephonix.in';
-    const pass = process.env.SMTP_PASS || process.env.EMAIL_PASS || process.env.MAIL_PASS || process.env.EMAIL_PASSWORD || 'Rephonix@152026';
-    const fallbackTransporter = nodemailer.createTransport({
-      host: 'smtp.hostinger.com',
-      port: 587,
-      secure: false,
-      auth: { user, pass },
-      tls: { rejectUnauthorized: false },
-    });
-    const info = await fallbackTransporter.sendMail({ from: FROM_ADDRESS, to, subject: 'Your Rephonix Verification Code', html, text });
-    console.log(`[Email Service] ✅ Verification code successfully sent via port 587 to ${to} (MessageID: ${info.messageId})`);
+    const info = await transporter.sendMail({ from: fromAddress, to, subject: 'Your Rephonix Verification Code', html, text });
+    console.log(`[Email Service] ✅ Verification code successfully sent to ${to} from ${fromAddress} via direct SMTP (MessageID: ${info.messageId})`);
+  } catch (err: any) {
+    console.error(`[Email Service] ❌ Direct SMTP failed to send OTP email to ${to}:`, err.message || err);
+    throw err;
   }
 }
 
@@ -216,7 +213,7 @@ export async function sendPilotFeedbackEmail(
   }
 
   await transporter.sendMail({
-    from: FROM_ADDRESS,
+    from: getFromAddress(),
     to: targetEmail,
     replyTo: `${userName} <${userEmail}>`,
     subject: `🚀 [Pilot Feedback] ${categoryName} — ${userName} (${userEmail})`,
