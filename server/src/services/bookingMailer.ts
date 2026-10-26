@@ -11,11 +11,16 @@ export function escapeHtml(str: any): string {
     .replace(/'/g, '&#39;');
 }
 
+function cleanEnv(val: string | undefined): string {
+  if (!val) return '';
+  return val.trim().replace(/^["']|["']$/g, '').trim();
+}
+
 function getTransporter() {
-  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
-  const port = parseInt(process.env.SMTP_PORT || '587', 10);
-  const user = process.env.SMTP_USER || process.env.SECURITY_SMTP_USER || process.env.EMAIL_USER || process.env.MAIL_USER || process.env.ADMIN_ALERT_EMAIL || 'garvitmadan511@gmail.com';
-  const pass = process.env.SMTP_PASS || process.env.SECURITY_SMTP_PASS || process.env.EMAIL_PASS || process.env.MAIL_PASS || process.env.EMAIL_PASSWORD;
+  const host = cleanEnv(process.env.SMTP_HOST) || 'smtp.gmail.com';
+  const port = parseInt(cleanEnv(process.env.SMTP_PORT) || '587', 10);
+  const user = cleanEnv(process.env.SMTP_USER || process.env.SECURITY_SMTP_USER || process.env.EMAIL_USER || process.env.MAIL_USER || process.env.ADMIN_ALERT_EMAIL) || 'garvitmadan511@gmail.com';
+  const pass = cleanEnv(process.env.SMTP_PASS || process.env.SECURITY_SMTP_PASS || process.env.EMAIL_PASS || process.env.MAIL_PASS || process.env.EMAIL_PASSWORD);
 
   if (!user || !pass) {
     return null;
@@ -31,13 +36,13 @@ function getTransporter() {
 }
 
 function getFromAddress(): string {
-  const user = process.env.SMTP_USER || process.env.SECURITY_SMTP_USER || process.env.EMAIL_USER || 'garvitmadan511@gmail.com';
-  if (process.env.EMAIL_FROM && process.env.EMAIL_FROM.trim()) {
-    const raw = process.env.EMAIL_FROM.trim();
-    if (raw.includes('<') && raw.includes('>')) {
-      return raw;
+  const user = cleanEnv(process.env.SMTP_USER || process.env.SECURITY_SMTP_USER || process.env.EMAIL_USER) || 'garvitmadan511@gmail.com';
+  const rawFrom = cleanEnv(process.env.EMAIL_FROM);
+  if (rawFrom) {
+    if (rawFrom.includes('<') && rawFrom.includes('>')) {
+      return rawFrom;
     }
-    return `"Rephonix" <${raw}>`;
+    return `"Rephonix" <${rawFrom}>`;
   }
   return `"Rephonix" <${user}>`;
 }
