@@ -38,8 +38,10 @@ const getEngineeringLabel = (description: string) => {
     'Screws Stripped / Missing':         'Pentalobe Hardware Replacement',
     'Bottom Screws Stripped / Missing':  'Chassis Hardware Replacement',
     'Camera Faulty / Lens Blur':         'Optical Sensor Recalibration',
+    'Camera Glass Cracked / Chipped':    'Camera Lens Glass Replacement Fee',
     'Battery Health < 80%':              'Battery Module Replacement',
     'Battery Health < 80% (Service Alert)': 'Battery Module Replacement Fee',
+    'Battery Health < 80% or Service Alert': 'Battery Module Replacement Fee',
     'Battery Faulty / Rapid Drain / Sudden Shutdown': 'Battery Module Replacement Fee',
     'Non-Genuine Battery Warning':       'Original Battery Compliance Levy',
     'Battery Replaced / Duplicate Battery': 'Non-Original Battery Fee',
@@ -350,11 +352,11 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
       category: model.category,
       releaseYear: model.releaseYear,
       hasSpen,
-      warrantyAge: isScreenNonOriginal ? 'out_of_warranty' : warrantyAge,
-      deviceAge: isScreenNonOriginal ? 'out_of_warranty' : deviceAge,
+      warrantyAge,
+      deviceAge,
       dualEsim: dualEsim === true
     });
-  }, [variant, selectedDefects, model, simType, warrantyAge, deviceAge, dualEsim, hasSpen, isScreenNonOriginal]);
+  }, [variant, selectedDefects, model, simType, warrantyAge, deviceAge, dualEsim, hasSpen]);
 
   // Stable receipt reference code — generated once per wizard session
   const receiptRef = useMemo(() => Math.random().toString(36).substr(2, 6).toUpperCase(), []);

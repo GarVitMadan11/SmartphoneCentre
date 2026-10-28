@@ -129,6 +129,7 @@ export function isFoldableDevice(_brandId?: string, modelName?: string, modelId?
 // Helper to identify modern devices that never included a wall charger adapter in the retail box
 export function isNoChargerDevice(brandId?: string, modelName?: string, modelId?: string): boolean {
   if (!modelName && !modelId) return false;
+  const b = (brandId || '').toLowerCase();
   const m = (modelName || '').toLowerCase();
   const id = (modelId || '').toLowerCase();
   const isApple = isAppleDevice(brandId, modelName);
@@ -138,26 +139,37 @@ export function isNoChargerDevice(brandId?: string, modelName?: string, modelId?
       m.includes('iphone 12') || m.includes('iphone 13') || m.includes('iphone 14') ||
       m.includes('iphone 15') || m.includes('iphone 16') || m.includes('iphone 17') ||
       m.includes('iphone 18') || m.includes('iphone air') ||
+      m.includes('se3') || m.includes('se 3') || m.includes('se (3rd') || m.includes('se 2022') || m.includes('se (2022)') ||
       id.includes('iphone-12') || id.includes('iphone-13') || id.includes('iphone-14') ||
       id.includes('iphone-15') || id.includes('iphone-16') || id.includes('iphone-17') ||
-      id.includes('iphone-18') || id.includes('iphone-air')
+      id.includes('iphone-18') || id.includes('iphone-air') || id.includes('iphone-se3') || id.includes('iphone-se-2022')
     ) {
       return true;
     }
   }
 
+  // Samsung Galaxy S21, S22, S23, S24, S25, S26 series and Z Fold / Z Flip
   if (
-    m.includes('s21') || m.includes('s22') || m.includes('s23') || m.includes('s24') || m.includes('s25') ||
+    /s2[1-9]/i.test(m) || /s2[1-9]/i.test(id) ||
     m.includes('z fold') || m.includes('z flip') ||
-    id.includes('s21') || id.includes('s22') || id.includes('s23') || id.includes('s24') || id.includes('s25') ||
     id.includes('fold') || id.includes('flip')
   ) {
     return true;
   }
 
+  // Google Pixel 6, 7, 8, 9, 10 series and Pixel Fold
   if (
-    m.includes('pixel 6') || m.includes('pixel 7') || m.includes('pixel 8') || m.includes('pixel 9') ||
-    id.includes('pixel-6') || id.includes('pixel-7') || id.includes('pixel-8') || id.includes('pixel-9')
+    /pixel\s*(6|7|8|9|10|fold)/i.test(m) ||
+    /pixel-(6|7|8|9|10|fold)/i.test(id)
+  ) {
+    return true;
+  }
+
+  // Nothing brand phones (Nothing Phone 1, 2, 2a, CMF Phone) never bundle a wall charger
+  if (
+    b === 'brand-nothing' ||
+    m.includes('nothing phone') || m.includes('cmf phone') ||
+    id.includes('nothing-phone') || id.includes('cmf-phone')
   ) {
     return true;
   }
@@ -183,7 +195,7 @@ export function getBiometricType(brandId?: string, modelName?: string, modelId?:
     // iPhone 8, 8 Plus, 7, 7 Plus, 6, 6s, 5s
     // Non-Pro iPads (iPad base 5th-10th gen, iPad Air, iPad mini)
     const isTouchIdIphone = (
-      m.includes('se') || id.includes('se') ||
+      /\bse\b/i.test(m) || m.includes('iphone se') || /(^|-)se(-|\d|$)/i.test(id) ||
       m.includes('iphone 8') || id.includes('iphone-8') ||
       m.includes('iphone 7') || id.includes('iphone-7') ||
       m.includes('iphone 6') || id.includes('iphone-6') ||
