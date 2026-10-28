@@ -6,6 +6,7 @@ import prisma from '../db.js';
 import { adminAuth, optionalAdminAuth, requireRole, getJwtSecret, JWT_ISSUER, JWT_AUDIENCE, parseCookies, AuthenticatedRequest } from '../middleware/adminAuth.js';
 import { getLockdownState, triggerEmergencyLockdown, unlockEmergencyLockdown } from '../services/lockdownService.js';
 import { sendAdminSecurityAlertEmail } from '../services/securityMailer.js';
+import { pruneExpiredQuotes, getMaintenanceStats } from '../services/maintenance.js';
 
 const router = Router();
 
@@ -1400,6 +1401,41 @@ router.post('/cashify/trigger-scan', adminAuth, async (req: AuthenticatedRequest
  */
 router.get('/cashify/scan-status', adminAuth, (_req: AuthenticatedRequest, res: Response): void => {
   res.json({ isRunning: isScanRunning() });
+});
+
+/**
+ * GET /api/admin/maintenance/stats
+ * Returns database quote hygiene metrics.
+ */
+router.get('/maintenance/stats', adminAuth, requireRole(['SUPER_ADMIN', 'OPERATIONS_AGENT']), async (_req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const stats = await getMaintenanceStats();
+    res.json({ success: true, stats });
+  } catch (err: any) {
+    console.error('GET /api/admin/maintenance/stats error:', err);
+    res.status(500).json({ error: 'ServerError', message: err.message || 'Failed to fetch maintenance stats.' });
+  }
+});
+
+/**
+ * POST /api/admin/maintenance/prune-quotes
+ * Triggers on-demand pruning of expired quotes.
+ */
+router.post('/maintenance/prune-quotes', adminAuth, requireRole(['SUPER_ADMIN', 'OPERATIONS_AGENT']), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const olderThanDays = Math.max(1, parseInt(String(req.body.olderThanDays || '7'), 10));
+    const prunedCount = await pruneExpiredQuotes(olderThanDays);
+    res.json({
+      success: true,
+      message: `Successfully pruned ${prunedCount} quotes older than ${olderThanDays} days.`,
+      prunedCount,
+      olderThanDays,
+      prunedAt: new Date().toISOString(),
+    });
+  } catch (err: any) {
+    console.error('POST /api/admin/maintenance/prune-quotes error:', err);
+    res.status(500).json({ error: 'ServerError', message: err.message || 'Failed to prune quotes.' });
+  }
 });
 
 export default router;

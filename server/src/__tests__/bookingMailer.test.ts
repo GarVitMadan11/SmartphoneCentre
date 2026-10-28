@@ -8,7 +8,7 @@ describe('Booking Mailer & Admin Alert Email', () => {
     storageGb: 256,
     customerName: 'Garvit Madan',
     customerPhone: '9876543210',
-    customerEmail: 'customer@example.com',
+    customerEmail: 'garvitmadan511+test@gmail.com',
     address: 'Flat 402, Sunshine Towers, Delhi - 110001',
     pickupDate: '2026-09-01',
     pickupTimeSlot: '10:00 AM - 01:00 PM (Morning)',
@@ -20,12 +20,12 @@ describe('Booking Mailer & Admin Alert Email', () => {
   it('should run sendAdminBookingNotificationEmail without throwing errors', async () => {
     const result = await sendAdminBookingNotificationEmail(sampleBooking, null, 'http://localhost:4000');
     expect(result).toBe(true);
-  });
+  }, 15000);
 
   it('should run sendBookingConfirmationEmail and dispatch both customer & admin emails without throwing errors', async () => {
     const result = await sendBookingConfirmationEmail(sampleBooking, 'http://localhost:4000');
     expect(result).toBe(true);
-  });
+  }, 15000);
 
   it('should run sendAdminQuoteAlertEmail for logged-in quote generation without throwing errors', async () => {
     const result = await sendAdminQuoteAlertEmail({
@@ -40,6 +40,6 @@ describe('Booking Mailer & Admin Alert Email', () => {
       refCode: 'SCH-TEST123',
     });
     expect(result).toBe(true);
-  });
+  }, 15000);
 });
 

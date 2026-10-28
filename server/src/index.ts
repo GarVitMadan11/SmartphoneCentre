@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 import 'dotenv/config';
 import prisma from './db.js';
 import { PRICING_ENGINE_VERSION } from './services/valuation.js';
+import { startPeriodicMaintenance, stopPeriodicMaintenance } from './services/maintenance.js';
 
 // Route handlers
 import adminRouter from './routes/admin.js';
@@ -250,12 +251,14 @@ const server = app.listen(PORT, () => {
   prisma.$connect()
     .then(() => {
       if (isDev) console.log('✅ Database connected');
+      startPeriodicMaintenance();
     })
     .catch((err) => console.error('⚠️  Database connection failed:', err));
 });
 
 const gracefulShutdown = async (signal: string) => {
   console.log(`\nReceived ${signal}. Gracefully shutting down Express & Prisma database connections...`);
+  stopPeriodicMaintenance();
   server.close(async () => {
     await prisma.$disconnect();
     console.log('Database connections closed cleanly. Exiting process.');

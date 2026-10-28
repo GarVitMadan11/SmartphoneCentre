@@ -4,7 +4,6 @@
  */
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
-import { getFirestore, Firestore } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'AIzaSyBmhYvC0BrBU6hXVVFu4GwUigZsM0NEMD0',
@@ -25,15 +24,13 @@ export const isFirebaseClientConfigured = Boolean(
 
 let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
-let db: Firestore | null = null;
 
 if (isFirebaseClientConfigured) {
   app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
   auth = getAuth(app);
-  db = getFirestore(app);
 } else {
   console.info('[Firebase] Client SDK not initialized. Set VITE_FIREBASE_* env variables to enable.');
 }
 
-export { app, auth, db };
+export { app, auth };
 

@@ -45,6 +45,7 @@
     "vite-plugin-image-optimizer": "^2.0.3"
   },
   "overrides": {
-    "deepmerge-ts": "^8.0.0"
+    "deepmerge-ts": "^8.0.0",
+    "@grpc/grpc-js": "^1.14.6"
   }
 }
