@@ -229,9 +229,13 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
     return (currentYear - resolvedYear) <= 1;
   }, [model, isApple]);
 
+  const isScreenNonOriginal = useMemo(() => {
+    return selectedDefects.some(d => d.id === 'defect-screen-non-original');
+  }, [selectedDefects]);
+
   const showWarrantyQuestion = useMemo(() => {
-    return isEligibleForWarranty;
-  }, [isEligibleForWarranty]);
+    return isEligibleForWarranty && !isScreenNonOriginal;
+  }, [isEligibleForWarranty, isScreenNonOriginal]);
 
   const [deviceAge, setDeviceAge] = useState<AgeFactorKey>('under_3m');
   const [warrantyAge, setWarrantyAge] = useState<'under_3m' | '3_to_6m' | '6_to_11m' | 'out_of_warranty'>('under_3m');
@@ -346,11 +350,11 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
       category: model.category,
       releaseYear: model.releaseYear,
       hasSpen,
-      warrantyAge,
-      deviceAge,
+      warrantyAge: isScreenNonOriginal ? 'out_of_warranty' : warrantyAge,
+      deviceAge: isScreenNonOriginal ? 'out_of_warranty' : deviceAge,
       dualEsim: dualEsim === true
     });
-  }, [variant, selectedDefects, model, simType, warrantyAge, deviceAge, dualEsim, hasSpen]);
+  }, [variant, selectedDefects, model, simType, warrantyAge, deviceAge, dualEsim, hasSpen, isScreenNonOriginal]);
 
   // Stable receipt reference code — generated once per wizard session
   const receiptRef = useMemo(() => Math.random().toString(36).substr(2, 6).toUpperCase(), []);
@@ -1098,10 +1102,99 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   <p className="text-xs sm:text-sm text-slate-800 mt-2 font-medium">Examine the front screen glass and the display panel carefully.</p>
                 </div>
 
+                {/* Screen Originality Question */}
+                <div className="mb-6 text-left border border-ice-border/80 bg-slate-50/70 p-4 rounded-2xl">
+                  <h4 className="text-xs font-bold text-ink-navy font-outfit uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+                    <Smartphone className="w-4 h-4 text-cobalt" />
+                    <span>Is your phone screen original?</span>
+                  </h4>
+                  <p className="text-xs text-ink-muted mb-3.5 font-light leading-snug">
+                    Please confirm whether your display panel is the original factory screen or if it has been replaced.
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div
+                      role="radio"
+                      tabIndex={0}
+                      aria-checked={!selectedDefects.some(d => d.id === 'defect-screen-non-original')}
+                      onKeyDown={e => handleKeyDown(e, () => {
+                        setSelectedDefects(prev => prev.filter(d => d.id !== 'defect-screen-non-original'));
+                      })}
+                      onClick={() => {
+                        setSelectedDefects(prev => prev.filter(d => d.id !== 'defect-screen-non-original'));
+                      }}
+                      className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center gap-3.5 text-left focus:outline-none focus:ring-2 focus:ring-cobalt ${
+                        !selectedDefects.some(d => d.id === 'defect-screen-non-original')
+                          ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/30'
+                          : 'border-ice-border bg-canvas-white hover:border-emerald-500/40 hover:bg-slate-50/50'
+                      }`}
+                    >
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
+                        !selectedDefects.some(d => d.id === 'defect-screen-non-original') ? 'bg-emerald-500 text-white' : 'bg-emerald-500/10 text-emerald-600'
+                      }`}>
+                        <Check className="w-4 h-4 stroke-[2.5]" />
+                      </div>
+                      <div>
+                        <h5 className="font-bold text-xs text-ink-navy">Yes, Original Screen</h5>
+                        <p className="text-[10px] text-ink-muted font-light mt-0.5">Original factory display panel installed</p>
+                      </div>
+                    </div>
+
+                    <div
+                      role="radio"
+                      tabIndex={0}
+                      aria-checked={selectedDefects.some(d => d.id === 'defect-screen-non-original')}
+                      onKeyDown={e => handleKeyDown(e, () => {
+                        const nonOriginalDefect = rules.find(r => r.id === 'defect-screen-non-original') || {
+                          id: 'defect-screen-non-original',
+                          category: 'screen' as const,
+                          description: 'Replaced / Non-Original Screen',
+                          subText: 'Display panel has been changed or replaced with a local/aftermarket screen.',
+                          deductionFixed: 0,
+                          deductionPercentage: model.category === 'flagship' ? 0.40 : model.category === 'premium' ? 0.32 : 0.25
+                        };
+                        setSelectedDefects(prev => {
+                          if (prev.some(d => d.id === 'defect-screen-non-original')) return prev;
+                          return [...prev, nonOriginalDefect];
+                        });
+                      })}
+                      onClick={() => {
+                        const nonOriginalDefect = rules.find(r => r.id === 'defect-screen-non-original') || {
+                          id: 'defect-screen-non-original',
+                          category: 'screen' as const,
+                          description: 'Replaced / Non-Original Screen',
+                          subText: 'Display panel has been changed or replaced with a local/aftermarket screen.',
+                          deductionFixed: 0,
+                          deductionPercentage: model.category === 'flagship' ? 0.40 : model.category === 'premium' ? 0.32 : 0.25
+                        };
+                        setSelectedDefects(prev => {
+                          if (prev.some(d => d.id === 'defect-screen-non-original')) return prev;
+                          return [...prev, nonOriginalDefect];
+                        });
+                      }}
+                      className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center gap-3.5 text-left focus:outline-none focus:ring-2 focus:ring-cobalt ${
+                        selectedDefects.some(d => d.id === 'defect-screen-non-original')
+                          ? 'border-amber-500 bg-amber-500/10 ring-1 ring-amber-500/30'
+                          : 'border-ice-border bg-canvas-white hover:border-amber-500/40 hover:bg-slate-50/50'
+                      }`}
+                    >
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
+                        selectedDefects.some(d => d.id === 'defect-screen-non-original') ? 'bg-amber-500 text-white' : 'bg-amber-500/10 text-amber-600'
+                      }`}>
+                        <X className="w-4 h-4 stroke-[2.5]" />
+                      </div>
+                      <div>
+                        <h5 className="font-bold text-xs text-ink-navy">No, Replaced / Local Screen</h5>
+                        <p className="text-[10px] text-ink-muted font-light mt-0.5">Non-original or local display panel (Voids brand warranty)</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-6 text-left">
                   {/* Flawless Option */}
                   {(() => {
-                    const isAnyPhysicalScreenDefectSelected = selectedDefects.some(d => d.category === 'screen');
+                    const isAnyPhysicalScreenDefectSelected = selectedDefects.some(d => d.category === 'screen' && d.id !== 'defect-screen-non-original');
                     const isSelected = screenConfirmed && !isAnyPhysicalScreenDefectSelected;
                     return (
                       <div
@@ -1112,7 +1205,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           if (isSelected) {
                             setScreenConfirmed(false);
                           } else {
-                            setSelectedDefects(prev => prev.filter(d => d.category !== 'screen'));
+                            setSelectedDefects(prev => prev.filter(d => d.category !== 'screen' || d.id === 'defect-screen-non-original'));
                             setScreenConfirmed(true);
                             setStep(2);
                           }
@@ -1121,7 +1214,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           if (isSelected) {
                             setScreenConfirmed(false);
                           } else {
-                            setSelectedDefects(prev => prev.filter(d => d.category !== 'screen'));
+                            setSelectedDefects(prev => prev.filter(d => d.category !== 'screen' || d.id === 'defect-screen-non-original'));
                             setScreenConfirmed(true);
                             setStep(2);
                           }
@@ -1150,7 +1243,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
                   {/* Screen Defect Options */}
                   {(() => {
-                    return rules.filter(r => r.category === 'screen').map(defect => {
+                    return rules.filter(r => r.category === 'screen' && r.id !== 'defect-screen-non-original').map(defect => {
                       const isSelected = selectedDefects.some(d => d.id === defect.id);
                       return (
                       <div
