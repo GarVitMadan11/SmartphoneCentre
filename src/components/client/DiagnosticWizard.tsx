@@ -1147,13 +1147,18 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                       tabIndex={0}
                       aria-checked={selectedDefects.some(d => d.id === 'defect-screen-non-original')}
                       onKeyDown={e => handleKeyDown(e, () => {
+                        const isMatured = (model.releaseYear !== undefined && model.releaseYear < 2024) ||
+                          /iphone (14|13|12|11|x|xs|xr|8|7|6|se)/i.test(model.name);
+                        const nonOriginalRate = isMatured
+                          ? (model.category === 'flagship' ? 0.25 : 0.22)
+                          : (model.category === 'flagship' ? 0.40 : model.category === 'premium' ? 0.32 : 0.25);
                         const nonOriginalDefect = rules.find(r => r.id === 'defect-screen-non-original') || {
                           id: 'defect-screen-non-original',
                           category: 'screen' as const,
                           description: 'Replaced / Non-Original Screen',
                           subText: 'Display panel has been changed or replaced with a local/aftermarket screen.',
                           deductionFixed: 0,
-                          deductionPercentage: model.category === 'flagship' ? 0.40 : model.category === 'premium' ? 0.32 : 0.25
+                          deductionPercentage: nonOriginalRate
                         };
                         setSelectedDefects(prev => {
                           if (prev.some(d => d.id === 'defect-screen-non-original')) return prev;
@@ -1161,13 +1166,18 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         });
                       })}
                       onClick={() => {
+                        const isMatured = (model.releaseYear !== undefined && model.releaseYear < 2024) ||
+                          /iphone (14|13|12|11|x|xs|xr|8|7|6|se)/i.test(model.name);
+                        const nonOriginalRate = isMatured
+                          ? (model.category === 'flagship' ? 0.25 : 0.22)
+                          : (model.category === 'flagship' ? 0.40 : model.category === 'premium' ? 0.32 : 0.25);
                         const nonOriginalDefect = rules.find(r => r.id === 'defect-screen-non-original') || {
                           id: 'defect-screen-non-original',
                           category: 'screen' as const,
                           description: 'Replaced / Non-Original Screen',
                           subText: 'Display panel has been changed or replaced with a local/aftermarket screen.',
                           deductionFixed: 0,
-                          deductionPercentage: model.category === 'flagship' ? 0.40 : model.category === 'premium' ? 0.32 : 0.25
+                          deductionPercentage: nonOriginalRate
                         };
                         setSelectedDefects(prev => {
                           if (prev.some(d => d.id === 'defect-screen-non-original')) return prev;
