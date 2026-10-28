@@ -48,10 +48,7 @@ export type AgeFactorKey =
   | 'under_3m'
   | '3_to_6m'
   | '6_to_12m'
-  | '1_to_2y'
-  | '2_to_3y'
-  | '3_to_4y'
-  | 'above_4y';
+  | 'out_of_warranty';
 
 export type MarketDemandKey = 
   | 'high'
@@ -68,6 +65,11 @@ export interface PricingRulesConfig {
   vendorThreshold: number; // ₹50,000
   vendorLowMultiplier: number; // 1.02 (+2%)
   vendorHighMultiplier: number; // 1.03 (+3%)
+  vendorConditionTiers?: {
+    flawlessMultiplier: number;    // 1.03 (+3.0%) for fCondition >= 0.98
+    minorDefectMultiplier: number; // 1.025 (+2.5%) for 0.80 <= fCondition < 0.98
+    heavyDefectMultiplier: number; // 1.02 (+2.0%) for fCondition < 0.80
+  };
   ruleVersion: string;
   segments: Record<DeviceSegment, SegmentConfig>;
   repairCosts: Record<DeviceSegment, RepairCostConfig>;
@@ -100,9 +102,9 @@ export type DeviceCycleTier = 'TIER_1_WARRANTY_ACTIVE' | 'TIER_2_MATURED_BASELIN
 
 export function resolveDeviceCycleTier(releaseYear?: number): DeviceCycleTier {
   if (!releaseYear) return 'TIER_2_MATURED_BASELINE';
-  const currentYear = new Date().getFullYear();
-  // Models released in current or previous year (<= 1 year old) are Tier 1 (Active Warranty)
-  return (currentYear - releaseYear <= 1) ? 'TIER_1_WARRANTY_ACTIVE' : 'TIER_2_MATURED_BASELINE';
+  // Active flagship generations (2024+) undergo manufacturer warranty validation.
+  // Matured models (2023 and earlier) trade on secondary market rates with zero warranty penalty.
+  return (releaseYear >= 2024) ? 'TIER_1_WARRANTY_ACTIVE' : 'TIER_2_MATURED_BASELINE';
 }
 
 export interface UniversalDeductionsConfig {
@@ -161,9 +163,14 @@ export interface UniversalDeductionsConfig {
 
 export const DEFAULT_PRICING_RULES_CONFIG: PricingRulesConfig = {
   vendorThreshold: 50000,
-  vendorLowMultiplier: 1.03,  // +3% guaranteed across all price points & multi-faults
-  vendorHighMultiplier: 1.03, // +3% guaranteed for premium/flagship
-  ruleVersion: '2.2.0-battery-multifault-parity',
+  vendorLowMultiplier: 1.02,
+  vendorHighMultiplier: 1.03,
+  vendorConditionTiers: {
+    flawlessMultiplier: 1.03,    // +3.0% for flawless / near-mint (fCondition >= 0.98)
+    minorDefectMultiplier: 1.025, // +2.5% for minor / single fault (0.80 <= fCondition < 0.98)
+    heavyDefectMultiplier: 1.02, // +2.0% for major / multiple faults (fCondition < 0.80)
+  },
+  ruleVersion: '2.4.0-condition-tiered-vendor-premium',
   roundingStrategy: 'clean_50',
   accessoryMaxCapPercent: 0.10, // Cap total accessory deductions to 10% of B_market
   universalDeductions: {
@@ -181,7 +188,7 @@ export const DEFAULT_PRICING_RULES_CONFIG: PricingRulesConfig = {
     outOfWarrantyPercentTier2: 0.00,
     wifiBluetoothMotherboardPercent: 0.32,
     callingDefectivePercent: 0.32,
-    touchOrNonOriginalScreenSalvageFloor: 1000,
+    touchOrNonOriginalScreenSalvageFloor: 1200,
     screenCrackedPercent: 0.25,
     screenLinesBleedPercent: 0.35,
     screenMinorScratches: 500,
@@ -221,13 +228,10 @@ export const DEFAULT_PRICING_RULES_CONFIG: PricingRulesConfig = {
   },
 
   ageFactors: {
-    under_3m: 1.00,  // 0% reduction (price remains same)
-    '3_to_6m': 0.85, // 15% reduction
-    '6_to_12m': 0.80, // 20% reduction (6 to 11 months)
-    '1_to_2y': 0.75, // 25% reduction (above 11 months / out of warranty)
-    '2_to_3y': 0.75, // 25% reduction
-    '3_to_4y': 0.75, // 25% reduction
-    above_4y: 0.75,  // 25% reduction
+    under_3m: 1.00,       // 0% reduction (full base price)
+    '3_to_6m': 0.85,      // 15% reduction
+    '6_to_12m': 0.80,     // 20% reduction (6 to 11 months)
+    out_of_warranty: 0.75, // 25% reduction (above 11 months / out of warranty)
   },
 
   marketDemandFactors: {

@@ -1,0 +1,65 @@
+{
+  "timestamp": "2026-10-27 01:41:34",
+  "total_models_scanned": 1,
+  "successful_audits_count": 4,
+  "skipped_variants_count": 0,
+  "successful_audits": [
+    {
+      "model_id": "c3ac9254-ac05-4713-8e2a-6834dae9bb4a",
+      "brand": "Apple",
+      "model": "iPhone 18 Pro",
+      "ram": 0,
+      "storage": 256,
+      "spec": "256 GB",
+      "rephonix_price": 123600,
+      "cashify_price": 130000,
+      "difference": -6400,
+      "status": "STABLE",
+      "change_amount": 0,
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-apple-iphone-18-pro-max-12-gb-256-gb"
+    },
+    {
+      "model_id": "c3ac9254-ac05-4713-8e2a-6834dae9bb4a",
+      "brand": "Apple",
+      "model": "iPhone 18 Pro",
+      "ram": 0,
+      "storage": 512,
+      "spec": "512 GB",
+      "rephonix_price": 130810,
+      "cashify_price": 137000,
+      "difference": -6190,
+      "status": "STABLE",
+      "change_amount": 0,
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-apple-iphone-18-pro-max-12-gb-512-gb"
+    },
+    {
+      "model_id": "c3ac9254-ac05-4713-8e2a-6834dae9bb4a",
+      "brand": "Apple",
+      "model": "iPhone 18 Pro",
+      "ram": 0,
+      "storage": 1024,
+      "spec": "1 TB",
+      "rephonix_price": 144200,
+      "cashify_price": 145000,
+      "difference": -800,
+      "status": "STABLE",
+      "change_amount": 0,
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-apple-iphone-18-pro-max-12-gb-1-tb"
+    },
+    {
+      "model_id": "c3ac9254-ac05-4713-8e2a-6834dae9bb4a",
+      "brand": "Apple",
+      "model": "iPhone 18 Pro",
+      "ram": 0,
+      "storage": 2048,
+      "spec": "2 TB",
+      "rephonix_price": 164800,
+      "cashify_price": 165000,
+      "difference": -200,
+      "status": "STABLE",
+      "change_amount": 0,
+      "url": "https://www.cashify.in/sell-old-mobile-phone/used-apple-iphone-18-pro-max-12-gb-2-tb"
+    }
+  ],
+  "skipped_variants": []
+}

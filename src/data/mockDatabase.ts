@@ -126,6 +126,45 @@ export function isFoldableDevice(_brandId?: string, modelName?: string, modelId?
   );
 }
 
+// Helper to identify modern devices that never included a wall charger adapter in the retail box
+export function isNoChargerDevice(brandId?: string, modelName?: string, modelId?: string): boolean {
+  if (!modelName && !modelId) return false;
+  const m = (modelName || '').toLowerCase();
+  const id = (modelId || '').toLowerCase();
+  const isApple = isAppleDevice(brandId, modelName);
+
+  if (isApple) {
+    if (
+      m.includes('iphone 12') || m.includes('iphone 13') || m.includes('iphone 14') ||
+      m.includes('iphone 15') || m.includes('iphone 16') || m.includes('iphone 17') ||
+      m.includes('iphone 18') || m.includes('iphone air') ||
+      id.includes('iphone-12') || id.includes('iphone-13') || id.includes('iphone-14') ||
+      id.includes('iphone-15') || id.includes('iphone-16') || id.includes('iphone-17') ||
+      id.includes('iphone-18') || id.includes('iphone-air')
+    ) {
+      return true;
+    }
+  }
+
+  if (
+    m.includes('s21') || m.includes('s22') || m.includes('s23') || m.includes('s24') || m.includes('s25') ||
+    m.includes('z fold') || m.includes('z flip') ||
+    id.includes('s21') || id.includes('s22') || id.includes('s23') || id.includes('s24') || id.includes('s25') ||
+    id.includes('fold') || id.includes('flip')
+  ) {
+    return true;
+  }
+
+  if (
+    m.includes('pixel 6') || m.includes('pixel 7') || m.includes('pixel 8') || m.includes('pixel 9') ||
+    id.includes('pixel-6') || id.includes('pixel-7') || id.includes('pixel-8') || id.includes('pixel-9')
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
 export type BiometricType = 'face_id' | 'touch_id' | 'fingerprint' | 'none';
 
 // Helper to identify biometric hardware security architecture
@@ -371,7 +410,6 @@ export function getTabletDefectRules(
 ): DefectRule[] {
   const isApple = isAppleDevice(brandId, modelName);
   const screenPct = category === 'flagship' ? 0.32 : category === 'premium' ? 0.26 : 0.20;
-  const nonOriginalPct = category === 'flagship' ? 0.38 : category === 'premium' ? 0.30 : 0.24;
 
   return [
     // ── BOOT GATEKEEPER ───────────────────────────────────────────────────
@@ -422,14 +460,6 @@ export function getTabletDefectRules(
       subText: 'Dead touch zones, ghost touches, or unresponsive digitizer when swiping or using stylus.',
       deductionFixed: 0,
       deductionPercentage: 0.25
-    },
-    {
-      id: 'defect-screen-non-original',
-      category: 'screen',
-      description: 'Screen Replaced at Local Shop (Non-Original)',
-      subText: 'Display panel was replaced at a local workshop / non-authorized service center.',
-      deductionFixed: 0,
-      deductionPercentage: nonOriginalPct
     },
 
     // ── SCREEN PHYSICAL CONDITION ─────────────────────────────────────────
@@ -796,17 +826,16 @@ export function getDefectRulesForCategory(
   const isFoldable = isFoldableDevice(brandId, modelName, modelId);
   const biometricType = getBiometricType(brandId, modelName, modelId);
   const screenPct   = category === 'flagship' ? 0.28 : category === 'premium' ? 0.22 : 0.18;
-  const nonOriginalScreenPct = category === 'flagship' ? 0.40 : category === 'premium' ? 0.32 : 0.25;
   const bodyDentPct = category === 'flagship' ? 0.08 : category === 'premium' ? 0.07 : 0.06;
-  const cameraPct   = category === 'flagship' ? 0.15 : category === 'premium' ? 0.12 : 0.08;
+  const cameraPct   = category === 'flagship' ? 0.08 : category === 'premium' ? 0.07 : 0.06;
 
   return [
     // ── SCREEN ───────────────────────────────────────────────────────────
     {
       id: 'defect-screen-cracked',
       category: 'screen',
-      description: 'Cracked Screen / Back Glass',
-      subText: 'Visible cracks, deep chips, or shattered glass panels.',
+      description: 'Cracked Front Screen Glass',
+      subText: 'Visible cracks, deep chips, or shattered front display glass.',
       deductionFixed: 0,
       deductionPercentage: screenPct
     },
@@ -844,14 +873,6 @@ export function getDefectRulesForCategory(
       deductionFixed: category === 'flagship' ? 2500 : 1500,
       deductionPercentage: 0
     },
-    {
-      id: 'defect-screen-non-original',
-      category: 'screen',
-      description: 'Replaced / Non-Original Screen',
-      subText: 'Display panel has been changed or replaced with a local/aftermarket screen.',
-      deductionFixed: 0,
-      deductionPercentage: nonOriginalScreenPct
-    },
     ...(isFoldable ? [{
       id: 'defect-screen-crease',
       category: 'screen' as const,
@@ -877,6 +898,14 @@ export function getDefectRulesForCategory(
       subText: 'Deep frame dents, heavy paint chipping, or structural bending.',
       deductionFixed: 1000,
       deductionPercentage: bodyDentPct
+    },
+    {
+      id: 'defect-body-backglass',
+      category: 'body',
+      description: 'Back Glass Broken / Cracked',
+      subText: 'Rear back glass panel cracked, chipped, or shattered.',
+      deductionFixed: category === 'flagship' ? 2500 : category === 'premium' ? 1800 : 1200,
+      deductionPercentage: 0
     },
     {
       id: 'defect-body-scuffs',
@@ -921,6 +950,14 @@ export function getDefectRulesForCategory(
       subText: 'Front/rear camera scratched, autofocus failing, portrait or cinematic modes not working.',
       deductionFixed: 1000,
       deductionPercentage: cameraPct
+    },
+    {
+      id: 'defect-camera-glass',
+      category: 'camera',
+      description: 'Camera Glass Cracked / Chipped',
+      subText: 'External camera lens glass cover has cracks or chips, but camera takes clean photos.',
+      deductionFixed: category === 'flagship' ? 1500 : 1000,
+      deductionPercentage: 0
     },
 
     // ── HARDWARE FUNCTIONALITY (Step 3) ──────────────────────────────────
@@ -969,22 +1006,12 @@ export function getDefectRulesForCategory(
     {
       id: 'defect-battery-low',
       category: 'connectivity',
-      description: isApple ? 'Battery Health < 80% (Service Alert)' : 'Battery Faulty / Rapid Drain / Sudden Shutdown',
+      description: isApple ? 'Battery Health < 80% or Service Alert' : 'Battery Faulty / Rapid Drain / Sudden Shutdown',
       subText: isApple
-        ? 'Maximum capacity is below 80% or shows "Service" message in Settings → Battery.'
+        ? 'Maximum capacity is below 80% or shows "Service / Important Battery Message" in Settings → Battery.'
         : 'Phone drains very quickly, shuts down unexpectedly under 20%, or battery is swollen.',
-      deductionFixed: 2500,
-      deductionPercentage: 0.05
-    },
-    {
-      id: 'defect-battery-warning',
-      category: 'connectivity',
-      description: 'Battery Replaced / Duplicate Battery',
-      subText: isApple 
-        ? 'Battery was replaced at a local repair shop (even if currently showing 100% capacity) or shows "Important Battery Message" in Settings.'
-        : 'Battery was replaced from a local repair shop or is not original company battery (even if showing 100% charge).',
-      deductionFixed: 2000,
-      deductionPercentage: 0.015
+      deductionFixed: category === 'flagship' ? 3500 : 2500,
+      deductionPercentage: category === 'flagship' ? 0.08 : 0.06
     },
     {
       id: 'defect-func-network',
@@ -1002,16 +1029,6 @@ export function getDefectRulesForCategory(
       deductionFixed: 0,
       deductionPercentage: 0.07
     },
-    {
-      id: 'defect-func-partmatch',
-      category: 'connectivity',
-      description: isApple ? '3uTools Serial Mismatch' : 'PC Diagnostic Serial Mismatch',
-      subText: isApple 
-        ? 'PC diagnostic shows motherboard serial does not match screen/battery/camera — parts replaced.'
-        : 'Hardware diagnostic tool shows serial numbers do not match original motherboard registry.',
-      deductionFixed: 0,
-      deductionPercentage: 0.12
-    },
 
     // ── ACCESSORIES & DOCUMENTATION (Step 5) ─────────────────────────────
     {
@@ -1019,15 +1036,17 @@ export function getDefectRulesForCategory(
       category: 'accessories',
       description: 'Missing Original Box',
       subText: 'Original retail box with matching serial/IMEI is not available.',
-      deductionFixed: category === 'flagship' ? 2500 : 1200,
+      deductionFixed: category === 'flagship' ? 1800 : category === 'premium' ? 1000 : category === 'midrange' ? 600 : 400,
       deductionPercentage: 0
     },
     {
       id: 'defect-charger-missing',
       category: 'accessories',
-      description: 'Missing Original Charger / Cable',
-      subText: 'Original charger or cable is not included.',
-      deductionFixed: 1500,
+      description: isNoChargerDevice(brandId, modelName, modelId) ? 'Missing Original Charging Cable' : 'Missing Original Charger / Cable',
+      subText: isNoChargerDevice(brandId, modelName, modelId)
+        ? 'Original USB-C charging cable bundled in retail box is not included.'
+        : 'Original in-box charging adapter or cable is not included.',
+      deductionFixed: isNoChargerDevice(brandId, modelName, modelId) ? 500 : (category === 'flagship' ? 1500 : 1000),
       deductionPercentage: 0
     },
     {

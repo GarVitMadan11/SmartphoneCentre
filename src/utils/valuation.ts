@@ -66,7 +66,7 @@ export function calculateValuation(
     selectedDefects,
     simType: options?.simType || 'dual_sim',
     regionConfig: options?.regionConfig || 'indian',
-    warrantyAge: options?.warrantyAge || (options?.deviceAge && ['1_to_2y', '2_to_3y', '3_to_4y', 'above_4y'].includes(options.deviceAge) ? 'out_of_warranty' : 'under_3m'),
+    warrantyAge: options?.warrantyAge || (options?.deviceAge === 'out_of_warranty' ? 'out_of_warranty' : 'under_3m'),
     deviceAge: options?.deviceAge,
     marketDemand: options?.marketDemand,
     variantType: options?.variantType,

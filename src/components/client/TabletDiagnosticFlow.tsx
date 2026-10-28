@@ -328,7 +328,6 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
   // ─────────────────────────────────────────────────────────────────────────────
   if (step === 1) {
     const isTouchUnresponsive = hasDefect('defect-screen-touch');
-    const isNonOriginalScreen = hasDefect('defect-screen-non-original');
 
     const physicalGroup = [
       'defect-screen-scratches-minor',
@@ -411,49 +410,11 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
           </div>
         </div>
 
-        {/* 2. Is screen original? */}
-        <div className="p-4 rounded-xl border border-ice-border bg-slate-50/60">
-          <h4 className="font-bold text-sm text-slate-900 mb-1">
-            Is the tablet/iPad screen original?
-          </h4>
-          <p className="text-xs text-slate-500 mb-3">
-            Pick "Yes" if screen was never changed or changed by Authorized Service Center. Pick "No" if changed at local shop.
-          </p>
-
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => setSelectedDefects(prev => prev.filter(d => d.id !== 'defect-screen-non-original'))}
-              className={`py-3 px-4 rounded-xl border font-bold text-xs flex items-center justify-center gap-2 transition-all ${
-                !isNonOriginalScreen
-                  ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
-                  : 'bg-white text-slate-700 border-ice-border hover:border-emerald-500/40'
-              }`}
-            >
-              <Check className="w-4 h-4" />
-              <span>Yes, Original Screen</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => toggleDefect('defect-screen-non-original')}
-              className={`py-3 px-4 rounded-xl border font-bold text-xs flex items-center justify-center gap-2 transition-all ${
-                isNonOriginalScreen
-                  ? 'bg-amber-600 text-white border-amber-600 shadow-sm'
-                  : 'bg-white text-slate-700 border-ice-border hover:border-amber-500/40'
-              }`}
-            >
-              <X className="w-4 h-4" />
-              <span>No, Changed Locally</span>
-            </button>
-          </div>
-        </div>
-
-        {/* 3. Screen Physical Condition */}
+        {/* 2. Screen Physical Condition */}
         <div className="p-4 rounded-xl border border-ice-border bg-slate-50/60">
           <div className="flex items-center justify-between mb-1">
             <h4 className="font-bold text-sm text-slate-900">Screen Physical Condition</h4>
-            <span className="text-[10px] font-mono text-zinc-400">Cashify standard</span>
+            <span className="text-[10px] font-mono text-zinc-400">Physical Grade</span>
           </div>
           <p className="text-xs text-slate-500 mb-3">Check physical condition of Display Screen glass.</p>
 
@@ -489,7 +450,7 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
         <div className="p-4 rounded-xl border border-ice-border bg-slate-50/60">
           <div className="flex items-center justify-between mb-1">
             <h4 className="font-bold text-sm text-slate-900">Discoloration on Screen</h4>
-            <span className="text-[10px] font-mono text-zinc-400">Cashify standard</span>
+            <span className="text-[10px] font-mono text-zinc-400">Panel Calibration</span>
           </div>
           <p className="text-xs text-slate-500 mb-3">Check tablet/iPad screen for discoloration or warm tints.</p>
 
@@ -524,7 +485,7 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
         <div className="p-4 rounded-xl border border-ice-border bg-slate-50/60">
           <div className="flex items-center justify-between mb-1">
             <h4 className="font-bold text-sm text-slate-900">Spot on Screen</h4>
-            <span className="text-[10px] font-mono text-zinc-400">Cashify standard</span>
+            <span className="text-[10px] font-mono text-zinc-400">Matrix Check</span>
           </div>
           <p className="text-xs text-slate-500 mb-3">Check tablet/iPad screen for visible spots or lines.</p>
 
@@ -653,7 +614,7 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
                   <div className="flex items-center justify-between gap-1">
                     <span className="font-bold text-xs text-slate-900 leading-snug">{item.label}</span>
                     <span className="text-[9px] font-mono px-1 rounded bg-slate-100 text-slate-500 flex-shrink-0">
-                      Cashify
+                      Standard
                     </span>
                   </div>
                   <p className="text-[10px] text-slate-400 font-light mt-1">{item.desc}</p>
@@ -721,7 +682,7 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
         <div className="p-4 rounded-xl border border-ice-border bg-slate-50/60">
           <div className="flex items-center justify-between mb-1">
             <h4 className="font-bold text-sm text-slate-900">Body Scratches</h4>
-            <span className="text-[10px] font-mono text-zinc-400">Cashify standard</span>
+            <span className="text-[10px] font-mono text-zinc-400">Enclosure Grade</span>
           </div>
           <p className="text-xs text-slate-500 mb-3">Check scratches on tablet/iPad body housing.</p>
 
@@ -755,7 +716,7 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
         <div className="p-4 rounded-xl border border-ice-border bg-slate-50/60">
           <div className="flex items-center justify-between mb-1">
             <h4 className="font-bold text-sm text-slate-900">Body or Panel Dents</h4>
-            <span className="text-[10px] font-mono text-zinc-400">Cashify standard</span>
+            <span className="text-[10px] font-mono text-zinc-400">Structural Check</span>
           </div>
           <p className="text-xs text-slate-500 mb-3">Check for dents or impact marks on tablet/iPad body.</p>
 
@@ -789,7 +750,7 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
         <div className="p-4 rounded-xl border border-ice-border bg-slate-50/60">
           <div className="flex items-center justify-between mb-1">
             <h4 className="font-bold text-sm text-slate-900">Device bent or screen loose</h4>
-            <span className="text-[10px] font-mono text-zinc-400">Cashify standard</span>
+            <span className="text-[10px] font-mono text-zinc-400">Alignment Check</span>
           </div>
           <p className="text-xs text-slate-500 mb-3">Check for structural chassis bend or loose screen adhesive.</p>
 
@@ -824,7 +785,7 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
         <div className="p-4 rounded-xl border border-ice-border bg-slate-50/60">
           <div className="flex items-center justify-between mb-1">
             <h4 className="font-bold text-sm text-slate-900">Device Side / Back Panel Condition</h4>
-            <span className="text-[10px] font-mono text-zinc-400">Cashify standard</span>
+            <span className="text-[10px] font-mono text-zinc-400">Housing Grade</span>
           </div>
           <p className="text-xs text-slate-500 mb-3">Check tablet/iPad side &amp; back panels.</p>
 

@@ -75,18 +75,18 @@ export function runPricingEngineTests(): { passed: number; total: number } {
     assert(res.finalPrice === 103000, 'Final price equals 103,000');
   });
 
-  runTest('Test 3: Apple Pro Max with 1-2 Year Age Factor (0.88)', () => {
+  runTest('Test 3: Apple Pro Max with Out of Warranty Age Factor (0.80)', () => {
     const res = calculateStage1Valuation({
       modelId: 'mod-15pm',
       brandId: 'brand-apple',
       modelName: 'iPhone 15 Pro Max',
       variant: makeVariant(100000),
       selectedDefects: [],
-      deviceAge: '1_to_2y'
+      deviceAge: 'out_of_warranty'
     });
-    assert(res.auditTrail.fAge === 0.88, 'Age factor 0.88 for 1-2 years');
-    assert(res.adjustedBenchmark === 88000, 'Pre-vendor benchmark 88,000');
-    assert(res.finalPrice === roundToCleanIndianPrice(88000 * 1.03), 'Final offer matches vendor calculation');
+    assert(res.auditTrail.fAge === 0.80, 'Age factor 0.80 for out of warranty');
+    assert(res.adjustedBenchmark === 80000, 'Pre-vendor benchmark 80,000');
+    assert(res.finalPrice === roundToCleanIndianPrice(80000 * 1.03), 'Final offer matches vendor calculation');
   });
 
   runTest('Test 4: Severity Group B Deduplication (Screen Scratches vs Cracked Glass)', () => {
@@ -169,7 +169,7 @@ export function runPricingEngineTests(): { passed: number; total: number } {
     assert(res.auditTrail.preAccessoryValue === Math.round(30000 * 0.92), 'Value reflects weak demand factor');
   });
 
-  runTest('Test 9: Android Midrange Damaged (+3% uniform vendor rule)', () => {
+  runTest('Test 9: Android Midrange Damaged (Option A Tiered Vendor Rule: +2.5%)', () => {
     const res = calculateStage1Valuation({
       modelId: 'mod-redmi',
       brandId: 'brand-xiaomi',
@@ -178,7 +178,7 @@ export function runPricingEngineTests(): { passed: number; total: number } {
       selectedDefects: [makeDefect('defect-body-cracked', 'Dented Frame', 'body', 0, 0.15)],
       deviceAge: 'under_3m'
     });
-    assert(res.auditTrail.vendorMultiplier === 1.03, 'Multiplier +3%');
+    assert(res.auditTrail.vendorMultiplier === 1.025, 'Multiplier +2.5% for minor defect band');
     assert(res.finalPrice > 0, 'Final price > 0');
   });
 
@@ -191,8 +191,8 @@ export function runPricingEngineTests(): { passed: number; total: number } {
       selectedDefects: [makeDefect('defect-body-cracked', 'Dented Frame', 'body', 0, 0.18)],
       deviceAge: 'under_3m'
     });
-    assert(res.auditTrail.vendorMultiplier === 1.03, 'Multiplier +3%');
-    assert(res.finalPrice >= 500, 'Above recycle floor 500');
+    assert(res.auditTrail.vendorMultiplier === 1.025, 'Multiplier +2.5%');
+    assert(res.finalPrice >= 1200, 'Above recycle floor 1200');
   });
 
   runTest('Test 11: Non-genuine Display Deduction in Group B', () => {
@@ -333,7 +333,8 @@ export function runPricingEngineTests(): { passed: number; total: number } {
     assert(!res.isCritical, 'Not critical');
     assert(res.auditTrail.fAge === 0.94, 'fAge 0.94');
     assert(res.auditTrail.preAccessoryValue === 42672, 'preAccessoryValue matches calculation');
-    assert(res.finalPrice === 42400, 'Final price matches 42,400 (+3% vendor multiplier)');
+    assert(res.auditTrail.vendorMultiplier === 1.02, 'Tiered multiplier +2% for heavy defect');
+    assert(res.finalPrice === 42000, 'Final price matches 42,000 (+2% tiered vendor multiplier)');
   });
 
   runTest('Test 21: Samsung Galaxy Ultra with Missing S-Pen Stylus (-₹2,000)', () => {
@@ -395,7 +396,7 @@ export function runPricingEngineTests(): { passed: number; total: number } {
     assert(samDefect?.description === 'Biometrics Faulty (Fingerprint / Face Unlock)', 'Android rule has Fingerprint label');
   });
 
-  runTest('Test 24: Multiple Faults Stacking Parity (+3% Invariant Preserved)', () => {
+  runTest('Test 24: Multiple Faults Stacking Parity (+2.5% Tiered Invariant Preserved)', () => {
     // iPhone 16 Pro Max with multiple faults: Speaker + Mic + Vibrator (Cashify Quote: 78,380)
     const res = calculateStage1Valuation({
       modelId: 'mod-16pm',
@@ -413,8 +414,8 @@ export function runPricingEngineTests(): { passed: number; total: number } {
     });
     assert(!res.isCritical, 'Not critical');
     assert(res.finalPrice > 78380, 'Rephonix multi-fault quote strictly higher than Cashify (78,380)');
-    assert(res.auditTrail.vendorMultiplier === 1.03, 'Maintains full +3% multiplier on multi-fault');
-    assert(res.finalPrice >= 80700, 'Guarantees ~+Rs 2,370 difference above Cashify');
+    assert(res.auditTrail.vendorMultiplier === 1.025, 'Maintains +2.5% tiered multiplier on minor defect');
+    assert(res.finalPrice >= 80300, 'Guarantees ~+Rs 1,970 difference above Cashify');
   });
 
   runTest('Test 25: Battery Health 80% – 85% Mild Degradation Rule', () => {
@@ -434,7 +435,7 @@ export function runPricingEngineTests(): { passed: number; total: number } {
     assert(!res.isCritical, 'Not critical');
     assert(res.auditTrail.fBattery === 0.98, 'Battery factor 0.98 for 80-85% health');
     assert(res.finalPrice > 58060, 'Rephonix quote strictly higher than Cashify (58,060)');
-    assert(res.auditTrail.vendorMultiplier === 1.03, 'Vendor multiplier is +3%');
+    assert(res.auditTrail.vendorMultiplier === 1.03, 'Vendor multiplier is +3% for near-mint / fCondition >= 0.98');
   });
 
   runTest('Test 26: iPhone 16 Pro Out of Warranty Receives 20% Penalty (fAge === 0.80)', () => {
@@ -446,12 +447,107 @@ export function runPricingEngineTests(): { passed: number; total: number } {
       variant: makeVariant(75705),
       selectedDefects: [],
       warrantyAge: 'out_of_warranty',
-      deviceAge: '1_to_2y'
+      deviceAge: 'out_of_warranty'
     });
     assert(!res.isCritical, 'Not critical');
     assert(res.auditTrail.fAge === 0.80, 'Age factor is 0.80 (20% out-of-warranty penalty)');
     assert(res.adjustedBenchmark === Math.round(75705 * 0.80), 'Benchmark reflects 20% warranty deduction');
     assert(res.finalPrice === roundToCleanIndianPrice(Math.round(75705 * 0.80 * 1.03)), 'Offer preserves +3% vendor edge over Cashify');
+  });
+
+  runTest('Test 27: Screen Burn-in Panel Replacement Benchmark (+2% Tiered Edge)', () => {
+    const res = calculateStage1Valuation({
+      modelId: 'mod-18pm',
+      brandId: 'brand-apple',
+      modelName: 'iPhone 18 Pro Max',
+      category: 'flagship',
+      releaseYear: 2025,
+      variant: makeVariant(100000),
+      selectedDefects: [
+        makeDefect('defect-screen-burn', 'Screen Burn-in / Lines', 'screen', 0, 0.28)
+      ],
+      warrantyAge: 'under_3m',
+      deviceAge: 'under_3m'
+    });
+    assert(!res.isCritical, 'Not critical');
+    assert(res.auditTrail.fDisplay === 0.72, 'fDisplay is 0.72 (28% panel replacement deduction)');
+    assert(res.adjustedBenchmark === 72000, 'Benchmark is 72,000');
+    assert(res.auditTrail.vendorMultiplier === 1.02, 'Tiered vendor multiplier is 1.02 for heavy defect');
+    assert(res.finalPrice === 73450, 'Offer provides +2% vendor edge (73,450)');
+  });
+
+  runTest('Test 28: Battery Health < 80% / Service Alert on Flagship (8% Deduction, Retains ~92%)', () => {
+    const res = calculateStage1Valuation({
+      modelId: 'mod-18pm',
+      brandId: 'brand-apple',
+      modelName: 'iPhone 18 Pro Max',
+      variant: makeVariant(100000),
+      selectedDefects: [
+        makeDefect('defect-battery-low', 'Battery Health < 80% or Service Alert', 'connectivity', 3500, 0.08)
+      ],
+      warrantyAge: 'under_3m',
+      deviceAge: 'under_3m'
+    });
+    assert(!res.isCritical, 'Not critical');
+    assert(Math.round(res.auditTrail.fBattery * 100) === 92, 'Battery factor is 0.92 (8% deduction)');
+    assert(res.adjustedBenchmark === 92000, 'Benchmark is 92,000 (92% retention)');
+    assert(res.auditTrail.vendorMultiplier === 1.025, 'Tiered vendor multiplier is 1.025');
+    assert(res.finalPrice === 94300, 'Final price preserves +2.5% vendor edge (94,300)');
+  });
+
+  runTest('Test 29: Screen Defect Deduplication (Cracked Panel Absorbs Scratches)', () => {
+    // When both screen cracked (28%) and screen scratches (3%) are selected, scratches are absorbed
+    const resWithBoth = calculateStage1Valuation({
+      modelId: 'mod-16pm',
+      brandId: 'brand-apple',
+      modelName: 'iPhone 16 Pro Max',
+      category: 'flagship',
+      releaseYear: 2024,
+      variant: makeVariant(100000),
+      selectedDefects: [
+        makeDefect('defect-screen-cracked', 'Cracked Front Screen Glass', 'screen', 0, 0.28),
+        makeDefect('defect-screen-scratches', 'Front Glass Scratches', 'screen', 1000, 0.03)
+      ],
+      warrantyAge: 'under_3m'
+    });
+    // fDisplay must be exactly 0.72 (28% deduction for screen replacement), scratches waived
+    assert(Math.round(resWithBoth.auditTrail.fDisplay * 100) === 72, 'Screen panel replacement absorbs scratches (fDisplay = 0.72)');
+    assert(resWithBoth.adjustedBenchmark === 72000, 'Benchmark reflects exact 28% panel replacement deduction');
+    assert(resWithBoth.auditTrail.vendorMultiplier === 1.02, 'Tiered vendor multiplier is 1.02 for heavy defect');
+    assert(resWithBoth.finalPrice === 73450, 'Final price preserves +2% edge (73,450)');
+  });
+
+  runTest('Test 30: Missing Purchase Bill Automatically Drops Warranty to Out-of-Warranty', () => {
+    // Customer selected "under_3m" but has missing bill -> drops to out_of_warranty (0.80 for Tier 1)
+    const res = calculateStage1Valuation({
+      modelId: 'mod-16p',
+      brandId: 'brand-apple',
+      modelName: 'iPhone 16 Pro',
+      category: 'flagship',
+      releaseYear: 2024,
+      variant: makeVariant(100000),
+      selectedDefects: [
+        makeDefect('defect-acc-nodocs', 'Missing Bill / Customer Photo ID', 'accessories', 1500, 0)
+      ],
+      warrantyAge: 'under_3m',
+      deviceAge: 'under_3m'
+    });
+    assert(res.auditTrail.fAge === 0.80, 'Missing bill drops age factor to out_of_warranty (0.80)');
+    // Pre-accessory value: 100,000 * 0.80 = 80,000. Less accessory deduction 1,500 = 78,500
+    assert(res.adjustedBenchmark === 78500, 'Benchmark reflects out_of_warranty + missing bill deduction');
+    assert(res.finalPrice === roundToCleanIndianPrice(78500 * 1.03), 'Final offer provides strict +3% above Cashify');
+  });
+
+  runTest('Test 31: Smart Charger Exemption for iPhone 12+ (Cable-only Deduction)', () => {
+    const rules16 = getDefectRulesForCategory('flagship', 'brand-apple', 'iPhone 16 Pro Max');
+    const chargerRule16 = rules16.find(r => r.id === 'defect-charger-missing');
+    assert(chargerRule16?.description === 'Missing Original Charging Cable', 'Modern iPhone detects in-box cable only');
+    assert(chargerRule16?.deductionFixed === 500, 'Modern iPhone only deducts ₹500 for missing cable');
+
+    const rulesOlder = getDefectRulesForCategory('midrange', 'brand-apple', 'iPhone 11');
+    const chargerRuleOlder = rulesOlder.find(r => r.id === 'defect-charger-missing');
+    assert(chargerRuleOlder?.description === 'Missing Original Charger / Cable', 'Older iPhone detects charger adapter');
+    assert(chargerRuleOlder?.deductionFixed === 1000, 'Older phone deducts adapter fee');
   });
 
   console.log(`\n=== RESULTS: ${passed}/${total} TESTS PASSED ===`);

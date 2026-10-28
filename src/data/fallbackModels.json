@@ -21,11 +21,13 @@
       0
     ],
     "variantPrices": {
+      "12": 130800,
       "0_256": 133900,
       "0_512": 141110,
       "0_1024": 149350,
       "0_2048": 169950,
-      "_supportsWarrantyQuestion": true
+      "_supportsWarrantyQuestion": true,
+      "0_12": 130800
     },
     "hidden": false,
     "supportsWarrantyQuestion": true
@@ -52,11 +54,13 @@
       0
     ],
     "variantPrices": {
+      "12": 130800,
       "0_256": 123600,
       "0_512": 130810,
       "0_1024": 144200,
       "0_2048": 164800,
-      "_supportsWarrantyQuestion": true
+      "_supportsWarrantyQuestion": true,
+      "0_12": 130800
     },
     "hidden": false,
     "supportsWarrantyQuestion": true
@@ -2982,6 +2986,7 @@
       0
     ],
     "variantPrices": {
+      "8": 69750,
       "256": 111240,
       "512": 119000,
       "1024": 123000,
@@ -2990,7 +2995,8 @@
       "0_256": 112785,
       "0_512": 119995,
       "0_1024": 121746,
-      "0_2048": 126175
+      "0_2048": 126175,
+      "0_8": 69750
     },
     "hidden": false,
     "supportsWarrantyQuestion": true
@@ -3016,13 +3022,15 @@
       0
     ],
     "variantPrices": {
+      "8": 69750,
       "256": 103000,
       "512": 109180,
       "1024": 113298,
       "_supportsWarrantyQuestion": true,
       "0_256": 105575,
       "0_512": 110725,
-      "0_1024": 111755
+      "0_1024": 111755,
+      "0_8": 69750
     },
     "hidden": false,
     "supportsWarrantyQuestion": true
@@ -3214,13 +3222,15 @@
       0
     ],
     "variantPrices": {
+      "8": 69750,
       "256": 69113,
       "512": 78280,
       "1024": 88580,
       "_supportsWarrantyQuestion": true,
       "0_256": 71070,
       "0_512": 77456,
-      "0_1024": 89610
+      "0_1024": 89610,
+      "0_8": 69750
     },
     "hidden": false,
     "supportsWarrantyQuestion": true
@@ -3398,11 +3408,13 @@
       0
     ],
     "variantPrices": {
+      "8": 69750,
       "256": 60000,
       "512": 66435,
       "_supportsWarrantyQuestion": true,
       "0_256": 66950,
-      "0_512": 69731
+      "0_512": 69731,
+      "0_8": 69750
     },
     "hidden": false,
     "supportsWarrantyQuestion": true
@@ -3615,11 +3627,13 @@
       0
     ],
     "variantPrices": {
+      "8": 69750,
       "256": 44290,
       "512": 53770,
       "_supportsWarrantyQuestion": true,
       "0_256": 47380,
-      "0_512": 55002
+      "0_512": 55002,
+      "0_8": 69750
     },
     "hidden": false,
     "supportsWarrantyQuestion": true
@@ -4781,7 +4795,7 @@
     "category": "midrange",
     "deviceType": "smartphones",
     "releaseYear": 2025,
-    "basePrice128GB": 18798,
+    "basePrice128GB": 20500,
     "series": "Phone Series",
     "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/nothing-phone-2a-plus.jpg",
     "supportedStorageGb": [
@@ -4792,9 +4806,14 @@
       12
     ],
     "variantPrices": {
+      "128": 20500,
+      "256": 21000,
+      "512": 21750,
       "_supportsWarrantyQuestion": true,
       "8_256": 18798,
-      "12_256": 19292
+      "12_256": 21000,
+      "8_128": 20500,
+      "12_512": 21750
     },
     "hidden": false,
     "supportsWarrantyQuestion": true
@@ -7125,13 +7144,15 @@
       0
     ],
     "variantPrices": {
-      "256": 87220,
-      "512": 89425,
-      "1024": 92916,
+      "8": 90900,
+      "256": 84550,
+      "512": 86350,
+      "1024": 88450,
       "_supportsWarrantyQuestion": true,
-      "0_256": 88621,
-      "0_512": 90918,
-      "0_1024": 93112
+      "0_256": 84550,
+      "0_512": 86350,
+      "0_1024": 88450,
+      "0_8": 90900
     },
     "hidden": false,
     "supportsWarrantyQuestion": true
@@ -7158,15 +7179,17 @@
       0
     ],
     "variantPrices": {
+      "8": 90900,
       "128": 74830,
-      "256": 78744,
-      "512": 80430,
-      "1024": 81430,
+      "256": 84550,
+      "512": 86350,
+      "1024": 88450,
       "_supportsWarrantyQuestion": true,
       "0_128": 75705,
-      "0_256": 78970,
-      "0_512": 80948,
-      "0_1024": 81741
+      "0_256": 84550,
+      "0_512": 86350,
+      "0_1024": 88450,
+      "0_8": 90900
     },
     "hidden": false,
     "supportsWarrantyQuestion": true
@@ -7246,10 +7269,13 @@
       12
     ],
     "variantPrices": {
+      "256": 62350,
+      "512": 62950,
+      "1024": 63600,
       "_supportsWarrantyQuestion": true,
-      "12_256": 63232,
-      "12_512": 63912,
-      "12_1024": 64890
+      "12_256": 62350,
+      "12_512": 62950,
+      "12_1024": 63600
     },
     "hidden": false,
     "supportsWarrantyQuestion": true
@@ -7324,7 +7350,7 @@
     "category": "flagship",
     "deviceType": "smartphones",
     "releaseYear": 2024,
-    "basePrice128GB": 57500,
+    "basePrice128GB": 20500,
     "series": "Phone Series",
     "imageUrl": "https://wsrv.nl/?url=https%3A%2F%2Ffdn2.gsmarena.com%2Fvv%2Fbigpic%2Fnothing-phone-2a.jpg",
     "supportedStorageGb": [
@@ -7338,12 +7364,15 @@
       16
     ],
     "variantPrices": {
-      "8_128": 57680,
+      "128": 20500,
+      "256": 21000,
+      "512": 21750,
+      "8_128": 20500,
       "8_256": 63860,
       "8_512": 69010,
       "12_128": 60152,
-      "12_256": 66332,
-      "12_512": 71482,
+      "12_256": 21000,
+      "12_512": 21750,
       "16_128": 62624,
       "16_256": 68804,
       "16_512": 73954
@@ -7374,15 +7403,17 @@
       16
     ],
     "variantPrices": {
+      "256": 33300,
+      "512": 38350,
       "8_128": 57680,
       "8_256": 63860,
       "8_512": 69010,
       "12_128": 60152,
-      "12_256": 66332,
+      "12_256": 33300,
       "12_512": 71482,
       "16_128": 62624,
       "16_256": 68804,
-      "16_512": 73954
+      "16_512": 38350
     },
     "hidden": true,
     "supportsWarrantyQuestion": true
@@ -7435,13 +7466,15 @@
       0
     ],
     "variantPrices": {
+      "8": 57350,
       "128": 52705,
       "256": 53004,
       "512": 53993,
       "_supportsWarrantyQuestion": true,
       "0_128": 56362,
       "0_256": 56856,
-      "0_512": 57845
+      "0_512": 57845,
+      "0_8": 57350
     },
     "hidden": false,
     "supportsWarrantyQuestion": true
@@ -7517,13 +7550,17 @@
       0
     ],
     "variantPrices": {
+      "8": 90900,
       "128": 48946,
-      "256": 53447,
-      "512": 53890,
+      "256": 84550,
+      "512": 86350,
+      "1024": 88450,
       "_supportsWarrantyQuestion": true,
       "0_128": 53962,
-      "0_256": 55826,
-      "0_512": 56805
+      "0_256": 84550,
+      "0_512": 86350,
+      "0_1024": 88450,
+      "0_8": 90900
     },
     "hidden": false,
     "supportsWarrantyQuestion": true
@@ -7694,7 +7731,7 @@
     "category": "premium",
     "deviceType": "smartphones",
     "releaseYear": 2024,
-    "basePrice128GB": 40407,
+    "basePrice128GB": 34350,
     "series": "S Series",
     "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-s24-plus-5g-sm-s926.jpg",
     "supportedStorageGb": [
@@ -7705,9 +7742,13 @@
       12
     ],
     "variantPrices": {
+      "128": 34350,
+      "256": 36450,
       "_supportsWarrantyQuestion": true,
       "12_256": 40829,
-      "12_512": 40407
+      "12_512": 40407,
+      "8_128": 34350,
+      "8_256": 36450
     },
     "hidden": false,
     "supportsWarrantyQuestion": true
@@ -7810,13 +7851,15 @@
       0
     ],
     "variantPrices": {
+      "8": 57350,
       "128": 35970,
       "256": 37564,
       "512": 40770,
       "_supportsWarrantyQuestion": true,
       "0_128": 38965,
       "0_256": 40469,
-      "0_512": 42467
+      "0_512": 42467,
+      "0_8": 57350
     },
     "hidden": false,
     "supportsWarrantyQuestion": true
@@ -7842,10 +7885,16 @@
       8
     ],
     "variantPrices": {
+      "256": 62350,
+      "512": 62950,
+      "1024": 63600,
       "_supportsWarrantyQuestion": true,
       "8_128": 34392,
       "8_256": 36483,
-      "8_512": 37471
+      "8_512": 37471,
+      "12_256": 62350,
+      "12_512": 62950,
+      "12_1024": 63600
     },
     "hidden": false,
     "supportsWarrantyQuestion": true
@@ -7871,9 +7920,11 @@
       16
     ],
     "variantPrices": {
+      "256": 33300,
+      "512": 38350,
       "_supportsWarrantyQuestion": true,
-      "12_256": 34145,
-      "16_512": 39192
+      "12_256": 33300,
+      "16_512": 38350
     },
     "hidden": false,
     "supportsWarrantyQuestion": true
@@ -8195,10 +8246,14 @@
       16
     ],
     "variantPrices": {
+      "256": 33300,
+      "512": 38350,
       "_supportsWarrantyQuestion": true,
       "8_128": 26100,
       "8_256": 27480,
-      "16_256": 28160
+      "16_256": 28160,
+      "12_256": 33300,
+      "16_512": 38350
     },
     "hidden": false,
     "supportsWarrantyQuestion": true
@@ -8333,7 +8388,7 @@
     "category": "midrange",
     "deviceType": "smartphones",
     "releaseYear": 2024,
-    "basePrice128GB": 24730,
+    "basePrice128GB": 34350,
     "series": "S Series",
     "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-s24-fe-r1.jpg",
     "supportedStorageGb": [
@@ -8344,9 +8399,11 @@
       8
     ],
     "variantPrices": {
+      "128": 34350,
+      "256": 36450,
       "_supportsWarrantyQuestion": true,
-      "8_128": 24730,
-      "8_256": 26203
+      "8_128": 34350,
+      "8_256": 36450
     },
     "hidden": false,
     "supportsWarrantyQuestion": true
@@ -8562,7 +8619,7 @@
     "category": "midrange",
     "deviceType": "smartphones",
     "releaseYear": 2024,
-    "basePrice128GB": 18344,
+    "basePrice128GB": 18100,
     "series": "Nord Series",
     "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/oneplus-nord4.jpg",
     "supportedStorageGb": [
@@ -8574,10 +8631,12 @@
       12
     ],
     "variantPrices": {
+      "128": 18100,
+      "256": 20250,
       "_supportsWarrantyQuestion": true,
-      "8_128": 18344,
-      "8_256": 20775,
-      "12_256": 21568
+      "8_128": 18100,
+      "8_256": 20250,
+      "12_256": 20250
     },
     "hidden": false,
     "supportsWarrantyQuestion": true
@@ -8665,9 +8724,10 @@
       12
     ],
     "variantPrices": {
+      "256": 13850,
       "_supportsWarrantyQuestion": true,
-      "8_256": 17819,
-      "12_256": 18293
+      "8_256": 13850,
+      "12_256": 13850
     },
     "hidden": false,
     "supportsWarrantyQuestion": true
@@ -8779,7 +8839,7 @@
     "category": "budget",
     "deviceType": "smartphones",
     "releaseYear": 2024,
-    "basePrice128GB": 17314,
+    "basePrice128GB": 20500,
     "series": "Phone Series",
     "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/nothing-phone-2a.jpg",
     "supportedStorageGb": [
@@ -8791,10 +8851,14 @@
       12
     ],
     "variantPrices": {
+      "128": 20500,
+      "256": 21000,
+      "512": 21750,
       "_supportsWarrantyQuestion": true,
-      "8_128": 17314,
+      "8_128": 20500,
       "8_256": 17809,
-      "12_256": 18406
+      "12_256": 21000,
+      "12_512": 21750
     },
     "hidden": false,
     "supportsWarrantyQuestion": true
@@ -8958,8 +9022,10 @@
       8
     ],
     "variantPrices": {
+      "256": 13850,
       "_supportsWarrantyQuestion": true,
-      "8_256": 15821
+      "8_256": 13850,
+      "12_256": 13850
     },
     "hidden": false,
     "supportsWarrantyQuestion": true
@@ -12054,7 +12120,7 @@
     "category": "flagship",
     "deviceType": "smartphones",
     "releaseYear": 2023,
-    "basePrice128GB": 70600,
+    "basePrice128GB": 61050,
     "series": "iPhone 15 Series",
     "imageUrl": "https://wsrv.nl/?url=https%3A%2F%2Ffdn2.gsmarena.com%2Fvv%2Fbigpic%2Fapple-iphone-15-pro-max.jpg",
     "supportedStorageGb": [
@@ -12066,13 +12132,17 @@
       0
     ],
     "variantPrices": {
-      "256": 70600,
-      "512": 74520,
+      "8": 70200,
+      "128": 61050,
+      "256": 63850,
+      "512": 66650,
       "1024": 79403,
       "_supportsWarrantyQuestion": true,
-      "0_256": 73171,
-      "0_512": 74654,
-      "0_1024": 80587
+      "0_256": 63850,
+      "0_512": 66650,
+      "0_1024": 80587,
+      "0_128": 61050,
+      "0_8": 70200
     },
     "hidden": false,
     "supportsWarrantyQuestion": true
@@ -12086,7 +12156,7 @@
     "category": "flagship",
     "deviceType": "smartphones",
     "releaseYear": 2023,
-    "basePrice128GB": 61604,
+    "basePrice128GB": 61050,
     "series": "iPhone 15 Series",
     "imageUrl": "https://wsrv.nl/?url=https%3A%2F%2Ffdn2.gsmarena.com%2Fvv%2Fbigpic%2Fapple-iphone-15-pro.jpg",
     "supportedStorageGb": [
@@ -12099,15 +12169,17 @@
       0
     ],
     "variantPrices": {
-      "128": 61604,
-      "256": 66250,
-      "512": 68620,
+      "8": 70200,
+      "128": 61050,
+      "256": 63850,
+      "512": 66650,
       "1024": 70895,
       "_supportsWarrantyQuestion": true,
-      "0_128": 64272,
-      "0_256": 67238,
-      "0_512": 70205,
-      "0_1024": 72182
+      "0_128": 61050,
+      "0_256": 63850,
+      "0_512": 66650,
+      "0_1024": 72182,
+      "0_8": 70200
     },
     "hidden": false,
     "supportsWarrantyQuestion": true
@@ -12175,7 +12247,7 @@
     "category": "flagship",
     "deviceType": "smartphones",
     "releaseYear": 2023,
-    "basePrice128GB": 49000,
+    "basePrice128GB": 23000,
     "series": "Numbered Series",
     "imageUrl": "https://www.oneplus.com/content/dam/oasis/product-asset-library/salami/en/images-global-appear-phone-black-1.png.webp",
     "supportedStorageGb": [
@@ -12189,14 +12261,16 @@
       16
     ],
     "variantPrices": {
-      "8_128": 48925,
+      "128": 23000,
+      "256": 24950,
+      "8_128": 23000,
       "8_256": 55105,
       "8_512": 60255,
       "12_128": 51397,
       "12_256": 57577,
       "12_512": 62727,
       "16_128": 53869,
-      "16_256": 60049,
+      "16_256": 24950,
       "16_512": 65199
     },
     "hidden": true,
@@ -12211,7 +12285,7 @@
     "category": "flagship",
     "deviceType": "smartphones",
     "releaseYear": 2023,
-    "basePrice128GB": 49000,
+    "basePrice128GB": 23000,
     "series": "Numbered Series",
     "imageUrl": "https://www.oneplus.com/content/dam/oasis/product-asset-library/salami/en/images-global-appear-phone-black-1.png.webp",
     "supportedStorageGb": [
@@ -12225,14 +12299,16 @@
       16
     ],
     "variantPrices": {
-      "8_128": 48925,
+      "128": 23000,
+      "256": 24950,
+      "8_128": 23000,
       "8_256": 55105,
       "8_512": 60255,
       "12_128": 51397,
       "12_256": 57577,
       "12_512": 62727,
       "16_128": 53869,
-      "16_256": 60049,
+      "16_256": 24950,
       "16_512": 65199
     },
     "hidden": true,
@@ -12331,13 +12407,15 @@
       0
     ],
     "variantPrices": {
+      "6": 43500,
       "128": 45200,
       "256": 46530,
       "512": 49470,
       "_supportsWarrantyQuestion": true,
       "0_128": 46041,
       "0_256": 47504,
-      "0_512": 50058
+      "0_512": 50058,
+      "0_6": 43500
     },
     "hidden": false,
     "supportsWarrantyQuestion": true
@@ -12351,7 +12429,7 @@
     "category": "premium",
     "deviceType": "smartphones",
     "releaseYear": 2023,
-    "basePrice128GB": 40850,
+    "basePrice128GB": 61050,
     "series": "iPhone 15 Series",
     "imageUrl": "https://wsrv.nl/?url=https%3A%2F%2Ffdn2.gsmarena.com%2Fvv%2Fbigpic%2Fapple-iphone-15.jpg",
     "supportedStorageGb": [
@@ -12363,13 +12441,15 @@
       0
     ],
     "variantPrices": {
-      "128": 40850,
-      "256": 44070,
-      "512": 47140,
+      "8": 70200,
+      "128": 61050,
+      "256": 63850,
+      "512": 66650,
       "_supportsWarrantyQuestion": true,
-      "0_128": 43075,
-      "0_256": 45114,
-      "0_512": 47493
+      "0_128": 61050,
+      "0_256": 63850,
+      "0_512": 66650,
+      "0_8": 70200
     },
     "hidden": false,
     "supportsWarrantyQuestion": true
@@ -12396,8 +12476,9 @@
       12
     ],
     "variantPrices": {
+      "256": 22850,
       "8_128": 25235,
-      "8_256": 31415,
+      "8_256": 22850,
       "8_512": 37080,
       "12_128": 27707,
       "12_256": 33887,
@@ -12427,9 +12508,11 @@
       12
     ],
     "variantPrices": {
+      "256": 34900,
+      "512": 35750,
       "_supportsWarrantyQuestion": false,
-      "12_256": 36009,
-      "12_512": 36843,
+      "12_256": 34900,
+      "12_512": 35750,
       "12_1024": 39593
     },
     "hidden": false,
@@ -12444,7 +12527,7 @@
     "category": "flagship",
     "deviceType": "smartphones",
     "releaseYear": 2023,
-    "basePrice128GB": 32878,
+    "basePrice128GB": 33200,
     "series": "Pixel 8 Series",
     "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/google-pixel-8-pro.jpg",
     "supportedStorageGb": [
@@ -12456,9 +12539,11 @@
       12
     ],
     "variantPrices": {
+      "128": 33200,
+      "256": 33850,
       "_supportsWarrantyQuestion": true,
-      "12_128": 32878,
-      "12_256": 33866,
+      "12_128": 33200,
+      "12_256": 33850,
       "12_512": 34361
     },
     "hidden": false,
@@ -12677,7 +12762,7 @@
     "category": "premium",
     "deviceType": "smartphones",
     "releaseYear": 2023,
-    "basePrice128GB": 25791,
+    "basePrice128GB": 33200,
     "series": "Pixel 8 Series",
     "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/google-pixel-8.jpg",
     "supportedStorageGb": [
@@ -12688,9 +12773,13 @@
       8
     ],
     "variantPrices": {
+      "128": 33200,
+      "256": 33850,
       "_supportsWarrantyQuestion": true,
       "8_128": 25791,
-      "8_256": 26080
+      "8_256": 26080,
+      "12_128": 33200,
+      "12_256": 33850
     },
     "hidden": false,
     "supportsWarrantyQuestion": true
@@ -12763,7 +12852,7 @@
     "category": "premium",
     "deviceType": "smartphones",
     "releaseYear": 2023,
-    "basePrice128GB": 23649,
+    "basePrice128GB": 23000,
     "series": "Numbered Series",
     "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/oneplus-11.jpg",
     "supportedStorageGb": [
@@ -12775,9 +12864,11 @@
       16
     ],
     "variantPrices": {
+      "128": 23000,
+      "256": 24950,
       "_supportsWarrantyQuestion": true,
-      "8_128": 23649,
-      "16_256": 25596
+      "8_128": 23000,
+      "16_256": 24950
     },
     "hidden": false,
     "supportsWarrantyQuestion": true
@@ -12802,9 +12893,13 @@
       8
     ],
     "variantPrices": {
+      "256": 34900,
+      "512": 35750,
       "_supportsWarrantyQuestion": false,
       "8_128": 23381,
-      "8_256": 24782
+      "8_256": 24782,
+      "12_256": 34900,
+      "12_512": 35750
     },
     "hidden": false,
     "supportsWarrantyQuestion": false
@@ -12828,8 +12923,9 @@
       8
     ],
     "variantPrices": {
+      "256": 22850,
       "_supportsWarrantyQuestion": true,
-      "8_256": 23360
+      "8_256": 22850
     },
     "hidden": false,
     "supportsWarrantyQuestion": true
@@ -12879,7 +12975,7 @@
     "category": "midrange",
     "deviceType": "smartphones",
     "releaseYear": 2023,
-    "basePrice128GB": 21620,
+    "basePrice128GB": 23000,
     "series": "Numbered Series",
     "imageUrl": "https://m.media-amazon.com/images/I/61sG3M1E3AL._SL1500_.jpg",
     "supportedStorageGb": [
@@ -12893,9 +12989,11 @@
       18
     ],
     "variantPrices": {
+      "128": 23000,
+      "256": 24950,
       "_supportsWarrantyQuestion": true,
-      "8_128": 21620,
-      "16_256": 22269,
+      "8_128": 23000,
+      "16_256": 24950,
       "18_512": 23051
     },
     "hidden": false,
@@ -12966,7 +13064,7 @@
     "category": "premium",
     "deviceType": "smartphones",
     "releaseYear": 2023,
-    "basePrice128GB": 20291,
+    "basePrice128GB": 20500,
     "series": "Phone Series",
     "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/nothing-phone2_.jpg",
     "supportedStorageGb": [
@@ -12979,10 +13077,13 @@
       12
     ],
     "variantPrices": {
+      "128": 20500,
+      "256": 21000,
+      "512": 21750,
       "_supportsWarrantyQuestion": true,
-      "8_128": 20291,
-      "12_256": 21033,
-      "12_512": 21764
+      "8_128": 20500,
+      "12_256": 21000,
+      "12_512": 21750
     },
     "hidden": false,
     "supportsWarrantyQuestion": true
@@ -13409,7 +13510,7 @@
     "category": "midrange",
     "deviceType": "smartphones",
     "releaseYear": 2023,
-    "basePrice128GB": 14000,
+    "basePrice128GB": 23000,
     "series": "Numbered Series",
     "imageUrl": "https://m.media-amazon.com/images/I/61sG3M1E3AL._SL1500_.jpg",
     "supportedStorageGb": [
@@ -13423,15 +13524,18 @@
       12
     ],
     "variantPrices": {
+      "128": 23000,
+      "256": 24950,
       "6_128": 13905,
       "6_256": 20085,
       "6_512": 25750,
-      "8_128": 15141,
+      "8_128": 23000,
       "8_256": 21321,
       "8_512": 26986,
       "12_128": 17613,
       "12_256": 23793,
-      "12_512": 29458
+      "12_512": 29458,
+      "16_256": 24950
     },
     "hidden": true,
     "supportsWarrantyQuestion": true
@@ -15659,7 +15763,7 @@
     "category": "flagship",
     "deviceType": "smartphones",
     "releaseYear": 2022,
-    "basePrice128GB": 43420,
+    "basePrice128GB": 41650,
     "series": "iPhone 14 Series",
     "imageUrl": "https://wsrv.nl/?url=https%3A%2F%2Ffdn2.gsmarena.com%2Fvv%2Fbigpic%2Fapple-iphone-14-pro-max-.jpg",
     "supportedStorageGb": [
@@ -15672,15 +15776,17 @@
       0
     ],
     "variantPrices": {
-      "128": 43420,
-      "256": 45760,
-      "512": 48500,
+      "6": 47500,
+      "128": 41650,
+      "256": 43000,
+      "512": 45000,
       "1024": 49512,
       "_supportsWarrantyQuestion": false,
-      "0_128": 45176,
-      "0_256": 46844,
-      "0_512": 48935,
-      "0_1024": 50604
+      "0_128": 41650,
+      "0_256": 43000,
+      "0_512": 45000,
+      "0_1024": 50604,
+      "0_6": 47500
     },
     "hidden": false,
     "supportsWarrantyQuestion": false
@@ -15694,7 +15800,7 @@
     "category": "flagship",
     "deviceType": "smartphones",
     "releaseYear": 2022,
-    "basePrice128GB": 42086,
+    "basePrice128GB": 41650,
     "series": "iPhone 14 Series",
     "imageUrl": "https://wsrv.nl/?url=https%3A%2F%2Ffdn2.gsmarena.com%2Fvv%2Fbigpic%2Fapple-iphone-14-pro.jpg",
     "supportedStorageGb": [
@@ -15707,15 +15813,17 @@
       0
     ],
     "variantPrices": {
-      "128": 42086,
-      "256": 43700,
-      "512": 45845,
+      "6": 47500,
+      "128": 41650,
+      "256": 43000,
+      "512": 45000,
       "1024": 46896,
       "_supportsWarrantyQuestion": false,
-      "0_128": 43971,
-      "0_256": 45392,
-      "0_512": 47483,
-      "0_1024": 48317
+      "0_128": 41650,
+      "0_256": 43000,
+      "0_512": 45000,
+      "0_1024": 48317,
+      "0_6": 47500
     },
     "hidden": false,
     "supportsWarrantyQuestion": false
@@ -15777,13 +15885,15 @@
       0
     ],
     "variantPrices": {
+      "6": 28850,
       "128": 29036,
       "256": 30890,
       "512": 31374,
       "_supportsWarrantyQuestion": false,
       "0_128": 30117,
       "0_256": 30787,
-      "0_512": 31786
+      "0_512": 31786,
+      "0_6": 28850
     },
     "hidden": false,
     "supportsWarrantyQuestion": false
@@ -15893,7 +16003,7 @@
     "category": "premium",
     "deviceType": "smartphones",
     "releaseYear": 2022,
-    "basePrice128GB": 27350,
+    "basePrice128GB": 41650,
     "series": "iPhone 14 Series",
     "imageUrl": "https://wsrv.nl/?url=https%3A%2F%2Ffdn2.gsmarena.com%2Fvv%2Fbigpic%2Fapple-iphone-14.jpg",
     "supportedStorageGb": [
@@ -15905,13 +16015,15 @@
       0
     ],
     "variantPrices": {
-      "128": 27350,
-      "256": 28449,
-      "512": 29035,
+      "6": 47500,
+      "128": 41650,
+      "256": 43000,
+      "512": 45000,
       "_supportsWarrantyQuestion": false,
-      "0_128": 28613,
-      "0_256": 29283,
-      "0_512": 29705
+      "0_128": 41650,
+      "0_256": 43000,
+      "0_512": 45000,
+      "0_6": 47500
     },
     "hidden": false,
     "supportsWarrantyQuestion": false
@@ -16912,8 +17024,10 @@
       8
     ],
     "variantPrices": {
+      "8": 12050,
       "8_128": 11824,
-      "8_256": 12679
+      "8_256": 12679,
+      "0_8": 12050
     },
     "hidden": true,
     "supportsWarrantyQuestion": false
@@ -19169,7 +19283,7 @@
     "category": "flagship",
     "deviceType": "smartphones",
     "releaseYear": 2021,
-    "basePrice128GB": 35051,
+    "basePrice128GB": 32100,
     "series": "iPhone 13 Series",
     "imageUrl": "https://wsrv.nl/?url=https%3A%2F%2Ffdn2.gsmarena.com%2Fvv%2Fbigpic%2Fapple-iphone-13-pro-max.jpg",
     "supportedStorageGb": [
@@ -19182,15 +19296,17 @@
       0
     ],
     "variantPrices": {
-      "128": 35051,
-      "256": 36220,
-      "512": 36690,
-      "1024": 40222,
+      "6": 37100,
+      "128": 32100,
+      "256": 33950,
+      "512": 35100,
+      "1024": 35950,
       "_supportsWarrantyQuestion": false,
-      "0_128": 35885,
-      "0_256": 36967,
-      "0_512": 39470,
-      "0_1024": 41056
+      "0_128": 32100,
+      "0_256": 33950,
+      "0_512": 35100,
+      "0_1024": 35950,
+      "0_6": 37100
     },
     "hidden": false,
     "supportsWarrantyQuestion": false
@@ -19204,7 +19320,7 @@
     "category": "flagship",
     "deviceType": "smartphones",
     "releaseYear": 2021,
-    "basePrice128GB": 33300,
+    "basePrice128GB": 32100,
     "series": "iPhone 13 Series",
     "imageUrl": "https://wsrv.nl/?url=https%3A%2F%2Ffdn2.gsmarena.com%2Fvv%2Fbigpic%2Fapple-iphone-13-pro.jpg",
     "supportedStorageGb": [
@@ -19217,15 +19333,17 @@
       0
     ],
     "variantPrices": {
-      "128": 33300,
-      "256": 34680,
-      "512": 36510,
-      "1024": 37513,
+      "6": 37100,
+      "128": 32100,
+      "256": 33950,
+      "512": 35100,
+      "1024": 35950,
       "_supportsWarrantyQuestion": false,
-      "0_128": 33928,
-      "0_256": 35844,
-      "0_512": 37101,
-      "0_1024": 37976
+      "0_128": 32100,
+      "0_256": 33950,
+      "0_512": 35100,
+      "0_1024": 35950,
+      "0_6": 37100
     },
     "hidden": false,
     "supportsWarrantyQuestion": false
@@ -19239,7 +19357,7 @@
     "category": "premium",
     "deviceType": "smartphones",
     "releaseYear": 2021,
-    "basePrice128GB": 23917,
+    "basePrice128GB": 32100,
     "series": "iPhone 13 Series",
     "imageUrl": "https://wsrv.nl/?url=https%3A%2F%2Ffdn2.gsmarena.com%2Fvv%2Fbigpic%2Fapple-iphone-13.jpg",
     "supportedStorageGb": [
@@ -19251,13 +19369,17 @@
       0
     ],
     "variantPrices": {
-      "128": 23917,
-      "256": 25256,
-      "512": 25678,
+      "6": 37100,
+      "128": 32100,
+      "256": 33950,
+      "512": 35100,
+      "1024": 35950,
       "_supportsWarrantyQuestion": false,
-      "0_128": 24988,
-      "0_256": 25637,
-      "0_512": 26214
+      "0_128": 32100,
+      "0_256": 33950,
+      "0_512": 35100,
+      "0_1024": 35950,
+      "0_6": 37100
     },
     "hidden": false,
     "supportsWarrantyQuestion": false
@@ -19283,13 +19405,15 @@
       0
     ],
     "variantPrices": {
+      "4": 25000,
       "128": 21990,
       "256": 22526,
       "512": 23113,
       "_supportsWarrantyQuestion": false,
       "0_128": 22032,
       "0_256": 22701,
-      "0_512": 23113
+      "0_512": 23113,
+      "0_4": 25000
     },
     "hidden": false,
     "supportsWarrantyQuestion": false
@@ -19369,13 +19493,15 @@
       0
     ],
     "variantPrices": {
+      "4": 19200,
       "128": 25180,
       "256": 26368,
       "512": 28201,
       "_supportsWarrantyQuestion": false,
       "0_128": 25194,
       "0_256": 26450,
-      "0_512": 27717
+      "0_512": 27717,
+      "0_4": 19200
     },
     "hidden": false,
     "supportsWarrantyQuestion": false
@@ -19401,13 +19527,15 @@
       0
     ],
     "variantPrices": {
+      "4": 19200,
       "128": 23460,
       "256": 25080,
       "512": 27210,
       "_supportsWarrantyQuestion": false,
       "0_128": 23690,
       "0_256": 25194,
-      "0_512": 26533
+      "0_512": 26533,
+      "0_4": 19200
     },
     "hidden": false,
     "supportsWarrantyQuestion": false
@@ -19433,13 +19561,15 @@
       0
     ],
     "variantPrices": {
+      "4": 19200,
       "64": 16810,
       "128": 17943,
       "256": 19620,
       "_supportsWarrantyQuestion": false,
       "0_64": 16985,
       "0_128": 17943,
-      "0_256": 19189
+      "0_256": 19189,
+      "0_4": 19200
     },
     "hidden": false,
     "supportsWarrantyQuestion": false
@@ -19465,13 +19595,15 @@
       0
     ],
     "variantPrices": {
+      "4": 19200,
       "64": 14729,
       "128": 16480,
       "256": 17119,
       "_supportsWarrantyQuestion": false,
       "0_64": 14863,
       "0_128": 16490,
-      "0_256": 16985
+      "0_256": 16985,
+      "0_4": 19200
     },
     "hidden": false,
     "supportsWarrantyQuestion": false
@@ -19497,13 +19629,15 @@
       0
     ],
     "variantPrices": {
+      "4": 14950,
       "64": 17634,
       "256": 19220,
       "512": 19880,
       "_supportsWarrantyQuestion": false,
       "0_64": 17459,
       "0_256": 19302,
-      "0_512": 19797
+      "0_512": 19797,
+      "0_4": 14950
     },
     "hidden": false,
     "supportsWarrantyQuestion": false
@@ -19529,13 +19663,15 @@
       0
     ],
     "variantPrices": {
+      "4": 14950,
       "64": 15360,
       "256": 17428,
       "512": 18450,
       "_supportsWarrantyQuestion": false,
       "0_64": 15450,
       "0_256": 17510,
-      "0_512": 17757
+      "0_512": 17757,
+      "0_4": 14950
     },
     "hidden": false,
     "supportsWarrantyQuestion": false
@@ -19561,13 +19697,15 @@
       0
     ],
     "variantPrices": {
+      "4": 14950,
       "64": 12947,
       "128": 14492,
       "256": 15120,
       "_supportsWarrantyQuestion": false,
       "0_64": 12865,
       "0_128": 14575,
-      "0_256": 15162
+      "0_256": 15162,
+      "0_4": 14950
     },
     "hidden": false,
     "supportsWarrantyQuestion": false

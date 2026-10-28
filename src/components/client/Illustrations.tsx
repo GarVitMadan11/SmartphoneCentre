@@ -842,7 +842,6 @@ export const getIllustration = (
       case 'defect-watch-screen-touch':
         return <WatchTouchUnresponsiveIllustration />;
       case 'defect-screen-truetone':
-      case 'defect-screen-non-original':
         return <WatchFlawlessDisplayIllustration />;
       case 'body-flawless':
         return <WatchFlawlessFrameIllustration />;
@@ -906,7 +905,6 @@ export const getIllustration = (
       case 'defect-screen-touch':
         return <TabletTouchUnresponsiveIllustration />;
       case 'defect-screen-truetone':
-      case 'defect-screen-non-original':
         return <TabletTrueToneIllustration />;
       case 'body-flawless':
         return <TabletFlawlessFrameIllustration />;
@@ -921,6 +919,7 @@ export const getIllustration = (
       case 'defect-body-screws':
         return <TabletScrewsIllustration />;
       case 'defect-camera-faulty':
+      case 'defect-camera-glass':
         return <TabletFaultyLensIllustration />;
       case 'defect-battery-80-85':
         return <Battery80to85Illustration />;
@@ -979,7 +978,6 @@ export const getIllustration = (
     case 'defect-screen-touch':
       return <TouchUnresponsiveIllustration />;
     case 'defect-screen-truetone':
-    case 'defect-screen-non-original':
       return <TrueToneIllustration />;
     case 'defect-screen-crease':
       return <InnerScreenCreaseIllustration />;
@@ -991,6 +989,8 @@ export const getIllustration = (
       return <HingeFaultyIllustration />;
     case 'defect-body-dented':
       return <DentedFrameIllustration />;
+    case 'defect-body-backglass':
+      return <CrackedScreenIllustration />;
     case 'defect-body-scuffs':
       return <ScuffedFrameIllustration />;
     case 'defect-body-airpass':
@@ -1002,6 +1002,7 @@ export const getIllustration = (
 
     // Hardware / Functionality
     case 'defect-camera-faulty':
+    case 'defect-camera-glass':
       return <FaultyLensIllustration />;
     case 'defect-battery-80-85':
       return <Battery80to85Illustration />;

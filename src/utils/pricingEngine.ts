@@ -245,40 +245,48 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
   const isIphone17or18 = nameLower.includes('iphone 17') || nameLower.includes('iphone 18');
   const isIphone15or16 = nameLower.includes('iphone 15') || nameLower.includes('iphone 16');
 
+  // If purchase bill/invoice is missing, manufacturer warranty cannot be validated -> automatically out of warranty
+  const hasMissingBill = input.selectedDefects.some(d => d.id === 'defect-acc-nodocs');
+  const effectiveWarrantyAge = hasMissingBill ? 'out_of_warranty' : input.warrantyAge;
+  const effectiveDeviceAge = hasMissingBill ? 'out_of_warranty' : input.deviceAge;
+
   let fAge = 1.00;
   if (isIphone17or18) {
-    // iPhone 17 & 18 Series: 0% under 3m, 15% 3-6m, 20% 6-11m, 25% > 11m
-    let ageKey: AgeFactorKey = input.deviceAge || 'under_3m';
-    if (!input.deviceAge && input.warrantyAge) {
-      if (input.warrantyAge === 'under_3m') ageKey = 'under_3m';
-      else if (input.warrantyAge === '3_to_6m') ageKey = '3_to_6m';
-      else if (input.warrantyAge === '6_to_11m') ageKey = '6_to_12m';
-      else ageKey = '1_to_2y';
+    // iPhone 17 & 18 Series: 0% under 3m, 15% 3-6m, 20% 6-11m, 25% out of warranty
+    let ageKey: AgeFactorKey = effectiveDeviceAge || 'under_3m';
+    if (!effectiveDeviceAge && effectiveWarrantyAge) {
+      if (effectiveWarrantyAge === 'under_3m') ageKey = 'under_3m';
+      else if (effectiveWarrantyAge === '3_to_6m') ageKey = '3_to_6m';
+      else if (effectiveWarrantyAge === '6_to_11m') ageKey = '6_to_12m';
+      else ageKey = 'out_of_warranty';
     }
     fAge = config.ageFactors[ageKey] ?? 1.00;
-  } else if (isIphone15or16) {
-    if (input.warrantyAge === 'out_of_warranty' || input.deviceAge === '2_to_3y' || input.deviceAge === 'above_4y') {
+  } else if (input.releaseYear !== undefined && input.releaseYear < 2024) {
+    // For older / matured models (> 1 year old, e.g. iPhone 15/14/13, Galaxy S23) with explicit release year,
+    // secondary market baseline already reflects an out-of-warranty device.
+    // Matches Cashify empirical evidence (₹0 deduction on out_of_warranty for matured models).
+    fAge = 1.00;
+  } else if (isIphone15or16 || nameLower.includes('s24') || cycleTier === 'TIER_1_WARRANTY_ACTIVE') {
+    // Active current generation models under 1 year old (Tier 1)
+    if (effectiveWarrantyAge === 'out_of_warranty' || effectiveDeviceAge === 'out_of_warranty') {
       fAge = 1.0 - (config.universalDeductions.outOfWarrantyPercentTier1 ?? 0.20); // -20.0% Cashify empirical out of warranty
-    } else if (input.deviceAge === '1_to_2y') {
-      fAge = 0.88; // -12.0% reduction for 1-2 years
-    } else if (input.deviceAge === '6_to_12m' || input.warrantyAge === '6_to_11m') {
+    } else if (effectiveDeviceAge === '6_to_12m' || effectiveWarrantyAge === '6_to_11m') {
       fAge = 0.94; // -6.0% reduction for 6-12 months
-    } else if (input.deviceAge === '3_to_6m' || input.warrantyAge === '3_to_6m') {
+    } else if (effectiveDeviceAge === '3_to_6m' || effectiveWarrantyAge === '3_to_6m') {
       fAge = 0.97; // -3.0% reduction
     } else {
       fAge = 1.00; // 0% under 3 months
     }
-  } else if (cycleTier === 'TIER_2_MATURED_BASELINE' && !input.deviceAge) {
-    // For older / matured models, baseline already reflects secondary market rate (0% warranty penalty)
+  } else if (cycleTier === 'TIER_2_MATURED_BASELINE') {
     fAge = 1.00;
   } else {
-    // Other models apply age factors from config (under 3m: 1.00, 3-6m: 0.85, 6-11m: 0.80, >11m: 0.75)
-    let ageKey: AgeFactorKey = input.deviceAge || 'under_3m';
-    if (!input.deviceAge && input.warrantyAge) {
-      if (input.warrantyAge === 'under_3m') ageKey = 'under_3m';
-      else if (input.warrantyAge === '3_to_6m') ageKey = '3_to_6m';
-      else if (input.warrantyAge === '6_to_11m') ageKey = '6_to_12m';
-      else ageKey = '1_to_2y';
+    // Other models apply age factors from config
+    let ageKey: AgeFactorKey = effectiveDeviceAge || 'under_3m';
+    if (!effectiveDeviceAge && effectiveWarrantyAge) {
+      if (effectiveWarrantyAge === 'under_3m') ageKey = 'under_3m';
+      else if (effectiveWarrantyAge === '3_to_6m') ageKey = '3_to_6m';
+      else if (effectiveWarrantyAge === '6_to_11m') ageKey = '6_to_12m';
+      else ageKey = 'out_of_warranty';
     }
     fAge = config.ageFactors[ageKey] ?? 1.00;
   }
@@ -332,14 +340,25 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
 
     fCosmetic = fSurface * fStructural * fPanel;
   } else {
-    // Phone logic
-    cosmeticDefects.forEach(defect => {
+    // Phone logic: Evaluate frame condition (scratches/dents/bent) and back glass panel condition independently (matching Cashify's 2-question model)
+    const frameDefects = cosmeticDefects.filter(d => d.id !== 'defect-body-backglass');
+    let fFrame = 1.00;
+    frameDefects.forEach(defect => {
       const penalty = defect.deductionPercentage || (defect.deductionFixed > 0 ? defect.deductionFixed / basePrice : 0);
       const factor = Math.max(0, 1.0 - penalty);
-      if (factor < fCosmetic) {
-        fCosmetic = factor;
+      if (factor < fFrame) {
+        fFrame = factor;
       }
     });
+
+    const backGlassDefect = cosmeticDefects.find(d => d.id === 'defect-body-backglass');
+    let fBackGlass = 1.00;
+    if (backGlassDefect) {
+      const penalty = backGlassDefect.deductionPercentage || (backGlassDefect.deductionFixed > 0 ? backGlassDefect.deductionFixed / basePrice : 0.05);
+      fBackGlass = Math.max(0.80, 1.0 - penalty);
+    }
+
+    fCosmetic = fFrame * fBackGlass;
   }
 
   // Group B — Display (Scratches, cracks, touch, OLED/LCD, non-original display)
@@ -347,8 +366,8 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
   let fDisplay = 1.00;
 
   if (isTablet) {
-    // For tablets: separate into Physical Damage (scratches/cracks/spots/discoloration), Touch failure, and Non-original screen
-    const physicalDefects = displayDefects.filter(d => d.id !== 'defect-screen-touch' && d.id !== 'defect-screen-non-original');
+    // For tablets: separate into Physical Damage (scratches/cracks/spots/discoloration) and Touch failure
+    const physicalDefects = displayDefects.filter(d => d.id !== 'defect-screen-touch');
     let fPhysical = 1.00;
     physicalDefects.forEach(defect => {
       let penalty = defect.deductionPercentage || 0;
@@ -359,15 +378,20 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
     });
 
     const hasTouchFail = displayDefects.some(d => d.id === 'defect-screen-touch');
-    const fTouch = hasTouchFail ? 0.75 : 1.00; // -25% digitizer penalty
+    const touchSalvageFloor = config.universalDeductions.touchOrNonOriginalScreenSalvageFloor ?? 1200;
+    const fTouch = hasTouchFail ? Math.min(0.25, touchSalvageFloor / basePrice) : 1.00;
 
-    const hasNonOriginal = displayDefects.some(d => d.id === 'defect-screen-non-original');
-    const fNonOrig = hasNonOriginal ? (segment.includes('pro') ? 0.65 : 0.72) : 1.00;
-
-    fDisplay = fPhysical * fTouch * fNonOrig;
+    fDisplay = fPhysical * fTouch;
   } else {
-    // Phone logic
+    // Phone logic: Deduplicate screen defects — full panel replacement (cracked glass, burn-in) automatically absorbs surface scratches
+    const hasScreenPanelReplacement = displayDefects.some(d => 
+      d.id === 'defect-screen-cracked' || d.id === 'defect-screen-burn'
+    );
+
     displayDefects.forEach(defect => {
+      if (hasScreenPanelReplacement && defect.id === 'defect-screen-scratches') {
+        return; // Waived: replacing entire display panel includes new scratch-free glass
+      }
       let penalty = defect.deductionPercentage || 0;
       if (defect.id === 'defect-screen-cracked' && penalty === 0) {
         penalty = 0.28; // Standard ~28% display panel deduction
@@ -381,6 +405,13 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
         fDisplay = factor;
       }
     });
+
+    // Unresponsive touch digitizer prevents on-site diagnostic testing (matches Cashify national scrap policy)
+    const hasTouchFail = displayDefects.some(d => d.id === 'defect-screen-touch');
+    if (hasTouchFail) {
+      const touchSalvageFloor = config.universalDeductions.touchOrNonOriginalScreenSalvageFloor ?? 1200;
+      fDisplay = Math.min(fDisplay, touchSalvageFloor / basePrice);
+    }
   }
 
   // Group C — Functional (Camera, speaker, mic, charging port, biometrics)
@@ -409,7 +440,24 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
   });
 
   // Total Multiplicative Condition Score
-  const fCondition = fCosmetic * fDisplay * fFunctional * fBattery;
+  let fCondition = fCosmetic * fDisplay * fFunctional * fBattery;
+
+  // Multi-fault compounding labor risk:
+  // When a device has 3 or more distinct hardware defects, each additional module replacement
+  // incurs cumulative physical disassembly overhead and parts risk (matching Cashify repair labor compounding).
+  const hardwareDefects = input.selectedDefects.filter(d => d.category !== 'accessories');
+  if (hardwareDefects.length >= 4) {
+    const multiFaultLaborRisk = Math.min(0.12, (hardwareDefects.length - 3) * 0.03); // 3% for 4 defects, 6% for 5
+    fCondition *= (1.0 - multiFaultLaborRisk);
+    adjustments.push({
+      id: 'multi-fault-labor-overhead',
+      name: `Multi-Fault Repair Labor Adjustment (${hardwareDefects.length} Hardware Defects)`,
+      category: 'condition',
+      type: 'TYPE_A_PERCENT',
+      rateOrValue: -multiFaultLaborRisk,
+      impactAmount: -Math.round(basePrice * (fCosmetic * fDisplay * fFunctional * fBattery) * multiFaultLaborRisk)
+    });
+  }
 
   // Calculate Pre-Accessory Valuation
   const preAccessoryValue = Math.round(basePrice * fAge * fMarket * fCondition * fVariant);
@@ -479,17 +527,35 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
   // Calculate Pre-Vendor Adjusted Benchmark (includes dual eSIM & single SIM deduction)
   let adjustedBenchmark = preAccessoryValue - dualEsimDeduction - singleSimDeduction - dAccessoriesCapped;
 
-  // Minimum Valuation / Salvage Floor Check
-  const minimumRecycleFloor = Math.max(500, Math.round(basePrice * 0.08));
+  // Minimum Valuation / Salvage Floor Check (Empirically beats competitor scrap floor of ₹1,180)
+  const hasTouchDefect = input.selectedDefects.some(d => d.id === 'defect-screen-touch');
+  const minimumRecycleFloor = hasTouchDefect
+    ? (config.universalDeductions.touchOrNonOriginalScreenSalvageFloor ?? 1200)
+    : Math.max(1200, Math.round(basePrice * 0.08));
   if (adjustedBenchmark < minimumRecycleFloor) {
     adjustedBenchmark = minimumRecycleFloor;
   }
 
-  const isHighThreshold = adjustedBenchmark > config.vendorThreshold;
-  const vendorMultiplier = isHighThreshold ? config.vendorHighMultiplier : config.vendorLowMultiplier;
-  const vendorMultiplierPercentage = vendorMultiplier >= 1.03 ? '+3%' : '+2%';
+  let vendorMultiplier = 1.03;
+  let vendorMultiplierPercentage = '+3%';
+  if (config.vendorConditionTiers) {
+    if (fCondition >= 0.98) {
+      vendorMultiplier = config.vendorConditionTiers.flawlessMultiplier; // 1.03 (+3.0%)
+      vendorMultiplierPercentage = '+3%';
+    } else if (fCondition >= 0.80) {
+      vendorMultiplier = config.vendorConditionTiers.minorDefectMultiplier; // 1.025 (+2.5%)
+      vendorMultiplierPercentage = '+2.5%';
+    } else {
+      vendorMultiplier = config.vendorConditionTiers.heavyDefectMultiplier; // 1.02 (+2.0%)
+      vendorMultiplierPercentage = '+2%';
+    }
+  } else {
+    const isHighThreshold = adjustedBenchmark > config.vendorThreshold;
+    vendorMultiplier = isHighThreshold ? config.vendorHighMultiplier : config.vendorLowMultiplier;
+    vendorMultiplierPercentage = vendorMultiplier >= 1.03 ? '+3%' : '+2%';
+  }
 
-  // Rephonix Buyback Offer strictly applies the vendor multiplier (+2% or +3%)
+  // Rephonix Buyback Offer strictly applies the tiered vendor multiplier
   const rawCalculatedPrice = Math.round(adjustedBenchmark * vendorMultiplier);
   const finalRephonixPrice = roundToCleanIndianPrice(rawCalculatedPrice, config.roundingStrategy);
 
