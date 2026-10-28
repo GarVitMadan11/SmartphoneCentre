@@ -37,7 +37,7 @@ function getEnvValue(key: string): string {
   return '';
 }
 
-export function getTransporter(): nodemailer.Transporter | null {
+export function getTransporter(): ReturnType<typeof nodemailer.createTransport> | null {
   const host = getEnvValue('SMTP_HOST') || 'smtp.hostinger.com';
   const port = parseInt(getEnvValue('SMTP_PORT') || '465', 10);
   const user = getEnvValue('SMTP_USER') || getEnvValue('EMAIL_USER') || getEnvValue('SECURITY_SMTP_USER') || 'support@rephonix.in';
