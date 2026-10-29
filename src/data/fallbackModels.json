@@ -3613,7 +3613,7 @@
     "dbId": "0a0808d2-62f6-4c7d-a86e-0788f43e49bd",
     "brandId": "brand-apple",
     "name": "iPhone 17e",
-    "category": "budget",
+    "category": "premium",
     "deviceType": "smartphones",
     "releaseYear": 2025,
     "basePrice128GB": 44290,
@@ -7281,6 +7281,191 @@
     "supportsWarrantyQuestion": true
   },
   {
+    "id": "sam-s25u",
+    "legacyId": "sam-s25u",
+    "dbId": "sam-s25u-001",
+    "brandId": "brand-samsung",
+    "name": "Galaxy S25 Ultra",
+    "category": "flagship",
+    "deviceType": "smartphones",
+    "releaseYear": 2025,
+    "basePrice128GB": 74500,
+    "series": "S Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-s24-ultra-5g-sm-s928-stylus.jpg",
+    "supportedStorageGb": [
+      256,
+      512,
+      1024
+    ],
+    "supportedRamGb": [
+      12,
+      16
+    ],
+    "variantPrices": {
+      "256": 74500,
+      "512": 79000,
+      "1024": 86000,
+      "_supportsWarrantyQuestion": true,
+      "12_256": 74500,
+      "12_512": 79000,
+      "16_1024": 86000
+    },
+    "hidden": false,
+    "supportsWarrantyQuestion": true
+  },
+  {
+    "id": "sam-s25plus",
+    "legacyId": "sam-s25plus",
+    "dbId": "sam-s25plus-001",
+    "brandId": "brand-samsung",
+    "name": "Galaxy S25 Plus",
+    "category": "flagship",
+    "deviceType": "smartphones",
+    "releaseYear": 2025,
+    "basePrice128GB": 52000,
+    "series": "S Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-s24-plus-5g-sm-s926.jpg",
+    "supportedStorageGb": [
+      256,
+      512
+    ],
+    "supportedRamGb": [
+      12
+    ],
+    "variantPrices": {
+      "256": 52000,
+      "512": 57000,
+      "_supportsWarrantyQuestion": true,
+      "12_256": 52000,
+      "12_512": 57000
+    },
+    "hidden": false,
+    "supportsWarrantyQuestion": true
+  },
+  {
+    "id": "sam-s25",
+    "legacyId": "sam-s25",
+    "dbId": "sam-s25-001",
+    "brandId": "brand-samsung",
+    "name": "Galaxy S25",
+    "category": "flagship",
+    "deviceType": "smartphones",
+    "releaseYear": 2025,
+    "basePrice128GB": 42000,
+    "series": "S Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-s24-5g-sm-s921.jpg",
+    "supportedStorageGb": [
+      128,
+      256,
+      512
+    ],
+    "supportedRamGb": [
+      12
+    ],
+    "variantPrices": {
+      "128": 39500,
+      "256": 42000,
+      "512": 47000,
+      "_supportsWarrantyQuestion": true,
+      "12_128": 39500,
+      "12_256": 42000,
+      "12_512": 47000
+    },
+    "hidden": false,
+    "supportsWarrantyQuestion": true
+  },
+  {
+    "id": "sam-s26u",
+    "legacyId": "sam-s26u",
+    "dbId": "sam-s26u-001",
+    "brandId": "brand-samsung",
+    "name": "Galaxy S26 Ultra",
+    "category": "flagship",
+    "deviceType": "smartphones",
+    "releaseYear": 2026,
+    "basePrice128GB": 92000,
+    "series": "S Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-s24-ultra-5g-sm-s928-stylus.jpg",
+    "supportedStorageGb": [
+      256,
+      512,
+      1024
+    ],
+    "supportedRamGb": [
+      12,
+      16
+    ],
+    "variantPrices": {
+      "256": 92000,
+      "512": 99000,
+      "1024": 108000,
+      "_supportsWarrantyQuestion": true,
+      "12_256": 92000,
+      "12_512": 99000,
+      "16_1024": 108000
+    },
+    "hidden": false,
+    "supportsWarrantyQuestion": true
+  },
+  {
+    "id": "sam-s26plus",
+    "legacyId": "sam-s26plus",
+    "dbId": "sam-s26plus-001",
+    "brandId": "brand-samsung",
+    "name": "Galaxy S26 Plus",
+    "category": "flagship",
+    "deviceType": "smartphones",
+    "releaseYear": 2026,
+    "basePrice128GB": 68000,
+    "series": "S Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-s24-plus-5g-sm-s926.jpg",
+    "supportedStorageGb": [
+      256,
+      512
+    ],
+    "supportedRamGb": [
+      12
+    ],
+    "variantPrices": {
+      "256": 68000,
+      "512": 74000,
+      "_supportsWarrantyQuestion": true,
+      "12_256": 68000,
+      "12_512": 74000
+    },
+    "hidden": false,
+    "supportsWarrantyQuestion": true
+  },
+  {
+    "id": "sam-s26",
+    "legacyId": "sam-s26",
+    "dbId": "sam-s26-001",
+    "brandId": "brand-samsung",
+    "name": "Galaxy S26",
+    "category": "flagship",
+    "deviceType": "smartphones",
+    "releaseYear": 2026,
+    "basePrice128GB": 58000,
+    "series": "S Series",
+    "imageUrl": "https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-s24-5g-sm-s921.jpg",
+    "supportedStorageGb": [
+      256,
+      512
+    ],
+    "supportedRamGb": [
+      12
+    ],
+    "variantPrices": {
+      "256": 58000,
+      "512": 64000,
+      "_supportsWarrantyQuestion": true,
+      "12_256": 58000,
+      "12_512": 64000
+    },
+    "hidden": false,
+    "supportsWarrantyQuestion": true
+  },
+  {
     "id": "catalog-oppo-reno-12-pro",
     "legacyId": "catalog-oppo-reno-12-pro",
     "dbId": "37b128ef-a9e6-4ce3-8b39-3a61268f5d36",
@@ -7836,7 +8021,7 @@
     "dbId": "ba990ad2-17a4-4d16-a33f-724b11bc0c87",
     "brandId": "brand-apple",
     "name": "iPhone 16e",
-    "category": "midrange",
+    "category": "premium",
     "deviceType": "smartphones",
     "releaseYear": 2024,
     "basePrice128GB": 35970,

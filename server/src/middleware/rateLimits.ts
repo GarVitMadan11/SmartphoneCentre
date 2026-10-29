@@ -38,3 +38,13 @@ export const trackingLimiter = rateLimit({
   message: { error: 'TooManyRequests', message: 'Too many order tracking attempts. Please try again in 15 minutes.' },
   skip: () => isDev,
 });
+
+export const leadLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: isDev ? 1000 : 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'TooManyRequests', message: 'Too many lead events. Please wait.' },
+  skip: () => isDev,
+});
+

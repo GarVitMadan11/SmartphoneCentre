@@ -516,3 +516,181 @@ export async function sendAdminPriceMatchAlertEmail(data: PriceMatchAlertData): 
     return false;
   }
 }
+
+export interface StepLeadAlertData {
+  modelName: string;
+  brandName?: string;
+  storageGb: number;
+  ramGb?: number;
+  basePrice?: number;
+  customerName?: string;
+  customerPhone?: string;
+  customerEmail?: string;
+  deviceType?: string;
+  sourceUrl?: string;
+  ip?: string;
+  userAgent?: string;
+}
+
+export async function sendAdminStepLeadEmail(data: StepLeadAlertData): Promise<boolean> {
+  const adminRecipient = process.env.ADMIN_ALERT_EMAIL || 'garvitmadan511@gmail.com';
+  const transporter = getTransporter();
+
+  const formattedBase = data.basePrice && data.basePrice > 0
+    ? `₹${data.basePrice.toLocaleString('en-IN')}`
+    : 'Pending Full Diagnostics';
+
+  const specLabel = `${Number(data.storageGb) >= 1024 ? (Number(data.storageGb) / 1024) + ' TB' : Number(data.storageGb) + ' GB'}${data.ramGb ? ` • ${data.ramGb} GB RAM` : ''}`;
+
+  const cleanPhone = data.customerPhone ? String(data.customerPhone).replace(/[^\d+]/g, '') : '';
+  const isGuest = !data.customerName && !data.customerPhone && !data.customerEmail;
+  const leadTitle = isGuest ? 'Guest Website Visitor' : (data.customerName || 'Registered User');
+
+  const nowIst = new Date().toLocaleString('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  });
+
+  const subject = isGuest
+    ? `🔥 [STEP 2 LEAD] Visitor is evaluating ${data.modelName} (${specLabel})`
+    : `🔥 [STEP 2 LEAD] ${leadTitle} is evaluating ${data.modelName} (${specLabel})`;
+
+  if (!transporter) {
+    console.log(`[Step Lead Mailer] SMTP credentials not set. Lead ready for ${adminRecipient}: ${leadTitle} -> ${data.modelName} (${specLabel})`);
+    return true;
+  }
+
+  const waLeadMsg = encodeURIComponent(
+    `Hello! We saw you were checking the sell value for ${data.modelName} (${specLabel}) on Rephonix. Would you like an instant quote with free doorstep pickup today?`
+  );
+  const waUrl = cleanPhone ? `https://wa.me/91${cleanPhone.replace(/^(\+?91)/, '')}?text=${waLeadMsg}` : '';
+  const callUrl = cleanPhone ? `tel:${cleanPhone}` : '';
+
+  const htmlBody = `
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 650px; margin: 0 auto; background-color: #0f172a; border: 1px solid #334155; border-radius: 12px; overflow: hidden; color: #f8fafc;">
+      <!-- HEADER -->
+      <div style="background: linear-gradient(135deg, #091e3a 0%, #1d4ed8 100%); padding: 26px 24px; text-align: center; border-bottom: 1px solid #1e3a8a;">
+        <span style="display: inline-block; padding: 5px 14px; background-color: #f97316; color: #ffffff; font-weight: 800; font-size: 11px; border-radius: 20px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">🔥 LIVE IN-MARKET LEAD // STEP 2 REACHED</span>
+        <h1 style="color: #ffffff; margin: 0 0 6px 0; font-size: 22px; font-weight: 800; letter-spacing: -0.5px;">Customer Evaluating Device</h1>
+        <p style="color: #bfdbfe; margin: 0; font-size: 13px;">A prospective seller entered Step 2 (Screen & Display Check) on Rephonix</p>
+      </div>
+
+      <!-- BODY -->
+      <div style="padding: 24px; background-color: #0b1329;">
+        <!-- DEVICE SUMMARY CARD -->
+        <div style="margin-bottom: 20px; background-color: #111d38; padding: 18px; border-radius: 10px; border: 1px solid #1e3a8a;">
+          <h3 style="margin: 0 0 12px 0; font-size: 12px; font-weight: 800; color: #60a5fa; text-transform: uppercase; letter-spacing: 0.8px;">📱 Device Model Selected</h3>
+          <table style="width: 100%; border-collapse: collapse; font-size: 14px; color: #e2e8f0;">
+            <tr>
+              <td style="padding: 6px 0; color: #94a3b8; width: 140px;">Model:</td>
+              <td style="padding: 6px 0; font-weight: 800; color: #ffffff; font-size: 17px;">${escapeHtml(data.modelName)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 6px 0; color: #94a3b8;">Specification:</td>
+              <td style="padding: 6px 0; font-weight: 700; color: #38bdf8;">${escapeHtml(specLabel)}</td>
+            </tr>
+            ${data.brandName ? `
+            <tr>
+              <td style="padding: 6px 0; color: #94a3b8;">Brand / Category:</td>
+              <td style="padding: 6px 0; font-weight: 600; color: #cbd5e1;">${escapeHtml(data.brandName)} ${data.deviceType ? `(${escapeHtml(data.deviceType)})` : ''}</td>
+            </tr>
+            ` : ''}
+            <tr style="border-top: 1px solid #1e293b;">
+              <td style="padding: 10px 0 4px 0; color: #94a3b8; font-size: 13px;">Base Trade-in Value:</td>
+              <td style="padding: 10px 0 4px 0; font-weight: 800; color: #10b981; font-size: 20px;">${escapeHtml(formattedBase)}</td>
+            </tr>
+          </table>
+        </div>
+
+        <!-- VISITOR STATUS CARD -->
+        <div style="margin-bottom: 20px; background-color: #111d38; padding: 18px; border-radius: 10px; border: 1px solid #334155;">
+          <h3 style="margin: 0 0 12px 0; font-size: 12px; font-weight: 800; color: ${isGuest ? '#f59e0b' : '#38bdf8'}; text-transform: uppercase; letter-spacing: 0.8px;">
+            ${isGuest ? '👤 Visitor Status: Anonymous / Guest' : '👤 Customer Contact Details'}
+          </h3>
+          <table style="width: 100%; border-collapse: collapse; font-size: 13px; color: #e2e8f0;">
+            <tr>
+              <td style="padding: 6px 0; color: #94a3b8; width: 140px;">User Status:</td>
+              <td style="padding: 6px 0; font-weight: bold; color: ${isGuest ? '#f59e0b' : '#10b981'};">
+                ${isGuest ? 'Guest Visitor (Not logged in yet)' : 'Logged-In Rephonix Account'}
+              </td>
+            </tr>
+            ${data.customerName ? `
+            <tr>
+              <td style="padding: 6px 0; color: #94a3b8;">Customer Name:</td>
+              <td style="padding: 6px 0; font-weight: bold; color: #ffffff;">${escapeHtml(data.customerName)}</td>
+            </tr>
+            ` : ''}
+            ${cleanPhone ? `
+            <tr>
+              <td style="padding: 6px 0; color: #94a3b8;">Phone Number:</td>
+              <td style="padding: 6px 0; font-weight: bold; color: #38bdf8;">
+                <a href="tel:${encodeURIComponent(cleanPhone)}" style="color: #38bdf8; text-decoration: none;">+91 ${escapeHtml(cleanPhone)}</a>
+              </td>
+            </tr>
+            ` : ''}
+            ${data.customerEmail ? `
+            <tr>
+              <td style="padding: 6px 0; color: #94a3b8;">Email Address:</td>
+              <td style="padding: 6px 0; font-weight: bold; color: #cbd5e1;">
+                <a href="mailto:${encodeURIComponent(data.customerEmail)}" style="color: #38bdf8; text-decoration: none;">${escapeHtml(data.customerEmail)}</a>
+              </td>
+            </tr>
+            ` : ''}
+            <tr>
+              <td style="padding: 6px 0; color: #94a3b8;">Diagnostic Stage:</td>
+              <td style="padding: 6px 0; font-weight: 600; color: #93c5fd;">Step 2 // Screen & Display Diagnostics</td>
+            </tr>
+            <tr>
+              <td style="padding: 6px 0; color: #94a3b8;">Time (IST):</td>
+              <td style="padding: 6px 0; color: #94a3b8;">${escapeHtml(nowIst)}</td>
+            </tr>
+            ${data.sourceUrl ? `
+            <tr>
+              <td style="padding: 6px 0; color: #94a3b8;">Page URL:</td>
+              <td style="padding: 6px 0; color: #64748b; font-size: 11px; word-break: break-all;">${escapeHtml(data.sourceUrl)}</td>
+            </tr>
+            ` : ''}
+          </table>
+        </div>
+
+        ${cleanPhone ? `
+        <!-- QUICK CONTACT BUTTONS (IF PHONE AVAILABLE) -->
+        <div style="text-align: center; margin: 20px 0 8px 0;">
+          <a href="${escapeHtml(waUrl)}" style="background-color: #10b981; color: #ffffff; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 13px; display: inline-block; margin-right: 8px;">💬 Chat on WhatsApp</a>
+          <a href="${escapeHtml(callUrl)}" style="background-color: #2563eb; color: #ffffff; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 13px; display: inline-block;">📞 Call Customer</a>
+        </div>
+        ` : `
+        <div style="background-color: #0f172a; padding: 12px 16px; border-radius: 8px; border: 1px dashed #334155; font-size: 12px; color: #94a3b8; text-align: center;">
+          💡 <em>Tip: This visitor is currently actively progressing through the evaluation steps on your website. Once they complete the diagnostics and sign in or book, you'll receive the full booking details.</em>
+        </div>
+        `}
+      </div>
+
+      <!-- FOOTER -->
+      <div style="background-color: #080d1a; padding: 14px; text-align: center; font-size: 11px; color: #64748b; border-top: 1px solid #1e293b;">
+        <p style="margin: 0;">Rephonix Real-time Step Lead Notification &bull; Instant In-Market Alert</p>
+      </div>
+    </div>
+  `;
+
+  try {
+    await transporter.sendMail({
+      from: getFromAddress(),
+      to: adminRecipient,
+      subject,
+      html: htmlBody,
+    });
+
+    console.log(`[Step Lead Mailer] Successfully sent immediate Step 2 lead email to ${adminRecipient} for model "${data.modelName}"!`);
+    return true;
+  } catch (err) {
+    console.error('[Step Lead Mailer] Failed to send step lead alert email via Nodemailer:', err);
+    return false;
+  }
+}
+

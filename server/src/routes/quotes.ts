@@ -12,11 +12,13 @@ import {
 import {
   sendAdminQuoteAlertEmail,
   sendAdminPriceMatchAlertEmail,
+  sendAdminStepLeadEmail,
 } from '../services/bookingMailer.js';
 import { ALLOWED_STORAGE_GB } from '../validation/booking.js';
-import { authLimiter } from '../middleware/rateLimits.js';
+import { authLimiter, leadLimiter } from '../middleware/rateLimits.js';
 
 const router = Router();
+
 
 // POST /api/quotes
 router.post('/', async (req, res) => {
@@ -169,4 +171,54 @@ router.post('/price-match', authLimiter, async (req, res) => {
   }
 });
 
+// POST /api/quotes/step-lead
+router.post('/step-lead', leadLimiter, async (req, res) => {
+  try {
+    const {
+      modelName,
+      brandName,
+      storageGb,
+      ramGb,
+      basePrice,
+      customerName,
+      customerPhone,
+      customerEmail,
+      deviceType,
+      sourceUrl,
+    } = req.body || {};
+
+    if (!modelName || typeof modelName !== 'string') {
+      res.status(400).json({ error: 'ValidationError', message: 'modelName is required.' });
+      return;
+    }
+
+    const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || req.socket.remoteAddress || undefined;
+    const userAgent = req.headers['user-agent'] as string | undefined;
+
+    // Dispatch lead email asynchronously so the client flow remains ultra-snappy
+    sendAdminStepLeadEmail({
+      modelName: String(modelName).trim(),
+      brandName: brandName ? String(brandName).trim() : undefined,
+      storageGb: Number(storageGb) || 128,
+      ramGb: ramGb ? Number(ramGb) : undefined,
+      basePrice: basePrice ? Number(basePrice) : undefined,
+      customerName: customerName ? String(customerName).trim() : undefined,
+      customerPhone: customerPhone ? String(customerPhone).trim() : undefined,
+      customerEmail: customerEmail ? String(customerEmail).trim() : undefined,
+      deviceType: deviceType ? String(deviceType).trim() : undefined,
+      sourceUrl: sourceUrl ? String(sourceUrl).trim() : undefined,
+      ip,
+      userAgent,
+    }).catch((err) => {
+      console.error('[POST /api/quotes/step-lead] Failed to dispatch admin step lead email:', err);
+    });
+
+    res.json({ success: true, message: 'Step lead email notification processed.' });
+  } catch (err) {
+    console.error('POST /api/quotes/step-lead error:', err);
+    res.status(500).json({ error: 'ServerError', message: 'Failed to process step lead.' });
+  }
+});
+
 export default router;
+

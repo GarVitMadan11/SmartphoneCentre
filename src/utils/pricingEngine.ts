@@ -130,7 +130,7 @@ export function determineDeviceSegment(brandId: string, modelName: string, categ
   if (nameLower.includes('ultra') || nameLower.includes('fold') || nameLower.includes('flip')) {
     return 'android_ultra_premium';
   }
-  if (nameLower.includes('s24') || nameLower.includes('s23') || nameLower.includes('x100 pro') || (category === 'flagship' && !nameLower.includes('fe'))) {
+  if (/s2[3-7]/i.test(nameLower) || nameLower.includes('x100 pro') || (category === 'flagship' && !nameLower.includes('fe'))) {
     return 'android_premium_flagship';
   }
   if (nameLower.includes('12r') || nameLower.includes('11r') || nameLower.includes('pro+') || nameLower.includes('v30') || category === 'premium') {
@@ -245,28 +245,27 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
   const isIphone17or18 = nameLower.includes('iphone 17') || nameLower.includes('iphone 18');
   const isIphone15or16 = nameLower.includes('iphone 15') || nameLower.includes('iphone 16');
 
-  // If purchase bill/invoice is missing, manufacturer warranty cannot be validated -> automatically out of warranty
+  // If purchase bill/invoice is missing OR screen is non-original, manufacturer warranty is legally void -> automatically out of warranty
   const hasMissingBill = input.selectedDefects.some(d => d.id === 'defect-acc-nodocs');
-  const effectiveWarrantyAge = hasMissingBill ? 'out_of_warranty' : input.warrantyAge;
-  const effectiveDeviceAge = hasMissingBill ? 'out_of_warranty' : input.deviceAge;
+  const hasNonOriginalScreen = input.selectedDefects.some(d => d.id === 'defect-screen-non-original');
+  const isWarrantyVoided = hasMissingBill || hasNonOriginalScreen;
+  const effectiveWarrantyAge = isWarrantyVoided ? 'out_of_warranty' : input.warrantyAge;
+  const effectiveDeviceAge = isWarrantyVoided ? 'out_of_warranty' : input.deviceAge;
 
   let fAge = 1.00;
   if (isIphone17or18) {
-    // iPhone 17 & 18 Series: 0% under 3m, 15% 3-6m, 20% 6-11m, 25% out of warranty
-    let ageKey: AgeFactorKey = effectiveDeviceAge || 'under_3m';
-    if (!effectiveDeviceAge && effectiveWarrantyAge) {
-      if (effectiveWarrantyAge === 'under_3m') ageKey = 'under_3m';
-      else if (effectiveWarrantyAge === '3_to_6m') ageKey = '3_to_6m';
-      else if (effectiveWarrantyAge === '6_to_11m') ageKey = '6_to_12m';
-      else ageKey = 'out_of_warranty';
+    // iPhone 17 & 18 Series: 0% under 3m, 3% 3-6m, 6% 6-11m, 20% out of warranty
+    // Aligned with Cashify empirical active Tier 1 rate (~20% out of warranty)
+    if (effectiveWarrantyAge === 'out_of_warranty' || effectiveDeviceAge === 'out_of_warranty') {
+      fAge = 1.0 - (config.universalDeductions.outOfWarrantyPercentTier1 ?? 0.20); // 0.80 (-20%)
+    } else if (effectiveDeviceAge === '6_to_12m' || effectiveWarrantyAge === '6_to_11m') {
+      fAge = 0.94; // -6.0% reduction for 6-12 months
+    } else if (effectiveDeviceAge === '3_to_6m' || effectiveWarrantyAge === '3_to_6m') {
+      fAge = 0.97; // -3.0% reduction
+    } else {
+      fAge = 1.00; // 0% under 3 months
     }
-    fAge = config.ageFactors[ageKey] ?? 1.00;
-  } else if (input.releaseYear !== undefined && input.releaseYear < 2024) {
-    // For older / matured models (> 1 year old, e.g. iPhone 15/14/13, Galaxy S23) with explicit release year,
-    // secondary market baseline already reflects an out-of-warranty device.
-    // Matches Cashify empirical evidence (₹0 deduction on out_of_warranty for matured models).
-    fAge = 1.00;
-  } else if (isIphone15or16 || nameLower.includes('s24') || cycleTier === 'TIER_1_WARRANTY_ACTIVE') {
+  } else if (isIphone15or16 || /s2[4-6]/i.test(nameLower) || cycleTier === 'TIER_1_WARRANTY_ACTIVE') {
     // Active current generation models under 1 year old (Tier 1)
     if (effectiveWarrantyAge === 'out_of_warranty' || effectiveDeviceAge === 'out_of_warranty') {
       fAge = 1.0 - (config.universalDeductions.outOfWarrantyPercentTier1 ?? 0.20); // -20.0% Cashify empirical out of warranty
@@ -277,6 +276,11 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
     } else {
       fAge = 1.00; // 0% under 3 months
     }
+  } else if (input.releaseYear !== undefined && input.releaseYear < 2024) {
+    // For older / matured models (> 1 year old, e.g. iPhone 14/13/12, Galaxy S23) with explicit release year,
+    // secondary market baseline already reflects an out-of-warranty device.
+    // Matches Cashify empirical evidence (₹0 deduction on out_of_warranty for matured models).
+    fAge = 1.00;
   } else if (cycleTier === 'TIER_2_MATURED_BASELINE') {
     fAge = 1.00;
   } else {
@@ -442,22 +446,9 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
   // Total Multiplicative Condition Score
   let fCondition = fCosmetic * fDisplay * fFunctional * fBattery;
 
-  // Multi-fault compounding labor risk:
-  // When a device has 3 or more distinct hardware defects, each additional module replacement
-  // incurs cumulative physical disassembly overhead and parts risk (matching Cashify repair labor compounding).
-  const hardwareDefects = input.selectedDefects.filter(d => d.category !== 'accessories');
-  if (hardwareDefects.length >= 4) {
-    const multiFaultLaborRisk = Math.min(0.12, (hardwareDefects.length - 3) * 0.03); // 3% for 4 defects, 6% for 5
-    fCondition *= (1.0 - multiFaultLaborRisk);
-    adjustments.push({
-      id: 'multi-fault-labor-overhead',
-      name: `Multi-Fault Repair Labor Adjustment (${hardwareDefects.length} Hardware Defects)`,
-      category: 'condition',
-      type: 'TYPE_A_PERCENT',
-      rateOrValue: -multiFaultLaborRisk,
-      impactAmount: -Math.round(basePrice * (fCosmetic * fDisplay * fFunctional * fBattery) * multiFaultLaborRisk)
-    });
-  }
+  // Condition score is naturally compounded via multiplicative severity groups:
+  // F_condition = F_cosmetic * F_display * F_functional * F_battery.
+  // Each distinct defect category naturally compounds without artificial overhead penalties (matches Cashify repair economics).
 
   // Calculate Pre-Accessory Valuation
   const preAccessoryValue = Math.round(basePrice * fAge * fMarket * fCondition * fVariant);
@@ -493,6 +484,10 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
   // Group E — Accessories (Box, Charger, Cable, Invoice) -> Fixed Economic Deductions
   let dAccessoriesRaw = 0;
   input.selectedDefects.filter(d => d.category === 'accessories').forEach(defect => {
+    // Missing bill/invoice voids brand warranty in F_age; it does not double-penalize under fixed accessory deductions (matches Cashify doorstep verification)
+    if (defect.id === 'defect-acc-nodocs') {
+      return;
+    }
     const fixedAmount = Math.abs(defect.deductionFixed || Math.round(basePrice * (defect.deductionPercentage || 0)));
     dAccessoriesRaw += fixedAmount;
     adjustments.push({

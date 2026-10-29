@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { Model, Variant, getDefectRulesForCategory, DefectRule, isAppleDevice, isSmartwatchDevice, isTabletDevice, hasSpenSupport, getBiometricType, getDeviceImage } from '../../data/mockDatabase';
 import { calculateValuation } from '../../utils/valuation';
-import type { AgeFactorKey } from '../../data/pricingRulesConfig';
+import { type AgeFactorKey } from '../../data/pricingRulesConfig';
 import { 
   ArrowLeft, Check, ChevronRight, Activity, Sparkles, 
   Smartphone, Box, Zap, ShieldCheck, Printer, Receipt,
@@ -11,7 +11,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { getIllustration } from './Illustrations';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
-import { checkEmail, customerLogin, customerSignup, verifyOtp, requestPasswordResetOtp, resetPasswordWithOtp, sendQuoteAlertApi, sendPriceMatchAlertApi, ApiUser } from '../../utils/api';
+import { checkEmail, customerLogin, customerSignup, verifyOtp, requestPasswordResetOtp, resetPasswordWithOtp, sendQuoteAlertApi, sendPriceMatchAlertApi, sendStepLeadAlertApi, ApiUser } from '../../utils/api';
 import { saveQuote, isQuoteAlreadySaved } from '../../utils/savedQuotes';
 import { TabletDiagnosticFlow } from './TabletDiagnosticFlow';
 import { AnimatedPrice } from './wizard/AnimatedPrice';
@@ -197,17 +197,15 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
   // Obtain rules based on model category, brand and model ID
   const rules = useMemo(() => getDefectRulesForCategory(model.category, model.brandId, model.name, model.id), [model]);
 
-  // Only ask for warranty if model.supportsWarrantyQuestion is true (or fallback for recent devices >= 2023)
-  // Dynamic Cycle Tier: Only ask for warranty if model is Tier 1 (Current/Recent Cycle <= 1 year old)
+  // Dynamic Cycle Tier: Only ask for warranty if model is Tier 1 (Current/Recent Cycle <= 1 year old, releaseYear >= 2024)
   const isEligibleForWarranty = useMemo(() => {
     if (model.supportsWarrantyQuestion !== undefined) {
       return model.supportsWarrantyQuestion;
     }
-    const currentYear = new Date().getFullYear();
     const resolvedYear = model.releaseYear ?? 2024;
-    // Current cycle (<= 1 year old)
-    if (currentYear - resolvedYear > 1) {
-      return false; // Matured baseline - no warranty question
+    // Matured models (< 2024) trade on secondary market rates with zero warranty penalty (matches Cashify)
+    if (resolvedYear < 2024) {
+      return false;
     }
     const nm = model.name.toLowerCase();
     if (model.brandId === 'brand-apple' || nm.includes('iphone') || isApple) {
@@ -228,7 +226,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
       }
       return true;
     }
-    return (currentYear - resolvedYear) <= 1;
+    return true;
   }, [model, isApple]);
 
   const isScreenNonOriginal = useMemo(() => {
@@ -287,6 +285,39 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
       setIcloudChecked(hasIcloudLock ? 'locked' : 'clear');
     }
   }, [step, icloudChecked, selectedDefects]);
+
+  // Dispatch immediate lead alert email to admin as soon as user reaches Step 2 (Screen Diagnostics)
+  const stepTwoLeadSentRef = useRef<string | null>(null);
+  React.useEffect(() => {
+    if (step === 1 && model?.name && variant) {
+      const sessionKey = `stc_step2_lead_${model.id}_${variant.storageGb}_${variant.ramGb || ''}`;
+      if (stepTwoLeadSentRef.current === sessionKey) return;
+      try {
+        if (sessionStorage.getItem(sessionKey)) {
+          stepTwoLeadSentRef.current = sessionKey;
+          return;
+        }
+        sessionStorage.setItem(sessionKey, '1');
+      } catch {}
+      stepTwoLeadSentRef.current = sessionKey;
+
+      sendStepLeadAlertApi({
+        modelName: model.name,
+        brandName: model.brandId ? model.brandId.replace(/^brand-/, '').toUpperCase() : undefined,
+        storageGb: variant.storageGb,
+        ramGb: variant.ramGb,
+        basePrice: variant.basePrice,
+        customerName: currentUser?.name || undefined,
+        customerEmail: currentUser?.email || undefined,
+        customerPhone: currentUser?.phone || undefined,
+        deviceType,
+        sourceUrl: typeof window !== 'undefined' ? window.location.href : undefined,
+      }).catch((err) => {
+        console.warn('[DiagnosticWizard] Step 2 lead alert notification completed/logged:', err?.message || err);
+      });
+    }
+  }, [step, model, variant, currentUser, deviceType]);
+
 
   // Critical-failure confirmation modal
   const [criticalModal, setCriticalModal] = useState<{
@@ -352,11 +383,11 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
       category: model.category,
       releaseYear: model.releaseYear,
       hasSpen,
-      warrantyAge,
-      deviceAge,
+      warrantyAge: isScreenNonOriginal ? 'out_of_warranty' : warrantyAge,
+      deviceAge: isScreenNonOriginal ? 'out_of_warranty' : deviceAge,
       dualEsim: dualEsim === true
     });
-  }, [variant, selectedDefects, model, simType, warrantyAge, deviceAge, dualEsim, hasSpen]);
+  }, [variant, selectedDefects, model, simType, warrantyAge, deviceAge, dualEsim, hasSpen, isScreenNonOriginal]);
 
   // Stable receipt reference code — generated once per wizard session
   const receiptRef = useMemo(() => Math.random().toString(36).substr(2, 6).toUpperCase(), []);
@@ -1104,101 +1135,30 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   <p className="text-xs sm:text-sm text-slate-800 mt-2 font-medium">Examine the front screen glass and the display panel carefully.</p>
                 </div>
 
-                {/* Screen Originality Question */}
-                <div className="mb-6 text-left border border-ice-border/80 bg-slate-50/70 p-4 rounded-2xl">
-                  <h4 className="text-xs font-bold text-ink-navy font-outfit uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
-                    <Smartphone className="w-4 h-4 text-cobalt" />
-                    <span>Is your phone screen original?</span>
-                  </h4>
-                  <p className="text-xs text-ink-muted mb-3.5 font-light leading-snug">
-                    Please confirm whether your display panel is the original factory screen or if it has been replaced.
-                  </p>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div
-                      role="radio"
-                      tabIndex={0}
-                      aria-checked={!selectedDefects.some(d => d.id === 'defect-screen-non-original')}
-                      onKeyDown={e => handleKeyDown(e, () => {
-                        setSelectedDefects(prev => prev.filter(d => d.id !== 'defect-screen-non-original'));
-                      })}
-                      onClick={() => {
-                        setSelectedDefects(prev => prev.filter(d => d.id !== 'defect-screen-non-original'));
-                      }}
-                      className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center gap-3.5 text-left focus:outline-none focus:ring-2 focus:ring-cobalt ${
-                        !selectedDefects.some(d => d.id === 'defect-screen-non-original')
-                          ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/30'
-                          : 'border-ice-border bg-canvas-white hover:border-emerald-500/40 hover:bg-slate-50/50'
-                      }`}
-                    >
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
-                        !selectedDefects.some(d => d.id === 'defect-screen-non-original') ? 'bg-emerald-500 text-white' : 'bg-emerald-500/10 text-emerald-600'
-                      }`}>
-                        <Check className="w-4 h-4 stroke-[2.5]" />
-                      </div>
-                      <div>
-                        <h5 className="font-bold text-xs text-ink-navy">Yes, Original Screen</h5>
-                        <p className="text-[10px] text-ink-muted font-light mt-0.5">Original factory display panel installed</p>
-                      </div>
+                {/* Standard Original Factory Display Assumed Banner */}
+                <div className="mb-6 text-left border border-blue-500/25 bg-gradient-to-r from-blue-50/90 via-indigo-50/60 to-blue-50/80 p-4 rounded-2xl relative overflow-hidden shadow-xs">
+                  <div className="flex items-start gap-3.5">
+                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center flex-shrink-0 text-blue-600 mt-0.5">
+                      <ShieldCheck className="w-5 h-5" />
                     </div>
-
-                    <div
-                      role="radio"
-                      tabIndex={0}
-                      aria-checked={selectedDefects.some(d => d.id === 'defect-screen-non-original')}
-                      onKeyDown={e => handleKeyDown(e, () => {
-                        const isMatured = (model.releaseYear !== undefined && model.releaseYear < 2024) ||
-                          /iphone (14|13|12|11|x|xs|xr|8|7|6|se)/i.test(model.name);
-                        const nonOriginalRate = isMatured
-                          ? (model.category === 'flagship' ? 0.25 : 0.22)
-                          : (model.category === 'flagship' ? 0.40 : model.category === 'premium' ? 0.32 : 0.25);
-                        const nonOriginalDefect = rules.find(r => r.id === 'defect-screen-non-original') || {
-                          id: 'defect-screen-non-original',
-                          category: 'screen' as const,
-                          description: 'Replaced / Non-Original Screen',
-                          subText: 'Display panel has been changed or replaced with a local/aftermarket screen.',
-                          deductionFixed: 0,
-                          deductionPercentage: nonOriginalRate
-                        };
-                        setSelectedDefects(prev => {
-                          if (prev.some(d => d.id === 'defect-screen-non-original')) return prev;
-                          return [...prev, nonOriginalDefect];
-                        });
-                      })}
-                      onClick={() => {
-                        const isMatured = (model.releaseYear !== undefined && model.releaseYear < 2024) ||
-                          /iphone (14|13|12|11|x|xs|xr|8|7|6|se)/i.test(model.name);
-                        const nonOriginalRate = isMatured
-                          ? (model.category === 'flagship' ? 0.25 : 0.22)
-                          : (model.category === 'flagship' ? 0.40 : model.category === 'premium' ? 0.32 : 0.25);
-                        const nonOriginalDefect = rules.find(r => r.id === 'defect-screen-non-original') || {
-                          id: 'defect-screen-non-original',
-                          category: 'screen' as const,
-                          description: 'Replaced / Non-Original Screen',
-                          subText: 'Display panel has been changed or replaced with a local/aftermarket screen.',
-                          deductionFixed: 0,
-                          deductionPercentage: nonOriginalRate
-                        };
-                        setSelectedDefects(prev => {
-                          if (prev.some(d => d.id === 'defect-screen-non-original')) return prev;
-                          return [...prev, nonOriginalDefect];
-                        });
-                      }}
-                      className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center gap-3.5 text-left focus:outline-none focus:ring-2 focus:ring-cobalt ${
-                        selectedDefects.some(d => d.id === 'defect-screen-non-original')
-                          ? 'border-amber-500 bg-amber-500/10 ring-1 ring-amber-500/30'
-                          : 'border-ice-border bg-canvas-white hover:border-amber-500/40 hover:bg-slate-50/50'
-                      }`}
-                    >
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
-                        selectedDefects.some(d => d.id === 'defect-screen-non-original') ? 'bg-amber-500 text-white' : 'bg-amber-500/10 text-amber-600'
-                      }`}>
-                        <X className="w-4 h-4 stroke-[2.5]" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <h4 className="text-xs font-bold text-slate-900 font-outfit uppercase tracking-wider flex items-center gap-1.5">
+                          <span>Standard Original Factory Display Assumed</span>
+                        </h4>
+                        <a
+                          href={`https://wa.me/919034997719?text=${encodeURIComponent(`Hi Rephonix Team! My ${model.name} has a replaced / non-original screen. What is the best quote you can offer?`)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-semibold transition-colors shadow-xs"
+                        >
+                          <MessageSquare className="w-3.5 h-3.5" />
+                          <span>Screen Replaced? Chat with Us</span>
+                        </a>
                       </div>
-                      <div>
-                        <h5 className="font-bold text-xs text-ink-navy">No, Replaced / Local Screen</h5>
-                        <p className="text-[10px] text-ink-muted font-light mt-0.5">Non-original or local display panel (Voids brand warranty)</p>
-                      </div>
+                      <p className="text-xs text-slate-700 mt-1.5 font-normal leading-relaxed">
+                        We calculate this valuation assuming your device is equipped with its original factory display panel. If your screen has been replaced or is a non-original panel, please chat with us for the best custom quote, or our technician will transparently evaluate it during doorstep pickup.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -1568,6 +1528,34 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   <p className="text-xs sm:text-sm text-slate-800 mt-2 font-medium">Verify original company battery condition, cellular/Wi-Fi antennas, and motherboard serial mappings.</p>
                 </div>
 
+                {/* Standard Battery Performance Assumed Banner */}
+                <div className="mb-6 text-left border border-emerald-500/25 bg-gradient-to-r from-emerald-50/90 via-teal-50/60 to-emerald-50/80 p-4 rounded-2xl relative overflow-hidden shadow-xs">
+                  <div className="flex items-start gap-3.5">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center flex-shrink-0 text-emerald-600 mt-0.5">
+                      <Zap className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <h4 className="text-xs font-bold text-slate-900 font-outfit uppercase tracking-wider flex items-center gap-1.5">
+                          <span>Standard Battery Performance Assumed</span>
+                        </h4>
+                        <a
+                          href={`https://wa.me/919034997719?text=${encodeURIComponent(`Hi Rephonix Team! My ${model.name} has a degraded / replaced battery. What is the best quote you can offer?`)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-semibold transition-colors shadow-xs"
+                        >
+                          <MessageSquare className="w-3.5 h-3.5" />
+                          <span>Battery Degraded? Chat with Us</span>
+                        </a>
+                      </div>
+                      <p className="text-xs text-slate-700 mt-1.5 font-normal leading-relaxed">
+                        We calculate this valuation assuming healthy standard battery performance ({isApple ? 'above 85% maximum capacity in iOS Settings' : 'normal full-day battery backup on Android'}). If your battery requires service or has been changed, chat with us for the best quote, or our technician will transparently evaluate it during doorstep pickup.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-6 text-left">
                   {/* Affirmative option */}
                   {(() => {
@@ -1608,12 +1596,12 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         </div>
                         <div className="flex-1 min-w-0">
                           <h4 className="font-bold text-sm text-ink-navy">
-                            {isApple ? 'Battery Health >85% & Connectivity Healthy' : 'Battery & Connectivity Healthy'}
+                            {isApple ? 'Battery Health >85% & Connectivity Healthy' : 'Connectivity & Hardware Healthy'}
                           </h4>
                           <p className="text-xs text-ink-muted mt-1 font-light leading-snug">
                             {isApple 
                               ? 'Battery health is above 85% in Settings, cellular/Wi-Fi antennas are strong, and all hardware checks pass.' 
-                              : 'Battery holds charge normally with good backup, cellular/Wi-Fi antennas are strong, and hardware checks pass.'}
+                              : 'Cellular reception, Wi-Fi, Bluetooth, and biometric sensors are fully functional and pass hardware checks.'}
                           </p>
                         </div>
                         <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 mt-0.5 ${

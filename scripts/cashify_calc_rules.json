@@ -1,0 +1,2978 @@
+{
+  "r_id": "f25bd541-a5b3-4fc1-87b7-3d3a7c1525a5",
+  "cid": 182,
+  "plc": [
+    {
+      "id": 98,
+      "cn": "Does the Mobile Switch on?",
+      "st": "Should be able to make and receive calls",
+      "plo": 1,
+      "plp": [
+        {
+          "pid": 371,
+          "en": "mobileSwitchOn",
+          "pl": "Are you able to make and receive calls?",
+          "ht": "Mobile Switch On",
+          "pt": 406,
+          "sl": false,
+          "vt": "Please Select Gadget Condition",
+          "po": 8,
+          "iu": "/cashify/productLinePart/",
+          "cdn": "https://s3n.cashify.in",
+          "ir": true,
+          "pvr": [
+            {
+              "id": 3009,
+              "vl": "Mobile Switches On",
+              "ht": "",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 1,
+              "pmt": "",
+              "vgn": "Yes",
+              "vght": "",
+              "vghi": ""
+            },
+            {
+              "id": 3010,
+              "vl": "Mobile Doesn't Switch On",
+              "ht": "",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 5,
+              "pmt": "",
+              "vgn": "No",
+              "vght": "",
+              "vghi": ""
+            },
+            {
+              "id": 3011,
+              "vl": "Not \nTested",
+              "ht": "",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 10,
+              "pmt": ""
+            }
+          ],
+          "gl": "Device Details"
+        }
+      ],
+      "pmt": ""
+    },
+    {
+      "id": 99,
+      "cn": "Screen Condition",
+      "st": "Choose appropriate option as per your screen condition",
+      "plo": 2,
+      "plp": [
+        {
+          "pid": 372,
+          "en": "screenTouchCalibration",
+          "pl": "Is your device's touch screen working properly?",
+          "ht": "Check the touch screen functionality of your phone.",
+          "pt": 9,
+          "sl": true,
+          "vt": "Please select touch condition",
+          "po": 1,
+          "iu": "/cashify/productLinePart/",
+          "cdn": "https://s3n.cashify.in",
+          "ir": true,
+          "pvr": [
+            {
+              "id": 3012,
+              "vl": "Touch Working",
+              "ht": "",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 2,
+              "pmt": "",
+              "vgn": "Yes",
+              "vght": "",
+              "vghi": ""
+            },
+            {
+              "id": 3013,
+              "vl": "Touch Faulty",
+              "ht": "",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 5,
+              "pmt": "",
+              "vgn": "No",
+              "vght": "",
+              "vghi": ""
+            }
+          ],
+          "gl": "Screen Condition"
+        },
+        {
+          "pid": 373,
+          "en": "screenDisplaySpot",
+          "pl": "1. Dead Pixels/Spots on Screen",
+          "ht": "Check your device's screen for visible spots",
+          "pt": 1001,
+          "sl": true,
+          "vt": "Please select condition for dead pixels/spots",
+          "po": 2,
+          "iu": "/cashify/productLinePart/",
+          "cdn": "https://s3n.cashify.in",
+          "ir": true,
+          "pvr": [
+            {
+              "id": 3015,
+              "vl": "1-2 minor spots on screen",
+              "ht": "",
+              "in": "6086c2d887d97.png",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 3,
+              "pmt": ""
+            },
+            {
+              "id": 3016,
+              "vl": "3 or more minor spots on screen",
+              "ht": "",
+              "in": "6086c27675f5e.png",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 2,
+              "pmt": ""
+            },
+            {
+              "id": 3017,
+              "vl": "Large/ heavy visible spots on screen",
+              "ht": "",
+              "in": "6086c22f9a02e.png",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 1,
+              "pmt": ""
+            },
+            {
+              "id": 3018,
+              "vl": "No spots on screen",
+              "ht": "",
+              "in": "6086c312dc82b.png",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 4,
+              "pmt": ""
+            }
+          ],
+          "gl": "Screen Condition"
+        },
+        {
+          "pid": 374,
+          "en": "screenDisplayLines",
+          "pl": "2. Visible Lines on Screen",
+          "ht": "Check your device's screen for visible lines",
+          "pt": 1001,
+          "sl": true,
+          "vt": "Please make selection for visible lines on screen",
+          "po": 3,
+          "iu": "/cashify/productLinePart/",
+          "cdn": "https://s3n.cashify.in",
+          "ir": true,
+          "pvr": [
+            {
+              "id": 3020,
+              "vl": "Display faded along edges",
+              "ht": "",
+              "in": "6086c3f480850.png",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 2,
+              "pmt": ""
+            },
+            {
+              "id": 3021,
+              "vl": "Visible line(s) on display",
+              "ht": "",
+              "in": "6086c4256a067.png",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 1,
+              "pmt": ""
+            },
+            {
+              "id": 3022,
+              "vl": "No line(s) on Display",
+              "ht": "",
+              "in": "6086c459b94a7.png",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 3,
+              "pmt": ""
+            }
+          ],
+          "gl": "Screen Condition"
+        },
+        {
+          "pid": 375,
+          "en": "screenPhysicalCondition",
+          "pl": "Screen Physical Condition",
+          "ht": "Check physical condition of Display Screen",
+          "pt": 1001,
+          "sl": true,
+          "vt": "Please select screen physical condition",
+          "po": 4,
+          "iu": "/cashify/productLinePart/",
+          "cdn": "https://s3n.cashify.in",
+          "ir": true,
+          "pvr": [
+            {
+              "id": 3024,
+              "vl": "1-2 scratches on screen",
+              "ht": "",
+              "in": "6086c58aae9db.png",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 4,
+              "pmt": ""
+            },
+            {
+              "id": 3025,
+              "vl": "More than 2 scratches on screen",
+              "ht": "",
+              "in": "6086c54f23857.png",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 3,
+              "pmt": ""
+            },
+            {
+              "id": 3026,
+              "vl": "Screen cracked/ glass broken",
+              "ht": "",
+              "in": "6086c4de32a0b.png",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 1,
+              "pmt": ""
+            },
+            {
+              "id": 3589,
+              "vl": "Chipped/cracked outside display area",
+              "ht": "",
+              "in": "6086c513ed223.png",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 2,
+              "pmt": ""
+            },
+            {
+              "id": 3027,
+              "vl": "No scratches on screen",
+              "ht": "",
+              "in": "6086c5bea46e8.png",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 5,
+              "pmt": ""
+            }
+          ],
+          "gl": "Screen Condition"
+        },
+        {
+          "pid": 575,
+          "en": "screenDiscoloration",
+          "pl": "3. Discoloration on Screen",
+          "ht": "Check your device's screen for discoloration\n",
+          "pt": 1001,
+          "sl": true,
+          "vt": "",
+          "po": 7,
+          "iu": "/cashify/productLinePart/",
+          "cdn": "https://s3n.cashify.in",
+          "ir": true,
+          "pvr": [
+            {
+              "id": 4126,
+              "vl": "Minor Discoloration",
+              "ht": "",
+              "in": "Minor_Discolouration_Icon.png",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 2,
+              "pmt": ""
+            },
+            {
+              "id": 4127,
+              "vl": "Major Discoloration",
+              "ht": "",
+              "in": "Major_Discolouration_Icon.png",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 1,
+              "pmt": ""
+            },
+            {
+              "id": 4129,
+              "vl": "No Discoloration",
+              "ht": "",
+              "in": "No_Discolouration_Icon.png",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 3,
+              "pmt": ""
+            }
+          ],
+          "gl": "Screen Condition"
+        },
+        {
+          "pid": 680,
+          "en": "allianceScreenCondition",
+          "pl": "More than one scratch",
+          "ht": "More than one scratch",
+          "pt": 1002,
+          "sl": true,
+          "vt": "Please Select Screen Condition",
+          "po": 4,
+          "iu": "/cashify/productLinePart/",
+          "cdn": "https://s3n.cashify.in",
+          "ir": false,
+          "pvr": [
+            {
+              "id": 4912,
+              "vl": "Broken/scratch on device screen",
+              "ht": "",
+              "in": "62a31a9a6c17e.png",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 1,
+              "pmt": ""
+            }
+          ],
+          "gl": "Device Details"
+        },
+        {
+          "pid": 681,
+          "en": "allianceScreenExtraCondition",
+          "pl": "Dead Spot/Visible line and Discoloration on screen",
+          "ht": "Dead Spot/Visible line",
+          "pt": 1002,
+          "sl": true,
+          "vt": "Please Select Screen Condition",
+          "po": 2,
+          "iu": "/cashify/productLinePart/",
+          "cdn": "https://s3n.cashify.in",
+          "ir": false,
+          "pvr": [
+            {
+              "id": 4914,
+              "vl": "Dead Spot/Visible line and Discoloration on screen",
+              "ht": "",
+              "in": "62a31ad88c473.png",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 1,
+              "pmt": ""
+            }
+          ],
+          "gl": "Device Details"
+        },
+        {
+          "pid": 911,
+          "en": "subScreen",
+          "pl": "4. Outer Screen Condition",
+          "ht": "Check the smaller screen for discoloration, cracks, lines, spots, or any other visible damage.",
+          "pt": 1001,
+          "sl": true,
+          "vt": "",
+          "po": 8,
+          "iu": "/cashify/productLinePart/",
+          "cdn": "https://s3n.cashify.in",
+          "ir": false,
+          "pvr": [
+            {
+              "id": 6306,
+              "vl": "Outer screen damaged/line/ broken or Spot",
+              "ht": "",
+              "in": "Sub_Screen_damaged.png",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 1,
+              "pmt": ""
+            },
+            {
+              "id": 6305,
+              "vl": "No issue with outer screen",
+              "ht": "",
+              "in": "No_Issue_Sub_Screen.png",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 2,
+              "pmt": ""
+            }
+          ],
+          "gl": "Screen Condition"
+        }
+      ],
+      "pmt": ""
+    },
+    {
+      "id": 100,
+      "cn": "Functional Condition",
+      "st": "Choose appropriate option(s) to get accurate quote",
+      "plo": 3,
+      "plp": [
+        {
+          "pid": 376,
+          "en": "frontCamera",
+          "in": "5a3caef2be5e5.png",
+          "pl": "Front Camera not working",
+          "ht": "Please select if front camera doesn't work properly",
+          "pt": 1003,
+          "sl": true,
+          "vt": "Front camera error",
+          "po": 3,
+          "iu": "/cashify/productLinePart/",
+          "cdn": "https://s3n.cashify.in",
+          "ir": false,
+          "pvr": [
+            {
+              "id": 3029,
+              "vl": "Front \nCamera Working Fine",
+              "ht": "",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 50,
+              "pmt": ""
+            },
+            {
+              "id": 3030,
+              "vl": "Front Camera not working",
+              "ht": "",
+              "in": "5d2440e1d4b31.jpg",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 52,
+              "pmt": ""
+            }
+          ],
+          "gl": "Functional Condition"
+        },
+        {
+          "pid": 377,
+          "en": "backCamera",
+          "in": "5a3cb1f3547d8.png",
+          "pl": "Back camera not working",
+          "ht": "Please select if back camera doesn't work properly",
+          "pt": 1003,
+          "sl": true,
+          "vt": "Back Camera Condition",
+          "po": 5,
+          "iu": "/cashify/productLinePart/",
+          "cdn": "https://s3n.cashify.in",
+          "ir": false,
+          "pvr": [
+            {
+              "id": 3032,
+              "vl": "Back Camera Working Fine",
+              "ht": "",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 56,
+              "pmt": ""
+            },
+            {
+              "id": 3033,
+              "vl": "Back Camera not working",
+              "ht": "",
+              "in": "5d2441a16cca9.jpg",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 60,
+              "pmt": ""
+            }
+          ],
+          "gl": "Functional Condition"
+        },
+        {
+          "pid": 379,
+          "en": "wifi",
+          "in": "5a3cb28a72580.png",
+          "pl": "WiFi not working",
+          "ht": "Please select if mobile is having trouble connecting to Wi-Fi  network",
+          "pt": 1003,
+          "sl": true,
+          "vt": "na",
+          "po": 6,
+          "iu": "/cashify/productLinePart/",
+          "cdn": "https://s3n.cashify.in",
+          "ir": false,
+          "pvr": [
+            {
+              "id": 3038,
+              "vl": "Wifi Working Fine",
+              "ht": "",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 70,
+              "pmt": ""
+            },
+            {
+              "id": 3039,
+              "vl": "WiFi not working",
+              "ht": "",
+              "in": "5d2442d22fa49.jpg",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 72,
+              "pmt": ""
+            },
+            {
+              "id": 3040,
+              "vl": "Not Tested",
+              "ht": "",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 74,
+              "pmt": ""
+            }
+          ],
+          "gl": "Functional Condition"
+        },
+        {
+          "pid": 381,
+          "en": "bluetooth",
+          "pl": "Bluetooth not working",
+          "ht": "Bluetooth",
+          "pt": 1003,
+          "sl": true,
+          "vt": "Bluetooth",
+          "po": 15,
+          "iu": "/cashify/productLinePart/",
+          "cdn": "https://s3n.cashify.in",
+          "ir": false,
+          "pvr": [
+            {
+              "id": 3044,
+              "vl": "Bluetooth Working Fine",
+              "ht": "",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 82,
+              "pmt": ""
+            },
+            {
+              "id": 3045,
+              "vl": "Bluetooth not working",
+              "ht": "",
+              "in": "6023a363ad07d.png",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 84,
+              "pmt": ""
+            },
+            {
+              "id": 3046,
+              "vl": "Not Tested",
+              "ht": "",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 86,
+              "pmt": ""
+            }
+          ],
+          "gl": "Functional Condition"
+        },
+        {
+          "pid": 382,
+          "en": "volumeButton",
+          "in": "5a3cb224d64fd.png",
+          "pl": "Volume button not working",
+          "ht": "Please select if volume button doesn't work properly",
+          "pt": 1003,
+          "sl": true,
+          "vt": "Volume Button",
+          "po": 4,
+          "iu": "/cashify/productLinePart/",
+          "cdn": "https://s3n.cashify.in",
+          "ir": false,
+          "pvr": [
+            {
+              "id": 3047,
+              "vl": "Volume Button Working Fine",
+              "ht": "",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 88,
+              "pmt": ""
+            },
+            {
+              "id": 3048,
+              "vl": "Volume Button not working",
+              "ht": "",
+              "in": "5d2443731c3db.jpg",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 90,
+              "pmt": ""
+            }
+          ],
+          "gl": "Functional Condition"
+        },
+        {
+          "pid": 383,
+          "en": "vibrator",
+          "pl": "Vibrator not working",
+          "ht": "Vibrator",
+          "pt": 1003,
+          "sl": true,
+          "vt": "Vibrator",
+          "po": 7,
+          "iu": "/cashify/productLinePart/",
+          "cdn": "https://s3n.cashify.in",
+          "ir": false,
+          "pvr": [
+            {
+              "id": 3050,
+              "vl": "Vibrator is Working Fine",
+              "ht": "",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 94,
+              "pmt": ""
+            },
+            {
+              "id": 3051,
+              "vl": "Vibrator is not working",
+              "ht": "",
+              "in": "6023a3a6f00e2.png",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 96,
+              "pmt": ""
+            },
+            {
+              "id": 3052,
+              "vl": "Not Tested",
+              "ht": "",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 98,
+              "pmt": ""
+            }
+          ],
+          "gl": "Functional Condition"
+        },
+        {
+          "pid": 384,
+          "en": "battery",
+          "in": "5a3cb4391d9fc.png",
+          "pl": "Battery Faulty",
+          "ht": "Please select if battery has charging issues",
+          "pt": 1003,
+          "sl": true,
+          "vt": "Battery",
+          "po": 20,
+          "iu": "/cashify/productLinePart/",
+          "cdn": "https://s3n.cashify.in",
+          "ir": false,
+          "pvr": [
+            {
+              "id": 3053,
+              "vl": "Battery Is Working Fine",
+              "ht": "",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 100,
+              "pmt": ""
+            },
+            {
+              "id": 5073,
+              "vl": "Battery in Service (Health is less than 80%)",
+              "ht": "",
+              "in": "5d244621b86f8.jpg",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 3,
+              "pmt": ""
+            },
+            {
+              "id": 5910,
+              "vl": "Battery Health 80-85%",
+              "ht": "",
+              "in": "Battery_faulty_or__not_working.jpg",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 4,
+              "pmt": ""
+            },
+            {
+              "id": 3054,
+              "vl": "Battery Faulty",
+              "ht": "",
+              "in": "5d244621b86f8.jpg",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 102,
+              "pmt": ""
+            }
+          ],
+          "gl": "Functional Condition"
+        },
+        {
+          "pid": 385,
+          "en": "speaker",
+          "in": "5a3cb5bbafe4a.png",
+          "pl": "Speaker Faulty",
+          "ht": "Please select if speaker doesn't work properly",
+          "pt": 1003,
+          "sl": true,
+          "vt": "Speaker",
+          "po": 8,
+          "iu": "/cashify/productLinePart/",
+          "cdn": "https://s3n.cashify.in",
+          "ir": false,
+          "pvr": [
+            {
+              "id": 3056,
+              "vl": "No Issue With Speaker",
+              "ht": "",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 106,
+              "pmt": ""
+            },
+            {
+              "id": 3057,
+              "vl": "Speaker Faulty",
+              "ht": "",
+              "in": "5d244674ced62.jpg",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 108,
+              "pmt": ""
+            },
+            {
+              "id": 3058,
+              "vl": "Not Tested",
+              "ht": "",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 110,
+              "pmt": ""
+            }
+          ],
+          "gl": "Functional Condition"
+        },
+        {
+          "pid": 386,
+          "en": "microphone",
+          "pl": "Microphone not working",
+          "ht": "Microphone",
+          "pt": 1003,
+          "sl": true,
+          "vt": "Microphone",
+          "po": 9,
+          "iu": "/cashify/productLinePart/",
+          "cdn": "https://s3n.cashify.in",
+          "ir": false,
+          "pvr": [
+            {
+              "id": 3059,
+              "vl": "Microphone Working Fine",
+              "ht": "",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 112,
+              "pmt": ""
+            },
+            {
+              "id": 3060,
+              "vl": "Microphone not working",
+              "ht": "",
+              "in": "6023a3ef18975.png",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 114,
+              "pmt": ""
+            },
+            {
+              "id": 3061,
+              "vl": "Not Tested",
+              "ht": "",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 116,
+              "pmt": ""
+            }
+          ],
+          "gl": "Functional Condition"
+        },
+        {
+          "pid": 389,
+          "en": "fingerTouchSensor",
+          "in": "5bf516b4d9584.png",
+          "pl": "Finger Touch not working",
+          "ht": "Please select if fingerprint sensor doesn't work properly",
+          "pt": 1003,
+          "sl": true,
+          "vt": "Finger Touch Sensor Condition",
+          "po": 10,
+          "iu": "/cashify/productLinePart/",
+          "cdn": "https://s3n.cashify.in",
+          "ir": false,
+          "pvr": [
+            {
+              "id": 3068,
+              "vl": "Finger Touch Sensor OK",
+              "ht": "",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 146,
+              "pmt": ""
+            },
+            {
+              "id": 3069,
+              "vl": "Finger Touch not working",
+              "ht": "",
+              "in": "5d2444092bce8.jpg",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 148,
+              "pmt": ""
+            },
+            {
+              "id": 3070,
+              "vl": "Finger Touch Sensor not \navailable",
+              "ht": "",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 150,
+              "pmt": ""
+            }
+          ],
+          "gl": "Functional Condition"
+        },
+        {
+          "pid": 390,
+          "en": "proximitySensor",
+          "pl": "Proximity Sensor not working",
+          "ht": "Proximity Sensor Condition",
+          "pt": 1003,
+          "sl": true,
+          "vt": "Proximity Sensor Condition",
+          "po": 16,
+          "iu": "/cashify/productLinePart/",
+          "cdn": "https://s3n.cashify.in",
+          "ir": false,
+          "pvr": [
+            {
+              "id": 3072,
+              "vl": "Proximity Sensor \nWorking Fine",
+              "ht": "",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 152,
+              "pmt": ""
+            },
+            {
+              "id": 3073,
+              "vl": "Proximity Sensor not working",
+              "ht": "",
+              "in": "6023a5bda784d.png",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 154,
+              "pmt": ""
+            },
+            {
+              "id": 3074,
+              "vl": "Not Tested",
+              "ht": "",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 158,
+              "pmt": ""
+            }
+          ],
+          "gl": "Functional Condition"
+        },
+        {
+          "pid": 399,
+          "en": "chargingPort",
+          "in": "5a3cb3cfe8b8e.png",
+          "pl": "Charging Port not working",
+          "ht": "Please select if charging port doesn't work properly",
+          "pt": 1003,
+          "sl": true,
+          "vt": "Charging Port",
+          "po": 14,
+          "iu": "/cashify/productLinePart/",
+          "cdn": "https://s3n.cashify.in",
+          "ir": false,
+          "pvr": [
+            {
+              "id": 3100,
+              "vl": "Charging Port Working Fine",
+              "ht": "",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 210,
+              "pmt": ""
+            },
+            {
+              "id": 3101,
+              "vl": "Charging Port not working",
+              "ht": "",
+              "in": "5d24486306b57.jpg",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 212,
+              "pmt": ""
+            }
+          ],
+          "gl": "Functional Condition"
+        },
+        {
+          "pid": 424,
+          "en": "powerButton",
+          "in": "5a3cb2c72a543.png",
+          "pl": "Power Button not working",
+          "ht": "Please select if power button doesn't work properly",
+          "pt": 1003,
+          "sl": true,
+          "vt": "Power Button",
+          "po": 11,
+          "iu": "/cashify/productLinePart/",
+          "cdn": "https://s3n.cashify.in",
+          "ir": false,
+          "pvr": [
+            {
+              "id": 3138,
+              "vl": "Power Button Working Fine",
+              "ht": "",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 1,
+              "pmt": ""
+            },
+            {
+              "id": 3139,
+              "vl": "Power Button not working",
+              "ht": "",
+              "in": "5d244762197f4.jpg",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 2,
+              "pmt": ""
+            }
+          ],
+          "gl": "Functional Condition"
+        },
+        {
+          "pid": 436,
+          "en": "faceSensor",
+          "in": "5c506465730ab.png",
+          "pl": "Face Sensor not working",
+          "ht": "Please select if face sensor doesn't work properly",
+          "pt": 1003,
+          "sl": true,
+          "vt": "Face Sensor Condition",
+          "po": 12,
+          "iu": "/cashify/productLinePart/",
+          "cdn": "https://s3n.cashify.in",
+          "ir": false,
+          "pvr": [
+            {
+              "id": 3612,
+              "vl": "Face Sensor OK",
+              "ht": "",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 1,
+              "pmt": ""
+            },
+            {
+              "id": 3613,
+              "vl": "Face Sensor not working",
+              "ht": "",
+              "in": "5d2448e9ec9d0.jpg",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 2,
+              "pmt": ""
+            }
+          ],
+          "gl": "Functional Condition"
+        },
+        {
+          "pid": 468,
+          "en": "manualCopyScreen",
+          "pl": "Is your phone's screen original?",
+          "ht": "Pick \"Yes\" if screen was never changed or was changed by Authorized Service Center. Pick \"No\" if screen was changed at local shop.",
+          "pt": 9,
+          "sl": true,
+          "vt": "Please answer the third question!",
+          "po": 1,
+          "iu": "/cashify/productLinePart/",
+          "cdn": "https://s3n.cashify.in",
+          "ir": true,
+          "pvr": [
+            {
+              "id": 3768,
+              "vl": "Yes",
+              "ht": "",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 5,
+              "pmt": ""
+            },
+            {
+              "id": 3767,
+              "vl": "No",
+              "ht": "",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 20,
+              "pmt": ""
+            }
+          ],
+          "gl": "Device Details"
+        },
+        {
+          "pid": 469,
+          "en": "ringSilentKey",
+          "pl": "Silent Button not working",
+          "ht": "Ring Silent Key",
+          "pt": 1003,
+          "sl": true,
+          "vt": "Ring Silent Key",
+          "po": 1,
+          "iu": "/cashify/productLinePart/",
+          "cdn": "https://s3n.cashify.in",
+          "ir": false,
+          "pvr": [
+            {
+              "id": 3776,
+              "vl": "Ring Silent Key Working",
+              "ht": "",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 1,
+              "pmt": ""
+            },
+            {
+              "id": 3777,
+              "vl": "Silent Button not working",
+              "ht": "Ring Silent Key Not Working",
+              "in": "5df0e69829e5c.png",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 2,
+              "pmt": ""
+            }
+          ],
+          "gl": "Functional Condition"
+        },
+        {
+          "pid": 470,
+          "en": "audioIC",
+          "in": "5df9b5a9a557e.png",
+          "pl": "Audio Receiver not working",
+          "ht": "Audio IC",
+          "pt": 1003,
+          "sl": true,
+          "vt": "Audio IC",
+          "po": 2,
+          "iu": "/cashify/productLinePart/",
+          "cdn": "https://s3n.cashify.in",
+          "ir": false,
+          "pvr": [
+            {
+              "id": 3778,
+              "vl": "Audio IC Working",
+              "ht": "",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 1,
+              "pmt": ""
+            },
+            {
+              "id": 3779,
+              "vl": "Audio Receiver not working",
+              "ht": "",
+              "in": "5dfb2607b7889.png",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 5,
+              "pmt": ""
+            }
+          ],
+          "gl": "Functional Condition"
+        },
+        {
+          "pid": 503,
+          "en": "cameraGlassBroken",
+          "in": "5f8685c31c943.png",
+          "pl": "Camera Glass Broken",
+          "ht": "Please select if camera glass broken",
+          "pt": 1003,
+          "sl": true,
+          "vt": "Camera Glass Broken",
+          "po": 19,
+          "iu": "/cashify/productLinePart/",
+          "cdn": "https://s3n.cashify.in",
+          "ir": false,
+          "pvr": [
+            {
+              "id": 3867,
+              "vl": "Camera Glass Broken",
+              "ht": "",
+              "in": "5f868584a1a09.png",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 1,
+              "pmt": ""
+            },
+            {
+              "id": 3868,
+              "vl": "Camera Glass Not Broken",
+              "ht": "",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 5,
+              "pmt": ""
+            }
+          ],
+          "gl": "Functional Condition"
+        },
+        {
+          "pid": 884,
+          "en": "multipleeSIM",
+          "pl": "How many eSIMs does your device support?",
+          "ht": "Please select \"Dual eSIM\" if your device supports dual eSIMs. Otherwise, select \"Single eSIM\".",
+          "pt": 9,
+          "sl": true,
+          "vt": "",
+          "po": 11,
+          "iu": "/cashify/productLinePart/",
+          "cdn": "https://s3n.cashify.in",
+          "ir": true,
+          "pvr": [
+            {
+              "id": 6161,
+              "vl": "Single eSIM",
+              "ht": "",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 1,
+              "pmt": ""
+            },
+            {
+              "id": 6162,
+              "vl": "Dual eSIM",
+              "ht": "",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 2,
+              "pmt": ""
+            }
+          ],
+          "gl": "Device Details"
+        }
+      ]
+    },
+    {
+      "id": 101,
+      "cn": "Do you have the following?",
+      "st": "Select accessories which are available",
+      "plo": 4,
+      "plp": [
+        {
+          "pid": 401,
+          "en": "validBill",
+          "in": "5a3cb566f18b5.png",
+          "pl": "Do you have GST valid bill with the same IMEI?",
+          "ht": "Make sure your bill has device IMEI mentioned on it.",
+          "pt": 9,
+          "sl": true,
+          "vt": "Please answer the Valid Bill!",
+          "po": 6,
+          "iu": "/cashify/productLinePart/",
+          "cdn": "https://s3n.cashify.in",
+          "ir": true,
+          "pvr": [
+            {
+              "id": 3106,
+              "vl": "Yes",
+              "ht": "",
+              "in": "5d244b19aa676.jpg",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 220,
+              "pmt": ""
+            },
+            {
+              "id": 3107,
+              "vl": "No",
+              "ht": "",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 222,
+              "pmt": ""
+            }
+          ],
+          "gl": "Device Details"
+        },
+        {
+          "pid": 402,
+          "en": "charger",
+          "in": "5a3cb493dfbb9.png",
+          "pl": "Original Charger",
+          "ht": "Charger",
+          "pt": 1002,
+          "sl": true,
+          "vt": "Charger",
+          "po": 17,
+          "iu": "/cashify/productLinePart/",
+          "cdn": "https://s3n.cashify.in",
+          "ir": false,
+          "pvr": [
+            {
+              "id": 3109,
+              "vl": "Original Charger of Device",
+              "ht": "",
+              "in": "5d244a8299b93.jpg",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 226,
+              "pmt": ""
+            },
+            {
+              "id": 3110,
+              "vl": "Charger Not Available",
+              "ht": "",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 228,
+              "pmt": ""
+            },
+            {
+              "id": 3111,
+              "vl": "Charger Available But Not \nOriginal",
+              "ht": "",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 230,
+              "pmt": ""
+            }
+          ],
+          "gl": "Do you have the following?"
+        },
+        {
+          "pid": 403,
+          "en": "box",
+          "in": "5a3cb531873f1.png",
+          "pl": "Box",
+          "ht": "Box",
+          "pt": 1002,
+          "sl": true,
+          "vt": "Box",
+          "po": 18,
+          "iu": "/cashify/productLinePart/",
+          "cdn": "https://s3n.cashify.in",
+          "ir": false,
+          "pvr": [
+            {
+              "id": 3113,
+              "vl": "Original Box with same IMEI",
+              "ht": "",
+              "in": "5d244b6c82230.jpg",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 234,
+              "pmt": ""
+            },
+            {
+              "id": 3114,
+              "vl": "Box Not Available",
+              "ht": "",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 236,
+              "pmt": ""
+            }
+          ],
+          "gl": "Do you have the following?"
+        },
+        {
+          "pid": 580,
+          "en": "sPen",
+          "in": "5f8686d3ea4f2.png",
+          "pl": "S Pen",
+          "ht": "Please Select S Pen",
+          "pt": 1002,
+          "sl": true,
+          "vt": "Please Select S Pen",
+          "po": 222,
+          "iu": "/cashify/productLinePart/",
+          "cdn": "https://s3n.cashify.in",
+          "ir": false,
+          "pvr": [
+            {
+              "id": 4166,
+              "vl": "Original S Pen\t",
+              "ht": "",
+              "in": "5f8686a188bdf.png",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 1,
+              "pmt": ""
+            },
+            {
+              "id": 4167,
+              "vl": "S Pen not available",
+              "ht": "",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 5,
+              "pmt": ""
+            }
+          ],
+          "gl": "Do you have the following?"
+        },
+        {
+          "pid": 769,
+          "en": "boxCharger",
+          "pl": "Original Box and Charger both available",
+          "ht": "Please select original box/charger",
+          "pt": 1002,
+          "sl": true,
+          "vt": "Please select original box/charger",
+          "po": 0,
+          "iu": "/cashify/productLinePart/",
+          "cdn": "https://s3n.cashify.in",
+          "ir": false,
+          "pvr": [
+            {
+              "id": 5608,
+              "vl": "Original Box and Charger both available",
+              "ht": "",
+              "in": "79cb64df-49b2.png",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 5,
+              "pmt": ""
+            },
+            {
+              "id": 5609,
+              "vl": "Box and Charger not available",
+              "ht": "",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 10,
+              "pmt": ""
+            }
+          ],
+          "gl": "Do you have the following?"
+        }
+      ],
+      "pmt": ""
+    },
+    {
+      "id": 102,
+      "cn": "Mobile Age",
+      "st": "Valid Bill mandatory for in-warranty device",
+      "plo": 5,
+      "plp": [
+        {
+          "pid": 404,
+          "en": "mobileAge",
+          "pl": "Mobile Age",
+          "ht": "Valid bill mandatory for in-warranty \ndevice",
+          "pt": 404,
+          "sl": true,
+          "vt": "Please select Age of your Device",
+          "po": 20,
+          "iu": "/cashify/productLinePart/",
+          "cdn": "https://s3n.cashify.in",
+          "ir": true,
+          "ed": {
+            "stm": 1792888772195000,
+            "etm": 1793204132195000
+          },
+          "pvr": [
+            {
+              "id": 3116,
+              "vl": "Below 3 months",
+              "ht": "Valid bill mandatory",
+              "in": "61fa150927417.png",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 1,
+              "pmt": ""
+            },
+            {
+              "id": 3117,
+              "vl": "3 months - 6 months",
+              "ht": "Valid bill mandatory",
+              "in": "61fa15559033e.png",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 2,
+              "pmt": ""
+            },
+            {
+              "id": 3118,
+              "vl": "6 months - 11 months",
+              "ht": "Valid bill \nmandatory",
+              "in": "61fa159121a99.png",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 3,
+              "pmt": ""
+            },
+            {
+              "id": 3119,
+              "vl": "Above 11 months",
+              "ht": "",
+              "in": "61fa15cd3ebd2.png",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 4,
+              "pmt": ""
+            }
+          ],
+          "gl": "Mobile Age"
+        }
+      ],
+      "pmt": ""
+    },
+    {
+      "id": 104,
+      "cn": "Is your mobile under warranty?",
+      "st": "Warranty not applicable if device parts replaced/repaired at an unauthorized service center",
+      "plo": 7,
+      "plp": [
+        {
+          "pid": 405,
+          "en": "mobileWarranty",
+          "pl": "Is your device under manufacturer warranty?",
+          "ht": "You can get a better price for your device if it's under manufacturer warranty with a GST valid bill.",
+          "pt": 9,
+          "sl": true,
+          "vt": "Please answer the fourth question!",
+          "po": 7,
+          "iu": "/cashify/productLinePart/",
+          "cdn": "https://s3n.cashify.in",
+          "ir": true,
+          "pvr": [
+            {
+              "id": 3121,
+              "vl": "Mobile Under Warranty",
+              "ht": "",
+              "in": "58c114f66869b.png",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 250,
+              "pmt": "",
+              "vgn": "Yes",
+              "vght": "",
+              "vghi": ""
+            },
+            {
+              "id": 3122,
+              "vl": "Mobile Out of Warranty",
+              "ht": "",
+              "in": "58c1157a0bd23.png",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 252,
+              "pmt": "",
+              "vgn": "No",
+              "vght": "",
+              "vghi": ""
+            }
+          ],
+          "gl": "Device Details"
+        }
+      ],
+      "pmt": ""
+    },
+    {
+      "id": 105,
+      "cn": "Phone's Overall Condition",
+      "st": "Choose appropriate options for phone's physical condition",
+      "plo": 8,
+      "plp": [
+        {
+          "pid": 397,
+          "en": "simWorking",
+          "pl": "Are you able to make and receive calls?",
+          "ht": "Check your device for cellular network connectivity issues.",
+          "pt": 9,
+          "sl": true,
+          "vt": "Please answer the first question!",
+          "po": 5,
+          "iu": "/cashify/productLinePart/",
+          "cdn": "https://s3n.cashify.in",
+          "ir": true,
+          "pvr": [
+            {
+              "id": 3093,
+              "vl": "Able to Make and Receive Calls",
+              "ht": "",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 196,
+              "pmt": "",
+              "vgn": "Yes",
+              "vght": "",
+              "vghi": ""
+            },
+            {
+              "id": 3094,
+              "vl": "Not Able to Make and Receive Calls",
+              "ht": "",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 198,
+              "pmt": "",
+              "vgn": "No",
+              "vght": "",
+              "vghi": ""
+            },
+            {
+              "id": 3095,
+              "vl": "Not Tested",
+              "ht": "",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 200,
+              "pmt": ""
+            }
+          ],
+          "gl": "Device Details"
+        },
+        {
+          "pid": 429,
+          "en": "physicalConditionScratch",
+          "pl": "1. Scratches on device Body",
+          "ht": "Check for scratches on device body",
+          "pt": 1001,
+          "sl": true,
+          "vt": "Please select condition for body scratches",
+          "po": 190,
+          "iu": "/cashify/productLinePart/",
+          "cdn": "https://s3n.cashify.in",
+          "ir": true,
+          "pvr": [
+            {
+              "id": 3572,
+              "vl": "1-2 scratches",
+              "ht": "",
+              "in": "5d24843615469.jpg",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 2,
+              "pmt": ""
+            },
+            {
+              "id": 3573,
+              "vl": "More than 2 scratches",
+              "ht": "",
+              "in": "5d2483d9be1d2.jpg",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 1,
+              "pmt": ""
+            },
+            {
+              "id": 3571,
+              "vl": "No scratches",
+              "ht": "",
+              "in": "5d24878e9cc5f.jpg",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 3,
+              "pmt": ""
+            }
+          ],
+          "gl": "Phone's Overall Condition"
+        },
+        {
+          "pid": 430,
+          "en": "physicalConditionDent",
+          "pl": "2. Dents on device Body",
+          "ht": "Check for dents on device body",
+          "pt": 1001,
+          "sl": true,
+          "vt": "Please select condition for body dents",
+          "po": 192,
+          "iu": "/cashify/productLinePart/",
+          "cdn": "https://s3n.cashify.in",
+          "ir": true,
+          "pvr": [
+            {
+              "id": 3576,
+              "vl": "1-2 minor dents",
+              "ht": "",
+              "in": "6086bdccaae31.png",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 2,
+              "pmt": ""
+            },
+            {
+              "id": 3577,
+              "vl": "Major dent(s) or more than 2",
+              "ht": "",
+              "in": "6086be2c1a754.png",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 1,
+              "pmt": ""
+            },
+            {
+              "id": 3575,
+              "vl": "No dents",
+              "ht": "",
+              "in": "6086bd430c9a2.png",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 3,
+              "pmt": ""
+            }
+          ],
+          "gl": "Phone's Overall Condition"
+        },
+        {
+          "pid": 431,
+          "en": "physicalConditionPanel",
+          "pl": "1. Device Side/Back Panel Condition",
+          "ht": "Check your device's side & back panels",
+          "pt": 1001,
+          "sl": true,
+          "vt": "Please select panel condition",
+          "po": 194,
+          "iu": "/cashify/productLinePart/",
+          "cdn": "https://s3n.cashify.in",
+          "ir": true,
+          "pvr": [
+            {
+              "id": 3579,
+              "vl": "Cracked/ broken side or back panel",
+              "ht": "",
+              "in": "6086c0fbaca9e.png",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 1,
+              "pmt": ""
+            },
+            {
+              "id": 3580,
+              "vl": "Missing side or back panel",
+              "ht": "",
+              "in": "6086c18952a86.png",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 2,
+              "pmt": ""
+            },
+            {
+              "id": 3587,
+              "vl": "No defect on side or back panel",
+              "ht": "",
+              "in": "6086c1bd9581e.png",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 4,
+              "pmt": ""
+            }
+          ],
+          "gl": "Phone's Overall Condition"
+        },
+        {
+          "pid": 432,
+          "en": "physicalConditionBent",
+          "pl": "2. Device Bent/Screen loose",
+          "ht": "Check if your device is bent or display screen is loose",
+          "pt": 1001,
+          "sl": true,
+          "vt": "Please select condition for bent phone",
+          "po": 196,
+          "iu": "/cashify/productLinePart/",
+          "cdn": "https://s3n.cashify.in",
+          "ir": true,
+          "pvr": [
+            {
+              "id": 3582,
+              "vl": "Bent/ curved panel",
+              "ht": "",
+              "in": "5d248a31e359a.jpg",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 1,
+              "pmt": ""
+            },
+            {
+              "id": 3583,
+              "vl": "Loose screen (Gap in screen and body)",
+              "ht": "",
+              "in": "5d248ab00a5a0.jpg",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 3,
+              "pmt": ""
+            },
+            {
+              "id": 3588,
+              "vl": "Phone not bent",
+              "ht": "",
+              "in": "5d248b1920a98.jpg",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 4,
+              "pmt": ""
+            }
+          ],
+          "gl": "Phone's Overall Condition"
+        },
+        {
+          "pid": 679,
+          "en": "allianceBodyCondition",
+          "pl": "Scratch/Dent on phone",
+          "ht": "Scratch/Dent on phone",
+          "pt": 1002,
+          "sl": true,
+          "vt": "Please Select phone body condition",
+          "po": 3,
+          "iu": "/cashify/productLinePart/",
+          "cdn": "https://s3n.cashify.in",
+          "ir": false,
+          "pvr": [
+            {
+              "id": 4910,
+              "vl": "Scratch/Dent on device body",
+              "ht": "",
+              "in": "62a31b0b3b18d.png",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 1,
+              "pmt": ""
+            }
+          ],
+          "gl": "Device Details"
+        },
+        {
+          "pid": 724,
+          "en": "overallScreenBody",
+          "pl": "Overall Screen/Body",
+          "ht": "Select Screen physical condition that are applicable",
+          "pt": 1002,
+          "sl": true,
+          "vt": "Please Select screen/body condition",
+          "po": 9,
+          "iu": "/cashify/productLinePart/",
+          "cdn": "https://s3n.cashify.in",
+          "ir": false,
+          "pvr": [
+            {
+              "id": 5246,
+              "vl": "Device panel missing/broken",
+              "ht": "",
+              "in": "62a87a14b538f.png",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 1,
+              "pmt": ""
+            },
+            {
+              "id": 5247,
+              "vl": "Dead Spot/Visible line",
+              "ht": "",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 5,
+              "pmt": ""
+            },
+            {
+              "id": 5248,
+              "vl": "Scatch/Dent on phone",
+              "ht": "",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 10,
+              "pmt": ""
+            },
+            {
+              "id": 5249,
+              "vl": "Perfect Screen/Body",
+              "ht": "",
+              "in": "62a31bba5a974.png",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 20,
+              "pmt": ""
+            }
+          ],
+          "gl": "Device Details"
+        },
+        {
+          "pid": 910,
+          "en": "hingesCondition",
+          "pl": "3. Hinges Condition",
+          "ht": "Does your device have hinge issues.",
+          "pt": 1001,
+          "sl": true,
+          "vt": "",
+          "po": 197,
+          "iu": "/cashify/productLinePart/",
+          "cdn": "https://s3n.cashify.in",
+          "ir": false,
+          "pvr": [
+            {
+              "id": 6303,
+              "vl": "Hinges stuck/loose or broken",
+              "ht": "",
+              "in": "Hinges_Not_Open_and_Brocken.png",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 1,
+              "pmt": ""
+            },
+            {
+              "id": 6302,
+              "vl": "No hinges issues",
+              "ht": "",
+              "in": "Hinges_Open_Properly.png",
+              "iu": "/cashify/productLinePartVariation/",
+              "p": 2,
+              "pmt": ""
+            }
+          ],
+          "gl": "Phone's Overall Condition"
+        }
+      ],
+      "pmt": ""
+    }
+  ],
+  "cfg": [
+    {
+      "pid": -1,
+      "vid": -1
+    }
+  ],
+  "r": [
+    {
+      "id": 2302,
+      "pr": 1,
+      "img": "",
+      "t": "Tell us more about your device?",
+      "st": "Please answer a few questions about your device.",
+      "ht": "Above 2021",
+      "q": [
+        {
+          "eparam": false,
+          "qid": 372,
+          "ep": false,
+          "p": 20,
+          "vid": [
+            3012,
+            3013
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 397,
+          "ep": false,
+          "p": 10,
+          "vid": [
+            3093,
+            3094
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 401,
+          "ep": false,
+          "p": 40,
+          "vid": [
+            3106,
+            3107
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 405,
+          "ep": false,
+          "p": 30,
+          "vid": [
+            3121,
+            3122
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 468,
+          "ep": false,
+          "p": 25,
+          "vid": [
+            3768,
+            3767
+          ]
+        }
+      ]
+    },
+    {
+      "id": 2303,
+      "pr": 6,
+      "img": "Screenshot_2023-04-20_at_4.15.05_PM.png",
+      "t": "Tell us more about your device?",
+      "st": "Please answer a few questions about your device.",
+      "ht": "Less 2021 but not available",
+      "q": [
+        {
+          "eparam": false,
+          "qid": 372,
+          "ep": false,
+          "p": 11,
+          "vid": [
+            3012,
+            3013
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 397,
+          "ep": false,
+          "p": 10,
+          "vid": [
+            3093,
+            3094
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 468,
+          "ep": false,
+          "p": 12,
+          "vid": [
+            3768,
+            3767
+          ]
+        }
+      ]
+    },
+    {
+      "id": 2305,
+      "pr": 14,
+      "img": "Mobile_Logo_PNG.png",
+      "t": "Select screen/body defects that are applicable!",
+      "st": "Please provide correct details",
+      "ht": "NA",
+      "pmt": "",
+      "q": [
+        {
+          "eparam": false,
+          "qid": 680,
+          "ep": false,
+          "p": 20,
+          "vid": [
+            4912
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 681,
+          "ep": false,
+          "p": 30,
+          "vid": [
+            4914
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 724,
+          "ep": false,
+          "p": 50,
+          "vid": [
+            5246
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 679,
+          "ep": false,
+          "p": 40,
+          "vid": [
+            4910
+          ]
+        }
+      ]
+    },
+    {
+      "id": 2306,
+      "pr": 8,
+      "img": "Mobile_Logo_PNG_9EFnD67.png",
+      "t": "Tell us more about your device screen defects?",
+      "st": "(Because you selected screen defect)",
+      "ht": "more than one scratch",
+      "q": [
+        {
+          "eparam": false,
+          "qid": 375,
+          "ep": false,
+          "p": 10,
+          "vid": [
+            3024,
+            3025,
+            3026,
+            3589
+          ]
+        }
+      ]
+    },
+    {
+      "id": 2308,
+      "pr": 9,
+      "img": "Mobile_Logo_PNG_UBugggs.png",
+      "t": "Tell us more about your device's screen defects?",
+      "st": "(because you selected defective screen)",
+      "ht": "Dead Spot/visible line",
+      "q": [
+        {
+          "eparam": false,
+          "qid": 373,
+          "ep": false,
+          "p": 20,
+          "vid": [
+            3015,
+            3016,
+            3017,
+            3018
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 374,
+          "ep": false,
+          "p": 30,
+          "vid": [
+            3020,
+            3021,
+            3022
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 575,
+          "ep": false,
+          "p": 31,
+          "vid": [
+            4129,
+            4126,
+            4127
+          ]
+        }
+      ]
+    },
+    {
+      "id": 2310,
+      "pr": 11,
+      "img": "Mobile_Logo_PNG.png",
+      "t": "Tell us more about your device's body defects?",
+      "st": "(Because you selected device's body defect)",
+      "ht": "Body defect details",
+      "q": [
+        {
+          "eparam": false,
+          "qid": 430,
+          "ep": false,
+          "p": 20,
+          "vid": [
+            3577,
+            3576,
+            3575
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 429,
+          "ep": false,
+          "p": 10,
+          "vid": [
+            3573,
+            3572,
+            3571
+          ]
+        }
+      ]
+    },
+    {
+      "id": 2312,
+      "pr": 12,
+      "img": "",
+      "t": "Tell us more about your device's body defects?",
+      "st": "(Because you selected device's body defect)",
+      "ht": "Body defect details",
+      "q": [
+        {
+          "eparam": false,
+          "qid": 431,
+          "ep": false,
+          "p": 10,
+          "vid": [
+            3580,
+            3579,
+            3587
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 432,
+          "ep": false,
+          "p": 30,
+          "vid": [
+            3583,
+            3582,
+            3588
+          ]
+        }
+      ]
+    },
+    {
+      "id": 2314,
+      "pr": 16,
+      "img": "",
+      "t": "Functional or Physical Problems",
+      "st": "Please choose appropriate condition to get accurate quote",
+      "ht": "Android",
+      "q": [
+        {
+          "eparam": false,
+          "qid": 376,
+          "ep": false,
+          "p": 10,
+          "vid": [
+            3030
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 377,
+          "ep": false,
+          "p": 20,
+          "vid": [
+            3033
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 379,
+          "ep": false,
+          "p": 50,
+          "vid": [
+            3039
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 381,
+          "ep": false,
+          "p": 155,
+          "vid": [
+            3045
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 382,
+          "ep": false,
+          "p": 30,
+          "vid": [
+            3048
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 383,
+          "ep": false,
+          "p": 160,
+          "vid": [
+            3051
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 384,
+          "ep": false,
+          "p": 60,
+          "vid": [
+            3054
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 385,
+          "ep": false,
+          "p": 70,
+          "vid": [
+            3057
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 386,
+          "ep": false,
+          "p": 165,
+          "vid": [
+            3060
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 389,
+          "ep": false,
+          "p": 40,
+          "vid": [
+            3069
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 390,
+          "ep": false,
+          "p": 200,
+          "vid": [
+            3073
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 399,
+          "ep": false,
+          "p": 90,
+          "vid": [
+            3101
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 424,
+          "ep": false,
+          "p": 80,
+          "vid": [
+            3139
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 436,
+          "ep": false,
+          "p": 100,
+          "vid": [
+            3613
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 470,
+          "ep": false,
+          "p": 102,
+          "vid": [
+            3779
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 503,
+          "ep": false,
+          "p": 150,
+          "vid": [
+            3867
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 469,
+          "ep": false,
+          "p": 101,
+          "vid": [
+            3777
+          ]
+        }
+      ]
+    },
+    {
+      "id": 2315,
+      "pr": 17,
+      "img": "",
+      "t": "Do you have the following?",
+      "st": "Please select accessories which are available",
+      "ht": "With Earphone",
+      "pmt": "",
+      "q": [
+        {
+          "eparam": false,
+          "qid": 403,
+          "ep": false,
+          "p": 30,
+          "vid": [
+            3113
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 402,
+          "ep": false,
+          "p": 20,
+          "vid": [
+            3109
+          ]
+        }
+      ]
+    },
+    {
+      "id": 2317,
+      "pr": 18,
+      "img": "",
+      "t": "Do you have the following?",
+      "st": "Please select accessories which are available",
+      "ht": "Without earphone",
+      "pmt": "",
+      "q": [
+        {
+          "eparam": false,
+          "qid": 402,
+          "ep": false,
+          "p": 15,
+          "vid": [
+            3109
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 403,
+          "ep": false,
+          "p": 20,
+          "vid": [
+            3113
+          ]
+        }
+      ]
+    },
+    {
+      "id": 2318,
+      "pr": 20,
+      "img": "",
+      "t": "Do you have the following?",
+      "st": "Please select accessories which are available",
+      "ht": "With S Pen",
+      "pmt": "",
+      "q": [
+        {
+          "eparam": false,
+          "qid": 403,
+          "ep": false,
+          "p": 30,
+          "vid": [
+            3113
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 580,
+          "ep": false,
+          "p": 50,
+          "vid": [
+            4166
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 402,
+          "ep": false,
+          "p": 20,
+          "vid": [
+            3109
+          ]
+        }
+      ]
+    },
+    {
+      "id": 2319,
+      "pr": 21,
+      "img": "",
+      "t": "Do you have the following?",
+      "st": "Please select accessories which are available",
+      "ht": "with S Pen/Without Charger/Earphone",
+      "pmt": "",
+      "q": [
+        {
+          "eparam": false,
+          "qid": 403,
+          "ep": false,
+          "p": 10,
+          "vid": [
+            3113
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 580,
+          "ep": false,
+          "p": 30,
+          "vid": [
+            4166
+          ]
+        }
+      ]
+    },
+    {
+      "id": 2320,
+      "pr": 19,
+      "img": "",
+      "t": "Do you have the following?",
+      "st": "Please select accessories which are available",
+      "ht": "Without Charger/Earphone",
+      "pmt": "",
+      "q": [
+        {
+          "eparam": false,
+          "qid": 403,
+          "ep": false,
+          "p": 1,
+          "vid": [
+            3113
+          ]
+        }
+      ]
+    },
+    {
+      "id": 2321,
+      "pr": 22,
+      "img": "",
+      "t": "Do you have the following? (Valid bill is mandatory)",
+      "st": "Please select accessories which are available",
+      "ht": "bill is mandatory without earphone",
+      "pmt": "",
+      "q": [
+        {
+          "eparam": false,
+          "qid": 402,
+          "ep": false,
+          "p": 20,
+          "vid": [
+            3109
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 403,
+          "ep": false,
+          "p": 10,
+          "vid": [
+            3113
+          ]
+        }
+      ]
+    },
+    {
+      "id": 2322,
+      "pr": 23,
+      "img": "",
+      "t": "Do you have the following? (Valid bill is mandatory)",
+      "st": "Please select accessories which are available",
+      "ht": "bill is mandatory with earphone",
+      "pmt": "",
+      "q": [
+        {
+          "eparam": false,
+          "qid": 402,
+          "ep": false,
+          "p": 20,
+          "vid": [
+            3109
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 403,
+          "ep": false,
+          "p": 10,
+          "vid": [
+            3113
+          ]
+        }
+      ]
+    },
+    {
+      "id": 2324,
+      "pr": 24,
+      "img": "",
+      "t": "What is your mobile age?",
+      "st": "(Because you chose your device is under brand's warranty)",
+      "ht": "NA",
+      "pmt": "",
+      "q": [
+        {
+          "eparam": false,
+          "qid": 404,
+          "ep": false,
+          "p": 10,
+          "vid": [
+            3116,
+            3117,
+            3118,
+            3119
+          ]
+        }
+      ]
+    },
+    {
+      "id": 2325,
+      "pr": 5,
+      "img": "",
+      "t": "Tell us more about your device?",
+      "st": "Please answer a few questions about your device.",
+      "ht": "Less 2021 but available ",
+      "q": [
+        {
+          "eparam": false,
+          "qid": 372,
+          "ep": false,
+          "p": 5,
+          "vid": [
+            3012,
+            3013
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 397,
+          "ep": false,
+          "p": 1,
+          "vid": [
+            3093,
+            3094
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 405,
+          "ep": false,
+          "p": 15,
+          "vid": [
+            3121,
+            3122
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 468,
+          "ep": false,
+          "p": 10,
+          "vid": [
+            3768,
+            3767
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 401,
+          "ep": false,
+          "p": 20,
+          "vid": [
+            3106,
+            3107
+          ]
+        }
+      ]
+    },
+    {
+      "id": 2925,
+      "pr": 15,
+      "img": "",
+      "t": "Functional or Physical Problems",
+      "st": "Please choose appropriate condition to get accurate quote",
+      "ht": "Apple Only",
+      "q": [
+        {
+          "eparam": false,
+          "qid": 376,
+          "ep": false,
+          "p": 1,
+          "vid": [
+            3030
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 377,
+          "ep": false,
+          "p": 2,
+          "vid": [
+            3033
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 379,
+          "ep": false,
+          "p": 5,
+          "vid": [
+            3039
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 381,
+          "ep": false,
+          "p": 14,
+          "vid": [
+            3045
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 382,
+          "ep": false,
+          "p": 3,
+          "vid": [
+            3048
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 383,
+          "ep": false,
+          "p": 15,
+          "vid": [
+            3051
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 384,
+          "ep": false,
+          "p": 17,
+          "vid": [
+            5073,
+            5910
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 385,
+          "ep": false,
+          "p": 6,
+          "vid": [
+            3057
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 386,
+          "ep": false,
+          "p": 13,
+          "vid": [
+            3060
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 389,
+          "ep": false,
+          "p": 4,
+          "vid": [
+            3069
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 399,
+          "ep": false,
+          "p": 10,
+          "vid": [
+            3101
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 424,
+          "ep": false,
+          "p": 9,
+          "vid": [
+            3139
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 436,
+          "ep": false,
+          "p": 8,
+          "vid": [
+            3613
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 469,
+          "ep": false,
+          "p": 7,
+          "vid": [
+            3777
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 470,
+          "ep": false,
+          "p": 11,
+          "vid": [
+            3779
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 503,
+          "ep": false,
+          "p": 12,
+          "vid": [
+            3867
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 390,
+          "ep": false,
+          "p": 16,
+          "vid": [
+            3073
+          ]
+        }
+      ]
+    },
+    {
+      "id": 3018,
+      "pr": 2,
+      "img": "",
+      "t": "Tell us more about your device?",
+      "st": "Please answer a few questions about your device.",
+      "ht": "Above 2021 but not available",
+      "q": [
+        {
+          "eparam": false,
+          "qid": 372,
+          "ep": false,
+          "p": 2,
+          "vid": [
+            3012,
+            3013
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 397,
+          "ep": false,
+          "p": 1,
+          "vid": [
+            3093,
+            3094
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 468,
+          "ep": false,
+          "p": 3,
+          "vid": [
+            3768,
+            3767
+          ]
+        }
+      ]
+    },
+    {
+      "id": 3019,
+      "pr": 3,
+      "img": "",
+      "t": "Tell us more about your device?",
+      "st": "The better condition your device is in, we will pay you more",
+      "ht": "eSim use iphone 16 pro/Max above",
+      "q": [
+        {
+          "eparam": false,
+          "qid": 372,
+          "ep": false,
+          "p": 2,
+          "vid": [
+            3012,
+            3013
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 397,
+          "ep": false,
+          "p": 1,
+          "vid": [
+            3093,
+            3094
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 401,
+          "ep": false,
+          "p": 5,
+          "vid": [
+            3106,
+            3107
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 405,
+          "ep": false,
+          "p": 4,
+          "vid": [
+            3121,
+            3122
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 468,
+          "ep": false,
+          "p": 3,
+          "vid": [
+            3768,
+            3767
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 884,
+          "ep": false,
+          "p": 6,
+          "vid": [
+            6161,
+            6162
+          ]
+        }
+      ]
+    },
+    {
+      "id": 3027,
+      "pr": 4,
+      "img": "",
+      "t": "Tell us more about your device?",
+      "st": "Please choose appropriate condition to get accurate quote",
+      "ht": "eSim use iphone 14 /15 pro/max",
+      "q": [
+        {
+          "eparam": false,
+          "qid": 372,
+          "ep": false,
+          "p": 2,
+          "vid": [
+            3012,
+            3013
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 397,
+          "ep": false,
+          "p": 1,
+          "vid": [
+            3093,
+            3094
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 401,
+          "ep": false,
+          "p": 5,
+          "vid": [
+            3106,
+            3107
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 405,
+          "ep": false,
+          "p": 4,
+          "vid": [
+            3121,
+            3122
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 468,
+          "ep": false,
+          "p": 3,
+          "vid": [
+            3768,
+            3767
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 884,
+          "ep": false,
+          "p": 6,
+          "vid": [
+            6161,
+            6162
+          ]
+        }
+      ]
+    },
+    {
+      "id": 3215,
+      "pr": 10,
+      "img": "",
+      "t": "Tell us more about your device's screen defects?",
+      "st": "(because you selected defective screen)",
+      "ht": "Dead Spot/visible line/Outer Screen",
+      "q": [
+        {
+          "eparam": false,
+          "qid": 373,
+          "ep": false,
+          "p": 1,
+          "vid": [
+            3017,
+            3016,
+            3015,
+            3018
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 374,
+          "ep": false,
+          "p": 2,
+          "vid": [
+            3020,
+            3021,
+            3022
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 911,
+          "ep": false,
+          "p": 4,
+          "vid": [
+            6305,
+            6306
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 575,
+          "ep": false,
+          "p": 3,
+          "vid": [
+            4127,
+            4126,
+            4129
+          ]
+        }
+      ]
+    },
+    {
+      "id": 3216,
+      "pr": 13,
+      "img": "",
+      "t": "Tell us more about your device's body defects?",
+      "st": "(Because you selected device's body defect)",
+      "ht": "Body defect details with Hinges",
+      "q": [
+        {
+          "eparam": false,
+          "qid": 431,
+          "ep": false,
+          "p": 1,
+          "vid": [
+            3579,
+            3580,
+            3587
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 432,
+          "ep": false,
+          "p": 2,
+          "vid": [
+            3583,
+            3582,
+            3588
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 910,
+          "ep": false,
+          "p": 3,
+          "vid": [
+            6303,
+            6302
+          ]
+        }
+      ]
+    },
+    {
+      "id": 3713,
+      "pr": 7,
+      "img": "",
+      "t": "Tell us more about your device?",
+      "st": "Please choose appropriate condition to get accurate quote",
+      "ht": "E-sim OOW-13-14 Pro",
+      "q": [
+        {
+          "eparam": false,
+          "qid": 372,
+          "ep": false,
+          "p": 2,
+          "vid": [
+            3012,
+            3013
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 397,
+          "ep": false,
+          "p": 1,
+          "vid": [
+            3093,
+            3094
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 468,
+          "ep": false,
+          "p": 3,
+          "vid": [
+            3768,
+            3767
+          ]
+        },
+        {
+          "eparam": false,
+          "qid": 884,
+          "ep": false,
+          "p": 4,
+          "vid": [
+            6161,
+            6162
+          ]
+        }
+      ]
+    }
+  ],
+  "sp": true,
+  "pid": 27683,
+  "plid": 44,
+  "bid": 347,
+  "up": 71040.0,
+  "lo": 37,
+  "sse": 1,
+  "dcr": 3027
+}

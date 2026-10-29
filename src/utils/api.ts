@@ -819,6 +819,28 @@ export function sendPriceMatchAlertApi(payload: PriceMatchAlertPayload): Promise
   });
 }
 
+export interface StepLeadAlertPayload {
+  modelName: string;
+  brandName?: string | null;
+  storageGb: number;
+  ramGb?: number | null;
+  basePrice?: number | null;
+  customerName?: string | null;
+  customerEmail?: string | null;
+  customerPhone?: string | null;
+  deviceType?: string | null;
+  sourceUrl?: string | null;
+}
+
+/** Send immediate Step 2 lead alert email to admin */
+export function sendStepLeadAlertApi(payload: StepLeadAlertPayload): Promise<{ success: boolean }> {
+  return apiFetch<{ success: boolean }>('/quotes/step-lead', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+
 // ── Cashify Price Monitor Admin APIs ──────────────────────────────────────────
 
 export interface CashifySummaryData {

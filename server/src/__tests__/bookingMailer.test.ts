@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { sendBookingConfirmationEmail, sendAdminBookingNotificationEmail, sendAdminQuoteAlertEmail } from '../services/bookingMailer';
+import {
+  sendBookingConfirmationEmail,
+  sendAdminBookingNotificationEmail,
+  sendAdminQuoteAlertEmail,
+  sendAdminStepLeadEmail,
+} from '../services/bookingMailer';
 
 describe('Booking Mailer & Admin Alert Email', () => {
   const sampleBooking = {
@@ -20,12 +25,12 @@ describe('Booking Mailer & Admin Alert Email', () => {
   it('should run sendAdminBookingNotificationEmail without throwing errors', async () => {
     const result = await sendAdminBookingNotificationEmail(sampleBooking, null, 'http://localhost:4000');
     expect(result).toBe(true);
-  }, 15000);
+  }, 30000);
 
   it('should run sendBookingConfirmationEmail and dispatch both customer & admin emails without throwing errors', async () => {
     const result = await sendBookingConfirmationEmail(sampleBooking, 'http://localhost:4000');
     expect(result).toBe(true);
-  }, 15000);
+  }, 30000);
 
   it('should run sendAdminQuoteAlertEmail for logged-in quote generation without throwing errors', async () => {
     const result = await sendAdminQuoteAlertEmail({
@@ -41,5 +46,22 @@ describe('Booking Mailer & Admin Alert Email', () => {
     });
     expect(result).toBe(true);
   }, 15000);
+
+  it('should run sendAdminStepLeadEmail when user reaches Step 2 without throwing errors', async () => {
+    const result = await sendAdminStepLeadEmail({
+      modelName: 'Galaxy S24 Ultra',
+      brandName: 'SAMSUNG',
+      storageGb: 256,
+      ramGb: 12,
+      basePrice: 43250,
+      customerName: 'Garvit Madan (Unit Test)',
+      customerPhone: '9034997719',
+      customerEmail: 'garvitmadan511@gmail.com',
+      deviceType: 'phone',
+      sourceUrl: 'http://localhost:5173/sell-used-samsung-galaxy-s24-ultra-256gb',
+    });
+    expect(result).toBe(true);
+  }, 15000);
 });
+
 

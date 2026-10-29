@@ -994,8 +994,8 @@ export function getDefectRulesForCategory(
       category: 'functionality',
       description: 'Speakers / Microphone Faulty',
       subText: 'Stereo speakers sound distorted/low, or Voice Memos mic test reveals microphone failure.',
-      deductionFixed: 2800,
-      deductionPercentage: 0
+      deductionFixed: category === 'flagship' ? 2200 : category === 'premium' ? 1400 : 800,
+      deductionPercentage: 0.04
     },
     {
       id: 'defect-func-restart',
@@ -1007,24 +1007,25 @@ export function getDefectRulesForCategory(
     },
 
     // ── CONNECTIVITY & VERIFICATION (Step 4) ─────────────────────────────
-    ...(isApple ? [{
-      id: 'defect-battery-80-85' as const,
-      category: 'connectivity' as const,
-      description: 'Original Battery Health 80% – 85%',
-      subText: 'Maximum capacity is between 80% and 85% in Settings → Battery → Battery Health (Original Battery).',
-      deductionFixed: 1000,
-      deductionPercentage: 0.025
-    }] : []),
-    {
-      id: 'defect-battery-low',
-      category: 'connectivity',
-      description: isApple ? 'Battery Health < 80% or Service Alert' : 'Battery Faulty / Rapid Drain / Sudden Shutdown',
-      subText: isApple
-        ? 'Maximum capacity is below 80% or shows "Service / Important Battery Message" in Settings → Battery.'
-        : 'Phone drains very quickly, shuts down unexpectedly under 20%, or battery is swollen.',
-      deductionFixed: category === 'flagship' ? 3500 : 2500,
-      deductionPercentage: category === 'flagship' ? 0.08 : 0.06
-    },
+    // Battery degradation questions exist strictly for Apple devices on secondary markets (Cashify empirical: ₹0 Android battery deduction).
+    ...(isApple ? [
+      {
+        id: 'defect-battery-80-85' as const,
+        category: 'connectivity' as const,
+        description: 'Original Battery Health 80% – 85%',
+        subText: 'Maximum capacity is between 80% and 85% in Settings → Battery → Battery Health (Original Battery).',
+        deductionFixed: 0,
+        deductionPercentage: 0.015 // Calibrated 1.5% to match Cashify empirical drops
+      },
+      {
+        id: 'defect-battery-low' as const,
+        category: 'connectivity' as const,
+        description: 'Battery Health < 80% or Service Alert',
+        subText: 'Maximum capacity is below 80% or shows "Service / Important Battery Message" in Settings → Battery.',
+        deductionFixed: 0,
+        deductionPercentage: 0.045 // Calibrated 4.5% to beat Cashify empirical drops
+      }
+    ] : []),
     {
       id: 'defect-func-network',
       category: 'connectivity',
@@ -1128,7 +1129,7 @@ const catalogCategory = (name: string): DeviceCategory => {
     if (/oppo (a|f|k)|vivo (y|t)|galaxy (a|f|m)|redmi|poco|realme/i.test(name)) return 'midrange';
     return 'flagship';
   }
-  if (/\bplus\b|edge|air|reno|razr|v\d+ elite|\biphone 17\b|\biphone 16\b|\bgalaxy s2\d\b/i.test(name)) return 'premium';
+  if (/\bplus\b|edge|air|reno|razr|v\d+ elite|iphone 17|iphone 16|\bgalaxy s2\d\b/i.test(name)) return 'premium';
   if (/\b(a|y|m|f|g)\d|lite|ce|cmf|\b\d+e\b|\b\d+c\b/i.test(name)) return 'budget';
   return 'midrange';
 };
@@ -1632,11 +1633,11 @@ export function generateVariantsForModel(model: Model): Variant[] {
     'apple-17pm', 'apple-17p', 'apple-17air', 'apple-17',
     'apple-16pm', 'apple-16p',
     'apple-15pm',
-    'sam-s23u', 'sam-s24u', 'sam-s25u',
+    'sam-s23u', 'sam-s24u', 'sam-s25u', 'sam-s26u',
     'sam-fold3', 'sam-fold4', 'sam-fold5', 'sam-fold6'
   ];
 
-  const has1TB = ['apple-17pm', 'apple-17p', 'apple-16pm', 'apple-16p', 'apple-15pm', 'apple-15p', 'sam-s23u', 'sam-s24u', 'sam-s25u', 'sam-fold5', 'sam-fold6'];
+  const has1TB = ['apple-17pm', 'apple-17p', 'apple-16pm', 'apple-16p', 'apple-15pm', 'apple-15p', 'sam-s23u', 'sam-s24u', 'sam-s25u', 'sam-s26u', 'sam-fold5', 'sam-fold6'];
 
   let modelStorages: { gb: number; multiplier: number }[] = [];
 

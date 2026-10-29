@@ -59,23 +59,28 @@ def run_interactive_login():
 
     with sync_playwright() as p:
         # Launch visible browser for user to interact
-        browser = p.chromium.launch(
-            headless=False,
-            args=[
+        brave_path = r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe"
+        launch_kwargs = {
+            "headless": False,
+            "args": [
                 "--disable-blink-features=AutomationControlled",
                 "--start-maximized",
             ]
-        )
+        }
+        if os.path.exists(brave_path):
+            launch_kwargs["executable_path"] = brave_path
+
+        browser = p.chromium.launch(**launch_kwargs)
         context = browser.new_context(
             viewport=None,
-            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
         )
 
         page = context.new_page()
-        page.goto("https://www.cashify.in/sell-old-mobile-phone", timeout=60000)
+        page.goto("https://www.cashify.in", timeout=60000)
 
         print("\n⏳ Waiting for user to complete login on Cashify...")
-        print("   (The script checks every 3 seconds for active auth cookies/tokens)")
+        print("   (The script checks every 2 seconds for active auth cookies/tokens)")
 
         # Poll until user has logged in (cookies or auth indicator present)
         logged_in = False
@@ -89,7 +94,7 @@ def run_interactive_login():
 
                 # Check common auth indicators on Cashify
                 has_auth_cookie = any(
-                    k in cookie_names for k in ["token", "auth_token", "jwt", "user_id", "session_id", "authtoken"]
+                    k in cookie_names for k in ["_cs__user_auth__v1", "token", "auth_token", "jwt", "user_id", "session_id", "authtoken"]
                 )
 
                 # Check if user profile element or name is visible on page

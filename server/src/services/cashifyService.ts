@@ -11,6 +11,7 @@ const BASE_DIR = path.resolve(__dirname, '../../../');
 const DATA_DIR = path.resolve(__dirname, '../../data');
 const SESSION_FILE = path.join(DATA_DIR, 'cashify_session.json');
 const CUSTOM_URLS_FILE = path.join(DATA_DIR, 'cashify_custom_urls.json');
+const FALLBACK_URLS_FILE = path.join(DATA_DIR, 'cashify_fallback_urls.json');
 const AUDIT_RESULTS_FILE = path.join(BASE_DIR, 'scripts/cashify_url_audit_results.json');
 const MONITOR_SCRIPT = path.join(BASE_DIR, 'scripts/cashify_price_monitor.py');
 
@@ -81,6 +82,17 @@ export function saveCustomUrl(modelIdOrVariantKey: string, url: string): void {
   const current = getCustomUrls();
   current[modelIdOrVariantKey] = url.trim();
   fs.writeFileSync(CUSTOM_URLS_FILE, JSON.stringify(current, null, 2), 'utf-8');
+}
+
+export function getFallbackUrls(): Record<string, string> {
+  if (fs.existsSync(FALLBACK_URLS_FILE)) {
+    try {
+      return JSON.parse(fs.readFileSync(FALLBACK_URLS_FILE, 'utf-8'));
+    } catch {
+      return {};
+    }
+  }
+  return {};
 }
 
 export function getAuditResults(): { found: any[]; not_found: any[]; total_models: number; timestamp?: string } {
@@ -176,6 +188,7 @@ export async function getCashifyVariantsList(): Promise<CashifyVariantItem[]> {
   });
 
   const customUrls = getCustomUrls();
+  const fallbackUrls = getFallbackUrls();
   const audit = getAuditResults();
   const auditFoundMap = new Map<string, string>();
   for (const item of audit.found) {
@@ -296,6 +309,22 @@ export async function getCashifyVariantsList(): Promise<CashifyVariantItem[]> {
             baseAuditUrl = baseAuditUrl.slice(0, -3);
           }
           cashifyUrl = baseAuditUrl.includes(varSuffix) ? baseAuditUrl : `${baseAuditUrl}${varSuffix}`;
+          urlStatus = 'FOUND';
+        } else if (
+          fallbackUrls[customKeyVariant] ||
+          fallbackUrls[customKeyLegacy] ||
+          fallbackUrls[customKeyNamed] ||
+          fallbackUrls[`${m.name.toLowerCase()}_${ram}_${storage}`] ||
+          fallbackUrls[m.id] ||
+          fallbackUrls[m.legacyId]
+        ) {
+          cashifyUrl =
+            fallbackUrls[customKeyVariant] ||
+            fallbackUrls[customKeyLegacy] ||
+            fallbackUrls[customKeyNamed] ||
+            fallbackUrls[`${m.name.toLowerCase()}_${ram}_${storage}`] ||
+            fallbackUrls[m.id] ||
+            fallbackUrls[m.legacyId];
           urlStatus = 'FOUND';
         }
 

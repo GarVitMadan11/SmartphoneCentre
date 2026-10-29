@@ -33,6 +33,7 @@ from psycopg2.extras import RealDictCursor
 BASE_DIR = Path(__file__).resolve().parent.parent
 SESSION_FILE = BASE_DIR / "server" / "data" / "cashify_session.json"
 OVERRIDES_FILE = BASE_DIR / "server" / "data" / "cashify_custom_urls.json"
+FALLBACK_FILE = BASE_DIR / "server" / "data" / "cashify_fallback_urls.json"
 AUDIT_CACHE_FILE = BASE_DIR / "scripts" / "cashify_url_audit_results.json"
 REPORT_FILE = BASE_DIR / "scripts" / "cashify_scan_latest_report.json"
 ENV_FILE = BASE_DIR / "server" / ".env"
@@ -208,6 +209,20 @@ def get_best_variant_url(base_url: str, brand: str, model: str, ram: int, storag
         return custom_overrides[var_named_key]
     if model_id in custom_overrides:
         return custom_overrides[model_id]
+
+    # 1b. Check fallback options file
+    if FALLBACK_FILE.exists():
+        try:
+            with open(FALLBACK_FILE, "r", encoding="utf-8") as ff:
+                fallbacks = json.load(ff)
+                if var_key in fallbacks:
+                    return fallbacks[var_key]
+                if var_named_key in fallbacks:
+                    return fallbacks[var_named_key]
+                if f"{model.lower()}_{ram}_{storage}" in fallbacks:
+                    return fallbacks[f"{model.lower()}_{ram}_{storage}"]
+        except Exception:
+            pass
 
     storage_slug = f"{storage // 1024}-tb" if storage >= 1024 else f"{storage}-gb"
     candidates = []
