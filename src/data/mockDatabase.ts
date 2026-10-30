@@ -2,6 +2,8 @@ import phoneImages from './phoneImages.json';
 import actualPrices from './actualPrices.json';
 import activeModelIds from './activeModelIds.json';
 import fallbackModelsData from './fallbackModels.json';
+import screenDeductionsMap from './screenDeductionsMap.json';
+import warrantyDeductionsMap from './warrantyDeductionsMap.json';
 
 const ACTIVE_MODEL_ID_SET = new Set(activeModelIds as string[]);
 
@@ -11,6 +13,37 @@ export function isModelActiveInCatalog(m: { id?: string; legacyId?: string; name
   const clean = (m.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
   if (ACTIVE_MODEL_ID_SET.has(clean)) return true;
   return false;
+}
+
+export function getModelScreenDeduction(model?: { name?: string; basePrice128GB?: number; screenDeduction?: number } | null): number {
+  if (!model) return 3000;
+  if (typeof model.screenDeduction === 'number' && model.screenDeduction > 0) {
+    return model.screenDeduction;
+  }
+  const name = model.name?.trim() || '';
+  if (name && (screenDeductionsMap as Record<string, number>)[name] !== undefined) {
+    return (screenDeductionsMap as Record<string, number>)[name];
+  }
+  // Fallback: ~20% of base anchor price, bounded between ₹1,500 and ₹18,000
+  const base = model.basePrice128GB || 25000;
+  return Math.min(18000, Math.max(1500, Math.round(base * 0.20)));
+}
+
+export function getModelWarrantyDeductionPercentage(model?: { name?: string; releaseYear?: number; warrantyDeductionPercentage?: number } | null): number {
+  if (!model) return 20;
+  if (typeof model.warrantyDeductionPercentage === 'number') {
+    return model.warrantyDeductionPercentage;
+  }
+  const name = model.name?.trim() || '';
+  if (name && (warrantyDeductionsMap as Record<string, number>)[name] !== undefined) {
+    return (warrantyDeductionsMap as Record<string, number>)[name];
+  }
+  // Matured models (> 1-2 years old, e.g. releaseYear < 2023) don't have active warranty penalty
+  if (model.releaseYear !== undefined && model.releaseYear < 2023) {
+    return 0;
+  }
+  // Fallback for newer models
+  return 22.0;
 }
 
 
@@ -39,6 +72,8 @@ export interface Model {
   variantPrices?: Record<string, number>; // key: "ramGb_storageGb" e.g. "8_256" → 84900
   hidden?: boolean;                       // If true, hidden from frontend (disable selling)
   supportsWarrantyQuestion?: boolean;     // If true, diagnostic wizard asks warranty & SIM questions
+  screenDeduction?: number;               // Model-specific deduction in INR when non-original/replaced screen
+  warrantyDeductionPercentage?: number;   // Model-specific deduction percentage when out of warranty (e.g. 25.5 for 25.5%)
 }
 
 export interface Variant {
@@ -883,6 +918,14 @@ export function getDefectRulesForCategory(
         ? 'True Tone toggle missing in Display settings — indicates non-original screen replacement.'
         : 'Screen color profile sync or auto-brightness calibration failing — indicates non-original / duplicate display.',
       deductionFixed: category === 'flagship' ? 2500 : 1500,
+      deductionPercentage: 0
+    },
+    {
+      id: 'defect-screen-non-original',
+      category: 'screen',
+      description: 'Screen Replaced / Non-Original Display',
+      subText: 'Screen has been replaced with a duplicate or third-party display panel (voids brand warranty).',
+      deductionFixed: 0,
       deductionPercentage: 0
     },
     ...(isFoldable ? [{

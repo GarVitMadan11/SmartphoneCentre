@@ -91,6 +91,18 @@ router.get('/', async (req, res) => {
         ? Boolean((parsedVariantPrices as any)._supportsWarrantyQuestion)
         : (m.releaseYear >= 2023);
 
+      const screenDeduction = (parsedVariantPrices as any)?._screenDeduction !== undefined
+        ? Number((parsedVariantPrices as any)._screenDeduction)
+        : (m as any).screenDeduction !== undefined
+        ? Number((m as any).screenDeduction)
+        : undefined;
+
+      const warrantyDeductionPercentage = (parsedVariantPrices as any)?._warrantyDeductionPercentage !== undefined
+        ? Number((parsedVariantPrices as any)._warrantyDeductionPercentage)
+        : (m as any).warrantyDeductionPercentage !== undefined
+        ? Number((m as any).warrantyDeductionPercentage)
+        : undefined;
+
       return {
         id: m.legacyId,
         legacyId: m.legacyId,
@@ -108,6 +120,8 @@ router.get('/', async (req, res) => {
         variantPrices: parsedVariantPrices,
         hidden: Boolean((m as any).hidden ?? false),
         supportsWarrantyQuestion,
+        screenDeduction,
+        warrantyDeductionPercentage,
       };
     });
 
@@ -124,7 +138,7 @@ router.get('/', async (req, res) => {
 router.post('/', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITOR']), async (req, res) => {
   try {
     const { legacyId, brandId, name, category, deviceType, releaseYear, basePrice128GB,
-            series, imageUrl, supportedStorageGb, supportedRamGb, variantPrices, hidden, supportsWarrantyQuestion } = req.body;
+            series, imageUrl, supportedStorageGb, supportedRamGb, variantPrices, hidden, supportsWarrantyQuestion, screenDeduction, warrantyDeductionPercentage } = req.body;
     if (!legacyId || !brandId || !name || !category || !releaseYear || !basePrice128GB) {
       res.status(400).json({ error: 'BadRequest', message: 'Missing required fields' });
       return;
@@ -143,6 +157,12 @@ router.post('/', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITOR']), asyn
     const pricesObj = (variantPrices && typeof variantPrices === 'object' && !Array.isArray(variantPrices)) ? { ...variantPrices } : {};
     if (supportsWarrantyQuestion !== undefined) {
       (pricesObj as any)._supportsWarrantyQuestion = Boolean(supportsWarrantyQuestion);
+    }
+    if (screenDeduction !== undefined && Number.isFinite(Number(screenDeduction))) {
+      (pricesObj as any)._screenDeduction = Number(screenDeduction);
+    }
+    if (warrantyDeductionPercentage !== undefined && Number.isFinite(Number(warrantyDeductionPercentage))) {
+      (pricesObj as any)._warrantyDeductionPercentage = Number(warrantyDeductionPercentage);
     }
     // Auto-compute basePrice128GB from minimum variant price if prices are set
     const allPrices = Object.values(pricesObj).filter((v): v is number => typeof v === 'number' && v > 0);
@@ -179,6 +199,12 @@ router.post('/', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITOR']), asyn
     const resSupportsWarrantyQuestion = createdVP._supportsWarrantyQuestion !== undefined
       ? Boolean(createdVP._supportsWarrantyQuestion)
       : (model.releaseYear >= 2023);
+    const resScreenDeduction = createdVP._screenDeduction !== undefined
+      ? Number(createdVP._screenDeduction)
+      : undefined;
+    const resWarrantyDeductionPercentage = createdVP._warrantyDeductionPercentage !== undefined
+      ? Number(createdVP._warrantyDeductionPercentage)
+      : undefined;
 
     invalidateModelsCache();
 
@@ -189,6 +215,8 @@ router.post('/', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITOR']), asyn
       supportedRamGb: JSON.parse((model as any).supportedRamGb ?? '[0]'),
       variantPrices: createdVP,
       supportsWarrantyQuestion: resSupportsWarrantyQuestion,
+      screenDeduction: resScreenDeduction,
+      warrantyDeductionPercentage: resWarrantyDeductionPercentage,
     });
   } catch (err) {
     console.error('POST /api/models error:', err);
@@ -353,6 +381,26 @@ router.patch('/:legacyId', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITO
       (data as any).variantPrices = JSON.stringify(vp);
     }
 
+    if (updates.screenDeduction !== undefined) {
+      let vp: Record<string, any> = {};
+      try {
+        const rawVP = (data as any).variantPrices || existing?.variantPrices || '{}';
+        vp = typeof rawVP === 'string' ? JSON.parse(rawVP) : { ...rawVP };
+      } catch { vp = {}; }
+      vp._screenDeduction = Number(updates.screenDeduction);
+      (data as any).variantPrices = JSON.stringify(vp);
+    }
+
+    if (updates.warrantyDeductionPercentage !== undefined) {
+      let vp: Record<string, any> = {};
+      try {
+        const rawVP = (data as any).variantPrices || existing?.variantPrices || '{}';
+        vp = typeof rawVP === 'string' ? JSON.parse(rawVP) : { ...rawVP };
+      } catch { vp = {}; }
+      vp._warrantyDeductionPercentage = Number(updates.warrantyDeductionPercentage);
+      (data as any).variantPrices = JSON.stringify(vp);
+    }
+
     if (Object.keys(data).length === 0) {
       res.status(400).json({ error: 'BadRequest', message: 'No valid model fields supplied.' });
       return;
@@ -407,6 +455,8 @@ router.patch('/:legacyId', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITO
         supportsWarrantyQuestion: createdVP._supportsWarrantyQuestion !== undefined
           ? Boolean(createdVP._supportsWarrantyQuestion)
           : (created.releaseYear >= 2023),
+        screenDeduction: createdVP._screenDeduction !== undefined ? Number(createdVP._screenDeduction) : undefined,
+        warrantyDeductionPercentage: createdVP._warrantyDeductionPercentage !== undefined ? Number(createdVP._warrantyDeductionPercentage) : undefined,
       });
       return;
     }
@@ -437,6 +487,8 @@ router.patch('/:legacyId', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITO
       supportsWarrantyQuestion: updatedVP._supportsWarrantyQuestion !== undefined
         ? Boolean(updatedVP._supportsWarrantyQuestion)
         : (model.releaseYear >= 2023),
+      screenDeduction: updatedVP._screenDeduction !== undefined ? Number(updatedVP._screenDeduction) : undefined,
+      warrantyDeductionPercentage: updatedVP._warrantyDeductionPercentage !== undefined ? Number(updatedVP._warrantyDeductionPercentage) : undefined,
     });
   } catch (err) {
     console.error('PATCH /api/models error:', err);

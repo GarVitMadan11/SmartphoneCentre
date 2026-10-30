@@ -285,6 +285,9 @@ export interface ApiModel {
   supportedRamGb?: number[];              // [0] = Apple-style (no RAM variants)
   variantPrices?: Record<string, number>; // { "ramGb_storageGb": priceINR }
   hidden?: boolean;
+  supportsWarrantyQuestion?: boolean;
+  screenDeduction?: number;
+  warrantyDeductionPercentage?: number;
 }
 
 const MODEL_CACHE_KEY = 'stc_cached_models_v2';
@@ -347,6 +350,8 @@ export async function createModel(data: {
   variantPrices?: Record<string, number>;
   hidden?: boolean;
   supportsWarrantyQuestion?: boolean;
+  screenDeduction?: number;
+  warrantyDeductionPercentage?: number;
 }): Promise<ApiModel> {
   const res = await apiFetch<ApiModel>('/models', { method: 'POST', body: JSON.stringify(data) }, true);
   try {
@@ -874,6 +879,7 @@ export interface CashifyVariantItem {
   modelName: string;
   brandName: string;
   brandId: string;
+  series?: string;
   releaseYear: number;
   ramGb: number;
   storageGb: number;

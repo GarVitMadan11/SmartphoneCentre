@@ -1,4 +1,5 @@
 import type { Variant, DefectRule } from '../data/mockDatabase.ts';
+import { getModelScreenDeduction, getModelWarrantyDeductionPercentage } from '../data/mockDatabase.ts';
 import { 
   DeviceSegment, 
   DEFAULT_PRICING_RULES_CONFIG, 
@@ -9,9 +10,9 @@ import {
   resolveDeviceCycleTier
 } from '../data/pricingRulesConfig.ts';
 
-export function isAppleBrand(brandId: string, modelName: string): boolean {
-  if (brandId === 'brand-apple' || brandId.toLowerCase().includes('apple')) return true;
-  if (modelName.toLowerCase().includes('iphone') || modelName.toLowerCase().includes('apple')) return true;
+export function isAppleBrand(brandId?: string, modelName?: string): boolean {
+  if (brandId && (brandId === 'brand-apple' || brandId.toLowerCase().includes('apple'))) return true;
+  if (modelName && (modelName.toLowerCase().includes('iphone') || modelName.toLowerCase().includes('apple'))) return true;
   return false;
 }
 
@@ -33,6 +34,10 @@ export interface PricingInput {
   configOverride?: Partial<PricingRulesConfig>;
   /** Dual eSIM question answer — only relevant for Apple Pro/Pro Max iPhone 14+ */
   dualEsim?: boolean;
+  /** Explicit screen deduction amount configured in Admin Panel (or empirical CSV fallback) */
+  screenDeduction?: number;
+  /** Explicit warranty deduction percentage configured in Admin Panel (or empirical CSV fallback) */
+  warrantyDeductionPercentage?: number;
 }
 
 export interface AdjustmentDetail {
@@ -252,34 +257,35 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
   const effectiveWarrantyAge = isWarrantyVoided ? 'out_of_warranty' : input.warrantyAge;
   const effectiveDeviceAge = isWarrantyVoided ? 'out_of_warranty' : input.deviceAge;
 
+  // 1. Age Factor F_age & Warranty Assessment
+  const modelWarrantyDeductionPct = input.warrantyDeductionPercentage !== undefined
+    ? input.warrantyDeductionPercentage
+    : getModelWarrantyDeductionPercentage({
+        name: input.modelName,
+        releaseYear: input.releaseYear,
+        warrantyDeductionPercentage: input.warrantyDeductionPercentage
+      });
+
   let fAge = 1.00;
-  if (isIphone17or18) {
-    // iPhone 17 & 18 Series: 0% under 3m, 3% 3-6m, 6% 6-11m, 20% out of warranty
-    // Aligned with Cashify empirical active Tier 1 rate (~20% out of warranty)
+  if (modelWarrantyDeductionPct > 0 || isIphone17or18 || isIphone15or16 || /s2[4-6]/i.test(nameLower) || cycleTier === 'TIER_1_WARRANTY_ACTIVE') {
+    // Model has active warranty deduction configured (or active Tier 1 series)
+    const outOfWarrantyPenalty = modelWarrantyDeductionPct > 0
+      ? modelWarrantyDeductionPct / 100
+      : (config.universalDeductions.outOfWarrantyPercentTier1 ?? 0.20);
+
     if (effectiveWarrantyAge === 'out_of_warranty' || effectiveDeviceAge === 'out_of_warranty') {
-      fAge = 1.0 - (config.universalDeductions.outOfWarrantyPercentTier1 ?? 0.20); // 0.80 (-20%)
+      fAge = Math.max(0, 1.0 - outOfWarrantyPenalty);
     } else if (effectiveDeviceAge === '6_to_12m' || effectiveWarrantyAge === '6_to_11m') {
-      fAge = 0.94; // -6.0% reduction for 6-12 months
+      fAge = Math.max(0, 1.0 - (outOfWarrantyPenalty * 0.30)); // Staged reduction for 6-12 months
     } else if (effectiveDeviceAge === '3_to_6m' || effectiveWarrantyAge === '3_to_6m') {
-      fAge = 0.97; // -3.0% reduction
+      fAge = Math.max(0, 1.0 - (outOfWarrantyPenalty * 0.15)); // Staged reduction for 3-6 months
     } else {
       fAge = 1.00; // 0% under 3 months
     }
-  } else if (isIphone15or16 || /s2[4-6]/i.test(nameLower) || cycleTier === 'TIER_1_WARRANTY_ACTIVE') {
-    // Active current generation models under 1 year old (Tier 1)
-    if (effectiveWarrantyAge === 'out_of_warranty' || effectiveDeviceAge === 'out_of_warranty') {
-      fAge = 1.0 - (config.universalDeductions.outOfWarrantyPercentTier1 ?? 0.20); // -20.0% Cashify empirical out of warranty
-    } else if (effectiveDeviceAge === '6_to_12m' || effectiveWarrantyAge === '6_to_11m') {
-      fAge = 0.94; // -6.0% reduction for 6-12 months
-    } else if (effectiveDeviceAge === '3_to_6m' || effectiveWarrantyAge === '3_to_6m') {
-      fAge = 0.97; // -3.0% reduction
-    } else {
-      fAge = 1.00; // 0% under 3 months
-    }
-  } else if (input.releaseYear !== undefined && input.releaseYear < 2024) {
-    // For older / matured models (> 1 year old, e.g. iPhone 14/13/12, Galaxy S23) with explicit release year,
+  } else if ((input.releaseYear !== undefined && input.releaseYear < 2024) || modelWarrantyDeductionPct === 0) {
+    // For older / matured models (> 1-2 years old, e.g. iPhone 14/13/12, Galaxy S23) or models with 0% warranty deduction,
     // secondary market baseline already reflects an out-of-warranty device.
-    // Matches Cashify empirical evidence (₹0 deduction on out_of_warranty for matured models).
+    // Matches Cashify empirical evidence (0% deduction on out_of_warranty for matured models).
     fAge = 1.00;
   } else if (cycleTier === 'TIER_2_MATURED_BASELINE') {
     fAge = 1.00;
@@ -370,8 +376,8 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
   let fDisplay = 1.00;
 
   if (isTablet) {
-    // For tablets: separate into Physical Damage (scratches/cracks/spots/discoloration) and Touch failure
-    const physicalDefects = displayDefects.filter(d => d.id !== 'defect-screen-touch');
+    // Tablet logic
+    const physicalDefects = displayDefects.filter(d => d.id !== 'defect-screen-touch' && d.id !== 'defect-screen-non-original');
     let fPhysical = 1.00;
     physicalDefects.forEach(defect => {
       let penalty = defect.deductionPercentage || 0;
@@ -393,6 +399,9 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
     );
 
     displayDefects.forEach(defect => {
+      if (defect.id === 'defect-screen-non-original') {
+        return; // Handled separately as model-specific screenDeductionAmount fixed adjustment
+      }
       if (hasScreenPanelReplacement && defect.id === 'defect-screen-scratches') {
         return; // Waived: replacing entire display panel includes new scratch-free glass
       }
@@ -519,8 +528,26 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
     });
   }
 
-  // Calculate Pre-Vendor Adjusted Benchmark (includes dual eSIM & single SIM deduction)
-  let adjustedBenchmark = preAccessoryValue - dualEsimDeduction - singleSimDeduction - dAccessoriesCapped;
+  // Screen Deduction for Non-Original / Replaced Display
+  let screenDeductionAmount = 0;
+  if (hasNonOriginalScreen) {
+    screenDeductionAmount = input.screenDeduction ?? getModelScreenDeduction({
+      name: input.modelName,
+      basePrice128GB: basePrice,
+      screenDeduction: input.screenDeduction
+    });
+    adjustments.push({
+      id: 'defect-screen-non-original',
+      name: 'Non-Original / Replaced Display Deduction',
+      category: 'screen',
+      type: 'TYPE_B_FIXED',
+      rateOrValue: -screenDeductionAmount,
+      impactAmount: -screenDeductionAmount
+    });
+  }
+
+  // Calculate Pre-Vendor Adjusted Benchmark (includes screen deduction, dual eSIM & single SIM deduction)
+  let adjustedBenchmark = preAccessoryValue - screenDeductionAmount - dualEsimDeduction - singleSimDeduction - dAccessoriesCapped;
 
   // Minimum Valuation / Salvage Floor Check (Empirically beats competitor scrap floor of ₹1,180)
   const hasTouchDefect = input.selectedDefects.some(d => d.id === 'defect-screen-touch');
@@ -557,7 +584,7 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
   const isSpecialPartsCategory = fCondition < 0.55;
 
   const totalConditionDeductions = Math.round(basePrice * (1.0 - fCondition));
-  const totalFixedAdjustments = -(dAccessoriesCapped + dualEsimDeduction + singleSimDeduction);
+  const totalFixedAdjustments = -(dAccessoriesCapped + screenDeductionAmount + dualEsimDeduction + singleSimDeduction);
   const configurationAdjustments = Math.round(adjustedBenchmark - (basePrice - totalConditionDeductions));
 
   // Construct Audit Trail

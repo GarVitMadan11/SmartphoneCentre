@@ -33,7 +33,7 @@ import {
   Radio,
   ChevronDown,
 } from 'lucide-react';
-import { Model, Brand, BRANDS, isSmartwatchDevice, isTabletDevice, buildVariantPricesForModel, isVariantAvailable, predictCashifyPrice, hasSpenSupport } from '../../../data/mockDatabase';
+import { Model, Brand, BRANDS, isSmartwatchDevice, isTabletDevice, buildVariantPricesForModel, isVariantAvailable, predictCashifyPrice, hasSpenSupport, getModelScreenDeduction, getModelWarrantyDeductionPercentage } from '../../../data/mockDatabase';
 import { fetchModels, createModel, updateModel, deleteModel, testCashifyUrlApi, registerApprovedCashifyVariants } from '../../../utils/api';
 import cashifyCustomUrlsData from '../../../data/cashifyCustomUrls.json';
 import {
@@ -1299,6 +1299,19 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
                           </span>
                         </div>
 
+                        <div className="flex items-center justify-between text-ink-slate text-[10px] pt-1 border-t border-ice-border/40">
+                          <span className="text-zinc-500 font-semibold">Deductions:</span>
+                          <span className="font-mono text-zinc-700 font-bold">
+                            <span className="text-amber-700" title="Warranty Out Deduction Rate">
+                              {model.warrantyDeductionPercentage ?? getModelWarrantyDeductionPercentage(model)}% War.
+                            </span>
+                            <span className="text-zinc-400 mx-1">|</span>
+                            <span className="text-rose-700" title="Non-Original Screen Deduction Amount">
+                              ₹{(model.screenDeduction ?? getModelScreenDeduction(model)).toLocaleString('en-IN')} Scr.
+                            </span>
+                          </span>
+                        </div>
+
                         <div className="flex items-center justify-between pt-1.5 border-t border-ice-border/60">
                           <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">Base Anchor</span>
                           <span className="text-sm font-extrabold text-emerald-700">{formatPrice(model.basePrice128GB)}</span>
@@ -1975,6 +1988,8 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
     variantPrices: Record<string, number>;
     hidden: boolean;
     supportsWarrantyQuestion: boolean;
+    screenDeduction?: number;
+    warrantyDeductionPercentage?: number;
   }>({
     id: '',
     legacyId: '',
@@ -1990,6 +2005,8 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
     variantPrices: {},
     hidden: false,
     supportsWarrantyQuestion: true,
+    screenDeduction: 15000,
+    warrantyDeductionPercentage: 22.0,
   });
 
   const [saving, setSaving] = useState(false);
@@ -2135,6 +2152,8 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
         hidden: Boolean(model.hidden),
         supportsWarrantyQuestion:
           model.supportsWarrantyQuestion ?? ((model.releaseYear || 2024) >= 2023),
+        screenDeduction: model.screenDeduction ?? getModelScreenDeduction(model),
+        warrantyDeductionPercentage: model.warrantyDeductionPercentage ?? getModelWarrantyDeductionPercentage(model),
       });
       setIsCustomSeriesInput(Boolean(sVal && !brandExistingSeries.includes(sVal)));
       setUrlTestResults({});
@@ -2889,6 +2908,8 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
         variantPrices: cleanedVariantPrices,
         hidden: formData.hidden,
         supportsWarrantyQuestion: formData.supportsWarrantyQuestion,
+        screenDeduction: formData.screenDeduction !== undefined ? Number(formData.screenDeduction) : undefined,
+        warrantyDeductionPercentage: formData.warrantyDeductionPercentage !== undefined ? Number(formData.warrantyDeductionPercentage) : undefined,
       };
 
       let result;
@@ -3289,6 +3310,59 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
               />
               <span className="text-[10px] text-zinc-400 font-mono block mt-1">
                 Used as fallback baseline. Overridden by explicit Variant Matrix below.
+              </span>
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-bold text-ink-navy mb-1 uppercase font-mono flex items-center justify-between">
+                <span>Screen Deduction (₹)</span>
+                <span className="text-[9px] text-rose-600 font-bold bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">
+                  Non-Original Screen
+                </span>
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="50"
+                value={formData.screenDeduction ?? ''}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    screenDeduction: e.target.value === '' ? undefined : parseInt(e.target.value, 10) || 0,
+                  })
+                }
+                placeholder="e.g. 15000"
+                className="w-full px-3 py-2 bg-white border border-ice-border rounded font-mono font-bold text-rose-700 focus:border-cobalt focus:outline-none"
+              />
+              <span className="text-[10px] text-zinc-500 font-mono block mt-1">
+                Subtracted if user selects replaced display. In-warranty loses warranty + gets this deduction; out-of-warranty gets only this deduction.
+              </span>
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-bold text-ink-navy mb-1 uppercase font-mono flex items-center justify-between">
+                <span>Warranty Deduction (%)</span>
+                <span className="text-[9px] text-amber-700 font-bold bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+                  Out of Warranty
+                </span>
+              </label>
+              <input
+                type="number"
+                min="0"
+                max="100"
+                step="0.1"
+                value={formData.warrantyDeductionPercentage ?? ''}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    warrantyDeductionPercentage: e.target.value === '' ? undefined : parseFloat(e.target.value) || 0,
+                  })
+                }
+                placeholder="e.g. 25.5"
+                className="w-full px-3 py-2 bg-white border border-ice-border rounded font-mono font-bold text-amber-800 focus:border-cobalt focus:outline-none"
+              />
+              <span className="text-[10px] text-zinc-500 font-mono block mt-1">
+                Percentage deducted when out of warranty (or voided). Cashify market rate: ~21%–28% for active devices, 0% for matured.
               </span>
             </div>
           </div>

@@ -26,6 +26,7 @@ export interface CashifyModelItem {
   brandName: string;
   brandId: string;
   releaseYear: number;
+  series?: string;
   basePrice128GB: number;
   supportedStorageGb: number[];
   supportedRamGb: number[];
@@ -50,6 +51,7 @@ export interface CashifyVariantItem {
   modelName: string;
   brandName: string;
   brandId: string;
+  series: string;
   releaseYear: number;
   ramGb: number;
   storageGb: number;
@@ -93,6 +95,35 @@ export function getFallbackUrls(): Record<string, string> {
     }
   }
   return {};
+}
+
+const DETAILED_PRICES_CSV = path.join(DATA_DIR, 'cashify_detailed_prices.csv');
+
+export function getSeriesLookupMap(): Map<string, string> {
+  const map = new Map<string, string>();
+  const fileToRead = fs.existsSync(DETAILED_PRICES_CSV)
+    ? DETAILED_PRICES_CSV
+    : path.join(BASE_DIR, 'dist/cashify_detailed_prices.csv');
+
+  if (fs.existsSync(fileToRead)) {
+    try {
+      const lines = fs.readFileSync(fileToRead, 'utf-8').split('\n');
+      for (let i = 1; i < lines.length; i++) {
+        const l = lines[i].trim();
+        if (!l) continue;
+        const parts = l.split(',');
+        if (parts.length >= 3) {
+          const series = parts[0].replace(/"/g, '').trim();
+          const brand = parts[1].replace(/"/g, '').trim().toLowerCase();
+          const model = parts[2].replace(/"/g, '').trim().toLowerCase();
+          if (series && brand && model) {
+            map.set(`${brand}|${model}`, series);
+          }
+        }
+      }
+    } catch {}
+  }
+  return map;
 }
 
 export function getAuditResults(): { found: any[]; not_found: any[]; total_models: number; timestamp?: string } {
@@ -189,6 +220,7 @@ export async function getCashifyVariantsList(): Promise<CashifyVariantItem[]> {
 
   const customUrls = getCustomUrls();
   const fallbackUrls = getFallbackUrls();
+  const seriesMap = getSeriesLookupMap();
   const audit = getAuditResults();
   const auditFoundMap = new Map<string, string>();
   for (const item of audit.found) {
@@ -353,6 +385,9 @@ export async function getCashifyVariantsList(): Promise<CashifyVariantItem[]> {
           lastAuditedDate = alertRecord.alertDate.toISOString();
         }
 
+        const modelBrandKey = `${m.brand.name.toLowerCase()}|${m.name.toLowerCase()}`;
+        const seriesName = seriesMap.get(modelBrandKey) || m.series || 'Standard';
+
         variantItems.push({
           variantKey,
           modelId: m.id,
@@ -360,6 +395,7 @@ export async function getCashifyVariantsList(): Promise<CashifyVariantItem[]> {
           modelName: m.name,
           brandName: m.brand.name,
           brandId: m.brandId,
+          series: seriesName,
           releaseYear: m.releaseYear,
           ramGb: ram,
           storageGb: storage,

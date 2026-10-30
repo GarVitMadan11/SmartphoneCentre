@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Booking, Brand, Model } from '../../data/mockDatabase';
 import { 
   ArrowLeft, RefreshCw, ShieldAlert, Cpu, Smartphone, Tablet, Watch, 
@@ -48,7 +48,34 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
   // Modern Navigation & Layout State
   const [activeNav, setActiveNav] = useState<AdminNavKey>('smartphones');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarHovered, setSidebarHovered] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const isSidebarExpanded = !sidebarCollapsed || sidebarHovered;
+
+  const sidebarHoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleSidebarMouseEnter = useCallback(() => {
+    if (sidebarCollapsed) {
+      if (sidebarHoverTimeoutRef.current) clearTimeout(sidebarHoverTimeoutRef.current);
+      sidebarHoverTimeoutRef.current = setTimeout(() => {
+        setSidebarHovered(true);
+      }, 50);
+    }
+  }, [sidebarCollapsed]);
+
+  const handleSidebarMouseLeave = useCallback(() => {
+    if (sidebarHoverTimeoutRef.current) clearTimeout(sidebarHoverTimeoutRef.current);
+    sidebarHoverTimeoutRef.current = setTimeout(() => {
+      setSidebarHovered(false);
+    }, 120);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (sidebarHoverTimeoutRef.current) clearTimeout(sidebarHoverTimeoutRef.current);
+    };
+  }, []);
 
   const [adminUser, setAdminUser] = useState<AdminUserSession | null>(null);
 
@@ -183,7 +210,7 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
 
   const ActiveIcon = breadcrumbInfo.icon;
 
-  // Sidebar link component
+  // Sidebar link component with smooth CSS slide/fade
   const NavItem = ({ 
     navKey, 
     label, 
@@ -213,10 +240,20 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
       >
         <div className="flex items-center gap-3 min-w-0">
           <Icon className={`w-4 h-4 flex-shrink-0 transition-transform ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'}`} />
-          {!sidebarCollapsed && <span className="truncate">{label}</span>}
+          <span
+            className={`truncate transition-all duration-200 overflow-hidden whitespace-nowrap ${
+              isSidebarExpanded ? 'opacity-100 max-w-[140px] translate-x-0' : 'opacity-0 max-w-0 -translate-x-2 pointer-events-none'
+            }`}
+          >
+            {label}
+          </span>
         </div>
-        {!sidebarCollapsed && badge !== undefined && (
-          <span className={`px-2 py-0.5 text-[10px] font-mono font-bold rounded-full ${isActive ? 'bg-white/20 text-white' : badgeColor}`}>
+        {badge !== undefined && (
+          <span
+            className={`px-2 py-0.5 text-[10px] font-mono font-bold rounded-full transition-all duration-200 shrink-0 ${
+              isSidebarExpanded ? 'opacity-100 scale-100' : 'opacity-0 scale-75 pointer-events-none w-0 p-0 overflow-hidden'
+            } ${isActive ? 'bg-white/20 text-white' : badgeColor}`}
+          >
             {badge}
           </span>
         )}
@@ -229,37 +266,84 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
       
       {/* ── 1. MODERN COLLAPSIBLE SIDEBAR ─────────────────────────────────── */}
       <aside 
-        className={`bg-slate-900 border-r border-slate-800/90 text-slate-200 flex flex-col justify-between transition-all duration-300 z-30 ${
-          sidebarCollapsed ? 'w-full md:w-20' : 'w-full md:w-64'
-        } ${mobileMenuOpen ? 'block' : 'hidden md:flex'}`}
+        onMouseEnter={handleSidebarMouseEnter}
+        onMouseLeave={handleSidebarMouseLeave}
+        className={`relative bg-slate-900 border-r border-slate-800/90 text-slate-200 flex flex-col justify-between transition-[width,box-shadow] duration-250 ease-[cubic-bezier(0.16,1,0.3,1)] z-30 ${
+          isSidebarExpanded ? 'w-full md:w-64' : 'w-full md:w-20'
+        } ${mobileMenuOpen ? 'block' : 'hidden md:flex'} ${
+          sidebarCollapsed && sidebarHovered ? 'shadow-2xl ring-1 ring-slate-700/80' : ''
+        }`}
       >
-        {/* Top Brand Banner */}
         <div>
-          <div className="p-4 border-b border-slate-800/80 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-cobalt to-indigo-500 flex items-center justify-center text-white font-extrabold shadow-md flex-shrink-0">
-                R
+          {/* Top Brand Banner: Unified Persistent Header with Official Rephonix Logo */}
+        <div className="border-b border-slate-800/80">
+          <div className="h-16 px-3.5 flex items-center justify-between relative group select-none">
+            {/* Left: Rephonix Logo & Title */}
+            <div 
+              onClick={() => {
+                if (sidebarCollapsed) {
+                  setSidebarCollapsed(false);
+                  setSidebarHovered(false);
+                }
+              }}
+              className={`flex items-center gap-3 min-w-0 ${sidebarCollapsed ? 'cursor-pointer' : ''}`}
+              title={sidebarCollapsed ? "Click to pin sidebar open" : undefined}
+            >
+              {/* Premium Rephonix Logo Badge (Pixel-perfect vertical axis alignment with navigation icons) */}
+              <div className="w-10 h-10 rounded-xl bg-[#001736] border border-slate-700/80 p-1.5 flex items-center justify-center shadow-md flex-shrink-0 group-hover:border-cobalt/60 group-hover:shadow-cobalt/20 transition-all duration-200 group-hover:scale-105">
+                <img src="/logo.svg" className="w-full h-full object-contain filter drop-shadow-xs" alt="Rephonix Logo" />
               </div>
-              {!sidebarCollapsed && (
-                <div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-extrabold tracking-tight text-sm text-white">REPHONIX</span>
-                    <span className="text-[9px] font-mono px-1.5 py-0.2 bg-cobalt/20 text-cobalt rounded font-bold">OS</span>
-                  </div>
-                  <div className="text-[10px] text-slate-400 font-mono">Control Studio v2.4</div>
+
+              {/* Brand Typography & Tagline (Smooth CSS fade/slide, zero DOM unmounting) */}
+              <div 
+                className={`min-w-0 transition-all duration-200 ease-out overflow-hidden whitespace-nowrap ${
+                  isSidebarExpanded 
+                    ? 'opacity-100 max-w-[160px] translate-x-0' 
+                    : 'opacity-0 max-w-0 -translate-x-2 pointer-events-none'
+                }`}
+              >
+                <div className="flex items-center gap-1.5">
+                  <span className="font-extrabold tracking-tight text-sm text-white font-outfit">
+                    Re<span className="text-secondary">phonix</span>
+                  </span>
+                  <span className="text-[9px] font-mono px-1.5 py-0.5 bg-cobalt/20 text-cobalt rounded font-bold">
+                    OS
+                  </span>
                 </div>
-              )}
+                <div className="text-[10px] text-slate-400 font-mono truncate">Control Studio v2.4</div>
+              </div>
             </div>
 
-            {/* Collapse toggle (desktop only) */}
-            <button
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="hidden md:flex p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
-              title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-            >
-              {sidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-            </button>
+            {/* Collapse/Expand Toggle Button (Desktop only) */}
+            {isSidebarExpanded ? (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSidebarCollapsed(true);
+                  setSidebarHovered(false);
+                }}
+                className="hidden md:flex p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer flex-shrink-0"
+                title="Collapse Sidebar"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSidebarCollapsed(false);
+                  setSidebarHovered(false);
+                }}
+                className="hidden md:flex absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-slate-800 hover:bg-cobalt border border-slate-700 hover:border-cobalt text-slate-300 hover:text-white items-center justify-center shadow-lg transition-all duration-200 cursor-pointer z-40 hover:scale-110 opacity-0 group-hover:opacity-100"
+                title="Expand Sidebar"
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
+        </div>
 
           {/* Navigation Links Grouped by Domain */}
           <div className="p-3 space-y-4 overflow-y-auto max-h-[calc(100vh-250px)]">
@@ -267,11 +351,13 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
             {/* Group A: Inventory & Valuation */}
             {(hasAccessTo('smartphones') || hasAccessTo('tablets') || hasAccessTo('smartwatches') || hasAccessTo('cashify')) && (
               <div>
-                {!sidebarCollapsed && (
-                  <div className="px-3 pb-1.5 text-[10px] font-mono font-bold tracking-wider uppercase text-slate-400">
-                    Inventory & Valuation
-                  </div>
-                )}
+                <div
+                  className={`px-3 pb-1.5 text-[10px] font-mono font-bold tracking-wider uppercase text-slate-400 transition-all duration-200 overflow-hidden whitespace-nowrap ${
+                    isSidebarExpanded ? 'opacity-100 max-h-6' : 'opacity-0 max-h-0 pointer-events-none'
+                  }`}
+                >
+                  Inventory & Valuation
+                </div>
                 <div className="space-y-1">
                   {hasAccessTo('smartphones') && <NavItem navKey="smartphones" label="Smartphones" icon={Smartphone} />}
                   {hasAccessTo('tablets') && <NavItem navKey="tablets" label="Tablets" icon={Tablet} />}
@@ -292,11 +378,13 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
             {/* Group B: Operations & Logistics */}
             {(hasAccessTo('inspections') || hasAccessTo('support')) && (
               <div>
-                {!sidebarCollapsed && (
-                  <div className="px-3 pb-1.5 text-[10px] font-mono font-bold tracking-wider uppercase text-slate-400">
-                    Operations
-                  </div>
-                )}
+                <div
+                  className={`px-3 pb-1.5 text-[10px] font-mono font-bold tracking-wider uppercase text-slate-400 transition-all duration-200 overflow-hidden whitespace-nowrap ${
+                    isSidebarExpanded ? 'opacity-100 max-h-6' : 'opacity-0 max-h-0 pointer-events-none'
+                  }`}
+                >
+                  Operations
+                </div>
                 <div className="space-y-1">
                   {hasAccessTo('inspections') && (
                     <NavItem 
@@ -315,11 +403,13 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
             {/* Group C: Finance & Ledger */}
             {hasAccessTo('finance') && (
               <div>
-                {!sidebarCollapsed && (
-                  <div className="px-3 pb-1.5 text-[10px] font-mono font-bold tracking-wider uppercase text-slate-400">
-                    Financial Ledger
-                  </div>
-                )}
+                <div
+                  className={`px-3 pb-1.5 text-[10px] font-mono font-bold tracking-wider uppercase text-slate-400 transition-all duration-200 overflow-hidden whitespace-nowrap ${
+                    isSidebarExpanded ? 'opacity-100 max-h-6' : 'opacity-0 max-h-0 pointer-events-none'
+                  }`}
+                >
+                  Financial Ledger
+                </div>
                 <div className="space-y-1">
                   <NavItem 
                     navKey="finance" 
@@ -335,11 +425,13 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
             {/* Group D: System & Governance */}
             {(effectiveRole === 'SUPER_ADMIN' || effectiveRole === 'CATALOG_EDITOR' || effectiveRole === 'FINANCE_APPROVER') && (
               <div>
-                {!sidebarCollapsed && (
-                  <div className="px-3 pb-1.5 text-[10px] font-mono font-bold tracking-wider uppercase text-slate-400">
-                    Governance & Team
-                  </div>
-                )}
+                <div
+                  className={`px-3 pb-1.5 text-[10px] font-mono font-bold tracking-wider uppercase text-slate-400 transition-all duration-200 overflow-hidden whitespace-nowrap ${
+                    isSidebarExpanded ? 'opacity-100 max-h-6' : 'opacity-0 max-h-0 pointer-events-none'
+                  }`}
+                >
+                  Governance & Team
+                </div>
                 <div className="space-y-1">
                   {effectiveRole === 'SUPER_ADMIN' && (
                     <NavItem navKey="staff" label="Staff & Roles" icon={Users} />
@@ -354,7 +446,7 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
         {/* Bottom Sidebar: User Badge, Role Previewer & Quick Exit */}
         <div className="p-3 border-t border-slate-800/80 bg-slate-950/60 space-y-2">
           {/* Role Preview Switcher for Super Admins */}
-          {realRole === 'SUPER_ADMIN' && !sidebarCollapsed && (
+          {realRole === 'SUPER_ADMIN' && isSidebarExpanded && (
             <div className="p-2 bg-slate-900/90 rounded-lg border border-slate-800">
               <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 mb-1.5">
                 <span className="flex items-center gap-1 font-bold text-emerald-400">
@@ -404,16 +496,18 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
             <div className="w-7 h-7 rounded-lg bg-slate-800 flex items-center justify-center text-slate-300 font-mono text-xs font-bold border border-slate-700 flex-shrink-0">
               <Cpu className="w-3.5 h-3.5 text-cobalt" />
             </div>
-            {!sidebarCollapsed && (
-              <div className="min-w-0 flex-1">
-                <div className="text-xs font-bold text-white truncate">
-                  {currentUser?.name || currentUser?.email?.split('@')[0] || 'Admin Operator'}
-                </div>
-                <div className="text-[10px] font-mono text-emerald-400 truncate">
-                  {effectiveRole}
-                </div>
+            <div
+              className={`min-w-0 flex-1 transition-all duration-200 overflow-hidden whitespace-nowrap ${
+                isSidebarExpanded ? 'opacity-100 max-w-[160px] translate-x-0' : 'opacity-0 max-w-0 -translate-x-2 pointer-events-none'
+              }`}
+            >
+              <div className="text-xs font-bold text-white truncate">
+                {currentUser?.name || currentUser?.email?.split('@')[0] || 'Admin Operator'}
               </div>
-            )}
+              <div className="text-[10px] font-mono text-emerald-400 truncate">
+                {effectiveRole}
+              </div>
+            </div>
           </div>
 
           {/* Return to Storefront button */}
@@ -422,8 +516,14 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
             className="w-full flex items-center justify-center gap-2 p-2 rounded-lg bg-slate-800 hover:bg-slate-700/80 text-slate-300 hover:text-white text-xs font-semibold transition-all cursor-pointer"
             title="Return to Main Storefront"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            {!sidebarCollapsed && <span>Back to Storefront</span>}
+            <ArrowLeft className="w-3.5 h-3.5 flex-shrink-0" />
+            <span
+              className={`transition-all duration-200 overflow-hidden whitespace-nowrap ${
+                isSidebarExpanded ? 'opacity-100 max-w-[140px]' : 'opacity-0 max-w-0 pointer-events-none'
+              }`}
+            >
+              Back to Storefront
+            </span>
           </button>
         </div>
       </aside>

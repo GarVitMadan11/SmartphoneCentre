@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
   TrendingUp,
   TrendingDown,
@@ -17,6 +17,9 @@ import {
   Zap,
   Cpu,
   HardDrive,
+  ChevronRight,
+  Filter,
+  Pin,
 } from 'lucide-react';
 import {
   fetchCashifySummary,
@@ -35,6 +38,578 @@ import {
 import { Model } from '../../../data/mockDatabase';
 import { EditSpecsAndPricesModal } from './CatalogTab';
 
+interface SeriesGroup {
+  key: string;
+  brandName: string;
+  series: string;
+  variants: CashifyVariantItem[];
+  exactTargetCount: number;
+  belowTargetCount: number;
+  aboveTargetCount: number;
+  hasPriceCount: number;
+  needsFixCount: number;
+}
+
+interface SeriesAccordionCardProps {
+  group: SeriesGroup;
+  isSearchActive: boolean;
+  isPinned: boolean;
+  onTogglePin: (key: string) => void;
+  onBulkFixSeries: (variants: CashifyVariantItem[], series: string) => void;
+  isBulkFixing: boolean;
+  fixingVariantKey: string | null;
+  handleOpenEditSpecs: (variant: CashifyVariantItem) => void;
+  handleApplyRecommendedPrice: (variant: CashifyVariantItem, price: number) => void;
+  editingKey: string | null;
+  editUrlValue: string;
+  setEditUrlValue: (val: string) => void;
+  handleSaveUrl: (key: string) => void;
+  handleCancelEdit: () => void;
+  handleStartEdit: (variant: CashifyVariantItem) => void;
+  handleTestUrl: () => void;
+  testingUrl: boolean;
+  savingUrl: boolean;
+  testResult: {
+    ok: boolean;
+    status: number;
+    extractedPrice?: number | null;
+    error?: string;
+    is404?: boolean;
+    isUnserviceable?: boolean;
+  } | null;
+}
+
+/**
+ * High-performance, isolated Series Accordion Card.
+ * Manages its own local hover state so hovering does NOT re-render the other 79 series cards!
+ * Uses hardware-accelerated CSS Grid transition for zero-lag 60fps/120fps expansion.
+ */
+const SeriesAccordionCard: React.FC<SeriesAccordionCardProps> = React.memo(({
+  group,
+  isSearchActive,
+  isPinned,
+  onTogglePin,
+  onBulkFixSeries,
+  isBulkFixing,
+  fixingVariantKey,
+  handleOpenEditSpecs,
+  handleApplyRecommendedPrice,
+  editingKey,
+  editUrlValue,
+  setEditUrlValue,
+  handleSaveUrl,
+  handleCancelEdit,
+  handleStartEdit,
+  handleTestUrl,
+  testingUrl,
+  savingUrl,
+  testResult,
+}) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleMouseEnter = () => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+    // 60ms hover intent prevents jitter when skimming mouse across the list
+    hoverTimeoutRef.current = setTimeout(() => {
+      setIsHovered(true);
+    }, 60);
+  };
+
+  const handleMouseLeave = () => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+    hoverTimeoutRef.current = setTimeout(() => {
+      setIsHovered(false);
+    }, 140);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    };
+  }, []);
+
+  // By default collapsed! Expands if hovered, if pinned by click, or if search is active.
+  const isOpen = isSearchActive || isPinned || isHovered;
+
+  return (
+    <div
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      className={`bg-canvas-white border rounded-xl overflow-hidden transition-all duration-200 ${
+        isOpen
+          ? 'border-cobalt/50 shadow-md ring-1 ring-cobalt/15'
+          : 'border-ice-border shadow-2xs hover:border-slate-300 hover:shadow-xs'
+      }`}
+    >
+      {/* Series Accordion Header */}
+      <div
+        onClick={() => onTogglePin(group.key)}
+        className="px-4 py-3 bg-gradient-to-r from-slate-50 via-white to-slate-50 border-b border-ice-border/70 flex flex-wrap items-center justify-between gap-3 cursor-pointer select-none hover:bg-slate-100/70 transition-colors"
+      >
+        <div className="flex items-center gap-2.5">
+          <div
+            className={`p-1 rounded text-slate-500 hover:text-slate-900 transition-transform duration-200 ease-out ${
+              isOpen ? 'rotate-90 text-cobalt' : 'rotate-0 text-slate-400'
+            }`}
+            title={isPinned ? 'Click to unpin' : 'Click to pin open'}
+          >
+            <ChevronRight className="w-4 h-4" />
+          </div>
+
+          <span className="px-2 py-0.5 rounded text-[10px] font-bold font-mono uppercase tracking-wider bg-slate-900 text-white shadow-2xs">
+            {group.brandName}
+          </span>
+
+          <h3 className="font-bold text-sm text-ink-navy tracking-tight">
+            {group.series}
+          </h3>
+
+          <span className="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-slate-100 text-slate-700 border border-slate-200">
+            {group.variants.length} {group.variants.length === 1 ? 'Variant' : 'Variants'}
+          </span>
+
+          {/* Interactive Hover / Pin feedback indicator */}
+          {isPinned ? (
+            <span className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 text-slate-600 border border-slate-200 shadow-2xs">
+              <Pin className="w-2.5 h-2.5 fill-slate-500" />
+              <span>Pinned Open</span>
+            </span>
+          ) : isHovered ? (
+            <span className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-indigo-50 text-indigo-600 border border-indigo-200/60">
+              <span>Hover preview</span>
+            </span>
+          ) : null}
+        </div>
+
+        {/* Metric & Alignment Status Indicators */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {group.exactTargetCount > 0 && (
+            <span className="px-2 py-0.5 rounded text-[11px] font-bold font-mono bg-emerald-50 text-emerald-700 border border-emerald-200 inline-flex items-center gap-1">
+              <Check className="w-3 h-3 stroke-[3]" />
+              <span>{group.exactTargetCount} Exact +3%</span>
+            </span>
+          )}
+
+          {group.belowTargetCount > 0 && (
+            <span className="px-2 py-0.5 rounded text-[11px] font-bold font-mono bg-rose-50 text-rose-700 border border-rose-200">
+              🚨 {group.belowTargetCount} Below Target
+            </span>
+          )}
+
+          {group.aboveTargetCount > 0 && (
+            <span className="px-2 py-0.5 rounded text-[11px] font-bold font-mono bg-indigo-50 text-indigo-700 border border-indigo-200">
+              📈 {group.aboveTargetCount} Above Target
+            </span>
+          )}
+
+          <span className="text-[11px] font-mono text-slate-400 hidden sm:inline">
+            Live Quotes: {group.hasPriceCount} / {group.variants.length}
+          </span>
+
+          {/* Series-Level 1-Click Fix Button */}
+          {group.needsFixCount > 0 && (
+            <button
+              type="button"
+              disabled={isBulkFixing || !!fixingVariantKey}
+              onClick={(e) => {
+                e.stopPropagation();
+                onBulkFixSeries(group.variants, group.series);
+              }}
+              className="ml-1 px-2.5 py-1 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white rounded-md text-[11px] font-bold shadow-2xs flex items-center gap-1 transition-all cursor-pointer disabled:opacity-50"
+              title={`Align all ${group.needsFixCount} variants in ${group.series} to exact +3% above Cashify`}
+            >
+              <Zap className="w-3 h-3 fill-current text-white" />
+              <span>Fix Series ({group.needsFixCount})</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Hardware-Accelerated CSS Grid Transition (Butter-smooth, 0ms reflow lag) */}
+      <div
+        className={`grid transition-[grid-template-rows,opacity] duration-250 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-[grid-template-rows,opacity] ${
+          isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0 pointer-events-none'
+        }`}
+      >
+        <div className="overflow-hidden min-h-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-canvas-pure/70 border-b border-ice-border text-ink-muted uppercase font-mono text-[10px] tracking-wider">
+                <tr>
+                  <th className="py-2.5 px-4">Smartphone Model</th>
+                  <th className="py-2.5 px-3">RAM</th>
+                  <th className="py-2.5 px-3">Storage</th>
+                  <th className="py-2.5 px-4">Rephonix Price</th>
+                  <th className="py-2.5 px-4">Cashify Price</th>
+                  <th className="py-2.5 px-4 min-w-[210px]">Margin Difference & Rec (+3%)</th>
+                  <th className="py-2.5 px-4">Cashify Variant URL</th>
+                  <th className="py-2.5 px-4">Status</th>
+                  <th className="py-2.5 px-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-ice-border/60">
+                {group.variants.map((variant) => {
+                  const isEditing = editingKey === variant.variantKey;
+                  const hasCashifyPrice = variant.cashifyPrice !== null;
+
+                  return (
+                    <tr key={variant.variantKey} className="hover:bg-slate-50/70 transition-colors">
+                      {/* 1. Model & Brand */}
+                      <td className="py-3 px-4">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEditSpecs(variant)}
+                          className="font-bold text-ink-navy hover:text-cobalt hover:underline text-sm leading-tight text-left cursor-pointer transition-colors block"
+                          title="Click to edit specs & prices for this model"
+                        >
+                          {variant.modelName}
+                        </button>
+                        <div className="text-[11px] text-ink-muted font-mono mt-0.5">
+                          {variant.brandName} • {variant.releaseYear}
+                        </div>
+                      </td>
+
+                      {/* 2. RAM Variant */}
+                      <td className="py-3 px-3 whitespace-nowrap">
+                        {variant.ramGb > 0 ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-mono text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/80">
+                            <Cpu className="w-3 h-3 text-indigo-500" />
+                            <span>{variant.ramLabel}</span>
+                          </span>
+                        ) : (
+                          <span className="text-slate-400 font-mono text-xs">—</span>
+                        )}
+                      </td>
+
+                      {/* 3. Storage Variant */}
+                      <td className="py-3 px-3 whitespace-nowrap">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md font-mono text-xs font-bold bg-slate-100 text-slate-800 border border-slate-200">
+                          <HardDrive className="w-3 h-3 text-slate-500" />
+                          <span>{variant.storageLabel}</span>
+                        </span>
+                      </td>
+
+                      {/* 4. Rephonix Buyback Price */}
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        <div className="flex items-center gap-1.5 group">
+                          <span className="font-extrabold text-ink-navy text-sm">
+                            ₹{variant.rephonixPrice.toLocaleString('en-IN')}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEditSpecs(variant)}
+                            className="opacity-0 group-hover:opacity-100 p-0.5 text-cobalt hover:bg-cobalt/10 rounded transition-all cursor-pointer"
+                            title="Edit Rephonix buyback prices for this model"
+                          >
+                            <Edit2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                        <div className="text-[10px] text-emerald-700 font-mono">Our Buyback Payout</div>
+                      </td>
+
+                      {/* 5. Cashify Competitor Price */}
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        {hasCashifyPrice ? (
+                          <div>
+                            <div className="font-extrabold text-indigo-700 text-sm font-mono">
+                              ₹{variant.cashifyPrice!.toLocaleString('en-IN')}
+                            </div>
+                            <div className="text-[10px] text-indigo-500 font-mono">
+                              {variant.lastAuditedDate
+                                ? new Date(variant.lastAuditedDate).toLocaleDateString('en-IN', {
+                                    month: 'short',
+                                    day: 'numeric',
+                                  })
+                                : 'Cashify Quote'}
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-[11px] text-slate-400 font-mono italic">
+                            <span>Pending scan</span>
+                          </span>
+                        )}
+                      </td>
+
+                      {/* 6. Margin Difference & Recommended Price (+3% rule) */}
+                      <td className="py-3 px-4">
+                        {hasCashifyPrice ? (() => {
+                          const cashifyP = variant.cashifyPrice!;
+                          const recPrice = Math.round(cashifyP * 1.03);
+                          const currentDiff = variant.difference ?? (variant.rephonixPrice - cashifyP);
+                          const diffPct = ((variant.rephonixPrice - cashifyP) / cashifyP) * 100;
+                          const isExact = variant.rephonixPrice === recPrice;
+                          const isBelow = variant.rephonixPrice < recPrice;
+                          const isFixing = fixingVariantKey === variant.variantKey;
+
+                          return (
+                            <div className="space-y-1.5 min-w-[200px]">
+                              {/* Current Margin Diff Badge */}
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span
+                                  className={`px-2 py-0.5 rounded-md font-mono text-xs font-bold inline-flex items-center gap-1 ${
+                                    currentDiff > 0
+                                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                      : currentDiff < 0
+                                      ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                                      : 'bg-slate-100 text-slate-700 border border-slate-200'
+                                  }`}
+                                >
+                                  {currentDiff > 0
+                                    ? `+₹${currentDiff.toLocaleString('en-IN')} (${diffPct >= 0 ? '+' : ''}${diffPct.toFixed(1)}%)`
+                                    : currentDiff < 0
+                                    ? `-₹${Math.abs(currentDiff).toLocaleString('en-IN')} (${diffPct.toFixed(1)}%)`
+                                    : `₹0 (0.0%)`}
+                                </span>
+
+                                {isExact ? (
+                                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold font-mono bg-emerald-100/90 text-emerald-800 border border-emerald-300 inline-flex items-center gap-0.5 shadow-2xs">
+                                    <Check className="w-2.5 h-2.5 stroke-[3]" />
+                                    <span>+3% Exact</span>
+                                  </span>
+                                ) : isBelow ? (
+                                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold font-mono bg-rose-100/90 text-rose-800 border border-rose-300 inline-flex items-center gap-0.5 shadow-2xs">
+                                    <span>Below +3%</span>
+                                  </span>
+                                ) : (
+                                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold font-mono bg-indigo-100/90 text-indigo-800 border border-indigo-300 inline-flex items-center gap-0.5 shadow-2xs">
+                                    <span>Above +3% ({diffPct > 3 ? `+${(diffPct - 3).toFixed(1)}%` : ''})</span>
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* Recommended Price Box & 1-Click Fix Button */}
+                              <div
+                                className={`p-1.5 rounded-lg border text-xs ${
+                                  isExact
+                                    ? 'bg-emerald-50/40 border-emerald-100'
+                                    : 'bg-amber-50/60 border-amber-200 shadow-2xs'
+                                }`}
+                              >
+                                <div className="flex items-center justify-between gap-1 text-[11px]">
+                                  <span className="text-slate-500 font-medium font-sans">Target (Exact +3%):</span>
+                                  <span className="font-extrabold font-mono text-indigo-950">
+                                    ₹{recPrice.toLocaleString('en-IN')}
+                                  </span>
+                                </div>
+
+                                {!isExact ? (
+                                  <button
+                                    type="button"
+                                    disabled={isFixing || isBulkFixing}
+                                    onClick={() => handleApplyRecommendedPrice(variant, recPrice)}
+                                    className="mt-1.5 w-full flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-md bg-gradient-to-r from-indigo-600 to-cobalt hover:from-indigo-700 hover:to-cobalt-hover active:scale-95 text-white text-[11px] font-bold shadow-xs transition-all cursor-pointer disabled:opacity-50"
+                                    title={`Fix Rephonix payout to exact +3% (₹${recPrice.toLocaleString('en-IN')})`}
+                                  >
+                                    {isFixing ? (
+                                      <>
+                                        <RefreshCw className="w-3 h-3 animate-spin text-white" />
+                                        <span>Applying...</span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Zap className="w-3 h-3 fill-amber-300 text-amber-300" />
+                                        <span>Fix to ₹{recPrice.toLocaleString('en-IN')}</span>
+                                      </>
+                                    )}
+                                  </button>
+                                ) : (
+                                  <div className="mt-1 flex items-center justify-between text-[10px] text-emerald-700 font-mono">
+                                    <span className="flex items-center gap-0.5">
+                                      <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                      <span>Optimal Payout (Exact +3%)</span>
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })() : (
+                          <span className="text-slate-400 font-mono text-xs italic">— (Pending scan)</span>
+                        )}
+                      </td>
+
+                      {/* 7. Cashify Variant URL */}
+                      <td className="py-3 px-4 max-w-xs">
+                        {isEditing ? (
+                          <div className="space-y-2 bg-slate-50 p-2 rounded-lg border border-cobalt/40 shadow-xs">
+                            <input
+                              type="url"
+                              value={editUrlValue}
+                              onChange={(e) => setEditUrlValue(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  handleSaveUrl(variant.variantKey);
+                                } else if (e.key === 'Escape') {
+                                  handleCancelEdit();
+                                }
+                              }}
+                              placeholder="https://www.cashify.in/sell-old-mobile-phone/used-..."
+                              className="w-full px-2.5 py-1.5 text-xs border border-cobalt bg-white rounded focus:outline-none font-mono"
+                              autoFocus
+                            />
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => handleSaveUrl(variant.variantKey)}
+                                disabled={savingUrl}
+                                className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[11px] font-bold font-mono cursor-pointer transition-colors flex items-center gap-1 shadow-xs"
+                                title="Press Enter or Click to Save"
+                              >
+                                <Check className="w-3.5 h-3.5" />
+                                <span>{savingUrl ? 'Saving...' : 'Save URL'}</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={handleTestUrl}
+                                disabled={testingUrl}
+                                className="px-2 py-1 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded text-[11px] font-mono font-semibold cursor-pointer transition-colors"
+                              >
+                                {testingUrl ? 'Testing...' : 'Test URL'}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={handleCancelEdit}
+                                className="px-2 py-1 bg-white hover:bg-slate-100 text-slate-600 border border-slate-300 rounded text-[11px] font-mono cursor-pointer transition-colors"
+                              >
+                                Cancel
+                              </button>
+                              {testResult && (
+                                <div className="w-full mt-1 flex flex-col gap-1">
+                                  <span
+                                    className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded inline-flex items-center gap-1 max-w-full ${
+                                      testResult.ok
+                                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                                        : testResult.is404
+                                        ? 'bg-rose-100 text-rose-800 border border-rose-300'
+                                        : testResult.isUnserviceable
+                                        ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                                        : 'bg-rose-100 text-rose-800 border border-rose-300'
+                                    }`}
+                                  >
+                                    {testResult.ok ? (
+                                      <>
+                                        <span>✓ Verified</span>
+                                        {testResult.extractedPrice ? (
+                                          <span className="font-extrabold text-emerald-950">
+                                            (Live: ₹{testResult.extractedPrice.toLocaleString('en-IN')})
+                                          </span>
+                                        ) : null}
+                                      </>
+                                    ) : testResult.is404 ? (
+                                      <span>✗ 404: Page Not Found on Cashify</span>
+                                    ) : testResult.isUnserviceable ? (
+                                      <span>⚠️ Cashify not purchasing in this location (Gurgaon / Delhi / etc.)</span>
+                                    ) : (
+                                      <span>✗ {testResult.error || `HTTP ${testResult.status} Error`}</span>
+                                    )}
+                                  </span>
+                                  {!testResult.ok && testResult.error && !testResult.is404 && !testResult.isUnserviceable && (
+                                    <span className="text-[10px] text-rose-600 font-sans leading-tight">
+                                      {testResult.error}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                            <span className="text-[10px] text-slate-500 font-mono block">
+                              Tip: Press <b>Enter</b> to save or <b>Esc</b> to cancel
+                            </span>
+                          </div>
+                        ) : variant.cashifyUrl ? (
+                          <div className="flex items-center gap-1.5 group">
+                            <a
+                              href={variant.cashifyUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="font-mono text-[11px] text-cobalt hover:underline truncate max-w-[200px] inline-block"
+                              title={variant.cashifyUrl}
+                            >
+                              {variant.cashifyUrl.replace('https://www.cashify.in/sell-old-mobile-phone/', '')}
+                            </a>
+                            <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-cobalt shrink-0" />
+                          </div>
+                        ) : (
+                          <span className="text-amber-600 font-mono text-[11px]">No URL mapped</span>
+                        )}
+                      </td>
+
+                      {/* 8. URL Status Badge */}
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        {variant.isCustomOverride ? (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                            ⭐ Custom Override
+                          </span>
+                        ) : variant.urlStatus === 'FOUND' ? (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1 w-max">
+                            <CheckCircle2 className="w-3 h-3" /> 200 OK
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1 w-max">
+                            <AlertTriangle className="w-3 h-3" /> Missing (404)
+                          </span>
+                        )}
+                      </td>
+
+                      {/* 9. Actions */}
+                      <td className="py-3 px-4 text-right whitespace-nowrap">
+                        {isEditing ? (
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              onClick={() => handleSaveUrl(variant.variantKey)}
+                              disabled={savingUrl}
+                              className="p-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-bold cursor-pointer transition-all flex items-center gap-1 shadow-xs"
+                              title="Save Custom URL for this Variant"
+                            >
+                              <Check className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={handleCancelEdit}
+                              className="p-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded text-xs font-bold cursor-pointer transition-all"
+                              title="Cancel Edit"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => handleOpenEditSpecs(variant)}
+                              className="px-2.5 py-1 text-xs bg-cobalt/10 hover:bg-cobalt/20 text-cobalt border border-cobalt/20 hover:border-cobalt/40 rounded font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-xs"
+                              title="Edit specs, RAM/Storage matrix and Rephonix buyback prices"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                              <span>Edit Specs & Prices</span>
+                            </button>
+
+                            <button
+                              onClick={() => handleStartEdit(variant)}
+                              className="px-2.5 py-1 text-xs border border-ice-border hover:border-slate-400 hover:bg-slate-50 text-ink-slate rounded font-medium transition-all cursor-pointer flex items-center gap-1.5"
+                              title="Edit specific Cashify URL for this RAM/Storage variant"
+                            >
+                              <ExternalLink className="w-3 h-3 text-slate-400" />
+                              <span>{variant.cashifyUrl ? 'Edit URL' : 'Set URL'}</span>
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+});
+
 export const CashifyMonitorTab: React.FC = () => {
   const [activeSubTab, setActiveSubTab] = useState<'variants' | 'alerts'>('variants');
   const [summary, setSummary] = useState<CashifySummaryData | null>(null);
@@ -44,12 +619,16 @@ export const CashifyMonitorTab: React.FC = () => {
   const [isScanning, setIsScanning] = useState<boolean>(false);
   const [scanMessage, setScanMessage] = useState<string>('');
 
-  // Filters
+  // Brand, Series & Spec Filters
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedBrand, setSelectedBrand] = useState<string>('ALL');
+  const [selectedSeries, setSelectedSeries] = useState<string>('ALL');
   const [selectedRam, setSelectedRam] = useState<string>('ALL');
   const [selectedStorage, setSelectedStorage] = useState<string>('ALL');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
+
+  // Series pin states (by default collapsed!)
+  const [pinnedSeries, setPinnedSeries] = useState<Record<string, boolean>>({});
 
   // Inline editing state for specific variant row
   const [editingKey, setEditingKey] = useState<string | null>(null);
@@ -101,7 +680,6 @@ export const CashifyMonitorTab: React.FC = () => {
   }, []);
 
   const findTargetModel = (variant: CashifyVariantItem, modelList: Model[]): Model | undefined => {
-    // 1. Direct ID match (dbId, legacyId, or id)
     const direct = modelList.find(
       (m) =>
         (m as any).dbId === variant.modelId ||
@@ -115,7 +693,6 @@ export const CashifyMonitorTab: React.FC = () => {
     );
     if (direct) return direct;
 
-    // 2. Active (non-hidden) model by exact name match
     const activeByName = modelList.find(
       (m) =>
         !m.hidden &&
@@ -123,13 +700,12 @@ export const CashifyMonitorTab: React.FC = () => {
     );
     if (activeByName) return activeByName;
 
-    // 3. Fallback to any model by name
     return modelList.find(
       (m) => m.name.trim().toLowerCase() === variant.modelName.trim().toLowerCase()
     );
   };
 
-  const handleOpenEditSpecs = async (variant: CashifyVariantItem) => {
+  const handleOpenEditSpecs = useCallback(async (variant: CashifyVariantItem) => {
     let target = findTargetModel(variant, models);
 
     if (!target) {
@@ -161,16 +737,15 @@ export const CashifyMonitorTab: React.FC = () => {
 
     setHighlightSpecVariant({ ram: variant.ramGb, storage: variant.storageGb });
     setEditingModelForSpecs(target);
-  };
+  }, [models]);
 
-  const handleSpecsSaveSuccess = async () => {
+  const handleSpecsSaveSuccess = useCallback(async () => {
     setSuccessNotification('Model specs & prices updated successfully in database!');
     await loadData();
     window.dispatchEvent(new CustomEvent('stc_catalog_order_changed'));
-  };
+  }, [loadData]);
 
-  // 1-Click Apply Recommended Price (+3% above Cashify) for a specific variant
-  const handleApplyRecommendedPrice = async (variant: CashifyVariantItem, recommendedPrice: number) => {
+  const handleApplyRecommendedPrice = useCallback(async (variant: CashifyVariantItem, recommendedPrice: number) => {
     if (fixingVariantKey || isBulkFixing) return;
     setFixingVariantKey(variant.variantKey);
     try {
@@ -199,7 +774,6 @@ export const CashifyMonitorTab: React.FC = () => {
         basePrice128GB: minPrice,
       });
 
-      // Update local state immediately for instant responsive UI
       setVariants((prev) =>
         prev.map((v) => {
           if (v.variantKey === variant.variantKey) {
@@ -242,25 +816,28 @@ export const CashifyMonitorTab: React.FC = () => {
     } finally {
       setFixingVariantKey(null);
     }
-  };
+  }, [fixingVariantKey, isBulkFixing, models]);
 
-  // Bulk Apply Recommended Price (Exact +3%) to all visible variants not at target
-  const handleBulkFixAllRecommended = async () => {
+  const handleBulkFixVariants = useCallback(async (variantsToFix: CashifyVariantItem[], groupLabel?: string) => {
     if (isBulkFixing || fixingVariantKey) return;
-    const variantsToFix = filteredVariants.filter(
+
+    const targets = variantsToFix.filter(
       (v) => v.cashifyPrice !== null && v.cashifyPrice > 0 && v.rephonixPrice !== Math.round(v.cashifyPrice * 1.03)
     );
 
-    if (variantsToFix.length === 0) {
-      alert('All currently visible variants are already set to exact +3% above Cashify!');
+    if (targets.length === 0) {
+      alert(groupLabel
+        ? `All visible variants in ${groupLabel} are already aligned to exact +3% above Cashify!`
+        : 'All targeted variants are already aligned to exact +3% above Cashify!'
+      );
       return;
     }
 
-    const belowCount = variantsToFix.filter(v => v.rephonixPrice < Math.round(v.cashifyPrice! * 1.03)).length;
-    const aboveCount = variantsToFix.filter(v => v.rephonixPrice > Math.round(v.cashifyPrice! * 1.03)).length;
+    const belowCount = targets.filter((v) => v.rephonixPrice < Math.round(v.cashifyPrice! * 1.03)).length;
+    const aboveCount = targets.filter((v) => v.rephonixPrice > Math.round(v.cashifyPrice! * 1.03)).length;
 
     const confirm = window.confirm(
-      `Fix prices to exact +3% above Cashify for all ${variantsToFix.length} visible variants?\n` +
+      `Fix prices to exact +3% above Cashify for ${targets.length} variants${groupLabel ? ` in ${groupLabel}` : ''}?\n` +
       (belowCount > 0 ? `\n• ${belowCount} below target (will increase to +3%)` : '') +
       (aboveCount > 0 ? `\n• ${aboveCount} above target (will adjust to exact +3%)` : '') +
       `\n\nThis will update buyback prices directly in the database.`
@@ -271,7 +848,7 @@ export const CashifyMonitorTab: React.FC = () => {
     try {
       const modelUpdatesMap = new Map<string, Record<string, number>>();
 
-      variantsToFix.forEach((v) => {
+      targets.forEach((v) => {
         const existingTarget = findTargetModel(v, models);
         const resolvedLegacyId =
           (existingTarget as any)?.legacyId ||
@@ -305,7 +882,7 @@ export const CashifyMonitorTab: React.FC = () => {
       await bulkUpdateModels(updatesPayload);
 
       setSuccessNotification(
-        `✓ Successfully aligned ${variantsToFix.length} variants across ${modelUpdatesMap.size} models to exact +3% above Cashify!`
+        `✓ Successfully aligned ${targets.length} variants across ${modelUpdatesMap.size} models${groupLabel ? ` in ${groupLabel}` : ''} to exact +3% above Cashify!`
       );
       window.dispatchEvent(new CustomEvent('stc_catalog_order_changed'));
       await loadData();
@@ -315,22 +892,51 @@ export const CashifyMonitorTab: React.FC = () => {
     } finally {
       setIsBulkFixing(false);
     }
-  };
+  }, [fixingVariantKey, isBulkFixing, loadData, models]);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
 
-  // Distinct lists for filter dropdowns
   const brandsList = useMemo(() => {
     const set = new Set<string>();
-    variants.forEach(v => set.add(v.brandName));
+    variants.forEach((v) => set.add(v.brandName));
     return Array.from(set).sort();
   }, [variants]);
 
+  const brandStats = useMemo(() => {
+    const stats: Record<string, { total: number; seriesSet: Set<string> }> = {};
+    variants.forEach((v) => {
+      if (!stats[v.brandName]) {
+        stats[v.brandName] = { total: 0, seriesSet: new Set() };
+      }
+      stats[v.brandName].total++;
+      if (v.series) stats[v.brandName].seriesSet.add(v.series);
+    });
+    return stats;
+  }, [variants]);
+
+  const totalSeriesCount = useMemo(() => {
+    const set = new Set<string>();
+    variants.forEach((v) => {
+      if (v.series) set.add(v.series);
+    });
+    return set.size;
+  }, [variants]);
+
+  const seriesList = useMemo(() => {
+    const set = new Set<string>();
+    variants.forEach((v) => {
+      if (selectedBrand === 'ALL' || v.brandName === selectedBrand) {
+        if (v.series) set.add(v.series);
+      }
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [variants, selectedBrand]);
+
   const ramList = useMemo(() => {
     const set = new Set<number>();
-    variants.forEach(v => {
+    variants.forEach((v) => {
       if (v.ramGb > 0) set.add(v.ramGb);
     });
     return Array.from(set).sort((a, b) => a - b);
@@ -338,32 +944,28 @@ export const CashifyMonitorTab: React.FC = () => {
 
   const storageList = useMemo(() => {
     const set = new Set<number>();
-    variants.forEach(v => set.add(v.storageGb));
+    variants.forEach((v) => set.add(v.storageGb));
     return Array.from(set).sort((a, b) => a - b);
   }, [variants]);
 
-  // Count of all variants with a Cashify quote that are NOT at exact +3% target (both below and above)
   const notExactTargetTotalCount = useMemo(() => {
     return variants.filter(
       (v) => v.cashifyPrice !== null && v.cashifyPrice > 0 && v.rephonixPrice !== Math.round(v.cashifyPrice * 1.03)
     ).length;
   }, [variants]);
 
-  // Count of all variants with a Cashify quote that are below +3% target
   const belowTargetTotalCount = useMemo(() => {
     return variants.filter(
       (v) => v.cashifyPrice !== null && v.cashifyPrice > 0 && v.rephonixPrice < Math.round(v.cashifyPrice * 1.03)
     ).length;
   }, [variants]);
 
-  // Count of all variants with a Cashify quote that are above +3% target
   const aboveTargetTotalCount = useMemo(() => {
     return variants.filter(
       (v) => v.cashifyPrice !== null && v.cashifyPrice > 0 && v.rephonixPrice > Math.round(v.cashifyPrice * 1.03)
     ).length;
   }, [variants]);
 
-  // Map of Cashify prices for the active model being edited in the modal
   const editingModelCashifyPrices = useMemo(() => {
     if (!editingModelForSpecs) return undefined;
     const map: Record<string, number> = {};
@@ -383,10 +985,16 @@ export const CashifyMonitorTab: React.FC = () => {
     return Object.keys(map).length > 0 ? map : undefined;
   }, [editingModelForSpecs, variants]);
 
-  // Filtered variants (Each row is 1 RAM + 1 Storage variant)
+  const handleSelectBrand = (brand: string) => {
+    setSelectedBrand(brand);
+    setSelectedSeries('ALL');
+  };
+
   const filteredVariants = useMemo(() => {
-    return variants.filter(v => {
+    return variants.filter((v) => {
       if (selectedBrand !== 'ALL' && v.brandName !== selectedBrand) return false;
+      if (selectedSeries !== 'ALL' && (v.series || 'Standard') !== selectedSeries) return false;
+
       if (selectedRam !== 'ALL') {
         if (selectedRam === 'NONE' && v.ramGb !== 0) return false;
         if (selectedRam !== 'NONE' && v.ramGb !== parseInt(selectedRam, 10)) return false;
@@ -420,45 +1028,117 @@ export const CashifyMonitorTab: React.FC = () => {
       }
 
       if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
+        const q = searchQuery.toLowerCase().trim();
         return (
           v.modelName.toLowerCase().includes(q) ||
+          (v.series && v.series.toLowerCase().includes(q)) ||
           v.brandName.toLowerCase().includes(q) ||
           v.ramLabel.toLowerCase().includes(q) ||
           v.storageLabel.toLowerCase().includes(q) ||
+          v.specLabel.toLowerCase().includes(q) ||
           (v.cashifyUrl && v.cashifyUrl.toLowerCase().includes(q))
         );
       }
       return true;
     });
-  }, [variants, selectedBrand, selectedRam, selectedStorage, statusFilter, searchQuery]);
+  }, [variants, selectedBrand, selectedSeries, selectedRam, selectedStorage, statusFilter, searchQuery]);
 
-  // Filtered alerts for historical alerts tab
+  const groupedSeries = useMemo(() => {
+    const map = new Map<string, SeriesGroup>();
+
+    filteredVariants.forEach((v) => {
+      const sName = v.series || 'Standard';
+      const groupKey = `${v.brandName}___${sName}`;
+
+      let group = map.get(groupKey);
+      if (!group) {
+        group = {
+          key: groupKey,
+          brandName: v.brandName,
+          series: sName,
+          variants: [],
+          exactTargetCount: 0,
+          belowTargetCount: 0,
+          aboveTargetCount: 0,
+          hasPriceCount: 0,
+          needsFixCount: 0,
+        };
+        map.set(groupKey, group);
+      }
+
+      group.variants.push(v);
+      if (v.cashifyPrice !== null && v.cashifyPrice > 0) {
+        group.hasPriceCount++;
+        const rec = Math.round(v.cashifyPrice * 1.03);
+        if (v.rephonixPrice === rec) {
+          group.exactTargetCount++;
+        } else {
+          group.needsFixCount++;
+          if (v.rephonixPrice < rec) {
+            group.belowTargetCount++;
+          } else {
+            group.aboveTargetCount++;
+          }
+        }
+      }
+    });
+
+    return Array.from(map.values());
+  }, [filteredVariants]);
+
+  // Series Pin & Collapse actions (By default collapsed!)
+  const handleTogglePinSeries = useCallback((key: string) => {
+    setPinnedSeries((prev) => {
+      const next = { ...prev };
+      if (next[key]) {
+        delete next[key];
+      } else {
+        next[key] = true;
+      }
+      return next;
+    });
+  }, []);
+
+  const handleExpandAll = useCallback(() => {
+    const next: Record<string, boolean> = {};
+    groupedSeries.forEach((g) => {
+      next[g.key] = true;
+    });
+    setPinnedSeries(next);
+  }, [groupedSeries]);
+
+  const handleCollapseAll = useCallback(() => {
+    setPinnedSeries({});
+  }, []);
+
   const filteredAlerts = useMemo(() => {
-    return alerts.filter(a => {
+    return alerts.filter((a) => {
       if (selectedBrand !== 'ALL' && a.brandName !== selectedBrand) return false;
       if (statusFilter !== 'ALL' && a.status !== statusFilter) return false;
       if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        return a.modelName.toLowerCase().includes(q) || a.brandName.toLowerCase().includes(q);
+        const q = searchQuery.toLowerCase().trim();
+        return (
+          a.modelName.toLowerCase().includes(q) ||
+          a.brandName.toLowerCase().includes(q)
+        );
       }
       return true;
     });
   }, [alerts, selectedBrand, statusFilter, searchQuery]);
 
-  const handleStartEdit = (variant: CashifyVariantItem) => {
+  const handleStartEdit = useCallback((variant: CashifyVariantItem) => {
     setEditingKey(variant.variantKey);
     setEditUrlValue(variant.cashifyUrl || '');
     setTestResult(null);
-  };
+  }, []);
 
-  const handleCancelEdit = () => {
+  const handleCancelEdit = useCallback(() => {
     setEditingKey(null);
     setEditUrlValue('');
     setTestResult(null);
-  };
+  }, []);
 
-  const handleTestUrl = async () => {
+  const handleTestUrl = useCallback(async () => {
     if (!editUrlValue.trim()) return;
     setTestingUrl(true);
     setTestResult(null);
@@ -477,9 +1157,9 @@ export const CashifyMonitorTab: React.FC = () => {
     } finally {
       setTestingUrl(false);
     }
-  };
+  }, [editUrlValue]);
 
-  const handleSaveUrl = async (key: string) => {
+  const handleSaveUrl = useCallback(async (key: string) => {
     let cleanUrl = editUrlValue.trim();
     if (!cleanUrl) return;
     if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
@@ -495,7 +1175,7 @@ export const CashifyMonitorTab: React.FC = () => {
     } finally {
       setSavingUrl(false);
     }
-  };
+  }, [editUrlValue, loadData]);
 
   const handleTriggerScan = async (limit: number = 0) => {
     if (isScanning) return;
@@ -521,13 +1201,13 @@ export const CashifyMonitorTab: React.FC = () => {
       <div className="flex flex-col items-center justify-center py-20 text-ink-muted">
         <RefreshCw className="w-8 h-8 animate-spin text-cobalt mb-3" />
         <p className="font-semibold text-sm">Loading Cashify Market Intelligence Catalog...</p>
-        <p className="text-xs text-ink-muted mt-1">Resolving variant URLs & competitor buyback prices</p>
+        <p className="text-xs text-ink-muted mt-1">Organizing Brand & Series pricing matrix</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* ── Compact Header & Command Strip ── */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 text-white px-5 py-3.5 rounded-xl shadow-sm border border-slate-800">
         <div className="flex items-center gap-3">
@@ -540,8 +1220,13 @@ export const CashifyMonitorTab: React.FC = () => {
               <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
                 {variants.length} Variants
               </span>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-slate-800 text-slate-300 border border-slate-700">
+                {totalSeriesCount} Series
+              </span>
             </div>
-            <p className="text-slate-400 text-[11px] font-mono">Real-time competitor parity tracking per RAM & Storage specification</p>
+            <p className="text-slate-400 text-[11px] font-mono">
+              Brand & Series-organized competitor parity tracking per RAM & Storage specification
+            </p>
           </div>
         </div>
 
@@ -600,13 +1285,15 @@ export const CashifyMonitorTab: React.FC = () => {
         </div>
       )}
 
-      {/* ── Compact Metric Stat Strip (1 line, 4 cards) ── */}
+      {/* ── Compact Metric Stat Strip ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="bg-canvas-white border border-ice-border rounded-lg p-3 shadow-2xs flex items-center justify-between">
           <div>
-            <span className="text-[10px] font-mono uppercase text-ink-muted block">Catalog Coverage</span>
+            <span className="text-[10px] font-mono uppercase text-ink-muted block">Catalog Matrix</span>
             <span className="text-lg font-extrabold text-ink-navy">{variants.length} Variants</span>
-            <span className="text-[10px] text-ink-muted block font-mono">{summary?.totalModels ?? 186} Models</span>
+            <span className="text-[10px] text-ink-muted block font-mono">
+              {brandsList.length} Brands • {totalSeriesCount} Series
+            </span>
           </div>
           <Layers className="w-5 h-5 text-slate-400" />
         </div>
@@ -615,9 +1302,9 @@ export const CashifyMonitorTab: React.FC = () => {
           <div>
             <span className="text-[10px] font-mono uppercase text-emerald-700 block">Verified Endpoints</span>
             <span className="text-lg font-extrabold text-emerald-600">
-              {variants.filter(v => v.urlStatus === 'FOUND' || v.urlStatus === 'OVERRIDDEN').length}
+              {variants.filter((v) => v.urlStatus === 'FOUND' || v.urlStatus === 'OVERRIDDEN').length}
               <span className="text-xs font-normal text-emerald-700 ml-1 font-mono">
-                ({variants.length > 0 ? ((variants.filter(v => v.urlStatus === 'FOUND' || v.urlStatus === 'OVERRIDDEN').length / variants.length) * 100).toFixed(0) : 0}%)
+                ({variants.length > 0 ? ((variants.filter((v) => v.urlStatus === 'FOUND' || v.urlStatus === 'OVERRIDDEN').length / variants.length) * 100).toFixed(0) : 0}%)
               </span>
             </span>
             <span className="text-[10px] text-emerald-600/80 block font-mono">200 OK Live</span>
@@ -645,7 +1332,7 @@ export const CashifyMonitorTab: React.FC = () => {
       </div>
 
       {/* ── Sub Navigation Tabs Bar ── */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-ice-border pb-3">
+      <div className="flex items-center justify-between border-b border-ice-border pb-3">
         <div className="flex items-center gap-2 bg-canvas-pure p-1 rounded-xl border border-ice-border shadow-xs">
           <button
             onClick={() => {
@@ -659,7 +1346,7 @@ export const CashifyMonitorTab: React.FC = () => {
             }`}
           >
             <Layers className="w-3.5 h-3.5" />
-            <span>Variant Price Matrix & URLs</span>
+            <span>Brand & Series Matrix</span>
             <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-white/20">
               {variants.length}
             </span>
@@ -684,31 +1371,168 @@ export const CashifyMonitorTab: React.FC = () => {
           </button>
         </div>
 
-        {/* Global Filter Bar */}
-        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+        {/* Global Auto-Fix All to +3% Target Button */}
+        {activeSubTab === 'variants' && notExactTargetTotalCount > 0 && (
+          <button
+            type="button"
+            onClick={() => handleBulkFixVariants(filteredVariants)}
+            disabled={isBulkFixing || !!fixingVariantKey}
+            className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 active:scale-95 text-white rounded-lg text-xs font-bold shadow-xs flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 whitespace-nowrap"
+            title={`Automatically align all ${notExactTargetTotalCount} variants to exact +3% above Cashify (${belowTargetTotalCount} below, ${aboveTargetTotalCount} above)`}
+          >
+            {isBulkFixing ? (
+              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Zap className="w-3.5 h-3.5 fill-current text-white" />
+            )}
+            <span>Auto-Fix All to +3% ({notExactTargetTotalCount})</span>
+          </button>
+        )}
+      </div>
+
+      {/* ── Brand Selection Quick Switcher Bar ── */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
+        <button
+          type="button"
+          onClick={() => handleSelectBrand('ALL')}
+          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+            selectedBrand === 'ALL'
+              ? 'bg-slate-900 text-white shadow-xs font-extrabold'
+              : 'bg-canvas-white hover:bg-slate-100 text-ink-slate border border-ice-border'
+          }`}
+        >
+          <span>All Brands</span>
+          <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+            selectedBrand === 'ALL' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-700'
+          }`}>
+            {variants.length}
+          </span>
+        </button>
+
+        {brandsList.map((brand) => {
+          const isSelected = selectedBrand === brand;
+          const stats = brandStats[brand] || { total: 0, seriesSet: new Set() };
+          return (
+            <button
+              key={brand}
+              type="button"
+              onClick={() => handleSelectBrand(brand)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+                isSelected
+                  ? 'bg-cobalt text-white shadow-xs font-extrabold'
+                  : 'bg-canvas-white hover:bg-slate-100 text-ink-slate border border-ice-border'
+              }`}
+            >
+              <span>{brand}</span>
+              <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+                isSelected ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
+              }`}>
+                {stats.total}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ── Search Bar & Filter Controls Card ── */}
+      <div className="bg-canvas-white border border-ice-border rounded-xl p-3 shadow-2xs space-y-3">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+          {/* Prominent Search Option */}
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 text-ink-muted absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Search model, series, brand, RAM, storage, or URL... (e.g. iPhone 17, 12 GB, Fold, 512 GB)"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-9 py-2 text-xs bg-slate-50 hover:bg-white focus:bg-white border border-ice-border focus:border-cobalt rounded-lg text-ink-navy placeholder:text-slate-400 focus:outline-none transition-colors shadow-2xs font-medium"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded cursor-pointer"
+                title="Clear search"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* Results Summary & Accordion Toggles */}
+          {activeSubTab === 'variants' && (
+            <div className="flex items-center gap-2 shrink-0 self-end md:self-auto">
+              <span className="text-xs font-mono font-semibold text-slate-500 whitespace-nowrap">
+                {filteredVariants.length} variants in {groupedSeries.length} series
+              </span>
+              <div className="h-4 w-px bg-slate-200" />
+              <button
+                type="button"
+                onClick={handleExpandAll}
+                className="px-2.5 py-1 text-xs font-semibold text-slate-600 hover:text-ink-navy hover:bg-slate-100 rounded-md transition-colors cursor-pointer"
+                title="Lock and pin all series open"
+              >
+                Pin All Open
+              </button>
+              <button
+                type="button"
+                onClick={handleCollapseAll}
+                className="px-2.5 py-1 text-xs font-semibold text-indigo-700 bg-indigo-50/70 hover:bg-indigo-100 border border-indigo-200/60 rounded-md transition-colors cursor-pointer flex items-center gap-1 shadow-2xs"
+                title="Collapse all into default hover-peek mode"
+              >
+                <Zap className="w-3 h-3 text-indigo-500 fill-indigo-400" />
+                <span>Hover-Peek Mode</span>
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Filter Strip */}
+        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100">
+          <div className="flex items-center gap-1 text-[11px] font-bold text-slate-500 uppercase font-mono mr-1">
+            <Filter className="w-3 h-3 text-slate-400" />
+            <span>Filters:</span>
+          </div>
+
           {/* Brand Filter */}
           <select
             value={selectedBrand}
-            onChange={e => setSelectedBrand(e.target.value)}
-            className="px-2.5 py-1.5 border border-ice-border bg-canvas-white rounded-lg text-xs font-semibold text-ink-navy focus:outline-none focus:border-cobalt shadow-xs cursor-pointer"
+            onChange={(e) => handleSelectBrand(e.target.value)}
+            className="px-2.5 py-1.5 border border-ice-border bg-white rounded-lg text-xs font-semibold text-ink-navy focus:outline-none focus:border-cobalt shadow-xs cursor-pointer"
           >
             <option value="ALL">All Brands ({brandsList.length})</option>
-            {brandsList.map(b => (
+            {brandsList.map((b) => (
               <option key={b} value={b}>
                 {b}
               </option>
             ))}
           </select>
 
+          {/* Series Filter */}
+          {activeSubTab === 'variants' && (
+            <select
+              value={selectedSeries}
+              onChange={(e) => setSelectedSeries(e.target.value)}
+              className="px-2.5 py-1.5 border border-ice-border bg-white rounded-lg text-xs font-semibold text-ink-navy focus:outline-none focus:border-cobalt shadow-xs cursor-pointer max-w-[220px] truncate"
+            >
+              <option value="ALL">All Series ({seriesList.length})</option>
+              {seriesList.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          )}
+
           {/* RAM Filter */}
           {activeSubTab === 'variants' && (
             <select
               value={selectedRam}
-              onChange={e => setSelectedRam(e.target.value)}
-              className="px-2.5 py-1.5 border border-ice-border bg-canvas-white rounded-lg text-xs font-semibold text-ink-navy focus:outline-none focus:border-cobalt shadow-xs cursor-pointer"
+              onChange={(e) => setSelectedRam(e.target.value)}
+              className="px-2.5 py-1.5 border border-ice-border bg-white rounded-lg text-xs font-semibold text-ink-navy focus:outline-none focus:border-cobalt shadow-xs cursor-pointer"
             >
               <option value="ALL">All RAMs</option>
-              {ramList.map(r => (
+              {ramList.map((r) => (
                 <option key={r} value={r}>
                   {r} GB RAM
                 </option>
@@ -721,11 +1545,11 @@ export const CashifyMonitorTab: React.FC = () => {
           {activeSubTab === 'variants' && (
             <select
               value={selectedStorage}
-              onChange={e => setSelectedStorage(e.target.value)}
-              className="px-2.5 py-1.5 border border-ice-border bg-canvas-white rounded-lg text-xs font-semibold text-ink-navy focus:outline-none focus:border-cobalt shadow-xs cursor-pointer"
+              onChange={(e) => setSelectedStorage(e.target.value)}
+              className="px-2.5 py-1.5 border border-ice-border bg-white rounded-lg text-xs font-semibold text-ink-navy focus:outline-none focus:border-cobalt shadow-xs cursor-pointer"
             >
               <option value="ALL">All Storages</option>
-              {storageList.map(s => (
+              {storageList.map((s) => (
                 <option key={s} value={s}>
                   {s >= 1024 ? `${s / 1024} TB` : `${s} GB`}
                 </option>
@@ -737,8 +1561,8 @@ export const CashifyMonitorTab: React.FC = () => {
           {activeSubTab === 'variants' ? (
             <select
               value={statusFilter}
-              onChange={e => setStatusFilter(e.target.value)}
-              className="px-2.5 py-1.5 border border-ice-border bg-canvas-white rounded-lg text-xs font-semibold text-ink-navy focus:outline-none focus:border-cobalt shadow-xs cursor-pointer"
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-2.5 py-1.5 border border-ice-border bg-white rounded-lg text-xs font-semibold text-ink-navy focus:outline-none focus:border-cobalt shadow-xs cursor-pointer"
             >
               <option value="ALL">All Statuses</option>
               <option value="NOT_EXACT_TARGET">⚠️ Needs Alignment to +3% ({notExactTargetTotalCount})</option>
@@ -754,8 +1578,8 @@ export const CashifyMonitorTab: React.FC = () => {
           ) : (
             <select
               value={statusFilter}
-              onChange={e => setStatusFilter(e.target.value)}
-              className="px-2.5 py-1.5 border border-ice-border bg-canvas-white rounded-lg text-xs font-semibold text-ink-navy focus:outline-none focus:border-cobalt shadow-xs cursor-pointer"
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-2.5 py-1.5 border border-ice-border bg-white rounded-lg text-xs font-semibold text-ink-navy focus:outline-none focus:border-cobalt shadow-xs cursor-pointer"
             >
               <option value="ALL">All Price Trends</option>
               <option value="INCREASED">▲ Increased by Cashify</option>
@@ -764,35 +1588,24 @@ export const CashifyMonitorTab: React.FC = () => {
             </select>
           )}
 
-          {/* Quick Auto-Fix All to +3% Target Button */}
-          {activeSubTab === 'variants' && notExactTargetTotalCount > 0 && (
+          {/* Reset Filters button if any non-default is active */}
+          {(selectedBrand !== 'ALL' || selectedSeries !== 'ALL' || selectedRam !== 'ALL' || selectedStorage !== 'ALL' || statusFilter !== 'ALL' || searchQuery) && (
             <button
               type="button"
-              onClick={handleBulkFixAllRecommended}
-              disabled={isBulkFixing || !!fixingVariantKey}
-              className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 active:scale-95 text-white rounded-lg text-xs font-bold shadow-xs flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 whitespace-nowrap"
-              title={`Automatically align all ${notExactTargetTotalCount} variants to exact +3% above Cashify (${belowTargetTotalCount} below, ${aboveTargetTotalCount} above)`}
+              onClick={() => {
+                setSelectedBrand('ALL');
+                setSelectedSeries('ALL');
+                setSelectedRam('ALL');
+                setSelectedStorage('ALL');
+                setStatusFilter('ALL');
+                setSearchQuery('');
+              }}
+              className="px-2 py-1 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-md font-semibold transition-colors cursor-pointer flex items-center gap-1"
             >
-              {isBulkFixing ? (
-                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <Zap className="w-3.5 h-3.5 fill-current text-white" />
-              )}
-              <span>Auto-Fix All to +3% ({notExactTargetTotalCount})</span>
+              <X className="w-3 h-3" />
+              <span>Reset</span>
             </button>
           )}
-
-          {/* Search Box */}
-          <div className="relative flex-1 sm:w-56">
-            <Search className="w-3.5 h-3.5 text-ink-muted absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="Search model, variant or URL..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-1.5 text-xs bg-canvas-white border border-ice-border rounded-lg text-ink-navy placeholder:text-ink-muted focus:outline-none focus:border-cobalt shadow-xs"
-            />
-          </div>
         </div>
       </div>
 
@@ -812,380 +1625,61 @@ export const CashifyMonitorTab: React.FC = () => {
         </div>
       )}
 
-      {/* ── View 1: Variant Price Matrix Table (1 Row = 1 RAM + 1 Storage Variant) ── */}
+      {/* ── View 1: Brand & Series Grouped Variant Price Matrix ── */}
       {activeSubTab === 'variants' && (
-        <div className="bg-canvas-white border border-ice-border rounded-xl shadow-xs overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-canvas-pure border-b border-ice-border text-ink-muted uppercase font-mono text-[10px] tracking-wider">
-                <tr>
-                  <th className="py-3 px-4">Smartphone Model</th>
-                  <th className="py-3 px-3">RAM</th>
-                  <th className="py-3 px-3">Storage</th>
-                  <th className="py-3 px-4">Rephonix Price</th>
-                  <th className="py-3 px-4">Cashify Price</th>
-                  <th className="py-3 px-4 min-w-[210px]">Margin Difference & Rec (+3%)</th>
-                  <th className="py-3 px-4">Cashify Variant URL</th>
-                  <th className="py-3 px-4">Status</th>
-                  <th className="py-3 px-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-ice-border/60">
-                {filteredVariants.length === 0 ? (
-                  <tr>
-                    <td colSpan={9} className="py-12 text-center text-ink-muted">
-                      No variants matching current filters.
-                    </td>
-                  </tr>
-                ) : (
-                  filteredVariants.map(variant => {
-                    const isEditing = editingKey === variant.variantKey;
-                    const hasCashifyPrice = variant.cashifyPrice !== null;
-
-                    return (
-                      <tr key={variant.variantKey} className="hover:bg-slate-50/70 transition-colors">
-                        {/* 1. Model & Brand */}
-                        <td className="py-3 px-4">
-                          <button
-                            type="button"
-                            onClick={() => handleOpenEditSpecs(variant)}
-                            className="font-bold text-ink-navy hover:text-cobalt hover:underline text-sm leading-tight text-left cursor-pointer transition-colors block"
-                            title="Click to edit specs & prices for this model"
-                          >
-                            {variant.modelName}
-                          </button>
-                          <div className="text-[11px] text-ink-muted font-mono mt-0.5">
-                            {variant.brandName} • {variant.releaseYear}
-                          </div>
-                        </td>
-
-                        {/* 2. RAM Variant */}
-                        <td className="py-3 px-3 whitespace-nowrap">
-                          {variant.ramGb > 0 ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-mono text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/80">
-                              <Cpu className="w-3 h-3 text-indigo-500" />
-                              <span>{variant.ramLabel}</span>
-                            </span>
-                          ) : (
-                            <span className="text-slate-400 font-mono text-xs">—</span>
-                          )}
-                        </td>
-
-                        {/* 3. Storage Variant */}
-                        <td className="py-3 px-3 whitespace-nowrap">
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md font-mono text-xs font-bold bg-slate-100 text-slate-800 border border-slate-200">
-                            <HardDrive className="w-3 h-3 text-slate-500" />
-                            <span>{variant.storageLabel}</span>
-                          </span>
-                        </td>
-
-                        {/* 4. Rephonix Buyback Price */}
-                        <td className="py-3 px-4 whitespace-nowrap">
-                          <div className="flex items-center gap-1.5 group">
-                            <span className="font-extrabold text-ink-navy text-sm">
-                              ₹{variant.rephonixPrice.toLocaleString('en-IN')}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => handleOpenEditSpecs(variant)}
-                              className="opacity-0 group-hover:opacity-100 p-0.5 text-cobalt hover:bg-cobalt/10 rounded transition-all cursor-pointer"
-                              title="Edit Rephonix buyback prices for this model"
-                            >
-                              <Edit2 className="w-3 h-3" />
-                            </button>
-                          </div>
-                          <div className="text-[10px] text-emerald-700 font-mono">Our Buyback Payout</div>
-                        </td>
-
-                        {/* 5. Cashify Competitor Price */}
-                        <td className="py-3 px-4 whitespace-nowrap">
-                          {hasCashifyPrice ? (
-                            <div>
-                              <div className="font-extrabold text-indigo-700 text-sm font-mono">
-                                ₹{variant.cashifyPrice!.toLocaleString('en-IN')}
-                              </div>
-                              <div className="text-[10px] text-indigo-500 font-mono">
-                                {variant.lastAuditedDate
-                                  ? new Date(variant.lastAuditedDate).toLocaleDateString('en-IN', {
-                                      month: 'short',
-                                      day: 'numeric',
-                                    })
-                                  : 'Cashify Quote'}
-                              </div>
-                            </div>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 text-[11px] text-slate-400 font-mono italic">
-                              <span>Pending scan</span>
-                            </span>
-                          )}
-                        </td>
-
-                        {/* 6. Margin Difference & Recommended Price (+3% rule) */}
-                        <td className="py-3 px-4">
-                          {hasCashifyPrice ? (() => {
-                            const cashifyP = variant.cashifyPrice!;
-                            const recPrice = Math.round(cashifyP * 1.03);
-                            const currentDiff = variant.difference ?? (variant.rephonixPrice - cashifyP);
-                            const diffPct = ((variant.rephonixPrice - cashifyP) / cashifyP) * 100;
-                            const isExact = variant.rephonixPrice === recPrice;
-                            const isBelow = variant.rephonixPrice < recPrice;
-                            const isFixing = fixingVariantKey === variant.variantKey;
-
-                            return (
-                              <div className="space-y-1.5 min-w-[200px]">
-                                {/* Current Margin Diff Badge */}
-                                <div className="flex items-center gap-1.5 flex-wrap">
-                                  <span
-                                    className={`px-2 py-0.5 rounded-md font-mono text-xs font-bold inline-flex items-center gap-1 ${
-                                      currentDiff > 0
-                                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                        : currentDiff < 0
-                                        ? 'bg-rose-50 text-rose-700 border border-rose-200'
-                                        : 'bg-slate-100 text-slate-700 border border-slate-200'
-                                    }`}
-                                  >
-                                    {currentDiff > 0
-                                      ? `+₹${currentDiff.toLocaleString('en-IN')} (${diffPct >= 0 ? '+' : ''}${diffPct.toFixed(1)}%)`
-                                      : currentDiff < 0
-                                      ? `-₹${Math.abs(currentDiff).toLocaleString('en-IN')} (${diffPct.toFixed(1)}%)`
-                                      : `₹0 (0.0%)`}
-                                  </span>
-
-                                  {isExact ? (
-                                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold font-mono bg-emerald-100/90 text-emerald-800 border border-emerald-300 inline-flex items-center gap-0.5 shadow-2xs">
-                                      <Check className="w-2.5 h-2.5 stroke-[3]" />
-                                      <span>+3% Exact</span>
-                                    </span>
-                                  ) : isBelow ? (
-                                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold font-mono bg-rose-100/90 text-rose-800 border border-rose-300 inline-flex items-center gap-0.5 shadow-2xs">
-                                      <span>Below +3%</span>
-                                    </span>
-                                  ) : (
-                                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold font-mono bg-indigo-100/90 text-indigo-800 border border-indigo-300 inline-flex items-center gap-0.5 shadow-2xs">
-                                      <span>Above +3% ({diffPct > 3 ? `+${(diffPct - 3).toFixed(1)}%` : ''})</span>
-                                    </span>
-                                  )}
-                                </div>
-
-                                {/* Recommended Price Box & 1-Click Fix Button */}
-                                <div className={`p-1.5 rounded-lg border text-xs ${
-                                  isExact 
-                                    ? 'bg-emerald-50/40 border-emerald-100' 
-                                    : 'bg-amber-50/60 border-amber-200 shadow-2xs'
-                                }`}>
-                                  <div className="flex items-center justify-between gap-1 text-[11px]">
-                                    <span className="text-slate-500 font-medium font-sans">Target (Exact +3%):</span>
-                                    <span className="font-extrabold font-mono text-indigo-950">
-                                      ₹{recPrice.toLocaleString('en-IN')}
-                                    </span>
-                                  </div>
-
-                                  {!isExact ? (
-                                    <button
-                                      type="button"
-                                      disabled={isFixing || isBulkFixing}
-                                      onClick={() => handleApplyRecommendedPrice(variant, recPrice)}
-                                      className="mt-1.5 w-full flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-md bg-gradient-to-r from-indigo-600 to-cobalt hover:from-indigo-700 hover:to-cobalt-hover active:scale-95 text-white text-[11px] font-bold shadow-xs transition-all cursor-pointer disabled:opacity-50"
-                                      title={`Fix Rephonix payout to exact +3% (₹${recPrice.toLocaleString('en-IN')})`}
-                                    >
-                                      {isFixing ? (
-                                        <>
-                                          <RefreshCw className="w-3 h-3 animate-spin text-white" />
-                                          <span>Applying...</span>
-                                        </>
-                                      ) : (
-                                        <>
-                                          <Zap className="w-3 h-3 fill-amber-300 text-amber-300" />
-                                          <span>Fix to ₹{recPrice.toLocaleString('en-IN')}</span>
-                                        </>
-                                      )}
-                                    </button>
-                                  ) : (
-                                    <div className="mt-1 flex items-center justify-between text-[10px] text-emerald-700 font-mono">
-                                      <span className="flex items-center gap-0.5">
-                                        <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                                        <span>Optimal Payout (Exact +3%)</span>
-                                      </span>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          })() : (
-                            <span className="text-slate-400 font-mono text-xs italic">— (Pending scan)</span>
-                          )}
-                        </td>
-
-                        {/* 7. Cashify Variant URL */}
-                        <td className="py-3 px-4 max-w-xs">
-                          {isEditing ? (
-                            <div className="space-y-2 bg-slate-50 p-2 rounded-lg border border-cobalt/40 shadow-xs">
-                              <input
-                                type="url"
-                                value={editUrlValue}
-                                onChange={e => setEditUrlValue(e.target.value)}
-                                onKeyDown={e => {
-                                  if (e.key === 'Enter') {
-                                    e.preventDefault();
-                                    handleSaveUrl(variant.variantKey);
-                                  } else if (e.key === 'Escape') {
-                                    handleCancelEdit();
-                                  }
-                                }}
-                                placeholder="https://www.cashify.in/sell-old-mobile-phone/used-..."
-                                className="w-full px-2.5 py-1.5 text-xs border border-cobalt bg-white rounded focus:outline-none font-mono"
-                                autoFocus
-                              />
-                              <div className="flex flex-wrap items-center gap-1.5">
-                                <button
-                                  type="button"
-                                  onClick={() => handleSaveUrl(variant.variantKey)}
-                                  disabled={savingUrl}
-                                  className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[11px] font-bold font-mono cursor-pointer transition-colors flex items-center gap-1 shadow-xs"
-                                  title="Press Enter or Click to Save"
-                                >
-                                  <Check className="w-3.5 h-3.5" />
-                                  <span>{savingUrl ? 'Saving...' : 'Save URL'}</span>
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={handleTestUrl}
-                                  disabled={testingUrl}
-                                  className="px-2 py-1 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded text-[11px] font-mono font-semibold cursor-pointer transition-colors"
-                                >
-                                  {testingUrl ? 'Testing...' : 'Test URL'}
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={handleCancelEdit}
-                                  className="px-2 py-1 bg-white hover:bg-slate-100 text-slate-600 border border-slate-300 rounded text-[11px] font-mono cursor-pointer transition-colors"
-                                >
-                                  Cancel
-                                </button>
-                                {testResult && (
-                                  <div className="w-full mt-1 flex flex-col gap-1">
-                                    <span
-                                      className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded inline-flex items-center gap-1 max-w-full ${
-                                        testResult.ok
-                                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                                          : testResult.is404
-                                          ? 'bg-rose-100 text-rose-800 border border-rose-300'
-                                          : testResult.isUnserviceable
-                                          ? 'bg-amber-100 text-amber-800 border border-amber-300'
-                                          : 'bg-rose-100 text-rose-800 border border-rose-300'
-                                      }`}
-                                    >
-                                      {testResult.ok ? (
-                                        <>
-                                          <span>✓ Verified</span>
-                                          {testResult.extractedPrice ? (
-                                            <span className="font-extrabold text-emerald-950">
-                                              (Live: ₹{testResult.extractedPrice.toLocaleString('en-IN')})
-                                            </span>
-                                          ) : null}
-                                        </>
-                                      ) : testResult.is404 ? (
-                                        <span>✗ 404: Page Not Found on Cashify</span>
-                                      ) : testResult.isUnserviceable ? (
-                                        <span>⚠️ Cashify not purchasing in this location (Gurgaon / Delhi / etc.)</span>
-                                      ) : (
-                                        <span>✗ {testResult.error || `HTTP ${testResult.status} Error`}</span>
-                                      )}
-                                    </span>
-                                    {!testResult.ok && testResult.error && !testResult.is404 && !testResult.isUnserviceable && (
-                                      <span className="text-[10px] text-rose-600 font-sans leading-tight">
-                                        {testResult.error}
-                                      </span>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                              <span className="text-[10px] text-slate-500 font-mono block">Tip: Press <b>Enter</b> to save or <b>Esc</b> to cancel</span>
-                            </div>
-                          ) : variant.cashifyUrl ? (
-                            <div className="flex items-center gap-1.5 group">
-                              <a
-                                href={variant.cashifyUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="font-mono text-[11px] text-cobalt hover:underline truncate max-w-[200px] inline-block"
-                                title={variant.cashifyUrl}
-                              >
-                                {variant.cashifyUrl.replace('https://www.cashify.in/sell-old-mobile-phone/', '')}
-                              </a>
-                              <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-cobalt shrink-0" />
-                            </div>
-                          ) : (
-                            <span className="text-amber-600 font-mono text-[11px]">No URL mapped</span>
-                          )}
-                        </td>
-
-                        {/* 8. URL Status Badge */}
-                        <td className="py-3 px-4 whitespace-nowrap">
-                          {variant.isCustomOverride ? (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                              ⭐ Custom Override
-                            </span>
-                          ) : variant.urlStatus === 'FOUND' ? (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1 w-max">
-                              <CheckCircle2 className="w-3 h-3" /> 200 OK
-                            </span>
-                          ) : (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1 w-max">
-                              <AlertTriangle className="w-3 h-3" /> Missing (404)
-                            </span>
-                          )}
-                        </td>
-
-                        {/* 9. Actions */}
-                        <td className="py-3 px-4 text-right whitespace-nowrap">
-                          {isEditing ? (
-                            <div className="flex items-center justify-end gap-1.5">
-                              <button
-                                onClick={() => handleSaveUrl(variant.variantKey)}
-                                disabled={savingUrl}
-                                className="p-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-bold cursor-pointer transition-all flex items-center gap-1 shadow-xs"
-                                title="Save Custom URL for this Variant"
-                              >
-                                <Check className="w-3.5 h-3.5" />
-                              </button>
-                              <button
-                                onClick={handleCancelEdit}
-                                className="p-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded text-xs font-bold cursor-pointer transition-all"
-                                title="Cancel Edit"
-                              >
-                                <X className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          ) : (
-                            <div className="flex items-center justify-end gap-2">
-                              <button
-                                onClick={() => handleOpenEditSpecs(variant)}
-                                className="px-2.5 py-1 text-xs bg-cobalt/10 hover:bg-cobalt/20 text-cobalt border border-cobalt/20 hover:border-cobalt/40 rounded font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-xs"
-                                title="Edit specs, RAM/Storage matrix and Rephonix buyback prices"
-                              >
-                                <Edit2 className="w-3.5 h-3.5" />
-                                <span>Edit Specs & Prices</span>
-                              </button>
-
-                              <button
-                                onClick={() => handleStartEdit(variant)}
-                                className="px-2.5 py-1 text-xs border border-ice-border hover:border-slate-400 hover:bg-slate-50 text-ink-slate rounded font-medium transition-all cursor-pointer flex items-center gap-1.5"
-                                title="Edit specific Cashify URL for this RAM/Storage variant"
-                              >
-                                <ExternalLink className="w-3 h-3 text-slate-400" />
-                                <span>{variant.cashifyUrl ? 'Edit URL' : 'Set URL'}</span>
-                              </button>
-                            </div>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
+        <div className="space-y-4">
+          {filteredVariants.length === 0 ? (
+            <div className="bg-canvas-white border border-ice-border rounded-xl p-12 text-center shadow-xs">
+              <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3 text-slate-400">
+                <Search className="w-6 h-6" />
+              </div>
+              <h3 className="font-bold text-ink-navy text-sm">No matching variants found</h3>
+              <p className="text-xs text-ink-muted mt-1 max-w-sm mx-auto">
+                {searchQuery
+                  ? `No variants found matching "${searchQuery}". Try searching for another model, series, or spec.`
+                  : 'No variants match the current combination of brand, series, RAM, storage, or status filters.'}
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery('');
+                  setSelectedBrand('ALL');
+                  setSelectedSeries('ALL');
+                  setSelectedRam('ALL');
+                  setSelectedStorage('ALL');
+                  setStatusFilter('ALL');
+                }}
+                className="mt-4 px-3.5 py-1.5 rounded-lg text-xs font-bold bg-cobalt hover:bg-cobalt-hover text-white transition-all cursor-pointer shadow-xs"
+              >
+                Clear All Filters & Search
+              </button>
+            </div>
+          ) : (
+            groupedSeries.map((group) => (
+              <SeriesAccordionCard
+                key={group.key}
+                group={group}
+                isSearchActive={Boolean(searchQuery.trim())}
+                isPinned={Boolean(pinnedSeries[group.key])}
+                onTogglePin={handleTogglePinSeries}
+                onBulkFixSeries={handleBulkFixVariants}
+                isBulkFixing={isBulkFixing}
+                fixingVariantKey={fixingVariantKey}
+                handleOpenEditSpecs={handleOpenEditSpecs}
+                handleApplyRecommendedPrice={handleApplyRecommendedPrice}
+                editingKey={editingKey}
+                editUrlValue={editUrlValue}
+                setEditUrlValue={setEditUrlValue}
+                handleSaveUrl={handleSaveUrl}
+                handleCancelEdit={handleCancelEdit}
+                handleStartEdit={handleStartEdit}
+                handleTestUrl={handleTestUrl}
+                testingUrl={testingUrl}
+                savingUrl={savingUrl}
+                testResult={testResult}
+              />
+            ))
+          )}
         </div>
       )}
 
@@ -1209,11 +1703,11 @@ export const CashifyMonitorTab: React.FC = () => {
                 {filteredAlerts.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="py-12 text-center text-ink-muted">
-                      No price comparison alerts recorded yet. Click &quot;Audit Top 10&quot; or &quot;Run Full Price Audit&quot; to crawl live Cashify quotes!
+                      No price comparison alerts recorded yet. Click &quot;Audit Top 10&quot; or &quot;Run Full Audit&quot; to crawl live Cashify quotes!
                     </td>
                   </tr>
                 ) : (
-                  filteredAlerts.map(alert => {
+                  filteredAlerts.map((alert) => {
                     const isPayingMore = alert.difference > 0;
 
                     return (

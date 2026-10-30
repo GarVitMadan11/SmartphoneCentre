@@ -53,6 +53,8 @@ export function calculateValuation(
     marketDemand?: MarketDemandKey;
     variantType?: VariantFactorKey;
     dualEsim?: boolean;
+    screenDeduction?: number;
+    warrantyDeductionPercentage?: number;
   }
 ): ValuationBreakdown {
   const result: Stage1ValuationResult = calculateStage1Valuation({
@@ -70,7 +72,9 @@ export function calculateValuation(
     deviceAge: options?.deviceAge,
     marketDemand: options?.marketDemand,
     variantType: options?.variantType,
-    dualEsim: options?.dualEsim
+    dualEsim: options?.dualEsim,
+    screenDeduction: options?.screenDeduction,
+    warrantyDeductionPercentage: options?.warrantyDeductionPercentage
   });
 
   const deductions: ValuationDeduction[] = result.auditTrail.adjustments.map(adj => ({

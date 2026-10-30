@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { Model, Variant, getDefectRulesForCategory, DefectRule, isAppleDevice, isSmartwatchDevice, isTabletDevice, hasSpenSupport, getBiometricType, getDeviceImage } from '../../data/mockDatabase';
+import { Model, Variant, getDefectRulesForCategory, DefectRule, isAppleDevice, isSmartwatchDevice, isTabletDevice, hasSpenSupport, getBiometricType, getDeviceImage, getModelScreenDeduction, getModelWarrantyDeductionPercentage } from '../../data/mockDatabase';
 import { calculateValuation } from '../../utils/valuation';
 import { type AgeFactorKey } from '../../data/pricingRulesConfig';
 import { 
@@ -374,6 +374,14 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
   const simType = 'dual_sim';
   const [dualEsim, setDualEsim] = useState<boolean | null>(null);
 
+  const modelScreenDeduction = useMemo(() => {
+    return (model as any).screenDeduction ?? getModelScreenDeduction(model);
+  }, [model]);
+
+  const modelWarrantyDeductionPct = useMemo(() => {
+    return (model as any).warrantyDeductionPercentage ?? getModelWarrantyDeductionPercentage(model);
+  }, [model]);
+
   // Calculate live valuation via Stage 1 Rephonix Pricing Engine
   const valuation = useMemo(() => {
     return calculateValuation(variant, selectedDefects, {
@@ -385,9 +393,11 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
       hasSpen,
       warrantyAge: isScreenNonOriginal ? 'out_of_warranty' : warrantyAge,
       deviceAge: isScreenNonOriginal ? 'out_of_warranty' : deviceAge,
-      dualEsim: dualEsim === true
+      dualEsim: dualEsim === true,
+      screenDeduction: modelScreenDeduction,
+      warrantyDeductionPercentage: modelWarrantyDeductionPct
     });
-  }, [variant, selectedDefects, model, simType, warrantyAge, deviceAge, dualEsim, hasSpen, isScreenNonOriginal]);
+  }, [variant, selectedDefects, model, simType, warrantyAge, deviceAge, dualEsim, hasSpen, isScreenNonOriginal, modelScreenDeduction, modelWarrantyDeductionPct]);
 
   // Stable receipt reference code — generated once per wizard session
   const receiptRef = useMemo(() => Math.random().toString(36).substr(2, 6).toUpperCase(), []);
@@ -1135,30 +1145,111 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   <p className="text-xs sm:text-sm text-slate-800 mt-2 font-medium">Examine the front screen glass and the display panel carefully.</p>
                 </div>
 
-                {/* Standard Original Factory Display Assumed Banner */}
-                <div className="mb-6 text-left border border-blue-500/25 bg-gradient-to-r from-blue-50/90 via-indigo-50/60 to-blue-50/80 p-4 rounded-2xl relative overflow-hidden shadow-xs">
-                  <div className="flex items-start gap-3.5">
-                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center flex-shrink-0 text-blue-600 mt-0.5">
-                      <ShieldCheck className="w-5 h-5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between flex-wrap gap-2">
-                        <h4 className="text-xs font-bold text-slate-900 font-outfit uppercase tracking-wider flex items-center gap-1.5">
-                          <span>Standard Original Factory Display Assumed</span>
-                        </h4>
-                        <a
-                          href={`https://wa.me/919034997719?text=${encodeURIComponent(`Hi Rephonix Team! My ${model.name} has a replaced / non-original screen. What is the best quote you can offer?`)}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-semibold transition-colors shadow-xs"
-                        >
-                          <MessageSquare className="w-3.5 h-3.5" />
-                          <span>Screen Replaced? Chat with Us</span>
-                        </a>
+                {/* Display Panel Originality Check */}
+                <div className="mb-6 p-4 rounded-2xl border border-slate-200 bg-slate-50/80 shadow-xs text-left">
+                  <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
+                    <span className="text-[11px] font-mono tracking-wider text-slate-700 uppercase font-black flex items-center gap-1.5">
+                      <ShieldCheck className="w-4 h-4 text-blue-600" />
+                      <span>Display Authenticity & Warranty Verification</span>
+                    </span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 font-bold">
+                      Required
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {/* Option 1: Original Factory Display */}
+                    <div
+                      role="radio"
+                      tabIndex={0}
+                      aria-checked={!isScreenNonOriginal}
+                      onClick={() => {
+                        setSelectedDefects(prev => prev.filter(d => d.id !== 'defect-screen-non-original'));
+                      }}
+                      onKeyDown={e => handleKeyDown(e, () => {
+                        setSelectedDefects(prev => prev.filter(d => d.id !== 'defect-screen-non-original'));
+                      })}
+                      className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all duration-200 flex items-start gap-3 ${
+                        !isScreenNonOriginal
+                          ? 'border-emerald-500 bg-emerald-500/10 shadow-xs ring-1 ring-emerald-500/30'
+                          : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/70'
+                      }`}
+                    >
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                        !isScreenNonOriginal ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-slate-300 bg-white'
+                      }`}>
+                        {!isScreenNonOriginal && <div className="w-2 h-2 rounded-full bg-white" />}
                       </div>
-                      <p className="text-xs text-slate-700 mt-1.5 font-normal leading-relaxed">
-                        We calculate this valuation assuming your device is equipped with its original factory display panel. If your screen has been replaced or is a non-original panel, please chat with us for the best custom quote, or our technician will transparently evaluate it during doorstep pickup.
-                      </p>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <h4 className="font-black text-sm text-slate-900">Original Factory Display</h4>
+                          <span className="text-[9.5px] font-mono font-bold px-1.5 py-0.5 bg-emerald-100 text-emerald-800 rounded">
+                            OEM Standard
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-600 mt-1 font-medium leading-snug">
+                          Original factory display panel. Never replaced, or replaced exclusively at official brand service center.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Option 2: Replaced / Non-Original Screen */}
+                    <div
+                      role="radio"
+                      tabIndex={0}
+                      aria-checked={isScreenNonOriginal}
+                      onClick={() => {
+                        const rule = rules.find(r => r.id === 'defect-screen-non-original') || {
+                          id: 'defect-screen-non-original',
+                          category: 'screen' as const,
+                          description: 'Screen Replaced / Non-Original Display',
+                          subText: 'Screen has been replaced with a duplicate or third-party display panel.',
+                          deductionFixed: 0,
+                          deductionPercentage: 0
+                        };
+                        setSelectedDefects(prev => {
+                          const without = prev.filter(d => d.id !== 'defect-screen-non-original');
+                          return [...without, rule];
+                        });
+                        setScreenConfirmed(false);
+                      }}
+                      onKeyDown={e => handleKeyDown(e, () => {
+                        const rule = rules.find(r => r.id === 'defect-screen-non-original') || {
+                          id: 'defect-screen-non-original',
+                          category: 'screen' as const,
+                          description: 'Screen Replaced / Non-Original Display',
+                          subText: 'Screen has been replaced with a duplicate or third-party display panel.',
+                          deductionFixed: 0,
+                          deductionPercentage: 0
+                        };
+                        setSelectedDefects(prev => {
+                          const without = prev.filter(d => d.id !== 'defect-screen-non-original');
+                          return [...without, rule];
+                        });
+                        setScreenConfirmed(false);
+                      })}
+                      className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all duration-200 flex items-start gap-3 ${
+                        isScreenNonOriginal
+                          ? 'border-rose-500 bg-rose-500/10 shadow-xs ring-1 ring-rose-500/30'
+                          : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/70'
+                      }`}
+                    >
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                        isScreenNonOriginal ? 'border-rose-600 bg-rose-600 text-white' : 'border-slate-300 bg-white'
+                      }`}>
+                        {isScreenNonOriginal && <div className="w-2 h-2 rounded-full bg-white" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <h4 className="font-black text-sm text-rose-950">Screen Replaced / Duplicate</h4>
+                          <span className="text-[9.5px] font-mono font-bold px-1.5 py-0.5 bg-rose-100 text-rose-800 rounded">
+                            -₹{modelScreenDeduction.toLocaleString('en-IN')}
+                          </span>
+                        </div>
+                        <p className="text-xs text-rose-900/80 mt-1 font-medium leading-snug">
+                          Third-party replacement. Voids brand warranty (Warranty Out deduction) + applies Screen Deduction (-₹{modelScreenDeduction.toLocaleString('en-IN')}).
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
