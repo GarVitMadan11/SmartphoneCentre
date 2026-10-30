@@ -78,7 +78,7 @@ function buildEmailHtml(title: string, bodyHtml: string): string {
   const year = new Date().getFullYear();
   return '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>' + title + '</title>'
     + '<style>*{box-sizing:border-box;margin:0;padding:0}body{background:#f0f2f5;font-family:Arial,sans-serif;color:#1a2035}.wrapper{max-width:600px;margin:32px auto;background:#fff;border-radius:12px;overflow:hidden}.header{background:linear-gradient(135deg,#1a2035,#1e3a6e);padding:32px 40px;text-align:center}.header h1{color:#fff;font-size:22px;font-weight:700}.header p{color:rgba(255,255,255,.65);font-size:13px;margin-top:4px}.body{padding:36px 40px}.greeting{font-size:16px;font-weight:600;color:#1a2035;margin-bottom:12px}.text{font-size:14px;line-height:1.7;color:#4a5568;margin-bottom:16px}.btn-wrap{text-align:center;margin:28px 0}.btn{display:inline-block;padding:14px 36px;background:linear-gradient(135deg,#1e3a6e,#2563eb);color:#fff!important;text-decoration:none;border-radius:8px;font-size:15px;font-weight:700}.token-box{background:#f0f4ff;border:1px solid #c7d7fa;border-radius:8px;padding:16px 20px;font-family:monospace;font-size:13px;word-break:break-all;color:#1e3a6e;margin:16px 0}.divider{border:none;border-top:1px solid #edf2f7;margin:24px 0}.note{font-size:12px;color:#718096;line-height:1.6}.footer{background:#f7fafc;padding:20px 40px;text-align:center;border-top:1px solid #edf2f7}.footer p{font-size:12px;color:#a0aec0}.footer a{color:#2563eb;text-decoration:none}</style>'
-    + '</head><body><div class="wrapper"><div class="header"><h1>Rephonix</h1><p>India\'s Trusted Device Trade-In Platform</p></div>'
+    + '</head><body><div class="wrapper"><div class="header"><h1>Rephonix</h1><p>India\'s Trusted Smartphone Buyback Platform</p></div>'
     + '<div class="body">' + bodyHtml + '</div>'
     + '<div class="footer"><p>&copy; ' + year + ' Rephonix. All rights reserved.<br/>'
     + '<a href="' + FRONTEND_URL + '">www.rephonix.in</a> &middot; <a href="mailto:support@rephonix.in">support@rephonix.in</a></p>'
@@ -143,8 +143,8 @@ export async function sendWelcomeEmail(to: string, name: string): Promise<void> 
     return;
   }
   const body = '<p class="greeting">Welcome aboard, ' + escapeHtml(name) + '!</p>'
-    + '<p class="text">Your Rephonix account is ready. Get instant trade-in quotes, free doorstep pickup, and fast payouts.</p>'
-    + '<div class="btn-wrap"><a href="' + FRONTEND_URL + '" class="btn">Get Your Trade-In Quote</a></div>'
+    + '<p class="text">Your Rephonix account is ready. Get instant quotes, free doorstep pickup, and fast payouts.</p>'
+    + '<div class="btn-wrap"><a href="' + FRONTEND_URL + '" class="btn">Get Your Quote</a></div>'
     + '<hr class="divider" />'
     + '<p class="note">Questions? <a href="mailto:support@rephonix.in">support@rephonix.in</a></p>';
   const html = buildEmailHtml('Welcome to Rephonix!', body);

@@ -298,8 +298,8 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                               {b.payoutStatus === 'completed'
                                 ? 'Paid Out'
                                 : b.inspectionStatus === 'approved'
-                                ? 'Inspection Approved'
-                                : 'Pending Pickup'}
+                                ? 'Booking Confirmed'
+                                : 'Under Review'}
                             </span>
                           </div>
                         </div>

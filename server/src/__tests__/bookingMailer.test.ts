@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
+  sendBookingUnderReviewEmail,
+  sendBookingApprovalEmail,
   sendBookingConfirmationEmail,
   sendAdminBookingNotificationEmail,
   sendAdminQuoteAlertEmail,
@@ -27,7 +29,17 @@ describe('Booking Mailer & Admin Alert Email', () => {
     expect(result).toBe(true);
   }, 30000);
 
-  it('should run sendBookingConfirmationEmail and dispatch both customer & admin emails without throwing errors', async () => {
+  it('should run sendBookingUnderReviewEmail and dispatch customer & admin review alert without throwing errors', async () => {
+    const result = await sendBookingUnderReviewEmail(sampleBooking, 'http://localhost:4000');
+    expect(result).toBe(true);
+  }, 30000);
+
+  it('should run sendBookingApprovalEmail and dispatch customer confirmation without throwing errors', async () => {
+    const result = await sendBookingApprovalEmail(sampleBooking, 'http://localhost:4000');
+    expect(result).toBe(true);
+  }, 30000);
+
+  it('should run sendBookingConfirmationEmail backward-compatibility alias without throwing errors', async () => {
     const result = await sendBookingConfirmationEmail(sampleBooking, 'http://localhost:4000');
     expect(result).toBe(true);
   }, 30000);

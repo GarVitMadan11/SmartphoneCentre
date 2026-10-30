@@ -19,7 +19,7 @@ import {
   DeviceCategory,
 } from '../services/valuation.js';
 import { generateBookingQuotationPDF } from '../services/pdfGenerator.js';
-import { sendBookingConfirmationEmail } from '../services/bookingMailer.js';
+import { sendBookingUnderReviewEmail, sendBookingApprovalEmail } from '../services/bookingMailer.js';
 
 const router = Router();
 
@@ -230,7 +230,7 @@ router.post('/', bookingLimiter, optionalCustomerAuth, async (req: Authenticated
     const modelLegacyId = String(b.modelId ?? b.modelLegacyId);
     const model = await prisma.model.findUnique({ where: { legacyId: modelLegacyId } });
     if (!model || model.hidden) {
-      res.status(400).json({ error: 'ValidationError', message: 'The selected device is no longer available for trade-in.' });
+      res.status(400).json({ error: 'ValidationError', message: 'The selected device is no longer available.' });
       return;
     }
 
@@ -345,10 +345,10 @@ router.post('/', bookingLimiter, optionalCustomerAuth, async (req: Authenticated
     const host = req.get('host') || 'localhost:4000';
     const baseUrl = `${protocol}://${host}`;
 
-    // Non-blocking background email dispatch so the customer receives immediate confirmation without SMTP latency
+    // Non-blocking background email dispatch so the customer receives immediate under-review notification without SMTP latency
     setImmediate(async () => {
       try {
-        await sendBookingConfirmationEmail({
+        await sendBookingUnderReviewEmail({
           id: booking.id,
           modelName: booking.modelName,
           storageGb: booking.storageGb,
@@ -363,7 +363,7 @@ router.post('/', bookingLimiter, optionalCustomerAuth, async (req: Authenticated
           dateCreated: booking.dateCreated,
         }, baseUrl);
       } catch (err) {
-        console.error('[POST /api/bookings] Failed to dispatch quotation email:', err);
+        console.error('[POST /api/bookings] Failed to dispatch under-review email:', err);
       }
     });
 
@@ -522,6 +522,39 @@ router.patch('/:id', adminAuth, requireRole(['SUPER_ADMIN', 'FINANCE_APPROVER', 
         userAgent: String(req.headers['user-agent'] ?? ''),
       },
     });
+
+    // When admin approves the booking (transition to 'approved'), dispatch official Confirmation Email to customer
+    if (data.inspectionStatus === 'approved' && currentBooking.inspectionStatus !== 'approved') {
+      const protocol = req.protocol || 'http';
+      const host = req.get('host') || 'localhost:4000';
+      const baseUrl = `${protocol}://${host}`;
+
+      setImmediate(async () => {
+        try {
+          let defectIds: string[] = [];
+          try {
+            defectIds = JSON.parse(booking.defectIdsJson || '[]');
+          } catch {}
+
+          await sendBookingApprovalEmail({
+            id: booking.id,
+            modelName: booking.modelName,
+            storageGb: booking.storageGb,
+            customerName: booking.customerName,
+            customerPhone: booking.customerPhone,
+            customerEmail: booking.customerEmail,
+            address: booking.address,
+            pickupDate: booking.pickupDate,
+            pickupTimeSlot: booking.pickupTimeSlot,
+            finalPrice: booking.finalPrice,
+            defectDescriptions: defectIds,
+            dateCreated: booking.dateCreated,
+          }, baseUrl);
+        } catch (err) {
+          console.error('[PATCH /api/bookings/:id] Failed to dispatch booking confirmation email on approval:', err);
+        }
+      });
+    }
 
     res.json({ success: true, id: booking.id });
   } catch (err) {

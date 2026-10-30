@@ -84,7 +84,7 @@ export function generateBookingQuotationPDF(booking: PDFBookingData): Promise<Bu
         .fillColor('#64748B')
         .fontSize(9.5)
         .font('Helvetica')
-        .text('OFFICIAL TRADE-IN QUOTATION RECEIPT', headerTextX, 63);
+        .text('OFFICIAL QUOTATION RECEIPT', headerTextX, 63);
 
       // Top right Metadata Box
       doc
@@ -211,7 +211,7 @@ export function generateBookingQuotationPDF(booking: PDFBookingData): Promise<Bu
         .fillColor('#1E3A8A')
         .fontSize(12)
         .font('Helvetica-Bold')
-        .text('3. TRADE-IN VALUATION BREAKDOWN', 40, y);
+        .text('3. VALUATION BREAKDOWN', 40, y);
 
       y += 20;
 

@@ -309,7 +309,7 @@ export const LedgerTab: React.FC<LedgerTabProps> = ({
                         <td className="py-3 px-3">
                           {b.inspectionStatus === 'approved' && <span className="inline-flex items-center gap-1 text-[9px] bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 rounded-sm border border-emerald-500/20 font-bold uppercase">Approved</span>}
                           {b.inspectionStatus === 'rejected' && <span className="inline-flex items-center gap-1 text-[9px] bg-red-500/10 text-red-400 px-1.5 py-0.5 rounded-sm border border-red-500/20 font-bold uppercase">Rejected</span>}
-                          {b.inspectionStatus === 'pending' && <span className="inline-flex items-center gap-1 text-[9px] bg-amber-500/10 text-amber-400 px-1.5 py-0.5 rounded-sm border border-amber-500/20 font-bold uppercase">Pending</span>}
+                          {b.inspectionStatus === 'pending' && <span className="inline-flex items-center gap-1 text-[9px] bg-amber-500/10 text-amber-500 px-1.5 py-0.5 rounded-sm border border-amber-500/20 font-bold uppercase">Under Review</span>}
                         </td>
                         <td className="py-3 px-3">
                           {b.payoutStatus === 'completed' ? (
@@ -505,11 +505,17 @@ export const LedgerTab: React.FC<LedgerTabProps> = ({
                     <div className="p-3 bg-slate-50/50 dark:bg-zinc-900/50 border border-ice-border rounded-md space-y-1">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold text-ink-navy flex items-center gap-1.5 font-outfit">
-                          <span className="w-5 h-5 rounded-full bg-emerald-500 text-white text-[10px] flex items-center justify-center font-mono font-bold">1</span>
-                          1. Booked (Trade-In Created)
+                          <span className={`w-5 h-5 rounded-full text-white text-[10px] flex items-center justify-center font-mono font-bold ${
+                            selectedBooking.inspectionStatus === 'approved' ? 'bg-emerald-500' : 'bg-amber-500'
+                          }`}>1</span>
+                          1. Booking Review & Schedule
                         </span>
-                        <span className="text-[9px] font-mono font-bold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 uppercase">
-                          Confirmed
+                        <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded border uppercase ${
+                          selectedBooking.inspectionStatus === 'approved'
+                            ? 'text-emerald-600 bg-emerald-500/10 border-emerald-500/20'
+                            : 'text-amber-600 bg-amber-500/10 border-amber-500/20'
+                        }`}>
+                          {selectedBooking.inspectionStatus === 'approved' ? 'Confirmed & Approved' : 'Under Review'}
                         </span>
                       </div>
                       <p className="text-[10px] text-zinc-500 font-mono pl-6">
@@ -524,14 +530,14 @@ export const LedgerTab: React.FC<LedgerTabProps> = ({
                           <span className={`w-5 h-5 rounded-full text-white text-[10px] flex items-center justify-center font-mono font-bold ${
                             selectedBooking.inspectionStatus === 'approved' ? 'bg-emerald-500' : 'bg-slate-400'
                           }`}>2</span>
-                          2. Inspected (Doorstep Audit)
+                          2. Review & Doorstep Inspection Approval
                         </span>
                         <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded uppercase ${
                           selectedBooking.inspectionStatus === 'approved' ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20' :
                           selectedBooking.inspectionStatus === 'rejected' ? 'bg-red-500/10 text-red-500 border border-red-500/20' :
                           'bg-amber-500/10 text-amber-600 border border-amber-500/20'
                         }`}>
-                          {selectedBooking.inspectionStatus}
+                          {selectedBooking.inspectionStatus === 'pending' ? 'Awaiting Review' : selectedBooking.inspectionStatus}
                         </span>
                       </div>
 
@@ -542,6 +548,7 @@ export const LedgerTab: React.FC<LedgerTabProps> = ({
                               type="button"
                               onClick={() => handleInspectionChange(selectedBooking.id, 'approved')}
                               disabled={selectedBooking.inspectionStatus === 'approved' || selectedBooking.payoutStatus === 'completed'}
+                              title={selectedBooking.inspectionStatus === 'approved' ? 'Booking approved and confirmation email sent' : 'Approves booking and dispatches confirmation email to customer'}
                               className={`py-1.5 px-2 text-[11px] font-bold rounded border transition-all flex items-center justify-center gap-1.5 ${
                                 selectedBooking.inspectionStatus === 'approved'
                                   ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30 cursor-not-allowed opacity-90'
@@ -550,7 +557,7 @@ export const LedgerTab: React.FC<LedgerTabProps> = ({
                                   : 'bg-canvas-white text-ink-navy border-ice-border hover:border-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/5 cursor-pointer'
                               }`}
                             >
-                              <CheckCircle className="w-3.5 h-3.5" /> Approve Match
+                              <CheckCircle className="w-3.5 h-3.5" /> {selectedBooking.inspectionStatus === 'approved' ? 'Approved & Confirmed' : 'Approve Booking'}
                             </button>
                             <button
                               type="button"

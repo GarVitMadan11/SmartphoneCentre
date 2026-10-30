@@ -413,8 +413,8 @@ export default function ProfilePage({
                           {b.payoutStatus === 'completed'
                             ? 'Paid Out'
                             : b.inspectionStatus === 'approved'
-                            ? 'Inspection Approved'
-                            : 'Pending Pickup'}
+                            ? 'Booking Confirmed'
+                            : 'Under Review'}
                         </span>
                       </div>
                     </div>

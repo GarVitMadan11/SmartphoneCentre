@@ -37,7 +37,7 @@ router.post('/', async (req, res) => {
       where: { OR: [{ legacyId: modelId }, { id: modelId }] },
     });
     if (!model || model.hidden) {
-      res.status(404).json({ error: 'NotFound', message: 'Model not found in catalog or is unavailable for trade-in.' });
+      res.status(404).json({ error: 'NotFound', message: 'Model not found in catalog or is unavailable.' });
       return;
     }
 
