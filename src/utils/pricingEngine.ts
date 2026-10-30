@@ -38,6 +38,8 @@ export interface PricingInput {
   screenDeduction?: number;
   /** Explicit warranty deduction percentage configured in Admin Panel (or empirical CSV fallback) */
   warrantyDeductionPercentage?: number;
+  /** Whether the model asks brand warranty question in diagnostics (when false, skips warranty deduction) */
+  supportsWarrantyQuestion?: boolean;
 }
 
 export interface AdjustmentDetail {
@@ -267,7 +269,10 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
       });
 
   let fAge = 1.00;
-  if (modelWarrantyDeductionPct > 0 || isIphone17or18 || isIphone15or16 || /s2[4-6]/i.test(nameLower) || cycleTier === 'TIER_1_WARRANTY_ACTIVE') {
+  if (input.supportsWarrantyQuestion === false) {
+    // Model does not support / ask brand warranty question -> skip warranty deduction
+    fAge = 1.00;
+  } else if (modelWarrantyDeductionPct > 0 || isIphone17or18 || isIphone15or16 || /s2[4-6]/i.test(nameLower) || cycleTier === 'TIER_1_WARRANTY_ACTIVE') {
     // Model has active warranty deduction configured (or active Tier 1 series)
     const outOfWarrantyPenalty = modelWarrantyDeductionPct > 0
       ? modelWarrantyDeductionPct / 100

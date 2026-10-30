@@ -1302,10 +1302,14 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
                         <div className="flex items-center justify-between text-ink-slate text-[10px] pt-1 border-t border-ice-border/40">
                           <span className="text-zinc-500 font-semibold">Deductions:</span>
                           <span className="font-mono text-zinc-700 font-bold">
-                            <span className="text-amber-700" title="Warranty Out Deduction Rate">
-                              {model.warrantyDeductionPercentage ?? getModelWarrantyDeductionPercentage(model)}% War.
-                            </span>
-                            <span className="text-zinc-400 mx-1">|</span>
+                            {(model.supportsWarrantyQuestion ?? ((model.releaseYear || 2024) >= 2023)) ? (
+                              <>
+                                <span className="text-amber-700" title="Warranty Out Deduction Rate">
+                                  {model.warrantyDeductionPercentage ?? getModelWarrantyDeductionPercentage(model)}% War.
+                                </span>
+                                <span className="text-zinc-400 mx-1">|</span>
+                              </>
+                            ) : null}
                             <span className="text-rose-700" title="Non-Original Screen Deduction Amount">
                               ₹{(model.screenDeduction ?? getModelScreenDeduction(model)).toLocaleString('en-IN')} Scr.
                             </span>
@@ -3339,32 +3343,34 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
               </span>
             </div>
 
-            <div>
-              <label className="block text-[11px] font-bold text-ink-navy mb-1 uppercase font-mono flex items-center justify-between">
-                <span>Warranty Deduction (%)</span>
-                <span className="text-[9px] text-amber-700 font-bold bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
-                  Out of Warranty
+            {formData.supportsWarrantyQuestion && (
+              <div>
+                <label className="block text-[11px] font-bold text-ink-navy mb-1 uppercase font-mono flex items-center justify-between">
+                  <span>Warranty Deduction (%)</span>
+                  <span className="text-[9px] text-amber-700 font-bold bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+                    Out of Warranty
+                  </span>
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  value={formData.warrantyDeductionPercentage ?? ''}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      warrantyDeductionPercentage: e.target.value === '' ? undefined : parseFloat(e.target.value) || 0,
+                    })
+                  }
+                  placeholder="e.g. 25.5"
+                  className="w-full px-3 py-2 bg-white border border-ice-border rounded font-mono font-bold text-amber-800 focus:border-cobalt focus:outline-none"
+                />
+                <span className="text-[10px] text-zinc-500 font-mono block mt-1">
+                  Percentage deducted when out of warranty (or voided). Cashify market rate: ~21%–28% for active devices, 0% for matured.
                 </span>
-              </label>
-              <input
-                type="number"
-                min="0"
-                max="100"
-                step="0.1"
-                value={formData.warrantyDeductionPercentage ?? ''}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    warrantyDeductionPercentage: e.target.value === '' ? undefined : parseFloat(e.target.value) || 0,
-                  })
-                }
-                placeholder="e.g. 25.5"
-                className="w-full px-3 py-2 bg-white border border-ice-border rounded font-mono font-bold text-amber-800 focus:border-cobalt focus:outline-none"
-              />
-              <span className="text-[10px] text-zinc-500 font-mono block mt-1">
-                Percentage deducted when out of warranty (or voided). Cashify market rate: ~21%–28% for active devices, 0% for matured.
-              </span>
-            </div>
+              </div>
+            )}
           </div>
 
           {/* Image URL Section */}
@@ -3417,7 +3423,7 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
                 <span>Enable Brand Warranty Question</span>
               </span>
               <span className="text-[11px] text-zinc-500 block mt-0.5">
-                When ON, the "Is your device under brand warranty?" question appears in customer diagnostics. When OFF, the question is skipped to avoid double penalties on out-of-warranty devices.
+                When ON, the "Is your device under brand warranty?" question appears in customer diagnostics and allows configuring Warranty Deduction (%). When OFF, the question is skipped to avoid double penalties on out-of-warranty devices.
               </span>
             </div>
             <input

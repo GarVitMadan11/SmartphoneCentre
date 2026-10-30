@@ -395,9 +395,10 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
       deviceAge: isScreenNonOriginal ? 'out_of_warranty' : deviceAge,
       dualEsim: dualEsim === true,
       screenDeduction: modelScreenDeduction,
-      warrantyDeductionPercentage: modelWarrantyDeductionPct
+      warrantyDeductionPercentage: modelWarrantyDeductionPct,
+      supportsWarrantyQuestion: isEligibleForWarranty
     });
-  }, [variant, selectedDefects, model, simType, warrantyAge, deviceAge, dualEsim, hasSpen, isScreenNonOriginal, modelScreenDeduction, modelWarrantyDeductionPct]);
+  }, [variant, selectedDefects, model, simType, warrantyAge, deviceAge, dualEsim, hasSpen, isScreenNonOriginal, modelScreenDeduction, modelWarrantyDeductionPct, isEligibleForWarranty]);
 
   // Stable receipt reference code — generated once per wizard session
   const receiptRef = useMemo(() => Math.random().toString(36).substr(2, 6).toUpperCase(), []);

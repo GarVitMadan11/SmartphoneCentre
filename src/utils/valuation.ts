@@ -55,6 +55,7 @@ export function calculateValuation(
     dualEsim?: boolean;
     screenDeduction?: number;
     warrantyDeductionPercentage?: number;
+    supportsWarrantyQuestion?: boolean;
   }
 ): ValuationBreakdown {
   const result: Stage1ValuationResult = calculateStage1Valuation({
@@ -74,7 +75,8 @@ export function calculateValuation(
     variantType: options?.variantType,
     dualEsim: options?.dualEsim,
     screenDeduction: options?.screenDeduction,
-    warrantyDeductionPercentage: options?.warrantyDeductionPercentage
+    warrantyDeductionPercentage: options?.warrantyDeductionPercentage,
+    supportsWarrantyQuestion: options?.supportsWarrantyQuestion
   });
 
   const deductions: ValuationDeduction[] = result.auditTrail.adjustments.map(adj => ({
