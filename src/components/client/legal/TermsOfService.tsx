@@ -19,13 +19,13 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ onBack }) => {
       <div className="border-b border-ice-border pb-6">
         <div className="inline-flex items-center gap-2 px-3 py-1 bg-cobalt/10 text-cobalt rounded-full text-xs font-semibold mb-3">
           <FileCheck className="w-3.5 h-3.5" />
-          Trade-In Terms & Conditions
+          Service Terms & Conditions
         </div>
         <h1 className="text-3xl font-extrabold tracking-tight text-ink-navy">
-          Terms of Service & Trade-In Agreement
+          Terms of Service & Sale Agreement
         </h1>
         <p className="text-sm text-ink-muted mt-2">
-          Last Updated: August 2026 | Governing Smartphone Trade-In, Valuation & Payout Services
+          Last Updated: August 2026 | Governing Smartphone Device Sale, Valuation & Payout Services
         </p>
       </div>
 
@@ -36,7 +36,7 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ onBack }) => {
             1. Valuation & Server-Authoritative Pricing
           </h2>
           <p>
-            All trade-in quotes generated on Rephonix are calculated by our versioned server pricing engine based on catalog specifications and declared defect parameters. Initial estimated valuations are valid for 30 minutes or until physical doorstep inspection. Final payout amounts are subject to physical verification by an authorized agent.
+            All valuation quotes generated on Rephonix are calculated by our versioned server pricing engine based on catalog specifications and declared defect parameters. Initial estimated valuations are valid for 30 minutes or until physical doorstep inspection. Final payout amounts are subject to physical verification by an authorized agent.
           </p>
         </section>
 
@@ -46,7 +46,7 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ onBack }) => {
             2. Customer Device Ownership & Data Wipe Responsibility
           </h2>
           <p>
-            By initiating a trade-in booking, you certify that you are the lawful owner of the device or authorized to sell it. Customers MUST remove all cloud accounts (Apple iCloud, Google Account, Samsung Account), disable activation locks, and perform a full factory reset prior to handing over the device to our agent. Rephonix is not responsible for data remaining on un-wiped devices.
+            By initiating a pickup booking, you certify that you are the lawful owner of the device or authorized to sell it. Customers MUST remove all cloud accounts (Apple iCloud, Google Account, Samsung Account), disable activation locks, and perform a full factory reset prior to handing over the device to our agent. Rephonix is not responsible for data remaining on un-wiped devices.
           </p>
         </section>
 

@@ -177,7 +177,7 @@ export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
               Sell Your <span className="text-cobalt">Apple iPad</span> or <span className="text-secondary">Samsung Galaxy Tab</span>
             </h1>
             <p className="text-ink-slate text-sm font-light mt-2 max-w-xl">
-              Get an instant valuation, free doorstep pickup in Delhi, and instant payout for your Apple iPad or Samsung Galaxy Tab.
+              Get an instant valuation and immediate verified payout for your Apple iPad or Samsung Galaxy Tab.
             </p>
           </div>
 

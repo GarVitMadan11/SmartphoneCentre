@@ -3,7 +3,7 @@ import { Booking } from '../../../data/mockDatabase';
 import { ApiUser, updateBooking } from '../../../utils/api';
 import {
   Search, Filter,
-  CheckCircle, XCircle, Clock, CreditCard,
+  CheckCircle, XCircle, CreditCard,
   ChevronRight, Calendar, MapPin, User, Smartphone,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -47,7 +47,6 @@ export const LedgerTab: React.FC<LedgerTabProps> = ({
   searchTerm: propsSearchTerm,
   setSearchTerm: propsSetSearchTerm,
   filterVerification: propsFilterVerification,
-  setFilterVerification: propsSetFilterVerification,
   filterInspection: propsFilterInspection,
   setFilterInspection: propsSetFilterInspection,
   filterPayout: propsFilterPayout,
@@ -57,7 +56,7 @@ export const LedgerTab: React.FC<LedgerTabProps> = ({
   formatPrice: propsFormatPrice,
 }) => {
   const [internalSearch, setInternalSearch] = React.useState('');
-  const [internalVerification, setInternalVerification] = React.useState('all');
+  const [internalVerification] = React.useState('all');
   const [internalInspection, setInternalInspection] = React.useState('all');
   const [internalPayout, setInternalPayout] = React.useState('all');
   const [internalSelectedId, setInternalSelectedId] = React.useState<string | null>(null);
@@ -65,7 +64,6 @@ export const LedgerTab: React.FC<LedgerTabProps> = ({
   const searchTerm = propsSearchTerm ?? internalSearch;
   const setSearchTerm = propsSetSearchTerm ?? setInternalSearch;
   const filterVerification = propsFilterVerification ?? internalVerification;
-  const setFilterVerification = propsSetFilterVerification ?? setInternalVerification;
   const filterInspection = propsFilterInspection ?? internalInspection;
   const setFilterInspection = propsSetFilterInspection ?? setInternalInspection;
   const filterPayout = propsFilterPayout ?? internalPayout;
@@ -201,15 +199,6 @@ export const LedgerTab: React.FC<LedgerTabProps> = ({
               <span className="font-semibold text-ink-slate font-mono">Filters:</span>
             </div>
             <div className="flex items-center gap-1">
-              <span className="text-[10px] text-zinc-500 font-mono">KYC:</span>
-              <select value={filterVerification} onChange={e => setFilterVerification(e.target.value)} className="bg-canvas-pure border border-ice-border rounded-sm py-1 px-1.5 font-mono text-[10px] focus:outline-none">
-                <option value="all">All</option>
-                <option value="verified">Verified</option>
-                <option value="pending">Pending</option>
-                <option value="failed">Failed</option>
-              </select>
-            </div>
-            <div className="flex items-center gap-1">
               <span className="text-[10px] text-zinc-500 font-mono">Inspection:</span>
               <select value={filterInspection} onChange={e => setFilterInspection(e.target.value)} className="bg-canvas-pure border border-ice-border rounded-sm py-1 px-1.5 font-mono text-[10px] focus:outline-none">
                 <option value="all">All</option>
@@ -238,7 +227,6 @@ export const LedgerTab: React.FC<LedgerTabProps> = ({
                   <th className="p-3">Device</th>
                   <th className="p-3">Est. Value</th>
                   <th className="p-3">Stage Progress</th>
-                  <th className="p-3">KYC Status</th>
                   <th className="p-3">Inspection</th>
                   <th className="p-3">Payout</th>
                   <th className="p-3 text-right">Actions</th>
@@ -288,23 +276,6 @@ export const LedgerTab: React.FC<LedgerTabProps> = ({
                               </span>
                             ))}
                           </div>
-                        </td>
-                        <td className="py-3 px-3">
-                          {b.verificationStatus === 'verified' && (
-                            <span className="inline-flex items-center gap-1 text-[9px] bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 rounded-sm border border-emerald-500/20 font-bold uppercase">
-                              <CheckCircle className="w-2.5 h-2.5" /> Verified
-                            </span>
-                          )}
-                          {b.verificationStatus === 'failed' && (
-                            <span className="inline-flex items-center gap-1 text-[9px] bg-red-500/10 text-red-400 px-1.5 py-0.5 rounded-sm border border-red-500/20 font-bold uppercase">
-                              <XCircle className="w-2.5 h-2.5" /> Failed
-                            </span>
-                          )}
-                          {b.verificationStatus === 'pending' && (
-                            <span className="inline-flex items-center gap-1 text-[9px] bg-amber-500/10 text-amber-400 px-1.5 py-0.5 rounded-sm border border-amber-500/20 font-bold uppercase">
-                              <Clock className="w-2.5 h-2.5" /> Pending
-                            </span>
-                          )}
                         </td>
                         <td className="py-3 px-3">
                           {b.inspectionStatus === 'approved' && <span className="inline-flex items-center gap-1 text-[9px] bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 rounded-sm border border-emerald-500/20 font-bold uppercase">Approved</span>}

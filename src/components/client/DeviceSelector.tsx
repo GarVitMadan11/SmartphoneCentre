@@ -1338,7 +1338,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                   <h4 className="text-xs font-bold uppercase tracking-wider text-ink-slate font-mono flex items-center gap-1.5">
                     <Layers className="w-4 h-4 text-cobalt" /> Select Device Series
                   </h4>
-                  <p className="text-xs text-ink-muted font-light mt-1">Select a series below to see the available models for trade-in.</p>
+                  <p className="text-xs text-ink-muted font-light mt-1">Select a series below to see available models.</p>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   {availableSeries.map(seriesName => {

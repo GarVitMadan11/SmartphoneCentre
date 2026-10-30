@@ -3517,7 +3517,7 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
               <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-lg text-xs font-mono text-blue-900 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Cpu className="w-4 h-4 text-blue-600 shrink-0" />
-                  <span>Apple iPad uses unified memory architecture. RAM is unified and omitted from trade-in specifications.</span>
+                  <span>Apple iPad uses unified memory architecture. RAM is unified and omitted from device specifications.</span>
                 </div>
                 <span className="px-2 py-0.5 rounded bg-blue-200/70 text-blue-800 font-bold text-[10px]">Unified RAM</span>
               </div>

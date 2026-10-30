@@ -879,12 +879,12 @@ export function getDefectRulesForCategory(
   return [
     // ── SCREEN ───────────────────────────────────────────────────────────
     {
-      id: 'defect-screen-cracked',
+      id: 'defect-screen-minor-scratches',
       category: 'screen',
-      description: 'Cracked Front Screen Glass',
-      subText: 'Visible cracks, deep chips, or shattered front display glass.',
+      description: 'Minor / Hairline Scratches',
+      subText: '1-2 faint hairline scratches visible only under direct light. Not felt with fingernail.',
       deductionFixed: 0,
-      deductionPercentage: screenPct
+      deductionPercentage: 0.015
     },
     {
       id: 'defect-screen-scratches',
@@ -893,6 +893,14 @@ export function getDefectRulesForCategory(
       subText: 'Scratches or air bubbles visible under the screen protector / direct light.',
       deductionFixed: 1000,
       deductionPercentage: 0.03
+    },
+    {
+      id: 'defect-screen-cracked',
+      category: 'screen',
+      description: 'Cracked Front Screen Glass',
+      subText: 'Visible cracks, deep chips, or shattered front display glass.',
+      deductionFixed: 0,
+      deductionPercentage: screenPct
     },
     {
       id: 'defect-screen-burn',

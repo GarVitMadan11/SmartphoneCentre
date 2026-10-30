@@ -19,7 +19,7 @@ interface MobileBottomHUDProps {
 export const MobileBottomHUD: React.FC<MobileBottomHUDProps> = ({
   step,
   finalPrice,
-  retentionPercentage,
+  retentionPercentage: _retentionPercentage,
   isCritical,
   isLoggedIn,
   canProceed,
@@ -63,9 +63,6 @@ export const MobileBottomHUD: React.FC<MobileBottomHUDProps> = ({
                 isCritical={isCritical}
                 className="text-lg font-black text-emerald-700 font-outfit tracking-tight leading-none"
               />
-              <span className="text-[9px] font-bold bg-emerald-600 text-white px-1.5 py-0.5 rounded-full flex-shrink-0">
-                {retentionPercentage}%
-              </span>
             </div>
           </div>
         </div>

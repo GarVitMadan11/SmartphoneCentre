@@ -774,7 +774,7 @@ export async function sendAdminStepLeadEmail(data: StepLeadAlertData): Promise<b
   }
 
   const waLeadMsg = encodeURIComponent(
-    `Hello! We saw you were checking the sell value for ${data.modelName} (${specLabel}) on Rephonix. Would you like an instant quote with free doorstep pickup today?`
+    `Hello! We saw you were checking the sell value for ${data.modelName} (${specLabel}) on Rephonix. Would you like an instant quote and scheduled pickup today?`
   );
   const waUrl = cleanPhone ? `https://wa.me/91${cleanPhone.replace(/^(\+?91)/, '')}?text=${waLeadMsg}` : '';
   const callUrl = cleanPhone ? `tel:${cleanPhone}` : '';

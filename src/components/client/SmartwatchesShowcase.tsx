@@ -117,7 +117,7 @@ export const SmartwatchesShowcase: React.FC<SmartwatchesShowcaseProps> = ({
               Sell Your <span className="text-emerald-600">Apple Watch</span> or <span className="text-cobalt">Samsung Galaxy Watch</span>
             </h1>
             <p className="text-ink-slate text-sm font-light mt-2 max-w-xl">
-              Get an instant valuation, free doorstep pickup in Delhi, and instant payout for your Apple Watch or Galaxy Watch.
+              Get an instant valuation and immediate verified payout for your Apple Watch or Galaxy Watch.
             </p>
           </div>
 

@@ -567,7 +567,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                           {hasConsented && <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
                         </div>
                         <p className="text-[10px] text-ink-slate font-light leading-relaxed">
-                          <strong className="text-ink-navy">Data Collection Consent (Required)</strong> — I consent to Rephonix collecting and processing my contact details and device information solely to facilitate this trade-in booking. Data will not be shared with third parties except for pickup coordination.
+                          <strong className="text-ink-navy">Data Collection Consent (Required)</strong> — I consent to Rephonix collecting and processing my contact details and device information solely to facilitate this device pickup booking. Data will not be shared with third parties except for pickup coordination.
                         </p>
                       </div>
 
@@ -949,7 +949,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                           <span>Instant Doorside Payout Guaranteed</span>
                         </div>
                         <p className="font-semibold text-emerald-950 dark:text-emerald-50 leading-relaxed text-xs sm:text-sm">
-                          No upfront payment credentials required! Your full trade-in payout of <strong className="font-black text-emerald-950 dark:text-white underline decoration-emerald-500 decoration-2 underline-offset-2">{formatPrice(netDoorsidePayout)}</strong> will be transferred instantly via <strong className="font-black text-emerald-950 dark:text-white">UPI or Bank Transfer</strong> directly at your doorstep after physical device inspection.
+                          No upfront payment credentials required! Your full payout of <strong className="font-black text-emerald-950 dark:text-white underline decoration-emerald-500 decoration-2 underline-offset-2">{formatPrice(netDoorsidePayout)}</strong> will be transferred instantly via <strong className="font-black text-emerald-950 dark:text-white">UPI or Bank Transfer</strong> directly at your doorstep after physical device inspection.
                         </p>
                       </div>
 
@@ -983,7 +983,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                       {/* Final Financial summary box */}
                       <div className="bg-slate-50 dark:bg-zinc-800 p-4 rounded-xl border border-slate-300 dark:border-zinc-700 space-y-2.5 font-sans shadow-sm">
                         <div className="flex justify-between text-xs text-slate-700 dark:text-zinc-200 font-semibold">
-                          <span>Trade-In Valuation Price:</span>
+                          <span>Agreed Valuation:</span>
                           <span className="text-slate-950 dark:text-white font-bold">{formatPrice(finalPrice)}</span>
                         </div>
                         <div className="flex justify-between text-xs text-slate-700 dark:text-zinc-200 font-semibold">
@@ -1160,7 +1160,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
               <CheckCircle className="w-10 h-10 fill-emerald-500/10" />
             </div>
 
-            <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Trade-In Confirmed</h2>
+            <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Pickup Booking Confirmed</h2>
 
             {/* Receipt Details with declared defects summary & Side-by-side Phone Preview */}
             <div className="w-full my-6">

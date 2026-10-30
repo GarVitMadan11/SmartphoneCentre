@@ -154,7 +154,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                 <Package className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-bold text-base sm:text-lg text-ink-navy">Your Trade-In Bookings</h3>
+                <h3 className="font-bold text-base sm:text-lg text-ink-navy">Your Pickup Bookings</h3>
                 <p className="text-xs text-ink-muted">View selected device model, agreed price, booking date &amp; scheduled doorstep pickup</p>
               </div>
             </div>
@@ -235,7 +235,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
               {fetchingMyBookings ? (
                 <div className="py-12 text-center text-ink-muted space-y-3">
                   <div className="w-7 h-7 border-2 border-cobalt border-t-transparent rounded-full animate-spin mx-auto" />
-                  <p className="text-xs">Loading your trade-in bookings...</p>
+                  <p className="text-xs">Loading your pickup bookings...</p>
                 </div>
               ) : myBookings.length === 0 ? (
                 <div className="py-12 text-center text-ink-muted space-y-3 bg-slate-50/50 rounded-xl border border-dashed border-ice-border p-6">
@@ -244,7 +244,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                   </div>
                   <h4 className="font-bold text-base text-ink-navy">No Active Bookings Found</h4>
                   <p className="text-xs max-w-sm mx-auto text-ink-muted">
-                    You haven't scheduled any doorstep device trade-in bookings yet. Start an instant quote to sell your smartphone in 60 seconds!
+                    You haven't scheduled any doorstep pickup bookings yet. Start an instant quote to sell your smartphone in 60 seconds!
                   </p>
                 </div>
               ) : (
@@ -408,7 +408,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                   <FileText className="w-10 h-10 text-slate-300 mx-auto" />
                   <h4 className="font-bold text-ink-navy text-sm">No Invoices Available Yet</h4>
                   <p className="text-xs text-ink-muted max-w-sm mx-auto">
-                    Invoices and official sale receipts will appear here once you place a trade-in pickup order.
+                    Invoices and official sale receipts will appear here once you place a doorstep pickup order.
                   </p>
                 </div>
               ) : (
@@ -538,7 +538,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                   <div className="p-4 bg-zinc-50 rounded-xl border border-ice-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div>
                       <span className="text-[10px] font-mono uppercase tracking-wider text-ink-muted block font-semibold">
-                        Device for Trade-In
+                        Device for Sale
                       </span>
                       <h4 className="font-bold text-base text-ink-navy mt-0.5">
                         {trackingResult.modelName} ({trackingResult.storageGb >= 1024 ? `${trackingResult.storageGb / 1024}TB` : `${trackingResult.storageGb}GB`}{trackingResult.color && trackingResult.color !== 'Standard' && (trackingResult.color.includes('Wi-Fi') || trackingResult.color.includes('Cellular')) ? ` - ${trackingResult.color}` : ''})

@@ -262,7 +262,7 @@ export default function ProfilePage({
           Customer Account Dashboard
         </h2>
         <p className="text-xs text-ink-muted mt-1 font-light">
-          Manage your account profile, track active trade-in bookings, and download official tax receipts.
+          Manage your account profile, track active pickup bookings, and download official sale receipts.
         </p>
       </div>
 
@@ -341,7 +341,7 @@ export default function ProfilePage({
           {fetchingBookings ? (
             <div className="py-16 text-center text-ink-muted space-y-3 bg-canvas-pure border border-ice-border rounded-xl">
               <div className="w-8 h-8 border-2 border-cobalt border-t-transparent rounded-full animate-spin mx-auto" />
-              <p className="text-xs font-medium">Fetching your trade-in bookings...</p>
+              <p className="text-xs font-medium">Fetching your pickup bookings...</p>
             </div>
           ) : myBookings.length === 0 ? (
             <div className="py-16 text-center text-ink-muted space-y-4 bg-canvas-pure rounded-2xl border border-dashed border-ice-border p-8">
@@ -349,9 +349,9 @@ export default function ProfilePage({
                 <Package className="w-7 h-7" />
               </div>
               <div className="space-y-1">
-                <h4 className="font-extrabold text-lg text-ink-navy font-outfit">No Trade-In Bookings Yet</h4>
+                <h4 className="font-extrabold text-lg text-ink-navy font-outfit">No Pickup Bookings Yet</h4>
                 <p className="text-xs text-ink-muted max-w-md mx-auto font-light leading-relaxed">
-                  You haven't scheduled any doorstep device trade-in bookings under your account. Get an instant quote to sell your smartphone in under 60 seconds!
+                  You haven't scheduled any doorstep device pickup bookings under your account. Get an instant quote to sell your smartphone in under 60 seconds!
                 </p>
               </div>
               <button
@@ -537,14 +537,14 @@ export default function ProfilePage({
               <div className="space-y-1">
                 <h4 className="font-extrabold text-lg text-ink-navy font-outfit">No Tax Invoices Available Yet</h4>
                 <p className="text-xs text-ink-muted max-w-md mx-auto font-light leading-relaxed">
-                  Invoices and official sale receipts are generated automatically once you schedule a trade-in pickup order.
+                  Invoices and official sale receipts are generated automatically once you schedule a doorstep pickup order.
                 </p>
               </div>
               <button
                 onClick={() => onNavigate('/smartphones')}
                 className="mt-2 inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-md transition-all cursor-pointer"
               >
-                <span>Book Trade-In Order</span>
+                <span>Book Pickup Order</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>

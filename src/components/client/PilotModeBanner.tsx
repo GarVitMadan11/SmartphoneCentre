@@ -43,7 +43,7 @@ export const PilotModeBanner: React.FC<PilotModeBannerProps> = ({ onOpenFeedback
       {/* 3. Doorstep Payout Feature Pill */}
       <div className="inline-flex items-center gap-1.5 text-xs sm:text-[13px] text-cyan-200 font-semibold whitespace-nowrap bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-400/30 shadow-sm">
         <Zap className="w-3.5 h-3.5 text-cyan-300" />
-        <span>Instant Doorstep Payouts &amp; Free Pickup</span>
+        <span>Instant On-Site Payouts &amp; Verification</span>
       </div>
 
       {/* Radiant Diamond Separator */}

@@ -1,25 +1,42 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowRight, Smartphone, Tablet, ShieldCheck, Zap } from 'lucide-react';
+import { ArrowRight, Smartphone, Award, ShieldCheck, Zap } from 'lucide-react';
 import { fetchModels, type ApiUser } from '../../utils/api';
 import { getMaxVariantPrice, type Model } from '../../data/mockDatabase';
 
 /* ─────────────────────────────────────────────
    2D Premium Device Composition Cards
 ───────────────────────────────────────────── */
-const FloatingComposition: React.FC<{ currentUser?: ApiUser | null }> = ({ currentUser }) => {
-  const [ipadMaxPrice, setIpadMaxPrice] = useState<number | null>(null);
-  const [iphoneMaxPrice, setIphoneMaxPrice] = useState<number | null>(null);
+const FloatingComposition: React.FC<{ currentUser?: ApiUser | null }> = () => {
+  const [iphone18MaxPrice, setIphone18MaxPrice] = useState<number | null>(null);
+  const [pixelFoldMaxPrice, setPixelFoldMaxPrice] = useState<number | null>(null);
+  const [iphone18Model, setIphone18Model] = useState<Model | null>(null);
+  const [pixelFoldModel, setPixelFoldModel] = useState<Model | null>(null);
 
   useEffect(() => {
     let mounted = true;
     fetchModels().then((rawModels) => {
       if (!mounted) return;
       const models = rawModels as unknown as Model[];
-      const ipad = models.find((m) => m.id === 'apple-ipad-pro-m4-13' || m.id === 'apple-ipad-pro-m4-13-cellular' || m.name.toLowerCase().includes('ipad pro 13'));
-      const iphone = models.find((m) => m.id === 'apple-16pm' || m.name.toLowerCase().includes('iphone 16 pro max'));
+      const ip18 = models.find((m) => 
+        m.name.toLowerCase().includes('18 pro max') || 
+        m.name.toLowerCase().includes('17 pro max') || 
+        m.id === 'apple-17pm'
+      );
+      const pixelFold = models.find((m) => 
+        m.id === 'pixel-11-pro-fold' || 
+        (m.name.toLowerCase().includes('pixel 11') && m.name.toLowerCase().includes('fold')) ||
+        m.id === 'goog-10p-fold' ||
+        m.name.toLowerCase().includes('pixel 10 pro fold')
+      );
 
-      if (ipad) setIpadMaxPrice(getMaxVariantPrice(ipad));
-      if (iphone) setIphoneMaxPrice(getMaxVariantPrice(iphone));
+      if (ip18) {
+        setIphone18Model(ip18);
+        setIphone18MaxPrice(getMaxVariantPrice(ip18));
+      }
+      if (pixelFold) {
+        setPixelFoldModel(pixelFold);
+        setPixelFoldMaxPrice(getMaxVariantPrice(pixelFold));
+      }
     }).catch(() => {});
 
     return () => { mounted = false; };
@@ -37,94 +54,54 @@ const FloatingComposition: React.FC<{ currentUser?: ApiUser | null }> = ({ curre
 
       <div className="relative w-full max-w-2xl flex flex-col sm:flex-row items-center justify-center gap-6">
         
-        {/* ── CARD 1: iPad Pro 13" ── */}
-        <div className="w-full sm:w-64 h-[420px] bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xl hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 relative group overflow-hidden flex flex-col justify-between">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none group-hover:bg-emerald-500/10 transition-all" />
+        {/* ── CARD 1: iPhone 18 Pro Max ── */}
+        <div className="w-full sm:w-64 h-[350px] bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 relative group overflow-hidden flex flex-col items-center justify-between text-center">
+          <div className="absolute top-0 right-0 w-36 h-36 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none group-hover:bg-emerald-500/10 transition-all" />
           
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-[9px] font-mono font-bold tracking-widest text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 uppercase">
-                Tablet Valuation
-              </span>
-              <span className="flex items-center gap-1 text-[9px] font-mono text-emerald-600 font-semibold">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live Quote
-              </span>
-            </div>
-
-            {/* GSMArena Device Image */}
-            <div className="w-full h-36 flex items-center justify-center my-2 relative z-10">
-              <img
-                src="https://fdn2.gsmarena.com/vv/bigpic/apple-ipad-pro-13-2024.jpg"
-                alt="iPad Pro 13"
-                referrerPolicy="no-referrer"
-                className="max-h-full max-w-full object-contain filter drop-shadow-md group-hover:scale-105 transition-transform duration-300"
-              />
-            </div>
-
-            <div className="text-left space-y-0.5">
-              <h4 className="text-base font-extrabold text-slate-900 font-outfit">iPad Pro 13"</h4>
-              <p className="text-[11px] text-slate-500 font-mono">512GB &middot; M4 Chip</p>
-            </div>
+          {/* Image - flush with dividing line below */}
+          <div className="w-full h-44 flex items-end justify-center relative z-10 mt-auto">
+            <img
+              src={iphone18Model?.imageUrl || "https://fdn2.gsmarena.com/vv/bigpic/apple-iphone18-pro-max.jpg"}
+              alt="iPhone 18 Pro Max"
+              referrerPolicy="no-referrer"
+              style={{ mixBlendMode: 'multiply' }}
+              className="max-h-full max-w-full object-contain object-bottom block group-hover:scale-105 transition-transform duration-300"
+            />
           </div>
 
-          <div>
-            <div className="my-3 pt-3 border-t border-slate-100 flex items-baseline justify-between">
-              <span className="text-[10px] font-mono uppercase text-slate-400 font-medium">Up To Payout</span>
-              <span className="text-2xl font-black text-emerald-600 font-mono">
-                {!currentUser ? 'Rs XX,XXX' : formatPriceStr(ipadMaxPrice, '₹78,000')}
-              </span>
-            </div>
-
-            <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between text-[10px] font-mono text-slate-600">
-              <span className="flex items-center gap-1.5 text-emerald-600 font-bold">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Doorstep Pickup
-              </span>
-              <span className="text-slate-500 font-medium">Top Valuation</span>
+          {/* Model Name & Max Price */}
+          <div className="w-full pt-4 border-t border-slate-100 space-y-1 relative z-10">
+            <h4 className="text-lg font-black text-slate-900 font-outfit tracking-tight">
+              iPhone 18 Pro Max
+            </h4>
+            <div className="text-2xl sm:text-3xl font-black text-emerald-600 font-outfit tracking-tight">
+              {formatPriceStr(iphone18MaxPrice, '₹1,69,950')}
             </div>
           </div>
         </div>
 
-        {/* ── CARD 2: iPhone 16 Pro Max ── */}
-        <div className="w-full sm:w-64 h-[420px] bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xl hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 relative group overflow-hidden flex flex-col justify-between">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl pointer-events-none group-hover:bg-blue-500/10 transition-all" />
+        {/* ── CARD 2: Google Pixel 11 Fold ── */}
+        <div className="w-full sm:w-64 h-[350px] bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 relative group overflow-hidden flex flex-col items-center justify-between text-center">
+          <div className="absolute top-0 right-0 w-36 h-36 bg-blue-500/5 rounded-full blur-2xl pointer-events-none group-hover:bg-blue-500/10 transition-all" />
           
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-[9px] font-mono font-bold tracking-widest text-slate-700 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 uppercase">
-                Rephonix Certified
-              </span>
-              <span className="text-[9px] font-mono text-slate-400 font-medium">NIST Wiped</span>
-            </div>
-
-            {/* GSMArena Device Image */}
-            <div className="w-full h-36 flex items-center justify-center my-2 relative z-10">
-              <img
-                src="https://fdn2.gsmarena.com/vv/bigpic/apple-iphone-16-pro-max.jpg"
-                alt="iPhone 16 Pro Max"
-                referrerPolicy="no-referrer"
-                className="max-h-full max-w-full object-contain filter drop-shadow-md group-hover:scale-105 transition-transform duration-300"
-              />
-            </div>
-
-            <div className="text-left space-y-0.5">
-              <h4 className="text-base font-extrabold text-slate-900 font-outfit">iPhone 16 Pro Max</h4>
-              <p className="text-[11px] text-slate-500 font-mono">256GB &middot; Excellent Grade</p>
-            </div>
+          {/* Image - flush with dividing line below */}
+          <div className="w-full h-44 flex items-end justify-center relative z-10 mt-auto">
+            <img
+              src={pixelFoldModel?.imageUrl || "https://fdn2.gsmarena.com/vv/bigpic/google-pixel-11-pro-fold.jpg"}
+              alt="Google Pixel 11 Fold"
+              referrerPolicy="no-referrer"
+              style={{ mixBlendMode: 'multiply' }}
+              className="max-h-full max-w-full object-contain object-bottom block group-hover:scale-105 transition-transform duration-300"
+            />
           </div>
 
-          <div>
-            <div className="my-3 pt-3 border-t border-slate-100 flex items-baseline justify-between">
-              <span className="text-[10px] font-mono uppercase text-slate-400 font-medium">Estimated Valuation</span>
-              <span className="text-2xl font-black text-emerald-600 font-mono">
-                {!currentUser ? 'Rs XX,XXX' : formatPriceStr(iphoneMaxPrice, '₹86,500')}
-              </span>
-            </div>
-
-            <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between text-[10px] font-mono text-slate-600">
-              <span className="flex items-center gap-1.5 text-emerald-600 font-bold">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Doorstep Pickup
-              </span>
-              <span className="text-slate-500 font-medium">Instant Credit</span>
+          {/* Model Name & Max Price */}
+          <div className="w-full pt-4 border-t border-slate-100 space-y-1 relative z-10">
+            <h4 className="text-lg font-black text-slate-900 font-outfit tracking-tight">
+              Google Pixel 11 Fold
+            </h4>
+            <div className="text-2xl sm:text-3xl font-black text-emerald-600 font-outfit tracking-tight">
+              {formatPriceStr(pixelFoldMaxPrice, '₹1,04,288')}
             </div>
           </div>
         </div>
@@ -208,7 +185,8 @@ const FeaturePill: React.FC<{ icon: React.ReactNode; label: string; value: strin
 export const SellYourDevice: React.FC<{
   onGetValuation?: () => void;
   currentUser?: ApiUser | null;
-}> = ({ onGetValuation, currentUser }) => {
+  children?: React.ReactNode;
+}> = ({ onGetValuation, currentUser, children }) => {
   const [heroVisible, setHeroVisible] = useState(false);
   const heroRef = useRef<HTMLDivElement>(null);
 
@@ -238,9 +216,14 @@ export const SellYourDevice: React.FC<{
             }}
           >
             {/* Eyebrow */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-secondary/10 border border-secondary/20 text-[10px] font-bold font-mono tracking-widest text-secondary uppercase mb-6">
-              <div className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse" />
-              SELL TO REPHONIX
+            <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white/90 backdrop-blur-md border border-secondary/25 shadow-[0_2px_10px_-2px_rgba(0,110,47,0.15)] hover:border-secondary/40 hover:shadow-[0_4px_14px_-2px_rgba(0,110,47,0.2)] transition-all duration-300 mb-6 select-none group">
+              <span className="relative flex h-2 w-2 flex-shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-secondary shadow-[0_0_8px_rgba(0,110,47,0.5)]" />
+              </span>
+              <span className="text-[11px] font-bold font-outfit tracking-[0.16em] text-secondary uppercase">
+                SELL TO REPHONIX
+              </span>
             </div>
 
             {/* Headline — navy + green accent (matching photo) */}
@@ -252,14 +235,14 @@ export const SellYourDevice: React.FC<{
 
             {/* Sub-copy */}
             <p className="text-ink-slate text-base sm:text-lg font-light leading-relaxed mb-8 max-w-lg">
-              Sell your smartphone or tablet to Rephonix. Get an instant valuation, free doorstep pickup, and immediate payment. No hidden deductions, guaranteed.
+              Sell your smartphone to Rephonix. Get an instant valuation and immediate payment upon verification. No hidden deductions, guaranteed.
             </p>
 
             {/* Device type pills */}
             <div className="grid grid-cols-2 gap-3 mb-8 max-w-md">
               <FeaturePill icon={<Smartphone className="w-4 h-4" />} label="Smartphones" value="iPhone, Galaxy & More" />
-              <FeaturePill icon={<Tablet className="w-4 h-4" />} label="Tablets" value="iPad & Android Tabs" />
-              <FeaturePill icon={<Zap className="w-4 h-4" />} label="Speed" value="Instant Doorstep Credit" />
+              <FeaturePill icon={<Award className="w-4 h-4" />} label="Guarantee" value="Locked Valuation" />
+              <FeaturePill icon={<Zap className="w-4 h-4" />} label="Speed" value="Instant Direct Credit" />
               <FeaturePill icon={<ShieldCheck className="w-4 h-4" />} label="Security" value="NIST 800-88 Data Wipe" />
             </div>
 
@@ -290,6 +273,13 @@ export const SellYourDevice: React.FC<{
           </div>
         </div>
 
+        {/* ══ INSERTED SEGMENT: FEATURED DEVICES BENTO ══ */}
+        {children && (
+          <div className="mt-16 sm:mt-24">
+            {children}
+          </div>
+        )}
+
         {/* ══ HOW IT WORKS ══ */}
         <div className="mt-20 sm:mt-28">
           {/* Divider */}
@@ -297,8 +287,10 @@ export const SellYourDevice: React.FC<{
 
           {/* Header */}
           <div className="text-center mb-12">
-            <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cobalt/8 border border-cobalt/15 text-[10px] font-bold font-mono tracking-widest text-cobalt uppercase mb-4">
-              PROCESS
+            <span className="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-white/90 backdrop-blur-md border border-cobalt/20 shadow-[0_2px_10px_-2px_rgba(0,32,69,0.08)] hover:border-cobalt/35 hover:shadow-[0_4px_14px_-2px_rgba(0,32,69,0.14)] transition-all duration-300 mb-4 select-none">
+              <span className="text-[11px] font-bold font-outfit tracking-[0.18em] text-cobalt uppercase">
+                PROCESS
+              </span>
             </span>
             <h3 className="text-2xl sm:text-3xl font-black text-ink-navy font-outfit tracking-tight">
               Four steps to get <span className="text-secondary">paid.</span>
@@ -313,7 +305,7 @@ export const SellYourDevice: React.FC<{
             <ProcessStep
               number="01"
               title="Select Your Device"
-              description="Choose your smartphone or tablet and pick your brand and model."
+              description="Choose your smartphone and pick your brand and model."
               icon={<Smartphone strokeWidth={1.8} />}
               delay={0}
             />
@@ -345,7 +337,7 @@ export const SellYourDevice: React.FC<{
             <ProcessStep
               number="04"
               title="Complete the Sale"
-              description="Book a free doorstep pickup. We verify on-site and transfer payment instantly."
+              description="Confirm your schedule. We verify on-site and transfer payment instantly."
               icon={
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />

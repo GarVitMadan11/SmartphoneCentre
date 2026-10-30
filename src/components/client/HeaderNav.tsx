@@ -17,6 +17,8 @@ interface HeaderNavProps {
   models?: Model[];
 }
 
+const SHOW_TABLETS = false;
+
 export const HeaderNav: React.FC<HeaderNavProps> = ({
   currentPath,
   onNavigate,
@@ -236,7 +238,8 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
               )}
             </div>
 
-            {/* Tablets/iPads Dropdown */}
+            {/* Tablets/iPads Dropdown (Hidden while tablet catalogue is being refined) */}
+            {SHOW_TABLETS && (
             <div className="relative">
               <button
                 type="button"
@@ -273,6 +276,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                 </div>
               )}
             </div>
+            )}
 
             {/* About */}
             <button
@@ -438,7 +442,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
             >
               <div className="flex items-center gap-2">
                 <Search className="w-4 h-4 text-slate-400" />
-                <span>Search phone or tablet model...</span>
+                <span>Search phone model...</span>
               </div>
               <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
             </button>
@@ -479,7 +483,8 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
               )}
             </div>
 
-            {/* Mobile Tablets */}
+            {/* Mobile Tablets (Hidden while tablet catalogue is being refined) */}
+            {SHOW_TABLETS && (
             <div>
               <div 
                 onClick={() => setMobileSubMenu(prev => prev === 'tablets' ? null : 'tablets')}
@@ -505,6 +510,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                 </div>
               )}
             </div>
+            )}
 
             <button
               onClick={() => { setMobileMenuOpen(false); onNavigate('/about'); }}
@@ -623,7 +629,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-outfit shrink-0">
                 Popular:
               </span>
-              {['iPhone 16', 'iPhone 15', 'Galaxy S24', 'OnePlus 12', 'Pixel 9', 'iPad Pro'].map((tag) => (
+              {['iPhone 16', 'iPhone 15', 'Galaxy S24', 'OnePlus 12', 'Pixel 9', 'Galaxy Z Fold 6'].map((tag) => (
                 <button
                   key={tag}
                   type="button"

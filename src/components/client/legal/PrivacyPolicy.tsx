@@ -43,7 +43,7 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onBack }) => {
         <section className="space-y-3">
           <h2 className="text-base font-bold text-ink-navy">2. PII Data Collection & Purpose Limitation</h2>
           <p>
-            We collect personal information solely for fulfilling device trade-in valuations, scheduling pickup logistics, authenticating seller identity, and disbursing final payout amounts. The information collected includes:
+            We collect personal information solely for fulfilling device valuations, scheduling pickup logistics, authenticating seller identity, and disbursing final payout amounts. The information collected includes:
           </p>
           <ul className="list-disc pl-5 space-y-1 text-zinc-600">
             <li>Customer Name, Email Address, and 10-digit Mobile Number.</li>

@@ -58,6 +58,16 @@ export const CrackedScreenIllustration: React.FC = () => (
   </svg>
 );
 
+// 4b. Minor / Hairline Scratched Screen
+export const MinorScratchedScreenIllustration: React.FC = () => (
+  <svg viewBox="0 0 64 64" className="w-12 h-12" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="19" y="6" width="26" height="52" rx="4" stroke="#A1A1AA" strokeWidth="2" />
+    <rect x="22" y="9" width="20" height="46" rx="2" fill="#1C1C1F" />
+    <path d="M26 22C29 23 31 22 35 24" stroke="#F4F4F5" strokeWidth="0.9" strokeLinecap="round" opacity="0.45" />
+    <path d="M25 38C28 37 30 39 34 38" stroke="#F4F4F5" strokeWidth="0.8" strokeLinecap="round" opacity="0.35" />
+  </svg>
+);
+
 // 5. Scratched Screen
 export const ScratchedScreenIllustration: React.FC = () => (
   <svg viewBox="0 0 64 64" className="w-12 h-12" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -832,6 +842,7 @@ export const getIllustration = (
       case 'defect-screen-cracked':
       case 'defect-watch-screen-cracked':
         return <WatchCrackedScreenIllustration />;
+      case 'defect-screen-minor-scratches':
       case 'defect-screen-scratches':
       case 'defect-watch-screen-scratches':
         return <WatchScratchedScreenIllustration />;
@@ -898,6 +909,7 @@ export const getIllustration = (
         return <TabletFlawlessDisplayIllustration />;
       case 'defect-screen-cracked':
         return <TabletCrackedScreenIllustration />;
+      case 'defect-screen-minor-scratches':
       case 'defect-screen-scratches':
         return <TabletScratchedScreenIllustration />;
       case 'defect-screen-burn':
@@ -969,6 +981,8 @@ export const getIllustration = (
     // Screen
     case 'screen-flawless':
       return <FlawlessDisplayIllustration />;
+    case 'defect-screen-minor-scratches':
+      return <MinorScratchedScreenIllustration />;
     case 'defect-screen-cracked':
       return <CrackedScreenIllustration />;
     case 'defect-screen-scratches':

@@ -197,7 +197,7 @@ async function generateAiResponse(
 
   // 9. Pickup & Cities
   if (!response && (lowerMsg.includes('pickup') || lowerMsg.includes('city') || lowerMsg.includes('mumbai') || lowerMsg.includes('delhi') || lowerMsg.includes('bangalore') || lowerMsg.includes('pune'))) {
-    response = "We offer free doorstep pickup across Mumbai, Delhi NCR, Bangalore, Hyderabad, Chennai, and Pune!";
+    response = "We offer convenient on-site pickup and verification across Delhi NCR!";
     intent = "coverage_pickup";
   }
 

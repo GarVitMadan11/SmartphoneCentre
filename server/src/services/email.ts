@@ -143,7 +143,7 @@ export async function sendWelcomeEmail(to: string, name: string): Promise<void> 
     return;
   }
   const body = '<p class="greeting">Welcome aboard, ' + escapeHtml(name) + '!</p>'
-    + '<p class="text">Your Rephonix account is ready. Get instant quotes, free doorstep pickup, and fast payouts.</p>'
+    + '<p class="text">Your Rephonix account is ready. Get instant quotes, verified device inspection, and fast payouts.</p>'
     + '<div class="btn-wrap"><a href="' + FRONTEND_URL + '" class="btn">Get Your Quote</a></div>'
     + '<hr class="divider" />'
     + '<p class="note">Questions? <a href="mailto:support@rephonix.in">support@rephonix.in</a></p>';

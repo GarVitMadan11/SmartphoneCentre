@@ -109,7 +109,7 @@ export const PilotFeedbackSection: React.FC<PilotFeedbackSectionProps> = ({
             </h3>
 
             <p className="text-xs sm:text-sm text-ink-slate font-light leading-relaxed">
-              We’re currently in <strong className="font-semibold text-ink-navy">Pilot Mode</strong>, improving every step of the trade-in experience. Tell us what device models you’d like us to list next, what features to build, and what would make Rephonix better for you.
+              We’re currently in <strong className="font-semibold text-ink-navy">Pilot Mode</strong>, improving every step of the selling experience. Tell us what device models you’d like us to list next, what features to build, and what would make Rephonix better for you.
             </p>
 
             <div className="pt-2 space-y-2.5 text-xs text-ink-slate">

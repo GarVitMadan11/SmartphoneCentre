@@ -23,6 +23,7 @@ const getEngineeringLabel = (description: string) => {
     'Cracked Screen / Back Glass':       'Screen Restoration Fee',
     'Cracked Front Screen Glass':        'Screen Restoration Fee',
     'Back Glass Broken / Cracked':       'Rear Glass Restoration Fee',
+    'Minor / Hairline Scratches':        'Surface Micro-Buffing Fee',
     'Front Glass Scratches / Bubbles':   'Glass Micro-Polishing Fee',
     'Screen Burn-in / Lines':            'Display Panel Replacement Fee',
     'Touch / Swipe Unresponsive':        'Digitizer / Touch Layer Repair',
@@ -404,14 +405,15 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
   const receiptRef = useMemo(() => Math.random().toString(36).substr(2, 6).toUpperCase(), []);
 
   // Toggle selection helper
-  const handleToggleDefect = (defect: DefectRule, mutuallyExclusiveId?: string) => {
+  const handleToggleDefect = (defect: DefectRule, mutuallyExclusiveId?: string | string[]) => {
     setSelectedDefects(prev => {
       const current = Array.isArray(prev) ? prev : [];
       let next = [...current];
 
       // Remove mutually exclusive option if present
       if (mutuallyExclusiveId) {
-        next = next.filter(d => d.id !== mutuallyExclusiveId);
+        const idsToRemove = Array.isArray(mutuallyExclusiveId) ? mutuallyExclusiveId : [mutuallyExclusiveId];
+        next = next.filter(d => !idsToRemove.includes(d.id));
       }
 
       const exists = next.some(d => d.id === defect.id);
@@ -905,22 +907,12 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                     isCritical={valuation.isCritical}
                     className="text-xl sm:text-2xl font-black text-emerald-700 font-outfit tracking-tight"
                   />
-                  <span className="text-[10px] font-bold bg-emerald-600 text-white px-2.5 py-0.5 rounded-full shadow-xs tracking-tight">
-                    {valuation.retentionPercentage}% Retained
-                  </span>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Quick Retention Chip for Mobile (Sleek, zero screen blocking) */}
-          {step < reviewStepIndex && (
-            <div className="flex sm:hidden items-center gap-1.5 self-center flex-shrink-0">
-              <span className="text-[10px] font-bold bg-emerald-600 text-white px-2 py-0.5 rounded-full shadow-xs tracking-tight">
-                {valuation.retentionPercentage}% Retained
-              </span>
-            </div>
-          )}
+
         </div>
 
         {/* Bottom Row: Stepper Progress Indicator */}
@@ -1153,9 +1145,6 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                       <ShieldCheck className="w-4 h-4 text-blue-600" />
                       <span>Display Authenticity & Warranty Verification</span>
                     </span>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 font-bold">
-                      Required
-                    </span>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1184,9 +1173,6 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <h4 className="font-black text-sm text-slate-900">Original Factory Display</h4>
-                          <span className="text-[9.5px] font-mono font-bold px-1.5 py-0.5 bg-emerald-100 text-emerald-800 rounded">
-                            OEM Standard
-                          </span>
                         </div>
                         <p className="text-xs text-slate-600 mt-1 font-medium leading-snug">
                           Original factory display panel. Never replaced, or replaced exclusively at official brand service center.
@@ -1243,12 +1229,9 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <h4 className="font-black text-sm text-rose-950">Screen Replaced / Duplicate</h4>
-                          <span className="text-[9.5px] font-mono font-bold px-1.5 py-0.5 bg-rose-100 text-rose-800 rounded">
-                            -₹{modelScreenDeduction.toLocaleString('en-IN')}
-                          </span>
                         </div>
                         <p className="text-xs text-rose-900/80 mt-1 font-medium leading-snug">
-                          Third-party replacement. Voids brand warranty (Warranty Out deduction) + applies Screen Deduction (-₹{modelScreenDeduction.toLocaleString('en-IN')}).
+                          Third-party replacement. Voids brand warranty (Warranty Out deduction) + applies Screen Deduction.
                         </p>
                       </div>
                     </div>
@@ -1307,8 +1290,16 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
                   {/* Screen Defect Options */}
                   {(() => {
+                    const screenMutualMap: Record<string, string[]> = {
+                      'defect-screen-minor-scratches': ['defect-screen-scratches', 'defect-screen-cracked'],
+                      'defect-screen-scratches': ['defect-screen-minor-scratches', 'defect-screen-cracked'],
+                      'defect-screen-cracked': ['defect-screen-minor-scratches', 'defect-screen-scratches'],
+                    };
+
                     return rules.filter(r => r.category === 'screen' && r.id !== 'defect-screen-non-original').map(defect => {
                       const isSelected = selectedDefects.some(d => d.id === defect.id);
+                      const mutualIds = screenMutualMap[defect.id];
+
                       return (
                       <div
                         key={defect.id}
@@ -1316,25 +1307,11 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         tabIndex={0}
                         aria-checked={isSelected}
                         onKeyDown={e => handleKeyDown(e, () => {
-                          handleToggleDefect(
-                            defect, 
-                            defect.id === 'defect-screen-cracked' 
-                              ? 'defect-screen-scratches' 
-                              : defect.id === 'defect-screen-scratches' 
-                              ? 'defect-screen-cracked' 
-                              : undefined
-                          );
+                          handleToggleDefect(defect, mutualIds);
                           setScreenConfirmed(false);
                         })}
                         onClick={() => {
-                          handleToggleDefect(
-                            defect, 
-                            defect.id === 'defect-screen-cracked' 
-                              ? 'defect-screen-scratches' 
-                              : defect.id === 'defect-screen-scratches' 
-                              ? 'defect-screen-cracked' 
-                              : undefined
-                          );
+                          handleToggleDefect(defect, mutualIds);
                           setScreenConfirmed(false);
                         }}
                         className={`p-3.5 rounded-xl border cursor-pointer transition-all duration-300 flex items-start gap-3.5 text-left focus:outline-none focus:ring-2 focus:ring-rose-500 ${
@@ -2087,7 +2064,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   </span>
                   <h3 className="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight">Diagnostic Summary Review</h3>
                   <p className="text-xs sm:text-sm text-slate-800 mt-1.5 font-bold leading-relaxed">
-                    Review your completed {reviewStepIndex}-section diagnostic evaluation before generating your official trade-in quote.
+                    Review your completed {reviewStepIndex}-section diagnostic evaluation before generating your official valuation quote.
                   </p>
                 </div>
 
@@ -2108,9 +2085,6 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                       value={valuation.finalPrice}
                       className="font-black text-2xl text-emerald-700 font-outfit block"
                     />
-                    <p className="text-xs text-emerald-900 mt-0.5 font-bold">
-                      {valuation.retentionPercentage}% Value Retained
-                    </p>
                   </div>
                 </div>
 
@@ -2199,7 +2173,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                             Re<span className="text-blue-700 print-text-cobalt">phonix</span>
                           </span>
                           <span className="text-[10px] font-mono text-slate-600 print-text-muted tracking-wider uppercase block mt-1 font-bold">
-                            Official Trade-In &amp; Diagnostic Valuation Certificate
+                            Official Device Valuation &amp; Diagnostic Certificate
                           </span>
                         </div>
                       </div>
@@ -2301,19 +2275,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                       )}
                     </div>
 
-                    {/* Visual Valuation Retention Bar */}
-                    <div className="mt-3 pt-3 border-t border-slate-200 print-border space-y-1.5">
-                      <div className="flex justify-between text-xs font-mono text-slate-700 print-text-muted font-bold">
-                        <span>Value Retention Ratio</span>
-                        <span className="text-emerald-700 print-text-emerald font-bold">{valuation.retentionPercentage}% Retained</span>
-                      </div>
-                      <div className="h-2.5 w-full bg-slate-100 print-bar-bg rounded-full overflow-hidden flex border border-slate-200 print-border">
-                        <div 
-                          className="h-full bg-gradient-to-r from-blue-600 to-emerald-500 transition-all duration-700 rounded-full" 
-                          style={{ width: `${Math.max(5, valuation.retentionPercentage)}%` }}
-                        />
-                      </div>
-                    </div>
+
 
                     {/* Payout Summary Box */}
                     <div className="flex justify-between items-center border-t border-dashed border-slate-300 print-border pt-4 mt-4 bg-slate-50/80 print:bg-emerald-50/50 p-4 rounded-xl border border-slate-200 print:border-emerald-200">
@@ -2343,7 +2305,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         <div className="space-y-1">
                           <span className="font-bold text-slate-900 block uppercase tracking-wider">Pickup &amp; Support Verification:</span>
                           <p className="leading-relaxed">
-                            • Free doorstep pickup across Delhi NCR with live tracking.<br />
+                            • Scheduled device pickup across Delhi NCR with live tracking.<br />
                             • Dedicated Valuation Desk: +91 90349 97719 | support@rephonix.in<br />
                             • Rephonix Smart Device Exchange Services | www.rephonix.in
                           </p>
@@ -2384,7 +2346,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                     </div>
 
                     <p className="text-[10px] text-slate-500 mt-4 italic text-center font-mono">
-                      Estimated Trade-In Value. Final offer is subject to physical inspection, IMEI/device verification and diagnostic confirmation.
+                      Estimated Device Value. Final offer is subject to physical inspection, IMEI/device verification and diagnostic confirmation.
                     </p>
                   </div>
 
@@ -2529,7 +2491,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                 <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center border border-white/20 shadow-inner">
                   <Lock className="w-8 h-8 text-white fill-current" />
                 </div>
-                <p className="text-xs font-light opacity-90 leading-relaxed text-center">Verify your mobile number to unlock your diagnostic estimate and book a free doorstep inspection.</p>
+                <p className="text-xs font-light opacity-90 leading-relaxed text-center">Verify your mobile number to unlock your diagnostic estimate and schedule device verification.</p>
               </div>
 
               {/* Decorative light effects */}

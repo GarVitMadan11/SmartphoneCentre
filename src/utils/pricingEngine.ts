@@ -407,7 +407,7 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
       if (defect.id === 'defect-screen-non-original') {
         return; // Handled separately as model-specific screenDeductionAmount fixed adjustment
       }
-      if (hasScreenPanelReplacement && defect.id === 'defect-screen-scratches') {
+      if (hasScreenPanelReplacement && (defect.id === 'defect-screen-scratches' || defect.id === 'defect-screen-minor-scratches')) {
         return; // Waived: replacing entire display panel includes new scratch-free glass
       }
       let penalty = defect.deductionPercentage || 0;

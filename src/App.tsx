@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo, Suspense, useCallback, startTrans
 // Types only — no heavy data arrays in this import (keeps initial bundle lean)
 import type { Model, Variant, DefectRule, Brand } from './data/mockDatabase';
 // Helper functions needed at startup — imported statically but lightweight
-import { generateVariantsForModel, getDeviceImage, getDefectRulesForCategory, getMaxVariantPrice, isTabletDevice } from './data/mockDatabase';
+import { generateVariantsForModel, getDefectRulesForCategory, getMaxVariantPrice, isTabletDevice } from './data/mockDatabase';
 import { calculateValuation } from './utils/valuation';
 import type { SavedQuote } from './utils/savedQuotes';
 import { fetchCurrentUser, syncFirebaseUser, type ApiUser } from './utils/api';
@@ -18,6 +18,7 @@ import { useNavStore } from './store/useNavStore';
 
 // ── Components ────────────────────────────────────────────────────────────────
 import { DeviceSelector, BrandLogo } from './components/client/DeviceSelector';
+import { FeaturedDevicesBento } from './components/client/FeaturedDevicesBento';
 import { DeviceCategoryShowcase } from './components/client/DeviceCategoryShowcase';
 import { SellYourDevice } from './components/client/SellYourDevice';
 import { HeaderNav } from './components/client/HeaderNav';
@@ -36,7 +37,6 @@ import { PilotModeBanner } from './components/client/PilotModeBanner';
 import { PilotFeedbackSection } from './components/client/PilotFeedbackSection';
 import { FeedbackModal } from './components/client/FeedbackModal';
 import { PILOT_MODE_ENABLED } from './config/pilotMode';
-import { SpecsModal } from './components/client/SpecsModal';
 import { FaqSection } from './components/client/FaqSection';
 import { safeLazy } from './utils/safeLazy';
 import { SECRET_ADMIN_PATH, DECOY_ADMIN_PATHS } from './constants/routes';
@@ -50,13 +50,10 @@ const SmartphoneMockup   = safeLazy(() => import('./components/client/Smartphone
 const OrderTrackingModal = safeLazy(() => import('./components/client/OrderTrackingModal'), 'OrderTrackingModal');
 
 import {
-  Award, ShieldCheck, Zap, Search,
-  Truck, Lock, CheckCircle2, Sparkles, ArrowRight, Instagram
+  ShieldCheck, Search, Instagram
 } from 'lucide-react';
 
-import applePhoneImg from './assets/apple_phone.webp';
-import samsungPhoneImg from './assets/samsung_phone.webp';
-import oneplusPhoneImg from './assets/oneplus_phone.webp';
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -85,7 +82,6 @@ export default function App() {
 
   // ── Local UI state (does not belong in global stores) ──────────────────────
   const [toasts, setToasts]                     = useState<ToastMessage[]>([]);
-  const [isSpecModalOpen, setIsSpecModalOpen]   = useState(false);
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
   const [isTrackOpen, setIsTrackOpen]           = useState(false);
   const [trackModalTab, setTrackModalTab]       = useState<'my_bookings' | 'track_search' | 'invoices'>('my_bookings');
@@ -389,9 +385,19 @@ export default function App() {
     return getModelUrlPath(brand?.name || model.brandId, model.name, storageGb, ramGb);
   }, [BRANDS]);
 
-  const handleDirectSelectModel = useCallback((modelId: string) => {
-    const model = MODELS.find((m: Model) => m.id === modelId && !m.hidden);
-    if (!model) return;
+  const handleDirectSelectModel = useCallback((modelIdOrQuery: string) => {
+    const q = (modelIdOrQuery || '').toLowerCase().trim();
+    let model = MODELS.find((m: Model) => !m.hidden && (m.id === modelIdOrQuery || m.legacyId === modelIdOrQuery));
+    if (!model) {
+      model = MODELS.find((m: Model) => !m.hidden && (m.id.toLowerCase() === q || (m.legacyId && m.legacyId.toLowerCase() === q)));
+    }
+    if (!model) {
+      model = MODELS.find((m: Model) => !m.hidden && (m.name.toLowerCase() === q || m.name.toLowerCase().includes(q) || q.includes(m.name.toLowerCase())));
+    }
+    if (!model) {
+      console.warn('[App] Model not found for direct selection:', modelIdOrQuery);
+      return;
+    }
     if (isTabletDevice(model.brandId, model.name, model.id)) {
       handleReset();
       setPendingModelId(model.id);
@@ -399,8 +405,15 @@ export default function App() {
       return;
     }
     const variants = generateVariantsForModel(model);
-    if (variants?.length) handleVariantSelected(model, variants[0]);
-  }, [MODELS, handleReset, navigate, setPendingModelId, handleVariantSelected]);
+    if (variants?.length) {
+      const chosen = variants[0];
+      handleReset();
+      handleVariantSelected(model, chosen);
+      const targetPath = getPathForModel(model, chosen.storageGb, chosen.ramGb);
+      navigate(targetPath);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [MODELS, handleReset, navigate, setPendingModelId, handleVariantSelected, getPathForModel]);
 
   const handleHeroSearchSelect = (model: Model) => {
     setHeroSearch('');
@@ -556,10 +569,20 @@ export default function App() {
             <LoginPage onLoginSuccess={(user) => setCurrentUser(user)} onNavigate={navigate} />
           )}
 
-          {cleanPath === '/about' && <AboutPage />}
+          {cleanPath === '/about' && <AboutPage onNavigate={navigate} />}
           {cleanPath === '/contact' && <ContactPage onShowToast={showToast} />}
 
-          {cleanPath === '/tablets' && !isWorkflow && (
+          {/* Redirect /tablets to /smartphones while tablet catalogue is being refined */}
+          {cleanPath === '/tablets' && (
+            <div className="py-12 text-center">
+              {(() => {
+                navigate('/smartphones');
+                return null;
+              })()}
+            </div>
+          )}
+
+          {false && cleanPath === '/tablets' && !isWorkflow && (
             <TabletsShowcase
               models={MODELS}
               onSelectVariant={handleVariantSelected}
@@ -609,14 +632,21 @@ export default function App() {
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
                 {/* Hero Call to Action */}
                 <div className="lg:col-span-7 flex flex-col items-start text-left">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold bg-secondary/10 text-secondary mb-6 tracking-wide uppercase">
-                    ★ A Trusted Resale Partner
-                  </span>
+                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-secondary/10 border border-secondary/25 shadow-xs mb-6 font-outfit transition-all duration-300 hover:bg-secondary/15 select-none">
+                    <ShieldCheck className="w-4 h-4 text-secondary stroke-[2.2] flex-shrink-0" />
+                    <span className="text-[11px] font-bold tracking-wider uppercase text-secondary">
+                      A Trusted Resale Partner
+                    </span>
+                    <span className="relative flex h-1.5 w-1.5 ml-0.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-secondary"></span>
+                    </span>
+                  </div>
                   <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-ink-navy tracking-tight leading-none mb-6">
                     Sell Your Smartphone <br className="hidden sm:inline" />for the <span className="text-secondary">Best Price</span>
                   </h1>
                   <p className="text-base sm:text-lg text-ink-slate mb-8 max-w-xl font-light leading-relaxed">
-                    Get an instant valuation, free doorstep pickup, and instant online or UPI payment. No hidden deductions, guaranteed.
+                    Get an instant valuation and immediate online or UPI payment. No hidden deductions, guaranteed.
                   </p>
 
                   {/* Brand Logo Quick-Select Pills */}
@@ -733,7 +763,7 @@ export default function App() {
                     </div>
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/80 border border-ice-border shadow-sm">
                       <div className="w-5 h-5 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600 text-xs font-bold">✓</div>
-                      <span className="font-outfit text-ink-navy">Free Doorstep Pickup</span>
+                      <span className="font-outfit text-ink-navy">Zero Hidden Deductions</span>
                     </div>
                   </div>
                 </div>
@@ -752,280 +782,31 @@ export default function App() {
 
               {/* 1.5 Premium 3D Device Category Showcase */}
               <DeviceCategoryShowcase
+                models={MODELS}
+                onSelectModel={(modelId) => {
+                  handleReset();
+                  handleDirectSelectModel(modelId);
+                }}
                 onSelectCategory={(cat) => {
                   handleReset();
                   navigate(cat === 'tablets' ? '/tablets' : '/smartphones');
                 }}
               />
 
-              {/* CURATED FEATURED DEVICES SECTION */}
-              <div className="space-y-8 py-4">
-                <div className="text-center max-w-3xl mx-auto">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-secondary/10 text-secondary border border-secondary/15 tracking-widest uppercase font-mono">
-                    <Sparkles className="w-3.5 h-3.5 text-secondary" /> Curated Trending Models
-                  </span>
-                  <h2 className="text-3xl sm:text-4xl font-extrabold text-ink-navy tracking-tight mt-3">
-                    Featured Selling Devices
-                  </h2>
-                  <p className="text-ink-slate mt-2 text-sm sm:text-base font-light">
-                    Select a popular model directly to get an instant doorstep payout valuation.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-                  {[
-                    { id: 'apple-17pm', brand: 'Apple', name: 'iPhone 17 Pro Max' },
-                    { id: 'apple-17air', brand: 'Apple', name: 'iPhone 17 Air' },
-                    { id: 'sam-s24u', brand: 'Samsung', name: 'Galaxy S24 Ultra' },
-                    { id: 'apple-16pm', brand: 'Apple', name: 'iPhone 16 Pro Max' },
-                  ].map((dev) => {
-                    const modelObj = MODELS.find((m: Model) => m.id === dev.id);
-                    const priceVal = modelObj ? getMaxVariantPrice(modelObj) : 0;
-                    const priceStr = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(priceVal);
-                    const imgUrl = getDeviceImage(dev.id, dev.id.startsWith('apple') ? 'brand-apple' : 'brand-samsung');
-                    return (
-                      <div
-                        key={dev.id}
-                        onClick={() => handleDirectSelectModel(dev.id)}
-                        className="bg-canvas-pure border border-ice-border/60 hover:border-cobalt hover:shadow-premium rounded-2xl p-5 flex flex-col items-center justify-between text-center transition-all cursor-pointer group hover:scale-[1.02] active:scale-[0.98] shadow-sm relative overflow-hidden"
-                      >
-                        <div className="absolute top-0 right-0 w-24 h-24 bg-cobalt/5 blur-2xl rounded-full pointer-events-none group-hover:bg-cobalt/10 transition-all" />
-                        <div className="w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center mb-4 relative z-10 transition-transform group-hover:scale-105 duration-300">
-                          {imgUrl ? (
-                            <img src={imgUrl} alt={dev.name} referrerPolicy="no-referrer" className="max-w-full max-h-full object-contain filter drop-shadow-md" loading="lazy" />
-                          ) : (
-                            <div className="w-full h-full rounded bg-ice-gray flex items-center justify-center text-ink-muted text-[10px]">{dev.name}</div>
-                          )}
-                        </div>
-                        <div className="space-y-1 relative z-10 w-full text-center">
-                          <span className="text-[9px] font-mono font-bold tracking-wider text-ink-muted uppercase block">{dev.brand}</span>
-                          <h4 className="text-xs sm:text-sm font-extrabold text-ink-navy group-hover:text-cobalt transition-colors font-outfit truncate w-full">{dev.name}</h4>
-                          <div className="pt-2 border-t border-ice-border/40 mt-2">
-                            <span className="text-[9px] font-mono text-ink-slate font-light uppercase block">Valuations Up To</span>
-                            <span className="text-xs sm:text-sm font-black text-emerald-600 font-outfit">{priceStr}</span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Sell Your Device Section */}
+              {/* Sell Your Device Section with Most Valued Devices Bento above the Process segment */}
               <SellYourDevice
                 currentUser={currentUser}
                 onGetValuation={() => { handleReset(); navigate('/smartphones'); }}
-              />
-
-              {/* How It Works Section */}
-              <div id="how-it-works-section" className="py-12 border-t border-b border-ice-border/40">
-                <div className="text-center max-w-3xl mx-auto mb-12">
-                  <h2 className="text-3xl sm:text-4xl font-black text-ink-navy tracking-tight font-outfit">How it Works</h2>
-                  <p className="text-ink-slate mt-2 text-base font-light">Our transparent process ensures you get the highest value with zero doorstep friction.</p>
-                </div>
-                <div className="relative">
-                  <div className="absolute top-16 left-4 right-4 h-0.5 bg-ice-gray hidden md:block z-0" />
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative z-10">
-                    {[
-                      { step: '1', title: 'Check Price', desc: 'Select your smartphone model and answer a few questions about its condition. Get a quote instantly.' },
-                      { step: '2', title: 'Schedule Pickup', desc: 'Choose a convenient date and time slot. Our executive will visit your home or office for verification.' },
-                      { step: '3', title: 'Get Paid', desc: 'Once condition is verified at your doorstep, get paid instantly via digital bank transfer or UPI.' },
-                    ].map(({ step, title, desc }) => (
-                      <div key={step} className="flex flex-col items-center text-center group">
-                        <div className="w-16 h-16 rounded-2xl bg-cobalt text-white flex items-center justify-center text-xl font-black shadow-lg shadow-cobalt/20 mb-6 group-hover:scale-110 transition-transform duration-300 font-outfit">
-                          {step}
-                        </div>
-                        <h3 className="text-xl font-extrabold text-ink-navy mb-2 font-outfit">{title}</h3>
-                        <p className="text-sm text-ink-slate max-w-xs font-light leading-relaxed">{desc}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Benefits / Why Rephonix Section */}
-              <div className="py-12">
-                <div className="text-center max-w-2xl mx-auto mb-12">
-                  <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[11px] font-bold bg-cobalt/10 text-cobalt border border-cobalt/15 shadow-sm tracking-widest uppercase font-outfit">
-                    <Sparkles className="w-3.5 h-3.5 text-cobalt" /> Why Rephonix
-                  </span>
-                  <h2 className="text-3xl sm:text-4xl font-extrabold text-ink-navy tracking-tight mt-3 font-outfit">
-                    Designed Around You. Built for Absolute Trust.
-                  </h2>
-                  <p className="text-ink-slate mt-3 text-base max-w-xl mx-auto font-light leading-relaxed">
-                    No hidden cuts. No delayed payments. Engineered to give you maximum device value with zero doorstep friction.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {/* Benefit cards — condensed but identical content */}
-                  <div className="relative group overflow-hidden rounded-2xl bg-gradient-to-br from-[#001c3d] via-[#002652] to-[#00142e] border border-blue-500/30 p-6 text-white shadow-xl hover:shadow-2xl hover:border-blue-400/60 transition-all duration-300 flex flex-col justify-between">
-                    <div className="absolute -top-12 -right-12 w-32 h-32 bg-blue-500/20 rounded-full blur-2xl group-hover:bg-blue-500/35 transition-all duration-500 pointer-events-none" />
-                    <div>
-                      <div className="flex items-center justify-between mb-6">
-                        <div className="w-12 h-12 rounded-xl bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-blue-400 shadow-inner group-hover:scale-110 transition-transform duration-300">
-                          <Zap className="w-6 h-6" />
-                        </div>
-                        <span className="text-[9px] font-mono font-bold text-blue-300/60 uppercase tracking-wider">01</span>
-                      </div>
-                      <h3 className="text-lg font-extrabold tracking-tight mb-2">Instant Digital Payout</h3>
-                      <p className="text-xs text-blue-100/70 font-light leading-relaxed">Money hits your account or UPI ID within minutes of device verification. No waiting, no cheques.</p>
-                    </div>
-                  </div>
-
-                  <div className="relative group overflow-hidden rounded-2xl bg-canvas-pure border border-ice-border p-6 shadow-md hover:shadow-premium hover:border-cobalt/30 transition-all duration-300 flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-center justify-between mb-6">
-                        <div className="w-12 h-12 rounded-xl bg-cobalt/10 border border-cobalt/15 flex items-center justify-center text-cobalt shadow-inner group-hover:scale-110 transition-transform duration-300">
-                          <ShieldCheck className="w-6 h-6" />
-                        </div>
-                        <span className="text-[9px] font-mono font-bold text-ink-muted uppercase tracking-wider">02</span>
-                      </div>
-                      <h3 className="text-lg font-extrabold text-ink-navy tracking-tight mb-2">Transparent Grading</h3>
-                      <p className="text-xs text-ink-slate font-light leading-relaxed">Our diagnostic wizard uses a formula-based engine. Every deduction is shown, explained, and locked in before pickup.</p>
-                    </div>
-                  </div>
-
-                  <div className="relative group overflow-hidden rounded-2xl bg-canvas-pure border border-ice-border p-6 shadow-md hover:shadow-premium hover:border-emerald-500/30 transition-all duration-300 flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-center justify-between mb-6">
-                        <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/15 flex items-center justify-center text-emerald-600 shadow-inner group-hover:scale-110 transition-transform duration-300">
-                          <Truck className="w-6 h-6" />
-                        </div>
-                        <span className="text-[9px] font-mono font-bold text-ink-muted uppercase tracking-wider">03</span>
-                      </div>
-                      <h3 className="text-lg font-extrabold text-ink-navy tracking-tight mb-2">Free Doorstep Service</h3>
-                      <p className="text-xs text-ink-slate font-light leading-relaxed">Our agent comes to you. No dropping off, no courier risk. Schedule any slot that works for you.</p>
-                    </div>
-                  </div>
-
-                  <div className="relative group overflow-hidden rounded-2xl bg-canvas-pure border border-ice-border p-6 shadow-md hover:shadow-premium hover:border-purple-500/30 transition-all duration-300 flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-center justify-between mb-6">
-                        <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/15 flex items-center justify-center text-purple-600 shadow-inner group-hover:scale-110 transition-transform duration-300">
-                          <Lock className="w-6 h-6" />
-                        </div>
-                        <span className="text-[9px] font-mono font-bold text-ink-muted uppercase tracking-wider">04</span>
-                      </div>
-                      <h3 className="text-lg font-extrabold text-ink-navy tracking-tight mb-2">Verified &amp; Secure</h3>
-                      <p className="text-xs text-ink-slate font-light leading-relaxed">DigiLocker-powered KYC. IMEI tracking. Every transaction is cryptographically signed and auditable.</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              >
+                {/* Featured Device Showcase (3-column bento with sliding phones) */}
+                <FeaturedDevicesBento
+                  onSelectModel={handleDirectSelectModel}
+                  onNavigate={(dest: string) => { handleReset(); navigate(dest); }}
+                />
+              </SellYourDevice>
 
               {/* FAQ Section */}
               <FaqSection />
-
-              {/* Featured Device Showcase (3-column bento) */}
-              <div className="py-4">
-                <div className="text-center max-w-2xl mx-auto mb-10">
-                  <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[11px] font-bold bg-secondary/10 text-secondary border border-secondary/15 shadow-sm tracking-widest uppercase font-outfit">
-                    <CheckCircle2 className="w-3.5 h-3.5" /> Popular Right Now
-                  </span>
-                  <h2 className="text-3xl sm:text-4xl font-extrabold text-ink-navy tracking-tight mt-3 font-outfit">
-                    Top Trade-In Devices
-                  </h2>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
-                  {/* iPhone 15 Pro Max — Hero Card */}
-                  <div className="md:col-span-2 bg-gradient-to-br from-[#f8fafc] via-white to-[#f1f5f9] border border-slate-200/80 rounded-2xl p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden group text-left">
-                    <div className="absolute inset-0 bg-gradient-to-br from-cobalt/3 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                    <div className="z-10 flex-1">
-                      <span className="text-[10px] font-mono font-bold text-cobalt bg-cobalt/10 px-2 py-0.5 rounded border border-cobalt/15 uppercase tracking-wider">A17 Pro</span>
-                      <h3 className="text-2xl sm:text-3xl font-black text-ink-navy mt-2 tracking-tight">iPhone 15 Pro Max</h3>
-                      <p className="text-sm text-ink-slate mt-1 font-medium">
-                        Valuations up to{' '}
-                        <span className="text-emerald-600 font-extrabold text-lg">
-                          {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(
-                            (() => { const f = MODELS.find((m: Model) => m.id === 'apple-15pm'); return f ? getMaxVariantPrice(f) : 57000; })()
-                          )}
-                        </span>
-                      </p>
-                      <button
-                        onClick={() => handleDirectSelectModel('apple-15pm')}
-                        className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-6 py-3 rounded-xl font-extrabold text-sm shadow-lg shadow-emerald-500/25 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2 mt-4"
-                      >
-                        <span>Get Valuation</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </button>
-                    </div>
-                    <div className="z-10 relative flex-shrink-0 w-full md:w-56 lg:w-64">
-                      <div className="bg-gradient-to-b from-[#f8fafc] via-[#f1f5f9] to-[#e2e8f0] rounded-2xl p-4 border border-white/20 shadow-2xl flex items-center justify-center relative overflow-hidden group-hover:scale-[1.02] transition-transform duration-500">
-                        <div className="absolute top-2 right-2 text-[9px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-900/10 text-slate-700">256GB / Titanium</div>
-                        <img src={applePhoneImg} alt="iPhone 15 Pro Max" width={256} height={512} decoding="async" className="w-44 sm:w-48 h-auto object-contain mix-blend-multiply drop-shadow-lg py-2" />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Right stack (Samsung + OnePlus) */}
-                  <div className="flex flex-col gap-6 justify-between">
-                    <div className="bg-white border border-slate-200/80 rounded-2xl p-5 sm:p-6 flex items-center justify-between shadow-md hover:shadow-xl hover:border-blue-400/50 transition-all duration-300 relative overflow-hidden group text-left">
-                      <div className="z-10 flex-1 pr-4">
-                        <span className="text-[10px] font-mono font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100 uppercase tracking-wider">Galaxy AI</span>
-                        <h4 className="text-lg font-bold text-ink-navy mt-1.5">Galaxy S24 Ultra</h4>
-                        <p className="text-xs text-ink-slate mt-0.5 font-medium">
-                          Valuations up to{' '}
-                          <span className="text-emerald-600 font-extrabold text-sm">
-                            {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(
-                              (() => { const f = MODELS.find((m: Model) => m.id === 'sam-s24u'); return f ? getMaxVariantPrice(f) : 42000; })()
-                            )}
-                          </span>
-                        </p>
-                        <button onClick={() => handleDirectSelectModel('sam-s24u')} className="text-xs font-bold text-cobalt hover:text-blue-700 flex items-center gap-1 mt-3 transition-colors">
-                          <span>Get Valuation</span><ArrowRight className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                      <div className="w-20 sm:w-24 h-24 bg-slate-100 rounded-xl p-2 flex items-center justify-center flex-shrink-0 border border-slate-200/60 shadow-inner">
-                        <img src={samsungPhoneImg} alt="Galaxy S24 Ultra" width={96} height={192} loading="lazy" decoding="async" className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-300" />
-                      </div>
-                    </div>
-
-                    <div className="bg-white border border-slate-200/80 rounded-2xl p-5 sm:p-6 flex items-center justify-between shadow-md hover:shadow-xl hover:border-red-400/50 transition-all duration-300 relative overflow-hidden group text-left">
-                      <div className="z-10 flex-1 pr-4">
-                        <span className="text-[10px] font-mono font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded border border-red-100 uppercase tracking-wider">Fast Charge</span>
-                        <h4 className="text-lg font-bold text-ink-navy mt-1.5">OnePlus 12</h4>
-                        <p className="text-xs text-ink-slate mt-0.5 font-medium">
-                          Valuations up to{' '}
-                          <span className="text-emerald-600 font-extrabold text-sm">
-                            {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(
-                              (() => { const f = MODELS.find((m: Model) => m.id === 'op-12'); return f ? getMaxVariantPrice(f) : 24000; })()
-                            )}
-                          </span>
-                        </p>
-                        <button onClick={() => handleDirectSelectModel('op-12')} className="text-xs font-bold text-cobalt hover:text-blue-700 flex items-center gap-1 mt-3 transition-colors">
-                          <span>Get Valuation</span><ArrowRight className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                      <div className="w-20 sm:w-24 h-24 bg-slate-100 rounded-xl p-2 flex items-center justify-center flex-shrink-0 border border-slate-200/60 shadow-inner">
-                        <img src={oneplusPhoneImg} alt="OnePlus 12" width={96} height={192} loading="lazy" decoding="async" className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-300" />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Bulk Liquidation Corporate Banner */}
-                  <div className="lg:col-span-3 bg-gradient-to-r from-[#001c3d] via-[#002856] to-[#00142e] border border-blue-900 rounded-2xl p-6 sm:p-8 text-white relative overflow-hidden flex flex-col md:flex-row md:items-center md:justify-between gap-6 shadow-2xl text-left">
-                    <div className="z-10 max-w-2xl">
-                      <span className="px-3 py-1 bg-emerald-500/20 text-emerald-300 rounded-full text-xs font-bold uppercase tracking-wider border border-emerald-400/30 inline-flex items-center gap-1.5">
-                        <Award className="w-3.5 h-3.5 text-emerald-400" /> CORPORATE &amp; ENTERPRISE SERVICES
-                      </span>
-                      <h3 className="text-2xl sm:text-3xl font-extrabold mt-3 tracking-tight">Enterprise Device Liquidation</h3>
-                      <p className="text-slate-300 mt-2 text-sm font-light leading-relaxed">
-                        Selling company laptops or smartphone fleets? Get customized bulk pricing, NIST-compliant hardware data wiping, and direct corporate logistics.
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => { handleReset(); navigate('/contact'); }}
-                      className="mt-4 md:mt-0 bg-white hover:bg-slate-100 text-cobalt px-6 py-3.5 rounded-xl font-bold text-sm shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98] whitespace-nowrap z-10 flex-shrink-0 flex items-center gap-2"
-                    >
-                      <span>Contact B2B Team</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </button>
-                    <div className="absolute -right-12 -bottom-12 w-64 h-64 rounded-full bg-blue-500/10 blur-3xl pointer-events-none" />
-                  </div>
-                </div>
-              </div>
             </div>
           )}
 
@@ -1084,10 +865,9 @@ export default function App() {
               <span className="text-xl font-extrabold text-ink-navy tracking-tight">Re<span className="text-secondary">phonix</span></span>
             </div>
             <div className="flex flex-wrap justify-center items-center gap-6 md:gap-8 text-xs font-semibold text-ink-slate">
-              {[['/', 'Home'], ['/smartphones', 'Smartphones'], ['/tablets', 'Tablets/iPads'], ['/about', 'About'], ['/contact', 'Contact']].map(([href, label]) => (
+              {[['/', 'Home'], ['/smartphones', 'Smartphones'], ['/about', 'About'], ['/contact', 'Contact']].map(([href, label]) => (
                 <span key={href} onClick={() => { handleReset(); navigate(href); }} className="hover:text-cobalt cursor-pointer transition-colors">{label}</span>
               ))}
-              <span onClick={() => setIsSpecModalOpen(true)} className="hover:text-cobalt cursor-pointer transition-colors">System Spec</span>
               <a href="https://www.instagram.com/rephonix.in/" target="_blank" rel="noopener noreferrer" className="hover:text-pink-600 cursor-pointer transition-colors flex items-center gap-1.5 text-pink-600 font-bold bg-pink-500/10 px-2.5 py-1 rounded-full border border-pink-500/20">
                 <Instagram className="w-3.5 h-3.5" /><span>Instagram</span>
               </a>
@@ -1112,7 +892,6 @@ export default function App() {
       </footer>
 
       {/* ── Modals ─────────────────────────────────────────────────── */}
-      <SpecsModal isOpen={isSpecModalOpen} onClose={() => setIsSpecModalOpen(false)} />
       {PILOT_MODE_ENABLED && (
         <FeedbackModal isOpen={isFeedbackModalOpen} onClose={() => setIsFeedbackModalOpen(false)} currentUser={currentUser} onNavigate={navigate} />
       )}
