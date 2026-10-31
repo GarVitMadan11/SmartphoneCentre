@@ -175,8 +175,12 @@ if (distExists) {
     console.log(`📁 Serving frontend static build from: ${distPath}`);
   }
   app.use(express.static(distPath, {
+    maxAge: '1y',
     setHeaders: (res, filePath) => {
-      if (filePath.endsWith('index.html')) {
+      if (filePath.includes(path.sep + 'assets' + path.sep)) {
+        // Vite generates content-hashed files inside /assets/ — safe to cache immutably
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      } else if (filePath.endsWith('index.html')) {
         res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
         res.setHeader('Pragma', 'no-cache');
         res.setHeader('Expires', '0');

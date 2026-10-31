@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   X, Search, CheckCircle2, Clock, AlertCircle, Package, Calendar, MapPin,
-  Copy, Check, FileText, Download, Bookmark, Trash2, TrendingUp, TrendingDown, Sparkles, ArrowRight
+  Copy, Check, FileText, Download, Bookmark, Trash2, TrendingUp, TrendingDown, Sparkles, ArrowRight, Leaf
 } from 'lucide-react';
 import { trackBookingOrder, fetchMyBookings, downloadBookingPdf, ApiTrackBooking, ApiBooking, ApiUser } from '../../utils/api';
 import { getDeviceImage, Model } from '../../data/mockDatabase';
@@ -358,7 +358,12 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                           </div>
                         </div>
 
-
+                        {/* Circular Economy & Eco Impact Badge */}
+                        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-50/70 border border-emerald-200/60 text-xs text-emerald-800">
+                          <Leaf className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                          <span className="font-semibold text-emerald-900">Circular Impact:</span>
+                          <span className="text-[11px] text-emerald-700">Diverts ~70 kg CO₂e emissions &amp; ~175g rare e-waste through certified reuse.</span>
+                        </div>
 
                         {/* Status Progression Stepper */}
                         <div className="pt-2">
@@ -554,6 +559,15 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                       <span className="text-xl font-black text-emerald-600">
                         {formatPrice(trackingResult.finalPayoutAmount)}
                       </span>
+                    </div>
+                  </div>
+
+                  {/* Circular Economy & Eco Impact Badge */}
+                  <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-emerald-50/70 border border-emerald-200/60 text-xs text-emerald-800">
+                    <Leaf className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <div>
+                      <span className="font-semibold text-emerald-900 mr-1.5">Circular Impact:</span>
+                      <span className="text-[11px] text-emerald-700">Recirculating this smartphone diverts ~70 kg CO₂e emissions &amp; ~175g electronic waste from landfills.</span>
                     </div>
                   </div>
 

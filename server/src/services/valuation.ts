@@ -177,9 +177,19 @@ export function generateQuoteSignature(modelLegacyId: string, storageGb: number,
 }
 
 export function verifyQuoteSignature(modelLegacyId: string, storageGb: number, defectIds: string[], finalPrice: number, expiresAtIso: string, signature: string): boolean {
+  if (!signature || typeof signature !== 'string') {
+    return false;
+  }
   if (new Date(expiresAtIso).getTime() < Date.now()) {
     return false; // Quote expired
   }
   const expectedSignature = generateQuoteSignature(modelLegacyId, storageGb, defectIds, finalPrice, expiresAtIso);
-  return crypto.timingSafeEqual(Buffer.from(signature, 'hex'), Buffer.from(expectedSignature, 'hex'));
+  const sigBuf = Buffer.from(signature, 'hex');
+  const expectedBuf = Buffer.from(expectedSignature, 'hex');
+
+  if (sigBuf.length === 0 || sigBuf.length !== expectedBuf.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(sigBuf, expectedBuf);
 }

@@ -308,8 +308,14 @@ export async function sendBookingUnderReviewEmail(booking: PDFBookingData, baseU
           <p style="font-size: 13px; line-height: 22px; color: #4b5563; margin: 0;">&bull; At pickup, our executive will inspect the device and transfer payment instantly via UPI or bank transfer.</p>
         </div>
 
+        <!-- Circular Economy Impact -->
+        <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px 16px; margin: 20px 0 24px 0;">
+          <p style="font-size: 12px; font-weight: 600; color: #166534; margin: 0 0 3px 0;">🌱 Circular Economy Impact</p>
+          <p style="font-size: 11px; line-height: 18px; color: #15803d; margin: 0;">By refurbishing and recirculating this device, you help save ~70 kg of CO₂e emissions and divert hazardous electronic waste from landfills.</p>
+        </div>
+
         <!-- Button -->
-        <div style="margin: 28px 0 20px 0;">
+        <div style="margin: 24px 0 20px 0;">
           <a href="${escapeHtml(pdfDownloadUrl)}" style="background-color: #111827; color: #ffffff; padding: 11px 22px; text-decoration: none; border-radius: 6px; font-size: 13px; font-weight: 500; display: inline-block;">Download Quotation PDF</a>
         </div>
 
@@ -443,8 +449,14 @@ export async function sendBookingApprovalEmail(booking: PDFBookingData, baseUrl:
           </ul>
         </div>
 
+        <!-- Circular Economy Impact -->
+        <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px 16px; margin: 20px 0 24px 0;">
+          <p style="font-size: 12px; font-weight: 600; color: #166534; margin: 0 0 3px 0;">🌱 Circular Economy Impact</p>
+          <p style="font-size: 11px; line-height: 18px; color: #15803d; margin: 0;">By refurbishing and recirculating this device, you help save ~70 kg of CO₂e emissions and divert hazardous electronic waste from landfills.</p>
+        </div>
+
         <!-- Button -->
-        <div style="margin: 28px 0 20px 0;">
+        <div style="margin: 24px 0 20px 0;">
           <a href="${escapeHtml(pdfDownloadUrl)}" style="background-color: #111827; color: #ffffff; padding: 11px 22px; text-decoration: none; border-radius: 6px; font-size: 13px; font-weight: 500; display: inline-block;">Download Quotation PDF</a>
         </div>
 
