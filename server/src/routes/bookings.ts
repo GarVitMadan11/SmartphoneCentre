@@ -291,8 +291,9 @@ router.post('/', bookingLimiter, optionalCustomerAuth, async (req: Authenticated
       }
     }
 
+    const DOORSTEP_PROCESSING_FEE = 99;
     const totalBonusAmount = payout.amount + referralBonus;
-    const finalDoorstepPayout = estimatedPrice + totalBonusAmount;
+    const finalDoorstepPayout = Math.max(0, estimatedPrice + totalBonusAmount - DOORSTEP_PROCESSING_FEE);
     const d = new Date();
     const dd = String(d.getDate()).padStart(2, '0');
     const mm = String(d.getMonth() + 1).padStart(2, '0');
@@ -394,10 +395,11 @@ router.post('/', bookingLimiter, optionalCustomerAuth, async (req: Authenticated
           address: booking.address,
           pickupDate: booking.pickupDate,
           pickupTimeSlot: booking.pickupTimeSlot,
-          finalPrice: booking.finalPayoutAmount || booking.finalPrice,
+          finalPrice: booking.finalPayoutAmount,
           basePrice: booking.finalPrice,
           appliedCoupon: (booking as any).appliedCoupon || undefined,
           bonusAmount: booking.bonusAmount || undefined,
+          doorstepFee: 99,
           defectDescriptions: defectIds,
           dateCreated: booking.dateCreated,
         }, baseUrl);
@@ -460,7 +462,11 @@ router.get('/:id/pdf', optionalAdminAuth as any, optionalCustomerAuth, async (re
       address: booking.address,
       pickupDate: booking.pickupDate,
       pickupTimeSlot: booking.pickupTimeSlot,
-      finalPrice: booking.finalPrice,
+      finalPrice: booking.finalPayoutAmount || Math.max(0, booking.finalPrice - 99),
+      basePrice: booking.finalPrice,
+      appliedCoupon: (booking as any).appliedCoupon || undefined,
+      bonusAmount: booking.bonusAmount || undefined,
+      doorstepFee: 99,
       defectDescriptions: (() => {
         try {
           return JSON.parse(booking.defectIdsJson || '[]');
@@ -590,10 +596,11 @@ router.patch('/:id', adminAuth, requireRole(['SUPER_ADMIN', 'FINANCE_APPROVER', 
             address: booking.address,
             pickupDate: booking.pickupDate,
             pickupTimeSlot: booking.pickupTimeSlot,
-            finalPrice: booking.finalPayoutAmount || booking.finalPrice,
+            finalPrice: booking.finalPayoutAmount || Math.max(0, booking.finalPrice - 99),
             basePrice: booking.finalPrice,
             appliedCoupon: (booking as any).appliedCoupon || undefined,
             bonusAmount: booking.bonusAmount || undefined,
+            doorstepFee: 99,
             defectDescriptions: defectIds,
             dateCreated: booking.dateCreated,
           }, baseUrl);

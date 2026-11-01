@@ -50,6 +50,7 @@ export interface PDFBookingData {
   basePrice?: number;
   appliedCoupon?: string;
   bonusAmount?: number;
+  doorstepFee?: number;
   defectDescriptions?: string[];
   dateCreated: string;
 }
@@ -232,6 +233,13 @@ export function generateBookingQuotationPDF(booking: PDFBookingData): Promise<Bu
 
       y += 24;
 
+      const agreedValuation = typeof booking.basePrice === 'number' ? booking.basePrice : booking.finalPrice;
+      const doorstepFee = typeof booking.doorstepFee === 'number' ? booking.doorstepFee : 99;
+      const bonus = (booking.appliedCoupon && booking.bonusAmount && booking.bonusAmount > 0) ? booking.bonusAmount : 0;
+      const netPayout = typeof booking.finalPrice === 'number' && typeof booking.basePrice === 'number'
+        ? booking.finalPrice
+        : Math.max(0, agreedValuation + bonus - doorstepFee);
+
       // Row 1: Valuation Price
       doc
         .rect(40, y, 515, 22)
@@ -241,26 +249,10 @@ export function generateBookingQuotationPDF(booking: PDFBookingData): Promise<Bu
         .fillColor('#334155')
         .fontSize(9.5)
         .font('Helvetica')
-        .text(`Locked Valuation Quote (${booking.modelName})`, 50, y + 6, { width: 300 })
+        .text(`Agreed Valuation Quote (${booking.modelName})`, 50, y + 6, { width: 300 })
         .font('Helvetica-Bold')
         .fillColor('#0F172A')
-        .text(formatPdfPrice(booking.finalPrice), 350, y + 6, { width: 195, align: 'right' });
-
-      y += 22;
-
-      // Row 2: Inspection Fee
-      doc
-        .rect(40, y, 515, 22)
-        .fill('#F8FAFC');
-
-      doc
-        .fillColor('#334155')
-        .fontSize(9.5)
-        .font('Helvetica')
-        .text('Doorstep Inspection & Pickup Fee', 50, y + 6, { width: 300 })
-        .font('Helvetica-Bold')
-        .fillColor('#059669')
-        .text('FREE (Rs. 0)', 350, y + 6, { width: 195, align: 'right' });
+        .text(formatPdfPrice(agreedValuation), 350, y + 6, { width: 195, align: 'right' });
 
       y += 22;
 
@@ -283,7 +275,7 @@ export function generateBookingQuotationPDF(booking: PDFBookingData): Promise<Bu
       }
 
       // Referral / Promotional Bonus if applied
-      if (booking.appliedCoupon && booking.bonusAmount && booking.bonusAmount > 0) {
+      if (booking.appliedCoupon && bonus > 0) {
         doc
           .rect(40, y, 515, 22)
           .fill('#F0FDF4');
@@ -295,10 +287,44 @@ export function generateBookingQuotationPDF(booking: PDFBookingData): Promise<Bu
           .text(`Referral Incentive Bonus (${booking.appliedCoupon})`, 50, y + 6, { width: 300 })
           .font('Helvetica-Bold')
           .fillColor('#15803D')
-          .text(`+${formatPdfPrice(booking.bonusAmount)}`, 350, y + 6, { width: 195, align: 'right' });
+          .text(`+${formatPdfPrice(bonus)}`, 350, y + 6, { width: 195, align: 'right' });
 
         y += 22;
       }
+
+      // Row: Doorstep Processing Fee (-Rs. 99)
+      if (doorstepFee > 0) {
+        doc
+          .rect(40, y, 515, 22)
+          .fill('#FFF1F2');
+
+        doc
+          .fillColor('#9F1239')
+          .fontSize(9.5)
+          .font('Helvetica')
+          .text('Doorstep Processing & Logistics Fee', 50, y + 6, { width: 300 })
+          .font('Helvetica-Bold')
+          .fillColor('#E11D48')
+          .text(`-Rs. ${doorstepFee.toLocaleString('en-IN')}`, 350, y + 6, { width: 195, align: 'right' });
+
+        y += 22;
+      }
+
+      // Row: Inspection Service (FREE)
+      doc
+        .rect(40, y, 515, 22)
+        .fill('#F8FAFC');
+
+      doc
+        .fillColor('#334155')
+        .fontSize(9.5)
+        .font('Helvetica')
+        .text('Doorstep Diagnostics & Certified Data Wipe', 50, y + 6, { width: 300 })
+        .font('Helvetica-Bold')
+        .fillColor('#059669')
+        .text('FREE (Rs. 0)', 350, y + 6, { width: 195, align: 'right' });
+
+      y += 22;
 
       // Total Locked Box
       doc
@@ -311,7 +337,7 @@ export function generateBookingQuotationPDF(booking: PDFBookingData): Promise<Bu
         .font('Helvetica-Bold')
         .text('INSTANT DOORSIDE PAYOUT:', 50, y + 10)
         .fontSize(14)
-        .text(formatPdfPrice(booking.finalPrice), 330, y + 9, { width: 215, align: 'right' });
+        .text(formatPdfPrice(netPayout), 330, y + 9, { width: 215, align: 'right' });
 
       y += 50;
 

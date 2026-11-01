@@ -461,7 +461,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
       bonusPercentage: 0,
       bonusAmount: couponBonus || 0,
       appliedCoupon: appliedCoupon || undefined,
-      finalPayoutAmount: finalPrice,
+      finalPayoutAmount: netDoorsidePayout,
       payoutDetails: {},
       inspectionStatus: 'pending',
       payoutStatus: 'pending',

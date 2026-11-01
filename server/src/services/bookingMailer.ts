@@ -170,9 +170,22 @@ export async function sendAdminBookingNotificationEmail(booking: PDFBookingData,
               <td style="padding: 6px 0; color: #6b7280; vertical-align: top;">Reported condition</td>
               <td style="padding: 6px 0; color: #374151; line-height: 1.4;">${defectListHtml}</td>
             </tr>
+            <tr>
+              <td style="padding: 6px 0; color: #6b7280;">Agreed Valuation</td>
+              <td style="padding: 6px 0; color: #111827; font-weight: 500;">₹${Number(booking.basePrice || booking.finalPrice).toLocaleString('en-IN')}</td>
+            </tr>
+            ${booking.appliedCoupon && booking.bonusAmount ? `
+            <tr>
+              <td style="padding: 6px 0; color: #166534;">Referral Bonus (${escapeHtml(booking.appliedCoupon)})</td>
+              <td style="padding: 6px 0; color: #166534; font-weight: 600;">+₹${Number(booking.bonusAmount).toLocaleString('en-IN')}</td>
+            </tr>` : ''}
+            <tr>
+              <td style="padding: 6px 0; color: #dc2626;">Doorstep Processing Fee</td>
+              <td style="padding: 6px 0; color: #dc2626; font-weight: 600;">-₹${Number(typeof booking.doorstepFee === 'number' ? booking.doorstepFee : 99).toLocaleString('en-IN')}</td>
+            </tr>
             <tr style="border-top: 1px solid #f1f5f9;">
               <td style="padding: 10px 0 0 0; color: #111827; font-weight: 600;">Final Guaranteed Payout</td>
-              <td style="padding: 10px 0 0 0; color: #111827; font-size: 16px; font-weight: 700;">₹${Number(booking.finalPrice).toLocaleString('en-IN')}</td>
+              <td style="padding: 10px 0 0 0; color: #059669; font-size: 16px; font-weight: 700;">₹${Number(typeof booking.basePrice === 'number' ? booking.finalPrice : Math.max(0, (booking.finalPrice || 0) + (booking.bonusAmount || 0) - (typeof booking.doorstepFee === 'number' ? booking.doorstepFee : 99))).toLocaleString('en-IN')}</td>
             </tr>
           </table>
         </div>
@@ -302,8 +315,21 @@ export async function sendBookingUnderReviewEmail(booking: PDFBookingData, baseU
               <td style="padding: 8px 0; color: #111827; text-align: right; line-height: 1.5; border-bottom: 1px solid #f9fafb;">${escapeHtml(booking.address)}</td>
             </tr>
             <tr>
+              <td style="padding: 8px 0; color: #6b7280; border-bottom: 1px solid #f9fafb;">Agreed Valuation</td>
+              <td style="padding: 8px 0; color: #111827; font-weight: 500; text-align: right; border-bottom: 1px solid #f9fafb;">₹${Number(booking.basePrice || booking.finalPrice).toLocaleString('en-IN')}</td>
+            </tr>
+            ${booking.appliedCoupon && booking.bonusAmount ? `
+            <tr>
+              <td style="padding: 8px 0; color: #166534; border-bottom: 1px solid #f9fafb;">Referral Bonus (${escapeHtml(booking.appliedCoupon)})</td>
+              <td style="padding: 8px 0; color: #166534; font-weight: 600; text-align: right; border-bottom: 1px solid #f9fafb;">+₹${Number(booking.bonusAmount).toLocaleString('en-IN')}</td>
+            </tr>` : ''}
+            <tr>
+              <td style="padding: 8px 0; color: #dc2626; border-bottom: 1px solid #f9fafb;">Doorstep Processing Fee</td>
+              <td style="padding: 8px 0; color: #dc2626; font-weight: 600; text-align: right; border-bottom: 1px solid #f9fafb;">-₹${Number(typeof booking.doorstepFee === 'number' ? booking.doorstepFee : 99).toLocaleString('en-IN')}</td>
+            </tr>
+            <tr>
               <td style="padding: 12px 0 0 0; color: #111827; font-weight: 600;">Final Guaranteed Payout</td>
-              <td style="padding: 12px 0 0 0; color: #111827; font-size: 16px; font-weight: 700; text-align: right;">₹${Number(booking.finalPrice).toLocaleString('en-IN')}</td>
+              <td style="padding: 12px 0 0 0; color: #059669; font-size: 16px; font-weight: 700; text-align: right;">₹${Number(typeof booking.basePrice === 'number' ? booking.finalPrice : Math.max(0, (booking.finalPrice || 0) + (booking.bonusAmount || 0) - (typeof booking.doorstepFee === 'number' ? booking.doorstepFee : 99))).toLocaleString('en-IN')}</td>
             </tr>
           </table>
         </div>
@@ -441,8 +467,21 @@ export async function sendBookingApprovalEmail(booking: PDFBookingData, baseUrl:
               <td style="padding: 8px 0; color: #111827; text-align: right; line-height: 1.5; border-bottom: 1px solid #f9fafb;">${escapeHtml(booking.address)}</td>
             </tr>
             <tr>
-              <td style="padding: 12px 0 0 0; color: #111827; font-weight: 600;">Agreed payout</td>
-              <td style="padding: 12px 0 0 0; color: #111827; font-size: 16px; font-weight: 700; text-align: right;">₹${Number(booking.finalPrice).toLocaleString('en-IN')}</td>
+              <td style="padding: 8px 0; color: #6b7280; border-bottom: 1px solid #f9fafb;">Agreed Valuation</td>
+              <td style="padding: 8px 0; color: #111827; font-weight: 500; text-align: right; border-bottom: 1px solid #f9fafb;">₹${Number(booking.basePrice || booking.finalPrice).toLocaleString('en-IN')}</td>
+            </tr>
+            ${booking.appliedCoupon && booking.bonusAmount ? `
+            <tr>
+              <td style="padding: 8px 0; color: #166534; border-bottom: 1px solid #f9fafb;">Referral Bonus (${escapeHtml(booking.appliedCoupon)})</td>
+              <td style="padding: 8px 0; color: #166534; font-weight: 600; text-align: right; border-bottom: 1px solid #f9fafb;">+₹${Number(booking.bonusAmount).toLocaleString('en-IN')}</td>
+            </tr>` : ''}
+            <tr>
+              <td style="padding: 8px 0; color: #dc2626; border-bottom: 1px solid #f9fafb;">Doorstep Processing Fee</td>
+              <td style="padding: 8px 0; color: #dc2626; font-weight: 600; text-align: right; border-bottom: 1px solid #f9fafb;">-₹${Number(typeof booking.doorstepFee === 'number' ? booking.doorstepFee : 99).toLocaleString('en-IN')}</td>
+            </tr>
+            <tr>
+              <td style="padding: 12px 0 0 0; color: #111827; font-weight: 600;">Final Guaranteed Payout</td>
+              <td style="padding: 12px 0 0 0; color: #059669; font-size: 16px; font-weight: 700; text-align: right;">₹${Number(typeof booking.basePrice === 'number' ? booking.finalPrice : Math.max(0, (booking.finalPrice || 0) + (booking.bonusAmount || 0) - (typeof booking.doorstepFee === 'number' ? booking.doorstepFee : 99))).toLocaleString('en-IN')}</td>
             </tr>
           </table>
         </div>
