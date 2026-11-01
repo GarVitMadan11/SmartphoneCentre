@@ -104,9 +104,7 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
                 <Power className="w-4 h-4 text-emerald-600" />
                 <span>Does the tablet switch on?</span>
               </h4>
-              <p className="text-xs text-slate-500 mt-0.5">
-                We currently only accept devices that switch on without any issues.
-              </p>
+              
             </div>
             <span className="px-2 py-0.5 rounded text-[10px] font-sans font-bold bg-amber-100 text-amber-800">
               Mandatory
@@ -152,9 +150,7 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
                 <Radio className="w-4 h-4 text-cobalt" />
                 <span>Is your device's network working properly?</span>
               </h4>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Check your device for cellular network connectivity issues.
-              </p>
+              
             </div>
 
             <div className="grid grid-cols-2 gap-3 mt-3">

@@ -514,10 +514,7 @@ export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
                   <div className="bg-gradient-to-br from-emerald-500/[0.08] via-teal-500/[0.04] to-emerald-500/[0.08] border border-emerald-500/25 rounded-2xl p-4 sm:p-5 flex items-center justify-between shadow-xs relative overflow-hidden">
                     <div className="absolute -right-8 -top-8 w-32 h-32 bg-emerald-400/10 rounded-full blur-2xl pointer-events-none" />
                     <div className="relative z-10 text-left">
-                      <span className="text-[11px] font-sans font-extrabold text-slate-500 uppercase block tracking-wider mb-1">
-                        Estimated Payout
-                      </span>
-                      <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5 flex-wrap">
+                      <div className="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-1.5 flex-wrap">
                         <span className="truncate">{selectedModelForSpec.name}</span>
                         <span className="text-slate-300">•</span>
                         <span className="text-emerald-700 font-extrabold">

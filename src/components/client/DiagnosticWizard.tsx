@@ -390,21 +390,13 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
       return true;
     }
     if (step === 0) return powerChecked === 'working' && callingChecked !== null;
-    if (step === 1) return screenConfirmed || selectedDefects.some(d => d.category === 'screen');
-    if (step === 2) return bodyConfirmed || selectedDefects.some(d => d.category === 'body');
-    if (step === 3) {
-      const ids = rules.filter(r => ['camera', 'functionality'].includes(r.category)).map(r => r.id);
-      return funcConfirmed || selectedDefects.some(d => ids.includes(d.id));
-    }
-    if (step === 4) {
-      const ids = rules.filter(r => r.category === 'connectivity').map(r => r.id);
-      return connectConfirmed || selectedDefects.some(d => ids.includes(d.id));
-    }
+    if (step === 1) return true; // Screen defects - optional, defaults to perfect
+    if (step === 2) return true; // Body defects - optional, defaults to perfect
+    if (step === 3) return true; // Hardware defects - optional, defaults to perfect
+    if (step === 4) return true; // Connectivity defects - optional, defaults to perfect
     if (step === 5) {
-      const ids = rules.filter(r => r.category === 'accessories' && !r.isCriticalFailure).map(r => r.id);
-      const accOk = accConfirmed || selectedDefects.some(d => ids.includes(d.id));
       const warrantyOk = !showWarrantyQuestion || hasWarranty !== null;
-      return accOk && warrantyOk;
+      return warrantyOk;
     }
     return true;
   }, [isTablet, step, icloudChecked, screenConfirmed, bodyConfirmed, funcConfirmed, connectConfirmed, accConfirmed, selectedDefects, rules, showWarrantyQuestion, hasWarranty]);
@@ -1305,7 +1297,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
               >
                 <div className="mb-6 text-left">
                   <h3 className="text-2xl sm:text-3xl font-bold text-slate-950 tracking-tight">Screen & Display Panel</h3>
-                  <p className="text-xs sm:text-sm text-slate-800 mt-2 font-medium">Examine the front screen glass and the display panel carefully.</p>
+                  <p className="text-xs sm:text-sm text-slate-800 mt-2 font-medium">Examine the front screen glass and display panel carefully.</p>
                 </div>
 
                 {/* Display Panel Originality Check */}
@@ -1313,7 +1305,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
                     <span className="text-xs font-semibold text-slate-800 flex items-center gap-1.5">
                       <ShieldCheck className="w-4 h-4 text-blue-600" />
-                      <span>Display Authenticity & Warranty Verification</span>
+                      <span>Display Authenticity</span>
                     </span>
                   </div>
 
@@ -1329,13 +1321,13 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                       onKeyDown={e => handleKeyDown(e, () => {
                         setSelectedDefects(prev => prev.filter(d => d.id !== 'defect-screen-non-original' && d.id !== 'defect-screen-truetone'));
                       })}
-                      className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all duration-200 flex items-start gap-3 ${
+                      className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all duration-200 flex items-center gap-3 ${
                         !isScreenNonOriginal
                           ? 'border-emerald-500 bg-emerald-500/10 shadow-xs ring-1 ring-emerald-500/30'
                           : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/70'
                       }`}
                     >
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
                         !isScreenNonOriginal ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-slate-300 bg-white'
                       }`}>
                         {!isScreenNonOriginal && <div className="w-2 h-2 rounded-full bg-white" />}
@@ -1344,9 +1336,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <h4 className="font-black text-sm text-slate-900">Original Factory Display</h4>
                         </div>
-                        <p className="text-xs text-slate-600 mt-1 font-medium leading-snug">
-                          Original factory display panel. Never replaced, or replaced exclusively at official brand service center.
-                        </p>
+                        
                       </div>
                     </div>
 
@@ -1385,13 +1375,13 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         });
                         setScreenConfirmed(false);
                       })}
-                      className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all duration-200 flex items-start gap-3 ${
+                      className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all duration-200 flex items-center gap-3 ${
                         isScreenNonOriginal
                           ? 'border-rose-500 bg-rose-500/10 shadow-xs ring-1 ring-rose-500/30'
                           : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/70'
                       }`}
                     >
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
                         isScreenNonOriginal ? 'border-rose-600 bg-rose-600 text-white' : 'border-slate-300 bg-white'
                       }`}>
                         {isScreenNonOriginal && <div className="w-2 h-2 rounded-full bg-white" />}
@@ -1400,64 +1390,18 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <h4 className="font-black text-sm text-rose-950">Screen Replaced / Duplicate</h4>
                         </div>
-                        <p className="text-xs text-rose-900/80 mt-1 font-medium leading-snug">
-                          Third-party replacement
-                        </p>
+                        
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-6 text-left">
-                  {/* Flawless Option */}
-                  {(() => {
-                    const isAnyPhysicalScreenDefectSelected = selectedDefects.some(d => d.category === 'screen' && d.id !== 'defect-screen-non-original');
-                    const isSelected = screenConfirmed && !isAnyPhysicalScreenDefectSelected;
-                    return (
-                      <div
-                        role="checkbox"
-                        tabIndex={0}
-                        aria-checked={isSelected}
-                        onKeyDown={e => handleKeyDown(e, () => {
-                          if (isSelected) {
-                            setScreenConfirmed(false);
-                          } else {
-                            setSelectedDefects(prev => prev.filter(d => d.category !== 'screen' || d.id === 'defect-screen-non-original'));
-                            setScreenConfirmed(true);
-                            setStep(2);
-                          }
-                        })}
-                        onClick={() => {
-                          if (isSelected) {
-                            setScreenConfirmed(false);
-                          } else {
-                            setSelectedDefects(prev => prev.filter(d => d.category !== 'screen' || d.id === 'defect-screen-non-original'));
-                            setScreenConfirmed(true);
-                            setStep(2);
-                          }
-                        }}
-                        className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-start gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
-                          isSelected
-                            ? 'border-emerald-500 bg-emerald-500/10 shadow-sm ring-1 ring-emerald-500/30 scale-[1.01]'
-                            : 'border-ice-border bg-canvas-white hover:border-emerald-500/40 hover:bg-slate-50/60'
-                        }`}
-                      >
-                        <div className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 rounded-xl bg-emerald-50/70 border border-emerald-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
-                          {getIllustration('screen-flawless', deviceType)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-bold text-sm text-ink-navy">Perfect Display</h4>
-                          <p className="text-xs text-ink-muted mt-1 font-light leading-snug">No scratches, micro-abrasions, cracks, or screen bleeding.</p>
-                        </div>
-                        <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                          isSelected ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-ice-border bg-white'
-                        }`}>
-                          {isSelected && <Check className="w-3.5 h-3.5" />}
-                        </div>
-                      </div>
-                    );
-                  })()}
+                                {/* Instruction Line Below Display Authenticity */}
+                <p className="text-xs sm:text-sm text-slate-800 mb-4 font-medium text-left">
+                  Select any display issues that apply below. If your screen is in perfect condition, simply tap Continue.
+                </p>
 
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-left">
                   {/* Screen Defect Options */}
                   {(() => {
                     const screenMutualMap: Record<string, string[]> = {
@@ -1484,7 +1428,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           handleToggleDefect(defect, mutualIds);
                           setScreenConfirmed(false);
                         }}
-                        className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-start gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-rose-500 ${
+                        className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-center gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-rose-500 ${
                           isSelected
                             ? 'border-rose-400 bg-rose-500/10 shadow-sm ring-1 ring-rose-400/30 scale-[1.01]'
                             : 'border-ice-border bg-canvas-white hover:border-slate-300 hover:bg-slate-50/60'
@@ -1497,9 +1441,9 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <h4 className="font-bold text-sm text-ink-navy">{defect.description}</h4>
                           </div>
-                          <p className="text-xs text-ink-muted mt-1 font-light leading-snug">{defect.subText}</p>
+                          
                         </div>
-                        <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                        <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 ${
                           isSelected ? 'bg-rose-600 border-rose-600 text-white' : 'border-ice-border bg-white'
                         }`}>
                           {isSelected && <Check className="w-3.5 h-3.5" />}
@@ -1522,59 +1466,10 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
               >
                 <div className="mb-6 text-left">
                   <h3 className="text-2xl sm:text-3xl font-bold text-slate-950 tracking-tight">Body, Buttons & Frame</h3>
-                  <p className="text-xs sm:text-sm text-slate-800 mt-2 font-medium">Check the frame, side buttons, bottom screws, and waterproof seal integrity.</p>
+                  <p className="text-xs sm:text-sm text-slate-800 mt-2 font-medium">Select any physical body defects below. If the frame and body are in perfect condition, simply tap Continue.</p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-6 text-left">
-                  {/* Flawless Option */}
-                  {(() => {
-                    const isAnyBodySelected = selectedDefects.some(d => d.category === 'body');
-                    const isSelected = bodyConfirmed && !isAnyBodySelected;
-                    return (
-                      <div
-                        role="checkbox"
-                        tabIndex={0}
-                        aria-checked={isSelected}
-                        onKeyDown={e => handleKeyDown(e, () => {
-                          if (isSelected) {
-                            setBodyConfirmed(false);
-                          } else {
-                            setSelectedDefects(prev => prev.filter(d => d.category !== 'body'));
-                            setBodyConfirmed(true);
-                            setStep(3);
-                          }
-                        })}
-                        onClick={() => {
-                          if (isSelected) {
-                            setBodyConfirmed(false);
-                          } else {
-                            setSelectedDefects(prev => prev.filter(d => d.category !== 'body'));
-                            setBodyConfirmed(true);
-                            setStep(3);
-                          }
-                        }}
-                        className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-start gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
-                          isSelected
-                            ? 'border-emerald-500 bg-emerald-500/10 shadow-sm ring-1 ring-emerald-500/30 scale-[1.01]'
-                            : 'border-ice-border bg-canvas-white hover:border-emerald-500/40 hover:bg-slate-50/60'
-                        }`}
-                      >
-                        <div className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 rounded-xl bg-emerald-50/70 border border-emerald-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
-                          {getIllustration('body-flawless', deviceType)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-bold text-sm text-ink-navy">Perfect Frame</h4>
-                          <p className="text-xs text-ink-muted mt-1 font-light leading-snug">No dents, bends, or paint scuffs. Device looks brand new.</p>
-                        </div>
-                        <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                          isSelected ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-ice-border bg-white'
-                        }`}>
-                          {isSelected && <Check className="w-3.5 h-3.5" />}
-                        </div>
-                      </div>
-                    );
-                  })()}
-
                   {/* Body Rules */}
                   {(() => {
                     return rules.filter(r => r.category === 'body' && r.id !== 'defect-body-airpass').map(defect => {
@@ -1607,7 +1502,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           );
                           setBodyConfirmed(false);
                         }}
-                        className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-start gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-amber-500 ${
+                        className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-center gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-amber-500 ${
                           isSelected
                             ? 'border-amber-500 bg-amber-500/10 shadow-sm ring-1 ring-amber-500/30 scale-[1.01]'
                             : 'border-ice-border bg-canvas-white hover:border-slate-300 hover:bg-slate-50/60'
@@ -1620,9 +1515,9 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <h4 className="font-bold text-sm text-ink-navy">{defect.description}</h4>
                           </div>
-                          <p className="text-xs text-ink-muted mt-1 font-light leading-snug">{defect.subText}</p>
+                          
                         </div>
-                        <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                        <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 ${
                           isSelected ? 'bg-amber-600 border-amber-600 text-white' : 'border-ice-border bg-white'
                         }`}>
                           {isSelected && <Check className="w-3.5 h-3.5" />}
@@ -1645,66 +1540,10 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
               >
                 <div className="mb-6 text-left">
                   <h3 className="text-2xl sm:text-3xl font-bold text-slate-950 tracking-tight">Camera & Hardware</h3>
-                  <p className="text-xs sm:text-sm text-slate-800 mt-2 font-medium">Select any failing camera, biometric, audio, or system stability issues that apply.</p>
+                  <p className="text-xs sm:text-sm text-slate-800 mt-2 font-medium">Select any failing camera, biometric, audio, or hardware issues below. If all features work in perfect order, simply tap Continue.</p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-6 text-left">
-                  {/* Affirmative option */}
-                  {(() => {
-                    const ids = rules.filter(r => ['camera', 'functionality'].includes(r.category)).map(r => r.id);
-                    const isAnySelected = selectedDefects.some(d => ids.includes(d.id));
-                    const isSelected = funcConfirmed && !isAnySelected;
-                    return (
-                      <div
-                        role="checkbox"
-                        tabIndex={0}
-                        aria-checked={isSelected}
-                        onKeyDown={e => handleKeyDown(e, () => {
-                          if (isSelected) {
-                            setFuncConfirmed(false);
-                          } else {
-                            setSelectedDefects(prev => prev.filter(d => !ids.includes(d.id)));
-                            setFuncConfirmed(true);
-                            setStep(4);
-                          }
-                        })}
-                        onClick={() => {
-                          if (isSelected) {
-                            setFuncConfirmed(false);
-                          } else {
-                            setSelectedDefects(prev => prev.filter(d => !ids.includes(d.id)));
-                            setFuncConfirmed(true);
-                            setStep(4);
-                          }
-                        }}
-                        className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-start gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
-                          isSelected
-                            ? 'border-emerald-500 bg-emerald-500/10 shadow-sm ring-1 ring-emerald-500/30 scale-[1.01]'
-                            : 'border-ice-border bg-canvas-white hover:border-emerald-500/40 hover:bg-slate-50/60'
-                        }`}
-                      >
-                        <div className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 rounded-xl bg-emerald-50/70 border border-emerald-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
-                          {getIllustration('hardware-healthy', deviceType)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-bold text-sm text-ink-navy">Hardware Works Perfectly</h4>
-                          <p className="text-xs text-ink-muted mt-1 font-light leading-snug">
-                            Cameras, {
-                              biometricType === 'face_id' ? 'Face ID' :
-                              biometricType === 'touch_id' ? 'Touch ID' :
-                              'fingerprint scanner'
-                            }, audio, charging port, and haptics are perfect.
-                          </p>
-                        </div>
-                        <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                          isSelected ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-ice-border bg-white'
-                        }`}>
-                          {isSelected && <Check className="w-3.5 h-3.5" />}
-                        </div>
-                      </div>
-                    );
-                  })()}
-
                   {/* Hardware / functionality rules */}
                   {(() => {
                     return rules.filter(r => ['camera', 'functionality'].includes(r.category)).map(defect => {
@@ -1723,7 +1562,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           handleToggleDefect(defect);
                           setFuncConfirmed(false);
                         }}
-                        className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-start gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-rose-500 ${
+                        className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-center gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-rose-500 ${
                           isSelected
                             ? 'border-rose-400 bg-rose-500/10 shadow-sm ring-1 ring-rose-400/30 scale-[1.01]'
                             : 'border-ice-border bg-canvas-white hover:border-slate-300 hover:bg-slate-50/60'
@@ -1736,9 +1575,9 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <h4 className="font-bold text-sm text-ink-navy">{defect.description}</h4>
                           </div>
-                          <p className="text-xs text-ink-muted mt-1 font-light leading-snug">{defect.subText}</p>
+                          
                         </div>
-                        <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                        <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 ${
                           isSelected ? 'bg-rose-600 border-rose-600 text-white' : 'border-ice-border bg-white'
                         }`}>
                           {isSelected && <Check className="w-3.5 h-3.5" />}
@@ -1761,94 +1600,35 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
               >
                 <div className="mb-6 text-left">
                   <h3 className="text-2xl sm:text-3xl font-bold text-slate-950 tracking-tight">Connectivity & Verification</h3>
-                  <p className="text-xs sm:text-sm text-slate-800 mt-2 font-medium">Verify original company battery condition, cellular/Wi-Fi antennas, and motherboard serial mappings.</p>
+                  <p className="text-xs sm:text-sm text-slate-800 mt-2 font-medium">Select any battery or wireless connectivity issues below. If battery and connectivity are in perfect condition, simply tap Continue.</p>
                 </div>
 
-                {/* Standard Battery Performance Assumed Banner */}
-                <div className="mb-6 text-left border border-emerald-500/25 bg-gradient-to-r from-emerald-50/90 via-teal-50/60 to-emerald-50/80 p-4 rounded-2xl relative overflow-hidden shadow-xs">
-                  <div className="flex items-start gap-3.5">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center flex-shrink-0 text-emerald-600 mt-0.5">
-                      <BatteryCharging className="w-5 h-5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between flex-wrap gap-2">
-                        <h4 className="text-xs font-semibold text-slate-900 flex items-center gap-1.5">
-                          <span>Standard Battery Performance Assumed</span>
-                        </h4>
-                        <a
-                          href={`https://wa.me/919034997719?text=${encodeURIComponent(`Hi Rephonix Team! My ${model.name} has a degraded / replaced battery. What is the best quote you can offer?`)}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-semibold transition-colors shadow-xs"
-                        >
-                          <MessageSquare className="w-3.5 h-3.5" />
-                          <span>Battery Degraded? Chat with Us</span>
-                        </a>
+                {/* Standard Battery Performance Assumed Banner (Compact - Title Only) */}
+                <div className="mb-6 text-left border border-emerald-500/25 bg-gradient-to-r from-emerald-50/90 via-teal-50/60 to-emerald-50/80 p-3.5 sm:p-4 rounded-2xl relative overflow-hidden shadow-xs">
+                  <div className="flex items-center justify-between flex-wrap gap-2.5">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center flex-shrink-0 text-emerald-600">
+                        <BatteryCharging className="w-5 h-5" />
                       </div>
-                      <p className="text-xs text-slate-700 mt-1.5 font-normal leading-relaxed">
-                        We calculate this valuation assuming healthy standard battery performance ({isApple ? 'above 85% maximum capacity in iOS Settings' : 'normal full-day battery backup on Android'}). If your battery requires service or has been changed, chat with us for the best quote, or our technician will transparently evaluate it during doorstep pickup.
-                      </p>
+                      <h4 className="text-xs sm:text-sm font-bold text-slate-900">
+                        Standard Battery Performance Assumed
+                      </h4>
                     </div>
+                    {model && (
+                      <a
+                        href={`https://wa.me/919034997719?text=${encodeURIComponent(`Hi Rephonix Team! My ${model.name} has a degraded / replaced battery. What is the best quote you can offer?`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-semibold transition-colors shadow-xs touch-manipulation"
+                      >
+                        <MessageSquare className="w-3.5 h-3.5" />
+                        <span>Battery Degraded? Chat with Us</span>
+                      </a>
+                    )}
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-6 text-left">
-                  {/* Affirmative option */}
-                  {(() => {
-                    const ids = rules.filter(r => r.category === 'connectivity').map(r => r.id);
-                    const isAnySelected = selectedDefects.some(d => ids.includes(d.id));
-                    const isSelected = connectConfirmed && !isAnySelected;
-                    return (
-                      <div
-                        role="checkbox"
-                        tabIndex={0}
-                        aria-checked={isSelected}
-                        onKeyDown={e => handleKeyDown(e, () => {
-                          if (isSelected) {
-                            setConnectConfirmed(false);
-                          } else {
-                            setSelectedDefects(prev => prev.filter(d => !ids.includes(d.id)));
-                            setConnectConfirmed(true);
-                            setStep(5);
-                          }
-                        })}
-                        onClick={() => {
-                          if (isSelected) {
-                            setConnectConfirmed(false);
-                          } else {
-                            setSelectedDefects(prev => prev.filter(d => !ids.includes(d.id)));
-                            setConnectConfirmed(true);
-                            setStep(5);
-                          }
-                        }}
-                        className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-start gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
-                          isSelected
-                            ? 'border-emerald-500 bg-emerald-500/10 shadow-sm ring-1 ring-emerald-500/30 scale-[1.01]'
-                            : 'border-ice-border bg-canvas-white hover:border-emerald-500/40 hover:bg-slate-50/60'
-                        }`}
-                      >
-                        <div className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 rounded-xl bg-emerald-50/70 border border-emerald-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
-                          {getIllustration('connectivity-healthy', deviceType)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-bold text-sm text-ink-navy">
-                            {isApple ? 'Battery Health >85% & Connectivity Healthy' : 'Connectivity & Hardware Healthy'}
-                          </h4>
-                          <p className="text-xs text-ink-muted mt-1 font-light leading-snug">
-                            {isApple 
-                              ? 'Battery health is above 85% in Settings, cellular/Wi-Fi antennas are strong, and all hardware checks pass.' 
-                              : 'Cellular reception, Wi-Fi, Bluetooth, and biometric sensors are fully functional and pass hardware checks.'}
-                          </p>
-                        </div>
-                        <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                          isSelected ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-ice-border bg-white'
-                        }`}>
-                          {isSelected && <Check className="w-3.5 h-3.5" />}
-                        </div>
-                      </div>
-                    );
-                  })()}
-
                   {/* Connectivity & verification rules */}
                   {(() => {
                     return rules.filter(r => r.category === 'connectivity').map(defect => {
@@ -1872,7 +1652,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           handleToggleDefect(defect, mutId);
                           setConnectConfirmed(false);
                         }}
-                        className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-start gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-rose-500 ${
+                        className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-center gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-rose-500 ${
                           isSelected
                             ? 'border-rose-400 bg-rose-500/10 shadow-sm ring-1 ring-rose-400/30 scale-[1.01]'
                             : 'border-ice-border bg-canvas-white hover:border-slate-300 hover:bg-slate-50/60'
@@ -1885,9 +1665,9 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <h4 className="font-bold text-sm text-ink-navy">{defect.description}</h4>
                           </div>
-                          <p className="text-xs text-ink-muted mt-1 font-light leading-snug">{defect.subText}</p>
+                          
                         </div>
-                        <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                        <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 ${
                           isSelected ? 'bg-rose-600 border-rose-600 text-white' : 'border-ice-border bg-white'
                         }`}>
                           {isSelected && <Check className="w-3.5 h-3.5" />}
@@ -1911,61 +1691,11 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                 <div className="mb-6 text-left">
                   <h3 className="text-2xl sm:text-3xl font-bold text-slate-950 tracking-tight">Accessories & Documentation</h3>
                   <p className="text-xs sm:text-sm text-slate-800 mt-2 font-medium">
-                    Confirm if the original retail box, original charger/cable, {hasSpen ? 'original S-Pen stylus, ' : ''}and invoice are present.
+                    Select any missing accessories below. If you have all original accessories and box, simply select your warranty status and tap Review.
                   </p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-6 text-left">
-                  {/* Affirmative option */}
-                  {(() => {
-                    const ids = rules.filter(r => r.category === 'accessories' && !r.isCriticalFailure).map(r => r.id);
-                    const isAnySelected = selectedDefects.some(d => ids.includes(d.id));
-                    const isSelected = accConfirmed && !isAnySelected;
-                    return (
-                      <div
-                        role="checkbox"
-                        tabIndex={0}
-                        aria-checked={isSelected}
-                        onKeyDown={e => handleKeyDown(e, () => {
-                          if (isSelected) {
-                            setAccConfirmed(false);
-                          } else {
-                            setSelectedDefects(prev => prev.filter(d => !ids.includes(d.id)));
-                            setAccConfirmed(true);
-                          }
-                        })}
-                        onClick={() => {
-                          if (isSelected) {
-                            setAccConfirmed(false);
-                          } else {
-                            setSelectedDefects(prev => prev.filter(d => !ids.includes(d.id)));
-                            setAccConfirmed(true);
-                          }
-                        }}
-                        className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-start gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
-                          isSelected
-                            ? 'border-emerald-500 bg-emerald-500/10 shadow-sm ring-1 ring-emerald-500/30 scale-[1.01]'
-                            : 'border-ice-border bg-canvas-white hover:border-emerald-500/40 hover:bg-slate-50/60'
-                        }`}
-                      >
-                        <div className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 rounded-xl bg-emerald-50/70 border border-emerald-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
-                          {getIllustration('accessories-all', deviceType)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-bold text-sm text-ink-navy">All Accessories Included</h4>
-                          <p className="text-xs text-ink-muted mt-1 font-light leading-snug">
-                            Original box with matching IMEI, original charger/cable, {hasSpen ? 'S-Pen stylus, ' : ''}and purchasing receipt are present.
-                          </p>
-                        </div>
-                        <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                          isSelected ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-ice-border bg-white'
-                        }`}>
-                          {isSelected && <Check className="w-3.5 h-3.5" />}
-                        </div>
-                      </div>
-                    );
-                  })()}
-
                   {/* Accessories options */}
                   {(() => {
                     return rules.filter(r => r.category === 'accessories' && !r.isCriticalFailure).map(defect => {
@@ -1984,7 +1714,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           handleToggleDefect(defect);
                           setAccConfirmed(false);
                         }}
-                        className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-start gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-amber-500 ${
+                        className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-center gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-amber-500 ${
                           isSelected
                             ? 'border-amber-500 bg-amber-500/10 shadow-sm ring-1 ring-amber-500/30 scale-[1.01]'
                             : 'border-ice-border bg-canvas-white hover:border-slate-300 hover:bg-slate-50/60'
@@ -1997,9 +1727,9 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <h4 className="font-bold text-sm text-ink-navy">{defect.description}</h4>
                           </div>
-                          <p className="text-xs text-ink-muted mt-1 font-light leading-snug">{defect.subText}</p>
+                          
                         </div>
-                        <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                        <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 ${
                           isSelected ? 'bg-amber-600 border-amber-600 text-white' : 'border-ice-border bg-white'
                         }`}>
                           {isSelected && <Check className="w-3.5 h-3.5" />}
@@ -2050,9 +1780,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                                 Valid Bill
                               </span>
                             </div>
-                            <p className="text-[11px] text-ink-muted mt-0.5 font-light leading-snug">
-                              Device has active brand warranty &amp; purchasing invoice.
-                            </p>
+                            
                           </div>
                           <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${
                             hasWarranty === true ? 'bg-emerald-600 text-white' : 'border border-ice-border bg-white'
@@ -2087,9 +1815,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                                 Expired / No Bill
                               </span>
                             </div>
-                            <p className="text-[11px] text-ink-muted mt-0.5 font-light leading-snug">
-                              Warranty expired or purchase invoice not available.
-                            </p>
+                            
                           </div>
                           <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${
                             hasWarranty === false ? 'bg-amber-600 text-white' : 'border border-ice-border bg-white'
@@ -2119,7 +1845,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                               }`}
                             >
                               <h5 className="font-bold text-xs text-ink-navy">Under 3 Months</h5>
-                              <p className="text-[11px] text-ink-muted mt-0.5 font-light">Active brand warranty with valid bill.</p>
+                              
                             </div>
 
                             <div
@@ -2135,7 +1861,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                               }`}
                             >
                               <h5 className="font-bold text-xs text-ink-navy">3 to 6 Months</h5>
-                              <p className="text-[11px] text-ink-muted mt-0.5 font-light">Active brand warranty with valid bill.</p>
+                              
                             </div>
 
                             <div
@@ -2151,7 +1877,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                               }`}
                             >
                               <h5 className="font-bold text-xs text-ink-navy">6 to 11 Months</h5>
-                              <p className="text-[11px] text-ink-muted mt-0.5 font-light">Active brand warranty with valid bill.</p>
+                              
                             </div>
                           </div>
                         </div>
@@ -2186,7 +1912,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           </div>
                           <div>
                             <h5 className="font-bold text-xs text-ink-navy">Yes</h5>
-                            <p className="text-[10px] text-ink-muted font-light mt-0.5">Has physical SIM tray</p>
+                            
                           </div>
                         </div>
 
@@ -2208,7 +1934,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           </div>
                           <div>
                             <h5 className="font-bold text-xs text-ink-navy">No</h5>
-                            <p className="text-[10px] text-ink-muted font-light mt-0.5">eSIM only (No physical tray)</p>
+                            
                         </div>
                       </div>
                     </div>

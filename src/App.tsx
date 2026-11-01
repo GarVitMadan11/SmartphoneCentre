@@ -861,7 +861,7 @@ export default function App() {
       </main>
 
       {/* ── Footer ────────────────────────────────────────────────── */}
-      <footer className="bg-canvas-pure border-t border-ice-border mt-8 sm:mt-16 py-8">
+      <footer className="bg-canvas-pure border-t border-ice-border mt-8 sm:mt-16 py-8 pb-24 sm:pb-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6 pb-8 border-b border-ice-border/40">
             <div className="flex items-center gap-2 cursor-pointer" onClick={() => { handleReset(); navigate('/'); }}>

@@ -13,12 +13,6 @@ export interface FeaturedPhoneItem {
 // Default models using exact image URLs stored in database
 const DEFAULT_APPLE_PHONES: FeaturedPhoneItem[] = [
   {
-    id: 'iphone-18-pro-max',
-    name: 'iPhone 18 Pro Max',
-    series: 'iPhone 18 Series',
-    imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/apple-iphone18-pro-max.jpg',
-  },
-  {
     id: 'apple-16pm',
     name: 'iPhone 16 Pro Max',
     series: 'iPhone 16 Series',
@@ -42,6 +36,12 @@ const DEFAULT_APPLE_PHONES: FeaturedPhoneItem[] = [
     series: 'iPhone 14 Series',
     imageUrl: 'https://wsrv.nl/?url=https%3A%2F%2Ffdn2.gsmarena.com%2Fvv%2Fbigpic%2Fapple-iphone-14-pro-max-.jpg',
   },
+  {
+    id: 'iphone-18-pro-max',
+    name: 'iPhone 18 Pro Max',
+    series: 'iPhone 18 Series',
+    imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/apple-iphone18-pro-max.jpg',
+  },
 ];
 
 const DEFAULT_SAMSUNG_PHONES: FeaturedPhoneItem[] = [
@@ -58,37 +58,43 @@ const DEFAULT_SAMSUNG_PHONES: FeaturedPhoneItem[] = [
     imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-z-fold6.jpg',
   },
   {
-    id: 'sam-s23u',
-    name: 'Galaxy S23 Ultra',
-    series: 'S Series',
-    imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-s23-ultra-5g.jpg',
-  },
-  {
     id: 'sam-s25u',
     name: 'Galaxy S25 Ultra',
     series: 'S Series',
     imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-s25-ultra-sm-s938.jpg',
   },
+  {
+    id: 'sam-s23u',
+    name: 'Galaxy S23 Ultra',
+    series: 'S Series',
+    imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-s23-ultra-5g.jpg',
+  },
 ];
 
 const DEFAULT_OTHER_PHONES: FeaturedPhoneItem[] = [
   {
-    id: 'pixel-9-pro-xl',
+    id: 'goog-9p-xl',
     name: 'Pixel 9 Pro XL',
     series: 'Google Pixel',
-    imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/google-pixel-9-pro-xl.jpg',
+    imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/google-pixel-9-pro-xl-.jpg',
   },
   {
-    id: 'oneplus-12',
+    id: 'op-12',
     name: 'OnePlus 12',
     series: 'OnePlus',
-    imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/oneplus-12.jpg',
+    imageUrl: 'https://pisces.bbystatic.com/image2/BestBuy_US/images/products/6571/6571130_sd.jpg',
   },
   {
-    id: 'xiaomi-14-ultra',
+    id: 'xi-14u',
     name: 'Xiaomi 14 Ultra',
     series: 'Xiaomi',
-    imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/xiaomi-14-ultra.jpg',
+    imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/xiaomi-14-ultra-new.jpg',
+  },
+  {
+    id: 'goog-9p-fold',
+    name: 'Pixel 9 Pro Fold',
+    series: 'Google Pixel',
+    imageUrl: 'https://fdn2.gsmarena.com/vv/bigpic/google-pixel-9-pro-fold-.jpg',
   },
 ];
 
@@ -105,9 +111,9 @@ export const FeaturedDevicesBento: React.FC<FeaturedDevicesBentoProps> = ({
 
   // Map directly to database image URLs from catalog store with exact database fallback
   const applePhones: FeaturedPhoneItem[] = DEFAULT_APPLE_PHONES.map((def) => {
-    const found = catalogModels.find((m) => m.id === def.id || m.legacyId === def.id);
+    const found = catalogModels.find((m) => m.id === def.id || m.legacyId === def.id || m.name?.toLowerCase() === def.name.toLowerCase());
     return {
-      id: def.id,
+      id: found?.id || def.id,
       name: found?.name || def.name,
       series: found?.series || def.series,
       imageUrl: (found?.imageUrl && found.imageUrl.trim() !== '') ? found.imageUrl : def.imageUrl,
@@ -115,9 +121,9 @@ export const FeaturedDevicesBento: React.FC<FeaturedDevicesBentoProps> = ({
   });
 
   const samsungPhones: FeaturedPhoneItem[] = DEFAULT_SAMSUNG_PHONES.map((def) => {
-    const found = catalogModels.find((m) => m.id === def.id || m.legacyId === def.id);
+    const found = catalogModels.find((m) => m.id === def.id || m.legacyId === def.id || m.name?.toLowerCase() === def.name.toLowerCase());
     return {
-      id: def.id,
+      id: found?.id || def.id,
       name: found?.name || def.name,
       series: found?.series || def.series,
       imageUrl: (found?.imageUrl && found.imageUrl.trim() !== '') ? found.imageUrl : def.imageUrl,
@@ -125,9 +131,9 @@ export const FeaturedDevicesBento: React.FC<FeaturedDevicesBentoProps> = ({
   });
 
   const otherPhones: FeaturedPhoneItem[] = DEFAULT_OTHER_PHONES.map((def) => {
-    const found = catalogModels.find((m) => m.id === def.id || m.legacyId === def.id);
+    const found = catalogModels.find((m) => m.id === def.id || m.legacyId === def.id || m.name?.toLowerCase() === def.name.toLowerCase());
     return {
-      id: def.id,
+      id: found?.id || def.id,
       name: found?.name || def.name,
       series: found?.series || def.series,
       imageUrl: (found?.imageUrl && found.imageUrl.trim() !== '') ? found.imageUrl : def.imageUrl,
@@ -169,6 +175,14 @@ export const FeaturedDevicesBento: React.FC<FeaturedDevicesBentoProps> = ({
     return () => clearInterval(timer);
   }, [otherPhones.length]);
 
+  // Fallback image helper to prevent broken images if direct CDN has CORS/referrer block
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    const target = e.currentTarget;
+    if (!target.src.includes('wsrv.nl') && target.src.startsWith('https://fdn2.gsmarena.com')) {
+      target.src = `https://wsrv.nl/?url=${encodeURIComponent(target.src)}`;
+    }
+  };
+
   const currentApple = applePhones[appleIdx] || applePhones[0];
   const currentSam = samsungPhones[samIdx] || samsungPhones[0];
   const currentOther = otherPhones[otherIdx] || otherPhones[0];
@@ -197,12 +211,7 @@ export const FeaturedDevicesBento: React.FC<FeaturedDevicesBentoProps> = ({
 
           {/* Left Column: Title, Subtitle, Sell Now Button, Dots */}
           <div className="z-10 flex-1 max-w-sm">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 border border-slate-200/80 text-xs font-semibold text-slate-800 mb-3">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="font-bold text-slate-900">{currentApple.name}</span>
-              <span className="text-slate-400">•</span>
-              <span className="text-emerald-700 font-bold">Highest Resale Value</span>
-            </div>
+            
 
             <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight font-sans">
               Apple iPhones
@@ -261,6 +270,7 @@ export const FeaturedDevicesBento: React.FC<FeaturedDevicesBentoProps> = ({
                     src={currentApple.imageUrl}
                     alt={currentApple.name}
                     referrerPolicy="no-referrer"
+                    onError={handleImageError}
                     style={{ mixBlendMode: 'multiply' }}
                     className="w-44 sm:w-56 h-44 sm:h-56 object-contain filter drop-shadow-sm"
                   />
@@ -276,9 +286,7 @@ export const FeaturedDevicesBento: React.FC<FeaturedDevicesBentoProps> = ({
           {/* CARD 2: SAMSUNG GALAXY (UPPER) */}
           <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 flex items-center justify-between shadow-md hover:shadow-xl hover:border-cobalt/40 transition-all duration-300 relative overflow-hidden group text-left min-h-[160px]">
             <div className="z-10 flex-1 pr-3">
-              <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-blue-50 text-[10px] font-bold text-cobalt uppercase tracking-wider mb-2">
-                Samsung Flagship
-              </div>
+              
               <h4 className="text-lg font-bold text-slate-900 tracking-tight font-sans">
                 Samsung Galaxy
               </h4>
@@ -306,6 +314,7 @@ export const FeaturedDevicesBento: React.FC<FeaturedDevicesBentoProps> = ({
                   src={currentSam.imageUrl}
                   alt={currentSam.name}
                   referrerPolicy="no-referrer"
+                  onError={handleImageError}
                   style={{ mixBlendMode: 'multiply' }}
                   className="w-full h-full object-contain filter drop-shadow-2xs"
                 />
@@ -316,9 +325,7 @@ export const FeaturedDevicesBento: React.FC<FeaturedDevicesBentoProps> = ({
           {/* CARD 3: ALL OTHER BRANDS (LOWER) */}
           <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 flex items-center justify-between shadow-md hover:shadow-xl hover:border-cobalt/40 transition-all duration-300 relative overflow-hidden group text-left min-h-[160px]">
             <div className="z-10 flex-1 pr-3">
-              <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-100 text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-2">
-                Multi-Brand Flagships
-              </div>
+              
               <h4 className="text-lg font-bold text-slate-900 tracking-tight font-sans">
                 All Other Brands
               </h4>
@@ -346,6 +353,7 @@ export const FeaturedDevicesBento: React.FC<FeaturedDevicesBentoProps> = ({
                   src={currentOther.imageUrl}
                   alt={currentOther.name}
                   referrerPolicy="no-referrer"
+                  onError={handleImageError}
                   style={{ mixBlendMode: 'multiply' }}
                   className="w-full h-full object-contain filter drop-shadow-2xs"
                 />
