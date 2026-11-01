@@ -174,6 +174,13 @@ export default function App() {
     return () => unsubscribe();
   }, [setCurrentUser]);
 
+  // Associate any guest quotes created in this browser whenever customer signs in
+  useEffect(() => {
+    if (currentUser?.id) {
+      associateGuestQuotes(currentUser.id);
+    }
+  }, [currentUser]);
+
   // ── Redirect logged-in user away from auth pages ─────────────────────────────
   useEffect(() => {
     if (currentUser && (path.startsWith('/login') || path.startsWith('/signup'))) {
