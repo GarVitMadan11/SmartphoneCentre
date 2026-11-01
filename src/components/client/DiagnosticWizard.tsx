@@ -286,6 +286,15 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
   const [powerChecked, setPowerChecked] = useState<'working' | 'dead' | null>(null);
   const [callingChecked, setCallingChecked] = useState<'working' | 'faulty' | null>(null);
 
+  // Auto-scroll back up smoothly whenever the wizard step changes or on initial mount
+  React.useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const el = document.getElementById('wizard-top');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [step]);
+
   React.useEffect(() => {
     if (step > 0) {
       if (powerChecked === null) {
@@ -836,6 +845,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
   const handleNextStep = () => {
     if (!isStepValidated) return;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     if (step < reviewStepIndex) {
       setStep(prev => prev + 1);
     } else {
@@ -844,6 +854,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
   };
 
   const handlePrevStep = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     if (step === finalReceiptIndex) {
       setStep(reviewStepIndex);
     } else if (step === reviewStepIndex && selectedDefects.some(d => d.isCriticalFailure)) {
@@ -864,7 +875,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
   };
 
   return (
-    <div className="w-full">
+    <div id="wizard-top" className="w-full scroll-mt-24">
       {/* Critical Failure Confirmation Modal */}
       <AnimatePresence>
         {criticalModal.visible && (

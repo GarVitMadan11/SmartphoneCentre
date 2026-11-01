@@ -146,11 +146,17 @@ export const useWizardStore = create<WizardState>((set, get) => ({
       activeStage: 'diagnose',
     });
     get().persistNavState();
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   },
 
   handleDiagnosticsComplete: (price, defects) => {
     set({ finalPrice: price, selectedDefects: defects, activeStage: 'schedule' });
     get().persistNavState();
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   },
 
   reset: () => {

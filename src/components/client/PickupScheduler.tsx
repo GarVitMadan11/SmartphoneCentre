@@ -154,6 +154,15 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
 }) => {
   const [schedulerStep, setSchedulerStep] = useState<number>(1);
 
+  // Auto-scroll back up smoothly whenever schedulerStep changes or on initial mount
+  React.useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const el = document.getElementById('scheduler-top');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [schedulerStep]);
+
   const [name, setName] = useState(currentUser?.name || '');
   const [email, setEmail] = useState(currentUser?.email || '');
   const [phone, setPhone] = useState(currentUser?.phone || '');
