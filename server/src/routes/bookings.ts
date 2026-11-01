@@ -578,7 +578,7 @@ router.patch('/:id', adminAuth, requireRole(['SUPER_ADMIN', 'FINANCE_APPROVER', 
           let defectIds: string[] = [];
           try {
             defectIds = JSON.parse(booking.defectIdsJson || '[]');
-          } catch {}
+          } catch { }
 
           await sendBookingApprovalEmail({
             id: booking.id,
@@ -591,9 +591,9 @@ router.patch('/:id', adminAuth, requireRole(['SUPER_ADMIN', 'FINANCE_APPROVER', 
             pickupDate: booking.pickupDate,
             pickupTimeSlot: booking.pickupTimeSlot,
             finalPrice: booking.finalPayoutAmount || booking.finalPrice,
-          basePrice: booking.finalPrice,
-          appliedCoupon: (booking as any).appliedCoupon || undefined,
-          bonusAmount: booking.bonusAmount || undefined,
+            basePrice: booking.finalPrice,
+            appliedCoupon: (booking as any).appliedCoupon || undefined,
+            bonusAmount: booking.bonusAmount || undefined,
             defectDescriptions: defectIds,
             dateCreated: booking.dateCreated,
           }, baseUrl);

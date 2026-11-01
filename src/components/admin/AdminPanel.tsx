@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Booking, Brand, Model } from '../../data/mockDatabase';
-import { 
-  ArrowLeft, RefreshCw, ShieldAlert, Cpu, Smartphone, Tablet, Watch, 
-  Zap, Truck, MessageSquare, CreditCard, ChevronLeft, ChevronRight, 
+import {
+  ArrowLeft, RefreshCw, ShieldAlert, Cpu, Smartphone, Tablet, Watch,
+  Zap, Truck, MessageSquare, CreditCard, ChevronLeft, ChevronRight,
   Menu, X, ShieldCheck, Eye, Layers, Users, Tag
 } from 'lucide-react';
 import { fetchBookings, triggerAdminLockdown, fetchCurrentUser, getCurrentAdminUser, AdminUserSession, ApiUser } from '../../utils/api';
@@ -15,14 +15,14 @@ import AuditLogTab from './tabs/AuditLogTab';
 import StaffTab from './tabs/StaffTab';
 import { CouponsTab } from './tabs/CouponsTab';
 
-export type AdminNavKey = 
-  | 'smartphones' 
-  | 'tablets' 
-  | 'smartwatches' 
-  | 'cashify' 
-  | 'inspections' 
-  | 'support' 
-  | 'finance' 
+export type AdminNavKey =
+  | 'smartphones'
+  | 'tablets'
+  | 'smartwatches'
+  | 'cashify'
+  | 'inspections'
+  | 'support'
+  | 'finance'
   | 'audit'
   | 'coupons'
   | 'staff';
@@ -35,12 +35,12 @@ interface AdminPanelProps {
   onRefreshCatalog?: (updatedModels?: Model[]) => Promise<void> | void;
 }
 
-export const AdminPanelInner: React.FC<AdminPanelProps> = ({ 
-  onBack, 
-  initialBookings, 
-  brands, 
-  onRefreshBookings, 
-  onRefreshCatalog 
+export const AdminPanelInner: React.FC<AdminPanelProps> = ({
+  onBack,
+  initialBookings,
+  brands,
+  onRefreshBookings,
+  onRefreshCatalog
 }) => {
   const [currentUser, setCurrentUser] = useState<ApiUser | null>(null);
   const [bookings, setBookings] = useState<Booking[]>(initialBookings);
@@ -215,17 +215,17 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
   const ActiveIcon = breadcrumbInfo.icon;
 
   // Sidebar link component with smooth CSS slide/fade
-  const NavItem = ({ 
-    navKey, 
-    label, 
-    icon: Icon, 
-    badge, 
-    badgeColor = 'bg-cobalt/20 text-cobalt' 
-  }: { 
-    navKey: AdminNavKey; 
-    label: string; 
-    icon: React.ComponentType<{ className?: string }>; 
-    badge?: string | number; 
+  const NavItem = ({
+    navKey,
+    label,
+    icon: Icon,
+    badge,
+    badgeColor = 'bg-cobalt/20 text-cobalt'
+  }: {
+    navKey: AdminNavKey;
+    label: string;
+    icon: React.ComponentType<{ className?: string }>;
+    badge?: string | number;
     badgeColor?: string;
   }) => {
     const isActive = activeNav === navKey;
@@ -235,28 +235,25 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
           setActiveNav(navKey);
           setMobileMenuOpen(false);
         }}
-        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-medium transition-all group cursor-pointer ${
-          isActive 
-            ? 'bg-cobalt text-white shadow-sm font-bold' 
-            : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
-        }`}
+        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-medium transition-all group cursor-pointer ${isActive
+          ? 'bg-cobalt text-white shadow-sm font-bold'
+          : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
+          }`}
         title={label}
       >
         <div className="flex items-center gap-3 min-w-0">
           <Icon className={`w-4 h-4 flex-shrink-0 transition-transform ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'}`} />
           <span
-            className={`truncate transition-all duration-200 overflow-hidden whitespace-nowrap ${
-              isSidebarExpanded ? 'opacity-100 max-w-[140px] translate-x-0' : 'opacity-0 max-w-0 -translate-x-2 pointer-events-none'
-            }`}
+            className={`truncate transition-all duration-200 overflow-hidden whitespace-nowrap ${isSidebarExpanded ? 'opacity-100 max-w-[140px] translate-x-0' : 'opacity-0 max-w-0 -translate-x-2 pointer-events-none'
+              }`}
           >
             {label}
           </span>
         </div>
         {badge !== undefined && (
           <span
-            className={`px-2 py-0.5 text-[10px] font-mono font-bold rounded-full transition-all duration-200 shrink-0 ${
-              isSidebarExpanded ? 'opacity-100 scale-100' : 'opacity-0 scale-75 pointer-events-none w-0 p-0 overflow-hidden'
-            } ${isActive ? 'bg-white/20 text-white' : badgeColor}`}
+            className={`px-2 py-0.5 text-[10px] font-mono font-bold rounded-full transition-all duration-200 shrink-0 ${isSidebarExpanded ? 'opacity-100 scale-100' : 'opacity-0 scale-75 pointer-events-none w-0 p-0 overflow-hidden'
+              } ${isActive ? 'bg-white/20 text-white' : badgeColor}`}
           >
             {badge}
           </span>
@@ -267,98 +264,94 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
 
   return (
     <div className="w-full h-full min-h-0 flex flex-col md:flex-row bg-canvas-white text-left font-sans overflow-hidden">
-      
+
       {/* ── 1. MODERN COLLAPSIBLE SIDEBAR ─────────────────────────────────── */}
-      <aside 
+      <aside
         onMouseEnter={handleSidebarMouseEnter}
         onMouseLeave={handleSidebarMouseLeave}
-        className={`relative bg-slate-900 border-r border-slate-800/90 text-slate-200 flex flex-col justify-between transition-[width,box-shadow] duration-250 ease-[cubic-bezier(0.16,1,0.3,1)] z-30 ${
-          isSidebarExpanded ? 'w-full md:w-64' : 'w-full md:w-20'
-        } ${mobileMenuOpen ? 'block' : 'hidden md:flex'} ${
-          sidebarCollapsed && sidebarHovered ? 'shadow-2xl ring-1 ring-slate-700/80' : ''
-        }`}
+        className={`relative bg-slate-900 border-r border-slate-800/90 text-slate-200 flex flex-col justify-between transition-[width,box-shadow] duration-250 ease-[cubic-bezier(0.16,1,0.3,1)] z-30 ${isSidebarExpanded ? 'w-full md:w-64' : 'w-full md:w-20'
+          } ${mobileMenuOpen ? 'block' : 'hidden md:flex'} ${sidebarCollapsed && sidebarHovered ? 'shadow-2xl ring-1 ring-slate-700/80' : ''
+          }`}
       >
         <div>
           {/* Top Brand Banner: Unified Persistent Header with Official Rephonix Logo */}
-        <div className="border-b border-slate-800/80">
-          <div className="h-16 px-3.5 flex items-center justify-between relative group select-none">
-            {/* Left: Rephonix Logo & Title */}
-            <div 
-              onClick={() => {
-                if (sidebarCollapsed) {
-                  setSidebarCollapsed(false);
-                  setSidebarHovered(false);
-                }
-              }}
-              className={`flex items-center gap-3 min-w-0 ${sidebarCollapsed ? 'cursor-pointer' : ''}`}
-              title={sidebarCollapsed ? "Click to pin sidebar open" : undefined}
-            >
-              {/* Premium Rephonix Logo Badge (Pixel-perfect vertical axis alignment with navigation icons) */}
-              <div className="w-10 h-10 rounded-xl bg-[#001736] border border-slate-700/80 p-1.5 flex items-center justify-center shadow-md flex-shrink-0 group-hover:border-cobalt/60 group-hover:shadow-cobalt/20 transition-all duration-200 group-hover:scale-105">
-                <img src="/logo.svg" className="w-full h-full object-contain filter drop-shadow-xs" alt="Rephonix Logo" />
-              </div>
-
-              {/* Brand Typography & Tagline (Smooth CSS fade/slide, zero DOM unmounting) */}
-              <div 
-                className={`min-w-0 transition-all duration-200 ease-out overflow-hidden whitespace-nowrap ${
-                  isSidebarExpanded 
-                    ? 'opacity-100 max-w-[160px] translate-x-0' 
-                    : 'opacity-0 max-w-0 -translate-x-2 pointer-events-none'
-                }`}
+          <div className="border-b border-slate-800/80">
+            <div className="h-16 px-3.5 flex items-center justify-between relative group select-none">
+              {/* Left: Rephonix Logo & Title */}
+              <div
+                onClick={() => {
+                  if (sidebarCollapsed) {
+                    setSidebarCollapsed(false);
+                    setSidebarHovered(false);
+                  }
+                }}
+                className={`flex items-center gap-3 min-w-0 ${sidebarCollapsed ? 'cursor-pointer' : ''}`}
+                title={sidebarCollapsed ? "Click to pin sidebar open" : undefined}
               >
-                <div className="flex items-center gap-1.5">
-                  <span className="font-extrabold tracking-tight text-sm text-white font-sans">
-                    Re<span className="text-secondary">phonix</span>
-                  </span>
-                  <span className="text-[9px] font-mono px-1.5 py-0.5 bg-cobalt/20 text-cobalt rounded font-bold">
-                    OS
-                  </span>
+                {/* Premium Rephonix Logo Badge (Pixel-perfect vertical axis alignment with navigation icons) */}
+                <div className="w-10 h-10 rounded-xl bg-[#001736] border border-slate-700/80 p-1.5 flex items-center justify-center shadow-md flex-shrink-0 group-hover:border-cobalt/60 group-hover:shadow-cobalt/20 transition-all duration-200 group-hover:scale-105">
+                  <img src="/logo.svg" className="w-full h-full object-contain filter drop-shadow-xs" alt="Rephonix Logo" />
                 </div>
-                <div className="text-[10px] text-slate-400 font-mono truncate">Control Studio v2.4</div>
-              </div>
-            </div>
 
-            {/* Collapse/Expand Toggle Button (Desktop only) */}
-            {isSidebarExpanded ? (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSidebarCollapsed(true);
-                  setSidebarHovered(false);
-                }}
-                className="hidden md:flex p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer flex-shrink-0"
-                title="Collapse Sidebar"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSidebarCollapsed(false);
-                  setSidebarHovered(false);
-                }}
-                className="hidden md:flex absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-slate-800 hover:bg-cobalt border border-slate-700 hover:border-cobalt text-slate-300 hover:text-white items-center justify-center shadow-lg transition-all duration-200 cursor-pointer z-40 hover:scale-110 opacity-0 group-hover:opacity-100"
-                title="Expand Sidebar"
-              >
-                <ChevronRight className="w-3.5 h-3.5" />
-              </button>
-            )}
+                {/* Brand Typography & Tagline (Smooth CSS fade/slide, zero DOM unmounting) */}
+                <div
+                  className={`min-w-0 transition-all duration-200 ease-out overflow-hidden whitespace-nowrap ${isSidebarExpanded
+                    ? 'opacity-100 max-w-[160px] translate-x-0'
+                    : 'opacity-0 max-w-0 -translate-x-2 pointer-events-none'
+                    }`}
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-extrabold tracking-tight text-sm text-white font-sans">
+                      Re<span className="text-secondary">phonix</span>
+                    </span>
+                    <span className="text-[9px] font-mono px-1.5 py-0.5 bg-cobalt/20 text-cobalt rounded font-bold">
+                      OS
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-slate-400 font-mono truncate">Control Studio v2.4</div>
+                </div>
+              </div>
+
+              {/* Collapse/Expand Toggle Button (Desktop only) */}
+              {isSidebarExpanded ? (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSidebarCollapsed(true);
+                    setSidebarHovered(false);
+                  }}
+                  className="hidden md:flex p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer flex-shrink-0"
+                  title="Collapse Sidebar"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSidebarCollapsed(false);
+                    setSidebarHovered(false);
+                  }}
+                  className="hidden md:flex absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-slate-800 hover:bg-cobalt border border-slate-700 hover:border-cobalt text-slate-300 hover:text-white items-center justify-center shadow-lg transition-all duration-200 cursor-pointer z-40 hover:scale-110 opacity-0 group-hover:opacity-100"
+                  title="Expand Sidebar"
+                >
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
           </div>
-        </div>
 
           {/* Navigation Links Grouped by Domain */}
           <div className="p-3 space-y-4 overflow-y-auto max-h-[calc(100vh-250px)]">
-            
+
             {/* Group A: Inventory & Valuation */}
             {(hasAccessTo('smartphones') || hasAccessTo('tablets') || hasAccessTo('smartwatches') || hasAccessTo('cashify')) && (
               <div>
                 <div
-                  className={`px-3 pb-1.5 text-[10px] font-mono font-bold tracking-wider uppercase text-slate-400 transition-all duration-200 overflow-hidden whitespace-nowrap ${
-                    isSidebarExpanded ? 'opacity-100 max-h-6' : 'opacity-0 max-h-0 pointer-events-none'
-                  }`}
+                  className={`px-3 pb-1.5 text-[10px] font-mono font-bold tracking-wider uppercase text-slate-400 transition-all duration-200 overflow-hidden whitespace-nowrap ${isSidebarExpanded ? 'opacity-100 max-h-6' : 'opacity-0 max-h-0 pointer-events-none'
+                    }`}
                 >
                   Inventory & Valuation
                 </div>
@@ -367,12 +360,12 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
                   {hasAccessTo('tablets') && <NavItem navKey="tablets" label="Tablets" icon={Tablet} />}
                   {hasAccessTo('smartwatches') && <NavItem navKey="smartwatches" label="Smartwatches" icon={Watch} />}
                   {hasAccessTo('cashify') && (
-                    <NavItem 
-                      navKey="cashify" 
-                      label="Cashify Monitor" 
-                      icon={Zap} 
-                      badge="Live" 
-                      badgeColor="bg-amber-400/20 text-amber-300" 
+                    <NavItem
+                      navKey="cashify"
+                      label="Cashify Monitor"
+                      icon={Zap}
+                      badge="Live"
+                      badgeColor="bg-amber-400/20 text-amber-300"
                     />
                   )}
                 </div>
@@ -383,18 +376,17 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
             {(hasAccessTo('inspections') || hasAccessTo('support')) && (
               <div>
                 <div
-                  className={`px-3 pb-1.5 text-[10px] font-mono font-bold tracking-wider uppercase text-slate-400 transition-all duration-200 overflow-hidden whitespace-nowrap ${
-                    isSidebarExpanded ? 'opacity-100 max-h-6' : 'opacity-0 max-h-0 pointer-events-none'
-                  }`}
+                  className={`px-3 pb-1.5 text-[10px] font-mono font-bold tracking-wider uppercase text-slate-400 transition-all duration-200 overflow-hidden whitespace-nowrap ${isSidebarExpanded ? 'opacity-100 max-h-6' : 'opacity-0 max-h-0 pointer-events-none'
+                    }`}
                 >
                   Operations
                 </div>
                 <div className="space-y-1">
                   {hasAccessTo('inspections') && (
-                    <NavItem 
-                      navKey="inspections" 
-                      label="Doorstep Pickups" 
-                      icon={Truck} 
+                    <NavItem
+                      navKey="inspections"
+                      label="Doorstep Pickups"
+                      icon={Truck}
                       badge={pendingInspections > 0 ? pendingInspections : undefined}
                       badgeColor="bg-blue-500/20 text-blue-300"
                     />
@@ -408,27 +400,26 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
             {(hasAccessTo('finance') || hasAccessTo('coupons')) && (
               <div>
                 <div
-                  className={`px-3 pb-1.5 text-[10px] font-mono font-bold tracking-wider uppercase text-slate-400 transition-all duration-200 overflow-hidden whitespace-nowrap ${
-                    isSidebarExpanded ? 'opacity-100 max-h-6' : 'opacity-0 max-h-0 pointer-events-none'
-                  }`}
+                  className={`px-3 pb-1.5 text-[10px] font-mono font-bold tracking-wider uppercase text-slate-400 transition-all duration-200 overflow-hidden whitespace-nowrap ${isSidebarExpanded ? 'opacity-100 max-h-6' : 'opacity-0 max-h-0 pointer-events-none'
+                    }`}
                 >
                   Finance & Growth
                 </div>
                 <div className="space-y-1">
                   {hasAccessTo('finance') && (
-                    <NavItem 
-                      navKey="finance" 
-                      label="Payouts & Ledger" 
-                      icon={CreditCard} 
+                    <NavItem
+                      navKey="finance"
+                      label="Payouts & Ledger"
+                      icon={CreditCard}
                       badge={pendingPayouts > 0 ? pendingPayouts : undefined}
                       badgeColor="bg-emerald-500/20 text-emerald-300"
                     />
                   )}
                   {hasAccessTo('coupons') && (
-                    <NavItem 
-                      navKey="coupons" 
-                      label="Referral & Coupons" 
-                      icon={Tag} 
+                    <NavItem
+                      navKey="coupons"
+                      label="Referral & Coupons"
+                      icon={Tag}
                     />
                   )}
                 </div>
@@ -439,9 +430,8 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
             {(effectiveRole === 'SUPER_ADMIN' || effectiveRole === 'CATALOG_EDITOR' || effectiveRole === 'FINANCE_APPROVER') && (
               <div>
                 <div
-                  className={`px-3 pb-1.5 text-[10px] font-mono font-bold tracking-wider uppercase text-slate-400 transition-all duration-200 overflow-hidden whitespace-nowrap ${
-                    isSidebarExpanded ? 'opacity-100 max-h-6' : 'opacity-0 max-h-0 pointer-events-none'
-                  }`}
+                  className={`px-3 pb-1.5 text-[10px] font-mono font-bold tracking-wider uppercase text-slate-400 transition-all duration-200 overflow-hidden whitespace-nowrap ${isSidebarExpanded ? 'opacity-100 max-h-6' : 'opacity-0 max-h-0 pointer-events-none'
+                    }`}
                 >
                   Governance & Team
                 </div>
@@ -470,33 +460,29 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
               <div className="grid grid-cols-2 gap-1 text-[10px] font-mono">
                 <button
                   onClick={() => setPreviewRole('SUPER_ADMIN')}
-                  className={`py-1 px-1.5 rounded text-center transition-all cursor-pointer ${
-                    previewRole === 'SUPER_ADMIN' ? 'bg-cobalt text-white font-bold' : 'text-slate-400 hover:text-white bg-slate-800/60'
-                  }`}
+                  className={`py-1 px-1.5 rounded text-center transition-all cursor-pointer ${previewRole === 'SUPER_ADMIN' ? 'bg-cobalt text-white font-bold' : 'text-slate-400 hover:text-white bg-slate-800/60'
+                    }`}
                 >
                   All Privs
                 </button>
                 <button
                   onClick={() => setPreviewRole('CATALOG_EDITOR')}
-                  className={`py-1 px-1.5 rounded text-center transition-all cursor-pointer ${
-                    previewRole === 'CATALOG_EDITOR' ? 'bg-purple-600 text-white font-bold' : 'text-slate-400 hover:text-white bg-slate-800/60'
-                  }`}
+                  className={`py-1 px-1.5 rounded text-center transition-all cursor-pointer ${previewRole === 'CATALOG_EDITOR' ? 'bg-purple-600 text-white font-bold' : 'text-slate-400 hover:text-white bg-slate-800/60'
+                    }`}
                 >
                   Catalog
                 </button>
                 <button
                   onClick={() => setPreviewRole('OPERATIONS_AGENT')}
-                  className={`py-1 px-1.5 rounded text-center transition-all cursor-pointer ${
-                    previewRole === 'OPERATIONS_AGENT' ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white bg-slate-800/60'
-                  }`}
+                  className={`py-1 px-1.5 rounded text-center transition-all cursor-pointer ${previewRole === 'OPERATIONS_AGENT' ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white bg-slate-800/60'
+                    }`}
                 >
                   Operations
                 </button>
                 <button
                   onClick={() => setPreviewRole('FINANCE_APPROVER')}
-                  className={`py-1 px-1.5 rounded text-center transition-all cursor-pointer ${
-                    previewRole === 'FINANCE_APPROVER' ? 'bg-emerald-600 text-white font-bold' : 'text-slate-400 hover:text-white bg-slate-800/60'
-                  }`}
+                  className={`py-1 px-1.5 rounded text-center transition-all cursor-pointer ${previewRole === 'FINANCE_APPROVER' ? 'bg-emerald-600 text-white font-bold' : 'text-slate-400 hover:text-white bg-slate-800/60'
+                    }`}
                 >
                   Finance
                 </button>
@@ -510,9 +496,8 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
               <Cpu className="w-3.5 h-3.5 text-cobalt" />
             </div>
             <div
-              className={`min-w-0 flex-1 transition-all duration-200 overflow-hidden whitespace-nowrap ${
-                isSidebarExpanded ? 'opacity-100 max-w-[160px] translate-x-0' : 'opacity-0 max-w-0 -translate-x-2 pointer-events-none'
-              }`}
+              className={`min-w-0 flex-1 transition-all duration-200 overflow-hidden whitespace-nowrap ${isSidebarExpanded ? 'opacity-100 max-w-[160px] translate-x-0' : 'opacity-0 max-w-0 -translate-x-2 pointer-events-none'
+                }`}
             >
               <div className="text-xs font-bold text-white truncate">
                 {currentUser?.name || currentUser?.email?.split('@')[0] || 'Admin Operator'}
@@ -531,9 +516,8 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
           >
             <ArrowLeft className="w-3.5 h-3.5 flex-shrink-0" />
             <span
-              className={`transition-all duration-200 overflow-hidden whitespace-nowrap ${
-                isSidebarExpanded ? 'opacity-100 max-w-[140px]' : 'opacity-0 max-w-0 pointer-events-none'
-              }`}
+              className={`transition-all duration-200 overflow-hidden whitespace-nowrap ${isSidebarExpanded ? 'opacity-100 max-w-[140px]' : 'opacity-0 max-w-0 pointer-events-none'
+                }`}
             >
               Back to Storefront
             </span>
@@ -543,10 +527,10 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
 
       {/* ── 2. MAIN APPLICATION WORKSPACE ─────────────────────────────────── */}
       <div className="flex-1 flex flex-col bg-canvas-white min-w-0 overflow-hidden">
-        
+
         {/* Top App Header Bar */}
         <header className="bg-canvas-white/95 backdrop-blur-md border-b border-ice-border px-4 md:px-6 py-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-xs">
-          
+
           {/* Breadcrumb Path & Active View Title */}
           <div className="flex items-center gap-3">
             {/* Mobile Hamburger Menu Toggle */}

@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { 
-  Clock, User, MapPin, 
+import {
+  Clock, User, MapPin,
   CheckCircle, ArrowLeft, ChevronRight, ShieldCheck, Check, AlertCircle, X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -211,7 +211,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
         if (fields.verifiedName) setVerifiedName(fields.verifiedName);
         if (fields.maskedAadhaar) setMaskedAadhaar(fields.maskedAadhaar);
         if (fields.verificationDate) setVerificationDate(fields.verificationDate);
-        
+
         localStorage.removeItem('pending_scheduler_fields');
       } catch (err) {
         console.error('Failed to parse pending scheduler fields:', err);
@@ -525,7 +525,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
           >
             {/* Left Column: Form Details & Progressive Steps */}
             <div className="lg:col-span-7 bg-canvas-pure rounded-sm border border-ice-border p-4 sm:p-6 flex flex-col justify-between shadow-premium min-h-[500px]">
-              
+
               {/* Header block */}
               <div>
                 <div className="flex items-center gap-3 border-b border-white/[0.04] pb-4 mb-5">
@@ -546,9 +546,9 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                 {/* Progress bar info */}
                 <div className="flex items-center justify-between mb-6 bg-canvas-white/40 p-2.5 rounded-sm border border-white/[0.04] text-[10px] font-medium tracking-normal text-zinc-400">
                   <span className="uppercase">Step {schedulerStep} of 3: {
-                    schedulerStep === 1 ? 'Contact & Device Info' : 
-                    schedulerStep === 2 ? 'Address & Schedule' : 
-                    'Final Review & Doorside Payout'
+                    schedulerStep === 1 ? 'Contact & Device Info' :
+                      schedulerStep === 2 ? 'Address & Schedule' :
+                        'Final Review & Doorside Payout'
                   }</span>
                   <div className="flex gap-1">
                     {[1, 2, 3].map(s => (
@@ -569,15 +569,13 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                       {/* DPDP / Privacy Consent */}
                       <div
                         onClick={() => setHasConsented(v => !v)}
-                        className={`flex items-start gap-3 p-3 rounded-sm border cursor-pointer transition-all ${
-                          hasConsented
-                            ? 'bg-cobalt-light border-cobalt'
-                            : 'bg-canvas-white border-ice-border hover:border-cobalt/40'
-                        }`}
+                        className={`flex items-start gap-3 p-3 rounded-sm border cursor-pointer transition-all ${hasConsented
+                          ? 'bg-cobalt-light border-cobalt'
+                          : 'bg-canvas-white border-ice-border hover:border-cobalt/40'
+                          }`}
                       >
-                        <div className={`mt-0.5 w-4 h-4 rounded-sm border flex-shrink-0 flex items-center justify-center transition-all ${
-                          hasConsented ? 'bg-cobalt border-cobalt text-white' : 'border-ice-border'
-                        }`}>
+                        <div className={`mt-0.5 w-4 h-4 rounded-sm border flex-shrink-0 flex items-center justify-center transition-all ${hasConsented ? 'bg-cobalt border-cobalt text-white' : 'border-ice-border'
+                          }`}>
                           {hasConsented && <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
                         </div>
                         <p className="text-[10px] text-ink-slate font-light leading-relaxed">
@@ -597,9 +595,8 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                               value={name}
                               onChange={e => setName(e.target.value)}
                               placeholder="e.g. Vikramaditya Singh"
-                              className={`w-full p-3 pr-9 rounded-sm border bg-canvas-white text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all font-light ${
-                                name && isNameValid ? 'border-emerald-400' : name && !isNameValid ? 'border-red-400' : 'border-ice-border'
-                              }`}
+                              className={`w-full p-3 pr-9 rounded-sm border bg-canvas-white text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all font-light ${name && isNameValid ? 'border-emerald-400' : name && !isNameValid ? 'border-red-400' : 'border-ice-border'
+                                }`}
                               style={{ minHeight: '48px' }}
                             />
                             {name && (
@@ -623,9 +620,8 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                               value={email}
                               onChange={e => setEmail(e.target.value)}
                               placeholder="e.g. you@example.com"
-                              className={`w-full p-3 pr-9 rounded-sm border bg-canvas-white text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all font-light ${
-                                email && isEmailValid ? 'border-emerald-400' : email && !isEmailValid ? 'border-red-400' : 'border-ice-border'
-                              }`}
+                              className={`w-full p-3 pr-9 rounded-sm border bg-canvas-white text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all font-light ${email && isEmailValid ? 'border-emerald-400' : email && !isEmailValid ? 'border-red-400' : 'border-ice-border'
+                                }`}
                               style={{ minHeight: '48px' }}
                             />
                             {email && (
@@ -653,9 +649,8 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                             value={phone}
                             onChange={e => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
                             placeholder="9876543210"
-                            className={`w-full pl-11 pr-9 py-3 rounded-sm border bg-canvas-white text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all font-light ${
-                              phone && isPhoneValid ? 'border-emerald-400' : phone && !isPhoneValid ? 'border-red-400' : 'border-ice-border'
-                            }`}
+                            className={`w-full pl-11 pr-9 py-3 rounded-sm border bg-canvas-white text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all font-light ${phone && isPhoneValid ? 'border-emerald-400' : phone && !isPhoneValid ? 'border-red-400' : 'border-ice-border'
+                              }`}
                             style={{ minHeight: '48px' }}
                           />
                           {phone && (
@@ -689,9 +684,8 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                             value={imei}
                             onChange={e => setImei(e.target.value.replace(/\D/g, '').slice(0, 15))}
                             placeholder="e.g. 354892109845123 (15 digits)"
-                            className={`w-full p-3 pr-9 rounded-sm border bg-canvas-white text-ink-navy text-sm font-sans focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all ${
-                              imei && isImeiValid ? 'border-emerald-400' : imei && !isImeiValid ? 'border-red-400' : 'border-ice-border'
-                            }`}
+                            className={`w-full p-3 pr-9 rounded-sm border bg-canvas-white text-ink-navy text-sm font-sans focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all ${imei && isImeiValid ? 'border-emerald-400' : imei && !isImeiValid ? 'border-red-400' : 'border-ice-border'
+                              }`}
                             style={{ minHeight: '48px' }}
                           />
                           {imei && (
@@ -741,9 +735,8 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                             value={flatNo}
                             onChange={e => setFlatNo(e.target.value)}
                             placeholder="e.g. Flat 402, 4th Floor / House No. B-12"
-                            className={`w-full p-3 rounded-sm border bg-canvas-pure text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all font-light ${
-                              flatNo.trim() ? 'border-emerald-400' : 'border-ice-border'
-                            }`}
+                            className={`w-full p-3 rounded-sm border bg-canvas-pure text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all font-light ${flatNo.trim() ? 'border-emerald-400' : 'border-ice-border'
+                              }`}
                             style={{ minHeight: '44px' }}
                           />
                         </div>
@@ -757,9 +750,8 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                             value={buildingName}
                             onChange={e => setBuildingName(e.target.value)}
                             placeholder="e.g. Shanti Heights / DDA Pocket A Apartments"
-                            className={`w-full p-3 rounded-sm border bg-canvas-pure text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all font-light ${
-                              buildingName.trim() ? 'border-emerald-400' : 'border-ice-border'
-                            }`}
+                            className={`w-full p-3 rounded-sm border bg-canvas-pure text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all font-light ${buildingName.trim() ? 'border-emerald-400' : 'border-ice-border'
+                              }`}
                             style={{ minHeight: '44px' }}
                           />
                         </div>
@@ -773,9 +765,8 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                             value={locality}
                             onChange={e => setLocality(e.target.value)}
                             placeholder="e.g. Tilak Nagar / Sector 14 / Janakpuri Block B"
-                            className={`w-full p-3 rounded-sm border bg-canvas-pure text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all font-light ${
-                              locality.trim() ? 'border-emerald-400' : 'border-ice-border'
-                            }`}
+                            className={`w-full p-3 rounded-sm border bg-canvas-pure text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all font-light ${locality.trim() ? 'border-emerald-400' : 'border-ice-border'
+                              }`}
                             style={{ minHeight: '44px' }}
                           />
                         </div>
@@ -790,9 +781,8 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                             value={landmark}
                             onChange={e => setLandmark(e.target.value)}
                             placeholder="e.g. Near Apollo Pharmacy / Opposite Metro Pillar 450"
-                            className={`w-full p-3 rounded-sm border bg-canvas-pure text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all font-light ${
-                              landmark.trim() ? 'border-emerald-400' : 'border-ice-border'
-                            }`}
+                            className={`w-full p-3 rounded-sm border bg-canvas-pure text-ink-navy text-sm focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all font-light ${landmark.trim() ? 'border-emerald-400' : 'border-ice-border'
+                              }`}
                             style={{ minHeight: '44px' }}
                           />
                         </div>
@@ -824,13 +814,12 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                             value={pincode}
                             onChange={e => setPincode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                             placeholder="Type 6-digit Pincode (e.g. 110001, 110016, 110092)"
-                            className={`w-full p-3 pr-10 rounded-sm border bg-canvas-white text-ink-navy text-sm font-sans focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all ${
-                              pincode && isDelhiPincodeValid
-                                ? 'border-emerald-500 ring-1 ring-emerald-500/30'
-                                : pincode && pincode.length === 6 && !isDelhiPincodeValid
+                            className={`w-full p-3 pr-10 rounded-sm border bg-canvas-white text-ink-navy text-sm font-sans focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all ${pincode && isDelhiPincodeValid
+                              ? 'border-emerald-500 ring-1 ring-emerald-500/30'
+                              : pincode && pincode.length === 6 && !isDelhiPincodeValid
                                 ? 'border-red-400 ring-1 ring-red-400/30'
                                 : 'border-ice-border'
-                            }`}
+                              }`}
                             style={{ minHeight: '48px' }}
                           />
                           {pincode && pincode.length === 6 && (
@@ -886,13 +875,12 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                                 key={d.raw}
                                 type="button"
                                 onClick={() => setSelectedDate(d.raw)}
-                                className={`min-w-[68px] sm:min-w-0 flex-1 snap-start py-2.5 px-1.5 rounded-xl border text-center transition-all duration-200 flex flex-col justify-center items-center touch-manipulation select-none active:scale-95 focus:outline-none focus:ring-2 focus:ring-slate-900 ${
-                                  isSelected
-                                    ? 'bg-slate-950 border-slate-950 text-white shadow-md shadow-slate-950/20 scale-[1.02]'
-                                    : isAnyDateSelected
+                                className={`min-w-[68px] sm:min-w-0 flex-1 snap-start py-2.5 px-1.5 rounded-xl border text-center transition-all duration-200 flex flex-col justify-center items-center touch-manipulation select-none active:scale-95 focus:outline-none focus:ring-2 focus:ring-slate-900 ${isSelected
+                                  ? 'bg-slate-950 border-slate-950 text-white shadow-md shadow-slate-950/20 scale-[1.02]'
+                                  : isAnyDateSelected
                                     ? 'bg-slate-50 text-slate-500 border-slate-200 hover:border-slate-300'
                                     : 'bg-white text-slate-800 border-slate-200 hover:border-slate-400'
-                                }`}
+                                  }`}
                                 style={{ minHeight: '56px' }}
                               >
                                 <span className={`text-[9px] uppercase tracking-wider font-semibold block ${isSelected ? 'text-slate-400' : 'text-slate-500'}`}>{d.dayName}</span>
@@ -915,13 +903,12 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                                 key={slot}
                                 type="button"
                                 onClick={() => setSelectedTimeSlot(slot)}
-                                className={`p-3.5 rounded-sm border text-xs text-left transition-all duration-300 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt ${
-                                  isSelected
-                                    ? 'bg-cobalt-light border-cobalt scale-[1.01] opacity-100 z-10 shadow-sm'
-                                    : isAnySlotSelected
+                                className={`p-3.5 rounded-sm border text-xs text-left transition-all duration-300 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt ${isSelected
+                                  ? 'bg-cobalt-light border-cobalt scale-[1.01] opacity-100 z-10 shadow-sm'
+                                  : isAnySlotSelected
                                     ? 'bg-canvas-white text-ink-slate border-ice-border opacity-40 hover:opacity-75 hover:scale-[1.005]'
                                     : 'bg-canvas-white text-ink-navy border-ice-border hover:border-cobalt/30 hover:scale-[1.005]'
-                                }`}
+                                  }`}
                                 style={{ minHeight: '48px' }}
                               >
                                 <Clock className={`w-4 h-4 ${isSelected ? 'text-cobalt' : 'text-zinc-500'}`} />
@@ -1033,11 +1020,10 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                     disabled={
                       schedulerStep === 1 ? !isStep1Valid : !isStep2Valid
                     }
-                    className={`flex-1 bg-blue-600 hover:bg-blue-700 dark:bg-sky-600 dark:hover:bg-sky-500 text-white py-3 rounded-md font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-md ${
-                      (schedulerStep === 1 ? !isStep1Valid : !isStep2Valid)
-                        ? 'opacity-40 cursor-not-allowed'
-                        : 'hover:scale-[1.01]'
-                    }`}
+                    className={`flex-1 bg-blue-600 hover:bg-blue-700 dark:bg-sky-600 dark:hover:bg-sky-500 text-white py-3 rounded-md font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-md ${(schedulerStep === 1 ? !isStep1Valid : !isStep2Valid)
+                      ? 'opacity-40 cursor-not-allowed'
+                      : 'hover:scale-[1.01]'
+                      }`}
                     style={{ minHeight: '48px' }}
                   >
                     Continue to Next Step
@@ -1048,11 +1034,10 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                     type="button"
                     onClick={handleSubmit}
                     disabled={isSubmitting}
-                    className={`flex-1 bg-blue-600 hover:bg-blue-700 dark:bg-sky-600 dark:hover:bg-sky-500 text-white py-3 rounded-md font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-md ${
-                      isSubmitting
-                        ? 'opacity-40 cursor-not-allowed'
-                        : 'hover:scale-[1.01]'
-                    }`}
+                    className={`flex-1 bg-blue-600 hover:bg-blue-700 dark:bg-sky-600 dark:hover:bg-sky-500 text-white py-3 rounded-md font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-md ${isSubmitting
+                      ? 'opacity-40 cursor-not-allowed'
+                      : 'hover:scale-[1.01]'
+                      }`}
                     style={{ minHeight: '48px' }}
                   >
                     {isSubmitting ? 'Securing Payout...' : 'Lock Quote & Book Pickup'}
@@ -1173,28 +1158,28 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                   <span>Confirmation ID</span>
                   <span className="text-blue-600 dark:text-sky-400 font-extrabold font-sans text-base">#{confirmationId}</span>
                 </div>
-                
+
                 <div className="flex justify-between items-center">
                   <span className="text-slate-600 dark:text-zinc-400 font-medium">Device Model</span>
                   <span className="text-slate-900 dark:text-slate-100 font-semibold">{selectedModel.name} ({selectedVariant.storageGb}GB)</span>
                 </div>
-                
+
                 <div className="flex justify-between items-center">
                   <span className="text-slate-600 dark:text-zinc-400 font-medium">Client Name</span>
                   <span className="text-slate-900 dark:text-slate-100 font-semibold">{name}</span>
                 </div>
-                
+
                 <div className="flex justify-between items-center">
                   <span className="text-slate-600 dark:text-zinc-400 font-medium">Pickup Address</span>
                   <span className="text-slate-900 dark:text-slate-100 font-semibold truncate max-w-[240px]">{address}</span>
                 </div>
-                
+
                 {/* Date time booking overview */}
                 <div className="flex justify-between items-center border-t border-slate-200 dark:border-zinc-700 pt-2.5">
                   <span className="text-slate-600 dark:text-zinc-400 font-medium">Scheduled Date</span>
                   <span className="text-slate-900 dark:text-slate-100 font-semibold">{selectedDate}</span>
                 </div>
-                
+
                 <div className="flex justify-between items-center">
                   <span className="text-slate-600 dark:text-zinc-400 font-medium">Time Slot Window</span>
                   <span className="text-slate-900 dark:text-slate-100 font-semibold">{selectedTimeSlot}</span>
@@ -1222,7 +1207,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                     Instant Doorside Payout (UPI / Bank)
                   </span>
                 </div>
-                
+
                 <div className="flex justify-between items-center border-t border-slate-200 dark:border-zinc-700 pt-3 mt-3 text-slate-900 dark:text-white">
                   <span className="font-bold text-sm">Final Locked Payout</span>
                   <span className="text-emerald-600 dark:text-emerald-400 font-extrabold text-2xl font-sans">{formatPrice(totalPayoutVal)}</span>
