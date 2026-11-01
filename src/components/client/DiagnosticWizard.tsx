@@ -3,7 +3,7 @@ import { Model, Variant, getDefectRulesForCategory, DefectRule, isAppleDevice, i
 import { calculateValuation } from '../../utils/valuation';
 import { type AgeFactorKey } from '../../data/pricingRulesConfig';
 import { 
-  ArrowLeft, Check, ChevronRight, Activity, 
+  ArrowLeft, Check, CheckCircle2, ChevronRight, Activity, 
   Smartphone, Box, ShieldCheck, Printer, Receipt,
   X, Lock, Eye, EyeOff, AlertCircle, Mail, User,
   Phone, MessageSquare, ExternalLink, Headphones, Send, Bookmark,
@@ -1183,7 +1183,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
           <motion.div 
             layout 
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="bg-white rounded-xl border border-ice-border p-4 sm:p-7 min-h-0 sm:min-h-[440px] flex flex-col justify-between overflow-hidden shadow-sm sm:shadow-xl pb-20 sm:pb-7"
+            className={step === finalReceiptIndex ? "w-full min-h-0" : "bg-white rounded-xl border border-ice-border p-4 sm:p-7 min-h-0 sm:min-h-[440px] flex flex-col justify-between overflow-hidden shadow-sm sm:shadow-xl pb-20 sm:pb-7"}
           >
           <AnimatePresence mode="wait">
             {/* Dedicated Tablet Diagnostic Flow (Cashify Question Set) */}
@@ -2167,30 +2167,26 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
               >
                 <div className="max-w-2xl mx-auto print:max-w-none print:w-full">
                   <div id="printable-quote" className="bg-white text-slate-900 border-2 border-slate-200 rounded-xl overflow-hidden shadow-xl p-6 print:p-8 relative">
-                    {/* Watermark badge */}
-                    <div className="absolute -right-5 -top-5 w-24 h-24 rounded-full border-2 border-emerald-500/40 bg-emerald-50 flex items-center justify-center rotate-12 select-none pointer-events-none print-stamp">
-                      <span className="text-xs font-medium text-emerald-700">Verified</span>
-                    </div>
-
-                    {/* Company Header Logo */}
-                    <div className="flex items-center justify-between pb-5 mb-5 border-b border-slate-200 print-border">
+                    {/* Company Header Logo & Verified Status */}
+                    <div className="flex items-center justify-between pb-4 sm:pb-5 mb-5 border-b border-slate-200 print-border">
                       <div className="flex items-center gap-3">
-                        <img src="/logo.svg" className="w-10 h-10 object-contain rounded-md print-logo-bg flex-shrink-0 shadow-xs" alt="Rephonix Logo" />
+                        <img src="/logo.svg" className="w-9 h-9 sm:w-10 sm:h-10 object-contain rounded-md print-logo-bg flex-shrink-0 shadow-xs" alt="Rephonix Logo" />
                         <div>
-                          <span className="text-xl font-extrabold text-slate-950 print-text-dark tracking-tight block leading-none">
+                          <span className="text-lg sm:text-xl font-extrabold text-slate-950 print-text-dark tracking-tight block leading-none">
                             Re<span className="text-blue-700 print-text-cobalt">phonix</span>
                           </span>
-                          <span className="text-[10px] font-sans text-slate-600 print-text-muted tracking-wider uppercase block mt-1 font-bold">
-                            Official Device Valuation &amp; Diagnostic Certificate
+                          <span className="text-[9px] sm:text-[10px] font-sans text-slate-600 print-text-muted tracking-wider uppercase block mt-1 font-bold">
+                            Official Valuation &amp; Diagnostic Certificate
                           </span>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <span className="text-[10px] font-sans text-slate-600 print-text-muted uppercase block tracking-wider font-bold">
+                      <div className="text-right flex flex-col items-end">
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-300 text-emerald-800 text-[11px] font-bold shadow-xs">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                          <span>Verified</span>
+                        </div>
+                        <span className="text-[10px] font-sans text-slate-500 uppercase tracking-wider font-bold mt-1">
                           REF #{receiptRef}
-                        </span>
-                        <span className="text-[10px] font-sans text-emerald-700 print-text-emerald font-bold uppercase tracking-normal block mt-0.5">
-                          Verified Audit Passed
                         </span>
                         <span className="hidden print:block text-[9px] font-sans text-slate-500 mt-0.5">
                           Date: {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
@@ -2286,16 +2282,19 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
 
                     {/* Payout Summary Box */}
-                    <div className="flex justify-between items-center border-t border-dashed border-slate-300 print-border pt-4 mt-4 bg-slate-50/80 print:bg-emerald-50/50 p-4 rounded-xl border border-slate-200 print:border-emerald-200">
+                    <div className="flex justify-between items-center border-t border-slate-200 print-border pt-4 mt-4 bg-gradient-to-br from-emerald-50/70 via-slate-50 to-emerald-50/30 p-4 sm:p-5 rounded-xl border border-emerald-200/90 shadow-xs">
                       <div>
                         <span className="text-slate-600 print-text-muted block text-xs font-semibold">Total Estimated Payout</span>
-                        <span className="text-xs text-emerald-700 print-text-emerald font-semibold block mt-0.5">Payout Rate Locked</span>
+                        <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 font-bold mt-0.5">
+                          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                          Payout Rate Locked (7 Days)
+                        </span>
                       </div>
                       <AnimatedPrice
                         value={valuation.finalPrice}
                         isMasked={isPriceLocked}
                         isCritical={valuation.isCritical}
-                        className="text-3xl sm:text-4xl font-bold text-emerald-600 print-text-emerald tracking-tight"
+                        className="text-3xl sm:text-4xl font-extrabold text-emerald-600 print-text-emerald tracking-tight font-sans"
                       />
                     </div>
 
@@ -2413,12 +2412,33 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                     </motion.div>
                   )}
 
-                  <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3 mt-4">
-                    <div className="grid grid-cols-3 sm:flex gap-2 sm:gap-3">
+                  {/* Unified High-Conversion Action Controls */}
+                  <div className="mt-4 space-y-2.5 print:hidden">
+                    {isPriceLocked ? (
+                      <button
+                        type="button"
+                        onClick={() => setLockModalOpen(true)}
+                        className="w-full bg-cobalt hover:bg-cobalt-hover text-white py-3.5 sm:py-4 px-6 rounded-xl font-bold text-sm sm:text-base text-center transition-all flex items-center justify-center gap-2 group hover:scale-[1.005] active:scale-[0.99] shadow-lg shadow-cobalt/25 cursor-pointer"
+                      >
+                        <Lock className="w-4 h-4 text-sky-300" />
+                        <span>Unlock Price &amp; Book Free Pickup</span>
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => onComplete(valuation.finalPrice, selectedDefects)}
+                        className="w-full bg-gradient-to-r from-cobalt via-indigo-600 to-cobalt hover:from-cobalt-hover hover:to-indigo-700 text-white py-3.5 sm:py-4 px-6 rounded-xl font-bold text-sm sm:text-base text-center transition-all flex items-center justify-center gap-2 group hover:scale-[1.005] active:scale-[0.99] shadow-lg shadow-cobalt/25 cursor-pointer"
+                      >
+                        <span>Book Free Doorstep Pickup (Instant ₹{formatPrice(valuation.finalPrice)})</span>
+                        <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                      </button>
+                    )}
+
+                    <div className="grid grid-cols-3 gap-2 sm:gap-3">
                       <button
                         type="button"
                         onClick={() => setStep(reviewStepIndex)}
-                        className="px-3 sm:px-4 py-3 rounded-xl border-2 border-slate-300 bg-white hover:bg-slate-100 text-slate-900 hover:text-black font-bold text-xs transition-all flex items-center justify-center gap-1.5 shadow-xs cursor-pointer active:scale-[0.99]"
+                        className="py-2.5 px-3 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-xs cursor-pointer active:scale-[0.99]"
                       >
                         <ArrowLeft className="w-3.5 h-3.5" />
                         <span>Review</span>
@@ -2428,46 +2448,26 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         type="button"
                         onClick={() => window.print()}
                         aria-label="Print diagnostic report and quote"
-                        className="px-3 sm:px-4 py-3 rounded-xl border-2 border-slate-300 bg-white hover:bg-slate-100 text-slate-900 hover:text-black transition-all flex items-center justify-center gap-1.5 text-xs font-bold shadow-xs cursor-pointer active:scale-[0.99]"
+                        className="py-2.5 px-3 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-xs cursor-pointer active:scale-[0.99]"
                       >
-                        <Printer className="w-4 h-4" aria-hidden="true" />
+                        <Printer className="w-3.5 h-3.5" />
                         <span>Print</span>
                       </button>
 
-                      {/* Save Quote Button */}
                       <button
                         type="button"
                         onClick={handleSaveQuote}
                         aria-label="Save quote to profile"
-                        className={`px-3 sm:px-4 py-3 rounded-xl border-2 transition-all flex items-center justify-center gap-1.5 text-xs font-bold shadow-xs cursor-pointer active:scale-[0.99] ${
+                        className={`py-2.5 px-3 rounded-xl border transition-colors flex items-center justify-center gap-1.5 text-xs font-bold shadow-xs cursor-pointer active:scale-[0.99] ${
                           isQuoteSaved 
-                            ? 'bg-amber-50 border-amber-400 text-amber-900 font-extrabold' 
-                            : 'border-slate-300 bg-white hover:bg-slate-100 text-slate-900 hover:text-black'
+                            ? 'bg-amber-50 border-amber-300 text-amber-900 font-extrabold' 
+                            : 'border-slate-300 bg-white hover:bg-slate-50 text-slate-700'
                         }`}
                       >
-                        <Bookmark className={`w-4 h-4 ${isQuoteSaved ? 'text-amber-600 fill-amber-500' : 'text-slate-600'}`} />
-                        <span className="truncate">{isQuoteSaved ? 'Saved' : 'Save'}</span>
+                        <Bookmark className={`w-3.5 h-3.5 ${isQuoteSaved ? 'text-amber-600 fill-amber-500' : 'text-slate-500'}`} />
+                        <span className="truncate">{isQuoteSaved ? 'Saved (7d Lock)' : 'Save (7d Lock)'}</span>
                       </button>
                     </div>
-
-                    {isPriceLocked ? (
-                      <button
-                        type="button"
-                        onClick={() => setLockModalOpen(true)}
-                        className="flex-1 w-full bg-cobalt hover:bg-cobalt-hover text-white py-3.5 sm:py-3 px-4 rounded-xl font-bold text-xs sm:text-sm text-center transition-all flex items-center justify-center gap-2 group hover:scale-[1.01] active:scale-[0.99] shadow-md cursor-pointer"
-                      >
-                        <Lock className="w-4 h-4 text-sky-300" />
-                        Unlock Price &amp; Book
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => onComplete(valuation.finalPrice, selectedDefects)}
-                        className="flex-1 w-full bg-cobalt hover:bg-cobalt-hover text-white py-3.5 sm:py-3 px-4 rounded-xl font-bold text-xs sm:text-sm text-center transition-all flex items-center justify-center gap-2 group hover:scale-[1.01] active:scale-[0.99] shadow-md cursor-pointer"
-                      >
-                        Book Instant Doorstep Payout
-                        <ChevronRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
-                      </button>
-                    )}
                   </div>
                 </div>
               </motion.div>
