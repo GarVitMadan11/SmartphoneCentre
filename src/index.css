@@ -124,8 +124,8 @@ html {
   .glow-cobalt:active {
     border-color: rgba(0, 32, 69, 0.35);
   }
-  button:active, a:active, [role="button"]:active {
-    transform: scale(0.97);
+  button:active, [role="button"]:active {
+    transform: scale(0.98);
     transition: transform 0.08s ease-out;
   }
 }

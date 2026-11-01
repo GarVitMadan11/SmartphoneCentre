@@ -56,16 +56,25 @@ export const AnimatedPrice: React.FC<AnimatedPriceProps> = ({
   }, [value, isMasked, isCritical]);
 
   if (isMasked) {
-    return <span className={className}>₹ XX,XXX</span>;
+    return (
+      <span className={`tabular-nums ${className}`}>
+        <span className="text-[0.85em] font-medium mr-0.5">₹</span>XX,XXX
+      </span>
+    );
   }
 
   if (isCritical) {
-    return <span className={className}>₹ 0 (Locked)</span>;
+    return (
+      <span className={`tabular-nums ${className}`}>
+        <span className="text-[0.85em] font-medium mr-0.5">₹</span>0 (Locked)
+      </span>
+    );
   }
 
   return (
-    <span className={className}>
-      ₹{displayValue.toLocaleString('en-IN')}
+    <span className={`tabular-nums ${className}`}>
+      <span className="text-[0.85em] font-medium mr-0.5">₹</span>
+      {displayValue.toLocaleString('en-IN')}
     </span>
   );
 };

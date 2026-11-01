@@ -7,7 +7,7 @@ import {
   Smartphone, Box, ShieldCheck, Printer, Receipt,
   X, Lock, Eye, EyeOff, AlertCircle, Mail, User,
   Phone, MessageSquare, ExternalLink, Headphones, Send, Bookmark,
-  AlertTriangle, BatteryCharging, Radio, FileX, FileCheck
+  AlertTriangle, BatteryCharging, Radio, FileX, FileCheck, Zap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getIllustration } from './Illustrations';
@@ -1143,9 +1143,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                     <h3 className="text-sm font-semibold text-slate-900">
                       1. Does the phone switch on?
                     </h3>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      The device must power on and reach the home screen or setup screen.
-                    </p>
+                    
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1156,13 +1154,13 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                       aria-checked={powerChecked === 'working'}
                       onClick={handleSelectPowerOn}
                       onKeyDown={e => handleKeyDown(e, handleSelectPowerOn)}
-                      className={`p-4 rounded-xl border transition-all cursor-pointer text-left flex items-start gap-3.5 ${
+                      className={`p-4 rounded-xl border transition-all cursor-pointer text-left flex items-center gap-3.5 ${
                         powerChecked === 'working'
                           ? 'border-emerald-600 bg-emerald-50/50 shadow-xs ring-1 ring-emerald-600/20'
                           : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
                       }`}
                     >
-                      <div className={`w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors ${
+                      <div className={`w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 transition-colors ${
                         powerChecked === 'working'
                           ? 'border-emerald-600 bg-emerald-600 text-white'
                           : 'border-slate-300 bg-white'
@@ -1173,9 +1171,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         <span className="font-semibold text-sm text-slate-900 block">
                           Yes, powers on normally
                         </span>
-                        <p className="text-xs text-slate-500 mt-1 leading-normal">
-                          Device powers on and functions without unexpected shutdowns.
-                        </p>
+                        
                       </div>
                     </div>
 
@@ -1186,13 +1182,13 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                       aria-checked={powerChecked === 'dead'}
                       onClick={() => showCriticalModal('power')}
                       onKeyDown={e => handleKeyDown(e, () => showCriticalModal('power'))}
-                      className={`p-4 rounded-xl border transition-all cursor-pointer text-left flex items-start gap-3.5 ${
+                      className={`p-4 rounded-xl border transition-all cursor-pointer text-left flex items-center gap-3.5 ${
                         powerChecked === 'dead'
                           ? 'border-red-600 bg-red-50/50 shadow-xs ring-1 ring-red-600/20'
                           : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
                       }`}
                     >
-                      <div className={`w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors ${
+                      <div className={`w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 transition-colors ${
                         powerChecked === 'dead'
                           ? 'border-red-600 bg-red-600 text-white'
                           : 'border-slate-300 bg-white'
@@ -1203,9 +1199,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         <span className="font-semibold text-sm text-slate-900 block">
                           No, device does not turn on
                         </span>
-                        <p className="text-xs text-slate-500 mt-1 leading-normal">
-                          Does not power on, screen stays black, water damaged, or stuck on boot loop.
-                        </p>
+                        
                       </div>
                     </div>
                   </div>
@@ -1217,9 +1211,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                     <h3 className="text-sm font-semibold text-slate-900">
                       2. Are you able to make and receive calls?
                     </h3>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      Check if your SIM card is detected, cellular signal connects, and call audio (microphone and speaker) works.
-                    </p>
+                    
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1230,13 +1222,13 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                       aria-checked={callingChecked === 'working'}
                       onClick={() => handleSelectCalling('working')}
                       onKeyDown={e => handleKeyDown(e, () => handleSelectCalling('working'))}
-                      className={`p-4 rounded-xl border transition-all cursor-pointer text-left flex items-start gap-3.5 ${
+                      className={`p-4 rounded-xl border transition-all cursor-pointer text-left flex items-center gap-3.5 ${
                         callingChecked === 'working'
                           ? 'border-emerald-600 bg-emerald-50/50 shadow-xs ring-1 ring-emerald-600/20'
                           : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
                       }`}
                     >
-                      <div className={`w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors ${
+                      <div className={`w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 transition-colors ${
                         callingChecked === 'working'
                           ? 'border-emerald-600 bg-emerald-600 text-white'
                           : 'border-slate-300 bg-white'
@@ -1247,9 +1239,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         <span className="font-semibold text-sm text-slate-900 block">
                           Yes, calls work properly
                         </span>
-                        <p className="text-xs text-slate-500 mt-1 leading-normal">
-                          Able to make and receive phone calls with clear cellular signal, microphone, and speaker audio.
-                        </p>
+                        
                       </div>
                     </div>
 
@@ -1260,13 +1250,13 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                       aria-checked={callingChecked === 'faulty'}
                       onClick={() => handleSelectCalling('faulty')}
                       onKeyDown={e => handleKeyDown(e, () => handleSelectCalling('faulty'))}
-                      className={`p-4 rounded-xl border transition-all cursor-pointer text-left flex items-start gap-3.5 ${
+                      className={`p-4 rounded-xl border transition-all cursor-pointer text-left flex items-center gap-3.5 ${
                         callingChecked === 'faulty'
                           ? 'border-amber-500 bg-amber-50/50 shadow-xs ring-1 ring-amber-500/20'
                           : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
                       }`}
                     >
-                      <div className={`w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors ${
+                      <div className={`w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 transition-colors ${
                         callingChecked === 'faulty'
                           ? 'border-amber-500 bg-amber-500 text-white'
                           : 'border-slate-300 bg-white'
@@ -1277,9 +1267,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         <span className="font-semibold text-sm text-slate-900 block">
                           No, calling or network issues
                         </span>
-                        <p className="text-xs text-slate-500 mt-1 leading-normal">
-                          Calls drop, SIM not detected, no cellular signal, or call audio/microphone has problems.
-                        </p>
+                        
                       </div>
                     </div>
                   </div>
@@ -2002,20 +1990,20 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   )}
                 </div>
 
-                <div className="pt-4 border-t border-ice-border flex justify-between items-center">
+                <div className="pt-5 sm:pt-6 border-t border-ice-border flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
                   <button
                     type="button"
-                    onClick={() => setStep(5)}
-                    className="px-4 py-2.5 rounded-lg border-2 border-slate-300 bg-white hover:bg-slate-100 text-slate-900 hover:text-black font-bold text-xs transition-all flex items-center gap-1.5 shadow-xs"
+                    onClick={() => setStep(reviewStepIndex - 1)}
+                    className="w-full sm:w-auto px-4 py-3 sm:py-2.5 rounded-xl border-2 border-slate-300 bg-white hover:bg-slate-100 text-slate-800 hover:text-slate-950 font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer active:scale-[0.99]"
                   >
-                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <ArrowLeft className="w-4 h-4 shrink-0" />
                     <span>Edit Diagnostics</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => {
-                      setStep(7);
+                      setStep(finalReceiptIndex);
                       if (currentUser) {
                         sendQuoteAlertApi({
                           customerName: currentUser.name || 'Registered Customer',
@@ -2030,10 +2018,10 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         }).catch(err => console.warn('[Diagnostic Wizard] Failed to dispatch quote email alert:', err));
                       }
                     }}
-                    className="px-6 py-3 bg-gradient-to-r from-cobalt to-indigo-600 hover:from-cobalt-hover hover:to-indigo-700 text-white font-bold rounded-lg text-sm transition-all shadow-md hover:scale-[1.02] flex items-center gap-2"
+                    className="w-full sm:w-auto px-5 sm:px-6 py-3.5 sm:py-3 bg-gradient-to-r from-cobalt to-indigo-600 hover:from-cobalt-hover hover:to-indigo-700 text-white font-bold rounded-xl text-xs sm:text-sm transition-all shadow-md hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2 text-center cursor-pointer"
                   >
                     <span>Confirm Diagnostics &amp; Generate Quote</span>
-                    <ChevronRight className="w-4 h-4" />
+                    <ChevronRight className="w-4 h-4 shrink-0" />
                   </button>
                 </div>
               </motion.div>
@@ -2182,6 +2170,39 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                       />
                     </div>
 
+                    {/* Digital Trust & Transparency Badges */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mt-4 print:hidden">
+                      <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200/80 rounded-xl p-3">
+                        <div className="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0 text-emerald-700">
+                          <ShieldCheck className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="text-xs font-semibold text-slate-900 block leading-tight">7-Day Price Lock</span>
+                          <span className="text-[11px] text-slate-500 leading-tight">Rate guaranteed</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200/80 rounded-xl p-3">
+                        <div className="w-7 h-7 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0 text-blue-700">
+                          <Lock className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="text-xs font-semibold text-slate-900 block leading-tight">DoD Data Wipe</span>
+                          <span className="text-[11px] text-slate-500 leading-tight">Certified zero residual</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200/80 rounded-xl p-3">
+                        <div className="w-7 h-7 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0 text-amber-700">
+                          <Zap className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="text-xs font-semibold text-slate-900 block leading-tight">Instant Payout</span>
+                          <span className="text-[11px] text-slate-500 leading-tight">Direct UPI / IMPS</span>
+                        </div>
+                      </div>
+                    </div>
+
                     {/* Print-Only Official Terms & Handover Sign-off Block */}
                     <div className="hidden print:block mt-6 pt-5 border-t border-slate-300 print-border font-sans">
                       <div className="grid grid-cols-2 gap-6 text-[10px] text-slate-600 mb-6">
@@ -2263,46 +2284,48 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                     </motion.div>
                   )}
 
-                  <div className="flex flex-wrap sm:flex-nowrap gap-2.5 sm:gap-3 mt-4">
-                    <button
-                      type="button"
-                      onClick={() => setStep(reviewStepIndex)}
-                      className="px-3.5 sm:px-4 py-3 rounded-lg border-2 border-slate-300 bg-white hover:bg-slate-100 text-slate-900 hover:text-black font-bold text-xs transition-all flex items-center gap-1.5 shadow-xs"
-                    >
-                      <ArrowLeft className="w-3.5 h-3.5" />
-                      <span>Review</span>
-                    </button>
+                  <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3 mt-4">
+                    <div className="grid grid-cols-3 sm:flex gap-2 sm:gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setStep(reviewStepIndex)}
+                        className="px-3 sm:px-4 py-3 rounded-xl border-2 border-slate-300 bg-white hover:bg-slate-100 text-slate-900 hover:text-black font-bold text-xs transition-all flex items-center justify-center gap-1.5 shadow-xs cursor-pointer active:scale-[0.99]"
+                      >
+                        <ArrowLeft className="w-3.5 h-3.5" />
+                        <span>Review</span>
+                      </button>
 
-                    <button
-                      type="button"
-                      onClick={() => window.print()}
-                      aria-label="Print diagnostic report and quote"
-                      className="flex-shrink-0 px-3.5 sm:px-4 py-3 rounded-lg border-2 border-slate-300 bg-white hover:bg-slate-100 text-slate-900 hover:text-black transition-all flex items-center gap-1.5 sm:gap-2 text-xs font-bold shadow-xs"
-                    >
-                      <Printer className="w-4 h-4" aria-hidden="true" />
-                      <span>Print</span>
-                    </button>
+                      <button
+                        type="button"
+                        onClick={() => window.print()}
+                        aria-label="Print diagnostic report and quote"
+                        className="px-3 sm:px-4 py-3 rounded-xl border-2 border-slate-300 bg-white hover:bg-slate-100 text-slate-900 hover:text-black transition-all flex items-center justify-center gap-1.5 text-xs font-bold shadow-xs cursor-pointer active:scale-[0.99]"
+                      >
+                        <Printer className="w-4 h-4" aria-hidden="true" />
+                        <span>Print</span>
+                      </button>
 
-                    {/* Save Quote Button */}
-                    <button
-                      type="button"
-                      onClick={handleSaveQuote}
-                      aria-label="Save quote to profile"
-                      className={`flex-shrink-0 px-3.5 sm:px-4 py-3 rounded-lg border-2 transition-all flex items-center gap-1.5 sm:gap-2 text-xs font-bold shadow-xs cursor-pointer ${
-                        isQuoteSaved 
-                          ? 'bg-amber-50 border-amber-400 text-amber-900 font-extrabold' 
-                          : 'border-slate-300 bg-white hover:bg-slate-100 text-slate-900 hover:text-black'
-                      }`}
-                    >
-                      <Bookmark className={`w-4 h-4 ${isQuoteSaved ? 'text-amber-600 fill-amber-500' : 'text-slate-600'}`} />
-                      <span>{isQuoteSaved ? 'Quote Saved' : 'Save Quote'}</span>
-                    </button>
+                      {/* Save Quote Button */}
+                      <button
+                        type="button"
+                        onClick={handleSaveQuote}
+                        aria-label="Save quote to profile"
+                        className={`px-3 sm:px-4 py-3 rounded-xl border-2 transition-all flex items-center justify-center gap-1.5 text-xs font-bold shadow-xs cursor-pointer active:scale-[0.99] ${
+                          isQuoteSaved 
+                            ? 'bg-amber-50 border-amber-400 text-amber-900 font-extrabold' 
+                            : 'border-slate-300 bg-white hover:bg-slate-100 text-slate-900 hover:text-black'
+                        }`}
+                      >
+                        <Bookmark className={`w-4 h-4 ${isQuoteSaved ? 'text-amber-600 fill-amber-500' : 'text-slate-600'}`} />
+                        <span className="truncate">{isQuoteSaved ? 'Saved' : 'Save'}</span>
+                      </button>
+                    </div>
 
                     {isPriceLocked ? (
                       <button
                         type="button"
                         onClick={() => setLockModalOpen(true)}
-                        className="flex-1 bg-cobalt hover:bg-cobalt-hover text-white py-3 rounded-lg font-bold text-xs sm:text-sm text-center transition-all flex items-center justify-center gap-2 group hover:scale-[1.01]"
+                        className="flex-1 w-full bg-cobalt hover:bg-cobalt-hover text-white py-3.5 sm:py-3 px-4 rounded-xl font-bold text-xs sm:text-sm text-center transition-all flex items-center justify-center gap-2 group hover:scale-[1.01] active:scale-[0.99] shadow-md cursor-pointer"
                       >
                         <Lock className="w-4 h-4 text-sky-300" />
                         Unlock Price &amp; Book
@@ -2310,7 +2333,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                     ) : (
                       <button
                         onClick={() => onComplete(valuation.finalPrice, selectedDefects)}
-                        className="flex-1 bg-cobalt hover:bg-cobalt-hover text-white py-3 rounded-lg font-bold text-xs sm:text-sm text-center transition-all flex items-center justify-center gap-2 group hover:scale-[1.01]"
+                        className="flex-1 w-full bg-cobalt hover:bg-cobalt-hover text-white py-3.5 sm:py-3 px-4 rounded-xl font-bold text-xs sm:text-sm text-center transition-all flex items-center justify-center gap-2 group hover:scale-[1.01] active:scale-[0.99] shadow-md cursor-pointer"
                       >
                         Book Instant Doorstep Payout
                         <ChevronRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
