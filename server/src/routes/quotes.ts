@@ -16,6 +16,7 @@ import {
 } from '../services/bookingMailer.js';
 import { ALLOWED_STORAGE_GB } from '../validation/booking.js';
 import { authLimiter, leadLimiter, quoteLimiter } from '../middleware/rateLimits.js';
+import { validateCoupon } from '../services/couponService.js';
 
 const router = Router();
 
@@ -217,6 +218,22 @@ router.post('/step-lead', leadLimiter, async (req, res) => {
   } catch (err) {
     console.error('POST /api/quotes/step-lead error:', err);
     res.status(500).json({ error: 'ServerError', message: 'Failed to process step lead.' });
+  }
+});
+
+// POST /api/quotes/validate-coupon
+router.post('/validate-coupon', quoteLimiter, async (req, res) => {
+  try {
+    const { code, basePrice, customerPhone, customerEmail } = req.body || {};
+    if (!code || typeof code !== 'string') {
+      res.status(400).json({ valid: false, message: 'Please enter a referral code.' });
+      return;
+    }
+    const result = await validateCoupon(code, Number(basePrice) || 0, customerPhone, customerEmail);
+    res.json(result);
+  } catch (err) {
+    console.error('POST /api/quotes/validate-coupon error:', err);
+    res.status(500).json({ valid: false, message: 'Failed to validate referral code.' });
   }
 });
 

@@ -2249,6 +2249,7 @@ export interface Booking {
   payoutMethodName: string;
   bonusPercentage: number;
   bonusAmount: number;
+  appliedCoupon?: string;
   finalPayoutAmount: number;
   payoutDetails?: {
     upiId?: string;

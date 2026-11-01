@@ -20,6 +20,7 @@ import {
 } from '../services/valuation.js';
 import { generateBookingQuotationPDF } from '../services/pdfGenerator.js';
 import { sendBookingUnderReviewEmail, sendBookingApprovalEmail } from '../services/bookingMailer.js';
+import { validateCoupon, recordCouponUsage } from '../services/couponService.js';
 
 const router = Router();
 
@@ -84,6 +85,7 @@ export function mapBooking(b: any, includeUnmaskedPayout = false) {
     payoutMethodName: b.payoutMethodName,
     bonusPercentage: b.bonusPercentage,
     bonusAmount: b.bonusAmount,
+    appliedCoupon: (b as any).appliedCoupon || '',
     finalPayoutAmount: b.finalPayoutAmount,
     payoutDetails: safeDetails,
     inspectionStatus: b.inspectionStatus,
@@ -271,6 +273,26 @@ router.post('/', bookingLimiter, optionalCustomerAuth, async (req: Authenticated
     const estimatedPrice = calculatedPrice;
 
     const payout = payoutBonusFor(String(b.payoutMethod), estimatedPrice);
+
+    // Referral Coupon Validation & Incentive Bonus
+    let referralBonus = 0;
+    let appliedCouponCode = '';
+    const rawCoupon = String(b.appliedCoupon || b.referralCode || '').trim();
+    if (rawCoupon) {
+      const couponCheck = await validateCoupon(
+        rawCoupon,
+        estimatedPrice,
+        (req.customer?.phone || String(b.customerPhone ?? '')).trim(),
+        (req.customer?.email || String(b.customerEmail ?? '')).trim()
+      );
+      if (couponCheck.valid && couponCheck.bonusAmount && couponCheck.bonusAmount > 0) {
+        referralBonus = couponCheck.bonusAmount;
+        appliedCouponCode = couponCheck.code || rawCoupon.toUpperCase();
+      }
+    }
+
+    const totalBonusAmount = payout.amount + referralBonus;
+    const finalDoorstepPayout = estimatedPrice + totalBonusAmount;
     const d = new Date();
     const dd = String(d.getDate()).padStart(2, '0');
     const mm = String(d.getMonth() + 1).padStart(2, '0');
@@ -322,8 +344,9 @@ router.post('/', bookingLimiter, optionalCustomerAuth, async (req: Authenticated
         payoutMethod: String(b.payoutMethod),
         payoutMethodName: String(b.payoutMethodName ?? ''),
         bonusPercentage: payout.percentage,
-        bonusAmount: payout.amount,
-        finalPayoutAmount: estimatedPrice + payout.amount,
+        bonusAmount: totalBonusAmount,
+        appliedCoupon: appliedCouponCode,
+        finalPayoutAmount: finalDoorstepPayout,
         inspectionStatus: 'pending',
         payoutStatus: 'pending',
         dateCreated: new Date().toISOString(),
@@ -331,6 +354,19 @@ router.post('/', bookingLimiter, optionalCustomerAuth, async (req: Authenticated
         defectIdsJson: JSON.stringify(defectIds),
       } as any,
     });
+
+    if (appliedCouponCode && referralBonus > 0) {
+      recordCouponUsage({
+        couponCode: appliedCouponCode,
+        basePrice: estimatedPrice,
+        bonusCredited: referralBonus,
+        finalPrice: finalDoorstepPayout,
+        bookingId: booking.id,
+        customerPhone: booking.customerPhone,
+        customerEmail: booking.customerEmail,
+        customerName: booking.customerName,
+      }).catch(err => console.error('[CouponUsage] Error recording usage:', err));
+    }
 
     await prisma.bookingEvent.create({
       data: {
@@ -358,7 +394,10 @@ router.post('/', bookingLimiter, optionalCustomerAuth, async (req: Authenticated
           address: booking.address,
           pickupDate: booking.pickupDate,
           pickupTimeSlot: booking.pickupTimeSlot,
-          finalPrice: booking.finalPrice,
+          finalPrice: booking.finalPayoutAmount || booking.finalPrice,
+          basePrice: booking.finalPrice,
+          appliedCoupon: (booking as any).appliedCoupon || undefined,
+          bonusAmount: booking.bonusAmount || undefined,
           defectDescriptions: defectIds,
           dateCreated: booking.dateCreated,
         }, baseUrl);
@@ -551,7 +590,10 @@ router.patch('/:id', adminAuth, requireRole(['SUPER_ADMIN', 'FINANCE_APPROVER', 
             address: booking.address,
             pickupDate: booking.pickupDate,
             pickupTimeSlot: booking.pickupTimeSlot,
-            finalPrice: booking.finalPrice,
+            finalPrice: booking.finalPayoutAmount || booking.finalPrice,
+          basePrice: booking.finalPrice,
+          appliedCoupon: (booking as any).appliedCoupon || undefined,
+          bonusAmount: booking.bonusAmount || undefined,
             defectDescriptions: defectIds,
             dateCreated: booking.dateCreated,
           }, baseUrl);

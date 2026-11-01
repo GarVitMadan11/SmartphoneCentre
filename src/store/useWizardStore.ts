@@ -69,6 +69,8 @@ interface WizardState {
   selectedVariant: Variant | null;
   selectedDefects: DefectRule[];
   finalPrice: number;
+  appliedCoupon: string | null;
+  couponBonus: number;
 
   // Tablet brand filter
   selectedTabletBrand: 'all' | 'apple' | 'samsung';
@@ -83,11 +85,12 @@ interface WizardState {
   setSelectedVariant: (variant: Variant | null) => void;
   setSelectedDefects: (defects: DefectRule[] | ((prev: DefectRule[]) => DefectRule[])) => void;
   setFinalPrice: (price: number) => void;
+  setAppliedCoupon: (code: string | null, bonus: number) => void;
   setSelectedTabletBrand: (brand: 'all' | 'apple' | 'samsung') => void;
 
   // Actions
   handleVariantSelected: (model: Model, variant: Variant) => void;
-  handleDiagnosticsComplete: (price: number, defects: DefectRule[]) => void;
+  handleDiagnosticsComplete: (price: number, defects: DefectRule[], couponData?: { appliedCoupon?: string; bonusAmount?: number }) => void;
   reset: () => void;
   persistNavState: () => void;
 }
@@ -101,6 +104,8 @@ export const useWizardStore = create<WizardState>((set, get) => ({
   selectedVariant: saved?.selectedVariant ?? null,
   selectedDefects: [],
   finalPrice: typeof saved?.finalPrice === 'number' && saved.finalPrice > 0 ? saved.finalPrice : 0,
+  appliedCoupon: null,
+  couponBonus: 0,
   selectedTabletBrand: 'all',
 
   get isWorkflow() {
@@ -134,6 +139,7 @@ export const useWizardStore = create<WizardState>((set, get) => ({
     get().persistNavState();
   },
   setFinalPrice: (price) => set({ finalPrice: price }),
+  setAppliedCoupon: (code, bonus) => set({ appliedCoupon: code, couponBonus: bonus }),
   setSelectedTabletBrand: (brand) => set({ selectedTabletBrand: brand }),
 
   handleVariantSelected: (model, variant) => {
@@ -141,6 +147,8 @@ export const useWizardStore = create<WizardState>((set, get) => ({
       selectedModel: model,
       selectedVariant: variant,
       selectedDefects: [],
+      appliedCoupon: null,
+      couponBonus: 0,
       wizardStep: 0,
       finalPrice: variant.basePrice,
       activeStage: 'diagnose',
@@ -151,8 +159,14 @@ export const useWizardStore = create<WizardState>((set, get) => ({
     }
   },
 
-  handleDiagnosticsComplete: (price, defects) => {
-    set({ finalPrice: price, selectedDefects: defects, activeStage: 'schedule' });
+  handleDiagnosticsComplete: (price, defects, couponData) => {
+    set({
+      finalPrice: price,
+      selectedDefects: defects,
+      appliedCoupon: couponData?.appliedCoupon || null,
+      couponBonus: couponData?.bonusAmount || 0,
+      activeStage: 'schedule',
+    });
     get().persistNavState();
     if (typeof window !== 'undefined') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -164,6 +178,8 @@ export const useWizardStore = create<WizardState>((set, get) => ({
       selectedModel: null,
       selectedVariant: null,
       selectedDefects: [],
+      appliedCoupon: null,
+      couponBonus: 0,
       finalPrice: 0,
       wizardStep: 0,
       activeStage: 'select',

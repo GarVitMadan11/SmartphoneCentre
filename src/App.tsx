@@ -73,6 +73,7 @@ export default function App() {
     selectedDefects, finalPrice, selectedTabletBrand,
     setActiveStage, setWizardStep, setSelectedModel, setSelectedVariant,
     setSelectedDefects, setFinalPrice, setSelectedTabletBrand,
+    appliedCoupon, couponBonus, setAppliedCoupon,
     handleVariantSelected, handleDiagnosticsComplete, reset: handleReset,
   } = useWizardStore();
 
@@ -461,6 +462,7 @@ export default function App() {
       setSelectedDefects(matchedDefects);
       setFinalPrice(effectivePrice);
       setWizardStep(7);
+      setAppliedCoupon(quote.appliedCoupon || null, quote.couponBonus || 0);
       setActiveStage('diagnose');
       setIsTrackOpen(false);
       navigate(targetPath);
@@ -865,6 +867,8 @@ export default function App() {
             <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]" role="status"><div className="w-8 h-8 border-2 border-cobalt border-t-transparent rounded-full animate-spin" /></div>}>
               <PickupScheduler
                 finalPrice={finalPrice}
+                appliedCoupon={appliedCoupon}
+                couponBonus={couponBonus}
                 onBack={() => setActiveStage('diagnose')}
                 onSuccess={() => { handleReset(); navigate('/'); }}
                 selectedDefects={selectedDefects}

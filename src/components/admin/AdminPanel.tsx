@@ -3,7 +3,7 @@ import { Booking, Brand, Model } from '../../data/mockDatabase';
 import { 
   ArrowLeft, RefreshCw, ShieldAlert, Cpu, Smartphone, Tablet, Watch, 
   Zap, Truck, MessageSquare, CreditCard, ChevronLeft, ChevronRight, 
-  Menu, X, ShieldCheck, Eye, Layers, Users
+  Menu, X, ShieldCheck, Eye, Layers, Users, Tag
 } from 'lucide-react';
 import { fetchBookings, triggerAdminLockdown, fetchCurrentUser, getCurrentAdminUser, AdminUserSession, ApiUser } from '../../utils/api';
 import { AdminContextProvider } from '../../context/AdminContext';
@@ -13,6 +13,7 @@ import LedgerTab from './tabs/LedgerTab';
 import SupportTab from './tabs/SupportTab';
 import AuditLogTab from './tabs/AuditLogTab';
 import StaffTab from './tabs/StaffTab';
+import { CouponsTab } from './tabs/CouponsTab';
 
 export type AdminNavKey = 
   | 'smartphones' 
@@ -23,6 +24,7 @@ export type AdminNavKey =
   | 'support' 
   | 'finance' 
   | 'audit'
+  | 'coupons'
   | 'staff';
 
 interface AdminPanelProps {
@@ -104,7 +106,7 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
       return ['inspections', 'support'].includes(serviceKey);
     }
     if (effectiveRole === 'FINANCE_APPROVER') {
-      return ['finance'].includes(serviceKey);
+      return ['finance', 'coupons'].includes(serviceKey);
     }
     const perms = adminUser?.permissions || [];
     return perms.includes(serviceKey);
@@ -199,6 +201,8 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
         return { section: 'Operations & Logistics', title: 'Customer Support Desk', icon: MessageSquare };
       case 'finance':
         return { section: 'Finance & Ledger', title: 'Payouts & Ledger', icon: CreditCard };
+      case 'coupons':
+        return { section: 'Growth & Incentives', title: 'Referral & Promo Codes', icon: Tag };
       case 'audit':
         return { section: 'Security & Governance', title: 'System Audit Logs', icon: ShieldCheck };
       case 'staff':
@@ -400,24 +404,33 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
               </div>
             )}
 
-            {/* Group C: Finance & Ledger */}
-            {hasAccessTo('finance') && (
+            {/* Group C: Finance & Incentives */}
+            {(hasAccessTo('finance') || hasAccessTo('coupons')) && (
               <div>
                 <div
                   className={`px-3 pb-1.5 text-[10px] font-mono font-bold tracking-wider uppercase text-slate-400 transition-all duration-200 overflow-hidden whitespace-nowrap ${
                     isSidebarExpanded ? 'opacity-100 max-h-6' : 'opacity-0 max-h-0 pointer-events-none'
                   }`}
                 >
-                  Financial Ledger
+                  Finance & Growth
                 </div>
                 <div className="space-y-1">
-                  <NavItem 
-                    navKey="finance" 
-                    label="Payouts & Ledger" 
-                    icon={CreditCard} 
-                    badge={pendingPayouts > 0 ? pendingPayouts : undefined}
-                    badgeColor="bg-emerald-500/20 text-emerald-300"
-                  />
+                  {hasAccessTo('finance') && (
+                    <NavItem 
+                      navKey="finance" 
+                      label="Payouts & Ledger" 
+                      icon={CreditCard} 
+                      badge={pendingPayouts > 0 ? pendingPayouts : undefined}
+                      badgeColor="bg-emerald-500/20 text-emerald-300"
+                    />
+                  )}
+                  {hasAccessTo('coupons') && (
+                    <NavItem 
+                      navKey="coupons" 
+                      label="Referral & Coupons" 
+                      icon={Tag} 
+                    />
+                  )}
                 </div>
               </div>
             )}
@@ -666,6 +679,11 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
               onRefresh={loadBookings}
               currentUser={currentUser}
             />
+          )}
+
+          {/* Growth & Incentives: Referral & Promo Codes */}
+          {activeNav === 'coupons' && (
+            <CouponsTab />
           )}
 
           {/* Governance: Audit Trail */}

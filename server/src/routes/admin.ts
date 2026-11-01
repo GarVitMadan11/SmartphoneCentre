@@ -8,6 +8,13 @@ import { authLimiter } from '../middleware/rateLimits.js';
 import { getLockdownState, triggerEmergencyLockdown, unlockEmergencyLockdown } from '../services/lockdownService.js';
 import { sendAdminSecurityAlertEmail } from '../services/securityMailer.js';
 import { pruneExpiredQuotes, getMaintenanceStats } from '../services/maintenance.js';
+import {
+  listAllCoupons,
+  createReferralCoupon,
+  toggleCouponStatus,
+  deleteReferralCoupon,
+  listCouponUsages,
+} from '../services/couponService.js';
 
 const router = Router();
 
@@ -1631,6 +1638,111 @@ router.post('/maintenance/prune-quotes', adminAuth, requireRole(['SUPER_ADMIN', 
   } catch (err: any) {
     console.error('POST /api/admin/maintenance/prune-quotes error:', err);
     res.status(500).json({ error: 'ServerError', message: err.message || 'Failed to prune quotes.' });
+  }
+});
+
+/**
+ * ═══════════════════════════════════════════════════════════════════════════
+ * REFERRAL & PROMO COUPONS MANAGEMENT
+ * ═══════════════════════════════════════════════════════════════════════════
+ */
+
+/**
+ * GET /api/admin/coupons
+ * Returns all referral and promotional coupon configurations.
+ */
+router.get('/coupons', adminAuth, async (_req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const coupons = await listAllCoupons();
+    res.json({ success: true, coupons });
+  } catch (err: any) {
+    console.error('GET /api/admin/coupons error:', err);
+    res.status(500).json({ error: 'ServerError', message: err.message || 'Failed to list coupons.' });
+  }
+});
+
+/**
+ * POST /api/admin/coupons
+ * Creates a new referral / promo coupon code.
+ */
+router.post('/coupons', adminAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const { code, type, value, minDeviceValue, maxBonusCap, maxTotalUses, maxUsesPerUser, expiresAt } = req.body;
+    if (!code || typeof code !== 'string' || !code.trim()) {
+      res.status(400).json({ error: 'BadRequest', message: 'Coupon code is required.' });
+      return;
+    }
+    if (typeof value !== 'number' || value <= 0) {
+      res.status(400).json({ error: 'BadRequest', message: 'Coupon bonus value must be greater than zero.' });
+      return;
+    }
+
+    const created = await createReferralCoupon({
+      code,
+      type: type === 'PERCENT' ? 'PERCENT' : 'FLAT',
+      value,
+      minDeviceValue: typeof minDeviceValue === 'number' ? minDeviceValue : 0,
+      maxBonusCap: typeof maxBonusCap === 'number' ? maxBonusCap : undefined,
+      maxTotalUses: typeof maxTotalUses === 'number' ? maxTotalUses : 100,
+      maxUsesPerUser: typeof maxUsesPerUser === 'number' ? maxUsesPerUser : 1,
+      expiresAt: expiresAt || null,
+      createdBy: req.user?.username || 'ADMIN',
+    });
+
+    res.status(201).json({ success: true, coupon: created });
+  } catch (err: any) {
+    if (err.code === 'P2002') {
+      res.status(409).json({ error: 'Conflict', message: 'A referral code with this exact name already exists.' });
+      return;
+    }
+    console.error('POST /api/admin/coupons error:', err);
+    res.status(500).json({ error: 'ServerError', message: err.message || 'Failed to create coupon.' });
+  }
+});
+
+/**
+ * PATCH /api/admin/coupons/:id/toggle
+ * Toggles or updates coupon active status.
+ */
+router.patch('/coupons/:id/toggle', adminAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const id = String(req.params.id);
+    const { active } = req.body;
+    const updated = await toggleCouponStatus(id, active);
+    res.json({ success: true, coupon: updated });
+  } catch (err: any) {
+    console.error('PATCH /api/admin/coupons/:id/toggle error:', err);
+    res.status(500).json({ error: 'ServerError', message: err.message || 'Failed to toggle coupon status.' });
+  }
+});
+
+/**
+ * DELETE /api/admin/coupons/:id
+ * Deletes a referral coupon and associated logs.
+ */
+router.delete('/coupons/:id', adminAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const id = String(req.params.id);
+    await deleteReferralCoupon(id);
+    res.json({ success: true, message: 'Coupon deleted successfully.' });
+  } catch (err: any) {
+    console.error('DELETE /api/admin/coupons/:id error:', err);
+    res.status(500).json({ error: 'ServerError', message: err.message || 'Failed to delete coupon.' });
+  }
+});
+
+/**
+ * GET /api/admin/coupons/usages
+ * Returns comprehensive usage audit trail (who used what code, device, and bonus payout).
+ */
+router.get('/coupons/usages', adminAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const limit = Math.min(500, parseInt(String(req.query.limit || '100'), 10));
+    const usages = await listCouponUsages(limit);
+    res.json({ success: true, usages });
+  } catch (err: any) {
+    console.error('GET /api/admin/coupons/usages error:', err);
+    res.status(500).json({ error: 'ServerError', message: err.message || 'Failed to fetch coupon usages.' });
   }
 });
 

@@ -140,6 +140,7 @@ model Booking {
   verificationDate      String         @default("")
   payoutMethod          String
   payoutMethodName      String
+  appliedCoupon         String         @default("")
   bonusPercentage       Float          @default(0)
   bonusAmount           Int            @default(0)
   finalPayoutAmount     Int
@@ -249,4 +250,46 @@ model CashifyPriceAlert {
   @@index([modelId])
   @@index([status])
   @@index([alertDate])
+}
+
+
+model ReferralCoupon {
+  id             String        @id @default(uuid())
+  code           String        @unique
+  type           String        @default("FLAT") // "FLAT" (₹) or "PERCENT" (%)
+  value          Float         // e.g. 500 (₹500) or 5 (5%)
+  minDeviceValue Int           @default(0) // Minimum base price required to apply
+  maxBonusCap    Int?          // Optional cap on bonus amount for PERCENT coupons (e.g. max ₹1500)
+  maxTotalUses   Int           @default(100) // Total allowed redemptions (0 = unlimited)
+  currentUses    Int           @default(0) // Count of redemptions
+  maxUsesPerUser Int           @default(1) // Usually 1 use per customer/phone
+  expiresAt      DateTime?     // Optional expiry date
+  active         Boolean       @default(true)
+  createdBy      String        @default("ADMIN")
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  usages         CouponUsage[]
+
+  @@index([code])
+  @@index([active])
+}
+
+model CouponUsage {
+  id            String         @id @default(uuid())
+  couponId      String
+  couponCode    String
+  bookingId     String?        // Attached booking ID if completed
+  customerPhone String         @default("")
+  customerEmail String         @default("")
+  customerName  String         @default("")
+  basePrice     Int
+  bonusCredited Int            // Actual extra ₹ given to customer
+  finalPrice    Int            // basePrice + bonusCredited
+  usedAt        DateTime       @default(now())
+  coupon        ReferralCoupon @relation(fields: [couponId], references: [id], onDelete: Cascade)
+
+  @@index([couponCode])
+  @@index([customerPhone])
+  @@index([customerEmail])
+  @@index([usedAt])
 }

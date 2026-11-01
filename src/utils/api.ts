@@ -1063,3 +1063,94 @@ export function fetchCashifyScanStatus(): Promise<{ isRunning: boolean }> {
 
 
 
+
+export interface CouponValidationResponse {
+  valid: boolean;
+  message?: string;
+  code?: string;
+  type?: 'FLAT' | 'PERCENT';
+  value?: number;
+  bonusAmount?: number;
+  finalPrice?: number;
+}
+
+export function validateCouponApi(
+  code: string,
+  basePrice: number,
+  customerPhone?: string,
+  customerEmail?: string
+): Promise<CouponValidationResponse> {
+  return apiFetch<CouponValidationResponse>('/quotes/validate-coupon', {
+    method: 'POST',
+    body: JSON.stringify({ code, basePrice, customerPhone, customerEmail }),
+  });
+}
+
+export interface AdminReferralCoupon {
+  id: string;
+  code: string;
+  type: 'FLAT' | 'PERCENT';
+  value: number;
+  minDeviceValue: number;
+  maxBonusCap?: number | null;
+  maxTotalUses: number;
+  currentUses: number;
+  maxUsesPerUser: number;
+  expiresAt?: string | null;
+  active: boolean;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  _count?: { usages: number };
+}
+
+export interface AdminCouponUsage {
+  id: string;
+  couponId: string;
+  couponCode: string;
+  bookingId?: string | null;
+  customerPhone: string;
+  customerEmail: string;
+  customerName: string;
+  basePrice: number;
+  bonusCredited: number;
+  finalPrice: number;
+  usedAt: string;
+}
+
+export function fetchAdminCoupons(): Promise<{ success: boolean; coupons: AdminReferralCoupon[] }> {
+  return apiFetch<{ success: boolean; coupons: AdminReferralCoupon[] }>('/admin/coupons', {}, true);
+}
+
+export function createAdminCoupon(data: {
+  code: string;
+  type?: 'FLAT' | 'PERCENT';
+  value: number;
+  minDeviceValue?: number;
+  maxBonusCap?: number | null;
+  maxTotalUses?: number;
+  maxUsesPerUser?: number;
+  expiresAt?: string | null;
+}): Promise<{ success: boolean; coupon: AdminReferralCoupon }> {
+  return apiFetch<{ success: boolean; coupon: AdminReferralCoupon }>('/admin/coupons', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }, true);
+}
+
+export function toggleAdminCouponStatus(id: string, active?: boolean): Promise<{ success: boolean; coupon: AdminReferralCoupon }> {
+  return apiFetch<{ success: boolean; coupon: AdminReferralCoupon }>(`/admin/coupons/${id}/toggle`, {
+    method: 'PATCH',
+    body: JSON.stringify({ active }),
+  }, true);
+}
+
+export function deleteAdminCoupon(id: string): Promise<{ success: boolean; message: string }> {
+  return apiFetch<{ success: boolean; message: string }>(`/admin/coupons/${id}`, {
+    method: 'DELETE',
+  }, true);
+}
+
+export function fetchAdminCouponUsages(limit = 100): Promise<{ success: boolean; usages: AdminCouponUsage[] }> {
+  return apiFetch<{ success: boolean; usages: AdminCouponUsage[] }>(`/admin/coupons/usages?limit=${limit}`, {}, true);
+}

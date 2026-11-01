@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   User, Phone, Mail, Calendar, ArrowLeft, LogOut, ShieldCheck, AlertCircle,
   Package, FileText, Download, Copy, Check, CheckCircle2, MapPin, ArrowRight,
-  Bookmark, Trash2, Sparkles, TrendingUp
+  Bookmark, Trash2, Sparkles, TrendingUp, Tag
 } from 'lucide-react';
 import {
   updateCustomerProfile, sendEmailOtp, verifyEmailOtp,
@@ -976,6 +976,12 @@ export default function ProfilePage({
                             ) : (
                               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-slate-600 text-[10px] font-medium">
                                 Lock Expired • Live Rate
+                              </span>
+                            )}
+                            {q.appliedCoupon && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 border border-blue-200 text-blue-800 text-[10px] font-bold">
+                                <Tag className="w-3 h-3 text-blue-600 shrink-0" />
+                                Referral {q.appliedCoupon} {q.couponBonus ? `(+₹${q.couponBonus})` : ''}
                               </span>
                             )}
                           </div>

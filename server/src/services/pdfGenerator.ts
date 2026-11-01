@@ -47,6 +47,9 @@ export interface PDFBookingData {
   pickupDate: string;
   pickupTimeSlot: string;
   finalPrice: number;
+  basePrice?: number;
+  appliedCoupon?: string;
+  bonusAmount?: number;
   defectDescriptions?: string[];
   dateCreated: string;
 }
@@ -275,6 +278,24 @@ export function generateBookingQuotationPDF(booking: PDFBookingData): Promise<Bu
           .font('Helvetica')
           .fillColor('#64748B')
           .text('Included in Quote', 350, y + 6, { width: 195, align: 'right' });
+
+        y += 22;
+      }
+
+      // Referral / Promotional Bonus if applied
+      if (booking.appliedCoupon && booking.bonusAmount && booking.bonusAmount > 0) {
+        doc
+          .rect(40, y, 515, 22)
+          .fill('#F0FDF4');
+
+        doc
+          .fillColor('#166534')
+          .fontSize(9.5)
+          .font('Helvetica-Bold')
+          .text(`Referral Incentive Bonus (${booking.appliedCoupon})`, 50, y + 6, { width: 300 })
+          .font('Helvetica-Bold')
+          .fillColor('#15803D')
+          .text(`+${formatPdfPrice(booking.bonusAmount)}`, 350, y + 6, { width: 195, align: 'right' });
 
         y += 22;
       }

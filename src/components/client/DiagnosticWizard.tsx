@@ -7,12 +7,12 @@ import {
   Smartphone, Box, ShieldCheck, Printer, Receipt,
   X, Lock, Eye, EyeOff, AlertCircle, Mail, User,
   Phone, MessageSquare, ExternalLink, Headphones, Send, Bookmark,
-  AlertTriangle, BatteryCharging, Radio, FileX, FileCheck, Zap
+  AlertTriangle, BatteryCharging, Radio, FileX, FileCheck, Zap, Tag
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getIllustration } from './Illustrations';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
-import { checkEmail, customerLogin, customerSignup, verifyOtp, requestPasswordResetOtp, resetPasswordWithOtp, sendQuoteAlertApi, sendPriceMatchAlertApi, sendStepLeadAlertApi, syncFirebaseUser, ApiUser } from '../../utils/api';
+import { checkEmail, customerLogin, customerSignup, verifyOtp, requestPasswordResetOtp, resetPasswordWithOtp, sendQuoteAlertApi, sendPriceMatchAlertApi, sendStepLeadAlertApi, syncFirebaseUser, validateCouponApi, ApiUser } from '../../utils/api';
 import { loginWithGoogle } from '../../services/firebaseAuth';
 import { saveQuote, isQuoteAlreadySaved, associateGuestQuotes } from '../../utils/savedQuotes';
 import { TabletDiagnosticFlow } from './TabletDiagnosticFlow';
@@ -166,7 +166,7 @@ interface DiagnosticWizardProps {
   model: Model;
   variant: Variant;
   onBack: () => void;
-  onComplete: (finalPrice: number, selectedDefects: DefectRule[]) => void;
+  onComplete: (finalPrice: number, selectedDefects: DefectRule[], couponData?: { appliedCoupon?: string; bonusAmount?: number }) => void;
   selectedDefects: DefectRule[];
   setSelectedDefects: React.Dispatch<React.SetStateAction<DefectRule[]>>;
   step: number;
@@ -568,6 +568,57 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
   // Saved quote state
   const [isQuoteSaved, setIsQuoteSaved] = useState(false);
+
+  // Referral / Promo Coupon states
+  const [couponInput, setCouponInput] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string;
+    type: 'FLAT' | 'PERCENT';
+    bonusAmount: number;
+    message?: string;
+  } | null>(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState('');
+
+  const finalPayoutWithCoupon = valuation.finalPrice + (appliedCoupon?.bonusAmount || 0);
+
+  const handleApplyCoupon = async () => {
+    const clean = couponInput.trim();
+    if (!clean) return;
+    setCouponLoading(true);
+    setCouponError('');
+    try {
+      const res = await validateCouponApi(
+        clean,
+        valuation.finalPrice,
+        currentUser?.phone || undefined,
+        currentUser?.email || undefined
+      );
+      if (res.valid && res.bonusAmount) {
+        setAppliedCoupon({
+          code: res.code || clean.toUpperCase(),
+          type: res.type || 'FLAT',
+          bonusAmount: res.bonusAmount,
+          message: res.message,
+        });
+        setCouponInput('');
+        setSaveToast(`Referral code ${res.code || clean.toUpperCase()} applied! +₹${res.bonusAmount.toLocaleString('en-IN')} bonus added.`);
+        setTimeout(() => setSaveToast(null), 4000);
+      } else {
+        setCouponError(res.message || 'Invalid or ineligible referral code.');
+      }
+    } catch (err: any) {
+      setCouponError(err.message || 'Failed to validate referral code.');
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponError('');
+    setCouponInput('');
+  };
   const [saveToast, setSaveToast] = useState<string | null>(null);
 
   React.useEffect(() => {
@@ -595,7 +646,9 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
           selectedDefectIds: selectedDefects.map(d => d.id),
           selectedDefectDescriptions: selectedDefects.map(d => d.description),
           savedBasePrice: variant.basePrice,
-          savedPayout: valuation.finalPrice,
+          savedPayout: finalPayoutWithCoupon,
+          appliedCoupon: appliedCoupon?.code,
+          couponBonus: appliedCoupon?.bonusAmount,
           savedRetentionPercentage: valuation.retentionPercentage,
           refCode: `RPX${receiptRef}`,
         });
@@ -622,7 +675,9 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
       selectedDefectIds: selectedDefects.map(d => d.id),
       selectedDefectDescriptions: selectedDefects.map(d => d.description),
       savedBasePrice: variant.basePrice,
-      savedPayout: valuation.finalPrice,
+      savedPayout: finalPayoutWithCoupon,
+      appliedCoupon: appliedCoupon?.code,
+      couponBonus: appliedCoupon?.bonusAmount,
       savedRetentionPercentage: valuation.retentionPercentage,
       refCode: `RPX${receiptRef}`,
     });
@@ -1011,7 +1066,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                       </div>
                       <div className="flex items-center gap-2.5 mt-0.5">
                         <AnimatedPrice
-                          value={valuation.finalPrice}
+                          value={finalPayoutWithCoupon}
                           isMasked={false}
                           isCritical={valuation.isCritical}
                           className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight"
@@ -1033,7 +1088,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   </div>
                   <div className="flex items-baseline gap-2 mt-1">
                     <AnimatedPrice
-                      value={valuation.finalPrice}
+                      value={finalPayoutWithCoupon}
                       isMasked={false}
                       isCritical={valuation.isCritical}
                       className="text-3xl font-bold text-slate-900 tracking-tight"
@@ -2049,7 +2104,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                     <div className="p-4 rounded-xl border-2 border-emerald-500 bg-emerald-50 shadow-xs">
                       <span className="text-xs font-medium text-slate-500 block mb-1">Estimated Valuation</span>
                       <AnimatedPrice
-                        value={valuation.finalPrice}
+                        value={finalPayoutWithCoupon}
                         className="font-bold text-2xl text-slate-900 block"
                       />
                     </div>
@@ -2240,6 +2295,19 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
 
 
+                      {/* Itemized Referral / Promo Bonus if applied */}
+                      {appliedCoupon && appliedCoupon.bonusAmount > 0 && (
+                        <div className="flex justify-between items-center text-emerald-800 bg-emerald-50/90 border border-emerald-300 rounded-lg px-3 py-1.5 my-1.5 font-sans">
+                          <span className="font-semibold text-xs flex items-center gap-1.5">
+                            <Tag className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                            07. Referral Incentive Bonus ({appliedCoupon.code})
+                          </span>
+                          <span className="text-emerald-700 font-extrabold text-xs">
+                            +₹{appliedCoupon.bonusAmount.toLocaleString('en-IN')} (Applied)
+                          </span>
+                        </div>
+                      )}
+
                       {/* Payout Summary Box */}
                       <div className="flex justify-between items-center border-t border-slate-200 print-border pt-4 mt-4 bg-gradient-to-br from-emerald-50/70 via-slate-50 to-emerald-50/30 p-4 sm:p-5 rounded-xl border border-emerald-200/90 shadow-xs">
                         <div>
@@ -2250,7 +2318,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           </span>
                         </div>
                         <AnimatedPrice
-                          value={valuation.finalPrice}
+                          value={finalPayoutWithCoupon}
                           isMasked={isPriceLocked}
                           isCritical={valuation.isCritical}
                           className="text-3xl sm:text-4xl font-extrabold text-emerald-600 print-text-emerald tracking-tight font-sans"
@@ -2288,6 +2356,76 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                             <span className="text-[11px] text-slate-500 leading-tight">Direct UPI / IMPS</span>
                           </div>
                         </div>
+                      </div>
+
+                      {/* Referral / Promo Code Input Card */}
+                      <div className="mt-4 pt-3.5 border-t border-slate-200 print:hidden">
+                        {!appliedCoupon ? (
+                          <div className="bg-slate-50 border border-slate-200/90 rounded-xl p-3 sm:p-3.5">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-1.5">
+                                <Tag className="w-3.5 h-3.5 text-blue-600" />
+                                <span className="text-xs font-bold text-slate-800">Have a Referral or Promo Code?</span>
+                              </div>
+                              <span className="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 font-bold">Extra Cash Bonus</span>
+                            </div>
+                            <div className="flex gap-2">
+                              <input
+                                type="text"
+                                value={couponInput}
+                                onChange={(e) => {
+                                  setCouponInput(e.target.value.toUpperCase());
+                                  setCouponError('');
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    handleApplyCoupon();
+                                  }
+                                }}
+                                placeholder="ENTER CODE (e.g. WELCOME500)"
+                                className="flex-1 px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-bold uppercase tracking-wider text-slate-900 placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:ring-2 focus:ring-blue-600/30 focus:border-blue-600"
+                              />
+                              <button
+                                type="button"
+                                onClick={handleApplyCoupon}
+                                disabled={couponLoading || !couponInput.trim()}
+                                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-xs rounded-lg transition-colors cursor-pointer shrink-0 flex items-center gap-1 shadow-xs"
+                              >
+                                {couponLoading ? 'Applying...' : 'Apply Code'}
+                              </button>
+                            </div>
+                            {couponError && (
+                              <p className="text-[11px] text-rose-600 font-medium mt-1.5 flex items-center gap-1">
+                                <AlertCircle className="w-3 h-3 shrink-0" />
+                                <span>{couponError}</span>
+                              </p>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="bg-emerald-50/90 border border-emerald-300 rounded-xl p-3 flex items-center justify-between shadow-xs">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-700 shrink-0">
+                                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                              </div>
+                              <div>
+                                <span className="text-xs font-extrabold text-emerald-950 block">
+                                  Referral Code {appliedCoupon.code} Applied!
+                                </span>
+                                <span className="text-[11px] text-emerald-700 font-medium">
+                                  +₹{appliedCoupon.bonusAmount.toLocaleString('en-IN')} extra payout added to your final doorside transfer.
+                                </span>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={handleRemoveCoupon}
+                              className="text-xs text-slate-500 hover:text-rose-600 font-bold underline ml-2 cursor-pointer transition-colors"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        )}
                       </div>
 
                       {/* Print-Only Official Terms & Handover Sign-off Block */}
@@ -2385,10 +2523,10 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                       ) : (
                         <button
                           type="button"
-                          onClick={() => onComplete(valuation.finalPrice, selectedDefects)}
+                          onClick={() => onComplete(finalPayoutWithCoupon, selectedDefects, { appliedCoupon: appliedCoupon?.code, bonusAmount: appliedCoupon?.bonusAmount })}
                           className="w-full bg-gradient-to-r from-cobalt via-indigo-600 to-cobalt hover:from-cobalt-hover hover:to-indigo-700 text-white py-3.5 sm:py-4 px-6 rounded-xl font-bold text-sm sm:text-base text-center transition-all flex items-center justify-center gap-2 group hover:scale-[1.005] active:scale-[0.99] shadow-lg shadow-cobalt/25 cursor-pointer"
                         >
-                          <span>Book Free Doorstep Pickup (Instant ₹{formatPrice(valuation.finalPrice)})</span>
+                          <span>Book Free Doorstep Pickup (Instant ₹{formatPrice(finalPayoutWithCoupon)})</span>
                           <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                         </button>
                       )}
@@ -3029,7 +3167,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
               </div>
               <div className="text-right">
                 <span className="text-xs font-medium text-slate-500 block">Current Quote</span>
-                <span className="font-bold text-emerald-700 text-sm">{formatPrice(valuation.finalPrice)}</span>
+                <span className="font-bold text-emerald-700 text-sm">{formatPrice(finalPayoutWithCoupon)}</span>
               </div>
             </div>
 
@@ -3058,7 +3196,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                 {/* Quick Action Channels */}
                 <div className="grid grid-cols-2 gap-3">
                   <a
-                    href={`https://wa.me/919034997719?text=${encodeURIComponent(`Hi Rephonix Team! I got an online quote of ${formatPrice(valuation.finalPrice)} for my ${model.name} (${variant.storageGb}GB). Can I get a better price?`)}`}
+                    href={`https://wa.me/919034997719?text=${encodeURIComponent(`Hi Rephonix Team! I got an online quote of ${formatPrice(finalPayoutWithCoupon)} for my ${model.name} (${variant.storageGb}GB). Can I get a better price?`)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center justify-center gap-2 p-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-all shadow-xs"

@@ -11,6 +11,8 @@ import { createBooking, ApiUser } from '../../utils/api';
 
 interface PickupSchedulerProps {
   finalPrice: number;
+  appliedCoupon?: string | null;
+  couponBonus?: number;
   onBack: () => void;
   onSuccess: () => void;
   selectedDefects: DefectRule[];
@@ -143,6 +145,8 @@ const validateLuhn = (imei: string): boolean => {
 
 export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
   finalPrice,
+  appliedCoupon,
+  couponBonus,
   onBack,
   onSuccess,
   selectedDefects,
@@ -455,8 +459,9 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
       payoutMethod: 'doorstep',
       payoutMethodName: 'Instant Doorside Payout',
       bonusPercentage: 0,
-      bonusAmount: 0,
-      finalPayoutAmount: netDoorsidePayout,
+      bonusAmount: couponBonus || 0,
+      appliedCoupon: appliedCoupon || undefined,
+      finalPayoutAmount: finalPrice,
       payoutDetails: {},
       inspectionStatus: 'pending',
       payoutStatus: 'pending',

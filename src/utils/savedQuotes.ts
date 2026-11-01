@@ -20,6 +20,8 @@ export interface SavedQuote {
   savedRetentionPercentage: number;
   savedAt: string;
   refCode: string;
+  appliedCoupon?: string;
+  couponBonus?: number;
 }
 
 export const PRICE_LOCK_DAYS = 7;
