@@ -420,7 +420,7 @@ router.get('/me', optionalAdminAuth, async (req: AuthenticatedRequest, res: Resp
             else if (dbUser.role === 'FINANCE_APPROVER') permissions = ['finance'];
             else permissions = ['inspections'];
           }
-        } catch {}
+        } catch { }
       }
     }
   } else if (req.user.role === 'SUPER_ADMIN' || req.user.role === 'admin') {
@@ -528,8 +528,8 @@ export async function logAdminAudit(params: {
   userAgent?: string;
 }) {
   try {
-    const payloadStr = typeof params.payload === 'string' 
-      ? params.payload 
+    const payloadStr = typeof params.payload === 'string'
+      ? params.payload
       : JSON.stringify(params.payload ?? {});
 
     await prisma.adminAuditLog.create({
@@ -1073,7 +1073,7 @@ export function validateCashifyHtml(htmlText: string, status: number, finalUrl?:
           };
         }
       }
-    } catch {}
+    } catch { }
   }
 
   // 3. Check for 404 patterns in HTML
@@ -1371,8 +1371,7 @@ router.post('/cashify/register-approved-variants', adminAuth, async (req: Authen
  */
 router.post('/cashify/check-single-variant', adminAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const { modelName, brandName: rawBrandName, ramGb, storageGb, url, autoUpdate } = req.body;
-    const brandName = rawBrandName || 'Brand';
+    const { modelName, brandName, ramGb, storageGb, url, autoUpdate } = req.body;
     if (!url) {
       res.status(400).json({ ok: false, error: 'Cashify URL is required.' });
       return;
@@ -1467,31 +1466,7 @@ router.post('/cashify/check-single-variant', adminAuth, async (req: Authenticate
           status: 'STABLE',
         },
       });
-    } else {
-      await (prisma as any).cashifyPriceAlert.create({
-        data: {
-          modelId: `m-${modelName.toLowerCase().replace(/[^a-z0-9]/g, '')}`,
-          modelName,
-          brandName,
-          ramGb: Number(ramGb) || 0,
-          storageGb: Number(storageGb) || 128,
-          cashifyPrice: extractedPrice,
-          rephonixPrice: recommendedPrice,
-          difference: diff,
-          alertDate: new Date(),
-          reviewed: true,
-          status: 'STABLE',
-        },
-      });
     }
-
-    await logAdminAudit({
-      adminUserId: req.user?.username,
-      action: 'CASHIFY_SINGLE_PRICE_CHECK',
-      targetType: 'Variant',
-      targetId: `${modelName}_${storageGb}`,
-      payload: { modelName, brandName, cashifyPrice: extractedPrice, recommendedPrice },
-    });
 
     // Auto-update model's variant price in DB if requested
     if (autoUpdate) {
@@ -1512,7 +1487,7 @@ router.post('/cashify/check-single-variant', adminAuth, async (req: Authenticate
           } else if (dbModel.variantPrices && typeof dbModel.variantPrices === 'object') {
             currentPrices = { ...dbModel.variantPrices as any };
           }
-        } catch {}
+        } catch { }
 
         const key = `${Number(ramGb) || 0}_${Number(storageGb)}`;
         currentPrices[key] = recommendedPrice;
