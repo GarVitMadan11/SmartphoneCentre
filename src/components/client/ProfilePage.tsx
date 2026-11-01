@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   User, Phone, Mail, Calendar, ArrowLeft, LogOut, ShieldCheck, AlertCircle,
   Package, FileText, Download, Copy, Check, CheckCircle2, MapPin, ArrowRight,
-  Bookmark, Trash2, Sparkles, TrendingUp, TrendingDown
+  Bookmark, Trash2, Sparkles, TrendingUp
 } from 'lucide-react';
 import {
   updateCustomerProfile, sendEmailOtp, verifyEmailOtp,

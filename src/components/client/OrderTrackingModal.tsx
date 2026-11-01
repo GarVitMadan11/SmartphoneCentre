@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   X, Search, ShieldCheck, CheckCircle2, Clock, AlertCircle, Package, Calendar, MapPin,
-  Copy, Check, FileText, Download, Bookmark, Trash2, TrendingUp, TrendingDown, Sparkles, ArrowRight, Leaf
+  Copy, Check, FileText, Download, Bookmark, Trash2, TrendingUp, Sparkles, ArrowRight, Leaf
 } from 'lucide-react';
 import { trackBookingOrder, fetchMyBookings, downloadBookingPdf, ApiTrackBooking, ApiBooking, ApiUser } from '../../utils/api';
 import { getDeviceImage, Model } from '../../data/mockDatabase';
