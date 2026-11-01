@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { Smartphone, Tablet, ChevronDown, Zap, Truck, Menu, X, User, Package, Search, ArrowRight, Sparkles, FileText, Bookmark } from 'lucide-react';
+import { Smartphone, Tablet, ChevronDown, ChevronRight, Zap, Truck, Menu, X, User, Package, Search, ArrowRight, Sparkles, FileText, Bookmark, SlidersHorizontal, ArrowUpDown } from 'lucide-react';
 import { ApiUser } from '../../utils/api';
 import { BRANDS as STATIC_BRANDS, Model, getDeviceImage, getMaxVariantPrice } from '../../data/mockDatabase';
 import { applyBrandOrder } from '../../utils/ordering';
@@ -41,6 +41,20 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [selectedBrandFilter, setSelectedBrandFilter] = useState<string>('all');
+  const [sortOption, setSortOption] = useState<'payout' | 'year' | 'name'>('payout');
+
+  const BRAND_FILTERS = [
+    { id: 'all', label: 'All Brands' },
+    { id: 'brand-apple', label: 'Apple' },
+    { id: 'brand-samsung', label: 'Samsung' },
+    { id: 'brand-google', label: 'Google' },
+    { id: 'brand-oneplus', label: 'OnePlus' },
+    { id: 'brand-xiaomi', label: 'Xiaomi' },
+    { id: 'other', label: 'Others' },
+  ];
+
+  const POPULAR_TAGS = ['iPhone 16', 'iPhone 15', 'Galaxy S24', 'OnePlus 12', 'Pixel 9', 'Galaxy Z Fold 6'];
 
   const navRef = useRef<HTMLDivElement>(null);
   const modalInputRef = useRef<HTMLInputElement>(null);
@@ -82,18 +96,46 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
     }
   }, [isSearchOpen]);
 
-  // Filter models based on search query or show popular models when empty
-  const searchResults = useMemo(() => {
-    if (!searchQuery.trim()) {
-      return models
-        .filter(m => !m.hidden && (m.category === 'flagship' || m.name.includes('iPhone 1') || m.name.includes('S24') || m.name.includes('OnePlus 12')))
-        .slice(0, 6);
+  // Filter and sort models based on query, brand filter, and sort order
+  const { searchResults, totalMatchingCount } = useMemo(() => {
+    let list = models.filter(m => !m.hidden);
+
+    // 1. Filter by Brand
+    if (selectedBrandFilter !== 'all') {
+      if (selectedBrandFilter === 'other') {
+        const topBrands = ['brand-apple', 'brand-samsung', 'brand-google', 'brand-oneplus', 'brand-xiaomi'];
+        list = list.filter(m => !topBrands.includes(m.brandId));
+      } else {
+        list = list.filter(m => m.brandId === selectedBrandFilter || m.brandId.toLowerCase().includes(selectedBrandFilter));
+      }
     }
-    const q = searchQuery.toLowerCase().trim();
-    return models
-      .filter(m => !m.hidden && (m.name.toLowerCase().includes(q) || m.brandId.toLowerCase().includes(q)))
-      .slice(0, 8);
-  }, [models, searchQuery]);
+
+    // 2. Filter by Search Query
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      list = list.filter(m => m.name.toLowerCase().includes(q) || m.brandId.toLowerCase().includes(q));
+    } else if (selectedBrandFilter === 'all') {
+      // Default recommended flagships when empty
+      list = list.filter(m => m.category === 'flagship' || m.name.includes('iPhone 1') || m.name.includes('S24') || m.name.includes('OnePlus 12') || m.name.includes('Fold') || m.name.includes('Ultra'));
+    }
+
+    const totalMatchingCount = list.length;
+
+    // 3. Sort results
+    list = [...list].sort((a, b) => {
+      if (sortOption === 'payout') {
+        return getMaxVariantPrice(b) - getMaxVariantPrice(a);
+      } else if (sortOption === 'year') {
+        const yearA = parseInt(String(a.releaseYear || '2024'), 10);
+        const yearB = parseInt(String(b.releaseYear || '2024'), 10);
+        return yearB - yearA;
+      } else {
+        return a.name.localeCompare(b.name);
+      }
+    });
+
+    return { searchResults: list.slice(0, 10), totalMatchingCount };
+  }, [models, searchQuery, selectedBrandFilter, sortOption]);
 
   const handleBrandClick = (brandId: string) => {
     setActiveDropdown(null);
@@ -597,16 +639,18 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
       {/* ── Spotlight Command Palette Search Modal ──────────────────── */}
       {isSearchOpen && (
         <div 
-          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md flex items-start justify-center pt-16 sm:pt-24 px-4 p-6 animate-in fade-in duration-200"
+          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md flex items-start justify-center pt-10 sm:pt-20 px-3 sm:px-4 p-4 animate-in fade-in duration-200"
           onClick={() => setIsSearchOpen(false)}
         >
           <div 
-            className="w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-ice-border overflow-hidden animate-in zoom-in-95 duration-150"
+            className="w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-200/90 overflow-hidden animate-in zoom-in-95 duration-150 flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Search Input Bar */}
-            <div className="flex items-center px-5 py-4 border-b border-ice-border gap-3 bg-slate-50/50">
-              <Search className="w-5 h-5 text-cobalt shrink-0" />
+            {/* Search Input Bar (No outline, crisp modern typography) */}
+            <div className="flex items-center px-4 sm:px-6 py-4 border-b border-slate-100 gap-3 bg-white">
+              <div className="w-9 h-9 rounded-xl bg-cobalt/10 text-cobalt flex items-center justify-center shrink-0">
+                <Search className="w-4 h-4 stroke-[2.5]" />
+              </div>
               <input
                 ref={modalInputRef}
                 type="text"
@@ -617,7 +661,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                 }}
                 onKeyDown={handleModalKeyDown}
                 placeholder="Type device name e.g. iPhone 15 Pro, Samsung S24, OnePlus..."
-                className="w-full bg-transparent text-sm sm:text-base font-medium text-ink-navy placeholder-slate-400 focus:outline-none"
+                className="w-full bg-transparent text-sm sm:text-base font-medium text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-0 border-0 outline-none"
               />
               {searchQuery && (
                 <button
@@ -626,45 +670,101 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                     setSearchQuery('');
                     modalInputRef.current?.focus();
                   }}
-                  className="p-1 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-200/60 transition-colors"
+                  className="p-1 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
+                  title="Clear search"
                 >
                   <X className="w-4 h-4" />
                 </button>
               )}
-              <span className="hidden sm:inline-flex text-[11px] font-sans text-slate-400 bg-white border border-slate-200 px-2 py-0.5 rounded-md select-none">
+              <kbd className="hidden sm:inline-flex text-[10px] font-mono font-bold text-slate-400 bg-slate-100 border border-slate-200/80 px-2 py-0.5 rounded-md select-none shadow-2xs">
                 ESC
-              </span>
+              </kbd>
             </div>
 
-            {/* Quick Filter Pills */}
-            <div className="flex items-center gap-2 px-5 py-2.5 bg-slate-50 border-b border-ice-border/60 overflow-x-auto text-xs">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-normal font-sans shrink-0">
-                Popular:
-              </span>
-              {['iPhone 16', 'iPhone 15', 'Galaxy S24', 'OnePlus 12', 'Pixel 9', 'Galaxy Z Fold 6'].map((tag) => (
+            {/* Brand Filter & Sort Bar */}
+            <div className="px-4 sm:px-6 py-2.5 bg-slate-50/80 border-b border-slate-100 flex items-center justify-between gap-3 overflow-x-auto select-none no-scrollbar">
+              {/* Brand Filter Pills */}
+              <div className="flex items-center gap-1.5 shrink-0">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-sans mr-1 flex items-center gap-1">
+                  <SlidersHorizontal className="w-3 h-3 text-slate-400" />
+                  Filter:
+                </span>
+                {BRAND_FILTERS.map((brand) => {
+                  const isActive = selectedBrandFilter === brand.id;
+                  return (
+                    <button
+                      key={brand.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedBrandFilter(brand.id);
+                        setSelectedIndex(-1);
+                      }}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        isActive
+                          ? 'bg-slate-900 text-white shadow-xs'
+                          : 'bg-white hover:bg-slate-100 text-slate-600 hover:text-slate-950 border border-slate-200/80 shadow-2xs'
+                      }`}
+                    >
+                      {brand.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Sort Toggle Button */}
+              <div className="shrink-0 flex items-center">
                 <button
-                  key={tag}
                   type="button"
                   onClick={() => {
-                    setSearchQuery(tag);
-                    modalInputRef.current?.focus();
+                    setSortOption(prev => prev === 'payout' ? 'year' : prev === 'year' ? 'name' : 'payout');
+                    setSelectedIndex(-1);
                   }}
-                  className="px-2.5 py-1 rounded-lg bg-white border border-ice-border hover:border-cobalt hover:text-cobalt text-slate-600 text-xs font-semibold shrink-0 transition-colors cursor-pointer shadow-2xs"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-slate-200/80 hover:border-slate-300 text-slate-700 text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                  title="Click to cycle sort"
                 >
-                  {tag}
+                  <ArrowUpDown className="w-3 h-3 text-cobalt" />
+                  <span>
+                    {sortOption === 'payout' ? 'Top Payout' : sortOption === 'year' ? 'Newest' : 'A-Z'}
+                  </span>
                 </button>
-              ))}
+              </div>
             </div>
 
+            {/* Popular Searches Shortcut Bar (Shown when search query is empty) */}
+            {!searchQuery && (
+              <div className="flex items-center gap-2 px-4 sm:px-6 py-2 bg-white border-b border-slate-100 overflow-x-auto text-xs select-none no-scrollbar">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-sans shrink-0">
+                  Popular:
+                </span>
+                {POPULAR_TAGS.map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery(tag);
+                      modalInputRef.current?.focus();
+                    }}
+                    className="px-2 py-0.5 rounded-md bg-slate-50 hover:bg-cobalt/10 hover:text-cobalt text-slate-600 text-[11px] font-medium shrink-0 transition-colors cursor-pointer border border-slate-100"
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            )}
+
             {/* Results List */}
-            <div className="max-h-[60vh] overflow-y-auto p-3 divide-y divide-slate-100">
-              <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-normal font-sans flex items-center justify-between">
-                <span>{searchQuery ? `Matching Devices (${searchResults.length})` : 'Recommended Flagships'}</span>
-                {!searchQuery && (
-                  <span className="text-[10px] text-cobalt flex items-center gap-1 font-semibold">
-                    <Sparkles className="w-3 h-3" /> Top Valuations
-                  </span>
-                )}
+            <div className="max-h-[55vh] overflow-y-auto p-2 sm:p-3 divide-y divide-slate-100">
+              <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider font-sans flex items-center justify-between">
+                <span>
+                  {searchQuery 
+                    ? `Matching Devices (${totalMatchingCount})` 
+                    : selectedBrandFilter !== 'all' 
+                      ? `${BRAND_FILTERS.find(b => b.id === selectedBrandFilter)?.label} Devices (${totalMatchingCount})` 
+                      : 'Recommended Flagships'}
+                </span>
+                <span className="text-[10px] text-cobalt flex items-center gap-1 font-semibold">
+                  <Sparkles className="w-3 h-3" /> Top Valuations
+                </span>
               </div>
 
               {searchResults.length > 0 ? (
@@ -678,34 +778,47 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                         key={model.id}
                         onClick={() => handleSelectSearchedModel(model)}
                         onMouseEnter={() => setSelectedIndex(idx)}
-                        className={`flex items-center justify-between p-3 rounded-2xl cursor-pointer transition-all ${
-                          isSelected ? 'bg-cobalt/10 text-cobalt ring-1 ring-cobalt/20' : 'hover:bg-slate-50 text-slate-800'
+                        className={`group flex items-center justify-between p-3 rounded-2xl cursor-pointer transition-all duration-150 ${
+                          isSelected 
+                            ? 'bg-cobalt/10 text-cobalt ring-1 ring-cobalt/25 border-transparent shadow-xs' 
+                            : 'hover:bg-slate-50/90 text-slate-800 border border-transparent'
                         }`}
                       >
                         <div className="flex items-center gap-3.5 min-w-0">
                           <img
                             src={imgUrl}
                             alt={model.name}
-                            className="w-11 h-11 object-contain shrink-0 p-1 bg-white rounded-xl border border-slate-100 shadow-2xs"
+                            className="w-12 h-12 object-contain shrink-0 p-1.5 bg-white rounded-xl border border-slate-200/80 shadow-2xs group-hover:scale-105 transition-transform"
                             loading="lazy"
                           />
                           <div className="min-w-0">
-                            <p className="text-sm font-bold text-ink-navy truncate">{model.name}</p>
-                            <div className="flex items-center gap-2 mt-0.5">
-                              <span className="text-[10px] font-sans font-semibold px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md uppercase tracking-wider">
+                            <p className="text-sm sm:text-base font-extrabold text-slate-900 group-hover:text-cobalt transition-colors truncate">
+                              {model.name}
+                            </p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-[10px] font-sans font-bold px-2 py-0.5 bg-slate-100 text-slate-700 rounded-md uppercase tracking-wider">
                                 {model.brandId.replace('brand-', '')}
                               </span>
-                              <span className="text-[11px] text-slate-400">
+                              <span className="text-[11px] font-medium text-slate-400">
                                 {model.releaseYear || 'Latest'}
                               </span>
+
                             </div>
                           </div>
                         </div>
-                        <div className="text-right shrink-0 pl-3">
-                          <span className="text-[10px] text-slate-400 block font-sans">Max Payout</span>
-                          <span className="text-sm sm:text-base font-black text-emerald-600 font-sans">
-                            ₹{maxPrice.toLocaleString('en-IN')}
-                          </span>
+
+                        <div className="text-right shrink-0 pl-3 flex items-center gap-3">
+                          <div>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block font-sans">
+                              Max Payout
+                            </span>
+                            <span className="text-sm sm:text-base font-black text-emerald-600 font-sans tracking-tight">
+                              ₹{maxPrice.toLocaleString('en-IN')}
+                            </span>
+                          </div>
+                          <ChevronRight className={`w-4 h-4 text-cobalt transition-transform duration-200 ${
+                            isSelected ? 'translate-x-1 opacity-100' : 'opacity-0 group-hover:opacity-100'
+                          }`} />
                         </div>
                       </div>
                     );
@@ -724,33 +837,40 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                 </div>
               ) : (
                 <div className="py-12 text-center text-sm text-slate-400 space-y-2">
-                  <p>No devices matching "{searchQuery}"</p>
+                  <p className="font-medium text-slate-600">No devices matching your filters</p>
+                  <p className="text-xs text-slate-400">Try selecting "All Brands" or typing a different model name.</p>
                   <button
                     type="button"
                     onClick={() => {
-                      setIsSearchOpen(false);
-                      onNavigate('/smartphones');
+                      setSearchQuery('');
+                      setSelectedBrandFilter('all');
                     }}
-                    className="text-cobalt font-bold hover:underline text-xs"
+                    className="text-cobalt font-bold hover:underline text-xs mt-2"
                   >
-                    View All Smartphones &rarr;
+                    Reset Filters
                   </button>
                 </div>
               )}
             </div>
 
             {/* Modal Footer Key Guide */}
-            <div className="px-5 py-3 bg-slate-50 border-t border-ice-border/60 flex items-center justify-between text-[11px] text-slate-400 font-sans">
+            <div className="px-4 sm:px-6 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500 font-sans">
               <div className="flex items-center gap-3">
-                <span><kbd className="bg-white border border-slate-200 px-1 py-0.5 rounded shadow-2xs font-semibold">↑</kbd> <kbd className="bg-white border border-slate-200 px-1 py-0.5 rounded shadow-2xs font-semibold">↓</kbd> to navigate</span>
-                <span><kbd className="bg-white border border-slate-200 px-1.5 py-0.5 rounded shadow-2xs font-semibold">↵</kbd> to select</span>
+                <span className="flex items-center gap-1">
+                  <kbd className="bg-white border border-slate-200 px-1.5 py-0.5 rounded shadow-2xs font-mono text-slate-700">↑</kbd>
+                  <kbd className="bg-white border border-slate-200 px-1.5 py-0.5 rounded shadow-2xs font-mono text-slate-700">↓</kbd>
+                  <span>navigate</span>
+                </span>
+                <span className="flex items-center gap-1">
+                  <kbd className="bg-white border border-slate-200 px-1.5 py-0.5 rounded shadow-2xs font-mono text-slate-700">↵</kbd>
+                  <span>select</span>
+                </span>
               </div>
-              <span>Rephonix Smart Valuation</span>
+              <span className="font-medium text-slate-400">Rephonix Smart Valuation</span>
             </div>
           </div>
         </div>
-      )}
-    </>
+      )}</>
   );
 };
 

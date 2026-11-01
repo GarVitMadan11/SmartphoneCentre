@@ -350,9 +350,26 @@ export const SellYourDevice: React.FC<{
             />
           </div>
 
-          {/* Bottom CTA strip */}
-          <div className="mt-10 sm:mt-12 flex flex-col md:flex-row items-center justify-between gap-5 p-6 sm:p-7 bg-white border border-slate-200/90 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-4 text-left w-full md:w-auto">
+          {/* Bottom CTA strip with Instant Payout in background only */}
+          <div className="mt-10 sm:mt-12 flex flex-col md:flex-row items-center justify-between gap-5 p-6 sm:p-7 bg-white border border-slate-200/90 rounded-2xl shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+            {/* Background Image 2 (Instant UPI Payout - background only) */}
+            <div 
+              className="hidden md:block absolute right-36 top-1/2 -translate-y-1/2 w-48 h-48 pointer-events-none select-none opacity-35"
+              style={{
+                maskImage: 'radial-gradient(circle at center, black 45%, transparent 85%)',
+                WebkitMaskImage: 'radial-gradient(circle at center, black 45%, transparent 85%)',
+                mixBlendMode: 'multiply',
+              }}
+              aria-hidden="true"
+            >
+              <img 
+                src="/illustrations/instant_payout.jpg" 
+                alt="" 
+                className="w-full h-full object-contain filter saturate-110 contrast-105 brightness-105"
+              />
+            </div>
+
+            <div className="flex items-center gap-4 text-left w-full md:w-auto relative z-10">
               <div className="w-12 h-12 rounded-xl bg-cobalt/10 border border-cobalt/20 text-cobalt flex items-center justify-center shrink-0">
                 <Sparkles className="w-6 h-6 text-cobalt" />
               </div>
@@ -365,9 +382,10 @@ export const SellYourDevice: React.FC<{
                 </p>
               </div>
             </div>
+
             <button
               onClick={onGetValuation}
-              className="group flex items-center justify-center gap-2.5 px-6 py-3.5 bg-cobalt hover:bg-cobalt-hover text-white font-bold text-sm rounded-xl transition-all duration-300 shadow-sm hover:shadow-md flex-shrink-0 font-sans tracking-wide cursor-pointer w-full md:w-auto active:scale-98"
+              className="group flex items-center justify-center gap-2.5 px-6 py-3.5 bg-cobalt hover:bg-cobalt-hover text-white font-bold text-sm rounded-xl transition-all duration-300 shadow-sm hover:shadow-md flex-shrink-0 font-sans tracking-wide cursor-pointer w-full lg:w-auto active:scale-98 relative z-10"
             >
               <span>Start Live Valuation</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />

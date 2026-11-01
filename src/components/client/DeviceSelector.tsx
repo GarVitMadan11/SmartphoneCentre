@@ -1428,16 +1428,8 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                                 }`}
                             >
                               <div>
-                                <div className="flex items-center justify-between mb-4">
-                                  <span className={`px-2.5 py-1 text-[10px] font-sans font-bold rounded-full uppercase tracking-wider ${model.category === 'flagship'
-                                      ? 'bg-amber-100 text-amber-800'
-                                      : model.category === 'premium'
-                                        ? 'bg-blue-50 text-blue-700'
-                                        : 'bg-zinc-100 text-zinc-800'
-                                    }`}>
-                                    {model.category || (model.brandId === 'brand-apple' ? 'Apple iPhone' : 'Smartphone')}
-                                  </span>
-                                  <span className="text-[10px] font-sans text-zinc-400">{model.releaseYear}</span>
+                                <div className="flex items-center justify-end mb-2">
+                                  <span className="text-[11px] font-sans font-semibold text-slate-400">{model.releaseYear}</span>
                                 </div>
 
                                 <h3 className="text-base sm:text-xl font-bold font-sans text-ink-navy uppercase group-hover:text-cobalt transition-colors text-left line-clamp-1">

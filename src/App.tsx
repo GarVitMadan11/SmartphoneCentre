@@ -627,9 +627,26 @@ export default function App() {
           {cleanPath === '/' && !isWorkflow && (
             <div className="space-y-20 pt-4 pb-12 sm:pt-6 sm:pb-16">
               {/* 1. Hero Section */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+              <div className="relative grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                {/* Background Ambient Illustration (Image 1 in the background only) */}
+                <div 
+                  className="hidden lg:block absolute left-1/2 top-1/2 -translate-x-[45%] -translate-y-[52%] w-[420px] h-[420px] pointer-events-none select-none -z-0 opacity-45"
+                  style={{
+                    maskImage: 'radial-gradient(ellipse 65% 65% at 50% 50%, black 45%, transparent 85%)',
+                    WebkitMaskImage: 'radial-gradient(ellipse 65% 65% at 50% 50%, black 45%, transparent 85%)',
+                    mixBlendMode: 'multiply',
+                  }}
+                  aria-hidden="true"
+                >
+                  <img 
+                    src="/illustrations/rephonix_doorstep_pickup.jpg" 
+                    alt="" 
+                    className="w-full h-full object-contain filter saturate-110 contrast-105 brightness-105"
+                  />
+                </div>
+
                 {/* Hero Call to Action */}
-                <div className="lg:col-span-7 flex flex-col items-start text-left">
+                <div className="lg:col-span-7 flex flex-col items-start text-left relative z-10">
                   <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-secondary/10 border border-secondary/25 shadow-xs mb-6 font-sans transition-all duration-300 hover:bg-secondary/15 select-none">
                     <ShieldCheck className="w-4 h-4 text-secondary stroke-[2.2] flex-shrink-0" />
                     <span className="text-[11px] font-bold tracking-wider uppercase text-secondary">
@@ -773,7 +790,7 @@ export default function App() {
                 </div>
 
                 {/* Hero Interactive Phone Panel Graphic */}
-                <div className="lg:col-span-5 flex justify-center">
+                <div className="lg:col-span-5 flex justify-center relative z-10">
                   <Suspense fallback={
                     <div className="w-full max-w-sm h-96 border border-ice-border rounded-3xl bg-slate-50/50 animate-pulse flex items-center justify-center">
                       <div className="w-8 h-8 border-2 border-cobalt border-t-transparent rounded-full animate-spin" />
