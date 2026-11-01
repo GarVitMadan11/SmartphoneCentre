@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   TrendingUp,
   TrendingDown,
@@ -27,6 +27,7 @@ import {
   fetchCashifyPriceAlerts,
   saveCashifyCustomUrl,
   testCashifyUrlApi,
+  checkSingleVariantPriceApi,
   triggerCashifyScan,
   fetchModels,
   updateModel,
@@ -58,6 +59,8 @@ interface SeriesAccordionCardProps {
   onBulkFixSeries: (variants: CashifyVariantItem[], series: string) => void;
   isBulkFixing: boolean;
   fixingVariantKey: string | null;
+  checkingVariantKey: string | null;
+  handleCheckSingleVariantLive: (variant: CashifyVariantItem) => Promise<void>;
   handleOpenEditSpecs: (variant: CashifyVariantItem) => void;
   handleApplyRecommendedPrice: (variant: CashifyVariantItem, price: number) => void;
   editingKey: string | null;
@@ -92,6 +95,8 @@ const SeriesAccordionCard: React.FC<SeriesAccordionCardProps> = React.memo(({
   onBulkFixSeries,
   isBulkFixing,
   fixingVariantKey,
+  checkingVariantKey,
+  handleCheckSingleVariantLive,
   handleOpenEditSpecs,
   handleApplyRecommendedPrice,
   editingKey,
@@ -105,46 +110,15 @@ const SeriesAccordionCard: React.FC<SeriesAccordionCardProps> = React.memo(({
   savingUrl,
   testResult,
 }) => {
-  const [isHovered, setIsHovered] = useState(false);
-  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  const handleMouseEnter = () => {
-    if (hoverTimeoutRef.current) {
-      clearTimeout(hoverTimeoutRef.current);
-    }
-    // 60ms hover intent prevents jitter when skimming mouse across the list
-    hoverTimeoutRef.current = setTimeout(() => {
-      setIsHovered(true);
-    }, 60);
-  };
-
-  const handleMouseLeave = () => {
-    if (hoverTimeoutRef.current) {
-      clearTimeout(hoverTimeoutRef.current);
-    }
-    hoverTimeoutRef.current = setTimeout(() => {
-      setIsHovered(false);
-    }, 140);
-  };
-
-  useEffect(() => {
-    return () => {
-      if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
-    };
-  }, []);
-
-  // By default collapsed! Expands if hovered, if pinned by click, or if search is active.
-  const isOpen = isSearchActive || isPinned || isHovered;
+  // Expanded strictly by button / header click or active search (no hover auto-expansion)
+  const isOpen = isSearchActive || isPinned;
 
   return (
     <div
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      className={`bg-canvas-white border rounded-xl overflow-hidden transition-all duration-200 ${
-        isOpen
+      className={`bg-canvas-white border rounded-xl overflow-hidden transition-all duration-200 ${isOpen
           ? 'border-cobalt/50 shadow-md ring-1 ring-cobalt/15'
           : 'border-ice-border shadow-2xs hover:border-slate-300 hover:shadow-xs'
-      }`}
+        }`}
     >
       {/* Series Accordion Header */}
       <div
@@ -153,9 +127,8 @@ const SeriesAccordionCard: React.FC<SeriesAccordionCardProps> = React.memo(({
       >
         <div className="flex items-center gap-2.5">
           <div
-            className={`p-1 rounded text-slate-500 hover:text-slate-900 transition-transform duration-200 ease-out ${
-              isOpen ? 'rotate-90 text-cobalt' : 'rotate-0 text-slate-400'
-            }`}
+            className={`p-1 rounded text-slate-500 hover:text-slate-900 transition-transform duration-200 ease-out ${isOpen ? 'rotate-90 text-cobalt' : 'rotate-0 text-slate-400'
+              }`}
             title={isPinned ? 'Click to unpin' : 'Click to pin open'}
           >
             <ChevronRight className="w-4 h-4" />
@@ -178,10 +151,6 @@ const SeriesAccordionCard: React.FC<SeriesAccordionCardProps> = React.memo(({
             <span className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 text-slate-600 border border-slate-200 shadow-2xs">
               <Pin className="w-2.5 h-2.5 fill-slate-500" />
               <span>Pinned Open</span>
-            </span>
-          ) : isHovered ? (
-            <span className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-indigo-50 text-indigo-600 border border-indigo-200/60">
-              <span>Hover preview</span>
             </span>
           ) : null}
         </div>
@@ -232,9 +201,8 @@ const SeriesAccordionCard: React.FC<SeriesAccordionCardProps> = React.memo(({
 
       {/* Hardware-Accelerated CSS Grid Transition (Butter-smooth, 0ms reflow lag) */}
       <div
-        className={`grid transition-[grid-template-rows,opacity] duration-250 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-[grid-template-rows,opacity] ${
-          isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0 pointer-events-none'
-        }`}
+        className={`grid transition-[grid-template-rows,opacity] duration-250 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-[grid-template-rows,opacity] ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0 pointer-events-none'
+          }`}
       >
         <div className="overflow-hidden min-h-0">
           <div className="overflow-x-auto">
@@ -322,9 +290,9 @@ const SeriesAccordionCard: React.FC<SeriesAccordionCardProps> = React.memo(({
                             <div className="text-[10px] text-indigo-500 font-mono">
                               {variant.lastAuditedDate
                                 ? new Date(variant.lastAuditedDate).toLocaleDateString('en-IN', {
-                                    month: 'short',
-                                    day: 'numeric',
-                                  })
+                                  month: 'short',
+                                  day: 'numeric',
+                                })
                                 : 'Cashify Quote'}
                             </div>
                           </div>
@@ -351,19 +319,18 @@ const SeriesAccordionCard: React.FC<SeriesAccordionCardProps> = React.memo(({
                               {/* Current Margin Diff Badge */}
                               <div className="flex items-center gap-1.5 flex-wrap">
                                 <span
-                                  className={`px-2 py-0.5 rounded-md font-mono text-xs font-bold inline-flex items-center gap-1 ${
-                                    currentDiff > 0
+                                  className={`px-2 py-0.5 rounded-md font-mono text-xs font-bold inline-flex items-center gap-1 ${currentDiff > 0
                                       ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                                       : currentDiff < 0
-                                      ? 'bg-rose-50 text-rose-700 border border-rose-200'
-                                      : 'bg-slate-100 text-slate-700 border border-slate-200'
-                                  }`}
+                                        ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                                        : 'bg-slate-100 text-slate-700 border border-slate-200'
+                                    }`}
                                 >
                                   {currentDiff > 0
                                     ? `+₹${currentDiff.toLocaleString('en-IN')} (${diffPct >= 0 ? '+' : ''}${diffPct.toFixed(1)}%)`
                                     : currentDiff < 0
-                                    ? `-₹${Math.abs(currentDiff).toLocaleString('en-IN')} (${diffPct.toFixed(1)}%)`
-                                    : `₹0 (0.0%)`}
+                                      ? `-₹${Math.abs(currentDiff).toLocaleString('en-IN')} (${diffPct.toFixed(1)}%)`
+                                      : `₹0 (0.0%)`}
                                 </span>
 
                                 {isExact ? (
@@ -384,11 +351,10 @@ const SeriesAccordionCard: React.FC<SeriesAccordionCardProps> = React.memo(({
 
                               {/* Recommended Price Box & 1-Click Fix Button */}
                               <div
-                                className={`p-1.5 rounded-lg border text-xs ${
-                                  isExact
+                                className={`p-1.5 rounded-lg border text-xs ${isExact
                                     ? 'bg-emerald-50/40 border-emerald-100'
                                     : 'bg-amber-50/60 border-amber-200 shadow-2xs'
-                                }`}
+                                  }`}
                               >
                                 <div className="flex items-center justify-between gap-1 text-[11px]">
                                   <span className="text-slate-500 font-medium font-sans">Target (Exact +3%):</span>
@@ -482,15 +448,14 @@ const SeriesAccordionCard: React.FC<SeriesAccordionCardProps> = React.memo(({
                               {testResult && (
                                 <div className="w-full mt-1 flex flex-col gap-1">
                                   <span
-                                    className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded inline-flex items-center gap-1 max-w-full ${
-                                      testResult.ok
+                                    className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded inline-flex items-center gap-1 max-w-full ${testResult.ok
                                         ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
                                         : testResult.is404
-                                        ? 'bg-rose-100 text-rose-800 border border-rose-300'
-                                        : testResult.isUnserviceable
-                                        ? 'bg-amber-100 text-amber-800 border border-amber-300'
-                                        : 'bg-rose-100 text-rose-800 border border-rose-300'
-                                    }`}
+                                          ? 'bg-rose-100 text-rose-800 border border-rose-300'
+                                          : testResult.isUnserviceable
+                                            ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                                            : 'bg-rose-100 text-rose-800 border border-rose-300'
+                                      }`}
                                   >
                                     {testResult.ok ? (
                                       <>
@@ -579,6 +544,26 @@ const SeriesAccordionCard: React.FC<SeriesAccordionCardProps> = React.memo(({
                         ) : (
                           <div className="flex items-center justify-end gap-2">
                             <button
+                              type="button"
+                              disabled={checkingVariantKey === variant.variantKey || isBulkFixing || !!fixingVariantKey}
+                              onClick={() => handleCheckSingleVariantLive(variant)}
+                              className="px-2.5 py-1 text-xs bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 border border-emerald-300 hover:border-emerald-400 rounded font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-xs disabled:opacity-50"
+                              title="Check live Cashify competitor price and update Rephonix payout"
+                            >
+                              {checkingVariantKey === variant.variantKey ? (
+                                <>
+                                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-emerald-600" />
+                                  <span>Checking...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Zap className="w-3.5 h-3.5 text-emerald-600 fill-emerald-500" />
+                                  <span>Check Live Price</span>
+                                </>
+                              )}
+                            </button>
+
+                            <button
                               onClick={() => handleOpenEditSpecs(variant)}
                               className="px-2.5 py-1 text-xs bg-cobalt/10 hover:bg-cobalt/20 text-cobalt border border-cobalt/20 hover:border-cobalt/40 rounded font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-xs"
                               title="Edit specs, RAM/Storage matrix and Rephonix buyback prices"
@@ -646,6 +631,7 @@ export const CashifyMonitorTab: React.FC = () => {
 
   // Recommended price fixing states
   const [fixingVariantKey, setFixingVariantKey] = useState<string | null>(null);
+  const [checkingVariantKey, setCheckingVariantKey] = useState<string | null>(null);
   const [isBulkFixing, setIsBulkFixing] = useState<boolean>(false);
 
   // Specs & Prices Edit Modal state
@@ -818,6 +804,41 @@ export const CashifyMonitorTab: React.FC = () => {
     }
   }, [fixingVariantKey, isBulkFixing, models]);
 
+  const handleCheckSingleVariantLive = useCallback(async (variant: CashifyVariantItem) => {
+    if (checkingVariantKey) return;
+    if (!variant.cashifyUrl) {
+      setScanMessage(`[!] No Cashify URL mapped for ${variant.modelName} (${variant.storageLabel}). Please click 'Set URL' first.`);
+      return;
+    }
+
+    setCheckingVariantKey(variant.variantKey);
+    try {
+      const res = await checkSingleVariantPriceApi({
+        modelName: variant.modelName,
+        brandName: variant.brandName,
+        ramGb: variant.ramGb,
+        storageGb: variant.storageGb,
+        url: variant.cashifyUrl,
+        autoUpdate: true,
+      });
+
+      if (res.ok && res.cashifyPrice && res.cashifyPrice > 0) {
+        const recPrice = res.recommendedPrice || Math.round(res.cashifyPrice * 1.035);
+        await handleApplyRecommendedPrice(variant, recPrice);
+        setSuccessNotification(
+          `✓ Verified live price for ${variant.modelName} (${variant.storageLabel}): Cashify ₹${res.cashifyPrice.toLocaleString('en-IN')} → Rephonix updated to ₹${recPrice.toLocaleString('en-IN')} (+3.5% edge)`
+        );
+        await loadData();
+      } else {
+        setScanMessage(`[!] Check failed for ${variant.modelName}: ${res.error || 'Could not extract live price'}`);
+      }
+    } catch (err: any) {
+      setScanMessage(`[!] Error checking ${variant.modelName}: ${err?.message || 'Network error'}`);
+    } finally {
+      setCheckingVariantKey(null);
+    }
+  }, [checkingVariantKey, handleApplyRecommendedPrice, loadData]);
+
   const handleBulkFixVariants = useCallback(async (variantsToFix: CashifyVariantItem[], groupLabel?: string) => {
     if (isBulkFixing || fixingVariantKey) return;
 
@@ -965,6 +986,24 @@ export const CashifyMonitorTab: React.FC = () => {
       (v) => v.cashifyPrice !== null && v.cashifyPrice > 0 && v.rephonixPrice > Math.round(v.cashifyPrice * 1.03)
     ).length;
   }, [variants]);
+
+  const editingModelCashifyUrls = useMemo(() => {
+    if (!editingModelForSpecs) return undefined;
+    const map: Record<string, string> = {};
+    variants.forEach((v) => {
+      if (
+        (v.modelId === editingModelForSpecs.id ||
+          v.modelId === (editingModelForSpecs as any).legacyId ||
+          v.modelId === (editingModelForSpecs as any).dbId ||
+          (v.legacyId && (v.legacyId === editingModelForSpecs.id || v.legacyId === (editingModelForSpecs as any).legacyId)) ||
+          v.modelName.toLowerCase() === editingModelForSpecs.name.toLowerCase()) &&
+        v.cashifyUrl
+      ) {
+        map[`${v.ramGb}_${v.storageGb}`] = v.cashifyUrl;
+      }
+    });
+    return Object.keys(map).length > 0 ? map : undefined;
+  }, [editingModelForSpecs, variants]);
 
   const editingModelCashifyPrices = useMemo(() => {
     if (!editingModelForSpecs) return undefined;
@@ -1234,11 +1273,10 @@ export const CashifyMonitorTab: React.FC = () => {
         <div className="flex items-center gap-2 self-end sm:self-auto">
           {/* Session Status Pill */}
           <div
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-mono font-semibold border ${
-              summary?.session.hasSession
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-mono font-semibold border ${summary?.session.hasSession
                 ? 'bg-emerald-950/60 border-emerald-500/40 text-emerald-300'
                 : 'bg-rose-950/60 border-rose-500/40 text-rose-300'
-            }`}
+              }`}
             title={
               summary?.session.hasSession
                 ? `Authenticated session loaded (${summary.session.cookiesCount} cookies)`
@@ -1339,11 +1377,10 @@ export const CashifyMonitorTab: React.FC = () => {
               setActiveSubTab('variants');
               setStatusFilter('ALL');
             }}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
-              activeSubTab === 'variants'
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${activeSubTab === 'variants'
                 ? 'bg-slate-900 text-white shadow-sm font-extrabold'
                 : 'text-ink-slate hover:text-ink-navy hover:bg-canvas-white'
-            }`}
+              }`}
           >
             <Layers className="w-3.5 h-3.5" />
             <span>Brand & Series Matrix</span>
@@ -1357,11 +1394,10 @@ export const CashifyMonitorTab: React.FC = () => {
               setActiveSubTab('alerts');
               setStatusFilter('ALL');
             }}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
-              activeSubTab === 'alerts'
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${activeSubTab === 'alerts'
                 ? 'bg-indigo-600 text-white shadow-sm font-extrabold'
                 : 'text-ink-slate hover:text-ink-navy hover:bg-canvas-white'
-            }`}
+              }`}
           >
             <TrendingUp className="w-3.5 h-3.5" />
             <span>Price Shifts & Alerts Log</span>
@@ -1395,16 +1431,14 @@ export const CashifyMonitorTab: React.FC = () => {
         <button
           type="button"
           onClick={() => handleSelectBrand('ALL')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-            selectedBrand === 'ALL'
+          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${selectedBrand === 'ALL'
               ? 'bg-slate-900 text-white shadow-xs font-extrabold'
               : 'bg-canvas-white hover:bg-slate-100 text-ink-slate border border-ice-border'
-          }`}
+            }`}
         >
           <span>All Brands</span>
-          <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
-            selectedBrand === 'ALL' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-700'
-          }`}>
+          <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${selectedBrand === 'ALL' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-700'
+            }`}>
             {variants.length}
           </span>
         </button>
@@ -1417,16 +1451,14 @@ export const CashifyMonitorTab: React.FC = () => {
               key={brand}
               type="button"
               onClick={() => handleSelectBrand(brand)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-                isSelected
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${isSelected
                   ? 'bg-cobalt text-white shadow-xs font-extrabold'
                   : 'bg-canvas-white hover:bg-slate-100 text-ink-slate border border-ice-border'
-              }`}
+                }`}
             >
               <span>{brand}</span>
-              <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
-                isSelected ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
-              }`}>
+              <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${isSelected ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
+                }`}>
                 {stats.total}
               </span>
             </button>
@@ -1470,18 +1502,17 @@ export const CashifyMonitorTab: React.FC = () => {
                 type="button"
                 onClick={handleExpandAll}
                 className="px-2.5 py-1 text-xs font-semibold text-slate-600 hover:text-ink-navy hover:bg-slate-100 rounded-md transition-colors cursor-pointer"
-                title="Lock and pin all series open"
+                title="Expand and open all series tables"
               >
-                Pin All Open
+                Expand All
               </button>
               <button
                 type="button"
                 onClick={handleCollapseAll}
-                className="px-2.5 py-1 text-xs font-semibold text-indigo-700 bg-indigo-50/70 hover:bg-indigo-100 border border-indigo-200/60 rounded-md transition-colors cursor-pointer flex items-center gap-1 shadow-2xs"
-                title="Collapse all into default hover-peek mode"
+                className="px-2.5 py-1 text-xs font-semibold text-slate-600 hover:text-ink-navy hover:bg-slate-100 rounded-md transition-colors cursor-pointer"
+                title="Collapse all series tables"
               >
-                <Zap className="w-3 h-3 text-indigo-500 fill-indigo-400" />
-                <span>Hover-Peek Mode</span>
+                Collapse All
               </button>
             </div>
           )}
@@ -1665,6 +1696,8 @@ export const CashifyMonitorTab: React.FC = () => {
                 onBulkFixSeries={handleBulkFixVariants}
                 isBulkFixing={isBulkFixing}
                 fixingVariantKey={fixingVariantKey}
+                checkingVariantKey={checkingVariantKey}
+                handleCheckSingleVariantLive={handleCheckSingleVariantLive}
                 handleOpenEditSpecs={handleOpenEditSpecs}
                 handleApplyRecommendedPrice={handleApplyRecommendedPrice}
                 editingKey={editingKey}
@@ -1739,11 +1772,10 @@ export const CashifyMonitorTab: React.FC = () => {
                         {/* Difference / Edge */}
                         <td className="py-3.5 px-4">
                           <span
-                            className={`px-2 py-0.5 rounded-md font-mono text-xs font-bold ${
-                              isPayingMore
+                            className={`px-2 py-0.5 rounded-md font-mono text-xs font-bold ${isPayingMore
                                 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                                 : 'bg-rose-50 text-rose-700 border border-rose-200'
-                            }`}
+                              }`}
                           >
                             {isPayingMore
                               ? `+₹${alert.difference.toLocaleString('en-IN')} (We pay more)`
@@ -1794,6 +1826,7 @@ export const CashifyMonitorTab: React.FC = () => {
           model={editingModelForSpecs}
           highlightVariant={highlightSpecVariant}
           cashifyPrices={editingModelCashifyPrices}
+          existingCashifyUrls={editingModelCashifyUrls}
           onClose={() => {
             setEditingModelForSpecs(null);
             setHighlightSpecVariant(null);

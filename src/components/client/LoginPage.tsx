@@ -18,7 +18,9 @@ export default function LoginPage({ onLoginSuccess, onNavigate, redirectParam }:
   const [googleLoading, setGoogleLoading] = useState(false);
 
   // Phone OTP States
-  const [loginMethod, setLoginMethod] = useState<'phone' | 'password'>('phone');
+  // Phone OTP feature flag - temporarily hidden
+  const SHOW_PHONE_OTP = false;
+  const [loginMethod, setLoginMethod] = useState<'phone' | 'password'>('password');
   const [phone, setPhone] = useState('');
   const [phoneOtp, setPhoneOtp] = useState('');
   const [phoneStep, setPhoneStep] = useState<'input' | 'verify'>('input');
@@ -304,12 +306,13 @@ export default function LoginPage({ onLoginSuccess, onNavigate, redirectParam }:
 
           <div className="flex items-center gap-3">
             <div className="flex-1 border-t border-ice-border/60" />
-            <span className="text-[10px] font-mono tracking-wider text-ink-muted uppercase">or choose login method</span>
+            <span className="text-[10px] font-mono tracking-wider text-ink-muted uppercase">{SHOW_PHONE_OTP ? 'or choose login method' : 'or sign in with password'}</span>
             <div className="flex-1 border-t border-ice-border/60" />
           </div>
         </div>
 
         {/* Login Method Tabs */}
+        {SHOW_PHONE_OTP && (
         <div className="flex p-1 bg-slate-100 rounded-xl text-xs font-semibold">
           <button
             type="button"
@@ -336,11 +339,12 @@ export default function LoginPage({ onLoginSuccess, onNavigate, redirectParam }:
             <span>Password</span>
           </button>
         </div>
+        )}
 
         
 
         {/* ── Mode 1: Phone OTP Form ── */}
-        {loginMethod === 'phone' && (
+        {SHOW_PHONE_OTP && loginMethod === 'phone' && (
           <div className="space-y-4">
             {phoneStep === 'input' ? (
               <form onSubmit={handleSendOtp} className="space-y-4">
@@ -441,7 +445,7 @@ export default function LoginPage({ onLoginSuccess, onNavigate, redirectParam }:
         )}
 
         {/* ── Mode 2: Password Form ── */}
-        {loginMethod === 'password' && (
+        {(!SHOW_PHONE_OTP || loginMethod === 'password') && (
         <form className="space-y-5" onSubmit={handleSubmit}>
           <div className="space-y-4">
 

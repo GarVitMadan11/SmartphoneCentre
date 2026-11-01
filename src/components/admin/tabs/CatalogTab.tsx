@@ -1947,6 +1947,7 @@ export interface EditSpecsAndPricesModalProps {
   existingSeries?: string[];
   highlightVariant?: { ram: number; storage: number } | null;
   cashifyPrices?: Record<string, number>;
+  existingCashifyUrls?: Record<string, string>;
   onClose: () => void;
   onSaveSuccess: (savedModel?: any) => void;
 }
@@ -1961,6 +1962,7 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
   existingSeries,
   highlightVariant,
   cashifyPrices,
+  existingCashifyUrls,
   onClose,
   onSaveSuccess,
 }) => {
@@ -2200,7 +2202,7 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
               model.id,
               model.releaseYear
             );
-            initUrls[key] = generateCashifyVariantUrl(
+            initUrls[key] = existingCashifyUrls?.[key] || existingCashifyUrls?.[`${ram}_${storage}`] || generateCashifyVariantUrl(
               brandName,
               model.name,
               ram,
@@ -2930,6 +2932,7 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
         url: string;
         extractedPrice?: number | null;
         rephonixPrice?: number | null;
+        isManuallyEdited?: boolean;
       }> = [];
 
       validRams.forEach((ram) => {
@@ -2979,6 +2982,7 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
                 url,
                 extractedPrice: extPrice,
                 rephonixPrice: repPrice,
+                isManuallyEdited: Boolean(manuallyEditedUrls[key]),
               });
             }
           }

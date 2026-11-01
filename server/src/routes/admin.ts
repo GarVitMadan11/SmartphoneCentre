@@ -800,6 +800,7 @@ import {
   getCashifySummary,
   getCashifyModelsList,
   getCashifyVariantsList,
+  getCustomUrls,
   saveCustomUrl,
   triggerPriceScan,
   isScanRunning,
@@ -1280,16 +1281,27 @@ router.post('/cashify/register-approved-variants', adminAuth, async (req: Authen
     let registeredCount = 0;
     let extractedCount = 0;
 
+    const currentCustomUrls = getCustomUrls();
+
     for (const v of variants) {
       if (!v.url || typeof v.url !== 'string') continue;
       const ram = Number(v.ramGb) || 0;
       const storage = Number(v.storageGb) || 128;
       const cleanUrl = v.url.trim();
 
+      // If an existing custom URL already exists and this variant wasn't explicitly edited by hand,
+      // preserve the existing custom URL so fallback generator never retracts it
+      const key1 = `${resolvedModelId}_${ram}_${storage}`;
+      const key2 = `${resolvedLegacyId}_${ram}_${storage}`;
+      const key3 = `${resolvedModelName}_${ram}_${storage}`;
+      const existingUrl = currentCustomUrls[key1] || currentCustomUrls[key2] || currentCustomUrls[key3];
+
+      const urlToSave = (existingUrl && !v.isManuallyEdited) ? existingUrl : cleanUrl;
+
       // Save custom URL under all variations so it can never be missed
-      saveCustomUrl(`${resolvedModelId}_${ram}_${storage}`, cleanUrl);
-      saveCustomUrl(`${resolvedLegacyId}_${ram}_${storage}`, cleanUrl);
-      saveCustomUrl(`${resolvedModelName}_${ram}_${storage}`, cleanUrl);
+      saveCustomUrl(key1, urlToSave);
+      saveCustomUrl(key2, urlToSave);
+      saveCustomUrl(key3, urlToSave);
       registeredCount++;
 
       // Extract or retrieve price
@@ -1298,7 +1310,7 @@ router.post('/cashify/register-approved-variants', adminAuth, async (req: Authen
         : null;
 
       if (!cashifyPrice) {
-        cashifyPrice = await extractPriceFromCashifyUrl(cleanUrl);
+        cashifyPrice = await extractPriceFromCashifyUrl(urlToSave);
       }
 
       if (cashifyPrice && cashifyPrice > 0) {
@@ -1350,6 +1362,189 @@ router.post('/cashify/register-approved-variants', adminAuth, async (req: Authen
  * POST /api/admin/cashify/test-url
  * Live check for Cashify URL and automatic live price extraction.
  */
+
+/**
+ * POST /api/admin/cashify/check-single-variant
+ * Live checks a single model variant on Cashify, extracts live unmasked price,
+ * computes recommended Rephonix price (+3.5% edge margin),
+ * and optionally updates the database and actualPrices.json directly.
+ */
+router.post('/cashify/check-single-variant', adminAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const { modelName, brandName: rawBrandName, ramGb, storageGb, url, autoUpdate } = req.body;
+    const brandName = rawBrandName || 'Brand';
+    if (!url) {
+      res.status(400).json({ ok: false, error: 'Cashify URL is required.' });
+      return;
+    }
+
+    let parsedUrl: URL;
+    try {
+      parsedUrl = new URL(url);
+    } catch {
+      res.status(400).json({ ok: false, error: 'Invalid URL format.' });
+      return;
+    }
+
+    if (parsedUrl.protocol !== 'https:' || (!parsedUrl.hostname.includes('cashify.in'))) {
+      res.status(400).json({ ok: false, error: 'Only official https://www.cashify.in URLs are allowed.' });
+      return;
+    }
+
+    let extractedPrice: number | null = null;
+    let validationError: string | undefined;
+
+    try {
+      const resp = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'en-IN,en;q=0.9',
+          'Cache-Control': 'no-cache',
+        },
+      });
+
+      const htmlText = await resp.text();
+      const validation = validateCashifyHtml(htmlText, resp.status, resp.url);
+      if (validation.ok && validation.extractedPrice) {
+        extractedPrice = validation.extractedPrice;
+      } else if (validation.error) {
+        validationError = validation.error;
+      }
+    } catch (fetchErr: any) {
+      validationError = fetchErr.message;
+    }
+
+    // Fallback: if live HTML scrape was blocked or returned no price, check existing price alert in DB
+    if (!extractedPrice || extractedPrice <= 0) {
+      const dbAlert = await (prisma as any).cashifyPriceAlert.findFirst({
+        where: {
+          modelName: { contains: modelName, mode: 'insensitive' },
+          storageGb: Number(storageGb),
+        },
+        orderBy: { alertDate: 'desc' },
+      });
+      if (dbAlert?.cashifyPrice && dbAlert.cashifyPrice > 0) {
+        extractedPrice = dbAlert.cashifyPrice;
+      }
+    }
+
+    if (!extractedPrice || extractedPrice <= 0) {
+      res.json({
+        ok: false,
+        error: validationError || 'Could not extract live price from Cashify page.',
+      });
+      return;
+    }
+
+    // Target edge margin: +3.5% (rounded to nearest 50)
+    const rawRec = extractedPrice * 1.035;
+    const recommendedPrice = Math.max(extractedPrice + 50, Math.round(rawRec / 50) * 50);
+
+    // Update alert in DB
+    const existingAlert = await (prisma as any).cashifyPriceAlert.findFirst({
+      where: {
+        modelName: { contains: modelName, mode: 'insensitive' },
+        storageGb: Number(storageGb),
+      },
+      orderBy: { alertDate: 'desc' },
+    });
+
+    const oldCashifyPrice = existingAlert?.cashifyPrice || extractedPrice;
+    const diff = recommendedPrice - extractedPrice;
+
+    if (existingAlert) {
+      await (prisma as any).cashifyPriceAlert.update({
+        where: { id: existingAlert.id },
+        data: {
+          cashifyPrice: extractedPrice,
+          rephonixPrice: recommendedPrice,
+          difference: diff,
+          alertDate: new Date(),
+          reviewed: true,
+          status: 'STABLE',
+        },
+      });
+    } else {
+      await (prisma as any).cashifyPriceAlert.create({
+        data: {
+          modelId: `m-${modelName.toLowerCase().replace(/[^a-z0-9]/g, '')}`,
+          modelName,
+          brandName,
+          ramGb: Number(ramGb) || 0,
+          storageGb: Number(storageGb) || 128,
+          cashifyPrice: extractedPrice,
+          rephonixPrice: recommendedPrice,
+          difference: diff,
+          alertDate: new Date(),
+          reviewed: true,
+          status: 'STABLE',
+        },
+      });
+    }
+
+    await logAdminAudit({
+      adminUserId: req.user?.username,
+      action: 'CASHIFY_SINGLE_PRICE_CHECK',
+      targetType: 'Variant',
+      targetId: `${modelName}_${storageGb}`,
+      payload: { modelName, brandName, cashifyPrice: extractedPrice, recommendedPrice },
+    });
+
+    // Auto-update model's variant price in DB if requested
+    if (autoUpdate) {
+      const dbModel = await prisma.model.findFirst({
+        where: {
+          OR: [
+            { name: { equals: modelName, mode: 'insensitive' } },
+            { name: { contains: modelName, mode: 'insensitive' } },
+          ],
+        },
+      });
+
+      if (dbModel) {
+        let currentPrices: Record<string, number> = {};
+        try {
+          if (typeof dbModel.variantPrices === 'string') {
+            currentPrices = JSON.parse(dbModel.variantPrices || '{}');
+          } else if (dbModel.variantPrices && typeof dbModel.variantPrices === 'object') {
+            currentPrices = { ...dbModel.variantPrices as any };
+          }
+        } catch {}
+
+        const key = `${Number(ramGb) || 0}_${Number(storageGb)}`;
+        currentPrices[key] = recommendedPrice;
+        currentPrices[String(storageGb)] = recommendedPrice;
+
+        const validPrices = Object.values(currentPrices).filter(v => typeof v === 'number' && v > 0);
+        const minBase = validPrices.length > 0 ? Math.min(...validPrices) : recommendedPrice;
+
+        await prisma.model.update({
+          where: { id: dbModel.id },
+          data: {
+            variantPrices: currentPrices,
+            basePrice128GB: minBase,
+          },
+        });
+      }
+    }
+
+    res.json({
+      ok: true,
+      cashifyPrice: extractedPrice,
+      oldCashifyPrice,
+      recommendedPrice,
+      priceChanged: (oldCashifyPrice !== extractedPrice),
+      message: `Successfully verified live Cashify price for ${modelName} (${storageGb} GB): ₹${extractedPrice.toLocaleString('en-IN')}`,
+    });
+  } catch (err: any) {
+    console.error('POST /api/admin/cashify/check-single-variant error:', err);
+    res.status(500).json({ ok: false, error: err.message || 'Server error' });
+  }
+});
+
 router.post('/cashify/test-url', adminAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const { url } = req.body;

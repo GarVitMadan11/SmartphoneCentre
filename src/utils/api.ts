@@ -978,6 +978,7 @@ export interface RegisterApprovedCashifyVariantsPayload {
     url: string;
     extractedPrice?: number | null;
     rephonixPrice?: number | null;
+    isManuallyEdited?: boolean;
   }>;
 }
 
@@ -992,6 +993,37 @@ export function registerApprovedCashifyVariants(
     },
     true
   );
+}
+
+
+export function checkSingleVariantPriceApi(params: {
+  modelName: string;
+  brandName?: string;
+  ramGb?: number;
+  storageGb: number;
+  url: string;
+  autoUpdate?: boolean;
+}): Promise<{
+  ok: boolean;
+  cashifyPrice?: number;
+  oldCashifyPrice?: number;
+  recommendedPrice?: number;
+  priceChanged?: boolean;
+  message?: string;
+  error?: string;
+}> {
+  return apiFetch<{
+    ok: boolean;
+    cashifyPrice?: number;
+    oldCashifyPrice?: number;
+    recommendedPrice?: number;
+    priceChanged?: boolean;
+    message?: string;
+    error?: string;
+  }>('/admin/cashify/check-single-variant', {
+    method: 'POST',
+    body: JSON.stringify(params),
+  }, true);
 }
 
 export function testCashifyUrlApi(url: string): Promise<{

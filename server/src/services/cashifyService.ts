@@ -201,8 +201,9 @@ export async function getCashifySummary() {
 
 export function getAppleRamGb(modelName: string): number {
   const name = modelName.toLowerCase();
+  if (name.includes('18 pro') || name.includes('18 pro max')) return 12;
   if (name.includes('17 pro') || name.includes('17 pro max')) return 12;
-  if (name.includes('17') || name.includes('16')) return 8;
+  if (name.includes('18') || name.includes('17') || name.includes('16')) return 8;
   if (name.includes('15 pro') || name.includes('15 pro max')) return 8;
   if (name.includes('15') || name.includes('14')) return 6;
   if (name.includes('13 pro') || name.includes('13 pro max')) return 6;
