@@ -1371,7 +1371,7 @@ router.post('/cashify/register-approved-variants', adminAuth, async (req: Authen
  */
 router.post('/cashify/check-single-variant', adminAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const { modelName, brandName, ramGb, storageGb, url, autoUpdate } = req.body;
+    const { modelName, ramGb, storageGb, url, autoUpdate } = req.body;
     if (!url) {
       res.status(400).json({ ok: false, error: 'Cashify URL is required.' });
       return;
