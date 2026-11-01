@@ -75,7 +75,7 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onBack }) => {
           <p>
             If you have questions regarding this Privacy Policy or wish to exercise your data rights, please contact our Compliance Officer:
           </p>
-          <div className="p-4 bg-white rounded-lg border border-ice-border font-mono text-xs space-y-1">
+          <div className="p-4 bg-white rounded-lg border border-ice-border font-sans text-xs space-y-1">
             <p><strong>Email:</strong> privacy@rephonix.in</p>
             <p><strong>Grievance Office:</strong> Rephonix Regulatory & Legal Dept, HSR Layout, Sector 4, Bengaluru - 560102</p>
           </div>

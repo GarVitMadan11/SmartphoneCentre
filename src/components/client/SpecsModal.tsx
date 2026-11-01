@@ -23,8 +23,8 @@ export function SpecsModal({ isOpen, onClose }: SpecsModalProps) {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-ice-border bg-canvas-white">
           <div className="text-left">
-            <h3 className="font-outfit font-light text-xl text-ink-navy">System Design Specification</h3>
-            <span className="text-[10px] font-mono tracking-wider text-zinc-500 uppercase">Rephonix Architecture</span>
+            <h3 className="font-sans font-light text-xl text-ink-navy">System Design Specification</h3>
+            <span className="text-[10px] font-medium tracking-normal text-zinc-500 uppercase">Rephonix Architecture</span>
           </div>
           <button 
             onClick={onClose}
@@ -39,22 +39,22 @@ export function SpecsModal({ isOpen, onClose }: SpecsModalProps) {
         <div className="flex-1 overflow-y-auto p-6 space-y-6 text-left text-sm text-ink-slate leading-relaxed">
           {/* Section 1 */}
           <div className="space-y-2">
-            <div className="flex items-center gap-2 text-ink-navy font-outfit font-light text-lg border-b border-white/[0.04] pb-1">
+            <div className="flex items-center gap-2 text-ink-navy font-sans font-light text-lg border-b border-white/[0.04] pb-1">
               <Info className="w-5 h-5 text-cobalt" />
               1. Business Architecture &amp; Pillars
             </div>
             <p className="font-light">Rephonix bridges the gap between high-volume commercial supply and consumer convenience, structured across three key pillars:</p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
               <div className="bg-canvas-white p-3 border border-ice-border rounded-sm">
-                <span className="text-cobalt font-semibold block text-xs uppercase font-mono mb-1">C2B Sourcing</span>
+                <span className="text-cobalt font-semibold block text-xs uppercase font-sans mb-1">C2B Sourcing</span>
                 <p className="text-xs font-light text-zinc-500">Consumer direct digital self-diagnostic wizard for honest grading, instant dynamic valuations, and doorstep pickups.</p>
               </div>
               <div className="bg-canvas-white p-3 border border-ice-border rounded-sm">
-                <span className="text-cobalt font-semibold block text-xs uppercase font-mono mb-1">B2B2C Ingestion</span>
+                <span className="text-cobalt font-semibold block text-xs uppercase font-sans mb-1">B2B2C Ingestion</span>
                 <p className="text-xs font-light text-zinc-500">A blind marketplace allowing vetted physical retail storefront partners to list refurbished inventory under strict grading rules.</p>
               </div>
               <div className="bg-canvas-white p-3 border border-ice-border rounded-sm">
-                <span className="text-cobalt font-semibold block text-xs uppercase font-mono mb-1">B2C Storefront</span>
+                <span className="text-cobalt font-semibold block text-xs uppercase font-sans mb-1">B2C Storefront</span>
                 <p className="text-xs font-light text-zinc-500">A masked, high-trust store (similar to Apple Certified Refurbished) featuring certified quality, warranties, and fulfillment.</p>
               </div>
             </div>
@@ -62,12 +62,12 @@ export function SpecsModal({ isOpen, onClose }: SpecsModalProps) {
 
           {/* Section 2 */}
           <div className="space-y-2">
-            <div className="flex items-center gap-2 text-ink-navy font-outfit font-light text-lg border-b border-white/[0.04] pb-1">
+            <div className="flex items-center gap-2 text-ink-navy font-sans font-light text-lg border-b border-white/[0.04] pb-1">
               <Code className="w-5 h-5 text-cobalt" />
               2. Design System Specification
             </div>
             <p className="font-light">Following the Industrial Luxury visual model, the interface focuses on spatial tactile cards, micro-borders, and high-fidelity overlays.</p>
-            <table className="w-full text-xs font-mono text-ink-slate border-collapse">
+            <table className="w-full text-xs font-sans text-ink-slate border-collapse">
               <thead>
                 <tr className="border-b border-white/[0.06] text-ink-navy text-left">
                   <th className="py-2">Token</th>
@@ -102,12 +102,12 @@ export function SpecsModal({ isOpen, onClose }: SpecsModalProps) {
 
           {/* Section 3 */}
           <div className="space-y-2">
-            <div className="flex items-center gap-2 text-ink-navy font-outfit font-light text-lg border-b border-white/[0.04] pb-1">
+            <div className="flex items-center gap-2 text-ink-navy font-sans font-light text-lg border-b border-white/[0.04] pb-1">
               <GitBranch className="w-5 h-5 text-cobalt" />
               3. Dynamic Valuation Algorithm
             </div>
             <p className="font-light">Values are computed programmatically using base-to-defect pricing formula unique to each model variant:</p>
-            <div className="bg-canvas-white p-4 rounded-sm border border-ice-border text-xs font-mono text-center text-cobalt">
+            <div className="bg-canvas-white p-4 rounded-sm border border-ice-border text-xs font-sans text-center text-cobalt">
               Price_Final = Price_Base - Σ ( Deduction_Fixed + ( Price_Base × Deduction_Percentage ) )
             </div>
             <div className="text-xs space-y-1 font-light text-zinc-500">
@@ -120,12 +120,12 @@ export function SpecsModal({ isOpen, onClose }: SpecsModalProps) {
 
           {/* Section 4 */}
           <div className="space-y-2">
-            <div className="flex items-center gap-2 text-ink-navy font-outfit font-light text-lg border-b border-white/[0.04] pb-1">
+            <div className="flex items-center gap-2 text-ink-navy font-sans font-light text-lg border-b border-white/[0.04] pb-1">
               <Database className="w-5 h-5 text-cobalt" />
               4. Core Relational Data Schema
             </div>
             <p className="font-light text-xs">A relational model binds brands, models, specific variants, defect rules, and customer bookings together:</p>
-            <div className="bg-zinc-950 p-4 rounded-sm border border-ice-border text-xs font-mono overflow-x-auto text-zinc-300">
+            <div className="bg-zinc-950 p-4 rounded-sm border border-ice-border text-xs font-sans overflow-x-auto text-zinc-300">
               {`BRANDS (id, name, logo)\n└── MODELS (id, brand_id, name, category, release_year)\n    ├── DEVICE_VARIANTS (id, model_id, storage_gb, color, base_price)\n    └── DEFECT_RULES (id, category, description, fixed, percentage, is_critical)\n        └── TRADE_IN_BOOKINGS (id, variant_id, customer_name, customer_phone, final_quote, address)`}
             </div>
           </div>

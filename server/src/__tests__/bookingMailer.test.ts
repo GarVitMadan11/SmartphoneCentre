@@ -1,4 +1,14 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+
+vi.mock('nodemailer', () => ({
+  default: {
+    createTransport: vi.fn().mockReturnValue({
+      sendMail: vi.fn().mockResolvedValue({ messageId: 'mock-test-id-12345' }),
+      verify: vi.fn().mockResolvedValue(true),
+    }),
+  },
+}));
+
 import {
   sendBookingUnderReviewEmail,
   sendBookingApprovalEmail,

@@ -11,15 +11,15 @@ export const PilotModeBanner: React.FC<PilotModeBannerProps> = ({ onOpenFeedback
       {/* 1. Primary Highlight Badge & Announcement */}
       <div className="inline-flex items-center gap-3">
         <span className="relative flex h-3 w-3">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-80"></span>
+          
           <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-400 shadow-lg shadow-emerald-400/80"></span>
         </span>
-        <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[10px] font-mono font-black tracking-widest uppercase bg-gradient-to-r from-emerald-500/30 via-teal-500/20 to-emerald-500/30 border border-emerald-400/40 text-emerald-300 shadow-inner">
-          <Sparkles className="w-3 h-3 text-emerald-300 animate-pulse" />
+        <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[10px] font-sans font-black tracking-normal uppercase bg-gradient-to-r from-emerald-500/30 via-teal-500/20 to-emerald-500/30 border border-emerald-400/40 text-emerald-300 shadow-inner">
+          <Sparkles className="w-3 h-3 text-emerald-300" />
           <span>WE ARE LIVE NOW</span>
         </span>
-        <span className="text-xs sm:text-sm font-extrabold font-outfit text-white tracking-wide flex items-center gap-2 drop-shadow-sm">
-          <span className="text-base animate-bounce">⚡</span>
+        <span className="text-xs sm:text-sm font-extrabold font-sans text-white tracking-wide flex items-center gap-2 drop-shadow-sm">
+          
           <span className="bg-gradient-to-r from-white via-slate-100 to-emerald-200 bg-clip-text text-transparent">
             Sell Your Old Smartphones &amp; Gadgets Instantly!
           </span>
@@ -31,7 +31,7 @@ export const PilotModeBanner: React.FC<PilotModeBannerProps> = ({ onOpenFeedback
 
       {/* 2. Unlisted Models Notice */}
       <div className="inline-flex items-center gap-2 bg-slate-900/60 backdrop-blur-md px-3 py-1 rounded-full border border-slate-700/50 shadow-inner">
-        <Flame className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+        <Flame className="w-3.5 h-3.5 text-amber-400" />
         <p className="text-xs sm:text-[13px] text-slate-200 font-medium whitespace-nowrap">
           Can’t find your model? <span className="text-amber-300 font-bold">New models and categories will be added soon.</span> If your model is not listed then contact us!
         </p>

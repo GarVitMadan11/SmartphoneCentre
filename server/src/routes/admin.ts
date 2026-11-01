@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import { randomBytes } from 'node:crypto';
 import prisma from '../db.js';
 import { adminAuth, optionalAdminAuth, requireRole, getJwtSecret, JWT_ISSUER, JWT_AUDIENCE, parseCookies, AuthenticatedRequest } from '../middleware/adminAuth.js';
+import { authLimiter } from '../middleware/rateLimits.js';
 import { getLockdownState, triggerEmergencyLockdown, unlockEmergencyLockdown } from '../services/lockdownService.js';
 import { sendAdminSecurityAlertEmail } from '../services/securityMailer.js';
 import { pruneExpiredQuotes, getMaintenanceStats } from '../services/maintenance.js';
@@ -22,7 +23,7 @@ router.get('/security-status', (_req: Request, res: Response): void => {
  * POST /api/admin/unlock
  * Unlocks Admin Panel using Master Emergency Unlock Key.
  */
-router.post('/unlock', async (req: Request, res: Response): Promise<void> => {
+router.post('/unlock', authLimiter, async (req: Request, res: Response): Promise<void> => {
   const { masterKey } = req.body;
   const ipAddress = String(req.headers['x-forwarded-for'] || req.ip || 'Unknown');
   const userAgent = String(req.headers['user-agent'] || 'Unknown');
@@ -46,15 +47,13 @@ router.post('/lockdown', adminAuth, async (req: AuthenticatedRequest, res: Respo
   const ipAddress = String(req.headers['x-forwarded-for'] || req.ip || 'Unknown');
   const userAgent = String(req.headers['user-agent'] || 'Unknown');
 
-  const result = await triggerEmergencyLockdown(reason, ipAddress, userAgent, req.user?.username);
+  await triggerEmergencyLockdown(reason, ipAddress, userAgent, req.user?.username);
 
-  res.clearCookie('rex_admin_token', { path: '/' });
-  res.clearCookie('rex_admin_csrf', { path: '/' });
+  clearAdminCookie(res);
 
   res.json({
     success: true,
-    message: 'Emergency Admin Panel Lockdown Activated! Access suspended.',
-    masterUnlockKey: result.masterUnlockKey,
+    message: 'Emergency Admin Panel Lockdown Activated! Access suspended. Master key dispatched to authorized emails.',
   });
 });
 
@@ -351,13 +350,23 @@ router.post('/auth', async (req: Request, res: Response): Promise<void> => {
   });
 });
 
+function clearAdminCookie(res: Response): void {
+  const isProd = process.env.NODE_ENV === 'production';
+  const sameSiteMode = isProd ? 'none' : 'lax';
+  const opts = { path: '/', secure: isProd, sameSite: sameSiteMode as 'none' | 'lax' };
+
+  res.clearCookie('rex_admin_token', { ...opts, httpOnly: true });
+  res.clearCookie('rex_admin_csrf', { ...opts, httpOnly: false });
+  res.cookie('rex_admin_token', '', { ...opts, httpOnly: true, expires: new Date(0), maxAge: 0 });
+  res.cookie('rex_admin_csrf', '', { ...opts, httpOnly: false, expires: new Date(0), maxAge: 0 });
+}
+
 /**
  * POST /api/admin/logout
  * Clears the HttpOnly authentication cookie.
  */
 router.post('/logout', (_req: Request, res: Response): void => {
-  res.clearCookie('rex_admin_token', { path: '/' });
-  res.clearCookie('rex_admin_csrf', { path: '/' });
+  clearAdminCookie(res);
   res.json({ success: true, message: 'Logged out successfully' });
 });
 
@@ -1344,8 +1353,16 @@ router.post('/cashify/register-approved-variants', adminAuth, async (req: Authen
 router.post('/cashify/test-url', adminAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const { url } = req.body;
-    if (!url || !url.startsWith('https://www.cashify.in')) {
-      res.status(400).json({ error: 'BadRequest', message: 'Valid https://www.cashify.in URL required.' });
+    let parsedUrl: URL;
+    try {
+      parsedUrl = new URL(url);
+    } catch {
+      res.status(400).json({ error: 'BadRequest', message: 'Valid URL required.' });
+      return;
+    }
+
+    if (parsedUrl.protocol !== 'https:' || (parsedUrl.hostname !== 'www.cashify.in' && parsedUrl.hostname !== 'cashify.in')) {
+      res.status(400).json({ error: 'BadRequest', message: 'Only official https://www.cashify.in URLs are allowed.' });
       return;
     }
 

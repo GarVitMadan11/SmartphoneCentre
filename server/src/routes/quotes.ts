@@ -15,13 +15,13 @@ import {
   sendAdminStepLeadEmail,
 } from '../services/bookingMailer.js';
 import { ALLOWED_STORAGE_GB } from '../validation/booking.js';
-import { authLimiter, leadLimiter } from '../middleware/rateLimits.js';
+import { authLimiter, leadLimiter, quoteLimiter } from '../middleware/rateLimits.js';
 
 const router = Router();
 
 
 // POST /api/quotes
-router.post('/', async (req, res) => {
+router.post('/', quoteLimiter, async (req, res) => {
   try {
     const { modelId, storageGb, defectIds } = req.body;
     if (!modelId || typeof modelId !== 'string') {

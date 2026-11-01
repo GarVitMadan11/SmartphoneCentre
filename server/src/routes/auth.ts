@@ -56,6 +56,35 @@ function setCustomerCookie(res: Response, token: string): string {
   return csrfToken;
 }
 
+function clearCustomerCookie(res: Response): void {
+  const isProd = process.env.NODE_ENV === 'production';
+  const sameSiteMode = isProd ? 'none' : 'lax';
+
+  const baseOptions = {
+    path: '/',
+    secure: isProd,
+    sameSite: sameSiteMode as 'none' | 'lax',
+  };
+
+  res.clearCookie('rex_token', { ...baseOptions, httpOnly: true });
+  res.clearCookie('rex_csrf', { ...baseOptions, httpOnly: false });
+
+  // Overwrite with expired cookies to ensure immediate deletion across all browsers
+  res.cookie('rex_token', '', {
+    ...baseOptions,
+    httpOnly: true,
+    expires: new Date(0),
+    maxAge: 0,
+  });
+
+  res.cookie('rex_csrf', '', {
+    ...baseOptions,
+    httpOnly: false,
+    expires: new Date(0),
+    maxAge: 0,
+  });
+}
+
 function sanitizeUser(user: any) {
   return {
     id: user.id,
@@ -185,7 +214,9 @@ router.post('/signup', async (req, res) => {
       update: { otp: otpHashed, expiresAt, attempts: 0 },
     });
 
-    console.log(`🔑 [Email OTP - Signup] Verification code for ${cleanEmail} is: ${otp}`);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`🔑 [Email OTP - Signup] Verification code for ${cleanEmail} is: ${otp}`);
+    }
 
     // Dispatch verification code using the backend email service if SMTP is configured
     try {
@@ -197,7 +228,6 @@ router.post('/signup', async (req, res) => {
     res.status(200).json({
       status: 'otp_sent',
       phone: cleanPhone,
-      otp,
     });
   } catch (err) {
     console.error('Signup error:', err);
@@ -239,14 +269,14 @@ router.post('/verify-otp', async (req, res) => {
 
     // Max attempts check (3 attempts)
     if (otpRecord.attempts >= 3) {
-      await prisma.otpVerification.delete({ where: { phone: cleanPhone } }).catch(() => {});
+      await prisma.otpVerification.delete({ where: { phone: cleanPhone } }).catch(() => { });
       res.status(400).json({ error: 'ValidationError', message: 'Maximum verification attempts exceeded. Please request a new code.' });
       return;
     }
 
     // Expiry check
     if (new Date() > otpRecord.expiresAt) {
-      await prisma.otpVerification.delete({ where: { phone: cleanPhone } }).catch(() => {});
+      await prisma.otpVerification.delete({ where: { phone: cleanPhone } }).catch(() => { });
       res.status(400).json({ error: 'ValidationError', message: 'Verification code has expired. Please request a new one.' });
       return;
     }
@@ -265,7 +295,7 @@ router.post('/verify-otp', async (req, res) => {
       }).catch(() => null);
       const newAttempts = updatedRecord ? updatedRecord.attempts : otpRecord.attempts + 1;
       if (newAttempts >= 3) {
-        await prisma.otpVerification.delete({ where: { phone: cleanPhone } }).catch(() => {});
+        await prisma.otpVerification.delete({ where: { phone: cleanPhone } }).catch(() => { });
         res.status(400).json({ error: 'ValidationError', message: 'Maximum verification attempts exceeded. Please request a new code.' });
         return;
       }
@@ -274,7 +304,7 @@ router.post('/verify-otp', async (req, res) => {
       return;
     }
 
-    await prisma.otpVerification.delete({ where: { phone: cleanPhone } }).catch(() => {});
+    await prisma.otpVerification.delete({ where: { phone: cleanPhone } }).catch(() => { });
 
     const passwordHash = await bcrypt.hash(password, 12);
 
@@ -372,8 +402,7 @@ router.post('/login', async (req, res) => {
 
 // Logout
 router.post('/logout', (_req, res) => {
-  res.clearCookie('rex_token', { path: '/' });
-  res.clearCookie('rex_csrf', { path: '/' });
+  clearCustomerCookie(res);
   res.json({ success: true, message: 'Logged out successfully.' });
 });
 
@@ -624,7 +653,7 @@ router.post('/verify-email', async (req, res) => {
 
     if (new Date() > record.expiresAt) {
       // Delete expired token
-      await prisma.emailVerificationToken.delete({ where: { tokenHash } }).catch(() => {});
+      await prisma.emailVerificationToken.delete({ where: { tokenHash } }).catch(() => { });
       res.status(400).json({ error: 'TokenExpired', message: 'Verification link has expired. Please request a new one.' });
       return;
     }
@@ -756,7 +785,7 @@ router.post('/reset-password', async (req, res) => {
     }
 
     if (new Date() > record.expiresAt) {
-      await prisma.passwordResetToken.delete({ where: { tokenHash } }).catch(() => {});
+      await prisma.passwordResetToken.delete({ where: { tokenHash } }).catch(() => { });
       res.status(400).json({ error: 'TokenExpired', message: 'Reset link has expired. Please request a new one.' });
       return;
     }
@@ -771,7 +800,7 @@ router.post('/reset-password', async (req, res) => {
     // Fetch user for security notification
     const user = await prisma.user.findUnique({ where: { id: record.userId } });
     if (user) {
-      sendSecurityEmail(user.email, user.name, 'password_reset').catch(() => {});
+      sendSecurityEmail(user.email, user.name, 'password_reset').catch(() => { });
     }
 
     res.json({ success: true, message: 'Password reset successfully. You can now sign in with your new password.' });
@@ -833,7 +862,7 @@ router.post('/link-google', customerAuth, async (req: AuthenticatedCustomerReque
       },
     });
 
-    sendSecurityEmail(user.email, user.name, 'google_linked').catch(() => {});
+    sendSecurityEmail(user.email, user.name, 'google_linked').catch(() => { });
 
     res.json({ success: true, user: sanitizeUser(user) });
   } catch (err) {
@@ -872,7 +901,7 @@ router.post('/unlink-google', customerAuth, async (req: AuthenticatedCustomerReq
       data: { googleId: null, picture: null },
     });
 
-    sendSecurityEmail(user.email, user.name, 'google_unlinked').catch(() => {});
+    sendSecurityEmail(user.email, user.name, 'google_unlinked').catch(() => { });
 
     res.json({ success: true, user: sanitizeUser(updatedUser) });
   } catch (err) {
@@ -962,7 +991,6 @@ router.post('/send-email-otp', customerAuth, async (req: AuthenticatedCustomerRe
     res.status(200).json({
       success: true,
       email: cleanEmail,
-      otp,
     });
   } catch (err) {
     console.error('Send email OTP error:', err);
@@ -1092,7 +1120,9 @@ router.post('/forgot-password-request', async (req, res) => {
       }
     });
 
-    console.log(`🔑 [Forgot Password OTP] Verification code for ${cleanEmail} is: ${otp}`);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`🔑 [Forgot Password OTP] Verification code for ${cleanEmail} is: ${otp}`);
+    }
 
     // Send the verification code to the customer email address
     try {
@@ -1104,7 +1134,6 @@ router.post('/forgot-password-request', async (req, res) => {
     res.status(200).json({
       success: true,
       email: cleanEmail,
-      otp,
       message: 'If an account exists with this email, a verification code has been sent.'
     });
   } catch (err) {

@@ -144,11 +144,11 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
                   <Lock className="w-8 h-8" />
                 </div>
                 <div className="space-y-2 max-w-sm mx-auto">
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-cobalt/10 text-cobalt border border-cobalt/20">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-sans font-semibold bg-cobalt/10 text-cobalt border border-cobalt/20">
                     <Sparkles className="w-3 h-3" />
                     <span>LOGIN REQUIRED</span>
                   </div>
-                  <h3 className="text-xl font-bold font-outfit text-ink-navy">
+                  <h3 className="text-xl font-bold font-sans text-ink-navy">
                     Sign In to Share Feedback
                   </h3>
                   <p className="text-xs text-ink-muted font-light leading-relaxed">
@@ -188,7 +188,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
                   <CheckCircle2 className="w-9 h-9" />
                 </div>
                 <div className="space-y-1.5">
-                  <h3 className="text-xl font-bold font-outfit text-ink-navy">Feedback Dispatched!</h3>
+                  <h3 className="text-xl font-bold font-sans text-ink-navy">Feedback Dispatched!</h3>
                   <p className="text-xs text-ink-muted max-w-sm mx-auto font-light leading-relaxed">
                     Your suggestion was sent directly to <strong className="text-ink-navy">support@rephonix.in</strong>. Thank you for helping shape our platform!
                   </p>
@@ -199,11 +199,11 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
               <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
                 {/* Header */}
                 <div className="space-y-1 pr-6">
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-cobalt/10 text-cobalt border border-cobalt/20">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-sans font-semibold bg-cobalt/10 text-cobalt border border-cobalt/20">
                     <Sparkles className="w-3 h-3 text-cobalt" />
                     <span>PILOT PROGRAM FEEDBACK</span>
                   </div>
-                  <h3 className="text-xl font-bold font-outfit text-ink-navy tracking-tight">
+                  <h3 className="text-xl font-bold font-sans text-ink-navy tracking-tight">
                     Help Shape the Rephonix Experience
                   </h3>
                   <p className="text-xs text-ink-muted font-light leading-relaxed">
@@ -221,7 +221,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
 
                 {/* Category Selection */}
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-mono uppercase tracking-wider text-ink-muted block">
+                  <label className="text-[10px] font-sans uppercase tracking-wider text-ink-muted block">
                     Feedback Category <span className="text-rose-500">*</span>
                   </label>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -249,7 +249,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
 
                 {/* Thoughts Textarea */}
                 <div className="space-y-1.5">
-                  <label htmlFor="pilot-feedback" className="text-[10px] font-mono uppercase tracking-wider text-ink-muted block">
+                  <label htmlFor="pilot-feedback" className="text-[10px] font-sans uppercase tracking-wider text-ink-muted block">
                     Your Thoughts &amp; Suggestions <span className="text-rose-500">*</span>
                   </label>
                   <textarea
@@ -266,7 +266,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
                 {/* Mandatory Name & Gmail / Email Fields */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label htmlFor="pilot-name" className="text-[10px] font-mono uppercase tracking-wider text-ink-muted block">
+                    <label htmlFor="pilot-name" className="text-[10px] font-sans uppercase tracking-wider text-ink-muted block">
                       Your Name <span className="text-rose-500">*</span>
                     </label>
                     <input
@@ -280,7 +280,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
                     />
                   </div>
                   <div className="space-y-1">
-                    <label htmlFor="pilot-email" className="text-[10px] font-mono uppercase tracking-wider text-ink-muted block">
+                    <label htmlFor="pilot-email" className="text-[10px] font-sans uppercase tracking-wider text-ink-muted block">
                       Your Gmail / Email <span className="text-rose-500">*</span>
                     </label>
                     <input

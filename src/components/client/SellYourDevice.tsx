@@ -48,18 +48,18 @@ const FloatingComposition: React.FC<{ currentUser?: ApiUser | null }> = () => {
   };
 
   return (
-    <div className="relative w-full min-h-[440px] flex items-center justify-center p-2 sm:p-4">
+    <div className="relative w-full min-h-0 sm:min-h-[440px] flex items-center justify-center p-1 sm:p-4">
       {/* Background ambient lighting glow */}
       <div className="absolute inset-0 bg-gradient-to-tr from-cobalt/10 via-emerald-500/10 to-transparent rounded-3xl blur-3xl pointer-events-none" />
 
       <div className="relative w-full max-w-2xl flex flex-col sm:flex-row items-center justify-center gap-6">
         
         {/* ── CARD 1: iPhone 18 Pro Max ── */}
-        <div className="w-full sm:w-64 h-[350px] bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 relative group overflow-hidden flex flex-col items-center justify-between text-center">
+        <div className="w-full sm:w-64 h-[280px] sm:h-[350px] bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-6 shadow-md sm:shadow-xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 relative group overflow-hidden flex flex-col items-center justify-between text-center">
           <div className="absolute top-0 right-0 w-36 h-36 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none group-hover:bg-emerald-500/10 transition-all" />
           
           {/* Image - flush with dividing line below */}
-          <div className="w-full h-44 flex items-end justify-center relative z-10 mt-auto">
+          <div className="w-full h-32 sm:h-44 flex items-end justify-center relative z-10 mt-auto">
             <img
               src={iphone18Model?.imageUrl || "https://fdn2.gsmarena.com/vv/bigpic/apple-iphone18-pro-max.jpg"}
               alt="iPhone 18 Pro Max"
@@ -71,21 +71,21 @@ const FloatingComposition: React.FC<{ currentUser?: ApiUser | null }> = () => {
 
           {/* Model Name & Max Price */}
           <div className="w-full pt-4 border-t border-slate-100 space-y-1 relative z-10">
-            <h4 className="text-lg font-black text-slate-900 font-outfit tracking-tight">
+            <h4 className="text-lg font-black text-slate-900 font-sans tracking-tight">
               iPhone 18 Pro Max
             </h4>
-            <div className="text-2xl sm:text-3xl font-black text-emerald-600 font-outfit tracking-tight">
+            <div className="text-2xl sm:text-3xl font-black text-emerald-600 font-sans tracking-tight">
               {formatPriceStr(iphone18MaxPrice, '₹1,69,950')}
             </div>
           </div>
         </div>
 
         {/* ── CARD 2: Google Pixel 11 Fold ── */}
-        <div className="w-full sm:w-64 h-[350px] bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 relative group overflow-hidden flex flex-col items-center justify-between text-center">
+        <div className="w-full sm:w-64 h-[280px] sm:h-[350px] bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-6 shadow-md sm:shadow-xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 relative group overflow-hidden flex flex-col items-center justify-between text-center">
           <div className="absolute top-0 right-0 w-36 h-36 bg-blue-500/5 rounded-full blur-2xl pointer-events-none group-hover:bg-blue-500/10 transition-all" />
           
           {/* Image - flush with dividing line below */}
-          <div className="w-full h-44 flex items-end justify-center relative z-10 mt-auto">
+          <div className="w-full h-32 sm:h-44 flex items-end justify-center relative z-10 mt-auto">
             <img
               src={pixelFoldModel?.imageUrl || "https://fdn2.gsmarena.com/vv/bigpic/google-pixel-11-pro-fold.jpg"}
               alt="Google Pixel 11 Fold"
@@ -97,10 +97,10 @@ const FloatingComposition: React.FC<{ currentUser?: ApiUser | null }> = () => {
 
           {/* Model Name & Max Price */}
           <div className="w-full pt-4 border-t border-slate-100 space-y-1 relative z-10">
-            <h4 className="text-lg font-black text-slate-900 font-outfit tracking-tight">
+            <h4 className="text-lg font-black text-slate-900 font-sans tracking-tight">
               Google Pixel 11 Fold
             </h4>
-            <div className="text-2xl sm:text-3xl font-black text-emerald-600 font-outfit tracking-tight">
+            <div className="text-2xl sm:text-3xl font-black text-emerald-600 font-sans tracking-tight">
               {formatPriceStr(pixelFoldMaxPrice, '₹1,04,288')}
             </div>
           </div>
@@ -153,11 +153,11 @@ const ProcessStep: React.FC<StepProps> = ({ number, title, description, icon, de
         <div className="relative mb-5">
           <div className="absolute inset-0 rounded-2xl bg-secondary/8 blur-md scale-110 group-hover:bg-secondary/14 transition-all duration-500" />
           <div className="relative w-20 h-20 rounded-2xl bg-gradient-to-br from-cobalt to-[#002652] flex flex-col items-center justify-center gap-1 shadow-lg shadow-cobalt/20 group-hover:scale-105 group-hover:shadow-cobalt/30 transition-all duration-300">
-            <div className="text-white/50 text-[9px] font-mono tracking-widest font-bold">{number}</div>
+            <div className="text-white/50 text-[9px] font-medium tracking-normal font-bold">{number}</div>
             <div className="text-white [&>svg]:w-6 [&>svg]:h-6">{icon}</div>
           </div>
         </div>
-        <h3 className="text-sm font-bold text-ink-navy font-outfit tracking-tight mb-1.5">{title}</h3>
+        <h3 className="text-sm font-bold text-ink-navy font-sans tracking-tight mb-1.5">{title}</h3>
         <p className="text-ink-slate text-xs leading-relaxed font-light max-w-[180px]">{description}</p>
       </div>
     </div>
@@ -173,8 +173,8 @@ const FeaturePill: React.FC<{ icon: React.ReactNode; label: string; value: strin
       {icon}
     </div>
     <div>
-      <div className="text-[9px] font-mono tracking-wider text-ink-muted uppercase">{label}</div>
-      <div className="text-xs font-bold text-ink-navy font-outfit">{value}</div>
+      <div className="text-[9px] font-medium tracking-normal text-ink-muted uppercase">{label}</div>
+      <div className="text-xs font-bold text-ink-navy font-sans">{value}</div>
     </div>
   </div>
 );
@@ -221,13 +221,13 @@ export const SellYourDevice: React.FC<{
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-secondary shadow-[0_0_8px_rgba(0,110,47,0.5)]" />
               </span>
-              <span className="text-[11px] font-bold font-outfit tracking-[0.16em] text-secondary uppercase">
+              <span className="text-[11px] font-bold font-sans tracking-[0.16em] text-secondary uppercase">
                 SELL TO REPHONIX
               </span>
             </div>
 
             {/* Headline — navy + green accent (matching photo) */}
-            <h2 className="text-4xl sm:text-5xl lg:text-[3.5rem] font-black text-ink-navy font-outfit tracking-tight leading-[1.08] mb-5">
+            <h2 className="text-4xl sm:text-5xl lg:text-[3.5rem] font-black text-ink-navy font-sans tracking-tight leading-[1.08] mb-5">
               YOUR DEVICE<br />
               HAS{' '}
               <span className="text-secondary">VALUE.</span>
@@ -288,11 +288,11 @@ export const SellYourDevice: React.FC<{
           {/* Header */}
           <div className="text-center mb-12">
             <span className="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-white/90 backdrop-blur-md border border-cobalt/20 shadow-[0_2px_10px_-2px_rgba(0,32,69,0.08)] hover:border-cobalt/35 hover:shadow-[0_4px_14px_-2px_rgba(0,32,69,0.14)] transition-all duration-300 mb-4 select-none">
-              <span className="text-[11px] font-bold font-outfit tracking-[0.18em] text-cobalt uppercase">
+              <span className="text-[11px] font-bold font-sans tracking-[0.18em] text-cobalt uppercase">
                 PROCESS
               </span>
             </span>
-            <h3 className="text-2xl sm:text-3xl font-black text-ink-navy font-outfit tracking-tight">
+            <h3 className="text-2xl sm:text-3xl font-black text-ink-navy font-sans tracking-tight">
               Four steps to get <span className="text-secondary">paid.</span>
             </h3>
             <p className="text-ink-slate text-sm mt-2 font-light max-w-md mx-auto">
@@ -352,12 +352,12 @@ export const SellYourDevice: React.FC<{
           {/* Bottom CTA strip */}
           <div className="mt-12 flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-5 bg-canvas-white border border-ice-border rounded-2xl shadow-sm">
             <div>
-              <div className="text-sm font-bold text-ink-navy font-outfit">Ready to check your device&apos;s value?</div>
+              <div className="text-sm font-bold text-ink-navy font-sans">Ready to check your device&apos;s value?</div>
               <div className="text-xs text-ink-muted font-light mt-0.5">Takes under 2 minutes. No commitment required.</div>
             </div>
             <button
               onClick={onGetValuation}
-              className="group flex items-center gap-2.5 px-6 py-3 bg-cobalt hover:bg-cobalt-hover text-white font-bold text-sm rounded-xl transition-all duration-300 hover:shadow-lg flex-shrink-0 font-outfit tracking-wide"
+              className="group flex items-center gap-2.5 px-6 py-3 bg-cobalt hover:bg-cobalt-hover text-white font-bold text-sm rounded-xl transition-all duration-300 hover:shadow-lg flex-shrink-0 font-sans tracking-wide"
             >
               Start Valuation
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />

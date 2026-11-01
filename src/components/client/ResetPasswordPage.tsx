@@ -60,7 +60,7 @@ export default function ResetPasswordPage({ onNavigate, tokenParam }: ResetPassw
                 <CheckCircle2 className="w-8 h-8 text-emerald-500" />
               </div>
             </div>
-            <h2 className="text-2xl font-extrabold text-ink-navy font-outfit">Password Reset!</h2>
+            <h2 className="text-2xl font-extrabold text-ink-navy font-sans">Password Reset!</h2>
             <p className="text-xs text-ink-muted font-light">Your password has been reset successfully. You can now sign in with your new password.</p>
             <button
               onClick={() => onNavigate('/login')}
@@ -82,7 +82,7 @@ export default function ResetPasswordPage({ onNavigate, tokenParam }: ResetPassw
           <div className="flex justify-center mb-4">
             <img src="/logo.svg" className="w-12 h-12 object-contain" alt="Rephonix Logo" />
           </div>
-          <h2 className="text-2xl font-extrabold text-ink-navy tracking-tight font-outfit">Reset Password</h2>
+          <h2 className="text-2xl font-extrabold text-ink-navy tracking-tight font-sans">Reset Password</h2>
           <p className="mt-2 text-xs text-ink-muted font-light">Enter your new password below.</p>
         </div>
 
@@ -107,7 +107,7 @@ export default function ResetPasswordPage({ onNavigate, tokenParam }: ResetPassw
         {!error || !error.includes('Invalid or missing') ? (
           <form className="space-y-5" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="new-password" className="text-[10px] font-mono tracking-wider text-ink-muted uppercase block mb-1.5">New Password</label>
+              <label htmlFor="new-password" className="text-[10px] font-medium tracking-normal text-ink-muted uppercase block mb-1.5">New Password</label>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-ink-muted"><Lock className="w-4 h-4" /></span>
                 <input
@@ -128,7 +128,7 @@ export default function ResetPasswordPage({ onNavigate, tokenParam }: ResetPassw
             </div>
 
             <div>
-              <label htmlFor="confirm-new-password" className="text-[10px] font-mono tracking-wider text-ink-muted uppercase block mb-1.5">Confirm New Password</label>
+              <label htmlFor="confirm-new-password" className="text-[10px] font-medium tracking-normal text-ink-muted uppercase block mb-1.5">Confirm New Password</label>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-ink-muted"><Lock className="w-4 h-4" /></span>
                 <input

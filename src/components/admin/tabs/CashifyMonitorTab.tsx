@@ -197,13 +197,13 @@ const SeriesAccordionCard: React.FC<SeriesAccordionCardProps> = React.memo(({
 
           {group.belowTargetCount > 0 && (
             <span className="px-2 py-0.5 rounded text-[11px] font-bold font-mono bg-rose-50 text-rose-700 border border-rose-200">
-              🚨 {group.belowTargetCount} Below Target
+              {group.belowTargetCount} Below Target
             </span>
           )}
 
           {group.aboveTargetCount > 0 && (
             <span className="px-2 py-0.5 rounded text-[11px] font-bold font-mono bg-indigo-50 text-indigo-700 border border-indigo-200">
-              📈 {group.aboveTargetCount} Above Target
+              {group.aboveTargetCount} Above Target
             </span>
           )}
 
@@ -494,7 +494,7 @@ const SeriesAccordionCard: React.FC<SeriesAccordionCardProps> = React.memo(({
                                   >
                                     {testResult.ok ? (
                                       <>
-                                        <span>✓ Verified</span>
+                                        <span>Verified</span>
                                         {testResult.extractedPrice ? (
                                           <span className="font-extrabold text-emerald-950">
                                             (Live: ₹{testResult.extractedPrice.toLocaleString('en-IN')})
@@ -502,11 +502,11 @@ const SeriesAccordionCard: React.FC<SeriesAccordionCardProps> = React.memo(({
                                         ) : null}
                                       </>
                                     ) : testResult.is404 ? (
-                                      <span>✗ 404: Page Not Found on Cashify</span>
+                                      <span>404: Page Not Found on Cashify</span>
                                     ) : testResult.isUnserviceable ? (
-                                      <span>⚠️ Cashify not purchasing in this location (Gurgaon / Delhi / etc.)</span>
+                                      <span>Cashify not purchasing in this location (Gurgaon / Delhi / etc.)</span>
                                     ) : (
-                                      <span>✗ {testResult.error || `HTTP ${testResult.status} Error`}</span>
+                                      <span>{testResult.error || `HTTP ${testResult.status} Error`}</span>
                                     )}
                                   </span>
                                   {!testResult.ok && testResult.error && !testResult.is404 && !testResult.isUnserviceable && (
@@ -807,7 +807,7 @@ export const CashifyMonitorTab: React.FC = () => {
       );
 
       setSuccessNotification(
-        `✓ Updated ${variant.modelName} (${variant.specLabel}) buyback payout to ₹${recommendedPrice.toLocaleString('en-IN')} (+3% above Cashify)!`
+        `Updated ${variant.modelName} (${variant.specLabel}) buyback payout to ₹${recommendedPrice.toLocaleString('en-IN')} (+3% above Cashify)!`
       );
       window.dispatchEvent(new CustomEvent('stc_catalog_order_changed'));
     } catch (err: any) {
@@ -882,7 +882,7 @@ export const CashifyMonitorTab: React.FC = () => {
       await bulkUpdateModels(updatesPayload);
 
       setSuccessNotification(
-        `✓ Successfully aligned ${targets.length} variants across ${modelUpdatesMap.size} models${groupLabel ? ` in ${groupLabel}` : ''} to exact +3% above Cashify!`
+        `Successfully aligned ${targets.length} variants across ${modelUpdatesMap.size} models${groupLabel ? ` in ${groupLabel}` : ''} to exact +3% above Cashify!`
       );
       window.dispatchEvent(new CustomEvent('stc_catalog_order_changed'));
       await loadData();
@@ -1565,14 +1565,14 @@ export const CashifyMonitorTab: React.FC = () => {
               className="px-2.5 py-1.5 border border-ice-border bg-white rounded-lg text-xs font-semibold text-ink-navy focus:outline-none focus:border-cobalt shadow-xs cursor-pointer"
             >
               <option value="ALL">All Statuses</option>
-              <option value="NOT_EXACT_TARGET">⚠️ Needs Alignment to +3% ({notExactTargetTotalCount})</option>
-              <option value="BELOW_TARGET">🚨 Below +3% Target ({belowTargetTotalCount})</option>
-              <option value="ABOVE_TARGET">📈 Above +3% Target ({aboveTargetTotalCount})</option>
-              <option value="EXACT_TARGET">🎯 Exact +3% Target</option>
-              <option value="VERIFIED">✅ Verified URL</option>
-              <option value="MISSING">⚠️ Missing URL</option>
+              <option value="NOT_EXACT_TARGET">Needs Alignment to +3% ({notExactTargetTotalCount})</option>
+              <option value="BELOW_TARGET">Below +3% Target ({belowTargetTotalCount})</option>
+              <option value="ABOVE_TARGET">Above +3% Target ({aboveTargetTotalCount})</option>
+              <option value="EXACT_TARGET">Exact +3% Target</option>
+              <option value="VERIFIED">Verified URL</option>
+              <option value="MISSING">Missing URL</option>
               <option value="OVERRIDDEN">⭐ Custom Overridden</option>
-              <option value="HAS_PRICE">💰 Has Cashify Price</option>
+              <option value="HAS_PRICE">Has Cashify Price</option>
               <option value="PENDING">⏳ Pending Scan</option>
             </select>
           ) : (

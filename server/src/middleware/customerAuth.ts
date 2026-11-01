@@ -143,6 +143,7 @@ export async function customerAuth(
     const decoded = jwt.verify(token, getJwtSecret(), {
       issuer: JWT_ISSUER,
       audience: CUSTOMER_JWT_AUDIENCE,
+      algorithms: ['HS256'],
     }) as CustomerPayload;
 
     const user = await prisma.user.findUnique({ where: { id: decoded.sub } });
@@ -206,6 +207,7 @@ export async function optionalCustomerAuth(
     const decoded = jwt.verify(token, getJwtSecret(), {
       issuer: JWT_ISSUER,
       audience: CUSTOMER_JWT_AUDIENCE,
+      algorithms: ['HS256'],
     }) as CustomerPayload;
 
     const user = await prisma.user.findUnique({ where: { id: decoded.sub } });

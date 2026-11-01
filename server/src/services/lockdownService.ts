@@ -68,11 +68,10 @@ export async function unlockEmergencyLockdown(
   const cleanInput = (masterKeyInput || '').trim();
   const configuredMasterKey = (process.env.ADMIN_MASTER_KEY || '').trim();
 
-  // Allow either dynamically generated key OR env ADMIN_MASTER_KEY OR standard super-admin pin match
+  // Allow either dynamically generated key OR env ADMIN_MASTER_KEY
   const isMatch =
-    (state.masterUnlockKey && cleanInput.toUpperCase() === state.masterUnlockKey.toUpperCase()) ||
-    (configuredMasterKey && cleanInput.toUpperCase() === configuredMasterKey.toUpperCase()) ||
-    cleanInput === 'UNLOCK2026';
+    Boolean(state.masterUnlockKey && cleanInput.toUpperCase() === state.masterUnlockKey.toUpperCase()) ||
+    Boolean(configuredMasterKey && cleanInput.toUpperCase() === configuredMasterKey.toUpperCase());
 
   if (!isMatch) {
     // Send failed unlock attempt alert

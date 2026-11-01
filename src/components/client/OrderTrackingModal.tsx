@@ -267,7 +267,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                         {/* Top Header Row: ID, Creation Date & Status Badge */}
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-ice-border/60">
                           <div className="flex items-center gap-2">
-                            <span className="text-xs font-mono font-bold text-cobalt bg-cobalt/10 px-2.5 py-1 rounded-md border border-cobalt/20">
+                            <span className="text-xs font-sans font-bold text-cobalt bg-cobalt/10 px-2.5 py-1 rounded-md border border-cobalt/20">
                               #{b.id}
                             </span>
                             <button
@@ -285,10 +285,10 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                           </div>
 
                           <div className="flex items-center gap-2 text-xs">
-                            <span className="text-[10px] font-mono text-zinc-400">
+                            <span className="text-[10px] font-sans text-zinc-400">
                               Booked on {formatDate(b.dateCreated)}
                             </span>
-                            <span className={`text-[10px] font-bold font-mono px-2 py-0.5 rounded-full uppercase ${
+                            <span className={`text-[10px] font-bold font-sans px-2 py-0.5 rounded-full uppercase ${
                               b.payoutStatus === 'completed'
                                 ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
                                 : b.inspectionStatus === 'approved'
@@ -322,7 +322,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                             <h4 className="font-bold text-base text-ink-navy truncate">
                               {b.modelName}
                             </h4>
-                            <p className="text-xs text-ink-muted mt-0.5 truncate font-mono">
+                            <p className="text-xs text-ink-muted mt-0.5 truncate font-sans">
                               Storage: {b.storageGb >= 1024 ? `${b.storageGb / 1024}TB` : `${b.storageGb}GB`}
                               {b.color && b.color !== 'Standard' ? ` • ${b.color}` : ''}
                               {b.imei ? ` • IMEI: ${b.imei}` : ''}
@@ -330,8 +330,8 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                           </div>
 
                           <div className="text-right flex-shrink-0">
-                            <span className="text-[10px] font-mono text-zinc-400 uppercase block font-semibold">Agreed Quote</span>
-                            <span className="text-lg sm:text-xl font-extrabold text-emerald-600 font-mono">
+                            <span className="text-[10px] font-sans text-zinc-400 uppercase block font-semibold">Agreed Quote</span>
+                            <span className="text-lg sm:text-xl font-extrabold text-emerald-600 font-sans">
                               {formatPrice(b.finalPayoutAmount || b.finalPrice)}
                             </span>
                           </div>
@@ -340,7 +340,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                         {/* Info Grid: Scheduled Pickup & Address */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs bg-slate-50/60 dark:bg-zinc-900/40 p-3 rounded-lg border border-ice-border/40">
                           <div>
-                            <span className="text-[10px] font-mono text-zinc-400 uppercase font-semibold block flex items-center gap-1">
+                            <span className="text-[10px] font-sans text-zinc-400 uppercase font-semibold block flex items-center gap-1">
                               <Calendar className="w-3 h-3 text-cobalt" /> Scheduled Doorstep Pickup
                             </span>
                             <p className="font-medium text-ink-navy mt-0.5">
@@ -349,7 +349,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                           </div>
                           
                           <div>
-                            <span className="text-[10px] font-mono text-zinc-400 uppercase font-semibold block flex items-center gap-1">
+                            <span className="text-[10px] font-sans text-zinc-400 uppercase font-semibold block flex items-center gap-1">
                               <MapPin className="w-3 h-3 text-cobalt" /> Pickup Address
                             </span>
                             <p className="font-light text-ink-navy truncate mt-0.5" title={b.address}>
@@ -429,11 +429,11 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                             </div>
                             <div>
                               <h4 className="font-extrabold text-sm text-ink-navy tracking-tight">OFFICIAL TAX INVOICE</h4>
-                              <span className="text-[11px] font-mono text-ink-muted">Invoice No: INV-{b.id}</span>
+                              <span className="text-[11px] font-sans text-ink-muted">Invoice No: INV-{b.id}</span>
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200 uppercase tracking-wider">
+                            <span className="text-[10px] font-sans font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200 uppercase tracking-wider">
                               {b.status || 'CONFIRMED'}
                             </span>
                           </div>
@@ -441,25 +441,25 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                           <div>
-                            <span className="text-[10px] font-mono text-ink-muted uppercase block">Device Details</span>
+                            <span className="text-[10px] font-sans text-ink-muted uppercase block">Device Details</span>
                             <span className="font-bold text-ink-navy">{b.modelName} ({b.storageGb}GB)</span>
                           </div>
                           <div>
-                            <span className="text-[10px] font-mono text-ink-muted uppercase block">Booking Date</span>
+                            <span className="text-[10px] font-sans text-ink-muted uppercase block">Booking Date</span>
                             <span className="font-semibold text-slate-700">{new Date(b.dateCreated).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                           </div>
                           <div>
-                            <span className="text-[10px] font-mono text-ink-muted uppercase block">Customer Name</span>
+                            <span className="text-[10px] font-sans text-ink-muted uppercase block">Customer Name</span>
                             <span className="font-semibold text-slate-700">{b.customerName}</span>
                           </div>
                           <div>
-                            <span className="text-[10px] font-mono text-ink-muted uppercase block">Final Agreed Payout</span>
-                            <span className="font-black text-emerald-600 font-mono text-sm">{formattedPrice}</span>
+                            <span className="text-[10px] font-sans text-ink-muted uppercase block">Final Agreed Payout</span>
+                            <span className="font-black text-emerald-600 font-sans text-sm">{formattedPrice}</span>
                           </div>
                         </div>
 
                         <div className="pt-3 border-t border-ice-border/60 flex items-center justify-between gap-3">
-                          <span className="text-[11px] text-slate-400 font-mono hidden sm:inline">100% GST &amp; Aadhaar Compliant Receipt</span>
+                          <span className="text-[11px] text-slate-400 font-sans hidden sm:inline">100% GST &amp; Aadhaar Compliant Receipt</span>
                           <button
                             type="button"
                             onClick={() => downloadBookingPdf(b.id)}
@@ -489,7 +489,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                       placeholder="e.g. RPX19104821"
                       value={bookingId}
                       onChange={(e) => setBookingId(e.target.value.toUpperCase())}
-                      className="w-full px-3.5 py-2.5 rounded-lg border border-ice-border bg-white text-sm font-mono focus:ring-2 focus:ring-cobalt focus:border-cobalt outline-none uppercase"
+                      className="w-full px-3.5 py-2.5 rounded-lg border border-ice-border bg-white text-sm font-sans focus:ring-2 focus:ring-cobalt focus:border-cobalt outline-none uppercase"
                       required
                     />
                   </div>
@@ -504,7 +504,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                       placeholder="10-digit number"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-                      className="w-full px-3.5 py-2.5 rounded-lg border border-ice-border bg-white text-sm font-mono focus:ring-2 focus:ring-cobalt focus:border-cobalt outline-none"
+                      className="w-full px-3.5 py-2.5 rounded-lg border border-ice-border bg-white text-sm font-sans focus:ring-2 focus:ring-cobalt focus:border-cobalt outline-none"
                       required
                     />
                   </div>
@@ -542,7 +542,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                   {/* Summary Card */}
                   <div className="p-4 bg-zinc-50 rounded-xl border border-ice-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div>
-                      <span className="text-[10px] font-mono uppercase tracking-wider text-ink-muted block font-semibold">
+                      <span className="text-[10px] font-sans uppercase tracking-wider text-ink-muted block font-semibold">
                         Device for Sale
                       </span>
                       <h4 className="font-bold text-base text-ink-navy mt-0.5">
@@ -553,7 +553,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                       </p>
                     </div>
                     <div className="sm:text-right">
-                      <span className="text-[10px] font-mono uppercase tracking-wider text-ink-muted block font-semibold">
+                      <span className="text-[10px] font-sans uppercase tracking-wider text-ink-muted block font-semibold">
                         Payout Amount
                       </span>
                       <span className="text-xl font-black text-emerald-600">
@@ -620,7 +620,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                               <Clock className="w-3.5 h-3.5 text-cobalt shrink-0" />
                               <span className="text-ink-navy font-medium">{evt.note}</span>
                             </div>
-                            <span className="text-[10px] font-mono text-ink-muted whitespace-nowrap">
+                            <span className="text-[10px] font-sans text-ink-muted whitespace-nowrap">
                               {new Date(evt.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
                           </div>
@@ -664,12 +664,12 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                             </div>
                             <div>
                               <div className="flex items-center gap-2">
-                                <h4 className="font-bold text-sm text-ink-navy font-outfit">{q.modelName}</h4>
-                                <span className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] font-mono font-bold">
+                                <h4 className="font-bold text-sm text-ink-navy font-sans">{q.modelName}</h4>
+                                <span className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] font-sans font-bold">
                                   {storageLabel}
                                 </span>
                               </div>
-                              <span className="text-[10px] font-mono text-slate-400">
+                              <span className="text-[10px] font-sans text-slate-400">
                                 Ref: #{q.id.slice(-8).toUpperCase()} • {formatDate(q.createdAt)}
                               </span>
                             </div>
@@ -691,15 +691,15 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                         {/* Price evaluation & change banner */}
                         <div className="my-3 p-3 bg-slate-50 rounded-lg border border-slate-200/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                           <div>
-                            <span className="text-[10px] font-mono uppercase text-slate-500 font-bold block">
+                            <span className="text-[10px] font-sans uppercase text-slate-500 font-bold block">
                               Live Estimated Payout
                             </span>
                             <div className="flex items-baseline gap-2">
-                              <span className="text-xl font-extrabold text-emerald-700 font-outfit">
+                              <span className="text-xl font-extrabold text-emerald-700 font-sans">
                                 {formatPrice(q.livePrice)}
                               </span>
                               {q.hasPriceChanged && (
-                                <span className="text-xs text-slate-400 line-through font-mono">
+                                <span className="text-xs text-slate-400 line-through font-sans">
                                   Was {formatPrice(q.originalPrice)}
                                 </span>
                               )}
@@ -708,18 +708,18 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
 
                           {q.hasPriceChanged ? (
                             q.priceDifference > 0 ? (
-                              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[11px] font-bold font-mono border border-emerald-300">
+                              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[11px] font-bold font-sans border border-emerald-300">
                                 <TrendingUp className="w-3 h-3 text-emerald-700" />
                                 <span>Live Update: +{formatPrice(q.priceDifference)}</span>
                               </div>
                             ) : (
-                              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-100 text-amber-900 text-[11px] font-bold font-mono border border-amber-300">
+                              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-100 text-amber-900 text-[11px] font-bold font-sans border border-amber-300">
                                 <TrendingDown className="w-3 h-3 text-amber-700" />
                                 <span>Live Update: -{formatPrice(Math.abs(q.priceDifference))}</span>
                               </div>
                             )
                           ) : (
-                            <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-white text-slate-600 text-[10px] font-medium font-mono border border-slate-200">
+                            <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-white text-slate-600 text-[10px] font-medium font-sans border border-slate-200">
                               <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                               <span>Catalog Price Active</span>
                             </div>

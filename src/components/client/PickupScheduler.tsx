@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { 
   Clock, User, MapPin, 
-  CheckCircle, ArrowLeft, ChevronRight, ShieldCheck
+  CheckCircle, ArrowLeft, ChevronRight, ShieldCheck, Check, AlertCircle, X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
@@ -523,14 +523,14 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                     <ArrowLeft className="w-4 h-4" />
                   </button>
                   <div>
-                    <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase block mb-0.5">Scheduling agent</span>
+                    <span className="text-[10px] font-medium tracking-normal text-zinc-500 uppercase block mb-0.5">Scheduling agent</span>
                     <h2 className="text-3xl font-light text-ink-navy tracking-tight">Doorstep Pickup</h2>
                     <p className="text-xs text-ink-muted mt-1 font-light">Complete the steps below to secure your dynamic doorside valuation.</p>
                   </div>
                 </div>
 
                 {/* Progress bar info */}
-                <div className="flex items-center justify-between mb-6 bg-canvas-white/40 p-2.5 rounded-sm border border-white/[0.04] text-[10px] font-mono tracking-wider text-zinc-400">
+                <div className="flex items-center justify-between mb-6 bg-canvas-white/40 p-2.5 rounded-sm border border-white/[0.04] text-[10px] font-medium tracking-normal text-zinc-400">
                   <span className="uppercase">Step {schedulerStep} of 3: {
                     schedulerStep === 1 ? 'Contact & Device Info' : 
                     schedulerStep === 2 ? 'Address & Schedule' : 
@@ -548,7 +548,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                   {/* STEP 1: Customer Contact & IMEI */}
                   {schedulerStep === 1 && (
                     <div className="space-y-5 animate-fadeIn">
-                      <h3 className="text-[11px] font-mono tracking-[0.25em] text-cobalt uppercase flex items-center gap-1.5 font-bold mb-3">
+                      <h3 className="text-[11px] font-medium tracking-normal text-cobalt uppercase flex items-center gap-1.5 font-bold mb-3">
                         <User className="w-3.5 h-3.5" /> 1. Contact details & IMEI Identification
                       </h3>
 
@@ -589,10 +589,8 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                               style={{ minHeight: '48px' }}
                             />
                             {name && (
-                              <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-sm ${
-                                isNameValid ? 'text-emerald-400' : 'text-red-400'
-                              }`}>
-                                {isNameValid ? '✓' : '✗'}
+                              <span className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
+                                {isNameValid ? <Check className="w-4 h-4 text-emerald-600 stroke-[2.5]" /> : <AlertCircle className="w-4 h-4 text-rose-500" />}
                               </span>
                             )}
                           </div>
@@ -617,10 +615,8 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                               style={{ minHeight: '48px' }}
                             />
                             {email && (
-                              <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-sm ${
-                                isEmailValid ? 'text-emerald-400' : 'text-red-400'
-                              }`}>
-                                {isEmailValid ? '✓' : '✗'}
+                              <span className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
+                                {isEmailValid ? <Check className="w-4 h-4 text-emerald-600 stroke-[2.5]" /> : <AlertCircle className="w-4 h-4 text-rose-500" />}
                               </span>
                             )}
                           </div>
@@ -633,7 +629,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                       <div>
                         <label className="text-xs font-semibold text-ink-slate block mb-1">WhatsApp / Contact Number *</label>
                         <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-mono text-zinc-400 font-semibold">+91</span>
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-sans text-zinc-400 font-semibold">+91</span>
                           <input
                             type="tel"
                             required
@@ -649,10 +645,8 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                             style={{ minHeight: '48px' }}
                           />
                           {phone && (
-                            <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-sm ${
-                              isPhoneValid ? 'text-emerald-400' : 'text-red-400'
-                            }`}>
-                              {isPhoneValid ? '✓' : '✗'}
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
+                              {isPhoneValid ? <Check className="w-4 h-4 text-emerald-600 stroke-[2.5]" /> : <AlertCircle className="w-4 h-4 text-rose-500" />}
                             </span>
                           )}
                         </div>
@@ -660,7 +654,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                           <span className="text-[10px] text-red-400 mt-1 block">Must start with 6-9 and contain exactly 10 digits.</span>
                         )}
                         {phone && isPhoneValid && (
-                          <span className="text-[10px] text-emerald-400 mt-1 block">✓ Valid Indian mobile number.</span>
+                          <span className="text-[10px] text-emerald-400 mt-1 block">Valid Indian mobile number.</span>
                         )}
                       </div>
 
@@ -670,7 +664,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                           <label className="text-xs font-semibold text-ink-slate flex items-center gap-1">
                             Device 15-Digit IMEI Number * <span className="text-red-500 font-bold">(Required)</span>
                           </label>
-                          <span className="text-[10px] font-mono text-zinc-400">Dial *#06# to check</span>
+                          <span className="text-[10px] font-sans text-zinc-400">Dial *#06# to check</span>
                         </div>
                         <div className="relative">
                           <input
@@ -681,16 +675,14 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                             value={imei}
                             onChange={e => setImei(e.target.value.replace(/\D/g, '').slice(0, 15))}
                             placeholder="e.g. 354892109845123 (15 digits)"
-                            className={`w-full p-3 pr-9 rounded-sm border bg-canvas-white text-ink-navy text-sm font-mono focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all ${
+                            className={`w-full p-3 pr-9 rounded-sm border bg-canvas-white text-ink-navy text-sm font-sans focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all ${
                               imei && isImeiValid ? 'border-emerald-400' : imei && !isImeiValid ? 'border-red-400' : 'border-ice-border'
                             }`}
                             style={{ minHeight: '48px' }}
                           />
                           {imei && (
-                            <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-sm font-bold ${
-                              isImeiValid ? 'text-emerald-400' : 'text-red-400'
-                            }`}>
-                              {isImeiValid ? '✓' : '✗'}
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
+                              {isImeiValid ? <Check className="w-4 h-4 text-emerald-600 stroke-[2.5]" /> : <AlertCircle className="w-4 h-4 text-rose-500" />}
                             </span>
                           )}
                         </div>
@@ -701,12 +693,12 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                         )}
                         {imei && isImeiValid && (
                           <span className="text-[10px] text-emerald-400 mt-1 block">
-                            ✓ Valid 15-digit device IMEI number verified.
+                            Valid 15-digit device IMEI number verified.
                           </span>
                         )}
                         {!imei && (
-                          <span className="text-[10px] text-zinc-400 mt-1 block font-mono">
-                            💡 Dial <strong>*#06#</strong> on your phone dialer or look in Settings &gt; About.
+                          <span className="text-[10px] text-zinc-400 mt-1 block font-sans">
+                            Dial <strong>*#06#</strong> on your phone dialer or find in Settings &gt; About.
                           </span>
                         )}
                       </div>
@@ -716,7 +708,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                   {/* STEP 2: Address & Schedule Slot */}
                   {schedulerStep === 2 && (
                     <div className="space-y-5 animate-fadeIn">
-                      <h3 className="text-[11px] font-mono tracking-[0.25em] text-cobalt uppercase flex items-center gap-1.5 font-bold mb-3">
+                      <h3 className="text-[11px] font-medium tracking-normal text-cobalt uppercase flex items-center gap-1.5 font-bold mb-3">
                         <MapPin className="w-3.5 h-3.5" /> 2. Address & Time slots
                       </h3>
 
@@ -792,8 +784,8 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                         </div>
 
                         {address && isAddressValid && (
-                          <span className="text-xs text-emerald-700 dark:text-emerald-400 mt-1.5 flex items-center gap-1.5 font-bold">
-                            ✓ Formatted Address: <span className="text-slate-900 dark:text-white font-medium">{address}</span>
+                          <span className="text-xs text-emerald-700 dark:text-emerald-400 mt-1.5 flex items-center gap-1.5 font-medium">
+                            Formatted Address: <span className="text-slate-900 dark:text-white font-medium">{address}</span>
                           </span>
                         )}
                       </div>
@@ -805,7 +797,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                             <MapPin className="w-3.5 h-3.5 text-cobalt" />
                             Delhi Pickup Pincode *
                           </label>
-                          <span className="text-[10px] font-mono text-cobalt font-bold uppercase">
+                          <span className="text-[10px] font-sans text-cobalt font-bold uppercase">
                             Delhi Only (110xxx)
                           </span>
                         </div>
@@ -818,7 +810,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                             value={pincode}
                             onChange={e => setPincode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                             placeholder="Type 6-digit Pincode (e.g. 110001, 110016, 110092)"
-                            className={`w-full p-3 pr-10 rounded-sm border bg-canvas-white text-ink-navy text-sm font-mono focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all ${
+                            className={`w-full p-3 pr-10 rounded-sm border bg-canvas-white text-ink-navy text-sm font-sans focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all ${
                               pincode && isDelhiPincodeValid
                                 ? 'border-emerald-500 ring-1 ring-emerald-500/30'
                                 : pincode && pincode.length === 6 && !isDelhiPincodeValid
@@ -828,10 +820,8 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                             style={{ minHeight: '48px' }}
                           />
                           {pincode && pincode.length === 6 && (
-                            <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-base font-bold ${
-                              isDelhiPincodeValid ? 'text-emerald-500' : 'text-red-500'
-                            }`}>
-                              {isDelhiPincodeValid ? '✓' : '✗'}
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
+                              {isDelhiPincodeValid ? <Check className="w-4 h-4 text-emerald-600 stroke-[2.5]" /> : <AlertCircle className="w-4 h-4 text-rose-500" />}
                             </span>
                           )}
                         </div>
@@ -839,15 +829,15 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                         {/* Live Delhi Locality Match Banner with Green Checkmark */}
                         {pincode && isDelhiPincodeValid && pincodeLocality && (
                           <div className="mt-2 p-3.5 bg-emerald-50 dark:bg-emerald-950 border-2 border-emerald-400 dark:border-emerald-600 rounded-xl text-xs flex items-center gap-3 animate-fadeIn shadow-xs">
-                            <div className="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0 shadow-sm">
-                              ✓
+                            <div className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0 shadow-xs">
+                              <Check className="w-3 h-3 stroke-[2.5]" />
                             </div>
                             <div>
-                              <span className="font-extrabold text-emerald-950 dark:text-emerald-100 block text-[11px] uppercase font-mono tracking-wider">
+                              <span className="font-extrabold text-emerald-950 dark:text-emerald-100 block text-[11px] uppercase font-medium tracking-normal">
                                 Verified Delhi Service Area (Pincode {pincode})
                               </span>
                               <span className="text-xs font-medium text-emerald-900 dark:text-emerald-100 block mt-0.5">
-                                📍 Locality: <strong className="font-extrabold text-emerald-950 dark:text-white underline decoration-emerald-500 decoration-1 underline-offset-2">{pincodeLocality}</strong>, Delhi NCT
+                                Locality: <strong className="font-semibold text-emerald-950 dark:text-white underline decoration-emerald-500 decoration-1 underline-offset-2">{pincodeLocality}</strong>, Delhi NCT
                               </span>
                             </div>
                           </div>
@@ -856,11 +846,11 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                         {/* Non-Delhi Pincode Warning Banner */}
                         {pincode && pincode.length === 6 && !isDelhiPincodeValid && (
                           <div className="mt-2 p-3.5 bg-red-50 dark:bg-red-950 border-2 border-red-400 dark:border-red-600 rounded-xl text-xs flex items-start gap-3 animate-fadeIn shadow-xs">
-                            <div className="w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5 shadow-sm">
-                              ✗
+                            <div className="w-5 h-5 rounded-full bg-rose-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5 shadow-xs">
+                              <AlertCircle className="w-3 h-3 stroke-[2.5]" />
                             </div>
                             <div>
-                              <strong className="block text-[11px] uppercase font-mono tracking-wider text-red-950 dark:text-red-100 font-extrabold">
+                              <strong className="block text-[11px] uppercase font-medium tracking-normal text-red-950 dark:text-red-100 font-extrabold">
                                 Service Unavailable for Pincode {pincode}
                               </strong>
                               <span className="text-xs font-medium text-red-900 dark:text-red-100 leading-relaxed block mt-0.5">
@@ -891,9 +881,9 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                                 }`}
                                 style={{ minHeight: '52px' }}
                               >
-                                <span className="text-[8px] font-mono uppercase tracking-wider block">{d.dayName}</span>
+                                <span className="text-[8px] font-sans uppercase tracking-wider block">{d.dayName}</span>
                                 <span className="text-base font-semibold leading-none my-0.5">{d.dayNumber}</span>
-                                <span className="text-[8px] font-mono uppercase tracking-wider block">{d.month}</span>
+                                <span className="text-[8px] font-sans uppercase tracking-wider block">{d.month}</span>
                               </button>
                             );
                           })}
@@ -934,7 +924,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                   {schedulerStep === 3 && (
                     <div className="space-y-5 animate-fadeIn">
                       <div className="space-y-1">
-                        <h3 className="text-[11px] font-mono tracking-[0.25em] text-cobalt uppercase flex items-center gap-1.5 font-bold mb-3">
+                        <h3 className="text-[11px] font-medium tracking-normal text-cobalt uppercase flex items-center gap-1.5 font-bold mb-3">
                           <CheckCircle className="w-3.5 h-3.5" /> 3. Final Review &amp; Confirmation
                         </h3>
                         <p className="text-xs text-slate-600 dark:text-zinc-400 leading-relaxed font-normal">
@@ -956,7 +946,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {/* Box 1: Client Specs */}
                         <div className="border border-slate-300 dark:border-zinc-700 rounded-xl p-4 bg-slate-50 dark:bg-zinc-800 space-y-2 shadow-xs">
-                          <span className="text-[11px] font-mono tracking-widest text-slate-700 dark:text-zinc-200 uppercase block font-bold">1. Contact Details</span>
+                          <span className="text-[11px] font-medium tracking-normal text-slate-700 dark:text-zinc-200 uppercase block font-bold">1. Contact Details</span>
                           <div className="space-y-1.5 text-xs text-slate-900 dark:text-zinc-100 font-medium">
                             <div><span className="font-bold text-slate-700 dark:text-zinc-300">Name:</span> <span className="font-bold text-slate-950 dark:text-white">{name}</span></div>
                             <div><span className="font-bold text-slate-700 dark:text-zinc-300">Mobile:</span> <span className="font-bold text-slate-950 dark:text-white">+91 {phone}</span></div>
@@ -966,7 +956,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
 
                         {/* Box 2: Pickup Schedule */}
                         <div className="border border-slate-300 dark:border-zinc-700 rounded-xl p-4 bg-slate-50 dark:bg-zinc-800 space-y-2 shadow-xs">
-                          <span className="text-[11px] font-mono tracking-widest text-slate-700 dark:text-zinc-200 uppercase block font-bold">2. Doorside Pickup Schedule</span>
+                          <span className="text-[11px] font-medium tracking-normal text-slate-700 dark:text-zinc-200 uppercase block font-bold">2. Doorside Pickup Schedule</span>
                           <div className="space-y-1.5 text-xs text-slate-900 dark:text-zinc-100 font-medium">
                             <div><span className="font-bold text-slate-700 dark:text-zinc-300">Date:</span> <span className="font-bold text-slate-950 dark:text-white">{selectedDate}</span></div>
                             <div className="truncate"><span className="font-bold text-slate-700 dark:text-zinc-300">Window:</span> <span className="font-bold text-slate-950 dark:text-white">{selectedTimeSlot}</span></div>
@@ -976,7 +966,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
 
                       {/* Address detail */}
                       <div className="border border-slate-300 dark:border-zinc-700 rounded-xl p-4 bg-slate-50 dark:bg-zinc-800 space-y-2 shadow-xs">
-                        <span className="text-[11px] font-mono tracking-widest text-slate-700 dark:text-zinc-200 uppercase block font-bold">Pickup Address &amp; Locality</span>
+                        <span className="text-[11px] font-medium tracking-normal text-slate-700 dark:text-zinc-200 uppercase block font-bold">Pickup Address &amp; Locality</span>
                         <p className="text-xs text-slate-950 dark:text-white font-medium leading-relaxed">{address}</p>
                       </div>
 
@@ -988,11 +978,11 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                         </div>
                         <div className="flex justify-between text-xs text-slate-700 dark:text-zinc-200 font-semibold">
                           <span>Doorstep Processing Fee:</span>
-                          <span className="text-red-500 dark:text-red-400 font-bold font-mono">-₹99</span>
+                          <span className="text-red-500 dark:text-red-400 font-bold font-sans">-₹99</span>
                         </div>
                         <div className="flex justify-between items-center text-sm font-bold text-slate-950 dark:text-white border-t border-slate-300 dark:border-zinc-700 pt-2.5 mt-2.5">
                           <span>Instant Doorside Payout:</span>
-                          <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-outfit tracking-tight">{formatPrice(netDoorsidePayout)}</span>
+                          <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-sans tracking-tight">{formatPrice(netDoorsidePayout)}</span>
                         </div>
                       </div>
                     </div>
@@ -1007,7 +997,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <span className="flex-1 font-semibold">{formError}</span>
-                  <button onClick={() => setFormError('')} className="ml-auto flex-shrink-0 text-red-700 dark:text-red-300 hover:text-red-950 font-bold" aria-label="Dismiss">✕</button>
+                  <button onClick={() => setFormError('')} className="ml-auto flex-shrink-0 text-red-700 dark:text-red-300 hover:text-red-950 p-0.5" aria-label="Dismiss"><X className="w-4 h-4" /></button>
                 </div>
               )}
 
@@ -1062,7 +1052,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
               {/* Receipt Style Lock Summary */}
               <div className="bg-canvas-pure dark:bg-zinc-900 rounded-xl border border-ice-border dark:border-zinc-800 p-5 relative overflow-hidden shadow-premium">
                 <div className="pb-3 border-b border-ice-border dark:border-zinc-800 mb-4 text-left">
-                  <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white font-mono tracking-wider uppercase">
+                  <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white font-medium tracking-normal uppercase">
                     Audit Ledger
                   </h3>
                 </div>
@@ -1090,7 +1080,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                       {selectedDefects.map((defect, idx) => (
                         <div key={defect.id} className="flex justify-between items-start text-slate-800 dark:text-zinc-200 font-medium">
                           <span className="leading-tight">{(idx + 1).toString().padStart(2, '0')}. {getEngineeringLabel(defect.description)}</span>
-                          <span className="text-slate-500 dark:text-zinc-400 text-[10px] font-mono flex-shrink-0">Declared</span>
+                          <span className="text-slate-500 dark:text-zinc-400 text-[10px] font-sans flex-shrink-0">Declared</span>
                         </div>
                       ))}
                     </div>
@@ -1102,8 +1092,8 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
 
                   <div className="flex justify-between items-center bg-slate-50 dark:bg-zinc-800/90 p-4 rounded-xl border border-slate-200 dark:border-zinc-700 mt-4 shadow-sm">
                     <div>
-                      <span className="text-[10px] font-mono font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider block mb-1">Total Estimated Payout</span>
-                      <span className="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight font-outfit">{formatPrice(totalPayoutVal)}</span>
+                      <span className="text-[10px] font-sans font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider block mb-1">Total Estimated Payout</span>
+                      <span className="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight font-sans">{formatPrice(totalPayoutVal)}</span>
                     </div>
                     <span className="text-xs bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 px-3 py-1.5 rounded-full border border-emerald-500/30 font-extrabold uppercase tracking-wider shadow-xs">Locked</span>
                   </div>
@@ -1112,7 +1102,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
 
               {/* Side contact info summary */}
               <div className="bg-white dark:bg-zinc-900 rounded-xl border border-slate-200 dark:border-zinc-800 p-5 text-xs text-left shadow-sm space-y-3">
-                <span className="text-xs font-mono font-bold tracking-wider text-slate-700 dark:text-zinc-300 uppercase block border-b border-slate-200 dark:border-zinc-800 pb-2">
+                <span className="text-xs font-sans font-bold tracking-wider text-slate-700 dark:text-zinc-300 uppercase block border-b border-slate-200 dark:border-zinc-800 pb-2">
                   Contact Summary
                 </span>
                 {name && (
@@ -1167,7 +1157,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
               <div className="bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-xl p-5 text-xs space-y-3 font-sans text-left shadow-sm">
                 <div className="flex justify-between items-center font-bold border-b border-slate-200 dark:border-zinc-700 pb-2.5 mb-2.5 text-slate-900 dark:text-white text-sm">
                   <span>Confirmation ID</span>
-                  <span className="text-blue-600 dark:text-sky-400 font-extrabold font-mono text-base">#{confirmationId}</span>
+                  <span className="text-blue-600 dark:text-sky-400 font-extrabold font-sans text-base">#{confirmationId}</span>
                 </div>
                 
                 <div className="flex justify-between items-center">
@@ -1221,7 +1211,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                 
                 <div className="flex justify-between items-center border-t border-slate-200 dark:border-zinc-700 pt-3 mt-3 text-slate-900 dark:text-white">
                   <span className="font-bold text-sm">Final Locked Payout</span>
-                  <span className="text-emerald-600 dark:text-emerald-400 font-extrabold text-2xl font-outfit">{formatPrice(totalPayoutVal)}</span>
+                  <span className="text-emerald-600 dark:text-emerald-400 font-extrabold text-2xl font-sans">{formatPrice(totalPayoutVal)}</span>
                 </div>
               </div>
             </div>

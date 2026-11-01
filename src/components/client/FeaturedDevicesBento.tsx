@@ -133,11 +133,11 @@ export const FeaturedDevicesBento: React.FC<FeaturedDevicesBentoProps> = ({
   return (
     <div className="py-4">
       {/* Section Heading */}
-      <div className="text-center max-w-2xl mx-auto mb-10">
-        <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[11px] font-bold bg-secondary/10 text-secondary border border-secondary/15 shadow-sm tracking-widest uppercase font-outfit">
-          <CheckCircle2 className="w-3.5 h-3.5" /> Popular Right Now
+      <div className="text-center max-w-2xl mx-auto mb-6 sm:mb-10">
+        <span className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+          <CheckCircle2 className="w-3.5 h-3.5" /> Popular Trade-Ins
         </span>
-        <h2 className="text-3xl sm:text-4xl font-extrabold text-ink-navy tracking-tight mt-3 font-outfit">
+        <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight mt-3">
           Most Valued Devices
         </h2>
       </div>
@@ -145,12 +145,12 @@ export const FeaturedDevicesBento: React.FC<FeaturedDevicesBentoProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
         
         {/* ── CARD 1: BIGGER ONE FOR APPLE (md:col-span-2) ── */}
-        <div className="md:col-span-2 bg-white border border-slate-200/90 rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-md hover:shadow-xl transition-all duration-300 relative overflow-hidden group text-left min-h-[340px]">
+        <div className="md:col-span-2 bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6 shadow-md hover:shadow-xl transition-all duration-300 relative overflow-hidden group text-left min-h-0 sm:min-h-[340px]">
           <div className="absolute inset-0 bg-gradient-to-br from-cobalt/3 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
           {/* Left Column: Title, Subtitle, Sell Now Button, Dots */}
           <div className="z-10 flex-1 max-w-sm">
-            <h3 className="text-3xl sm:text-4xl font-black text-ink-navy tracking-tight font-outfit">
+            <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
               Apple iPhones
             </h3>
 
@@ -162,7 +162,7 @@ export const FeaturedDevicesBento: React.FC<FeaturedDevicesBentoProps> = ({
               <button
                 type="button"
                 onClick={() => onSelectModel(currentApple.id)}
-                className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-7 py-3.5 rounded-xl font-extrabold text-sm shadow-lg shadow-emerald-500/25 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2 cursor-pointer group/btn"
+                className="bg-slate-900 hover:bg-slate-800 text-white px-6 py-3 rounded-xl font-semibold text-sm shadow-sm transition-all duration-200 flex items-center gap-2 cursor-pointer group/btn"
               >
                 <span>Sell Now</span>
                 <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
@@ -193,7 +193,7 @@ export const FeaturedDevicesBento: React.FC<FeaturedDevicesBentoProps> = ({
 
           {/* Right Column: Sliding iPhone Image with AnimatePresence (Seamlessly Integrated) */}
           <div className="z-10 relative flex-shrink-0 w-full sm:w-72 flex items-center justify-center">
-            <div className="flex flex-col items-center justify-center relative overflow-hidden w-full h-64 group-hover:scale-105 transition-transform duration-500">
+            <div className="flex flex-col items-center justify-center relative overflow-hidden w-full h-44 sm:h-64 group-hover:scale-105 transition-transform duration-500">
               
               <AnimatePresence mode="wait" custom={appleDirection}>
                 <motion.div
@@ -210,7 +210,7 @@ export const FeaturedDevicesBento: React.FC<FeaturedDevicesBentoProps> = ({
                     alt={currentApple.name}
                     referrerPolicy="no-referrer"
                     style={{ mixBlendMode: 'multiply' }}
-                    className="w-52 sm:w-56 h-52 object-contain"
+                    className="w-40 sm:w-56 h-40 sm:h-52 object-contain"
                   />
                 </motion.div>
               </AnimatePresence>
@@ -226,7 +226,7 @@ export const FeaturedDevicesBento: React.FC<FeaturedDevicesBentoProps> = ({
           {/* CARD 2: SAMSUNG GALAXY (UPPER) */}
           <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 flex items-center justify-between shadow-md hover:shadow-xl hover:border-blue-400/50 transition-all duration-300 relative overflow-hidden group text-left min-h-[155px]">
             <div className="z-10 flex-1 pr-4">
-              <h4 className="text-xl font-black text-ink-navy font-outfit tracking-tight">
+              <h4 className="text-lg font-bold text-slate-900 tracking-tight">
                 Samsung Galaxy
               </h4>
               <p className="text-xs text-ink-slate mt-1 font-light">
@@ -263,7 +263,7 @@ export const FeaturedDevicesBento: React.FC<FeaturedDevicesBentoProps> = ({
           {/* CARD 3: ALL OTHER BRANDS (LOWER) */}
           <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 flex flex-col justify-between shadow-md hover:shadow-xl hover:border-emerald-400/50 transition-all duration-300 relative overflow-hidden group text-left min-h-[155px]">
             <div className="z-10">
-              <h4 className="text-xl font-black text-ink-navy font-outfit tracking-tight">
+              <h4 className="text-lg font-bold text-slate-900 tracking-tight">
                 All Other Brands
               </h4>
               <p className="text-xs text-ink-slate mt-1.5 font-light leading-relaxed">

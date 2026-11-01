@@ -173,7 +173,7 @@ export const StaffTab: React.FC = () => {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6 font-outfit">
+    <div className="p-6 max-w-7xl mx-auto space-y-6 font-sans">
       {/* Top Banner */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
         <div>
@@ -212,7 +212,7 @@ export const StaffTab: React.FC = () => {
         <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-xs text-red-600 flex items-center gap-2">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
           <span>{error}</span>
-          <button onClick={() => setError('')} className="ml-auto text-red-400 hover:text-red-700">✕</button>
+          <button onClick={() => setError('')} className="ml-auto text-red-400 hover:text-red-700 p-0.5" aria-label="Dismiss"><X className="w-4 h-4" /></button>
         </div>
       )}
 
@@ -220,7 +220,7 @@ export const StaffTab: React.FC = () => {
         <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-700 flex items-center gap-2">
           <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
           <span>{successMsg}</span>
-          <button onClick={() => setSuccessMsg('')} className="ml-auto text-emerald-400 hover:text-emerald-800">✕</button>
+          <button onClick={() => setSuccessMsg('')} className="ml-auto text-emerald-400 hover:text-emerald-800 p-0.5" aria-label="Dismiss"><X className="w-4 h-4" /></button>
         </div>
       )}
 
@@ -410,7 +410,7 @@ export const StaffTab: React.FC = () => {
                 onClick={() => setShowAddModal(false)}
                 className="text-slate-400 hover:text-slate-600 p-1"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
@@ -546,7 +546,7 @@ export const StaffTab: React.FC = () => {
           <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-sm p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="font-bold text-slate-900 text-sm">Reset Password</h3>
-              <button onClick={() => setResetModalUser(null)} className="text-slate-400">✕</button>
+              <button onClick={() => setResetModalUser(null)} className="text-slate-400 hover:text-slate-600 p-0.5" aria-label="Close"><X className="w-4 h-4" /></button>
             </div>
             <p className="text-xs text-slate-500">
               Set a new secure password for <strong className="text-slate-800">{resetModalUser.email}</strong>. This will also clear any account lockouts.

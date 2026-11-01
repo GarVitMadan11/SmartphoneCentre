@@ -42,11 +42,7 @@ export default function ForgotPasswordPage({ onNavigate }: ForgotPasswordPagePro
     setIsLoading(true);
 
     try {
-      const response = await requestPasswordResetOtp(cleanEmail);
-      if (response.otp) {
-        console.log(`🔑 [Password Reset OTP]: ${response.otp}`);
-      }
-
+      await requestPasswordResetOtp(cleanEmail);
       setSuccess('Verification code sent successfully to your email.');
       setStage('reset');
       setCooldown(60);
@@ -103,7 +99,7 @@ export default function ForgotPasswordPage({ onNavigate }: ForgotPasswordPagePro
           <div className="flex justify-center mb-4">
             <img src="/logo.svg" className="w-12 h-12 object-contain" alt="Rephonix Logo" />
           </div>
-          <h2 className="text-2xl font-extrabold text-ink-navy tracking-tight font-outfit">
+          <h2 className="text-2xl font-extrabold text-ink-navy tracking-tight font-sans">
             {stage === 'request' ? 'Forgot Password?' : 'Enter Reset Code'}
           </h2>
           <p className="mt-2 text-xs text-ink-muted font-light">
@@ -149,7 +145,7 @@ export default function ForgotPasswordPage({ onNavigate }: ForgotPasswordPagePro
         {stage === 'request' && (
           <form className="space-y-5" onSubmit={handleRequestResetOtp}>
             <div>
-              <label htmlFor="reset-email" className="text-[10px] font-mono tracking-wider text-ink-muted uppercase block mb-1.5">
+              <label htmlFor="reset-email" className="text-[10px] font-medium tracking-normal text-ink-muted uppercase block mb-1.5">
                 Email Address
               </label>
               <div className="relative">
@@ -184,7 +180,7 @@ export default function ForgotPasswordPage({ onNavigate }: ForgotPasswordPagePro
             
             {/* Verification Code */}
             <div>
-              <label htmlFor="reset-otp" className="text-[10px] font-mono tracking-wider text-ink-muted uppercase block mb-1.5">
+              <label htmlFor="reset-otp" className="text-[10px] font-medium tracking-normal text-ink-muted uppercase block mb-1.5">
                 6-Digit Verification Code
               </label>
               <input
@@ -194,14 +190,14 @@ export default function ForgotPasswordPage({ onNavigate }: ForgotPasswordPagePro
                 maxLength={6}
                 value={otp}
                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                className="w-full px-3 py-2 bg-canvas-pure border border-ice-border rounded-sm text-center font-mono text-sm tracking-widest text-ink-navy focus:outline-none focus:border-cobalt transition-all"
+                className="w-full px-3 py-2 bg-canvas-pure border border-ice-border rounded-sm text-center font-sans text-sm tracking-widest text-ink-navy focus:outline-none focus:border-cobalt transition-all"
                 placeholder="000000"
               />
             </div>
 
             {/* New Password */}
             <div>
-              <label htmlFor="new-password" className="text-[10px] font-mono tracking-wider text-ink-muted uppercase block mb-1.5">
+              <label htmlFor="new-password" className="text-[10px] font-medium tracking-normal text-ink-muted uppercase block mb-1.5">
                 New Password
               </label>
               <div className="relative">
@@ -229,7 +225,7 @@ export default function ForgotPasswordPage({ onNavigate }: ForgotPasswordPagePro
 
             {/* Confirm New Password */}
             <div>
-              <label htmlFor="confirm-password" className="text-[10px] font-mono tracking-wider text-ink-muted uppercase block mb-1.5">
+              <label htmlFor="confirm-password" className="text-[10px] font-medium tracking-normal text-ink-muted uppercase block mb-1.5">
                 Confirm New Password
               </label>
               <div className="relative">
@@ -249,7 +245,7 @@ export default function ForgotPasswordPage({ onNavigate }: ForgotPasswordPagePro
             </div>
 
             {/* Cooldown/Resend */}
-            <div className="flex justify-end text-xs font-mono">
+            <div className="flex justify-end text-xs font-sans">
               {cooldown > 0 ? (
                 <span className="text-ink-muted font-light">
                   Resend code in <strong className="font-semibold text-cobalt">{cooldown}s</strong>

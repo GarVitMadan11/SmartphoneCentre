@@ -120,7 +120,7 @@ export const SupportInbox: React.FC = () => {
       {/* Inbox List */}
       <div className={`bg-canvas-pure border border-ice-border rounded-sm p-4 sm:p-6 shadow-premium transition-all ${selectedConvId ? 'lg:col-span-5' : 'lg:col-span-12'}`}>
         <div className="flex justify-between items-center pb-4 mb-4 border-b border-ice-border/40">
-          <h3 className="font-outfit font-light text-xl text-ink-navy">Support Inbox</h3>
+          <h3 className="font-sans font-light text-xl text-ink-navy">Support Inbox</h3>
           <button onClick={fetchConversations} className="p-2 border border-ice-border rounded-sm hover:text-cobalt transition-colors">
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>

@@ -60,7 +60,7 @@ export const PriceDeltaBadge: React.FC<PriceDeltaBadgeProps> = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.85 }}
             transition={{ type: 'spring', stiffness: 450, damping: 25 }}
-            className={`flex items-center gap-0.5 text-[10px] font-mono font-black px-2 py-0.5 rounded-full shadow-xs tracking-tight select-none border ${
+            className={`flex items-center gap-0.5 text-[10px] font-sans font-black px-2 py-0.5 rounded-full shadow-xs tracking-tight select-none border ${
               deltaInfo.amount > 0
                 ? 'bg-emerald-50 text-emerald-800 border-emerald-300 ring-2 ring-emerald-500/20'
                 : 'bg-rose-50 text-rose-800 border-rose-300 ring-2 ring-rose-500/20'

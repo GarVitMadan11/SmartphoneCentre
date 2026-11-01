@@ -371,7 +371,7 @@ export const PhoneBackPreview: React.FC<{
                   // Z Flip clamshell cover screen + dual camera
                   <div className="absolute top-1.5 left-1.5 right-1.5 h-16 rounded-[10px] bg-black border border-white/5 p-1 flex items-center justify-between">
                     <div className="flex-1 h-full rounded-[6px] bg-zinc-900 border border-white/5 flex items-center justify-center">
-                      <span className="text-[6px] font-mono text-zinc-550 tracking-tighter">09:41 AM</span>
+                      <span className="text-[6px] font-sans text-zinc-550 tracking-tighter">09:41 AM</span>
                     </div>
                     <div className="flex flex-col justify-around h-full pl-2 pr-1">
                       <div className="w-2.5 h-2.5 rounded-full bg-black border border-neutral-600 relative flex items-center justify-center">
@@ -524,8 +524,8 @@ export const PhoneBackPreview: React.FC<{
 
       {/* Styled device preview label under phone */}
       <div className="mt-4 text-center">
-        <span className="text-[10px] uppercase tracking-widest font-mono text-zinc-550 dark:text-zinc-400 block mb-1">Device Preview</span>
-        <span className="text-base font-bold text-ink-navy dark:text-zinc-200 font-outfit tracking-tight">{colorName}</span>
+        <span className="text-[10px] uppercase font-medium tracking-normal text-zinc-550 dark:text-zinc-400 block mb-1">Device Preview</span>
+        <span className="text-base font-bold text-ink-navy dark:text-zinc-200 font-sans tracking-tight">{colorName}</span>
       </div>
     </div>
   );
@@ -660,8 +660,8 @@ const SeriesCard: React.FC<{
       whileHover={{ scale: 1.015, y: -2 }}
       whileTap={{ scale: 0.985 }}
       onClick={onClick}
-      className="p-5 rounded-2xl border border-ice-border bg-canvas-pure cursor-pointer hover:border-cobalt/40 transition-all duration-300 shadow-sm hover:shadow-premium group flex flex-col justify-between relative overflow-hidden"
-      style={{ minHeight: '175px' }}
+      className="p-3 sm:p-5 rounded-xl sm:rounded-2xl border border-ice-border bg-canvas-pure cursor-pointer hover:border-cobalt/40 transition-all duration-300 shadow-xs sm:shadow-sm hover:shadow-premium group flex flex-col justify-between relative overflow-hidden"
+      style={{ minHeight: '140px' }}
     >
       {/* Top Details Row: Icon / Series Name / Year Badge */}
       <div className="text-left relative z-10">
@@ -669,12 +669,12 @@ const SeriesCard: React.FC<{
           <div className="p-2 rounded-xl bg-cobalt-light/10 text-cobalt border border-cobalt/10 group-hover:bg-cobalt group-hover:text-white transition-colors duration-300">
             <Smartphone className="w-5 h-5" />
           </div>
-          <span className="text-[10px] font-mono font-semibold tracking-wider text-zinc-500 bg-canvas-white border border-ice-border/60 px-2.5 py-0.5 rounded-full">
+          <span className="text-[10px] font-sans font-semibold tracking-wider text-zinc-500 bg-canvas-white border border-ice-border/60 px-2.5 py-0.5 rounded-full">
             {stats.yearRange}
           </span>
         </div>
 
-        <h4 className="font-bold text-base text-ink-navy leading-tight group-hover:text-cobalt transition-colors duration-300 font-outfit">
+        <h4 className="font-bold text-base text-ink-navy leading-tight group-hover:text-cobalt transition-colors duration-300 font-sans">
           {seriesName}
         </h4>
         <p className="text-[11px] text-ink-muted mt-1 font-light">
@@ -725,8 +725,8 @@ const SeriesCard: React.FC<{
                     {activeModel.name}
                   </span>
                   <div className="flex items-baseline gap-1 mt-0.5">
-                    <span className="text-[9px] text-zinc-400 font-mono uppercase">Max spec:</span>
-                    <span className="text-xs font-black text-emerald-600 font-mono tracking-tight">
+                    <span className="text-[9px] text-zinc-400 font-sans uppercase">Max spec:</span>
+                    <span className="text-xs font-black text-emerald-600 font-sans tracking-tight">
                       {formatPrice(activeMaxPrice)}
                     </span>
                   </div>
@@ -1197,7 +1197,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
             >
               <ArrowLeft className="w-4 h-4" /> Back to Series
             </motion.button>
-            <span className="text-xs text-zinc-500 font-mono font-semibold uppercase tracking-widest">{selectedSeries}</span>
+            <span className="text-xs text-zinc-500 font-sans font-semibold uppercase tracking-normal">{selectedSeries}</span>
           </div>
           {/* Series-specific search */}
           <div className="relative">
@@ -1306,7 +1306,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
           {debouncedSearchQuery.trim() !== '' && (
             <div className="flex items-center justify-between mb-5 animate-fadeIn">
               <div>
-                <p className="text-xs font-mono text-cobalt font-bold uppercase tracking-wider mb-0.5">
+                <p className="text-xs font-sans text-cobalt font-bold uppercase tracking-wider mb-0.5">
                   Search Results
                 </p>
                 <p className="text-sm font-semibold text-ink-navy">
@@ -1319,7 +1319,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                 onClick={() => setSearchQuery('')}
                 className="text-xs text-ink-muted hover:text-cobalt font-semibold transition-colors border border-ice-border px-3 py-1.5 rounded-lg hover:border-cobalt/40"
               >
-                ✕ Clear search
+                <span className="inline-flex items-center gap-1.5"><X className="w-3.5 h-3.5" /> Clear search</span>
               </button>
             </div>
           )}
@@ -1335,12 +1335,12 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                 className="mb-8"
               >
                 <div className="text-left mb-5">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-ink-slate font-mono flex items-center gap-1.5">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-ink-slate font-sans flex items-center gap-1.5">
                     <Layers className="w-4 h-4 text-cobalt" /> Select Device Series
                   </h4>
                   <p className="text-xs text-ink-muted font-light mt-1">Select a series below to see available models.</p>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-4">
                   {availableSeries.map(seriesName => {
                     const stats = seriesStats[seriesName] || { modelCount: 0, yearRange: '' };
                     const seriesModels = applyModelOrder(
@@ -1384,7 +1384,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                     >
                       <ArrowLeft className="w-4 h-4" /> Back to Series
                     </motion.button>
-                    <span className="text-xs text-zinc-500 font-mono font-semibold uppercase">{selectedSeries}</span>
+                    <span className="text-xs text-zinc-500 font-sans font-semibold uppercase">{selectedSeries}</span>
                   </div>
                 )}
 
@@ -1392,15 +1392,15 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                 {(() => {
                   const displayModels = (selectedSeries && !debouncedSearchQuery.trim()) ? seriesFilteredModels : filteredModels;
                   return (
-                <div className={`grid grid-cols-1 sm:grid-cols-2 ${selectedModel ? 'lg:grid-cols-2' : 'lg:grid-cols-3'} gap-6`}>
+                <div className={`grid grid-cols-2 sm:grid-cols-2 ${selectedModel ? 'lg:grid-cols-2' : 'lg:grid-cols-3'} gap-2.5 sm:gap-6`}>
                    {displayModels.length === 0 && (
                     <div className="col-span-full py-12 px-4 text-center border border-dashed border-ice-border rounded-2xl bg-canvas-pure">
                       <Smartphone className="w-10 h-10 text-ink-muted mx-auto mb-3" />
                       <h4 className="text-base font-semibold text-ink-navy">No models found</h4>
                       <p className="text-xs text-ink-muted mt-1 max-w-xs mx-auto">
                         {seriesSearchQuery
-                          ? <>No results for <span className="font-mono text-cobalt">"{seriesSearchQuery}"</span> in {selectedSeries}.<br />Try a different name.</>  
-                          : <>No results for <span className="font-mono text-cobalt">"{searchQuery}"</span>.<br />Try a brand name or model number.</>}
+                          ? <>No results for <span className="font-sans text-cobalt">"{seriesSearchQuery}"</span> in {selectedSeries}.<br />Try a different name.</>  
+                          : <>No results for <span className="font-sans text-cobalt">"{searchQuery}"</span>.<br />Try a brand name or model number.</>}
                       </p>
                       <button
                         onClick={() => seriesSearchQuery ? setSeriesSearchQuery('') : setSearchQuery('')}
@@ -1422,7 +1422,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                           whileHover={{ y: -6, boxShadow: "0 10px 25px -5px rgba(59, 130, 246, 0.08), 0 8px 16px -8px rgba(59, 130, 246, 0.08)" }}
                           whileTap={{ scale: 0.985 }}
                           onClick={() => handleModelClick(model)}
-                          className={`cursor-pointer bg-canvas-pure border rounded-2xl p-6 shadow-sm flex flex-col justify-between group transition-colors duration-300 ${
+                          className={`cursor-pointer bg-canvas-pure border rounded-xl sm:rounded-2xl p-3 sm:p-6 shadow-xs sm:shadow-sm flex flex-col justify-between group transition-colors duration-300 ${
                             isSelected
                               ? 'border-cobalt ring-2 ring-cobalt/20 scale-[1.01] opacity-100 z-10 shadow-md'
                               : hasSelection
@@ -1432,7 +1432,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                         >
                           <div>
                             <div className="flex items-center justify-between mb-4">
-                              <span className={`px-2.5 py-1 text-[10px] font-mono font-bold rounded-full uppercase tracking-wider ${
+                              <span className={`px-2.5 py-1 text-[10px] font-sans font-bold rounded-full uppercase tracking-wider ${
                                 model.category === 'flagship'
                                   ? 'bg-amber-100 text-amber-800'
                                   : model.category === 'premium'
@@ -1441,18 +1441,18 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                               }`}>
                                 {model.category || (model.brandId === 'brand-apple' ? 'Apple iPhone' : 'Smartphone')}
                               </span>
-                              <span className="text-[10px] font-mono text-zinc-400">{model.releaseYear}</span>
+                              <span className="text-[10px] font-sans text-zinc-400">{model.releaseYear}</span>
                             </div>
 
-                            <h3 className="text-xl font-bold font-outfit text-ink-navy uppercase group-hover:text-cobalt transition-colors text-left">
+                            <h3 className="text-xs sm:text-xl font-bold font-sans text-ink-navy uppercase group-hover:text-cobalt transition-colors text-left line-clamp-1">
                               {model.name}
                             </h3>
                             {model.series && (
-                              <p className="text-xs font-mono text-zinc-400 mt-1 text-left">Series: {model.series}</p>
+                              <p className="text-xs font-sans text-zinc-400 mt-1 text-left">Series: {model.series}</p>
                             )}
 
                             {/* Smartphone Image */}
-                            <div className="my-6 h-44 flex items-center justify-center pointer-events-none">
+                            <div className="my-2 sm:my-6 h-28 sm:h-44 flex items-center justify-center pointer-events-none">
                               <img
                                 src={getDeviceImage(model.id, model.brandId, undefined, model.imageUrl)}
                                 alt={model.name}
@@ -1472,14 +1472,14 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
 
                           <div className="pt-4 border-t border-ice-border/60 flex items-center justify-between">
                             <div className="text-left">
-                              <span className="text-[10px] text-zinc-400 uppercase font-mono block">Up to</span>
-                              <span className="text-lg font-extrabold text-emerald-600 font-mono">
+                              <span className="text-[10px] text-zinc-400 uppercase font-sans block">Up to</span>
+                              <span className="text-sm sm:text-lg font-extrabold text-emerald-600 font-sans">
                                 {formatPrice(getMaxVariantPrice(model))}
                               </span>
                             </div>
                             <button
                               type="button"
-                              className="px-3.5 py-1.5 rounded-lg bg-cobalt text-white text-xs font-bold flex items-center gap-1 group-hover:bg-cobalt/90 transition-all shadow-xs"
+                              className="px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-lg bg-cobalt text-white text-[10px] sm:text-xs font-bold flex items-center gap-1 group-hover:bg-cobalt/90 transition-all shadow-xs"
                             >
                               <span>Sell Now</span>
                               <ArrowRight className="w-3.5 h-3.5" />
@@ -1501,13 +1501,13 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
       {typeof document !== 'undefined' && createPortal(
         <AnimatePresence>
           {selectedModel && (
-            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto min-h-screen">
+            <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm overflow-y-auto min-h-screen">
               <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: 12 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 12 }}
                 transition={{ type: "spring", stiffness: 320, damping: 28 }}
-                className="bg-canvas-pure border border-ice-border rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl text-left my-auto max-h-[90vh] flex flex-col"
+                className="bg-canvas-pure border border-ice-border rounded-t-2xl sm:rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl text-left sm:my-auto max-h-[85vh] flex flex-col"
               >
                 {/* Modal Header */}
                 <div className="p-6 border-b border-ice-border flex items-center justify-between bg-canvas-white">
@@ -1516,10 +1516,10 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                       <Smartphone className="w-6 h-6 stroke-[2.2]" />
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-ink-navy uppercase font-outfit tracking-wide">
+                      <h3 className="text-xl font-bold text-ink-navy uppercase font-sans tracking-wide">
                         {selectedModel.name}
                       </h3>
-                      <p className="text-xs font-mono text-zinc-400 mt-0.5">
+                      <p className="text-xs font-sans text-zinc-400 mt-0.5">
                         {selectedModel.series || selectedModel.category} · Release: {selectedModel.releaseYear}
                       </p>
                     </div>
@@ -1545,16 +1545,16 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                   {isTablet && (
                     <div>
                       <div className="flex items-center justify-between mb-2.5">
-                        <span className="text-xs font-mono font-bold text-ink-navy uppercase tracking-wider flex items-center gap-1.5">
+                        <span className="text-xs font-sans font-bold text-ink-navy uppercase tracking-wider flex items-center gap-1.5">
                           <Wifi className="w-4 h-4 text-cobalt" /> Select Network &amp; Connectivity
                         </span>
-                        <span className="text-[10px] text-zinc-400 font-mono">SIM / Cellular Specs</span>
+                        <span className="text-[10px] text-zinc-400 font-sans">SIM / Cellular Specs</span>
                       </div>
                       <div className="grid grid-cols-2 gap-2.5">
                         <button
                           type="button"
                           onClick={() => handleConnectivitySelect('cellular')}
-                          className={`py-3.5 px-3.5 rounded-xl border text-xs font-bold font-mono transition-all flex items-center justify-between ${
+                          className={`py-3.5 px-3.5 rounded-xl border text-xs font-bold font-sans transition-all flex items-center justify-between ${
                             selectedConnectivity === 'cellular'
                               ? 'bg-cobalt text-white border-cobalt shadow-md shadow-cobalt/20'
                               : 'bg-canvas-white text-ink-slate border-ice-border hover:border-cobalt/40'
@@ -1573,7 +1573,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                         <button
                           type="button"
                           onClick={() => handleConnectivitySelect('wifi')}
-                          className={`py-3.5 px-3.5 rounded-xl border text-xs font-bold font-mono transition-all flex items-center justify-between ${
+                          className={`py-3.5 px-3.5 rounded-xl border text-xs font-bold font-sans transition-all flex items-center justify-between ${
                             selectedConnectivity === 'wifi'
                               ? 'bg-cobalt text-white border-cobalt shadow-md shadow-cobalt/20'
                               : 'bg-canvas-white text-ink-slate border-ice-border hover:border-cobalt/40'
@@ -1596,10 +1596,10 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                   {ramOptions.length > 0 && (
                     <div>
                       <div className="flex items-center justify-between mb-2.5">
-                        <span className="text-xs font-mono font-bold text-ink-navy uppercase tracking-wider flex items-center gap-1.5">
+                        <span className="text-xs font-sans font-bold text-ink-navy uppercase tracking-wider flex items-center gap-1.5">
                           <Cpu className="w-4 h-4 text-cobalt" /> Select RAM Variant
                         </span>
-                        <span className="text-[10px] text-zinc-400 font-mono">Memory Specs</span>
+                        <span className="text-[10px] text-zinc-400 font-sans">Memory Specs</span>
                       </div>
                       <div className="flex flex-wrap gap-2">
                         {ramOptions.map(ram => (
@@ -1607,7 +1607,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                             key={ram}
                             type="button"
                             onClick={() => handleRamSelect(ram)}
-                            className={`px-4 py-2.5 rounded-xl border text-xs font-bold font-mono transition-all flex items-center justify-center gap-1.5 ${
+                            className={`px-4 py-2.5 rounded-xl border text-xs font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
                               selectedRam === ram
                                 ? 'bg-cobalt text-white border-cobalt shadow-md shadow-cobalt/20'
                                 : 'bg-canvas-white text-ink-slate border-ice-border hover:border-cobalt/40'
@@ -1624,10 +1624,10 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                   {/* Storage selection */}
                   <div>
                     <div className="flex items-center justify-between mb-2.5">
-                      <span className="text-xs font-mono font-bold text-ink-navy uppercase tracking-wider flex items-center gap-1.5">
+                      <span className="text-xs font-sans font-bold text-ink-navy uppercase tracking-wider flex items-center gap-1.5">
                         <Layers className="w-4 h-4 text-violet-500" /> Select Storage Capacity
                       </span>
-                      <span className="text-[10px] text-zinc-400 font-mono">Internal Storage</span>
+                      <span className="text-[10px] text-zinc-400 font-sans">Internal Storage</span>
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                       {storageOptions.map(storage => (
@@ -1635,7 +1635,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                           key={storage}
                           type="button"
                           onClick={() => handleStorageSelect(storage)}
-                          className={`py-3 px-3 rounded-xl border text-xs font-bold font-mono transition-all flex items-center justify-center gap-1.5 ${
+                          className={`py-3 px-3 rounded-xl border text-xs font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
                             selectedStorage === storage
                               ? 'bg-violet-600 text-white border-violet-600 shadow-md shadow-violet-600/20'
                               : 'bg-canvas-white text-ink-slate border-ice-border hover:border-violet-400'
@@ -1651,16 +1651,16 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                   {/* Estimated Payout Banner */}
                   <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-300/90 rounded-xl p-4 flex items-center justify-between shadow-xs">
                     <div>
-                      <span className="text-[10px] font-mono font-bold text-emerald-950 uppercase block tracking-wider mb-0.5">
+                      <span className="text-[10px] font-sans font-bold text-emerald-950 uppercase block tracking-wider mb-0.5">
                         Estimated Payout
                       </span>
-                      <span className="text-xs font-mono font-semibold text-emerald-900">
+                      <span className="text-xs font-sans font-semibold text-emerald-900">
                         {isTablet ? (selectedConnectivity === 'cellular' ? 'Wi-Fi + Cellular · ' : 'Wi-Fi Only · ') : ''}
                         {ramOptions.length > 0 && selectedRam ? `${selectedRam}GB RAM / ` : ''}
                         {selectedStorage ? (selectedStorage >= 1024 ? `${selectedStorage / 1024}TB` : `${selectedStorage}GB`) : ''}
                       </span>
                     </div>
-                    <span className="text-2xl font-black text-emerald-700 font-outfit">
+                    <span className="text-2xl font-black text-emerald-700 font-sans">
                       {formatPrice(tempVariant?.basePrice || getMaxVariantPrice(selectedModel))}
                     </span>
                   </div>
@@ -1702,10 +1702,10 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
               className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-xl border-t border-slate-700/80 p-3.5 px-4 flex items-center justify-between shadow-2xl"
             >
               <div className="text-left">
-                <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest block">
+                <span className="text-[10px] font-sans text-slate-400 uppercase tracking-normal block">
                   {selectedModel.name} ({tempVariant.storageGb >= 1024 ? '1 TB' : `${tempVariant.storageGb} GB`})
                 </span>
-                <span className="text-lg font-black text-emerald-400 font-mono">
+                <span className="text-lg font-black text-emerald-400 font-sans">
                   {formatPrice(tempVariant.basePrice)}
                 </span>
               </div>

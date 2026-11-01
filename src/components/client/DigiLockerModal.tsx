@@ -89,8 +89,8 @@ export const DigiLockerModal: React.FC<DigiLockerModalProps> = ({
               <Shield className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h3 id="digi-modal-title" className="font-outfit font-bold text-sm tracking-wide">Identity verification</h3>
-              <span className="text-[9px] font-mono text-slate-400 uppercase tracking-widest block">Provider integration required</span>
+              <h3 id="digi-modal-title" className="font-sans font-bold text-sm tracking-wide">Identity verification</h3>
+              <span className="text-[9px] font-sans text-slate-400 uppercase tracking-normal block">Provider integration required</span>
             </div>
           </div>
           <button
@@ -117,7 +117,7 @@ export const DigiLockerModal: React.FC<DigiLockerModalProps> = ({
           {step === 'aadhaar' ? (
             <form onSubmit={handleAadhaarSubmit} className="space-y-4">
               <div className="space-y-1">
-                <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block">Identity Portal</span>
+                <span className="text-[10px] font-sans text-zinc-500 uppercase tracking-wider block">Identity Portal</span>
                 <h4 className="text-lg font-light text-ink-navy">Enter Aadhaar Number</h4>
                 <p className="text-xs text-ink-muted leading-relaxed font-light">
                   Identity verification is not available in this deployment. Do not enter Aadhaar details here; bookings remain pending until a configured provider completes verification.
@@ -135,7 +135,7 @@ export const DigiLockerModal: React.FC<DigiLockerModalProps> = ({
                     setAadhaar(val);
                   }}
                   placeholder="e.g. 123456789012"
-                  className="w-full p-3.5 pr-10 rounded-sm border border-ice-border bg-canvas-white text-ink-navy text-sm font-mono focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all"
+                  className="w-full p-3.5 pr-10 rounded-sm border border-ice-border bg-canvas-white text-ink-navy text-sm font-sans focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all"
                   style={{ minHeight: '48px' }}
                   disabled={isSubmitting}
                 />
@@ -143,7 +143,7 @@ export const DigiLockerModal: React.FC<DigiLockerModalProps> = ({
               </div>
 
               <div className="flex justify-between items-center pt-2 border-t border-white/[0.04]">
-                <span className="text-[9px] text-zinc-500 font-mono flex items-center gap-1">
+                <span className="text-[9px] text-zinc-500 font-sans flex items-center gap-1">
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Secure 256-bit encryption
                 </span>
                 <button
@@ -162,10 +162,10 @@ export const DigiLockerModal: React.FC<DigiLockerModalProps> = ({
           ) : (
             <div className="space-y-5 animate-fadeIn">
               <div className="space-y-1">
-                <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block">OTP Validation</span>
+                <span className="text-[10px] font-sans text-zinc-500 uppercase tracking-wider block">OTP Validation</span>
                 <h4 className="text-lg font-light text-ink-navy">Enter Mobile OTP</h4>
                 <p className="text-xs text-ink-muted leading-relaxed font-light">
-                  A verification code has been sent to the mobile number registered with Aadhaar ending in <strong className="text-ink-navy font-mono">*{aadhaar.slice(-4)}</strong>.
+                  A verification code has been sent to the mobile number registered with Aadhaar ending in <strong className="text-ink-navy font-sans">*{aadhaar.slice(-4)}</strong>.
                 </p>
               </div>
 
@@ -179,15 +179,15 @@ export const DigiLockerModal: React.FC<DigiLockerModalProps> = ({
                   setOtp(val);
                 }}
                 placeholder="6-digit OTP code"
-                className="w-full p-3.5 text-center tracking-[0.4em] rounded-sm border border-ice-border bg-canvas-white text-ink-navy text-lg font-mono focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all"
+                className="w-full p-3.5 text-center tracking-[0.4em] rounded-sm border border-ice-border bg-canvas-white text-ink-navy text-lg font-sans focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt transition-all"
                 style={{ minHeight: '48px' }}
                 disabled={isSubmitting}
               />
 
               {/* Simulation Sandbox Panel */}
               <div className="bg-zinc-950/60 rounded-sm border border-white/[0.06] p-4 space-y-3">
-                <span className="text-[9px] font-mono uppercase tracking-wider text-amber-400 block font-bold text-center">
-                  🧪 Sandbox Testing Controls
+                <span className="text-[9px] font-sans uppercase tracking-wider text-amber-400 block font-bold text-center">
+                  Sandbox Testing Controls
                 </span>
                 <p className="text-[10px] font-light text-zinc-400 text-center leading-normal">
                   This sandbox cannot verify a real identity and never marks a booking as verified.
@@ -222,12 +222,12 @@ export const DigiLockerModal: React.FC<DigiLockerModalProps> = ({
                     setStep('aadhaar');
                     setOtp('');
                   }}
-                  className="text-zinc-500 hover:text-ink-navy text-xs font-semibold font-mono"
+                  className="text-zinc-500 hover:text-ink-navy text-xs font-semibold font-sans"
                   disabled={isSubmitting}
                 >
                   &larr; Change Aadhaar
                 </button>
-                <span className="text-[10px] text-zinc-500 font-mono">
+                <span className="text-[10px] text-zinc-500 font-sans">
                   Didn't receive code? <span className="text-cobalt hover:underline cursor-pointer">Resend</span>
                 </span>
               </div>

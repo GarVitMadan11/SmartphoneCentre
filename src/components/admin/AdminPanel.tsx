@@ -159,13 +159,13 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
 
   const handleLockdown = async () => {
     const confirmLock = window.confirm(
-      '🚨 EMERGENCY LOCKDOWN ACTIVATION\n\nAre you sure you want to trigger an immediate Admin Panel Lockdown?\n\n• All Admin Panel access will be SUSPENDED immediately.\n• Active admin sessions will be terminated.\n• An alert email with the Master Emergency Unlock Key will be dispatched.'
+      'EMERGENCY PLATFORM LOCKDOWN\n\nAre you sure you want to trigger an immediate Admin Panel Lockdown?\n\n• All Admin Panel access will be SUSPENDED immediately.\n• Active admin sessions will be terminated.\n• An alert email with the Master Emergency Unlock Key will be dispatched.'
     );
     if (!confirmLock) return;
 
     try {
       const res = await triggerAdminLockdown('Manual emergency kill switch triggered by admin user.');
-      alert(`🚨 EMERGENCY LOCKDOWN ACTIVATED!\n\nMaster Emergency Unlock Key:\n${res.masterUnlockKey}\n\n(Save this key to unblock access on the lockdown shield page).`);
+      alert(`EMERGENCY PLATFORM LOCKDOWN ACTIVATED!\n\nMaster Emergency Unlock Key:\n${res.masterUnlockKey}\n\n(Save this key to unblock access on the lockdown shield page).`);
       onBack();
     } catch (err: any) {
       alert('Failed to trigger lockdown: ' + (err.message || err));
@@ -262,7 +262,7 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
   };
 
   return (
-    <div className="w-full h-full min-h-0 flex flex-col md:flex-row bg-canvas-white text-left font-outfit overflow-hidden">
+    <div className="w-full h-full min-h-0 flex flex-col md:flex-row bg-canvas-white text-left font-sans overflow-hidden">
       
       {/* ── 1. MODERN COLLAPSIBLE SIDEBAR ─────────────────────────────────── */}
       <aside 
@@ -303,7 +303,7 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
                 }`}
               >
                 <div className="flex items-center gap-1.5">
-                  <span className="font-extrabold tracking-tight text-sm text-white font-outfit">
+                  <span className="font-extrabold tracking-tight text-sm text-white font-sans">
                     Re<span className="text-secondary">phonix</span>
                   </span>
                   <span className="text-[9px] font-mono px-1.5 py-0.5 bg-cobalt/20 text-cobalt rounded font-bold">

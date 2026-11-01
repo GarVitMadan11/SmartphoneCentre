@@ -164,7 +164,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
             <div className="w-8 h-8 rounded-lg bg-[#001736] flex items-center justify-center shadow-xs p-1">
               <img src="/logo.svg" className="w-full h-full object-contain" alt="Rephonix Logo" />
             </div>
-            <span className="text-xl sm:text-2xl font-extrabold font-outfit text-ink-navy tracking-tight group-hover:text-cobalt transition-colors">
+            <span className="text-xl sm:text-2xl font-extrabold font-sans text-ink-navy tracking-tight group-hover:text-cobalt transition-colors">
               Re<span className="text-secondary">phonix</span>
             </span>
           </div>
@@ -205,7 +205,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                 <div 
                   className="absolute top-full left-0 mt-2 w-64 bg-white border border-ice-border rounded-2xl shadow-premium p-3 z-50 animate-in fade-in slide-in-from-top-2 duration-150"
                 >
-                  <div className="flex items-center justify-between px-2 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest font-outfit">
+                  <div className="flex items-center justify-between px-2 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-normal font-sans">
                     <span>Top Brands</span>
                     <button onClick={() => { setActiveDropdown(null); onNavigate('/smartphones'); }} className="text-cobalt hover:underline text-[10px] lowercase font-semibold">view all</button>
                   </div>
@@ -259,7 +259,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                 <div 
                   className="absolute top-full left-0 mt-2 w-60 bg-white border border-ice-border rounded-2xl shadow-premium p-3 z-50 animate-in fade-in slide-in-from-top-2 duration-150"
                 >
-                  <div className="flex items-center justify-between px-2 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest font-outfit">
+                  <div className="flex items-center justify-between px-2 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-normal font-sans">
                     <span>Top Tablet Brands</span>
                     <button onClick={() => { setActiveDropdown(null); onNavigate('/tablets'); }} className="text-violet-600 hover:underline text-[10px] lowercase font-semibold">view all</button>
                   </div>
@@ -619,14 +619,14 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                   <X className="w-4 h-4" />
                 </button>
               )}
-              <span className="hidden sm:inline-flex text-[11px] font-mono text-slate-400 bg-white border border-slate-200 px-2 py-0.5 rounded-md select-none">
+              <span className="hidden sm:inline-flex text-[11px] font-sans text-slate-400 bg-white border border-slate-200 px-2 py-0.5 rounded-md select-none">
                 ESC
               </span>
             </div>
 
             {/* Quick Filter Pills */}
             <div className="flex items-center gap-2 px-5 py-2.5 bg-slate-50 border-b border-ice-border/60 overflow-x-auto text-xs">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-outfit shrink-0">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-normal font-sans shrink-0">
                 Popular:
               </span>
               {['iPhone 16', 'iPhone 15', 'Galaxy S24', 'OnePlus 12', 'Pixel 9', 'Galaxy Z Fold 6'].map((tag) => (
@@ -646,7 +646,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
 
             {/* Results List */}
             <div className="max-h-[60vh] overflow-y-auto p-3 divide-y divide-slate-100">
-              <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest font-outfit flex items-center justify-between">
+              <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-normal font-sans flex items-center justify-between">
                 <span>{searchQuery ? `Matching Devices (${searchResults.length})` : 'Recommended Flagships'}</span>
                 {!searchQuery && (
                   <span className="text-[10px] text-cobalt flex items-center gap-1 font-semibold">
@@ -680,7 +680,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                           <div className="min-w-0">
                             <p className="text-sm font-bold text-ink-navy truncate">{model.name}</p>
                             <div className="flex items-center gap-2 mt-0.5">
-                              <span className="text-[10px] font-mono font-semibold px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md uppercase tracking-wider">
+                              <span className="text-[10px] font-sans font-semibold px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md uppercase tracking-wider">
                                 {model.brandId.replace('brand-', '')}
                               </span>
                               <span className="text-[11px] text-slate-400">
@@ -690,8 +690,8 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                           </div>
                         </div>
                         <div className="text-right shrink-0 pl-3">
-                          <span className="text-[10px] text-slate-400 block font-mono">Max Payout</span>
-                          <span className="text-sm sm:text-base font-black text-emerald-600 font-mono">
+                          <span className="text-[10px] text-slate-400 block font-sans">Max Payout</span>
+                          <span className="text-sm sm:text-base font-black text-emerald-600 font-sans">
                             ₹{maxPrice.toLocaleString('en-IN')}
                           </span>
                         </div>
@@ -728,7 +728,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
             </div>
 
             {/* Modal Footer Key Guide */}
-            <div className="px-5 py-3 bg-slate-50 border-t border-ice-border/60 flex items-center justify-between text-[11px] text-slate-400 font-mono">
+            <div className="px-5 py-3 bg-slate-50 border-t border-ice-border/60 flex items-center justify-between text-[11px] text-slate-400 font-sans">
               <div className="flex items-center gap-3">
                 <span><kbd className="bg-white border border-slate-200 px-1 py-0.5 rounded shadow-2xs font-semibold">↑</kbd> <kbd className="bg-white border border-slate-200 px-1 py-0.5 rounded shadow-2xs font-semibold">↓</kbd> to navigate</span>
                 <span><kbd className="bg-white border border-slate-200 px-1.5 py-0.5 rounded shadow-2xs font-semibold">↵</kbd> to select</span>

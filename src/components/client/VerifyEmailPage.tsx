@@ -89,7 +89,7 @@ export default function VerifyEmailPage({ onNavigate, tokenParam }: VerifyEmailP
         {state === 'loading' && (
           <div className="text-center space-y-4 py-6">
             <Loader2 className="w-12 h-12 animate-spin text-cobalt mx-auto" />
-            <h2 className="text-xl font-extrabold text-ink-navy font-outfit">Verifying Email...</h2>
+            <h2 className="text-xl font-extrabold text-ink-navy font-sans">Verifying Email...</h2>
             <p className="text-xs text-ink-muted">Please wait while we verify your email address.</p>
           </div>
         )}
@@ -103,7 +103,7 @@ export default function VerifyEmailPage({ onNavigate, tokenParam }: VerifyEmailP
               </div>
             </div>
             <div>
-              <h2 className="text-2xl font-extrabold text-ink-navy font-outfit">Email Verified!</h2>
+              <h2 className="text-2xl font-extrabold text-ink-navy font-sans">Email Verified!</h2>
               <p className="text-xs text-ink-muted font-light mt-2">Your email address has been verified. You can now sign in to your Rephonix account.</p>
             </div>
             <button
@@ -127,7 +127,7 @@ export default function VerifyEmailPage({ onNavigate, tokenParam }: VerifyEmailP
                   <AlertCircle className="w-8 h-8 text-amber-500" />
                 </div>
               </div>
-              <h2 className="text-2xl font-extrabold text-ink-navy font-outfit">Link Expired</h2>
+              <h2 className="text-2xl font-extrabold text-ink-navy font-sans">Link Expired</h2>
               <p className="text-xs text-ink-muted font-light mt-2">This verification link has expired. Links are valid for 24 hours. Request a new one below.</p>
             </div>
             <ResendForm />
@@ -146,7 +146,7 @@ export default function VerifyEmailPage({ onNavigate, tokenParam }: VerifyEmailP
                   <AlertCircle className="w-8 h-8 text-red-500" />
                 </div>
               </div>
-              <h2 className="text-2xl font-extrabold text-ink-navy font-outfit">Invalid Link</h2>
+              <h2 className="text-2xl font-extrabold text-ink-navy font-sans">Invalid Link</h2>
               <p className="text-xs text-ink-muted font-light mt-2">This verification link is invalid or has already been used. Request a new link below.</p>
             </div>
             <ResendForm />
@@ -165,7 +165,7 @@ export default function VerifyEmailPage({ onNavigate, tokenParam }: VerifyEmailP
                   <MailCheck className="w-8 h-8 text-cobalt" />
                 </div>
               </div>
-              <h2 className="text-2xl font-extrabold text-ink-navy font-outfit">Verify Your Email</h2>
+              <h2 className="text-2xl font-extrabold text-ink-navy font-sans">Verify Your Email</h2>
               <p className="text-xs text-ink-muted font-light mt-2">Didn't receive your verification email? Enter your address to resend it.</p>
             </div>
             <ResendForm />

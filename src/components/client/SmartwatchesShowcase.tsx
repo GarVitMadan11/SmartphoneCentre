@@ -110,10 +110,10 @@ export const SmartwatchesShowcase: React.FC<SmartwatchesShowcaseProps> = ({
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/15 tracking-widest uppercase font-mono mb-3">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/15 tracking-normal uppercase font-sans mb-3">
               <Sparkles className="w-3.5 h-3.5 text-emerald-500" /> DEDICATED SMARTWATCH PORTAL
             </span>
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-ink-navy font-outfit uppercase tracking-tight">
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-ink-navy font-sans uppercase tracking-tight">
               Sell Your <span className="text-emerald-600">Apple Watch</span> or <span className="text-cobalt">Samsung Galaxy Watch</span>
             </h1>
             <p className="text-ink-slate text-sm font-light mt-2 max-w-xl">
@@ -194,18 +194,18 @@ export const SmartwatchesShowcase: React.FC<SmartwatchesShowcaseProps> = ({
           >
             <div>
               <div className="flex items-center justify-between mb-4">
-                <span className={`px-2.5 py-1 text-[10px] font-mono font-bold rounded-full uppercase tracking-wider ${
+                <span className={`px-2.5 py-1 text-[10px] font-sans font-bold rounded-full uppercase tracking-wider ${
                   model.brandId === 'brand-apple' ? 'bg-zinc-100 text-zinc-800' : 'bg-blue-50 text-blue-700'
                 }`}>
                   {model.brandId === 'brand-apple' ? 'Apple Watch' : 'Samsung Watch'}
                 </span>
-                <span className="text-[10px] font-mono text-zinc-400">{model.releaseYear}</span>
+                <span className="text-[10px] font-sans text-zinc-400">{model.releaseYear}</span>
               </div>
 
-              <h3 className="text-xl font-bold font-outfit text-ink-navy uppercase group-hover:text-emerald-600 transition-colors">
+              <h3 className="text-xl font-bold font-sans text-ink-navy uppercase group-hover:text-emerald-600 transition-colors">
                 {model.name}
               </h3>
-              <p className="text-xs font-mono text-zinc-400 mt-1">Series: {model.series}</p>
+              <p className="text-xs font-sans text-zinc-400 mt-1">Series: {model.series}</p>
 
               {/* Watch Image */}
               <div className="my-6 h-44 flex items-center justify-center pointer-events-none">
@@ -220,8 +220,8 @@ export const SmartwatchesShowcase: React.FC<SmartwatchesShowcaseProps> = ({
 
             <div className="pt-4 border-t border-ice-border/60 flex items-center justify-between">
               <div>
-                <span className="text-[10px] text-zinc-400 uppercase font-mono block">Up to Get</span>
-                <span className="text-lg font-extrabold text-emerald-600 font-mono">
+                <span className="text-[10px] text-zinc-400 uppercase font-sans block">Up to Get</span>
+                <span className="text-lg font-extrabold text-emerald-600 font-sans">
                   {formatPrice(getMaxVariantPrice(model))}
                 </span>
               </div>
@@ -263,10 +263,10 @@ export const SmartwatchesShowcase: React.FC<SmartwatchesShowcaseProps> = ({
                       <Watch className="w-6 h-6 stroke-[2.2]" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-bold text-ink-navy font-outfit uppercase">
+                      <h3 className="text-lg font-bold text-ink-navy font-sans uppercase">
                         {selectedModelForSpec.name}
                       </h3>
-                      <p className="text-xs font-mono text-zinc-400">
+                      <p className="text-xs font-sans text-zinc-400">
                         {selectedModelForSpec.series} · Release: {selectedModelForSpec.releaseYear}
                       </p>
                     </div>
@@ -286,10 +286,10 @@ export const SmartwatchesShowcase: React.FC<SmartwatchesShowcaseProps> = ({
                   {/* Storage Capacity Selector */}
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-mono font-bold text-ink-navy uppercase tracking-wider flex items-center gap-1.5">
+                      <span className="text-xs font-sans font-bold text-ink-navy uppercase tracking-wider flex items-center gap-1.5">
                         <HardDrive className="w-4 h-4 text-emerald-600" /> Select Storage / Case Spec
                       </span>
-                      <span className="text-[10px] text-zinc-400 font-mono">Internal Capacity</span>
+                      <span className="text-[10px] text-zinc-400 font-sans">Internal Capacity</span>
                     </div>
                     <div className="grid grid-cols-3 gap-2.5">
                       {storageOptions.map(st => (
@@ -297,7 +297,7 @@ export const SmartwatchesShowcase: React.FC<SmartwatchesShowcaseProps> = ({
                           key={st}
                           type="button"
                           onClick={() => setSelectedStorage(st)}
-                          className={`py-3 px-3 rounded-xl border text-xs font-bold font-mono transition-all flex items-center justify-center gap-1 ${
+                          className={`py-3 px-3 rounded-xl border text-xs font-bold font-sans transition-all flex items-center justify-center gap-1 ${
                             selectedStorage === st
                               ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-600/20'
                               : 'bg-canvas-white text-ink-slate border-ice-border hover:border-emerald-400'
@@ -313,14 +313,14 @@ export const SmartwatchesShowcase: React.FC<SmartwatchesShowcaseProps> = ({
                   {/* Estimated Payout Banner */}
                   <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-300/90 rounded-xl p-4 flex items-center justify-between shadow-xs">
                     <div>
-                      <span className="text-[10px] font-mono font-bold text-emerald-950 uppercase block tracking-wider mb-0.5">
+                      <span className="text-[10px] font-sans font-bold text-emerald-950 uppercase block tracking-wider mb-0.5">
                         Estimated Payout
                       </span>
-                      <span className="text-xs font-mono font-semibold text-emerald-900">
+                      <span className="text-xs font-sans font-semibold text-emerald-900">
                         {selectedStorage}GB Internal Storage
                       </span>
                     </div>
-                    <span className="text-2xl font-black text-emerald-700 font-outfit">
+                    <span className="text-2xl font-black text-emerald-700 font-sans">
                       {formatPrice(calculatedPrice)}
                     </span>
                   </div>

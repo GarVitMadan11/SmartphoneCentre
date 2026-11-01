@@ -22,6 +22,7 @@ import { FeaturedDevicesBento } from './components/client/FeaturedDevicesBento';
 import { DeviceCategoryShowcase } from './components/client/DeviceCategoryShowcase';
 import { SellYourDevice } from './components/client/SellYourDevice';
 import { HeaderNav } from './components/client/HeaderNav';
+import { MobileBottomNavBar } from './components/client/MobileBottomNavBar';
 import { TabletsShowcase } from './components/client/TabletsShowcase';
 import { AboutPage } from './components/client/AboutPage';
 import { ContactPage } from './components/client/ContactPage';
@@ -50,7 +51,7 @@ const SmartphoneMockup   = safeLazy(() => import('./components/client/Smartphone
 const OrderTrackingModal = safeLazy(() => import('./components/client/OrderTrackingModal'), 'OrderTrackingModal');
 
 import {
-  ShieldCheck, Search, Instagram
+  ShieldCheck, Search, Instagram, Check
 } from 'lucide-react';
 
 
@@ -517,10 +518,10 @@ export default function App() {
       />
 
       {/* ── Main Layout ── */}
-      <main className={`flex-1 w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 ${!isWorkflow ? 'max-w-7xl flex flex-col' : 'max-w-7xl flex flex-col xl:grid xl:grid-cols-12 gap-6 xl:gap-8 items-start'}`}>
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 pb-20 sm:py-8 flex flex-col">
 
         {/* Active Stage Content Area */}
-        <section className={!isWorkflow ? 'w-full space-y-16' : 'w-full xl:col-span-9 space-y-4 sm:space-y-6 min-w-0'}>
+        <section className={!isWorkflow ? 'w-full space-y-16' : 'w-full space-y-4 sm:space-y-6 min-w-0'}>
 
           {path.startsWith('/login') && (
             <LoginPage
@@ -601,10 +602,7 @@ export default function App() {
           {cleanPath === '/smartphones' && !isWorkflow && (
             <div className="bg-canvas-pure border border-ice-border/60 rounded-xl p-5 sm:p-8 shadow-3d-card scroll-mt-24 mb-12">
               <div className="mb-8 pb-5 border-b border-ice-border/40 text-left">
-                <span className="text-[10px] font-mono tracking-[0.2em] text-cobalt font-bold uppercase block mb-1">
-                  Catalog / Hardware Selector
-                </span>
-                <h3 className="text-3xl sm:text-4xl font-extrabold text-ink-navy tracking-tight font-outfit">
+                <h3 className="text-3xl sm:text-4xl font-extrabold text-ink-navy tracking-tight font-sans">
                   Select Brand &amp; Model
                 </h3>
               </div>
@@ -632,7 +630,7 @@ export default function App() {
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
                 {/* Hero Call to Action */}
                 <div className="lg:col-span-7 flex flex-col items-start text-left">
-                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-secondary/10 border border-secondary/25 shadow-xs mb-6 font-outfit transition-all duration-300 hover:bg-secondary/15 select-none">
+                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-secondary/10 border border-secondary/25 shadow-xs mb-6 font-sans transition-all duration-300 hover:bg-secondary/15 select-none">
                     <ShieldCheck className="w-4 h-4 text-secondary stroke-[2.2] flex-shrink-0" />
                     <span className="text-[11px] font-bold tracking-wider uppercase text-secondary">
                       A Trusted Resale Partner
@@ -725,7 +723,7 @@ export default function App() {
                               </div>
                               <div className="flex-1 min-w-0">
                                 <span className="block text-sm font-semibold text-ink-navy group-hover:text-cobalt transition-colors truncate">{model.name}</span>
-                                <span className="block text-[10px] text-ink-muted font-mono">{brand?.name} · Up to ₹{getMaxVariantPrice(model).toLocaleString('en-IN')}</span>
+                                <span className="block text-[10px] text-ink-muted font-sans">{brand?.name} · Up to ₹{getMaxVariantPrice(model).toLocaleString('en-IN')}</span>
                               </div>
                               <svg className="w-4 h-4 text-ink-muted group-hover:text-cobalt transition-colors flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -733,7 +731,7 @@ export default function App() {
                             </button>
                           );
                         })}
-                        <div className="px-4 py-2 text-[10px] text-ink-muted font-mono border-t border-ice-border/40 bg-canvas-white">
+                        <div className="px-4 py-2 text-[10px] text-ink-muted font-sans border-t border-ice-border/40 bg-canvas-white">
                           Showing {heroSearchResults.length} result{heroSearchResults.length !== 1 ? 's' : ''} — or{' '}
                           <button onClick={() => { setHeroSearchOpen(false); handleReset(); navigate('/smartphones'); }} className="text-cobalt underline">
                             browse all models
@@ -743,7 +741,7 @@ export default function App() {
                     )}
                     {heroSearchOpen && heroSearch.trim().length >= 2 && heroSearchResults.length === 0 && (
                       <div className="absolute top-full left-0 right-0 mt-1 bg-canvas-pure border border-ice-border rounded-sm shadow-premium z-30 px-4 py-4 text-sm text-ink-muted text-center animate-fadeIn">
-                        No models found for <span className="font-mono text-cobalt">"{heroSearch}"</span>.
+                        No models found for <span className="font-sans text-cobalt">"{heroSearch}"</span>.
                         <button onClick={() => { setHeroSearchOpen(false); handleReset(); navigate('/smartphones'); }} className="block text-xs text-cobalt mt-1 underline mx-auto">
                           Browse all models instead →
                         </button>
@@ -752,18 +750,24 @@ export default function App() {
                   </div>
 
                   {/* Trust Badge Indicators */}
-                  <div className="flex flex-wrap items-center gap-6 text-xs sm:text-sm font-semibold text-ink-slate">
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/80 border border-ice-border shadow-sm">
-                      <div className="w-5 h-5 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600 text-xs font-bold">✓</div>
-                      <span className="font-outfit text-ink-navy">Secure &amp; Encrypted</span>
+                  <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-xs sm:text-sm font-semibold text-ink-slate">
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/90 border border-slate-200 shadow-xs">
+                      <div className="w-5 h-5 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
+                        <Check className="w-3 h-3 stroke-[2.5]" />
+                      </div>
+                      <span className="text-slate-800">Secure &amp; Encrypted</span>
                     </div>
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/80 border border-ice-border shadow-sm">
-                      <div className="w-5 h-5 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600 text-xs font-bold">✓</div>
-                      <span className="font-outfit text-ink-navy">Instant Payout</span>
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/90 border border-slate-200 shadow-xs">
+                      <div className="w-5 h-5 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
+                        <Check className="w-3 h-3 stroke-[2.5]" />
+                      </div>
+                      <span className="text-slate-800">Instant Payout</span>
                     </div>
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/80 border border-ice-border shadow-sm">
-                      <div className="w-5 h-5 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600 text-xs font-bold">✓</div>
-                      <span className="font-outfit text-ink-navy">Zero Hidden Deductions</span>
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/90 border border-slate-200 shadow-xs">
+                      <div className="w-5 h-5 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
+                        <Check className="w-3 h-3 stroke-[2.5]" />
+                      </div>
+                      <span className="text-slate-800">Zero Hidden Deductions</span>
                     </div>
                   </div>
                 </div>
@@ -880,11 +884,11 @@ export default function App() {
                 <Instagram className="w-3.5 h-3.5 text-pink-600" /><span>@rephonix.in</span>
               </a>
               <span>•</span>
-              <p>Built with ❤️ for secure, sustainable device resale.</p>
+              <p>Built with precision for secure, sustainable device resale.</p>
             </div>
           </div>
           <div className="mt-6 pt-4 border-t border-ice-border/30 text-[10px] text-zinc-400 font-light leading-relaxed text-center sm:text-left">
-            <h4 className="font-semibold text-zinc-500 mb-1.5 uppercase tracking-wider font-mono text-[9px]">TRADEMARK &amp; BRAND RIGHTS DISCLAIMER</h4>
+            <h4 className="font-semibold text-zinc-500 mb-1.5 uppercase tracking-wider font-sans text-[9px]">TRADEMARK &amp; BRAND RIGHTS DISCLAIMER</h4>
             <p className="mb-1">Rephonix is an independent marketplace for buying and selling pre-owned electronic devices. All third-party brand names, trademarks, logos, and product names mentioned on this platform belong to their respective owners. Rephonix is not affiliated with, endorsed by, sponsored by, or authorized by any such brand or manufacturer.</p>
             <p>Brand references are used solely for product identification and do not imply any affiliation or endorsement.</p>
           </div>
@@ -908,6 +912,18 @@ export default function App() {
 
       {/* Toast notifications */}
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
+
+      {/* Mobile Global Bottom Navigation Bar */}
+      <MobileBottomNavBar
+        currentPath={path}
+        onNavigate={(dest: string) => { handleReset(); navigate(dest); }}
+        onOpenTrackOrder={() => startTransition(() => { setTrackModalTab('my_bookings'); setIsTrackOpen(true); })}
+        currentUser={currentUser}
+        isWorkflow={isWorkflow}
+        activeStage={activeStage}
+        wizardStep={wizardStep}
+        reviewStepIndex={selectedModel && isTabletDevice(selectedModel.category, selectedModel.brandId, selectedModel.name) ? 5 : 6}
+      />
 
     </div>
   );

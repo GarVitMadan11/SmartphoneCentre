@@ -193,10 +193,10 @@ export const DeviceCategoryShowcase: React.FC<DeviceCategoryShowcaseProps> = ({
       {/* Section Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 sm:mb-10 gap-4">
         <div>
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-cobalt/10 text-cobalt border border-cobalt/15 tracking-widest uppercase font-outfit">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-cobalt/10 text-cobalt border border-cobalt/15 tracking-normal uppercase font-sans">
             <Sparkles className="w-3.5 h-3.5 text-cobalt" /> CURATED SHOWROOM
           </span>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-ink-navy tracking-tight font-outfit mt-2 uppercase">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-ink-navy tracking-tight font-sans mt-2 uppercase">
             SELL YOUR <span className="text-secondary font-black">SMARTPHONE</span>
           </h2>
           <p className="text-ink-slate text-sm font-light mt-1.5 max-w-lg">
@@ -229,14 +229,14 @@ export const DeviceCategoryShowcase: React.FC<DeviceCategoryShowcaseProps> = ({
             {/* Card Header Content */}
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-4">
-                <span className="px-3 py-1 bg-cobalt/8 text-cobalt text-[10px] font-bold font-mono tracking-widest uppercase rounded-full border border-cobalt/15">
+                <span className="px-3 py-1 bg-cobalt/8 text-cobalt text-[10px] font-bold font-medium tracking-normal uppercase rounded-full border border-cobalt/15">
                   FEATURED CATEGORY
                 </span>
                 <div className="w-10 h-10 rounded-xl bg-cobalt/10 border border-cobalt/15 flex items-center justify-center text-cobalt">
                   <Smartphone className="w-5 h-5" />
                 </div>
               </div>
-              <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black text-ink-navy font-outfit uppercase tracking-tight">
+              <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black text-ink-navy font-sans uppercase tracking-tight">
                 SMARTPHONES
               </h3>
               <p className="text-ink-slate text-sm font-light mt-1.5 max-w-sm">
@@ -275,7 +275,7 @@ export const DeviceCategoryShowcase: React.FC<DeviceCategoryShowcaseProps> = ({
           {/* Card Header Content */}
           <div className="relative z-10">
             <div>
-              <h3 className="text-xl sm:text-2xl font-black text-ink-navy font-outfit uppercase tracking-tight">
+              <h3 className="text-xl sm:text-2xl font-black text-ink-navy font-sans uppercase tracking-tight">
                 POPULAR CASH OFFERS
               </h3>
               <p className="text-ink-slate text-xs font-light mt-0.5">
@@ -312,10 +312,10 @@ export const DeviceCategoryShowcase: React.FC<DeviceCategoryShowcaseProps> = ({
 
                 {/* Device Details & Price */}
                 <div className="flex-1 text-center sm:text-left space-y-1">
-                  <h4 className="text-2xl sm:text-3xl font-black text-ink-navy font-outfit tracking-tight">
+                  <h4 className="text-2xl sm:text-3xl font-black text-ink-navy font-sans tracking-tight">
                     {currentPhone.name}
                   </h4>
-                  <div className="text-3xl sm:text-4xl font-black text-emerald-600 font-outfit tracking-tight pt-1">
+                  <div className="text-3xl sm:text-4xl font-black text-emerald-600 font-sans tracking-tight pt-1">
                     {currentPhone.formattedPrice}
                   </div>
                 </div>

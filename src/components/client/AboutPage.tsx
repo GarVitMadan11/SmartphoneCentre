@@ -46,10 +46,10 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
         <div className="absolute top-0 right-0 w-96 h-96 bg-cobalt/5 blur-[100px] rounded-full pointer-events-none" />
 
         <div className="relative z-10 max-w-3xl">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-cobalt/10 text-cobalt border border-cobalt/15 tracking-widest uppercase font-mono mb-4">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-cobalt/10 text-cobalt border border-cobalt/15 tracking-normal uppercase font-sans mb-4">
             <Sparkles className="w-3.5 h-3.5 text-cobalt" /> About Rephonix
           </span>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-ink-navy font-outfit tracking-tight leading-tight">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-ink-navy font-sans tracking-tight leading-tight">
             A transparent and reliable way to sell your smartphone.
           </h1>
           <p className="text-ink-slate text-base sm:text-lg font-light mt-4 leading-relaxed">
@@ -76,19 +76,19 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
         {/* Operational Highlights Strip */}
         <div className="mt-10 pt-8 border-t border-ice-border/60 grid grid-cols-2 sm:grid-cols-4 gap-4">
           <div className="space-y-1">
-            <span className="text-xl sm:text-2xl font-black text-ink-navy font-outfit">5–10 Min</span>
+            <span className="text-xl sm:text-2xl font-black text-ink-navy font-sans">5–10 Min</span>
             <p className="text-xs text-ink-slate font-light">Doorstep Diagnostics</p>
           </div>
           <div className="space-y-1">
-            <span className="text-xl sm:text-2xl font-black text-ink-navy font-outfit">Instant</span>
+            <span className="text-xl sm:text-2xl font-black text-ink-navy font-sans">Instant</span>
             <p className="text-xs text-ink-slate font-light">UPI &amp; IMPS Payment</p>
           </div>
           <div className="space-y-1">
-            <span className="text-xl sm:text-2xl font-black text-ink-navy font-outfit">₹0 Fee</span>
+            <span className="text-xl sm:text-2xl font-black text-ink-navy font-sans">₹0 Fee</span>
             <p className="text-xs text-ink-slate font-light">Zero-Obligation Cancellation</p>
           </div>
           <div className="space-y-1">
-            <span className="text-xl sm:text-2xl font-black text-ink-navy font-outfit">100%</span>
+            <span className="text-xl sm:text-2xl font-black text-ink-navy font-sans">100%</span>
             <p className="text-xs text-ink-slate font-light">Data Wipe Assistance</p>
           </div>
         </div>
@@ -97,8 +97,8 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
       {/* ── 2. The Problem We Solve ── */}
       <div className="space-y-6">
         <div>
-          <span className="text-xs font-mono font-bold uppercase tracking-wider text-cobalt">Industry Challenges</span>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-navy font-outfit tracking-tight mt-1">
+          <span className="text-xs font-sans font-bold uppercase tracking-wider text-cobalt">Industry Challenges</span>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-navy font-sans tracking-tight mt-1">
             Why traditional device selling feels broken
           </h2>
           <p className="text-sm text-ink-slate font-light mt-1.5 max-w-2xl leading-relaxed">
@@ -111,7 +111,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
             <div className="w-10 h-10 rounded-lg bg-rose-500/10 flex items-center justify-center text-rose-600">
               <AlertCircle className="w-5 h-5" />
             </div>
-            <h3 className="text-base font-bold text-ink-navy font-outfit">Classifieds Insecurity</h3>
+            <h3 className="text-base font-bold text-ink-navy font-sans">Classifieds Insecurity</h3>
             <p className="text-sm text-ink-slate font-light leading-relaxed">
               Peer-to-peer listings require sharing personal contact info, managing dozens of lowball messages, meeting unknown buyers in public, and dealing with flaky cancellations.
             </p>
@@ -121,7 +121,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
             <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-600">
               <Clock className="w-5 h-5" />
             </div>
-            <h3 className="text-base font-bold text-ink-navy font-outfit">Arbitrary Counter Cuts</h3>
+            <h3 className="text-base font-bold text-ink-navy font-sans">Arbitrary Counter Cuts</h3>
             <p className="text-sm text-ink-slate font-light leading-relaxed">
               Local retail shops frequently quote an attractive price over phone, only to aggressively discount it at the counter by claiming invisible or exaggerated hardware flaws.
             </p>
@@ -131,7 +131,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
             <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-600">
               <CheckCircle2 className="w-5 h-5" />
             </div>
-            <h3 className="text-base font-bold text-ink-navy font-outfit">The Rephonix Approach</h3>
+            <h3 className="text-base font-bold text-ink-navy font-sans">The Rephonix Approach</h3>
             <p className="text-sm text-ink-slate font-light leading-relaxed">
               We provide rule-based algorithmic pricing online, scheduled doorstep verification by a verified agent, and immediate digital payment prior to device handover.
             </p>
@@ -142,8 +142,8 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
       {/* ── 3. How Rephonix Compares (Side-by-Side Table) ── */}
       <div className="space-y-6">
         <div>
-          <span className="text-xs font-mono font-bold uppercase tracking-wider text-cobalt">Comparative Analysis</span>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-navy font-outfit tracking-tight mt-1">
+          <span className="text-xs font-sans font-bold uppercase tracking-wider text-cobalt">Comparative Analysis</span>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-navy font-sans tracking-tight mt-1">
             How Rephonix compares
           </h2>
           <p className="text-sm text-ink-slate font-light mt-1.5 max-w-2xl leading-relaxed">
@@ -155,11 +155,11 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs sm:text-sm border-separate border-spacing-0">
               <thead>
-                <tr className="bg-slate-50/70 text-ink-navy font-outfit font-bold">
+                <tr className="bg-slate-50/70 text-ink-navy font-sans font-bold">
                   <th className="p-4 sm:p-5 border-b border-ice-border">Feature</th>
                   <th className="p-4 sm:p-5 border-b border-ice-border text-ink-muted">P2P Classifieds</th>
                   <th className="p-4 sm:p-5 border-b border-ice-border text-ink-muted">Local Offline Shops</th>
-                  <th className="p-4 sm:p-5 text-blue-600 bg-blue-50/90 font-black font-outfit text-sm sm:text-base border-t-2 border-r-2 border-l-2 border-b-2 border-blue-500 rounded-tr-2xl shadow-[-4px_0_12px_rgba(59,130,246,0.25),4px_0_12px_rgba(59,130,246,0.25),0_-4px_12px_rgba(59,130,246,0.25)] relative">
+                  <th className="p-4 sm:p-5 text-blue-600 bg-blue-50/90 font-black font-sans text-sm sm:text-base border-t-2 border-r-2 border-l-2 border-b-2 border-blue-500 rounded-tr-2xl shadow-[-4px_0_12px_rgba(59,130,246,0.25),4px_0_12px_rgba(59,130,246,0.25),0_-4px_12px_rgba(59,130,246,0.25)] relative">
                     Rephonix
                   </th>
                 </tr>
@@ -222,8 +222,8 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
       {/* ── 4. The 4-Step Journey ── */}
       <div className="space-y-6">
         <div>
-          <span className="text-xs font-mono font-bold uppercase tracking-wider text-cobalt">Customer Journey</span>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-navy font-outfit tracking-tight mt-1">
+          <span className="text-xs font-sans font-bold uppercase tracking-wider text-cobalt">Customer Journey</span>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-navy font-sans tracking-tight mt-1">
             How doorstep selling works
           </h2>
           <p className="text-sm text-ink-slate font-light mt-1.5 max-w-2xl leading-relaxed">
@@ -233,40 +233,40 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           <div className="bg-canvas-pure border border-ice-border rounded-xl p-6 shadow-sm space-y-3 relative text-left">
-            <span className="text-xs font-mono font-bold text-cobalt bg-cobalt/10 px-2 py-0.5 rounded border border-cobalt/15">
+            <span className="text-xs font-sans font-bold text-cobalt bg-cobalt/10 px-2 py-0.5 rounded border border-cobalt/15">
               STEP 01
             </span>
-            <h3 className="text-base font-bold text-ink-navy font-outfit mt-2">Instant Valuation</h3>
+            <h3 className="text-base font-bold text-ink-navy font-sans mt-2">Instant Valuation</h3>
             <p className="text-xs text-ink-slate font-light leading-relaxed">
               Select your smartphone model and answer a quick condition checklist to view a transparent, real-time market quote.
             </p>
           </div>
 
           <div className="bg-canvas-pure border border-ice-border rounded-xl p-6 shadow-sm space-y-3 relative text-left">
-            <span className="text-xs font-mono font-bold text-cobalt bg-cobalt/10 px-2 py-0.5 rounded border border-cobalt/15">
+            <span className="text-xs font-sans font-bold text-cobalt bg-cobalt/10 px-2 py-0.5 rounded border border-cobalt/15">
               STEP 02
             </span>
-            <h3 className="text-base font-bold text-ink-navy font-outfit mt-2">Schedule Pickup</h3>
+            <h3 className="text-base font-bold text-ink-navy font-sans mt-2">Schedule Pickup</h3>
             <p className="text-xs text-ink-slate font-light leading-relaxed">
               Choose your preferred date and time slot. Our verified field technician visits your home or workplace across Delhi NCR.
             </p>
           </div>
 
           <div className="bg-canvas-pure border border-ice-border rounded-xl p-6 shadow-sm space-y-3 relative text-left">
-            <span className="text-xs font-mono font-bold text-cobalt bg-cobalt/10 px-2 py-0.5 rounded border border-cobalt/15">
+            <span className="text-xs font-sans font-bold text-cobalt bg-cobalt/10 px-2 py-0.5 rounded border border-cobalt/15">
               STEP 03
             </span>
-            <h3 className="text-base font-bold text-ink-navy font-outfit mt-2">5-Min Verification</h3>
+            <h3 className="text-base font-bold text-ink-navy font-sans mt-2">5-Min Verification</h3>
             <p className="text-xs text-ink-slate font-light leading-relaxed">
               The technician conducts an objective hardware check. When condition matches what you declared, the full quote is honored.
             </p>
           </div>
 
           <div className="bg-canvas-pure border border-ice-border rounded-xl p-6 shadow-sm space-y-3 relative text-left">
-            <span className="text-xs font-mono font-bold text-cobalt bg-cobalt/10 px-2 py-0.5 rounded border border-cobalt/15">
+            <span className="text-xs font-sans font-bold text-cobalt bg-cobalt/10 px-2 py-0.5 rounded border border-cobalt/15">
               STEP 04
             </span>
-            <h3 className="text-base font-bold text-ink-navy font-outfit mt-2">Instant Settlement</h3>
+            <h3 className="text-base font-bold text-ink-navy font-sans mt-2">Instant Settlement</h3>
             <p className="text-xs text-ink-slate font-light leading-relaxed">
               Payment is disbursed on the spot via UPI or immediate bank transfer directly to your account before you hand over the device.
             </p>
@@ -277,8 +277,8 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
       {/* ── 5. Pricing Engine & Valuation Framework ── */}
       <div className="bg-canvas-pure border border-ice-border rounded-2xl p-6 sm:p-8 space-y-6 shadow-sm">
         <div className="max-w-2xl">
-          <span className="text-xs font-mono font-bold uppercase tracking-wider text-cobalt">Valuation Mechanics</span>
-          <h2 className="text-xl sm:text-2xl font-bold text-ink-navy font-outfit tracking-tight mt-1">
+          <span className="text-xs font-sans font-bold uppercase tracking-wider text-cobalt">Valuation Mechanics</span>
+          <h2 className="text-xl sm:text-2xl font-bold text-ink-navy font-sans tracking-tight mt-1">
             Our dynamic pricing principles
           </h2>
           <p className="text-sm text-ink-slate font-light mt-1.5 leading-relaxed">
@@ -322,8 +322,8 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
       {/* ── 6. Guarantees: Safety, Transparency & Data Privacy ── */}
       <div className="space-y-6">
         <div>
-          <span className="text-xs font-mono font-bold uppercase tracking-wider text-cobalt">Customer Commitments</span>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-navy font-outfit tracking-tight mt-1">
+          <span className="text-xs font-sans font-bold uppercase tracking-wider text-cobalt">Customer Commitments</span>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-navy font-sans tracking-tight mt-1">
             Our core service guarantees
           </h2>
         </div>
@@ -333,7 +333,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
             <div className="w-10 h-10 rounded-lg bg-cobalt/10 flex items-center justify-center text-cobalt">
               <ShieldCheck className="w-5 h-5" />
             </div>
-            <h3 className="text-base font-bold text-ink-navy font-outfit">100% No-Obligation Evaluation</h3>
+            <h3 className="text-base font-bold text-ink-navy font-sans">100% No-Obligation Evaluation</h3>
             <p className="text-sm text-ink-slate font-light leading-relaxed">
               If our technician discovers an undisclosed physical or hardware defect and presents an updated valuation, you have total freedom to accept or decline. If you decline, the appointment is concluded immediately with absolutely zero cancellation fees or penalty charges.
             </p>
@@ -343,7 +343,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
             <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-600">
               <Lock className="w-5 h-5" />
             </div>
-            <h3 className="text-base font-bold text-ink-navy font-outfit">Complete Data Privacy &amp; Sanitization</h3>
+            <h3 className="text-base font-bold text-ink-navy font-sans">Complete Data Privacy &amp; Sanitization</h3>
             <p className="text-sm text-ink-slate font-light leading-relaxed">
               Your personal data security is non-negotiable. Our technicians guide you through signing out of all cloud accounts (Apple iCloud, Google Account, or Samsung Account) and performing a complete factory data reset in your presence prior to device handover.
             </p>
@@ -354,8 +354,8 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
       {/* ── 7. Transparency FAQ ── */}
       <div className="space-y-6">
         <div>
-          <span className="text-xs font-mono font-bold uppercase tracking-wider text-cobalt">Got Questions?</span>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-navy font-outfit tracking-tight mt-1">
+          <span className="text-xs font-sans font-bold uppercase tracking-wider text-cobalt">Got Questions?</span>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-navy font-sans tracking-tight mt-1">
             Frequently asked questions
           </h2>
           <p className="text-sm text-ink-slate font-light mt-1.5 max-w-2xl leading-relaxed">
@@ -395,7 +395,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
                 onClick={() => toggleFaq(idx)}
                 className="w-full p-4 sm:p-5 text-left flex items-center justify-between gap-4 font-semibold text-ink-navy hover:text-cobalt transition-colors cursor-pointer"
               >
-                <span className="text-sm font-outfit">{faq.q}</span>
+                <span className="text-sm font-sans">{faq.q}</span>
                 <ChevronDown className={`w-4 h-4 text-ink-muted shrink-0 transition-transform duration-200 ${openFaq === idx ? 'rotate-180 text-cobalt' : ''}`} />
               </button>
               {openFaq === idx && (
@@ -414,10 +414,10 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
         <div className="absolute bottom-0 left-0 w-80 h-80 bg-emerald-500/10 blur-[90px] rounded-full pointer-events-none" />
 
         <div className="relative z-10 max-w-2xl mx-auto space-y-3">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-white/10 text-white border border-white/15 tracking-widest uppercase font-mono">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-white/10 text-white border border-white/15 tracking-normal uppercase font-sans">
             Get Started Today
           </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold font-outfit tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-extrabold font-sans tracking-tight">
             Ready to find out what your smartphone is worth?
           </h2>
           <p className="text-white/80 text-sm font-light leading-relaxed">

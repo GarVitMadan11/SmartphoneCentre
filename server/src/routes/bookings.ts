@@ -378,13 +378,18 @@ router.post('/', bookingLimiter, optionalCustomerAuth, async (req: Authenticated
 router.get('/:id/pdf', optionalAdminAuth as any, optionalCustomerAuth, async (req: AuthenticatedCustomerRequest, res) => {
   try {
     const rawId = String(req.params.id);
+    const cleanId = rawId.trim().toUpperCase();
 
-    let booking: any = await prisma.booking.findUnique({ where: { id: rawId.trim().toUpperCase() } });
+    let booking: any = await prisma.booking.findUnique({ where: { id: cleanId } });
     if (!booking) {
-      const candidates = await prisma.booking.findMany({
-        select: { id: true, userId: true, modelName: true, storageGb: true, customerName: true, customerPhone: true, customerEmail: true, address: true, pickupDate: true, pickupTimeSlot: true, finalPrice: true, defectIdsJson: true, dateCreated: true }
+      booking = await prisma.booking.findFirst({
+        where: {
+          id: {
+            equals: rawId.trim(),
+            mode: 'insensitive',
+          },
+        },
       });
-      booking = candidates.find(b => b.id.toLowerCase() === rawId.toLowerCase()) ?? null;
     }
 
     if (!booking) {

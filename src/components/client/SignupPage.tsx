@@ -47,9 +47,6 @@ export default function SignupPage({ onSignupSuccess, onNavigate, redirectParam 
     try {
       const response = await customerSignup(name.trim(), email.trim(), phone.trim(), password);
       if (response.status === 'otp_sent') {
-        if (response.otp) {
-          console.log(`🔑 [Verification Code]: ${response.otp}`);
-        }
         setMode('otp');
       }
     } catch (err: any) {
@@ -95,7 +92,7 @@ export default function SignupPage({ onSignupSuccess, onNavigate, redirectParam 
           <div className="flex justify-center mb-4">
             <img src="/logo.svg" className="w-12 h-12 object-contain" alt="Rephonix Logo" />
           </div>
-          <h2 className="text-3xl font-extrabold text-ink-navy tracking-tight font-outfit">
+          <h2 className="text-3xl font-extrabold text-ink-navy tracking-tight font-sans">
             {mode === 'otp' ? 'Verify Your Email' : 'Create Account'}
           </h2>
           <p className="mt-2 text-xs text-ink-muted font-light">
@@ -139,7 +136,7 @@ export default function SignupPage({ onSignupSuccess, onNavigate, redirectParam 
             </div>
 
             <div>
-              <label htmlFor="otp" className="text-[10px] font-mono tracking-wider text-ink-muted uppercase block mb-1.5">
+              <label htmlFor="otp" className="text-[10px] font-medium tracking-normal text-ink-muted uppercase block mb-1.5">
                 Verification Code (6 Digits)
               </label>
               <input
@@ -171,7 +168,7 @@ export default function SignupPage({ onSignupSuccess, onNavigate, redirectParam 
               <div className="space-y-4">
                 {/* Full Name */}
                 <div>
-                  <label htmlFor="name" className="text-[10px] font-mono tracking-wider text-ink-muted uppercase block mb-1.5">Full Name</label>
+                  <label htmlFor="name" className="text-[10px] font-medium tracking-normal text-ink-muted uppercase block mb-1.5">Full Name</label>
                   <div className="relative">
                     <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-ink-muted"><User className="w-4 h-4" /></span>
                     <input id="name" name="name" type="text" required value={name} onChange={(e) => setName(e.target.value)}
@@ -182,7 +179,7 @@ export default function SignupPage({ onSignupSuccess, onNavigate, redirectParam 
 
                 {/* Email */}
                 <div>
-                  <label htmlFor="email" className="text-[10px] font-mono tracking-wider text-ink-muted uppercase block mb-1.5">Gmail / Email Address</label>
+                  <label htmlFor="email" className="text-[10px] font-medium tracking-normal text-ink-muted uppercase block mb-1.5">Gmail / Email Address</label>
                   <div className="relative">
                     <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-ink-muted"><Mail className="w-4 h-4" /></span>
                     <input id="email" name="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
@@ -193,7 +190,7 @@ export default function SignupPage({ onSignupSuccess, onNavigate, redirectParam 
 
                 {/* Mobile (optional) */}
                 <div>
-                  <label htmlFor="phone" className="text-[10px] font-mono tracking-wider text-ink-muted uppercase block mb-1.5">
+                  <label htmlFor="phone" className="text-[10px] font-medium tracking-normal text-ink-muted uppercase block mb-1.5">
                     Mobile Number <span className="text-ink-muted/60 normal-case">(for pickup logistics)</span>
                   </label>
                   <div className="relative">
@@ -206,7 +203,7 @@ export default function SignupPage({ onSignupSuccess, onNavigate, redirectParam 
 
                 {/* Password */}
                 <div>
-                  <label htmlFor="password" className="text-[10px] font-mono tracking-wider text-ink-muted uppercase block mb-1.5">Password</label>
+                  <label htmlFor="password" className="text-[10px] font-medium tracking-normal text-ink-muted uppercase block mb-1.5">Password</label>
                   <div className="relative">
                     <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-ink-muted"><Lock className="w-4 h-4" /></span>
                     <input id="password" name="password" type={showPassword ? 'text' : 'password'} required value={password}
@@ -222,7 +219,7 @@ export default function SignupPage({ onSignupSuccess, onNavigate, redirectParam 
 
                 {/* Confirm Password */}
                 <div>
-                  <label htmlFor="confirmPassword" className="text-[10px] font-mono tracking-wider text-ink-muted uppercase block mb-1.5">Confirm Password</label>
+                  <label htmlFor="confirmPassword" className="text-[10px] font-medium tracking-normal text-ink-muted uppercase block mb-1.5">Confirm Password</label>
                   <div className="relative">
                     <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-ink-muted"><Lock className="w-4 h-4" /></span>
                     <input id="confirmPassword" name="confirmPassword" type="password" required value={confirmPassword}

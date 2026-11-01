@@ -2,7 +2,7 @@ import React from 'react';
 import { Booking } from '../../../data/mockDatabase';
 import { ApiUser, updateBooking } from '../../../utils/api';
 import {
-  Search, Filter,
+  Search, Filter, Check,
   CheckCircle, XCircle, CreditCard,
   ChevronRight, Calendar, MapPin, User, Smartphone,
 } from 'lucide-react';
@@ -121,7 +121,7 @@ export const LedgerTab: React.FC<LedgerTabProps> = ({
       {/* KPI Ribbon */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <div className="bg-canvas-pure border border-ice-border rounded-xl p-4 shadow-2xs">
-          <span className="text-[10px] font-mono tracking-wider text-zinc-500 uppercase block">Total Payouts Completed</span>
+          <span className="text-[10px] font-mono tracking-normal text-zinc-500 uppercase block">Total Payouts Completed</span>
           <div className="flex items-baseline gap-2 mt-1">
             <span className="text-2xl font-bold text-emerald-500 tracking-tight">{formatPrice(metrics.totalPaidAmt)}</span>
           </div>
@@ -129,7 +129,7 @@ export const LedgerTab: React.FC<LedgerTabProps> = ({
         </div>
 
         <div className="bg-canvas-pure border border-ice-border rounded-xl p-4 shadow-2xs">
-          <span className="text-[10px] font-mono tracking-wider text-zinc-500 uppercase block">Pending Inspections</span>
+          <span className="text-[10px] font-mono tracking-normal text-zinc-500 uppercase block">Pending Inspections</span>
           <div className="flex items-baseline gap-2 mt-1">
             <span className="text-2xl font-bold text-amber-500 tracking-tight">{metrics.pendingInspections}</span>
           </div>
@@ -137,7 +137,7 @@ export const LedgerTab: React.FC<LedgerTabProps> = ({
         </div>
 
         <div className="bg-canvas-pure border border-ice-border rounded-xl p-4 shadow-2xs">
-          <span className="text-[10px] font-mono tracking-wider text-zinc-500 uppercase block">Seller Verification Rate</span>
+          <span className="text-[10px] font-mono tracking-normal text-zinc-500 uppercase block">Seller Verification Rate</span>
           <div className="flex items-baseline gap-2 mt-1">
             <span className="text-2xl font-bold text-cobalt tracking-tight">{metrics.verificationRate}%</span>
           </div>
@@ -145,7 +145,7 @@ export const LedgerTab: React.FC<LedgerTabProps> = ({
         </div>
 
         <div className="bg-canvas-pure border border-ice-border rounded-xl p-4 shadow-2xs">
-          <span className="text-[10px] font-mono tracking-wider text-zinc-500 uppercase block">Disbursed Bookings</span>
+          <span className="text-[10px] font-mono tracking-normal text-zinc-500 uppercase block">Disbursed Bookings</span>
           <div className="flex items-baseline gap-2 mt-1">
             <span className="text-2xl font-bold text-ink-navy tracking-tight">{metrics.completedPayouts} / {bookings.length}</span>
           </div>
@@ -158,7 +158,7 @@ export const LedgerTab: React.FC<LedgerTabProps> = ({
         {/* Full-width Table Ledger */}
         <div className="bg-canvas-pure border border-ice-border rounded-xl p-4 sm:p-6 shadow-xs">
           <div className="flex flex-col sm:flex-row gap-4 justify-between items-stretch sm:items-center pb-4 mb-4 border-b border-ice-border/60">
-            <h3 className="font-outfit font-bold text-lg text-ink-navy">Transactions Ledger ({filteredBookings.length})</h3>
+            <h3 className="font-sans font-bold text-lg text-ink-navy">Transactions Ledger ({filteredBookings.length})</h3>
             <div className="flex items-center gap-2 max-w-md w-full sm:w-auto">
               <div className="relative flex-1 sm:w-64">
                 <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-3" />
@@ -272,7 +272,7 @@ export const LedgerTab: React.FC<LedgerTabProps> = ({
                                 }`}
                                 title={`${s.step}. ${s.label}: ${s.passed ? 'Completed' : 'Pending'}`}
                               >
-                                {s.passed ? '✓' : s.step}
+                                {s.passed ? <Check className="w-2.5 h-2.5 stroke-[2.5]" /> : s.step}
                               </span>
                             ))}
                           </div>
@@ -331,7 +331,7 @@ export const LedgerTab: React.FC<LedgerTabProps> = ({
               <div className="flex justify-between items-start border-b border-white/[0.04] pb-3">
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase">Docket View</span>
+                    <span className="text-[10px] font-mono tracking-normal text-zinc-500 uppercase">Docket View</span>
                     <span className="text-[9px] font-mono bg-zinc-950 text-cobalt px-1.5 py-0.5 rounded-sm font-bold border border-white/[0.06]">#{selectedBooking.id}</span>
                   </div>
                   <h4 className="font-light text-lg text-ink-navy mt-1">Transaction Dossier</h4>
@@ -475,7 +475,7 @@ export const LedgerTab: React.FC<LedgerTabProps> = ({
                     {/* Stage 1: Booked */}
                     <div className="p-3 bg-slate-50/50 dark:bg-zinc-900/50 border border-ice-border rounded-md space-y-1">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-ink-navy flex items-center gap-1.5 font-outfit">
+                        <span className="text-xs font-bold text-ink-navy flex items-center gap-1.5 font-sans">
                           <span className={`w-5 h-5 rounded-full text-white text-[10px] flex items-center justify-center font-mono font-bold ${
                             selectedBooking.inspectionStatus === 'approved' ? 'bg-emerald-500' : 'bg-amber-500'
                           }`}>1</span>
@@ -497,7 +497,7 @@ export const LedgerTab: React.FC<LedgerTabProps> = ({
                     {/* Stage 2: Inspected (Physical Doorstep Check) */}
                     <div className="p-3 bg-slate-50/50 dark:bg-zinc-900/50 border border-ice-border rounded-md space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-ink-navy flex items-center gap-1.5 font-outfit">
+                        <span className="text-xs font-bold text-ink-navy flex items-center gap-1.5 font-sans">
                           <span className={`w-5 h-5 rounded-full text-white text-[10px] flex items-center justify-center font-mono font-bold ${
                             selectedBooking.inspectionStatus === 'approved' ? 'bg-emerald-500' : 'bg-slate-400'
                           }`}>2</span>
@@ -547,13 +547,13 @@ export const LedgerTab: React.FC<LedgerTabProps> = ({
                           </div>
                           {selectedBooking.payoutStatus === 'completed' && (
                             <span className="text-[9px] font-mono text-zinc-500 block italic leading-tight">
-                              🔒 Inspection status is locked after financial payout is completed.
+                              Inspection status is locked after financial payout is completed.
                             </span>
                           )}
                         </div>
                       ) : (
                         <div className="pl-6 text-[10px] font-mono text-amber-600 bg-amber-500/10 p-2 rounded border border-amber-500/20">
-                          🔒 Inspection approval requires Operations Agent or Super Admin role.
+                          Inspection approval requires Operations Agent or Super Admin role.
                         </div>
                       )}
                     </div>
@@ -561,7 +561,7 @@ export const LedgerTab: React.FC<LedgerTabProps> = ({
                     {/* Stage 3: Paid Out (Financial Disbursement) */}
                     <div className="p-3 bg-slate-50/50 dark:bg-zinc-900/50 border border-ice-border rounded-md space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-ink-navy flex items-center gap-1.5 font-outfit">
+                        <span className="text-xs font-bold text-ink-navy flex items-center gap-1.5 font-sans">
                           <span className={`w-5 h-5 rounded-full text-white text-[10px] flex items-center justify-center font-mono font-bold ${
                             selectedBooking.payoutStatus === 'completed' ? 'bg-emerald-500' : 'bg-slate-400'
                           }`}>3</span>
@@ -577,7 +577,7 @@ export const LedgerTab: React.FC<LedgerTabProps> = ({
                       <div className="pl-6">
                         {!canDisbursePayout ? (
                           <div className="p-2.5 bg-amber-500/10 border border-amber-500/20 rounded text-[10px] font-mono text-amber-600">
-                            🔒 Payout disbursement is restricted to Finance Approvers & Super Admins.
+                            Payout disbursement is restricted to Finance Approvers & Super Admins.
                           </div>
                         ) : (
                           <button
@@ -593,7 +593,7 @@ export const LedgerTab: React.FC<LedgerTabProps> = ({
                             }`}
                           >
                             <CreditCard className="w-4 h-4" />
-                            {selectedBooking.payoutStatus === 'completed' ? 'Payout Marked Completed ✓' : 'Disburse Instant Payout'}
+                            {selectedBooking.payoutStatus === 'completed' ? 'Payout Marked Completed' : 'Disburse Instant Payout'}
                           </button>
                         )}
                         {selectedBooking.inspectionStatus !== 'approved' && selectedBooking.payoutStatus !== 'completed' && (

@@ -48,3 +48,12 @@ export const leadLimiter = rateLimit({
   skip: () => isDev,
 });
 
+export const quoteLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: isDev ? 1000 : 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'TooManyRequests', message: 'Too many quote requests. Please wait a few minutes.' },
+  skip: () => isDev,
+});
+

@@ -1,9 +1,9 @@
 import React from 'react';
 import { Model, Variant, DefectRule } from '../../data/mockDatabase';
-import { 
-  Check, X, ShieldCheck, Power, Radio, CreditCard, FileText, 
-  Camera, Fingerprint, ScanFace, Wifi, MapPin, 
-  Bluetooth, Headphones, Volume2, Zap, Battery, Mic, VolumeX, 
+import {
+  Check, X, ShieldCheck, Power, Radio, CreditCard, FileText,
+  Camera, Fingerprint, ScanFace, Wifi, MapPin,
+  Bluetooth, Headphones, Volume2, Zap, Battery, Mic, VolumeX,
   Box, Clock, CheckCircle2, AlertTriangle
 } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -88,9 +88,6 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
         className="space-y-6 text-left"
       >
         <div className="border-b border-ice-border/70 pb-4">
-          <span className="text-[11px] font-mono tracking-[0.2em] text-cobalt uppercase block mb-1 font-bold">
-            Step 1 of 5 // Core Diagnostic Verification
-          </span>
           <h3 className="text-2xl sm:text-3xl font-bold text-slate-950 tracking-tight">
             Basic Functionality &amp; Warranty Check
           </h3>
@@ -111,7 +108,7 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
                 We currently only accept devices that switch on without any issues.
               </p>
             </div>
-            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-100 text-amber-800">
+            <span className="px-2 py-0.5 rounded text-[10px] font-sans font-bold bg-amber-100 text-amber-800">
               Mandatory
             </span>
           </div>
@@ -122,11 +119,10 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
               onClick={() => {
                 setSelectedDefects(prev => prev.filter(d => d.id !== 'defect-critical-power'));
               }}
-              className={`py-3 px-4 rounded-xl border font-bold text-xs flex items-center justify-center gap-2 transition-all ${
-                !isPowerOff
+              className={`py-3 px-4 rounded-xl border font-bold text-xs flex items-center justify-center gap-2 transition-all ${!isPowerOff
                   ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
                   : 'bg-white text-slate-700 border-ice-border hover:border-emerald-500/40'
-              }`}
+                }`}
             >
               <Check className="w-4 h-4" />
               <span>Yes, Powers On</span>
@@ -137,11 +133,10 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
               onClick={() => {
                 showCriticalModal('power');
               }}
-              className={`py-3 px-4 rounded-xl border font-bold text-xs flex items-center justify-center gap-2 transition-all ${
-                isPowerOff
+              className={`py-3 px-4 rounded-xl border font-bold text-xs flex items-center justify-center gap-2 transition-all ${isPowerOff
                   ? 'bg-red-600 text-white border-red-600 shadow-sm'
                   : 'bg-white text-slate-700 border-ice-border hover:border-red-500/40'
-              }`}
+                }`}
             >
               <X className="w-4 h-4" />
               <span>No, Won't Turn On</span>
@@ -166,11 +161,10 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
               <button
                 type="button"
                 onClick={() => setSelectedDefects(prev => prev.filter(d => d.id !== 'defect-tablet-network-fail'))}
-                className={`py-3 px-4 rounded-xl border font-bold text-xs flex items-center justify-center gap-2 transition-all ${
-                  !isNetworkFailed
+                className={`py-3 px-4 rounded-xl border font-bold text-xs flex items-center justify-center gap-2 transition-all ${!isNetworkFailed
                     ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
                     : 'bg-white text-slate-700 border-ice-border hover:border-emerald-500/40'
-                }`}
+                  }`}
               >
                 <Check className="w-4 h-4" />
                 <span>Yes, Network Working</span>
@@ -179,11 +173,10 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
               <button
                 type="button"
                 onClick={() => toggleDefect('defect-tablet-network-fail')}
-                className={`py-3 px-4 rounded-xl border font-bold text-xs flex items-center justify-center gap-2 transition-all ${
-                  isNetworkFailed
+                className={`py-3 px-4 rounded-xl border font-bold text-xs flex items-center justify-center gap-2 transition-all ${isNetworkFailed
                     ? 'bg-red-600 text-white border-red-600 shadow-sm'
                     : 'bg-white text-slate-700 border-ice-border hover:border-red-500/40'
-                }`}
+                  }`}
               >
                 <X className="w-4 h-4" />
                 <span>No, Network Issues</span>
@@ -209,11 +202,10 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
               <button
                 type="button"
                 onClick={() => setSelectedDefects(prev => prev.filter(d => d.id !== 'defect-tablet-missing-sim-tray'))}
-                className={`py-3 px-4 rounded-xl border font-bold text-xs flex items-center justify-center gap-2 transition-all ${
-                  !isSimTrayMissing
+                className={`py-3 px-4 rounded-xl border font-bold text-xs flex items-center justify-center gap-2 transition-all ${!isSimTrayMissing
                     ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
                     : 'bg-white text-slate-700 border-ice-border hover:border-emerald-500/40'
-                }`}
+                  }`}
               >
                 <Check className="w-4 h-4" />
                 <span>Yes, SIM Tray Present</span>
@@ -222,11 +214,10 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
               <button
                 type="button"
                 onClick={() => toggleDefect('defect-tablet-missing-sim-tray')}
-                className={`py-3 px-4 rounded-xl border font-bold text-xs flex items-center justify-center gap-2 transition-all ${
-                  isSimTrayMissing
+                className={`py-3 px-4 rounded-xl border font-bold text-xs flex items-center justify-center gap-2 transition-all ${isSimTrayMissing
                     ? 'bg-amber-600 text-white border-amber-600 shadow-sm'
                     : 'bg-white text-slate-700 border-ice-border hover:border-amber-500/40'
-                }`}
+                  }`}
               >
                 <X className="w-4 h-4" />
                 <span>No, Tray Missing / Damaged</span>
@@ -251,11 +242,10 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
             <button
               type="button"
               onClick={() => setSelectedDefects(prev => prev.filter(d => d.id !== 'defect-acc-missing-bill'))}
-              className={`py-3 px-4 rounded-xl border font-bold text-xs flex items-center justify-center gap-2 transition-all ${
-                !isBillMissing
+              className={`py-3 px-4 rounded-xl border font-bold text-xs flex items-center justify-center gap-2 transition-all ${!isBillMissing
                   ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
                   : 'bg-white text-slate-700 border-ice-border hover:border-emerald-500/40'
-              }`}
+                }`}
             >
               <Check className="w-4 h-4" />
               <span>Yes, Valid Bill Available</span>
@@ -264,11 +254,10 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
             <button
               type="button"
               onClick={() => toggleDefect('defect-acc-missing-bill')}
-              className={`py-3 px-4 rounded-xl border font-bold text-xs flex items-center justify-center gap-2 transition-all ${
-                isBillMissing
+              className={`py-3 px-4 rounded-xl border font-bold text-xs flex items-center justify-center gap-2 transition-all ${isBillMissing
                   ? 'bg-amber-600 text-white border-amber-600 shadow-sm'
                   : 'bg-white text-slate-700 border-ice-border hover:border-amber-500/40'
-              }`}
+                }`}
             >
               <X className="w-4 h-4" />
               <span>No Valid Bill</span>
@@ -292,11 +281,10 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
             <button
               type="button"
               onClick={() => setHasWarranty(true)}
-              className={`py-3 px-4 rounded-xl border font-bold text-xs flex items-center justify-center gap-2 transition-all ${
-                hasWarranty === true
+              className={`py-3 px-4 rounded-xl border font-bold text-xs flex items-center justify-center gap-2 transition-all ${hasWarranty === true
                   ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
                   : 'bg-white text-slate-700 border-ice-border hover:border-emerald-500/40'
-              }`}
+                }`}
             >
               <Check className="w-4 h-4" />
               <span>Yes, Under Brand Warranty</span>
@@ -308,11 +296,10 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
                 setHasWarranty(false);
                 setWarrantyAge('out_of_warranty');
               }}
-              className={`py-3 px-4 rounded-xl border font-bold text-xs flex items-center justify-center gap-2 transition-all ${
-                hasWarranty === false
+              className={`py-3 px-4 rounded-xl border font-bold text-xs flex items-center justify-center gap-2 transition-all ${hasWarranty === false
                   ? 'bg-slate-700 text-white border-slate-700 shadow-sm'
                   : 'bg-white text-slate-700 border-ice-border hover:border-slate-400'
-              }`}
+                }`}
             >
               <X className="w-4 h-4" />
               <span>No / Expired Warranty</span>
@@ -327,8 +314,6 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
   // STEP 1: Screen Defects
   // ─────────────────────────────────────────────────────────────────────────────
   if (step === 1) {
-    const isTouchUnresponsive = hasDefect('defect-screen-touch');
-
     const physicalGroup = [
       'defect-screen-scratches-minor',
       'defect-screen-scratches-major',
@@ -361,9 +346,6 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
         className="space-y-6 text-left"
       >
         <div className="border-b border-ice-border/70 pb-4">
-          <span className="text-[11px] font-mono tracking-[0.2em] text-cobalt uppercase block mb-1 font-bold">
-            Step 2 of 5 // Screen &amp; Touch Evaluation
-          </span>
           <h3 className="text-2xl sm:text-3xl font-bold text-slate-950 tracking-tight">
             Tell us more about your device's screen defects
           </h3>
@@ -372,49 +354,11 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
           </p>
         </div>
 
-        {/* 1. Touch screen working */}
-        <div className="p-4 rounded-xl border border-ice-border bg-slate-50/60">
-          <h4 className="font-bold text-sm text-slate-900 mb-1">
-            Is the tablet/iPad touch screen working properly?
-          </h4>
-          <p className="text-xs text-slate-500 mb-3">
-            Check the touch screen functionality across the entire display.
-          </p>
-
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => setSelectedDefects(prev => prev.filter(d => d.id !== 'defect-screen-touch'))}
-              className={`py-3 px-4 rounded-xl border font-bold text-xs flex items-center justify-center gap-2 transition-all ${
-                !isTouchUnresponsive
-                  ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
-                  : 'bg-white text-slate-700 border-ice-border hover:border-emerald-500/40'
-              }`}
-            >
-              <Check className="w-4 h-4" />
-              <span>Yes, Touch Working</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => toggleDefect('defect-screen-touch')}
-              className={`py-3 px-4 rounded-xl border font-bold text-xs flex items-center justify-center gap-2 transition-all ${
-                isTouchUnresponsive
-                  ? 'bg-red-600 text-white border-red-600 shadow-sm'
-                  : 'bg-white text-slate-700 border-ice-border hover:border-red-500/40'
-              }`}
-            >
-              <X className="w-4 h-4" />
-              <span>No, Touch Issue</span>
-            </button>
-          </div>
-        </div>
-
         {/* 2. Screen Physical Condition */}
         <div className="p-4 rounded-xl border border-ice-border bg-slate-50/60">
           <div className="flex items-center justify-between mb-1">
             <h4 className="font-bold text-sm text-slate-900">Screen Physical Condition</h4>
-            <span className="text-[10px] font-mono text-zinc-400">Physical Grade</span>
+            <span className="text-[10px] font-sans text-zinc-400">Physical Grade</span>
           </div>
           <p className="text-xs text-slate-500 mb-3">Check physical condition of Display Screen glass.</p>
 
@@ -430,11 +374,10 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
                 key={opt.id}
                 type="button"
                 onClick={() => setSingleChoiceDefect(opt.id, physicalGroup)}
-                className={`p-3 rounded-xl border text-left transition-all flex items-center justify-between ${
-                  activePhysical === opt.id
+                className={`p-3 rounded-xl border text-left transition-all flex items-center justify-between ${activePhysical === opt.id
                     ? 'border-cobalt bg-cobalt/5 ring-1 ring-cobalt/30'
                     : 'border-ice-border bg-white hover:border-cobalt/40'
-                }`}
+                  }`}
               >
                 <div>
                   <span className="block text-xs font-bold text-slate-900">{opt.label}</span>
@@ -450,7 +393,7 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
         <div className="p-4 rounded-xl border border-ice-border bg-slate-50/60">
           <div className="flex items-center justify-between mb-1">
             <h4 className="font-bold text-sm text-slate-900">Discoloration on Screen</h4>
-            <span className="text-[10px] font-mono text-zinc-400">Panel Calibration</span>
+            <span className="text-[10px] font-sans text-zinc-400">Panel Calibration</span>
           </div>
           <p className="text-xs text-slate-500 mb-3">Check tablet/iPad screen for discoloration or warm tints.</p>
 
@@ -465,11 +408,10 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
                 key={opt.id}
                 type="button"
                 onClick={() => setSingleChoiceDefect(opt.id, discolorGroup)}
-                className={`p-3 rounded-xl border text-left transition-all flex items-center justify-between ${
-                  activeDiscolor === opt.id
+                className={`p-3 rounded-xl border text-left transition-all flex items-center justify-between ${activeDiscolor === opt.id
                     ? 'border-cobalt bg-cobalt/5 ring-1 ring-cobalt/30'
                     : 'border-ice-border bg-white hover:border-cobalt/40'
-                }`}
+                  }`}
               >
                 <div>
                   <span className="block text-xs font-bold text-slate-900">{opt.label}</span>
@@ -485,7 +427,7 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
         <div className="p-4 rounded-xl border border-ice-border bg-slate-50/60">
           <div className="flex items-center justify-between mb-1">
             <h4 className="font-bold text-sm text-slate-900">Spot on Screen</h4>
-            <span className="text-[10px] font-mono text-zinc-400">Matrix Check</span>
+            <span className="text-[10px] font-sans text-zinc-400">Matrix Check</span>
           </div>
           <p className="text-xs text-slate-500 mb-3">Check tablet/iPad screen for visible spots or lines.</p>
 
@@ -501,11 +443,10 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
                 key={opt.id}
                 type="button"
                 onClick={() => setSingleChoiceDefect(opt.id, spotGroup)}
-                className={`p-3 rounded-xl border text-left transition-all flex items-center justify-between ${
-                  activeSpot === opt.id
+                className={`p-3 rounded-xl border text-left transition-all flex items-center justify-between ${activeSpot === opt.id
                     ? 'border-cobalt bg-cobalt/5 ring-1 ring-cobalt/30'
                     : 'border-ice-border bg-white hover:border-cobalt/40'
-                }`}
+                  }`}
               >
                 <div>
                   <span className="block text-xs font-bold text-slate-900">{opt.label}</span>
@@ -553,9 +494,6 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
         className="space-y-6 text-left"
       >
         <div className="border-b border-ice-border/70 pb-4">
-          <span className="text-[11px] font-mono tracking-[0.2em] text-cobalt uppercase block mb-1 font-bold">
-            Step 3 of 5 // Hardware &amp; Component Verification
-          </span>
           <h3 className="text-2xl sm:text-3xl font-bold text-slate-950 tracking-tight">
             Functional or Physical Problems
           </h3>
@@ -570,16 +508,14 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
             const funcIds = functionalItems.map(f => f.id);
             setSelectedDefects(prev => prev.filter(d => !funcIds.includes(d.id)));
           }}
-          className={`p-4 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${
-            !hasAnyFunctionalSelected
+          className={`p-4 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${!hasAnyFunctionalSelected
               ? 'border-emerald-500 bg-emerald-50/70 ring-1 ring-emerald-500/30'
               : 'border-ice-border bg-white hover:border-emerald-400'
-          }`}
+            }`}
         >
           <div className="flex items-center gap-3">
-            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-              !hasAnyFunctionalSelected ? 'bg-emerald-600 text-white' : 'bg-emerald-100 text-emerald-700'
-            }`}>
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${!hasAnyFunctionalSelected ? 'bg-emerald-600 text-white' : 'bg-emerald-100 text-emerald-700'
+              }`}>
               <Check className="w-4 h-4 stroke-[2.5]" />
             </div>
             <div>
@@ -599,21 +535,19 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
               <div
                 key={item.id}
                 onClick={() => toggleDefect(item.id)}
-                className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-start gap-3 text-left ${
-                  isSelected
+                className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-start gap-3 text-left ${isSelected
                     ? 'border-red-500 bg-red-50/60 ring-1 ring-red-500/30'
                     : 'border-ice-border bg-white hover:border-slate-300'
-                }`}
+                  }`}
               >
-                <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                  isSelected ? 'bg-red-600 text-white' : 'bg-slate-100 text-slate-600'
-                }`}>
+                <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${isSelected ? 'bg-red-600 text-white' : 'bg-slate-100 text-slate-600'
+                  }`}>
                   <Icon className="w-3.5 h-3.5" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between gap-1">
                     <span className="font-bold text-xs text-slate-900 leading-snug">{item.label}</span>
-                    <span className="text-[9px] font-mono px-1 rounded bg-slate-100 text-slate-500 flex-shrink-0">
+                    <span className="text-[9px] font-sans px-1 rounded bg-slate-100 text-slate-500 flex-shrink-0">
                       Standard
                     </span>
                   </div>
@@ -667,9 +601,6 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
         className="space-y-6 text-left"
       >
         <div className="border-b border-ice-border/70 pb-4">
-          <span className="text-[11px] font-mono tracking-[0.2em] text-cobalt uppercase block mb-1 font-bold">
-            Step 4 of 5 // Chassis &amp; Physical Body
-          </span>
           <h3 className="text-2xl sm:text-3xl font-bold text-slate-950 tracking-tight">
             Tell us more about your device's body defects
           </h3>
@@ -682,7 +613,7 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
         <div className="p-4 rounded-xl border border-ice-border bg-slate-50/60">
           <div className="flex items-center justify-between mb-1">
             <h4 className="font-bold text-sm text-slate-900">Body Scratches</h4>
-            <span className="text-[10px] font-mono text-zinc-400">Enclosure Grade</span>
+            <span className="text-[10px] font-sans text-zinc-400">Enclosure Grade</span>
           </div>
           <p className="text-xs text-slate-500 mb-3">Check scratches on tablet/iPad body housing.</p>
 
@@ -696,11 +627,10 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
                 key={opt.id}
                 type="button"
                 onClick={() => setSingleChoiceDefect(opt.id, scratchGroup)}
-                className={`p-3 rounded-xl border text-left transition-all flex items-center justify-between ${
-                  activeScratch === opt.id
+                className={`p-3 rounded-xl border text-left transition-all flex items-center justify-between ${activeScratch === opt.id
                     ? 'border-cobalt bg-cobalt/5 ring-1 ring-cobalt/30'
                     : 'border-ice-border bg-white hover:border-cobalt/40'
-                }`}
+                  }`}
               >
                 <div>
                   <span className="block text-xs font-bold text-slate-900">{opt.label}</span>
@@ -716,7 +646,7 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
         <div className="p-4 rounded-xl border border-ice-border bg-slate-50/60">
           <div className="flex items-center justify-between mb-1">
             <h4 className="font-bold text-sm text-slate-900">Body or Panel Dents</h4>
-            <span className="text-[10px] font-mono text-zinc-400">Structural Check</span>
+            <span className="text-[10px] font-sans text-zinc-400">Structural Check</span>
           </div>
           <p className="text-xs text-slate-500 mb-3">Check for dents or impact marks on tablet/iPad body.</p>
 
@@ -730,11 +660,10 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
                 key={opt.id}
                 type="button"
                 onClick={() => setSingleChoiceDefect(opt.id, dentGroup)}
-                className={`p-3 rounded-xl border text-left transition-all flex items-center justify-between ${
-                  activeDent === opt.id
+                className={`p-3 rounded-xl border text-left transition-all flex items-center justify-between ${activeDent === opt.id
                     ? 'border-cobalt bg-cobalt/5 ring-1 ring-cobalt/30'
                     : 'border-ice-border bg-white hover:border-cobalt/40'
-                }`}
+                  }`}
               >
                 <div>
                   <span className="block text-xs font-bold text-slate-900">{opt.label}</span>
@@ -750,7 +679,7 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
         <div className="p-4 rounded-xl border border-ice-border bg-slate-50/60">
           <div className="flex items-center justify-between mb-1">
             <h4 className="font-bold text-sm text-slate-900">Device bent or screen loose</h4>
-            <span className="text-[10px] font-mono text-zinc-400">Alignment Check</span>
+            <span className="text-[10px] font-sans text-zinc-400">Alignment Check</span>
           </div>
           <p className="text-xs text-slate-500 mb-3">Check for structural chassis bend or loose screen adhesive.</p>
 
@@ -765,11 +694,10 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
                 key={opt.id}
                 type="button"
                 onClick={() => setSingleChoiceDefect(opt.id, bentGroup)}
-                className={`p-3 rounded-xl border text-left transition-all flex items-center justify-between ${
-                  activeBent === opt.id
+                className={`p-3 rounded-xl border text-left transition-all flex items-center justify-between ${activeBent === opt.id
                     ? 'border-cobalt bg-cobalt/5 ring-1 ring-cobalt/30'
                     : 'border-ice-border bg-white hover:border-cobalt/40'
-                }`}
+                  }`}
               >
                 <div>
                   <span className="block text-xs font-bold text-slate-900">{opt.label}</span>
@@ -785,7 +713,7 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
         <div className="p-4 rounded-xl border border-ice-border bg-slate-50/60">
           <div className="flex items-center justify-between mb-1">
             <h4 className="font-bold text-sm text-slate-900">Device Side / Back Panel Condition</h4>
-            <span className="text-[10px] font-mono text-zinc-400">Housing Grade</span>
+            <span className="text-[10px] font-sans text-zinc-400">Housing Grade</span>
           </div>
           <p className="text-xs text-slate-500 mb-3">Check tablet/iPad side &amp; back panels.</p>
 
@@ -801,11 +729,10 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
                 key={opt.id}
                 type="button"
                 onClick={() => setSingleChoiceDefect(opt.id, panelGroup)}
-                className={`p-3 rounded-xl border text-left transition-all flex items-center justify-between ${
-                  activePanel === opt.id
+                className={`p-3 rounded-xl border text-left transition-all flex items-center justify-between ${activePanel === opt.id
                     ? 'border-cobalt bg-cobalt/5 ring-1 ring-cobalt/30'
                     : 'border-ice-border bg-white hover:border-cobalt/40'
-                }`}
+                  }`}
               >
                 <div>
                   <span className="block text-xs font-bold text-slate-900">{opt.label}</span>
@@ -836,9 +763,6 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
         className="space-y-6 text-left"
       >
         <div className="border-b border-ice-border/70 pb-4">
-          <span className="text-[11px] font-mono tracking-[0.2em] text-cobalt uppercase block mb-1 font-bold">
-            Step 5 of 5 // Packaging &amp; Warranty Age
-          </span>
           <h3 className="text-2xl sm:text-3xl font-bold text-slate-950 tracking-tight">
             Accessories &amp; Device Age
           </h3>
@@ -860,16 +784,14 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
             {/* Charger */}
             <div
               onClick={() => toggleDefect('defect-acc-missing-charger')}
-              className={`p-4 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${
-                !isChargerMissing
+              className={`p-4 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${!isChargerMissing
                   ? 'border-emerald-500 bg-emerald-50/70 ring-1 ring-emerald-500/30'
                   : 'border-ice-border bg-white hover:border-slate-300'
-              }`}
+                }`}
             >
               <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                  !isChargerMissing ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600'
-                }`}>
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${!isChargerMissing ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600'
+                  }`}>
                   <Zap className="w-5 h-5" />
                 </div>
                 <div>
@@ -887,16 +809,14 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
             {/* Box with same IMEI */}
             <div
               onClick={() => toggleDefect('defect-acc-missing-box')}
-              className={`p-4 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${
-                !isBoxMissing
+              className={`p-4 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${!isBoxMissing
                   ? 'border-emerald-500 bg-emerald-50/70 ring-1 ring-emerald-500/30'
                   : 'border-ice-border bg-white hover:border-slate-300'
-              }`}
+                }`}
             >
               <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                  !isBoxMissing ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600'
-                }`}>
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${!isBoxMissing ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600'
+                  }`}>
                   <Box className="w-5 h-5" />
                 </div>
                 <div>
@@ -921,14 +841,14 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
               <span>What is your tablet/iPad age?</span>
             </h4>
             {hasWarranty && (
-              <span className="text-[10px] font-mono text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded font-bold">
+              <span className="text-[10px] font-sans text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded font-bold">
                 Under Warranty
               </span>
             )}
           </div>
           <p className="text-xs text-slate-500 mb-3.5">
-            {hasWarranty 
-              ? 'Because you selected your device is under brand warranty, please specify exact age.' 
+            {hasWarranty
+              ? 'Because you selected your device is under brand warranty, please specify exact age.'
               : 'Select age bracket to apply appropriate depreciation factor.'}
           </p>
 
@@ -943,11 +863,10 @@ export const TabletDiagnosticFlow: React.FC<TabletDiagnosticFlowProps> = ({
                 key={age.id}
                 type="button"
                 onClick={() => setWarrantyAge(age.id as any)}
-                className={`p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between ${
-                  warrantyAge === age.id
+                className={`p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between ${warrantyAge === age.id
                     ? 'border-cobalt bg-cobalt/5 ring-1 ring-cobalt/30'
                     : 'border-ice-border bg-white hover:border-cobalt/40'
-                }`}
+                  }`}
               >
                 <span className="block text-xs font-bold text-slate-900 mb-1">{age.label}</span>
                 <span className="block text-[10px] text-slate-400 font-light">{age.desc}</span>

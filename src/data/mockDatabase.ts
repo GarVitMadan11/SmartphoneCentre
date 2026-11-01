@@ -499,16 +499,6 @@ export function getTabletDefectRules(
       deductionPercentage: 0
     },
 
-    // ── SCREEN DEFECTS (Touch & Originality) ──────────────────────────────
-    {
-      id: 'defect-screen-touch',
-      category: 'screen',
-      description: 'Touch Screen Not Working Properly',
-      subText: 'Dead touch zones, ghost touches, or unresponsive digitizer when swiping or using stylus.',
-      deductionFixed: 0,
-      deductionPercentage: 0.25
-    },
-
     // ── SCREEN PHYSICAL CONDITION ─────────────────────────────────────────
     {
       id: 'defect-screen-scratches-minor',
@@ -909,14 +899,6 @@ export function getDefectRulesForCategory(
       subText: 'Discoloration, pixel bleeding, or permanent glowing lines on display.',
       deductionFixed: 0,
       deductionPercentage: screenPct
-    },
-    {
-      id: 'defect-screen-touch',
-      category: 'screen',
-      description: 'Touch / Swipe Unresponsive',
-      subText: 'Dead zones, ghost touches, or unresponsive areas when swiping across the screen.',
-      deductionFixed: 0,
-      deductionPercentage: 0.15
     },
     {
       id: 'defect-screen-truetone',

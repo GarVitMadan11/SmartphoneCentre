@@ -49,7 +49,7 @@ const ToastItem: React.FC<{ toast: ToastMessage; onDismiss: (id: string) => void
     <div className={`pointer-events-auto flex items-start gap-3 p-3.5 rounded-xl border shadow-xl transition-all animate-in slide-in-from-bottom-2 ${borderColors[toast.type]}`}>
       {icons[toast.type]}
       <div className="flex-1 text-left">
-        <h4 className="text-xs font-bold font-mono tracking-tight text-slate-900">{toast.title}</h4>
+        <h4 className="text-xs font-bold font-semibold tracking-tight text-slate-900">{toast.title}</h4>
         {toast.message && <p className="text-xs text-slate-600 mt-0.5 leading-snug">{toast.message}</p>}
       </div>
       <button

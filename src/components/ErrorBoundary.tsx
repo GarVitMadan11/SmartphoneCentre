@@ -71,10 +71,10 @@ export class ErrorBoundary extends Component<Props, State> {
             </div>
 
             <div className="space-y-2">
-              <h2 className="font-outfit font-light text-2xl tracking-tight text-ink-navy">
+              <h2 className="font-sans font-light text-2xl tracking-tight text-ink-navy">
                 {isChunk ? 'New Version Available' : 'Application Error'}
               </h2>
-              <p className="text-xs font-mono text-zinc-400 leading-relaxed">
+              <p className="text-xs font-sans text-zinc-400 leading-relaxed">
                 {isChunk
                   ? 'A new version of the app has been published. Reload to update to the latest version.'
                   : 'An unexpected component runtime exception occurred. The system has prevented a full application crash.'}
@@ -82,14 +82,14 @@ export class ErrorBoundary extends Component<Props, State> {
             </div>
 
             {this.state.error && !isChunk && (
-              <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-500 rounded-sm text-[10px] font-mono text-left overflow-x-auto max-h-24">
+              <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-500 rounded-sm text-[10px] font-sans text-left overflow-x-auto max-h-24">
                 {this.state.error.toString()}
               </div>
             )}
 
             <button
               onClick={this.handleReset}
-              className="w-full py-3 bg-cobalt hover:bg-cobalt-hover text-white text-xs font-bold font-mono rounded-sm transition-all flex items-center justify-center gap-2 shadow-sm"
+              className="w-full py-3 bg-cobalt hover:bg-cobalt-hover text-white text-xs font-bold font-sans rounded-sm transition-all flex items-center justify-center gap-2 shadow-sm"
             >
               <RefreshCw className="w-4 h-4" />
               {isChunk ? 'Update & Reload Application' : 'Reload Application State'}

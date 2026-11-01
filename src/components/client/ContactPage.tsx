@@ -36,10 +36,10 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onShowToast }) => {
         <div className="absolute top-0 right-0 w-96 h-96 bg-cobalt/5 blur-[100px] rounded-full pointer-events-none" />
 
         <div className="relative z-10">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-cobalt/10 text-cobalt border border-cobalt/15 tracking-widest uppercase font-mono mb-4">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-cobalt/10 text-cobalt border border-cobalt/15 tracking-normal uppercase font-sans mb-4">
             <Sparkles className="w-3.5 h-3.5 text-cobalt" /> Reach Out
           </span>
-          <h1 className="text-3xl sm:text-5xl font-extrabold text-ink-navy font-outfit uppercase tracking-tight leading-tight">
+          <h1 className="text-3xl sm:text-5xl font-extrabold text-ink-navy font-sans uppercase tracking-tight leading-tight">
             We are Here to <span className="text-cobalt">Help You</span>
           </h1>
           <p className="text-ink-slate text-base font-light mt-3 max-w-2xl leading-relaxed">
@@ -52,14 +52,14 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onShowToast }) => {
         {/* Info Grid */}
         <div className="lg:col-span-5 space-y-6">
           <div className="bg-canvas-pure border border-ice-border rounded-xl p-6 space-y-6 shadow-sm">
-            <h3 className="text-xl font-bold font-outfit text-ink-navy border-b border-ice-border pb-3">Corporate Desk</h3>
+            <h3 className="text-xl font-bold font-sans text-ink-navy border-b border-ice-border pb-3">Corporate Desk</h3>
             
             <div className="flex items-start gap-4">
               <div className="w-9 h-9 rounded-lg bg-cobalt/10 flex items-center justify-center text-cobalt flex-shrink-0 mt-0.5">
                 <Mail className="w-4 h-4" />
               </div>
               <div>
-                <span className="text-[10px] font-mono tracking-wider text-ink-muted uppercase block">Email Support</span>
+                <span className="text-[10px] font-medium tracking-normal text-ink-muted uppercase block">Email Support</span>
                 <a href="mailto:support@rephonix.in" className="text-sm font-semibold text-ink-navy hover:text-cobalt transition-colors">support@rephonix.in</a>
               </div>
             </div>
@@ -69,7 +69,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onShowToast }) => {
                 <Phone className="w-4 h-4" />
               </div>
               <div>
-                <span className="text-[10px] font-mono tracking-wider text-ink-muted uppercase block">Call Support</span>
+                <span className="text-[10px] font-medium tracking-normal text-ink-muted uppercase block">Call Support</span>
                 <div className="flex flex-col gap-1">
                   <a href="tel:+919034997719" className="text-sm font-semibold text-ink-navy hover:text-cobalt transition-colors">+91 90349 97719</a>
                   <a href="tel:+919996534193" className="text-sm font-semibold text-ink-navy hover:text-cobalt transition-colors">+91 99965 34193</a>
@@ -82,7 +82,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onShowToast }) => {
                 <Instagram className="w-4 h-4" />
               </div>
               <div>
-                <span className="text-[10px] font-mono tracking-wider text-ink-muted uppercase block">Instagram</span>
+                <span className="text-[10px] font-medium tracking-normal text-ink-muted uppercase block">Instagram</span>
                 <a 
                   href="https://www.instagram.com/rephonix.in/" 
                   target="_blank" 
@@ -99,7 +99,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onShowToast }) => {
 
         {/* Contact Form */}
         <div className="lg:col-span-7 bg-canvas-pure border border-ice-border rounded-xl p-6 sm:p-8 shadow-sm">
-          <h3 className="text-xl font-bold font-outfit text-ink-navy mb-6 border-b border-ice-border pb-3 text-left">Send Us a Message</h3>
+          <h3 className="text-xl font-bold font-sans text-ink-navy mb-6 border-b border-ice-border pb-3 text-left">Send Us a Message</h3>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>

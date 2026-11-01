@@ -299,7 +299,7 @@ export function getCachedModels(): ApiModel[] {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) return parsed;
     }
-  } catch {}
+  } catch { }
   return [];
 }
 
@@ -308,7 +308,7 @@ export function saveCachedModels(models: ApiModel[]): void {
     if (Array.isArray(models) && models.length > 0) {
       localStorage.setItem(MODEL_CACHE_KEY, JSON.stringify(models));
     }
-  } catch {}
+  } catch { }
 }
 
 export async function fetchModels(brandId?: string, deviceType?: string, includeHidden?: boolean): Promise<ApiModel[]> {
@@ -361,7 +361,7 @@ export async function createModel(data: {
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('stc_catalog_order_changed'));
     }
-  } catch {}
+  } catch { }
   return res;
 }
 
@@ -379,7 +379,7 @@ export async function updateModel(legacyId: string, data: Partial<Omit<ApiModel,
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('stc_catalog_order_changed'));
     }
-  } catch {}
+  } catch { }
   return res;
 }
 
@@ -398,7 +398,7 @@ export async function bulkUpdateModels(updates: Array<{ id: string; changes: Par
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('stc_catalog_order_changed'));
     }
-  } catch {}
+  } catch { }
   return res;
 }
 
@@ -410,7 +410,7 @@ export async function deleteModel(legacyId: string): Promise<{ success: boolean 
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('stc_catalog_order_changed'));
     }
-  } catch {}
+  } catch { }
   return res;
 }
 
@@ -578,8 +578,8 @@ export function customerLogin(emailOrPhone: string, password: string): Promise<{
   });
 }
 
-export function customerSignup(name: string, email: string, phone: string, password: string): Promise<{ status: string; phone: string; otp?: string }> {
-  return apiFetch<{ status: string; phone: string; otp?: string }>('/auth/signup', {
+export function customerSignup(name: string, email: string, phone: string, password: string): Promise<{ status: string; phone: string }> {
+  return apiFetch<{ status: string; phone: string }>('/auth/signup', {
     method: 'POST',
     body: JSON.stringify({ name, email, phone, password }),
   });
@@ -593,6 +593,9 @@ export function verifyOtp(data: Record<string, unknown>): Promise<{ user: ApiUse
 }
 
 export function customerLogout(): Promise<{ success: boolean; message: string }> {
+  if (typeof document !== 'undefined') {
+    document.cookie = 'rex_csrf=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; max-age=0;';
+  }
   return apiFetch<{ success: boolean; message: string }>('/auth/logout', {
     method: 'POST',
   });
@@ -723,8 +726,8 @@ export function unlinkGoogleAccount(): Promise<{ success: boolean; user: ApiUser
   });
 }
 
-export function sendEmailOtp(email: string): Promise<{ success: boolean; email: string; otp: string }> {
-  return apiFetch<{ success: boolean; email: string; otp: string }>('/auth/send-email-otp', {
+export function sendEmailOtp(email: string): Promise<{ success: boolean; email: string }> {
+  return apiFetch<{ success: boolean; email: string }>('/auth/send-email-otp', {
     method: 'POST',
     body: JSON.stringify({ email }),
   });
@@ -737,8 +740,8 @@ export function verifyEmailOtp(email: string, otp: string): Promise<{ success: b
   });
 }
 
-export function requestPasswordResetOtp(email: string): Promise<{ success: boolean; email: string; otp: string }> {
-  return apiFetch<{ success: boolean; email: string; otp: string }>('/auth/forgot-password-request', {
+export function requestPasswordResetOtp(email: string): Promise<{ success: boolean; email: string; message?: string }> {
+  return apiFetch<{ success: boolean; email: string; message?: string }>('/auth/forgot-password-request', {
     method: 'POST',
     body: JSON.stringify({ email }),
   });

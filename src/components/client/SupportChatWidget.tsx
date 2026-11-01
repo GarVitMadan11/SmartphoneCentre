@@ -169,7 +169,7 @@ export const SupportChatWidget: React.FC = () => {
                   <h3 className="font-semibold text-sm">
                     {chatStatus === 'HUMAN_ACTIVE' ? 'Rephonix Support Agent' : 'Rephonix AI Assistant'}
                   </h3>
-                  <p className="text-[10px] text-white/70 font-mono">
+                  <p className="text-[10px] text-white/70 font-sans">
                     {chatStatus === 'WAITING_FOR_HUMAN' ? 'Waiting for an agent...' : 'Online'}
                   </p>
                 </div>
@@ -200,7 +200,7 @@ export const SupportChatWidget: React.FC = () => {
                 >
                   {msg.role === 'system' ? (
                     <div className="w-full text-center py-2">
-                      <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider bg-ice-gray/50 px-2 py-1 rounded-full border border-ice-border">
+                      <span className="text-[10px] font-sans text-zinc-500 uppercase tracking-wider bg-ice-gray/50 px-2 py-1 rounded-full border border-ice-border">
                         {msg.content}
                       </span>
                     </div>
@@ -248,7 +248,7 @@ export const SupportChatWidget: React.FC = () => {
                 <div className="flex justify-center mb-3">
                   <button 
                     onClick={requestHumanHandoff}
-                    className="text-[10px] text-zinc-500 hover:text-cobalt font-mono flex items-center gap-1 transition-colors"
+                    className="text-[10px] text-zinc-500 hover:text-cobalt font-sans flex items-center gap-1 transition-colors"
                   >
                     <Headphones className="w-3 h-3" /> Talk to a Human Agent
                   </button>

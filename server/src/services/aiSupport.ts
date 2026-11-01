@@ -9,6 +9,37 @@ interface AiResponse {
   handoffReason?: string;
 }
 
+let cachedSummary: { text: string; expiresAt: number } | null = null;
+let cachedModels: { data: any[]; expiresAt: number } | null = null;
+const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+
+async function getCatalogSummary(): Promise<string> {
+  const now = Date.now();
+  if (cachedSummary && cachedSummary.expiresAt > now) {
+    return cachedSummary.text;
+  }
+  const dbModels = await prisma.model.findMany({ where: { hidden: false }, select: { name: true, basePrice128GB: true, category: true } });
+  const catalogSummary = dbModels.map(m => {
+    const is256Base = m.category === 'flagship' || m.name.includes('15 Pro Max') || m.name.includes('16 Pro') || m.name.includes('17');
+    const minGb = is256Base ? 256 : 128;
+    const maxGb = is256Base ? 512 : 256;
+    return `- ${m.name}: ~₹${maximumQuoteFor(m.basePrice128GB, minGb)} to ₹${maximumQuoteFor(m.basePrice128GB, maxGb)} (Base ${minGb}GB)`;
+  }).join('\n');
+
+  cachedSummary = { text: catalogSummary, expiresAt: now + CACHE_TTL_MS };
+  return catalogSummary;
+}
+
+async function getCatalogModels(): Promise<any[]> {
+  const now = Date.now();
+  if (cachedModels && cachedModels.expiresAt > now) {
+    return cachedModels.data;
+  }
+  const models = await prisma.model.findMany({ where: { hidden: false }, include: { brand: true } });
+  cachedModels = { data: models, expiresAt: now + CACHE_TTL_MS };
+  return models;
+}
+
 // Call Google Gemini API directly via REST (handles any API key format)
 async function callGeminiRestApi(
   apiKey: string,
@@ -16,13 +47,7 @@ async function callGeminiRestApi(
   userMessage: string
 ): Promise<AiResponse | null> {
   try {
-    const dbModels = await prisma.model.findMany({ where: { hidden: false }, select: { name: true, basePrice128GB: true, category: true } });
-    const catalogSummary = dbModels.map(m => {
-      const is256Base = m.category === 'flagship' || m.name.includes('15 Pro Max') || m.name.includes('16 Pro') || m.name.includes('17');
-      const minGb = is256Base ? 256 : 128;
-      const maxGb = is256Base ? 512 : 256;
-      return `- ${m.name}: ~₹${maximumQuoteFor(m.basePrice128GB, minGb)} to ₹${maximumQuoteFor(m.basePrice128GB, maxGb)} (Base ${minGb}GB)`;
-    }).join('\n');
+    const catalogSummary = await getCatalogSummary();
 
     const systemPrompt = `${KNOWLEDGE_BASE}
 
@@ -138,15 +163,15 @@ async function generateAiResponse(
   // 3. Device Price Lookup in Database (matches CURRENT userMessage, handling "17 pro", "17 pro max", etc.)
   if (!response) {
     try {
-      const models = await prisma.model.findMany({ where: { hidden: false }, include: { brand: true } });
+      const models = await getCatalogModels();
       const msgClean = lowerMsg.replace(/^for\s+/, '').trim();
       
-      const matchedModel = models.find(m => {
+      const matchedModel = models.find((m: any) => {
         const nameLower = m.name.toLowerCase();
         const shortName = nameLower.replace('iphone ', '').trim(); // e.g. "17 pro max"
         if (msgClean === shortName || msgClean === nameLower || msgClean === `iphone ${shortName}`) return true;
         const words = nameLower.split(' ');
-        return words.every(w => msgClean.includes(w));
+        return words.every((w: string) => msgClean.includes(w));
       });
 
       if (matchedModel) {

@@ -64,7 +64,7 @@ export default function LoginPage({ onLoginSuccess, onNavigate, redirectParam }:
         {/* Back Button */}
         <button
           onClick={() => onNavigate('/')}
-          className="flex items-center gap-1.5 text-xs text-ink-muted hover:text-ink-navy transition-colors font-mono"
+          className="flex items-center gap-1.5 text-xs text-ink-muted hover:text-ink-navy transition-colors font-sans"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>Back to Home</span>
@@ -98,7 +98,7 @@ export default function LoginPage({ onLoginSuccess, onNavigate, redirectParam }:
 
             {/* Email/Phone */}
             <div>
-              <label htmlFor="emailOrPhone" className="text-[10px] font-mono tracking-wider text-ink-muted uppercase block mb-1.5">
+              <label htmlFor="emailOrPhone" className="text-[10px] font-medium tracking-normal text-ink-muted uppercase block mb-1.5">
                 Email Address or Phone Number
               </label>
               <div className="relative">
@@ -120,7 +120,7 @@ export default function LoginPage({ onLoginSuccess, onNavigate, redirectParam }:
 
             {/* Password */}
             <div>
-              <label htmlFor="password" className="text-[10px] font-mono tracking-wider text-ink-muted uppercase block mb-1.5">
+              <label htmlFor="password" className="text-[10px] font-medium tracking-normal text-ink-muted uppercase block mb-1.5">
                 Password
               </label>
               <div className="relative">

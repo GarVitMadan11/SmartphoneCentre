@@ -217,7 +217,7 @@ export const SmartphoneMockup: React.FC<SmartphoneMockupProps> = ({ onSelect }) 
             {/* Price Offer Callout */}
             <div className="mt-2.5 flex justify-between items-start px-0.5 z-10">
               <div>
-                <p className="text-[8px] text-ink-muted font-mono tracking-widest uppercase">Rephonix</p>
+                <p className="text-[8px] text-ink-muted font-medium tracking-normal uppercase">Rephonix</p>
                 <h3 className="text-xs sm:text-sm font-bold mt-0.5 leading-tight text-ink-navy">
                   <span className={`text-xl sm:text-2xl font-black ${previewData.accentClass} transition-colors duration-300 block mt-0.5`}>
                     {previewData.maxPrice}

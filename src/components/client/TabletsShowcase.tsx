@@ -170,10 +170,10 @@ export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-cobalt/10 text-cobalt border border-cobalt/15 tracking-widest uppercase font-mono mb-3">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-cobalt/10 text-cobalt border border-cobalt/15 tracking-normal uppercase font-sans mb-3">
               <Sparkles className="w-3.5 h-3.5 text-cobalt" /> DEDICATED TABLET PORTAL
             </span>
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-ink-navy font-outfit uppercase tracking-tight">
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-ink-navy font-sans uppercase tracking-tight">
               Sell Your <span className="text-cobalt">Apple iPad</span> or <span className="text-secondary">Samsung Galaxy Tab</span>
             </h1>
             <p className="text-ink-slate text-sm font-light mt-2 max-w-xl">
@@ -254,18 +254,18 @@ export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
           >
             <div>
               <div className="flex items-center justify-between mb-4">
-                <span className={`px-2.5 py-1 text-[10px] font-mono font-bold rounded-full uppercase tracking-wider ${
+                <span className={`px-2.5 py-1 text-[10px] font-sans font-bold rounded-full uppercase tracking-wider ${
                   model.brandId === 'brand-apple' ? 'bg-zinc-100 text-zinc-800' : 'bg-blue-50 text-blue-700'
                 }`}>
                   {model.brandId === 'brand-apple' ? 'Apple iPad' : 'Samsung Galaxy Tab'}
                 </span>
-                <span className="text-[10px] font-mono text-zinc-400">{model.releaseYear}</span>
+                <span className="text-[10px] font-sans text-zinc-400">{model.releaseYear}</span>
               </div>
 
-              <h3 className="text-xl font-bold font-outfit text-ink-navy uppercase group-hover:text-cobalt transition-colors">
+              <h3 className="text-xl font-bold font-sans text-ink-navy uppercase group-hover:text-cobalt transition-colors">
                 {model.name}
               </h3>
-              <p className="text-xs font-mono text-zinc-400 mt-1">Series: {model.series}</p>
+              <p className="text-xs font-sans text-zinc-400 mt-1">Series: {model.series}</p>
 
               {/* Tablet Image */}
               <div className="my-6 h-44 flex items-center justify-center pointer-events-none">
@@ -280,8 +280,8 @@ export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
 
             <div className="pt-4 border-t border-ice-border/60 flex items-center justify-between">
               <div>
-                <span className="text-[10px] text-zinc-400 uppercase font-mono block">Up to Get</span>
-                <span className="text-lg font-extrabold text-emerald-600 font-mono">
+                <span className="text-[10px] text-zinc-400 uppercase font-sans block">Up to Get</span>
+                <span className="text-lg font-extrabold text-emerald-600 font-sans">
                   {formatPrice(getMaxVariantPrice(model))}
                 </span>
               </div>
@@ -323,10 +323,10 @@ export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
                       <Tablet className="w-6 h-6 stroke-[2.2]" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-bold text-ink-navy font-outfit uppercase">
+                      <h3 className="text-lg font-bold text-ink-navy font-sans uppercase">
                         {selectedModelForSpec.name}
                       </h3>
-                      <p className="text-xs font-mono text-zinc-400">
+                      <p className="text-xs font-sans text-zinc-400">
                         {selectedModelForSpec.series} · Release: {selectedModelForSpec.releaseYear}
                       </p>
                     </div>
@@ -349,19 +349,19 @@ export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
                   
                   {/* Step Pills Navigation Summary */}
                   <div className="flex flex-wrap items-center gap-2 pb-3 border-b border-ice-border/60">
-                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-violet-50 text-violet-700 border border-violet-200">
+                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-sans font-bold bg-violet-50 text-violet-700 border border-violet-200">
                       <HardDrive className="w-3.5 h-3.5 text-violet-600" />
                       <span>1. Storage: {selectedStorage >= 1024 ? `${selectedStorage / 1024}TB` : `${selectedStorage}GB`}</span>
                     </div>
 
                     {!isApple && ramOptions.length > 0 && (
-                      <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                      <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-sans font-bold bg-blue-50 text-blue-700 border border-blue-200">
                         <Cpu className="w-3.5 h-3.5 text-blue-600" />
                         <span>2. RAM: {selectedRam}GB</span>
                       </div>
                     )}
 
-                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-sans font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
                       {connectivity === 'cellular' ? <Radio className="w-3.5 h-3.5 text-emerald-600" /> : <Wifi className="w-3.5 h-3.5 text-emerald-600" />}
                       <span>{!isApple && ramOptions.length > 0 ? '3' : '2'}. {connectivity === 'cellular' ? 'Wi-Fi + Cellular' : 'Wi-Fi Only'}</span>
                     </div>
@@ -370,11 +370,11 @@ export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
                   {/* 1. Storage Capacity Selector (FIRST) */}
                   <div>
                     <div className="flex items-center justify-between mb-2.5">
-                      <span className="text-xs font-mono font-bold text-ink-navy uppercase tracking-wider flex items-center gap-1.5">
+                      <span className="text-xs font-sans font-bold text-ink-navy uppercase tracking-wider flex items-center gap-1.5">
                         <HardDrive className="w-4 h-4 text-violet-600" />
                         <span>1. Select Storage Capacity</span>
                       </span>
-                      <span className="text-[10px] text-zinc-400 font-mono">Internal Storage</span>
+                      <span className="text-[10px] text-zinc-400 font-sans">Internal Storage</span>
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                       {storageOptions.map(st => (
@@ -388,7 +388,7 @@ export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
                               onVariantChange?.(selectedModelForSpec, st, effRam > 0 ? effRam : undefined);
                             }
                           }}
-                          className={`py-3 px-3 rounded-xl border text-xs font-bold font-mono transition-all flex items-center justify-center gap-1 ${
+                          className={`py-3 px-3 rounded-xl border text-xs font-bold font-sans transition-all flex items-center justify-center gap-1 ${
                             selectedStorage === st
                               ? 'bg-violet-600 text-white border-violet-600 shadow-md shadow-violet-600/20'
                               : 'bg-canvas-white text-ink-slate border-ice-border hover:border-violet-400'
@@ -405,11 +405,11 @@ export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
                   {!isApple && ramOptions.length > 0 && (
                     <div>
                       <div className="flex items-center justify-between mb-2.5">
-                        <span className="text-xs font-mono font-bold text-ink-navy uppercase tracking-wider flex items-center gap-1.5">
+                        <span className="text-xs font-sans font-bold text-ink-navy uppercase tracking-wider flex items-center gap-1.5">
                           <Cpu className="w-4 h-4 text-cobalt" />
                           <span>2. Select RAM Variant</span>
                         </span>
-                        <span className="text-[10px] text-zinc-400 font-mono">Memory Specs</span>
+                        <span className="text-[10px] text-zinc-400 font-sans">Memory Specs</span>
                       </div>
                       <div className="grid grid-cols-3 gap-2.5">
                         {ramOptions.map(ram => (
@@ -422,7 +422,7 @@ export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
                                 onVariantChange?.(selectedModelForSpec, selectedStorage, ram > 0 ? ram : undefined);
                               }
                             }}
-                            className={`py-3 px-3 rounded-xl border text-xs font-bold font-mono transition-all flex items-center justify-center gap-1.5 ${
+                            className={`py-3 px-3 rounded-xl border text-xs font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
                               selectedRam === ram
                                 ? 'bg-cobalt text-white border-cobalt shadow-md shadow-cobalt/20'
                                 : 'bg-canvas-white text-ink-slate border-ice-border hover:border-cobalt/40'
@@ -439,11 +439,11 @@ export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
                   {/* 3. Wi-Fi Variant vs Wi-Fi + Cellular (THIRD) */}
                   <div>
                     <div className="flex items-center justify-between mb-2.5">
-                      <span className="text-xs font-mono font-bold text-ink-navy uppercase tracking-wider flex items-center gap-1.5">
+                      <span className="text-xs font-sans font-bold text-ink-navy uppercase tracking-wider flex items-center gap-1.5">
                         <Wifi className="w-4 h-4 text-emerald-600" />
                         <span>{!isApple && ramOptions.length > 0 ? '3' : '2'}. Select Wi-Fi or Wi-Fi + Cellular</span>
                       </span>
-                      <span className="text-[10px] text-zinc-400 font-mono">SIM / Cellular Specs</span>
+                      <span className="text-[10px] text-zinc-400 font-sans">SIM / Cellular Specs</span>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {/* Wi-Fi Only */}
@@ -455,7 +455,7 @@ export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
                             onVariantChange?.(selectedModelForSpec, selectedStorage, selectedRam > 0 ? selectedRam : undefined);
                           }
                         }}
-                        className={`py-4 px-4 rounded-xl border text-xs font-bold font-mono transition-all flex items-center justify-between ${
+                        className={`py-4 px-4 rounded-xl border text-xs font-bold font-sans transition-all flex items-center justify-between ${
                           connectivity === 'wifi'
                             ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-600/20'
                             : 'bg-canvas-white text-ink-slate border-ice-border hover:border-emerald-500/50'
@@ -486,7 +486,7 @@ export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
                             onVariantChange?.(selectedModelForSpec, selectedStorage, selectedRam > 0 ? selectedRam : undefined);
                           }
                         }}
-                        className={`py-4 px-4 rounded-xl border text-xs font-bold font-mono transition-all flex items-center justify-between ${
+                        className={`py-4 px-4 rounded-xl border text-xs font-bold font-sans transition-all flex items-center justify-between ${
                           connectivity === 'cellular'
                             ? 'bg-cobalt text-white border-cobalt shadow-md shadow-cobalt/20'
                             : 'bg-canvas-white text-ink-slate border-ice-border hover:border-cobalt/50'
@@ -513,16 +513,16 @@ export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
                   {/* Estimated Payout Banner */}
                   <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-300/90 rounded-xl p-4 flex items-center justify-between shadow-xs">
                     <div>
-                      <span className="text-[10px] font-mono font-bold text-emerald-950 uppercase block tracking-wider mb-0.5">
+                      <span className="text-[10px] font-sans font-bold text-emerald-950 uppercase block tracking-wider mb-0.5">
                         Estimated Payout
                       </span>
-                      <span className="text-xs font-mono font-semibold text-emerald-900">
+                      <span className="text-xs font-sans font-semibold text-emerald-900">
                         {selectedStorage >= 1024 ? `${selectedStorage / 1024}TB` : `${selectedStorage}GB`}
                         {!isApple && ramOptions.length > 0 ? ` · ${selectedRam}GB RAM` : ''}
                         {` · ${connectivity === 'cellular' ? 'Wi-Fi + Cellular' : 'Wi-Fi Only'}`}
                       </span>
                     </div>
-                    <span className="text-2xl font-black text-emerald-700 font-outfit">
+                    <span className="text-2xl font-black text-emerald-700 font-sans">
                       {formatPrice(calculatedPrice)}
                     </span>
                   </div>

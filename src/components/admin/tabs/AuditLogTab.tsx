@@ -26,7 +26,7 @@ export const AuditLogTab: React.FC = () => {
         <div>
           <div className="flex items-center gap-2">
             <ShieldAlert className="w-5 h-5 text-cobalt" />
-            <h3 className="font-outfit text-xl font-bold text-ink-navy">System Audit Trail</h3>
+            <h3 className="font-sans text-xl font-bold text-ink-navy">System Audit Trail</h3>
           </div>
           <p className="text-xs text-zinc-500 font-mono mt-1">
             Real-time immutable log of administrative actions, pricing edits, and order processing events.

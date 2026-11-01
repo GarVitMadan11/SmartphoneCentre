@@ -155,10 +155,10 @@ export const AdminPinGate: React.FC<AdminPinGateProps> = ({ children, onExit }) 
             <div className="w-16 h-16 rounded-2xl bg-red-500/20 border border-red-500/40 flex items-center justify-center mb-4 text-red-500 animate-pulse shadow-lg">
               <ShieldX className="w-8 h-8" />
             </div>
-            <span className="px-3 py-1 bg-red-500/20 text-red-400 rounded-full text-[10px] font-mono font-extrabold tracking-widest uppercase border border-red-500/30">
+            <span className="px-3 py-1 bg-red-500/20 text-red-400 rounded-full text-[10px] font-mono font-extrabold tracking-normal uppercase border border-red-500/30">
               EMERGENCY SECURITY SHIELD ACTIVE
             </span>
-            <h2 className="text-2xl font-extrabold text-white mt-3 tracking-tight font-outfit">
+            <h2 className="text-2xl font-extrabold text-white mt-3 tracking-tight font-sans">
               Admin Panel Suspended
             </h2>
             <p className="text-xs text-red-200/80 mt-2 font-light leading-relaxed max-w-xs">

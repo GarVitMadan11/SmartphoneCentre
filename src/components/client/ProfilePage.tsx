@@ -164,11 +164,7 @@ export default function ProfilePage({
     setVerificationLoading(true);
 
     try {
-      const response = await sendEmailOtp(newEmail.trim());
-      if (response.otp) {
-        console.log(`🔑 [Email Change OTP]: ${response.otp}`);
-      }
-
+      await sendEmailOtp(newEmail.trim());
       setVerificationSuccess('Verification code sent successfully to your email.');
       setEmailOtpSent(true);
       setCooldown(60);
@@ -258,7 +254,7 @@ export default function ProfilePage({
 
       {/* Page Title */}
       <div className="mb-6">
-        <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-navy font-outfit tracking-tight">
+        <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-navy font-sans tracking-tight">
           Customer Account Dashboard
         </h2>
         <p className="text-xs text-ink-muted mt-1 font-light">
@@ -280,7 +276,7 @@ export default function ProfilePage({
           <Package className="w-4 h-4" />
           <span>Your Bookings</span>
           {myBookings.length > 0 && (
-            <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-sans font-bold ${
               activeTab === 'bookings' ? 'bg-white/20 text-white' : 'bg-cobalt/10 text-cobalt'
             }`}>
               {myBookings.length}
@@ -313,7 +309,7 @@ export default function ProfilePage({
           <Bookmark className="w-4 h-4" />
           <span>Saved Quotes</span>
           {savedQuotesList.length > 0 && (
-            <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-sans font-bold ${
               activeTab === 'saved' ? 'bg-white/20 text-white' : 'bg-amber-500/10 text-amber-700'
             }`}>
               {savedQuotesList.length}
@@ -349,7 +345,7 @@ export default function ProfilePage({
                 <Package className="w-7 h-7" />
               </div>
               <div className="space-y-1">
-                <h4 className="font-extrabold text-lg text-ink-navy font-outfit">No Pickup Bookings Yet</h4>
+                <h4 className="font-extrabold text-lg text-ink-navy font-sans">No Pickup Bookings Yet</h4>
                 <p className="text-xs text-ink-muted max-w-md mx-auto font-light leading-relaxed">
                   You haven't scheduled any doorstep device pickup bookings under your account. Get an instant quote to sell your smartphone in under 60 seconds!
                 </p>
@@ -382,7 +378,7 @@ export default function ProfilePage({
                     {/* Header Row: Booking ID, Date & Status */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-ice-border/60">
                       <div className="flex items-center gap-2.5">
-                        <span className="text-xs font-mono font-extrabold text-cobalt bg-cobalt/10 px-3 py-1 rounded-lg border border-cobalt/20">
+                        <span className="text-xs font-sans font-extrabold text-cobalt bg-cobalt/10 px-3 py-1 rounded-lg border border-cobalt/20">
                           #{b.id}
                         </span>
                         <button
@@ -400,10 +396,10 @@ export default function ProfilePage({
                       </div>
 
                       <div className="flex items-center gap-3 text-xs">
-                        <span className="text-[11px] font-mono text-ink-muted">
+                        <span className="text-[11px] font-sans text-ink-muted">
                           Booked {formatDateStr(b.dateCreated)}
                         </span>
-                        <span className={`text-[10px] font-bold font-mono px-2.5 py-1 rounded-full uppercase tracking-wider ${
+                        <span className={`text-[10px] font-bold font-sans px-2.5 py-1 rounded-full uppercase tracking-wider ${
                           b.payoutStatus === 'completed'
                             ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
                             : b.inspectionStatus === 'approved'
@@ -434,10 +430,10 @@ export default function ProfilePage({
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-extrabold text-base sm:text-lg text-ink-navy truncate font-outfit">
+                        <h4 className="font-extrabold text-base sm:text-lg text-ink-navy truncate font-sans">
                           {b.modelName}
                         </h4>
-                        <p className="text-xs text-ink-muted mt-0.5 truncate font-mono">
+                        <p className="text-xs text-ink-muted mt-0.5 truncate font-sans">
                           Storage: {b.storageGb >= 1024 ? `${b.storageGb / 1024}TB` : `${b.storageGb}GB`}
                           {b.color && b.color !== 'Standard' ? ` • ${b.color}` : ''}
                           {b.imei ? ` • IMEI: ${b.imei}` : ''}
@@ -445,8 +441,8 @@ export default function ProfilePage({
                       </div>
 
                       <div className="text-right flex-shrink-0">
-                        <span className="text-[10px] font-mono text-ink-muted uppercase block font-semibold">Agreed Payout</span>
-                        <span className="text-lg sm:text-xl font-black text-emerald-600 font-outfit">
+                        <span className="text-[10px] font-sans text-ink-muted uppercase block font-semibold">Agreed Payout</span>
+                        <span className="text-lg sm:text-xl font-black text-emerald-600 font-sans">
                           {formatPrice(b.finalPayoutAmount || b.finalPrice)}
                         </span>
                       </div>
@@ -455,7 +451,7 @@ export default function ProfilePage({
                     {/* Logistics Info: Pickup Date & Address */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-xl bg-slate-50/80 border border-ice-border/40 text-xs">
                       <div>
-                        <span className="text-[10px] font-mono text-ink-muted uppercase font-bold block flex items-center gap-1.5">
+                        <span className="text-[10px] font-sans text-ink-muted uppercase font-bold block flex items-center gap-1.5">
                           <Calendar className="w-3.5 h-3.5 text-cobalt" /> Scheduled Doorstep Pickup
                         </span>
                         <p className="font-semibold text-ink-navy mt-1">
@@ -464,7 +460,7 @@ export default function ProfilePage({
                       </div>
 
                       <div>
-                        <span className="text-[10px] font-mono text-ink-muted uppercase font-bold block flex items-center gap-1.5">
+                        <span className="text-[10px] font-sans text-ink-muted uppercase font-bold block flex items-center gap-1.5">
                           <MapPin className="w-3.5 h-3.5 text-cobalt" /> Pickup Address
                         </span>
                         <p className="font-medium text-ink-navy truncate mt-1" title={b.address}>
@@ -502,7 +498,7 @@ export default function ProfilePage({
 
                     {/* Download PDF invoice footer */}
                     <div className="pt-3 border-t border-ice-border/60 flex items-center justify-between gap-3">
-                      <span className="text-[11px] text-ink-muted font-mono hidden sm:inline">Official GST &amp; Aadhaar Compliant Receipt</span>
+                      <span className="text-[11px] text-ink-muted font-sans hidden sm:inline">Official GST &amp; Aadhaar Compliant Receipt</span>
                       <button
                         type="button"
                         onClick={() => downloadBookingPdf(b.id)}
@@ -535,7 +531,7 @@ export default function ProfilePage({
                 <FileText className="w-7 h-7" />
               </div>
               <div className="space-y-1">
-                <h4 className="font-extrabold text-lg text-ink-navy font-outfit">No Tax Invoices Available Yet</h4>
+                <h4 className="font-extrabold text-lg text-ink-navy font-sans">No Tax Invoices Available Yet</h4>
                 <p className="text-xs text-ink-muted max-w-md mx-auto font-light leading-relaxed">
                   Invoices and official sale receipts are generated automatically once you schedule a doorstep pickup order.
                 </p>
@@ -560,12 +556,12 @@ export default function ProfilePage({
                           TAX
                         </div>
                         <div>
-                          <h4 className="font-black text-base text-ink-navy tracking-tight font-outfit">OFFICIAL TAX INVOICE</h4>
-                          <span className="text-[11px] font-mono text-ink-muted">Invoice Ref: INV-{b.id}</span>
+                          <h4 className="font-black text-base text-ink-navy tracking-tight font-sans">OFFICIAL TAX INVOICE</h4>
+                          <span className="text-[11px] font-sans text-ink-muted">Invoice Ref: INV-{b.id}</span>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 uppercase tracking-wider">
+                        <span className="text-[10px] font-sans font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 uppercase tracking-wider">
                           OFFICIAL DOCUMENT
                         </span>
                       </div>
@@ -573,25 +569,25 @@ export default function ProfilePage({
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs bg-slate-50/60 p-4 rounded-xl border border-ice-border/40">
                       <div>
-                        <span className="text-[10px] font-mono text-ink-muted uppercase block font-semibold">Device Model</span>
+                        <span className="text-[10px] font-sans text-ink-muted uppercase block font-semibold">Device Model</span>
                         <span className="font-extrabold text-ink-navy text-sm">{b.modelName} ({b.storageGb}GB)</span>
                       </div>
                       <div>
-                        <span className="text-[10px] font-mono text-ink-muted uppercase block font-semibold">Booking Date</span>
+                        <span className="text-[10px] font-sans text-ink-muted uppercase block font-semibold">Booking Date</span>
                         <span className="font-semibold text-ink-navy">{formatDateStr(b.dateCreated)}</span>
                       </div>
                       <div>
-                        <span className="text-[10px] font-mono text-ink-muted uppercase block font-semibold">Customer Name</span>
+                        <span className="text-[10px] font-sans text-ink-muted uppercase block font-semibold">Customer Name</span>
                         <span className="font-semibold text-ink-navy">{b.customerName}</span>
                       </div>
                       <div>
-                        <span className="text-[10px] font-mono text-ink-muted uppercase block font-semibold">Final Agreed Payout</span>
-                        <span className="font-black text-emerald-600 font-outfit text-base">{formattedPrice}</span>
+                        <span className="text-[10px] font-sans text-ink-muted uppercase block font-semibold">Final Agreed Payout</span>
+                        <span className="font-black text-emerald-600 font-sans text-base">{formattedPrice}</span>
                       </div>
                     </div>
 
                     <div className="pt-3 border-t border-ice-border/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <span className="text-[11px] text-ink-muted font-mono">Includes NIST data wipe &amp; digital transfer receipt</span>
+                      <span className="text-[11px] text-ink-muted font-sans">Includes NIST data wipe &amp; digital transfer receipt</span>
                       <button
                         type="button"
                         onClick={() => downloadBookingPdf(b.id)}
@@ -616,11 +612,11 @@ export default function ProfilePage({
           {/* Left Side: Summary Card */}
           <div className="md:col-span-5 bg-canvas-pure border border-ice-border rounded-xl p-6 shadow-3d-card space-y-6">
             <div className="text-center pb-4 border-b border-ice-border/40">
-              <div className="w-16 h-16 bg-cobalt/10 text-cobalt border border-cobalt/20 rounded-full flex items-center justify-center mx-auto text-xl font-bold font-outfit mb-3">
+              <div className="w-16 h-16 bg-cobalt/10 text-cobalt border border-cobalt/20 rounded-full flex items-center justify-center mx-auto text-xl font-bold font-sans mb-3">
                 {user?.name ? user.name.slice(0, 2).toUpperCase() : 'US'}
               </div>
-              <h3 className="text-lg font-bold text-ink-navy font-outfit">{user?.name}</h3>
-              <span className="text-[10px] font-mono tracking-wider bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-2 py-0.5 rounded-full inline-block mt-1 font-semibold uppercase">
+              <h3 className="text-lg font-bold text-ink-navy font-sans">{user?.name}</h3>
+              <span className="text-[10px] font-medium tracking-normal bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-2 py-0.5 rounded-full inline-block mt-1 font-semibold uppercase">
                 Verified Customer Account
               </span>
             </div>
@@ -633,7 +629,7 @@ export default function ProfilePage({
                     <Mail className="w-4 h-4" />
                   </span>
                   <div>
-                    <span className="text-[10px] font-mono tracking-wider text-ink-muted uppercase block">Email Address</span>
+                    <span className="text-[10px] font-medium tracking-normal text-ink-muted uppercase block">Email Address</span>
                     <span className="text-ink-navy font-medium break-all">{user?.email}</span>
                   </div>
                 </div>
@@ -666,7 +662,7 @@ export default function ProfilePage({
                   <Phone className="w-4 h-4" />
                 </span>
                 <div>
-                  <span className="text-[10px] font-mono tracking-wider text-ink-muted uppercase block">Mobile Number</span>
+                  <span className="text-[10px] font-medium tracking-normal text-ink-muted uppercase block">Mobile Number</span>
                   <span className="text-ink-navy font-medium">+91 {user?.phone}</span>
                 </div>
               </div>
@@ -677,7 +673,7 @@ export default function ProfilePage({
                   <Calendar className="w-4 h-4" />
                 </span>
                 <div>
-                  <span className="text-[10px] font-mono tracking-wider text-ink-muted uppercase block">Member Since</span>
+                  <span className="text-[10px] font-medium tracking-normal text-ink-muted uppercase block">Member Since</span>
                   <span className="text-ink-navy font-medium">{formatDate(user?.createdAt)}</span>
                 </div>
               </div>
@@ -692,7 +688,7 @@ export default function ProfilePage({
                 
                 <div className="border-b border-ice-border/40 pb-3 flex justify-between items-start">
                   <div>
-                    <h4 className="text-xl font-bold text-ink-navy tracking-tight font-outfit">Verify Email Address</h4>
+                    <h4 className="text-xl font-bold text-ink-navy tracking-tight font-sans">Verify Email Address</h4>
                     <p className="text-xs text-ink-muted font-light mt-1">Enter your email address to receive a secure 6-digit OTP verification code.</p>
                   </div>
                   <button
@@ -724,7 +720,7 @@ export default function ProfilePage({
                 <div className="space-y-4">
                   {/* Email Input */}
                   <div>
-                    <label htmlFor="verify-email" className="text-[10px] font-mono tracking-wider text-ink-muted uppercase block mb-1.5">
+                    <label htmlFor="verify-email" className="text-[10px] font-medium tracking-normal text-ink-muted uppercase block mb-1.5">
                       Email Address
                     </label>
                     <div className="flex gap-2">
@@ -757,7 +753,7 @@ export default function ProfilePage({
                   {emailOtpSent && (
                     <form onSubmit={handleVerifyEmailOtp} className="space-y-4 pt-4 border-t border-ice-border/40 animate-in fade-in duration-200">
                       <div>
-                        <label htmlFor="email-otp" className="text-[10px] font-mono tracking-wider text-ink-muted uppercase block mb-1.5">
+                        <label htmlFor="email-otp" className="text-[10px] font-medium tracking-normal text-ink-muted uppercase block mb-1.5">
                           Verification Code (6 Digits)
                         </label>
                         <input
@@ -798,7 +794,7 @@ export default function ProfilePage({
             ) : (
               <div className="bg-canvas-pure border border-ice-border rounded-xl p-6 sm:p-8 shadow-3d-card space-y-6">
                 <div className="border-b border-ice-border/40 pb-3">
-                  <h4 className="text-xl font-bold text-ink-navy tracking-tight font-outfit">Edit Profile Settings</h4>
+                  <h4 className="text-xl font-bold text-ink-navy tracking-tight font-sans">Edit Profile Settings</h4>
                   <p className="text-xs text-ink-muted font-light mt-1">Keep your contact details up to date to ensure seamless pickup scheduling.</p>
                 </div>
 
@@ -821,7 +817,7 @@ export default function ProfilePage({
                   
                   {/* Name Input */}
                   <div>
-                    <label htmlFor="edit-name" className="text-[10px] font-mono tracking-wider text-ink-muted uppercase block mb-1.5">
+                    <label htmlFor="edit-name" className="text-[10px] font-medium tracking-normal text-ink-muted uppercase block mb-1.5">
                       Full Name
                     </label>
                     <div className="relative">
@@ -842,7 +838,7 @@ export default function ProfilePage({
 
                   {/* Phone Input */}
                   <div>
-                    <label htmlFor="edit-phone" className="text-[10px] font-mono tracking-wider text-ink-muted uppercase block mb-1.5">
+                    <label htmlFor="edit-phone" className="text-[10px] font-medium tracking-normal text-ink-muted uppercase block mb-1.5">
                       Mobile Number
                     </label>
                     <div className="relative">
@@ -889,7 +885,7 @@ export default function ProfilePage({
                 <Bookmark className="w-7 h-7" />
               </div>
               <div className="space-y-1">
-                <h4 className="font-extrabold text-lg text-ink-navy font-outfit">No Saved Quotes Yet</h4>
+                <h4 className="font-extrabold text-lg text-ink-navy font-sans">No Saved Quotes Yet</h4>
                 <p className="text-xs text-ink-muted max-w-md mx-auto font-light leading-relaxed">
                   Save diagnostic quotes while checking your device value. If our catalog base prices update, your saved quotes automatically adjust to the latest market rate!
                 </p>
@@ -906,7 +902,7 @@ export default function ProfilePage({
             <div className="space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-ice-border/60">
                 <div>
-                  <h3 className="font-bold text-base text-ink-navy font-outfit">
+                  <h3 className="font-bold text-base text-ink-navy font-sans">
                     Saved Valuation Quotes ({savedQuotesList.length})
                   </h3>
                   <p className="text-xs text-ink-muted">
@@ -937,14 +933,14 @@ export default function ProfilePage({
                           </div>
                           <div>
                             <div className="flex flex-wrap items-center gap-2">
-                              <h4 className="font-extrabold text-base sm:text-lg text-slate-950 font-outfit">
+                              <h4 className="font-extrabold text-base sm:text-lg text-slate-950 font-sans">
                                 {q.modelName}
                               </h4>
-                              <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-800 text-[11px] font-mono font-bold border border-slate-200">
+                              <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-800 text-[11px] font-sans font-bold border border-slate-200">
                                 {storageLabel}
                               </span>
                             </div>
-                            <p className="text-xs text-slate-500 mt-1 font-mono">
+                            <p className="text-xs text-slate-500 mt-1 font-sans">
                               Saved on {formatDateStr(q.createdAt)} • Ref: #{q.id.slice(-8).toUpperCase()}
                             </p>
                           </div>
@@ -967,15 +963,15 @@ export default function ProfilePage({
                       {/* Valuation & Price Recalculation Alert */}
                       <div className="my-4 bg-slate-50 rounded-xl p-4 border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                         <div className="space-y-1">
-                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500">
+                          <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-slate-500">
                             Current Estimated Payout
                           </span>
                           <div className="flex items-baseline gap-3">
-                            <span className="text-2xl sm:text-3xl font-extrabold text-emerald-700 font-outfit">
+                            <span className="text-2xl sm:text-3xl font-extrabold text-emerald-700 font-sans">
                               {formatPrice(q.livePrice)}
                             </span>
                             {q.hasPriceChanged && (
-                              <span className="text-xs text-slate-400 line-through font-mono">
+                              <span className="text-xs text-slate-400 line-through font-sans">
                                 Was {formatPrice(q.originalPrice)}
                               </span>
                             )}
@@ -984,18 +980,18 @@ export default function ProfilePage({
                           {/* Dynamic price update notification badge */}
                           {q.hasPriceChanged ? (
                             q.priceDifference > 0 ? (
-                              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-100/80 border border-emerald-300 text-emerald-800 text-xs font-bold font-mono">
+                              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-100/80 border border-emerald-300 text-emerald-800 text-xs font-bold font-sans">
                                 <TrendingUp className="w-3.5 h-3.5 text-emerald-700" />
                                 <span>Live Catalog Update: +{formatPrice(q.priceDifference)}</span>
                               </div>
                             ) : (
-                              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-100/80 border border-amber-300 text-amber-900 text-xs font-bold font-mono">
+                              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-100/80 border border-amber-300 text-amber-900 text-xs font-bold font-sans">
                                 <TrendingDown className="w-3.5 h-3.5 text-amber-700" />
                                 <span>Live Catalog Update: -{formatPrice(Math.abs(q.priceDifference))}</span>
                               </div>
                             )
                           ) : (
-                            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-600 text-[11px] font-medium font-mono">
+                            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-600 text-[11px] font-medium font-sans">
                               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                               <span>Live Catalog Base Rate Active (Unchanged)</span>
                             </div>
@@ -1003,10 +999,10 @@ export default function ProfilePage({
                         </div>
 
                         <div className="text-right sm:self-center">
-                          <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block font-bold">
+                          <span className="text-[10px] font-sans uppercase tracking-wider text-slate-400 block font-bold">
                             Value Retention
                           </span>
-                          <span className="text-xs sm:text-sm font-bold text-slate-800 font-mono">
+                          <span className="text-xs sm:text-sm font-bold text-slate-800 font-sans">
                             {q.retentionPercentage}% Retained
                           </span>
                         </div>
@@ -1014,7 +1010,7 @@ export default function ProfilePage({
 
                       {/* Declared Condition Summary */}
                       <div className="mb-4 text-xs">
-                        <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 block mb-1.5">
+                        <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-slate-500 block mb-1.5">
                           Audit Condition Declared
                         </span>
                         {q.selectedDefects.length === 0 ? (

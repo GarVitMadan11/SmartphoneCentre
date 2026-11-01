@@ -254,7 +254,9 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
 
   // If purchase bill/invoice is missing OR screen is non-original, manufacturer warranty is legally void -> automatically out of warranty
   const hasMissingBill = input.selectedDefects.some(d => d.id === 'defect-acc-nodocs');
-  const hasNonOriginalScreen = input.selectedDefects.some(d => d.id === 'defect-screen-non-original');
+  const hasNonOriginalScreen = input.selectedDefects.some(d =>
+    d.id === 'defect-screen-non-original' || d.id === 'defect-screen-truetone' || d.id === 'defect-screen-touch'
+  );
   const isWarrantyVoided = hasMissingBill || hasNonOriginalScreen;
   const effectiveWarrantyAge = isWarrantyVoided ? 'out_of_warranty' : input.warrantyAge;
   const effectiveDeviceAge = isWarrantyVoided ? 'out_of_warranty' : input.deviceAge;
@@ -382,7 +384,7 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
 
   if (isTablet) {
     // Tablet logic
-    const physicalDefects = displayDefects.filter(d => d.id !== 'defect-screen-touch' && d.id !== 'defect-screen-non-original');
+    const physicalDefects = displayDefects.filter(d => d.id !== 'defect-screen-touch' && d.id !== 'defect-screen-non-original' && d.id !== 'defect-screen-truetone');
     let fPhysical = 1.00;
     physicalDefects.forEach(defect => {
       let penalty = defect.deductionPercentage || 0;
@@ -404,7 +406,7 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
     );
 
     displayDefects.forEach(defect => {
-      if (defect.id === 'defect-screen-non-original') {
+      if (defect.id === 'defect-screen-non-original' || defect.id === 'defect-screen-truetone' || defect.id === 'defect-screen-touch') {
         return; // Handled separately as model-specific screenDeductionAmount fixed adjustment
       }
       if (hasScreenPanelReplacement && (defect.id === 'defect-screen-scratches' || defect.id === 'defect-screen-minor-scratches')) {
@@ -423,13 +425,6 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
         fDisplay = factor;
       }
     });
-
-    // Unresponsive touch digitizer prevents on-site diagnostic testing (matches Cashify national scrap policy)
-    const hasTouchFail = displayDefects.some(d => d.id === 'defect-screen-touch');
-    if (hasTouchFail) {
-      const touchSalvageFloor = config.universalDeductions.touchOrNonOriginalScreenSalvageFloor ?? 1200;
-      fDisplay = Math.min(fDisplay, touchSalvageFloor / basePrice);
-    }
   }
 
   // Group C — Functional (Camera, speaker, mic, charging port, biometrics)
@@ -541,9 +536,11 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
       basePrice128GB: basePrice,
       screenDeduction: input.screenDeduction
     });
+    const isTruetoneOnly = input.selectedDefects.some(d => d.id === 'defect-screen-truetone') &&
+      !input.selectedDefects.some(d => d.id === 'defect-screen-non-original');
     adjustments.push({
-      id: 'defect-screen-non-original',
-      name: 'Non-Original / Replaced Display Deduction',
+      id: isTruetoneOnly ? 'defect-screen-truetone' : 'defect-screen-non-original',
+      name: isTruetoneOnly ? 'Non-Original Screen (True Tone Inactive)' : 'Non-Original / Replaced Display Deduction',
       category: 'screen',
       type: 'TYPE_B_FIXED',
       rateOrValue: -screenDeductionAmount,
@@ -555,36 +552,37 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
   let adjustedBenchmark = preAccessoryValue - screenDeductionAmount - dualEsimDeduction - singleSimDeduction - dAccessoriesCapped;
 
   // Minimum Valuation / Salvage Floor Check (Empirically beats competitor scrap floor of ₹1,180)
-  const hasTouchDefect = input.selectedDefects.some(d => d.id === 'defect-screen-touch');
-  const minimumRecycleFloor = hasTouchDefect
-    ? (config.universalDeductions.touchOrNonOriginalScreenSalvageFloor ?? 1200)
-    : Math.max(1200, Math.round(basePrice * 0.08));
+  const minimumRecycleFloor = Math.max(1200, Math.round(basePrice * 0.08));
   if (adjustedBenchmark < minimumRecycleFloor) {
     adjustedBenchmark = minimumRecycleFloor;
   }
 
-  let vendorMultiplier = 1.03;
-  let vendorMultiplierPercentage = '+3%';
+  let vendorMultiplier = 1.0;
+  let vendorMultiplierPercentage = '+0%';
   if (config.vendorConditionTiers) {
     if (fCondition >= 0.98) {
-      vendorMultiplier = config.vendorConditionTiers.flawlessMultiplier; // 1.03 (+3.0%)
-      vendorMultiplierPercentage = '+3%';
+      vendorMultiplier = config.vendorConditionTiers.flawlessMultiplier ?? 1.0;
+      vendorMultiplierPercentage = vendorMultiplier > 1 ? `+${((vendorMultiplier - 1) * 100).toFixed(1)}%` : '+0%';
     } else if (fCondition >= 0.80) {
-      vendorMultiplier = config.vendorConditionTiers.minorDefectMultiplier; // 1.025 (+2.5%)
-      vendorMultiplierPercentage = '+2.5%';
+      vendorMultiplier = config.vendorConditionTiers.minorDefectMultiplier ?? 1.0;
+      vendorMultiplierPercentage = vendorMultiplier > 1 ? `+${((vendorMultiplier - 1) * 100).toFixed(1)}%` : '+0%';
     } else {
-      vendorMultiplier = config.vendorConditionTiers.heavyDefectMultiplier; // 1.02 (+2.0%)
-      vendorMultiplierPercentage = '+2%';
+      vendorMultiplier = config.vendorConditionTiers.heavyDefectMultiplier ?? 1.0;
+      vendorMultiplierPercentage = vendorMultiplier > 1 ? `+${((vendorMultiplier - 1) * 100).toFixed(1)}%` : '+0%';
     }
   } else {
     const isHighThreshold = adjustedBenchmark > config.vendorThreshold;
-    vendorMultiplier = isHighThreshold ? config.vendorHighMultiplier : config.vendorLowMultiplier;
-    vendorMultiplierPercentage = vendorMultiplier >= 1.03 ? '+3%' : '+2%';
+    vendorMultiplier = (isHighThreshold ? config.vendorHighMultiplier : config.vendorLowMultiplier) ?? 1.0;
+    vendorMultiplierPercentage = vendorMultiplier > 1 ? `+${((vendorMultiplier - 1) * 100).toFixed(1)}%` : '+0%';
   }
 
-  // Rephonix Buyback Offer strictly applies the tiered vendor multiplier
+  // Rephonix Buyback Offer calculates starting from the pre-increased catalog base price
   const rawCalculatedPrice = Math.round(adjustedBenchmark * vendorMultiplier);
-  const finalRephonixPrice = roundToCleanIndianPrice(rawCalculatedPrice, config.roundingStrategy);
+  // When device is in initial flawless condition (no defects/deductions), preserve exact configured basePrice
+  const isFlawlessInitialState = adjustedBenchmark === basePrice && vendorMultiplier === 1.0;
+  const finalRephonixPrice = isFlawlessInitialState
+    ? basePrice
+    : roundToCleanIndianPrice(rawCalculatedPrice, config.roundingStrategy);
 
   const isSpecialPartsCategory = fCondition < 0.55;
 

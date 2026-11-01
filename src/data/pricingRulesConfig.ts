@@ -163,14 +163,14 @@ export interface UniversalDeductionsConfig {
 
 export const DEFAULT_PRICING_RULES_CONFIG: PricingRulesConfig = {
   vendorThreshold: 50000,
-  vendorLowMultiplier: 1.02,
-  vendorHighMultiplier: 1.03,
+  vendorLowMultiplier: 1.0,
+  vendorHighMultiplier: 1.0,
   vendorConditionTiers: {
-    flawlessMultiplier: 1.03,    // +3.0% for flawless / near-mint (fCondition >= 0.98)
-    minorDefectMultiplier: 1.025, // +2.5% for minor / single fault (0.80 <= fCondition < 0.98)
-    heavyDefectMultiplier: 1.02, // +2.0% for major / multiple faults (fCondition < 0.80)
+    flawlessMultiplier: 1.0,    // 1.0 (Base price is already pre-increased by admin)
+    minorDefectMultiplier: 1.0, 
+    heavyDefectMultiplier: 1.0, 
   },
-  ruleVersion: '2.4.0-condition-tiered-vendor-premium',
+  ruleVersion: '2.5.0-preincreased-base-valuation',
   roundingStrategy: 'clean_50',
   accessoryMaxCapPercent: 0.10, // Cap total accessory deductions to 10% of B_market
   universalDeductions: {

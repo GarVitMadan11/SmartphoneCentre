@@ -96,7 +96,7 @@ export const PilotFeedbackSection: React.FC<PilotFeedbackSectionProps> = ({
         <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
           {/* Left Column: Context & Overview */}
           <div className="lg:col-span-5 space-y-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-bold uppercase tracking-wider bg-cobalt/10 text-cobalt border border-cobalt/20">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-sans font-bold uppercase tracking-wider bg-cobalt/10 text-cobalt border border-cobalt/20">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -104,7 +104,7 @@ export const PilotFeedbackSection: React.FC<PilotFeedbackSectionProps> = ({
               <span>Pilot Program Early Access</span>
             </div>
 
-            <h3 className="text-2xl sm:text-3xl font-extrabold font-outfit text-ink-navy tracking-tight leading-tight">
+            <h3 className="text-2xl sm:text-3xl font-extrabold font-sans text-ink-navy tracking-tight leading-tight">
               Help Shape the Future of Rephonix
             </h3>
 
@@ -133,7 +133,7 @@ export const PilotFeedbackSection: React.FC<PilotFeedbackSectionProps> = ({
                   <Lock className="w-7 h-7" />
                 </div>
                 <div className="max-w-md mx-auto space-y-1.5">
-                  <h4 className="text-lg font-bold font-outfit text-ink-navy">Sign In to Give Feedback</h4>
+                  <h4 className="text-lg font-bold font-sans text-ink-navy">Sign In to Give Feedback</h4>
                   <p className="text-xs text-ink-muted font-light leading-relaxed">
                     To maintain verified recommendations during Pilot Mode, suggestions can only be submitted by logged-in users.
                   </p>
@@ -157,7 +157,7 @@ export const PilotFeedbackSection: React.FC<PilotFeedbackSectionProps> = ({
                 <div className="w-14 h-14 bg-emerald-500/10 border border-emerald-500/20 rounded-full flex items-center justify-center mx-auto text-emerald-500">
                   <CheckCircle2 className="w-8 h-8" />
                 </div>
-                <h4 className="text-lg font-bold font-outfit text-ink-navy">Feedback Successfully Sent!</h4>
+                <h4 className="text-lg font-bold font-sans text-ink-navy">Feedback Successfully Sent!</h4>
                 <p className="text-xs text-ink-muted max-w-sm mx-auto font-light">
                   Your feedback was delivered directly to <strong className="text-ink-navy">support@rephonix.in</strong>. Thank you for helping us shape Rephonix!
                 </p>
@@ -174,7 +174,7 @@ export const PilotFeedbackSection: React.FC<PilotFeedbackSectionProps> = ({
 
                 {/* Category Selection */}
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-mono uppercase tracking-wider text-ink-muted block">
+                  <label className="text-[10px] font-sans uppercase tracking-wider text-ink-muted block">
                     Feedback Category <span className="text-rose-500">*</span>
                   </label>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -202,7 +202,7 @@ export const PilotFeedbackSection: React.FC<PilotFeedbackSectionProps> = ({
 
                 {/* Description */}
                 <div className="space-y-1.5">
-                  <label htmlFor="inpage-feedback" className="text-[10px] font-mono uppercase tracking-wider text-ink-muted block">
+                  <label htmlFor="inpage-feedback" className="text-[10px] font-sans uppercase tracking-wider text-ink-muted block">
                     Your Thoughts &amp; Suggestions <span className="text-rose-500">*</span>
                   </label>
                   <textarea
@@ -219,7 +219,7 @@ export const PilotFeedbackSection: React.FC<PilotFeedbackSectionProps> = ({
                 {/* Mandatory Name & Email (Pre-filled) */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label htmlFor="inpage-name" className="text-[10px] font-mono uppercase tracking-wider text-ink-muted block">
+                    <label htmlFor="inpage-name" className="text-[10px] font-sans uppercase tracking-wider text-ink-muted block">
                       Name <span className="text-rose-500">*</span>
                     </label>
                     <input
@@ -233,7 +233,7 @@ export const PilotFeedbackSection: React.FC<PilotFeedbackSectionProps> = ({
                     />
                   </div>
                   <div className="space-y-1">
-                    <label htmlFor="inpage-email" className="text-[10px] font-mono uppercase tracking-wider text-ink-muted block">
+                    <label htmlFor="inpage-email" className="text-[10px] font-sans uppercase tracking-wider text-ink-muted block">
                       Gmail / Email <span className="text-rose-500">*</span>
                     </label>
                     <input

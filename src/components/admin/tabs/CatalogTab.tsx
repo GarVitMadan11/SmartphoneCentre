@@ -606,7 +606,7 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
   };
 
   return (
-    <div className="space-y-6 font-outfit">
+    <div className="space-y-6 font-sans">
       {/* Alert Messages */}
       {error && (
         <div className="p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg flex items-center justify-between shadow-sm">
@@ -960,8 +960,8 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
                   {/* Skip / Hide Series Step Toggle Banner for Brand */}
                   <div className="p-3.5 bg-white border border-ice-border rounded-lg flex items-center justify-between gap-3 text-xs shadow-2xs">
                     <div>
-                      <span className="font-bold text-ink-navy block font-outfit text-sm">
-                        ⚡ Bypass / Hide Series Step for {orderedBrands.find((b) => b.id === reorderSeriesBrandId)?.name || 'Selected Brand'}
+                      <span className="font-bold text-ink-navy block font-sans text-sm">
+                        Direct Model Selection for {orderedBrands.find((b) => b.id === reorderSeriesBrandId)?.name || 'Selected Brand'}
                       </span>
                       <span className="text-[11px] text-ink-muted font-mono leading-relaxed block mt-0.5">
                         When enabled, clicking this brand in the public store skips the series sub-category step and displays all models directly.
@@ -3401,7 +3401,7 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
                   className="w-12 h-12 object-contain bg-zinc-50 rounded border p-1"
                 />
                 <div className="flex-1 overflow-hidden font-mono text-[11px]">
-                  <span className="text-emerald-600 font-bold block">✓ Image Attached</span>
+                  <span className="text-emerald-600 font-bold block">Image Attached</span>
                   <span className="text-zinc-500 truncate block">{formData.imageUrl}</span>
                 </div>
                 <button
@@ -3783,7 +3783,7 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
                                                 : 'bg-zinc-100 text-zinc-600 border-zinc-200'
                                             }`}>
                                               <Radio className="w-2.5 h-2.5 text-blue-600" />
-                                              <span>Cellular {isCellularApproved ? '✓' : '—'}</span>
+                                              <span>Cellular {isCellularApproved ? 'Approved' : 'Pending'}</span>
                                             </span>
                                           )}
                                           {!((formData.name || '').toLowerCase().includes('cellular') || (formData.name || '').toLowerCase().includes('5g') || (formData.name || '').toLowerCase().includes('lte')) && (
@@ -3793,7 +3793,7 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
                                                 : 'bg-zinc-100 text-zinc-600 border-zinc-200'
                                             }`}>
                                               <Wifi className="w-2.5 h-2.5 text-emerald-600" />
-                                              <span>Wi-Fi {isWifiApproved ? '✓' : '—'}</span>
+                                              <span>Wi-Fi {isWifiApproved ? 'Approved' : 'Pending'}</span>
                                             </span>
                                           )}
                                         </div>
@@ -3988,16 +3988,16 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
                                                               title={connTestResult.error || undefined}
                                                             >
                                                               {connTestResult.ok
-                                                                ? '✓ 200 OK'
+                                                                ? '200 OK'
                                                                 : connTestResult.is404
-                                                                ? '✗ 404 Not Found'
+                                                                ? '404 Not Found'
                                                                 : connTestResult.isUnserviceable
-                                                                ? '⚠ Not Buying (Gurgaon/Delhi)'
-                                                                : `⚠ ${connTestResult.status || 'Failed'}`}
+                                                                ? 'Unavailable in Region (Gurgaon/Delhi)'
+                                                                : `${connTestResult.status || 'Failed'}`}
                                                             </span>
                                                             {connTestResult.ok && connTestResult.extractedPrice ? (
                                                               <span className="text-[7.5px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200 px-1 py-0.2 rounded">
-                                                                ⚡ ₹{connTestResult.extractedPrice.toLocaleString('en-IN')}
+                                                                ₹{connTestResult.extractedPrice.toLocaleString('en-IN')}
                                                               </span>
                                                             ) : null}
                                                           </div>
@@ -4209,19 +4209,19 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
                                                         title={testResult.error || undefined}
                                                       >
                                                         {testResult.ok
-                                                          ? '✓ 200 OK'
+                                                          ? '200 OK'
                                                           : testResult.is404
-                                                          ? '✗ 404 Not Found'
+                                                          ? '404 Not Found'
                                                           : testResult.isUnserviceable
-                                                          ? '⚠ Not Buying (Gurgaon/Delhi)'
-                                                          : `⚠ ${testResult.status || 'Failed'}`}
+                                                          ? 'Unavailable in Region (Gurgaon/Delhi)'
+                                                          : `${testResult.status || 'Failed'}`}
                                                       </span>
                                                       {testResult.ok && testResult.extractedPrice ? (
                                                         <span
                                                           className="text-[8.5px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200 px-1 py-0.5 rounded flex items-center gap-0.5 shadow-2xs"
                                                           title="Live Buyback Price extracted from Cashify"
                                                         >
-                                                          ⚡ ₹{testResult.extractedPrice.toLocaleString('en-IN')}
+                                                          ₹{testResult.extractedPrice.toLocaleString('en-IN')}
                                                         </span>
                                                       ) : null}
                                                     </div>

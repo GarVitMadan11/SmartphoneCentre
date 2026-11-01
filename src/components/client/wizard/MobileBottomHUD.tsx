@@ -21,7 +21,7 @@ export const MobileBottomHUD: React.FC<MobileBottomHUDProps> = ({
   finalPrice,
   retentionPercentage: _retentionPercentage,
   isCritical,
-  isLoggedIn,
+  isLoggedIn: _isLoggedIn,
   canProceed,
   onNext,
   onBack,
@@ -49,19 +49,19 @@ export const MobileBottomHUD: React.FC<MobileBottomHUDProps> = ({
 
           <div className="min-w-0 text-left">
             <div className="flex items-center gap-1.5 leading-none">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse flex-shrink-0" />
-              <span className="text-[9px] font-mono font-bold tracking-wider text-slate-500 uppercase truncate">
-                LIVE PAYOUT
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 flex-shrink-0" />
+              <span className="text-[10px] font-medium text-slate-500">
+                Estimated Payout
               </span>
-              <PriceDeltaBadge currentPrice={finalPrice} disabled={!isLoggedIn || isCritical} />
+              <PriceDeltaBadge currentPrice={finalPrice} disabled={isCritical} />
             </div>
 
             <div className="flex items-center gap-1.5 mt-0.5">
               <AnimatedPrice
                 value={finalPrice}
-                isMasked={!isLoggedIn}
+                isMasked={false}
                 isCritical={isCritical}
-                className="text-lg font-black text-emerald-700 font-outfit tracking-tight leading-none"
+                className="text-lg font-black text-emerald-700 font-sans tracking-tight leading-none"
               />
             </div>
           </div>
