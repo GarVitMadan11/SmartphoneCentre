@@ -961,14 +961,6 @@ export function getDefectRulesForCategory(
       deductionPercentage: 0.02
     },
     {
-      id: 'defect-body-airpass',
-      category: 'body',
-      description: 'Air Pass / Waterproof Seal Fail',
-      subText: 'Barometer/air pressure test fails — seal compromised from drops or prior repair.',
-      deductionFixed: category === 'flagship' ? 1500 : 800,
-      deductionPercentage: 0
-    },
-    {
       id: 'defect-body-buttons',
       category: 'body',
       description: 'Side Buttons Faulty',
@@ -989,11 +981,19 @@ export function getDefectRulesForCategory(
 
     // ── CAMERA ───────────────────────────────────────────────────────────
     {
-      id: 'defect-camera-faulty',
+      id: 'defect-camera-front',
       category: 'camera',
-      description: 'Camera Faulty / Lens Blur',
-      subText: 'Front/rear camera scratched, autofocus failing, portrait or cinematic modes not working.',
-      deductionFixed: 1000,
+      description: 'Front Camera Not Working',
+      subText: 'Front selfie / FaceTime camera is blank, black, blurred, or fails to open.',
+      deductionFixed: category === 'flagship' ? 1000 : 800,
+      deductionPercentage: 0.04
+    },
+    {
+      id: 'defect-camera-back',
+      category: 'camera',
+      description: 'Back Camera Not Working',
+      subText: 'Rear primary camera sensor blurred, autofocus clicking, or black viewfinder.',
+      deductionFixed: 1200,
       deductionPercentage: cameraPct
     },
     {
@@ -1006,6 +1006,46 @@ export function getDefectRulesForCategory(
     },
 
     // ── HARDWARE FUNCTIONALITY (Step 3) ──────────────────────────────────
+    {
+      id: 'defect-func-speaker',
+      category: 'functionality',
+      description: 'Loudspeaker Faulty / Crackling',
+      subText: 'Loudspeaker sounds distorted, low, muffled, or rattles during media playback/ringing.',
+      deductionFixed: category === 'flagship' ? 1200 : category === 'premium' ? 900 : 600,
+      deductionPercentage: 0.02
+    },
+    {
+      id: 'defect-func-mic',
+      category: 'functionality',
+      description: 'Microphone Not Working',
+      subText: 'Call audio or Voice Memos microphone is muffled, cutting out, or silent.',
+      deductionFixed: category === 'flagship' ? 1200 : category === 'premium' ? 900 : 600,
+      deductionPercentage: 0.02
+    },
+    {
+      id: 'defect-func-receiver',
+      category: 'functionality',
+      description: 'Audio Receiver (Earpiece) Faulty',
+      subText: 'Top ear speaker for voice phone calls is faint, crackling, or completely silent.',
+      deductionFixed: category === 'flagship' ? 1000 : category === 'premium' ? 700 : 500,
+      deductionPercentage: 0.015
+    },
+    {
+      id: 'defect-func-charging',
+      category: 'functionality',
+      description: 'Charging Port Faulty / Loose',
+      subText: 'Phone fails to charge, cable requires wiggling/pressure, or connector has pin damage.',
+      deductionFixed: category === 'flagship' ? 1400 : category === 'premium' ? 1000 : 700,
+      deductionPercentage: 0.03
+    },
+    {
+      id: 'defect-func-vibrator',
+      category: 'functionality',
+      description: 'Vibrator / Haptics Not Working',
+      subText: 'Taptic Engine or vibration motor does not buzz, rattles loudly, or is completely dead.',
+      deductionFixed: category === 'flagship' ? 800 : category === 'premium' ? 600 : 400,
+      deductionPercentage: 0.015
+    },
     {
       id: 'defect-critical-security',
       category: 'functionality',
@@ -1021,22 +1061,6 @@ export function getDefectRulesForCategory(
           : 'Fingerprint scanner or Face Unlock fails to recognize, setup error, or hardware fault.',
       deductionFixed: 0,
       deductionPercentage: 0.20
-    },
-    {
-      id: 'defect-func-audio',
-      category: 'functionality',
-      description: 'Speakers / Microphone Faulty',
-      subText: 'Stereo speakers sound distorted/low, or Voice Memos mic test reveals microphone failure.',
-      deductionFixed: category === 'flagship' ? 2200 : category === 'premium' ? 1400 : 800,
-      deductionPercentage: 0.04
-    },
-    {
-      id: 'defect-func-restart',
-      category: 'functionality',
-      description: 'Auto-Restart / Unstable Device',
-      subText: 'Device randomly reboots within 3 minutes of idle use — indicates PMIC/board-level issue.',
-      deductionFixed: 0,
-      deductionPercentage: 0.15
     },
 
     // ── CONNECTIVITY & VERIFICATION (Step 4) ─────────────────────────────

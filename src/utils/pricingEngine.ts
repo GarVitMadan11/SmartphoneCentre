@@ -433,12 +433,28 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
     (d.category === 'camera' || d.category === 'functionality' || d.category === 'connectivity') &&
     !d.id.includes('battery')
   );
+
+  // Sub-assembly flex cable overlap protection (Rephonix repair economics parity):
+  // Charging Port + Microphone share the bottom dock flex assembly on most smartphones.
+  // When both fail, a single physical daughterboard swap replaces both; secondary defect penalty is capped/waived.
+  const hasChargingDefect = functionalDefects.some(d => d.id === 'defect-func-charging');
+  const hasMicDefect = functionalDefects.some(d => d.id === 'defect-func-mic');
+  const hasDockFlexOverlap = hasChargingDefect && hasMicDefect;
+
   let fFunctional = 1.00;
 
   functionalDefects.forEach(defect => {
     let penalty = defect.deductionPercentage || 0;
+    // Sub-assembly flex cable discount: mic fee is waived if charging port board is already being replaced
+    if (hasDockFlexOverlap && defect.id === 'defect-func-mic') {
+      penalty = penalty * 0.25; // 75% discount for shared assembly
+    }
     if (penalty === 0 && defect.deductionFixed > 0) {
-      penalty = Math.min(0.25, defect.deductionFixed / basePrice);
+      let fixedAmt = defect.deductionFixed;
+      if (hasDockFlexOverlap && defect.id === 'defect-func-mic') {
+        fixedAmt = 0; // Waived fixed cost since dock connector replacement includes mic
+      }
+      penalty = Math.min(0.25, fixedAmt / basePrice);
     }
     const factor = Math.max(0, 1.0 - penalty);
     fFunctional *= factor;

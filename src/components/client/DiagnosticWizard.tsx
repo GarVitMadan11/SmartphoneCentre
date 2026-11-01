@@ -4,10 +4,10 @@ import { calculateValuation } from '../../utils/valuation';
 import { type AgeFactorKey } from '../../data/pricingRulesConfig';
 import { 
   ArrowLeft, Check, ChevronRight, Activity, 
-  Smartphone, Box, Zap, ShieldCheck, Printer, Receipt,
+  Smartphone, Box, ShieldCheck, Printer, Receipt,
   X, Lock, Eye, EyeOff, AlertCircle, Mail, User,
   Phone, MessageSquare, ExternalLink, Headphones, Send, Bookmark,
-  AlertTriangle
+  AlertTriangle, BatteryCharging, Radio, FileX
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getIllustration } from './Illustrations';
@@ -265,9 +265,9 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
     return [
       { title: 'Core Assessment', icon: ShieldCheck, desc: 'Device power & calling assessment' },
       { title: 'Display Panel', icon: Smartphone, desc: 'Touch, screen glass & burn-in' },
-      { title: 'Body & Frame', icon: ShieldCheck, desc: 'Chassis, buttons, screws & seal' },
+      { title: 'Body & Frame', icon: Smartphone, desc: 'Chassis, buttons, screws & seal' },
       { title: 'Hardware', icon: Activity, desc: 'Cameras, biometrics & audio' },
-      { title: 'Connectivity', icon: Zap, desc: 'Battery, cellular, Wi-Fi & serial' },
+      { title: 'Connectivity', icon: Radio, desc: 'Battery, cellular, Wi-Fi & serial' },
       { title: showWarrantyQuestion ? 'Docs & Warranty' : 'Packaging & Box', icon: Box, desc: showWarrantyQuestion ? (hasSpen ? 'S-Pen, accessories & warranty' : 'Accessories, age & warranty') : (hasSpen ? 'Box, S-Pen, charger & invoice' : 'Original box, accessories & invoice') },
       { title: 'Review & Valuation', icon: Receipt, desc: 'Diagnostic review & breakdown' }
     ];
@@ -1442,7 +1442,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                             : 'border-ice-border bg-canvas-white hover:border-emerald-500/40 hover:bg-slate-50/60'
                         }`}
                       >
-                        <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-gradient-to-br from-emerald-500/15 to-teal-500/10 border border-emerald-500/25 flex items-center justify-center overflow-hidden shadow-xs">
+                        <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-emerald-50/70 border border-emerald-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
                           {getIllustration('screen-flawless', deviceType)}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -1490,7 +1490,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                             : 'border-ice-border bg-canvas-white hover:border-slate-300 hover:bg-slate-50/60'
                         }`}
                       >
-                        <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-gradient-to-br from-rose-500/15 to-amber-500/10 border border-rose-500/20 flex items-center justify-center overflow-hidden shadow-xs">
+                        <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
                           {getIllustration(defect.id, deviceType)}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -1559,7 +1559,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                             : 'border-ice-border bg-canvas-white hover:border-emerald-500/40 hover:bg-slate-50/60'
                         }`}
                       >
-                        <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-gradient-to-br from-emerald-500/15 to-teal-500/10 border border-emerald-500/25 flex items-center justify-center overflow-hidden shadow-xs">
+                        <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-emerald-50/70 border border-emerald-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
                           {getIllustration('body-flawless', deviceType)}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -1577,7 +1577,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
                   {/* Body Rules */}
                   {(() => {
-                    return rules.filter(r => r.category === 'body').map(defect => {
+                    return rules.filter(r => r.category === 'body' && r.id !== 'defect-body-airpass').map(defect => {
                       const isSelected = selectedDefects.some(d => d.id === defect.id);
                       return (
                       <div
@@ -1613,7 +1613,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                             : 'border-ice-border bg-canvas-white hover:border-slate-300 hover:bg-slate-50/60'
                         }`}
                       >
-                        <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-gradient-to-br from-amber-500/15 to-orange-500/10 border border-amber-500/20 flex items-center justify-center overflow-hidden shadow-xs">
+                        <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
                           {getIllustration(defect.id, deviceType)}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -1683,17 +1683,17 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                             : 'border-ice-border bg-canvas-white hover:border-emerald-500/40 hover:bg-slate-50/60'
                         }`}
                       >
-                        <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-gradient-to-br from-emerald-500/15 to-teal-500/10 border border-emerald-500/25 flex items-center justify-center overflow-hidden shadow-xs">
-                          <ShieldCheck className="w-7 h-7 text-emerald-600" />
+                        <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-emerald-50/70 border border-emerald-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
+                          {getIllustration('hardware-healthy', deviceType)}
                         </div>
                         <div className="flex-1 min-w-0">
                           <h4 className="font-bold text-sm text-ink-navy">Hardware Works Perfectly</h4>
                           <p className="text-xs text-ink-muted mt-1 font-light leading-snug">
-                            Front/rear cameras, {
+                            Cameras, {
                               biometricType === 'face_id' ? 'Face ID' :
                               biometricType === 'touch_id' ? 'Touch ID' :
                               'fingerprint scanner'
-                            }, speaker/mic, and system stability are perfect.
+                            }, audio, charging port, and haptics are perfect.
                           </p>
                         </div>
                         <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 mt-0.5 ${
@@ -1729,7 +1729,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                             : 'border-ice-border bg-canvas-white hover:border-slate-300 hover:bg-slate-50/60'
                         }`}
                       >
-                        <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-gradient-to-br from-blue-500/15 to-indigo-500/10 border border-blue-500/20 flex items-center justify-center overflow-hidden shadow-xs">
+                        <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
                           {getIllustration(defect.id, deviceType, biometricType)}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -1768,7 +1768,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                 <div className="mb-6 text-left border border-emerald-500/25 bg-gradient-to-r from-emerald-50/90 via-teal-50/60 to-emerald-50/80 p-4 rounded-2xl relative overflow-hidden shadow-xs">
                   <div className="flex items-start gap-3.5">
                     <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center flex-shrink-0 text-emerald-600 mt-0.5">
-                      <Zap className="w-5 h-5" />
+                      <BatteryCharging className="w-5 h-5" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between flex-wrap gap-2">
@@ -1827,8 +1827,8 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                             : 'border-ice-border bg-canvas-white hover:border-emerald-500/40 hover:bg-slate-50/60'
                         }`}
                       >
-                        <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-gradient-to-br from-emerald-500/15 to-teal-500/10 border border-emerald-500/25 flex items-center justify-center stroke-emerald-600">
-                          <ShieldCheck className="w-7 h-7 text-emerald-600" />
+                        <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-emerald-50/70 border border-emerald-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
+                          {getIllustration('connectivity-healthy', deviceType)}
                         </div>
                         <div className="flex-1 min-w-0">
                           <h4 className="font-bold text-sm text-ink-navy">
@@ -1878,7 +1878,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                             : 'border-ice-border bg-canvas-white hover:border-slate-300 hover:bg-slate-50/60'
                         }`}
                       >
-                        <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-gradient-to-br from-violet-500/15 to-purple-500/10 border border-violet-500/20 flex items-center justify-center overflow-hidden shadow-xs">
+                        <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
                           {getIllustration(defect.id, deviceType)}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -1948,8 +1948,8 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                             : 'border-ice-border bg-canvas-white hover:border-emerald-500/40 hover:bg-slate-50/60'
                         }`}
                       >
-                        <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-gradient-to-br from-emerald-500/15 to-teal-500/10 border border-emerald-500/25 flex items-center justify-center stroke-emerald-600">
-                          <Box className="w-7 h-7 text-emerald-600" />
+                        <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-emerald-50/70 border border-emerald-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
+                          {getIllustration('accessories-all', deviceType)}
                         </div>
                         <div className="flex-1 min-w-0">
                           <h4 className="font-bold text-sm text-ink-navy">All Accessories Included</h4>
@@ -1990,7 +1990,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                             : 'border-ice-border bg-canvas-white hover:border-slate-300 hover:bg-slate-50/60'
                         }`}
                       >
-                        <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-gradient-to-br from-amber-500/15 to-orange-500/10 border border-amber-500/20 flex items-center justify-center overflow-hidden shadow-xs">
+                        <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
                           {getIllustration(defect.id, deviceType)}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -2076,7 +2076,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           <div className={`w-9 h-9 rounded-lg border flex items-center justify-center shrink-0 transition-colors ${
                             hasWarranty === false ? 'bg-amber-500/15 border-amber-500/30 text-amber-600' : 'bg-slate-100 border-slate-200 text-slate-500'
                           }`}>
-                            <Box className="w-5 h-5" />
+                            <FileX className="w-5 h-5" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between">
