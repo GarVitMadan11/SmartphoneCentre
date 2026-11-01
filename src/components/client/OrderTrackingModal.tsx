@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  X, Search, CheckCircle2, Clock, AlertCircle, Package, Calendar, MapPin,
+  X, Search, ShieldCheck, CheckCircle2, Clock, AlertCircle, Package, Calendar, MapPin,
   Copy, Check, FileText, Download, Bookmark, Trash2, TrendingUp, TrendingDown, Sparkles, ArrowRight, Leaf
 } from 'lucide-react';
 import { trackBookingOrder, fetchMyBookings, downloadBookingPdf, ApiTrackBooking, ApiBooking, ApiUser } from '../../utils/api';
@@ -691,14 +691,22 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                         {/* Price evaluation & change banner */}
                         <div className="my-3 p-3 bg-slate-50 rounded-lg border border-slate-200/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                           <div>
-                            <span className="text-[10px] font-sans uppercase text-slate-500 font-bold block">
-                              Live Estimated Payout
-                            </span>
+                            <div className="flex items-center gap-1.5 mb-0.5">
+                              <span className="text-[10px] font-sans uppercase text-slate-500 font-bold block">
+                                Estimated Payout
+                              </span>
+                              {q.isPriceLocked && (
+                                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-full bg-emerald-50 border border-emerald-300 text-emerald-800 text-[9px] font-bold">
+                                  <ShieldCheck className="w-2.5 h-2.5 text-emerald-600" />
+                                  7d Lock ({q.daysRemaining}d left)
+                                </span>
+                              )}
+                            </div>
                             <div className="flex items-baseline gap-2">
                               <span className="text-xl font-extrabold text-emerald-700 font-sans">
                                 {formatPrice(q.livePrice)}
                               </span>
-                              {q.hasPriceChanged && (
+                              {q.hasPriceChanged && !q.isPriceProtected && (
                                 <span className="text-xs text-slate-400 line-through font-sans">
                                   Was {formatPrice(q.originalPrice)}
                                 </span>
@@ -706,22 +714,20 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                             </div>
                           </div>
 
-                          {q.hasPriceChanged ? (
-                            q.priceDifference > 0 ? (
-                              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[11px] font-bold font-sans border border-emerald-300">
-                                <TrendingUp className="w-3 h-3 text-emerald-700" />
-                                <span>Live Update: +{formatPrice(q.priceDifference)}</span>
-                              </div>
-                            ) : (
-                              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-100 text-amber-900 text-[11px] font-bold font-sans border border-amber-300">
-                                <TrendingDown className="w-3 h-3 text-amber-700" />
-                                <span>Live Update: -{formatPrice(Math.abs(q.priceDifference))}</span>
-                              </div>
-                            )
+                          {q.isPriceProtected ? (
+                            <div className="inline-flex items-center gap-1 px-2 py-1 rounded bg-emerald-50 text-emerald-900 text-[11px] font-semibold font-sans border border-emerald-300">
+                              <ShieldCheck className="w-3 h-3 text-emerald-700 shrink-0" />
+                              <span>7-Day Lock: {formatPrice(q.guaranteedPayout)} guaranteed</span>
+                            </div>
+                          ) : q.hasPriceChanged && q.priceDifference > 0 ? (
+                            <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[11px] font-bold font-sans border border-emerald-300">
+                              <TrendingUp className="w-3 h-3 text-emerald-700" />
+                              <span>Live Update: +{formatPrice(q.priceDifference)}</span>
+                            </div>
                           ) : (
                             <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-white text-slate-600 text-[10px] font-medium font-sans border border-slate-200">
                               <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                              <span>Catalog Price Active</span>
+                              <span>{q.isPriceLocked ? '7-Day Price Lock Active' : 'Catalog Price Active'}</span>
                             </div>
                           )}
                         </div>

@@ -14,7 +14,7 @@ import { getIllustration } from './Illustrations';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { checkEmail, customerLogin, customerSignup, verifyOtp, requestPasswordResetOtp, resetPasswordWithOtp, sendQuoteAlertApi, sendPriceMatchAlertApi, sendStepLeadAlertApi, syncFirebaseUser, ApiUser } from '../../utils/api';
 import { loginWithGoogle } from '../../services/firebaseAuth';
-import { saveQuote, isQuoteAlreadySaved } from '../../utils/savedQuotes';
+import { saveQuote, isQuoteAlreadySaved, associateGuestQuotes } from '../../utils/savedQuotes';
 import { TabletDiagnosticFlow } from './TabletDiagnosticFlow';
 import { AnimatedPrice } from './wizard/AnimatedPrice';
 import { PriceDeltaBadge } from './wizard/PriceDeltaBadge';
@@ -571,7 +571,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
   const [saveToast, setSaveToast] = useState<string | null>(null);
 
   React.useEffect(() => {
-    if (step === finalReceiptIndex) {
+    if (step === finalReceiptIndex && model && variant && valuation.finalPrice > 0) {
       const alreadySaved = isQuoteAlreadySaved(
         model.id,
         variant.storageGb,
@@ -579,8 +579,30 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
         currentUser?.id
       );
       setIsQuoteSaved(alreadySaved);
+
+      // Automatically secure the 7-day price lock quote in the Saved tab
+      if (!alreadySaved) {
+        saveQuote({
+          userId: currentUser?.id,
+          modelId: model.id,
+          modelName: model.name,
+          brandId: model.brandId,
+          category: model.category,
+          variantId: variant.id,
+          storageGb: variant.storageGb,
+          ramGb: variant.ramGb,
+          color: variant.color,
+          selectedDefectIds: selectedDefects.map(d => d.id),
+          selectedDefectDescriptions: selectedDefects.map(d => d.description),
+          savedBasePrice: variant.basePrice,
+          savedPayout: valuation.finalPrice,
+          savedRetentionPercentage: valuation.retentionPercentage,
+          refCode: `RPX${receiptRef}`,
+        });
+        setIsQuoteSaved(true);
+      }
     }
-  }, [step, finalReceiptIndex, model.id, variant.storageGb, selectedDefects, currentUser?.id]);
+  }, [step, finalReceiptIndex, model, variant, selectedDefects, currentUser?.id, valuation.finalPrice, valuation.retentionPercentage, receiptRef]);
 
   const handleSaveQuote = () => {
     if (!currentUser) {
@@ -619,6 +641,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
   React.useEffect(() => {
     if (currentUser) {
       setIsPriceLocked(false);
+      associateGuestQuotes(currentUser.id);
     }
   }, [currentUser]);
 

@@ -4,7 +4,7 @@ import type { Model, Variant, DefectRule, Brand } from './data/mockDatabase';
 // Helper functions needed at startup — imported statically but lightweight
 import { generateVariantsForModel, getDefectRulesForCategory, getMaxVariantPrice, isTabletDevice } from './data/mockDatabase';
 import { calculateValuation } from './utils/valuation';
-import type { SavedQuote } from './utils/savedQuotes';
+import { type SavedQuote, getPriceLockStatus, associateGuestQuotes } from './utils/savedQuotes';
 import { fetchCurrentUser, syncFirebaseUser, type ApiUser } from './utils/api';
 import { subscribeToFirebaseAuth, checkRedirectAuthResult } from './services/firebaseAuth';
 import { getModelUrlPath, matchModelFromPath, formatVariantSlug } from './utils/slugs';
@@ -443,13 +443,16 @@ export default function App() {
       modelId: targetModel.id, brandId: targetModel.brandId,
       modelName: targetModel.name, category: targetModel.category,
     });
+    // Honor 7-Day Price Lock Guarantee on resumed quotes
+    const lockStatus = getPriceLockStatus(quote.savedAt);
+    const effectivePrice = lockStatus.isLocked ? Math.max(quote.savedPayout, valuation.finalPrice) : valuation.finalPrice;
     const targetPath = getPathForModel(targetModel, matchedVariant.storageGb, matchedVariant.ramGb);
     isResumingQuoteRef.current = true;
     startTransition(() => {
       setSelectedModel(targetModel);
       setSelectedVariant(matchedVariant);
       setSelectedDefects(matchedDefects);
-      setFinalPrice(valuation.finalPrice);
+      setFinalPrice(effectivePrice);
       setWizardStep(7);
       setActiveStage('diagnose');
       setIsTrackOpen(false);
@@ -878,7 +881,7 @@ export default function App() {
       </main>
 
       {/* ── Footer ────────────────────────────────────────────────── */}
-      <footer className="bg-canvas-pure border-t border-ice-border mt-8 sm:mt-16 py-8 pb-24 sm:pb-8">
+      <footer className={`bg-canvas-pure border-t border-ice-border mt-8 sm:mt-16 py-8 pb-24 sm:pb-8 ${isWorkflow && activeStage === "diagnose" ? "hidden sm:block" : ""}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6 pb-8 border-b border-ice-border/40">
             <div className="flex items-center gap-2 cursor-pointer" onClick={() => { handleReset(); navigate('/'); }}>

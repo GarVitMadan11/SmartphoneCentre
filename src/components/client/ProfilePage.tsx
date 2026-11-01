@@ -962,38 +962,50 @@ export default function ProfilePage({
 
                       {/* Valuation & Price Recalculation Alert */}
                       <div className="my-4 bg-slate-50 rounded-xl p-4 border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                        <div className="space-y-1">
-                          <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-slate-500">
-                            Current Estimated Payout
-                          </span>
+                        <div className="space-y-1.5">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-slate-500">
+                              Estimated Payout
+                            </span>
+                            {/* 7-Day Price Lock Status Badge */}
+                            {q.isPriceLocked ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-300 text-emerald-800 text-[10px] font-bold">
+                                <ShieldCheck className="w-3 h-3 text-emerald-600 shrink-0" />
+                                7-Day Price Lock Active ({q.daysRemaining}d left)
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-slate-600 text-[10px] font-medium">
+                                Lock Expired • Live Rate
+                              </span>
+                            )}
+                          </div>
+
                           <div className="flex items-baseline gap-3">
                             <span className="text-2xl sm:text-3xl font-extrabold text-emerald-700 font-sans">
                               {formatPrice(q.livePrice)}
                             </span>
-                            {q.hasPriceChanged && (
+                            {q.hasPriceChanged && !q.isPriceProtected && (
                               <span className="text-xs text-slate-400 line-through font-sans">
                                 Was {formatPrice(q.originalPrice)}
                               </span>
                             )}
                           </div>
 
-                          {/* Dynamic price update notification badge */}
-                          {q.hasPriceChanged ? (
-                            q.priceDifference > 0 ? (
-                              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-100/80 border border-emerald-300 text-emerald-800 text-xs font-bold font-sans">
-                                <TrendingUp className="w-3.5 h-3.5 text-emerald-700" />
-                                <span>Live Catalog Update: +{formatPrice(q.priceDifference)}</span>
-                              </div>
-                            ) : (
-                              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-100/80 border border-amber-300 text-amber-900 text-xs font-bold font-sans">
-                                <TrendingDown className="w-3.5 h-3.5 text-amber-700" />
-                                <span>Live Catalog Update: -{formatPrice(Math.abs(q.priceDifference))}</span>
-                              </div>
-                            )
+                          {/* Dynamic price update / price protection notification */}
+                          {q.isPriceProtected ? (
+                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-semibold font-sans">
+                              <ShieldCheck className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                              <span>7-Day Lock Guarantee: Market dropped to {formatPrice(q.currentPayout)}, but your {formatPrice(q.guaranteedPayout)} rate is locked &amp; guaranteed!</span>
+                            </div>
+                          ) : q.hasPriceChanged && q.priceDifference > 0 ? (
+                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-100/80 border border-emerald-300 text-emerald-800 text-xs font-bold font-sans">
+                              <TrendingUp className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                              <span>Live Catalog Update: +{formatPrice(q.priceDifference)} applied</span>
+                            </div>
                           ) : (
                             <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-600 text-[11px] font-medium font-sans">
-                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                              <span>Live Catalog Base Rate Active (Unchanged)</span>
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                              <span>{q.isPriceLocked ? 'Guaranteed locked payout for 7 days' : 'Live catalog base rate active'}</span>
                             </div>
                           )}
                         </div>
