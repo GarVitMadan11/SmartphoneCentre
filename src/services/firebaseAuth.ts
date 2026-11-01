@@ -2,6 +2,8 @@
  * Firebase Authentication Client Service (Web SDK)
  * Handles Email/Password, Google Sign-in, and Phone OTP with RecaptchaVerifier
  */
+export type { ConfirmationResult, FirebaseUser };
+
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -34,22 +36,72 @@ export interface FirebaseAuthState {
 }
 
 // ── 1. Recaptcha Verifier Initializer for Phone OTP ───────────────────────
-export function initRecaptchaVerifier(containerId: string = 'recaptcha-container'): RecaptchaVerifier | null {
+let activeVerifier: RecaptchaVerifier | null = null;
+
+export function clearRecaptchaVerifier(containerId: string = 'recaptcha-login-container'): void {
+  if (activeVerifier) {
+    try {
+      activeVerifier.clear();
+    } catch {
+      // non-blocking
+    }
+    activeVerifier = null;
+  }
+  const el = document.getElementById(containerId);
+  if (el && el.parentNode) {
+    const freshEl = document.createElement('div');
+    freshEl.id = containerId;
+    el.parentNode.replaceChild(freshEl, el);
+  }
+}
+
+export function initRecaptchaVerifier(containerId: string = 'recaptcha-login-container'): RecaptchaVerifier | null {
   if (!auth) return null;
+
+  // If an active verifier instance already exists, reuse it to avoid re-rendering error
+  if (activeVerifier) {
+    return activeVerifier;
+  }
+
+  const el = document.getElementById(containerId);
+  if (!el) {
+    console.warn(`[Firebase Auth] reCAPTCHA container #${containerId} not found in DOM.`);
+    return null;
+  }
+
+  // Ensure DOM container is clean and unmounted from any prior grecaptcha instance
+  const freshEl = document.createElement('div');
+  freshEl.id = containerId;
+  el.parentNode?.replaceChild(freshEl, el);
+
   try {
-    const verifier = new RecaptchaVerifier(auth, containerId, {
+    activeVerifier = new RecaptchaVerifier(auth, freshEl, {
       size: 'invisible',
+      badge: 'inline',
       callback: () => {
-        // reCAPTCHA solved
+        // reCAPTCHA solved automatically
       },
       'expired-callback': () => {
-        console.warn('[Firebase Auth] reCAPTCHA expired. Please retry.');
+        console.warn('[Firebase Auth] reCAPTCHA expired. Resetting verifier.');
+        clearRecaptchaVerifier(containerId);
       },
     });
-    return verifier;
-  } catch (err) {
-    console.error('[Firebase Auth] Failed to initialize RecaptchaVerifier:', err);
-    return null;
+    return activeVerifier;
+  } catch (err: any) {
+    console.warn('[Firebase Auth] RecaptchaVerifier creation notice:', err);
+    clearRecaptchaVerifier(containerId);
+    const retryEl = document.getElementById(containerId);
+    if (!retryEl) return null;
+    try {
+      activeVerifier = new RecaptchaVerifier(auth, retryEl, {
+        size: 'invisible',
+      badge: 'inline',
+      });
+      return activeVerifier;
+    } catch (retryErr) {
+      console.error('[Firebase Auth] Recaptcha retry failed:', retryErr);
+      return null;
+    }
   }
 }
 
@@ -108,6 +160,8 @@ export async function loginWithEmail(
 export async function triggerGoogleRedirectLogin(): Promise<void> {
   if (!auth) throw new Error('Firebase Auth is not initialized');
   const provider = new GoogleAuthProvider();
+  provider.addScope('email');
+  provider.addScope('profile');
   provider.setCustomParameters({ prompt: 'select_account' });
   await signInWithRedirect(auth, provider);
 }
@@ -115,6 +169,8 @@ export async function triggerGoogleRedirectLogin(): Promise<void> {
 export async function loginWithGoogle(): Promise<{ user: FirebaseUser; token: string }> {
   if (!auth) throw new Error('Firebase Auth is not initialized');
   const provider = new GoogleAuthProvider();
+  provider.addScope('email');
+  provider.addScope('profile');
   provider.setCustomParameters({ prompt: 'select_account' });
 
   try {
@@ -122,9 +178,22 @@ export async function loginWithGoogle(): Promise<{ user: FirebaseUser; token: st
     const token = await result.user.getIdToken();
     return { user: result.user, token };
   } catch (err: any) {
-    console.warn('[Firebase Auth] Popup sign-in issue, triggering full redirect:', err);
-    await signInWithRedirect(auth, provider);
-    return new Promise(() => {}); // Wait for redirect navigation
+    // If user voluntarily closed or cancelled the popup, do not redirect
+    if (
+      err.code === 'auth/popup-closed-by-user' ||
+      err.code === 'auth/cancelled-popup-request'
+    ) {
+      throw err;
+    }
+
+    // If popup was blocked by browser or on mobile browsers where popups fail, fall back to redirect
+    if (err.code === 'auth/popup-blocked') {
+      console.warn('[Firebase Auth] Popup blocked by browser, triggering redirect sign-in:', err);
+      await signInWithRedirect(auth, provider);
+      return new Promise(() => {}); // Wait for redirect navigation
+    }
+
+    throw err;
   }
 }
 

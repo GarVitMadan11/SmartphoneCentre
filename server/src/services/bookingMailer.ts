@@ -63,6 +63,14 @@ function getTransporter() {
   });
 }
 
+export function getAdminAlertRecipient(): string {
+  const val = getEnvValue('ADMIN_ALERT_EMAIL') || process.env.ADMIN_ALERT_EMAIL;
+  if (val && val.trim()) {
+    return val.trim();
+  }
+  return 'garvitmadan511@gmail.com, dhruvmehta593@gmail.com';
+}
+
 function getFromAddress(): string {
   const user = getEnvValue('SMTP_USER') || getEnvValue('SECURITY_SMTP_USER') || getEnvValue('EMAIL_USER') || 'support@rephonix.in';
   const rawFrom = getEnvValue('EMAIL_FROM');
@@ -76,7 +84,7 @@ function getFromAddress(): string {
 }
 
 export async function sendAdminBookingNotificationEmail(booking: PDFBookingData, pdfBuffer: Buffer | null, baseUrl: string = 'http://localhost:4000'): Promise<boolean> {
-  const adminRecipient = process.env.ADMIN_ALERT_EMAIL || 'garvitmadan511@gmail.com';
+  const adminRecipient = getAdminAlertRecipient();
   const pdfDownloadUrl = `${baseUrl}/api/bookings/${encodeURIComponent(booking.id)}/pdf`;
 
   // Direct Nodemailer SMTP
@@ -510,7 +518,7 @@ export interface QuoteAlertData {
 }
 
 export async function sendAdminQuoteAlertEmail(data: QuoteAlertData): Promise<boolean> {
-  const adminRecipient = process.env.ADMIN_ALERT_EMAIL || 'garvitmadan511@gmail.com';
+  const adminRecipient = getAdminAlertRecipient();
   const formattedPayout = `₹${data.estimatedPayout.toLocaleString('en-IN')}`;
   const defectText = data.defects && data.defects.length > 0
     ? data.defects.map(d => escapeHtml(d)).join(', ')
@@ -625,7 +633,7 @@ export interface PriceMatchAlertData {
 }
 
 export async function sendAdminPriceMatchAlertEmail(data: PriceMatchAlertData): Promise<boolean> {
-  const adminRecipient = process.env.ADMIN_ALERT_EMAIL || 'garvitmadan511@gmail.com';
+  const adminRecipient = getAdminAlertRecipient();
   const cleanPhone = String(data.customerPhone).replace(/\D/g, '');
   const phoneFormatted = cleanPhone.length === 10 ? cleanPhone : data.customerPhone;
   const waUrl = `https://wa.me/91${phoneFormatted}`;
@@ -753,7 +761,7 @@ export interface StepLeadAlertData {
 }
 
 export async function sendAdminStepLeadEmail(data: StepLeadAlertData): Promise<boolean> {
-  const adminRecipient = process.env.ADMIN_ALERT_EMAIL || 'garvitmadan511@gmail.com';
+  const adminRecipient = getAdminAlertRecipient();
   const transporter = getTransporter();
 
   const formattedBase = data.basePrice && data.basePrice > 0

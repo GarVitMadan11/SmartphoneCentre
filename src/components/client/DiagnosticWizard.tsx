@@ -12,7 +12,8 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { getIllustration } from './Illustrations';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
-import { checkEmail, customerLogin, customerSignup, verifyOtp, requestPasswordResetOtp, resetPasswordWithOtp, sendQuoteAlertApi, sendPriceMatchAlertApi, sendStepLeadAlertApi, ApiUser } from '../../utils/api';
+import { checkEmail, customerLogin, customerSignup, verifyOtp, requestPasswordResetOtp, resetPasswordWithOtp, sendQuoteAlertApi, sendPriceMatchAlertApi, sendStepLeadAlertApi, syncFirebaseUser, ApiUser } from '../../utils/api';
+import { loginWithGoogle } from '../../services/firebaseAuth';
 import { saveQuote, isQuoteAlreadySaved } from '../../utils/savedQuotes';
 import { TabletDiagnosticFlow } from './TabletDiagnosticFlow';
 import { AnimatedPrice } from './wizard/AnimatedPrice';
@@ -241,7 +242,9 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
   const [deviceAge, setDeviceAge] = useState<AgeFactorKey>('under_3m');
   const [warrantyAge, setWarrantyAge] = useState<'under_3m' | '3_to_6m' | '6_to_11m' | 'out_of_warranty'>('under_3m');
+  const [selectedWarrantyAge, setSelectedWarrantyAge] = useState<'under_3m' | '3_to_6m' | '6_to_11m' | null>(null);
   const [hasWarranty, setHasWarranty] = useState<boolean | null>(null);
+  const [dualEsim, setDualEsim] = useState<boolean | null>(null);
   const [_warrantyStatus, setWarrantyStatus] = useState<'active' | 'expiring_soon' | 'expired' | 'unverified'>(
     isEligibleForWarranty ? 'active' : 'expired'
   );
@@ -395,14 +398,17 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
     if (step === 3) return true; // Hardware defects - optional, defaults to perfect
     if (step === 4) return true; // Connectivity defects - optional, defaults to perfect
     if (step === 5) {
-      const warrantyOk = !showWarrantyQuestion || hasWarranty !== null;
-      return warrantyOk;
+      const warrantyOk = !showWarrantyQuestion || (
+        hasWarranty === false || (hasWarranty === true && selectedWarrantyAge !== null)
+      );
+      const isIphone = isApple && !isWatch && !isTablet;
+      const simOk = !isIphone || dualEsim !== null;
+      return warrantyOk && simOk;
     }
     return true;
-  }, [isTablet, step, icloudChecked, screenConfirmed, bodyConfirmed, funcConfirmed, connectConfirmed, accConfirmed, selectedDefects, rules, showWarrantyQuestion, hasWarranty]);
+  }, [isTablet, step, icloudChecked, screenConfirmed, bodyConfirmed, funcConfirmed, connectConfirmed, accConfirmed, selectedDefects, rules, showWarrantyQuestion, hasWarranty, selectedWarrantyAge, isApple, isWatch, dualEsim]);
 
   const simType = 'dual_sim';
-  const [dualEsim, setDualEsim] = useState<boolean | null>(null);
 
   const modelScreenDeduction = useMemo(() => {
     return (model as any).screenDeduction ?? getModelScreenDeduction(model);
@@ -421,14 +427,14 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
       category: model.category,
       releaseYear: model.releaseYear,
       hasSpen,
-      warrantyAge: isScreenNonOriginal ? 'out_of_warranty' : warrantyAge,
-      deviceAge: isScreenNonOriginal ? 'out_of_warranty' : deviceAge,
+      warrantyAge: isScreenNonOriginal ? 'out_of_warranty' : (hasWarranty === false ? 'out_of_warranty' : (selectedWarrantyAge || 'under_3m')),
+      deviceAge: isScreenNonOriginal ? 'out_of_warranty' : (hasWarranty === false ? 'out_of_warranty' : (selectedWarrantyAge ? (selectedWarrantyAge === '6_to_11m' ? '6_to_12m' : selectedWarrantyAge) : 'under_3m')),
       dualEsim: dualEsim === true,
       screenDeduction: modelScreenDeduction,
       warrantyDeductionPercentage: modelWarrantyDeductionPct,
       supportsWarrantyQuestion: isEligibleForWarranty
     });
-  }, [variant, selectedDefects, model, simType, warrantyAge, deviceAge, dualEsim, hasSpen, isScreenNonOriginal, modelScreenDeduction, modelWarrantyDeductionPct, isEligibleForWarranty]);
+  }, [variant, selectedDefects, model, simType, warrantyAge, deviceAge, dualEsim, hasSpen, isScreenNonOriginal, modelScreenDeduction, modelWarrantyDeductionPct, isEligibleForWarranty, hasWarranty, selectedWarrantyAge]);
 
   // Stable receipt reference code — generated once per wizard session
   const receiptRef = useMemo(() => Math.random().toString(36).substr(2, 6).toUpperCase(), []);
@@ -486,6 +492,54 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
   const [isSubmittingBestPrice, setIsSubmittingBestPrice] = useState(false);
   const [bestPriceSubmitted, setBestPriceSubmitted] = useState(false);
   const [modalStage, setModalStage] = useState<'email' | 'password' | 'signup' | 'otp' | 'forgot_reset'>('email');
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  const handleFirebaseGoogleLoginModal = async () => {
+    setGoogleLoading(true);
+    setModalError('');
+    try {
+      const { token, user: fbUser } = await loginWithGoogle();
+      try {
+        const synced = await syncFirebaseUser(token);
+        if (synced && synced.user) {
+          if (onLoginSuccess) {
+            onLoginSuccess(synced.user);
+          }
+          setIsPriceLocked(false);
+          setLockModalOpen(false);
+          return;
+        }
+      } catch (syncErr) {
+        console.warn('[Firebase Google Auth] Backend sync warning:', syncErr);
+      }
+
+      if (fbUser) {
+        const fallbackUser: ApiUser = {
+          id: fbUser.uid,
+          name: fbUser.displayName || 'Google User',
+          email: fbUser.email || '',
+          phone: fbUser.phoneNumber || null,
+          picture: fbUser.photoURL || null,
+          emailVerified: Boolean(fbUser.emailVerified),
+          hasGoogleLinked: true,
+          hasPassword: false,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        if (onLoginSuccess) {
+          onLoginSuccess(fallbackUser);
+        }
+        setIsPriceLocked(false);
+        setLockModalOpen(false);
+      }
+    } catch (err: any) {
+      if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request') {
+        setModalError(err.message || 'Google sign-in failed. Please try again.');
+      }
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
   const [phoneInput, setPhoneInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
   const [nameInput, setNameInput] = useState('');
@@ -1732,9 +1786,20 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                 {showWarrantyQuestion && (
                   <div className="mt-6 text-left border-t border-ice-border/60 pt-5">
                     <div>
-                      <h4 className="text-sm font-semibold text-slate-900 mb-1">
-                        Is your device under brand warranty?
-                      </h4>
+                      <div className="flex items-center justify-between mb-1">
+                        <h4 className="text-sm font-semibold text-slate-900">
+                          Is your device under brand warranty?
+                        </h4>
+                        {hasWarranty === null ? (
+                          <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                            Required
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
+                            <Check className="w-3 h-3 stroke-[3]" /> Answered
+                          </span>
+                        )}
+                      </div>
                       <p className="text-[11px] text-ink-muted mb-3 font-light">
                         Devices with a valid purchase invoice under brand warranty receive higher valuation payouts.
                       </p>
@@ -1745,10 +1810,6 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           onClick={() => {
                             setHasWarranty(true);
                             setWarrantyStatus('active');
-                            if (warrantyAge === 'out_of_warranty') {
-                              setWarrantyAge('under_3m');
-                              setDeviceAge('under_3m');
-                            }
                           }}
                           className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center gap-3 ${
                             hasWarranty === true
@@ -1768,7 +1829,6 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                                 Valid Bill
                               </span>
                             </div>
-                            
                           </div>
                           <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${
                             hasWarranty === true ? 'bg-emerald-600 text-white' : 'border border-ice-border bg-white'
@@ -1781,6 +1841,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         <div
                           onClick={() => {
                             setHasWarranty(false);
+                            setSelectedWarrantyAge(null);
                             setWarrantyAge('out_of_warranty');
                             setDeviceAge('out_of_warranty');
                             setWarrantyStatus('expired');
@@ -1803,7 +1864,6 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                                 Expired / No Bill
                               </span>
                             </div>
-                            
                           </div>
                           <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${
                             hasWarranty === false ? 'bg-amber-600 text-white' : 'border border-ice-border bg-white'
@@ -1816,56 +1876,82 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                       {/* Sub-duration selection when user selects "Yes, Under Warranty" */}
                       {hasWarranty === true && (
                         <div className="pt-3 border-t border-dashed border-ice-border animate-in fade-in slide-in-from-top-2 duration-200">
-                          <p className="text-xs font-semibold text-ink-navy mb-2.5">
-                            Select device age (with valid bill):
-                          </p>
+                          <div className="flex items-center justify-between mb-2.5">
+                            <p className="text-xs font-semibold text-ink-navy">
+                              Select device age (with valid bill):
+                            </p>
+                            {selectedWarrantyAge === null ? (
+                              <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                                Required
+                              </span>
+                            ) : (
+                              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
+                                <Check className="w-3 h-3 stroke-[3]" /> Selected
+                              </span>
+                            )}
+                          </div>
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                             <div
                               onClick={() => {
+                                setSelectedWarrantyAge('under_3m');
                                 setWarrantyAge('under_3m');
                                 setDeviceAge('under_3m');
                                 setWarrantyStatus('active');
                               }}
                               className={`p-3 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
-                                warrantyAge === 'under_3m'
-                                  ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/30'
+                                selectedWarrantyAge === 'under_3m'
+                                  ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/30 shadow-xs'
                                   : 'border-ice-border bg-canvas-white hover:border-emerald-500/40'
                               }`}
                             >
-                              <h5 className="font-bold text-xs text-ink-navy">Under 3 Months</h5>
-                              
+                              <div className="flex items-center justify-between">
+                                <h5 className="font-bold text-xs text-ink-navy">Under 3 Months</h5>
+                                {selectedWarrantyAge === 'under_3m' && (
+                                  <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[2.5]" />
+                                )}
+                              </div>
                             </div>
 
                             <div
                               onClick={() => {
+                                setSelectedWarrantyAge('3_to_6m');
                                 setWarrantyAge('3_to_6m');
                                 setDeviceAge('3_to_6m');
                                 setWarrantyStatus('active');
                               }}
                               className={`p-3 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
-                                warrantyAge === '3_to_6m'
-                                  ? 'border-blue-500 bg-blue-500/10 ring-1 ring-blue-500/30'
+                                selectedWarrantyAge === '3_to_6m'
+                                  ? 'border-blue-500 bg-blue-500/10 ring-1 ring-blue-500/30 shadow-xs'
                                   : 'border-ice-border bg-canvas-white hover:border-blue-400'
                               }`}
                             >
-                              <h5 className="font-bold text-xs text-ink-navy">3 to 6 Months</h5>
-                              
+                              <div className="flex items-center justify-between">
+                                <h5 className="font-bold text-xs text-ink-navy">3 to 6 Months</h5>
+                                {selectedWarrantyAge === '3_to_6m' && (
+                                  <Check className="w-3.5 h-3.5 text-blue-600 stroke-[2.5]" />
+                                )}
+                              </div>
                             </div>
 
                             <div
                               onClick={() => {
+                                setSelectedWarrantyAge('6_to_11m');
                                 setWarrantyAge('6_to_11m');
                                 setDeviceAge('6_to_12m');
                                 setWarrantyStatus('expiring_soon');
                               }}
                               className={`p-3 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
-                                warrantyAge === '6_to_11m'
-                                  ? 'border-violet-500 bg-violet-500/10 ring-1 ring-violet-500/30'
+                                selectedWarrantyAge === '6_to_11m'
+                                  ? 'border-violet-500 bg-violet-500/10 ring-1 ring-violet-500/30 shadow-xs'
                                   : 'border-ice-border bg-canvas-white hover:border-violet-500/40'
                               }`}
                             >
-                              <h5 className="font-bold text-xs text-ink-navy">6 to 11 Months</h5>
-                              
+                              <div className="flex items-center justify-between">
+                                <h5 className="font-bold text-xs text-ink-navy">6 to 11 Months</h5>
+                                {selectedWarrantyAge === '6_to_11m' && (
+                                  <Check className="w-3.5 h-3.5 text-violet-600 stroke-[2.5]" />
+                                )}
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -1877,9 +1963,20 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                 {/* Physical SIM / eSIM Question — Apple iPhone models only */}
                 {isApple && !isWatch && !isTablet && (
                   <div className="mt-5 text-left border-t border-ice-border/60 pt-5">
-                      <h4 className="text-sm font-semibold text-slate-900 mb-2.5">
-                        Does your phone support physical SIM?
-                      </h4>
+                      <div className="flex items-center justify-between mb-2.5">
+                        <h4 className="text-sm font-semibold text-slate-900">
+                          Does your phone support physical SIM?
+                        </h4>
+                        {dualEsim === null ? (
+                          <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                            Required
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
+                            <Check className="w-3 h-3 stroke-[3]" /> Answered
+                          </span>
+                        )}
+                      </div>
 
                       <div className="grid grid-cols-2 gap-3">
                         <div
@@ -1900,7 +1997,6 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           </div>
                           <div>
                             <h5 className="font-bold text-xs text-ink-navy">Yes</h5>
-                            
                           </div>
                         </div>
 
@@ -1922,10 +2018,9 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           </div>
                           <div>
                             <h5 className="font-bold text-xs text-ink-navy">No</h5>
-                            
+                          </div>
                         </div>
                       </div>
-                    </div>
                   </div>
                 )}
               </motion.div>
@@ -2467,8 +2562,47 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
               )}
 
               {modalStage === 'email' && (
-                /* Stage 1: Email address entry */
-                <form onSubmit={handleEmailSubmit} className="space-y-4">
+                <div className="space-y-4">
+                  {/* Google 1-Click Fast Auth */}
+                  <button
+                    type="button"
+                    onClick={handleFirebaseGoogleLoginModal}
+                    disabled={googleLoading}
+                    className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-white border border-slate-300 hover:border-slate-400 hover:bg-slate-50 text-slate-800 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-xs active:scale-[0.99] disabled:opacity-50 cursor-pointer"
+                  >
+                    {googleLoading ? (
+                      <div className="w-4 h-4 border-2 border-cobalt border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+                        <path
+                          fill="#4285F4"
+                          d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                        />
+                        <path
+                          fill="#34A853"
+                          d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                        />
+                        <path
+                          fill="#FBBC05"
+                          d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                        />
+                        <path
+                          fill="#EA4335"
+                          d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                        />
+                      </svg>
+                    )}
+                    <span>{googleLoading ? 'Connecting to Google...' : 'Continue with Google'}</span>
+                  </button>
+
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 border-t border-slate-200" />
+                    <span className="text-[10px] font-mono tracking-wider text-slate-400 uppercase">or continue with email</span>
+                    <div className="flex-1 border-t border-slate-200" />
+                  </div>
+
+                  {/* Stage 1: Email address entry */}
+                  <form onSubmit={handleEmailSubmit} className="space-y-4">
                   <div>
                     <label htmlFor="modalEmail" className="text-xs font-semibold text-slate-700 block mb-1.5">
                       Enter your email address
@@ -2518,6 +2652,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                     {modalLoading ? 'Checking...' : 'CONTINUE'}
                   </button>
                 </form>
+                </div>
               )}
 
               {modalStage === 'password' && (

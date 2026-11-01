@@ -536,3 +536,42 @@ html {
 .pb-safe-lg {
   padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
 }
+/* ==========================================================================
+   Google reCAPTCHA Badge Styling & Placement
+   ========================================================================== */
+#recaptcha-login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin: 0.5rem auto 0;
+  min-height: 0;
+  transition: all 0.2s ease-in-out;
+}
+
+#recaptcha-login-container:empty {
+  display: none;
+}
+
+/* Ensure inline reCAPTCHA badge is centered and cleanly styled */
+#recaptcha-login-container .grecaptcha-badge,
+.grecaptcha-badge {
+  box-shadow: 0 4px 14px rgba(0, 32, 69, 0.08) !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+}
+
+/* If trapped inside a relative/backdrop-blur container, enforce clean static centering */
+#recaptcha-login-container .grecaptcha-badge {
+  position: static !important;
+  margin: 0 auto !important;
+  display: block !important;
+}
+
+/* If floating directly on document.body, place cleanly at true screen bottom-right */
+body > .grecaptcha-badge {
+  z-index: 9999 !important;
+  bottom: 24px !important;
+  right: 24px !important;
+}

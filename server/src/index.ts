@@ -91,6 +91,7 @@ const ALLOWED_ORIGINS = Array.from(new Set([
 
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
+  crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
   referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
   contentSecurityPolicy: {
     directives: {
@@ -98,6 +99,12 @@ app.use(helmet({
       objectSrc: ["'none'"],
       baseUri: ["'self'"],
       frameAncestors: ["'self'"],
+      frameSrc: [
+        "'self'",
+        'https://accounts.google.com',
+        'https://*.firebaseapp.com',
+        'https://*.google.com',
+      ],
       upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null,
       scriptSrc: [
         "'self'",
@@ -126,6 +133,8 @@ app.use(helmet({
         'http://localhost:*',
         'https://api.emailjs.com',
         'https://accounts.google.com',
+        'https://www.google.com',
+        'https://*.google.com',
         'https://identitytoolkit.googleapis.com',
         'https://securetoken.googleapis.com',
         'https://*.firebaseio.com',

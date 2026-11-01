@@ -62,8 +62,16 @@ function getTransporter() {
   });
 }
 
+function getAdminAlertRecipient(): string {
+  const val = getEnvValue('ADMIN_ALERT_EMAIL') || process.env.ADMIN_ALERT_EMAIL;
+  if (val && val.trim()) {
+    return val.trim();
+  }
+  return 'garvitmadan511@gmail.com, dhruvmehta593@gmail.com';
+}
+
 export async function sendAdminSecurityAlertEmail(event: SecurityEventData): Promise<boolean> {
-  const alertRecipient = process.env.ADMIN_ALERT_EMAIL || 'garvitmadan511@gmail.com';
+  const alertRecipient = getAdminAlertRecipient();
   const transporter = getTransporter();
   let subject = '';
   let badgeColor = '#3b82f6';
