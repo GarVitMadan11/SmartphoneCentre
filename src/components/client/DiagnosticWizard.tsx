@@ -2,8 +2,8 @@ import React, { useState, useMemo, useRef } from 'react';
 import { Model, Variant, getDefectRulesForCategory, DefectRule, isAppleDevice, isSmartwatchDevice, isTabletDevice, hasSpenSupport, getBiometricType, getDeviceImage, getModelScreenDeduction, getModelWarrantyDeductionPercentage } from '../../data/mockDatabase';
 import { calculateValuation } from '../../utils/valuation';
 import { type AgeFactorKey } from '../../data/pricingRulesConfig';
-import { 
-  ArrowLeft, Check, CheckCircle2, ChevronRight, Activity, 
+import {
+  ArrowLeft, Check, CheckCircle2, ChevronRight, Activity,
   Smartphone, Box, ShieldCheck, Printer, Receipt,
   X, Lock, Eye, EyeOff, AlertCircle, Mail, User,
   Phone, MessageSquare, ExternalLink, Headphones, Send, Bookmark,
@@ -22,140 +22,140 @@ import { MobileBottomHUD } from './wizard/MobileBottomHUD';
 
 const getEngineeringLabel = (description: string) => {
   const mapping: { [key: string]: string } = {
-    'Cracked Screen / Back Glass':       'Screen Restoration Fee',
-    'Cracked Front Screen Glass':        'Screen Restoration Fee',
-    'Back Glass Broken / Cracked':       'Rear Glass Restoration Fee',
-    'Minor / Hairline Scratches':        'Surface Micro-Buffing Fee',
-    'Front Glass Scratches / Bubbles':   'Glass Micro-Polishing Fee',
-    'Screen Burn-in / Lines':            'Display Panel Replacement Fee',
-    'Touch / Swipe Unresponsive':        'Digitizer / Touch Layer Repair',
-    'True Tone Not Working':             'Original Display Certification Fee',
-    'Replaced / Non-Original Screen':    'Locally Replaced Screen Deduction',
+    'Cracked Screen / Back Glass': 'Screen Restoration Fee',
+    'Cracked Front Screen Glass': 'Screen Restoration Fee',
+    'Back Glass Broken / Cracked': 'Rear Glass Restoration Fee',
+    'Minor / Hairline Scratches': 'Surface Micro-Buffing Fee',
+    'Front Glass Scratches / Bubbles': 'Glass Micro-Polishing Fee',
+    'Screen Burn-in / Lines': 'Display Panel Replacement Fee',
+    'Touch / Swipe Unresponsive': 'Digitizer / Touch Layer Repair',
+    'True Tone Not Working': 'Original Display Certification Fee',
+    'Replaced / Non-Original Screen': 'Locally Replaced Screen Deduction',
     'Inner Display Crease Damage / Bubbling': 'Flexible Folding Display Panel & Crease Assembly Repair',
-    'Display Calibration / Tint Issue':  'Display Panel Recalibration Levy',
+    'Display Calibration / Tint Issue': 'Display Panel Recalibration Levy',
     'Hinge Faulty / Does Not Fold Flat': 'Hinge Mechanism & Folding Chassis Restoration',
-    'Dented or Bent Frame':              'Chassis Structure Re-alignment',
-    'Scuffed Frame / Normal Wear':       'Frame Bead-Blasting & Refinishing',
-    'Air Pass / Waterproof Seal Fail':   'IP Seal & Gasket Replacement',
-    'Side Buttons Faulty':               'Button Flex Cable Repair Fee',
-    'Screws Stripped / Missing':         'Pentalobe Hardware Replacement',
-    'Bottom Screws Stripped / Missing':  'Chassis Hardware Replacement',
-    'Camera Faulty / Lens Blur':         'Optical Sensor Recalibration',
-    'Camera Glass Cracked / Chipped':    'Camera Lens Glass Replacement Fee',
-    'Battery Health < 80%':              'Battery Module Replacement',
+    'Dented or Bent Frame': 'Chassis Structure Re-alignment',
+    'Scuffed Frame / Normal Wear': 'Frame Bead-Blasting & Refinishing',
+    'Air Pass / Waterproof Seal Fail': 'IP Seal & Gasket Replacement',
+    'Side Buttons Faulty': 'Button Flex Cable Repair Fee',
+    'Screws Stripped / Missing': 'Pentalobe Hardware Replacement',
+    'Bottom Screws Stripped / Missing': 'Chassis Hardware Replacement',
+    'Camera Faulty / Lens Blur': 'Optical Sensor Recalibration',
+    'Camera Glass Cracked / Chipped': 'Camera Lens Glass Replacement Fee',
+    'Battery Health < 80%': 'Battery Module Replacement',
     'Battery Health < 80% (Service Alert)': 'Battery Module Replacement Fee',
     'Battery Health < 80% or Service Alert': 'Battery Module Replacement Fee',
     'Battery Faulty / Rapid Drain / Sudden Shutdown': 'Battery Module Replacement Fee',
-    'Non-Genuine Battery Warning':       'Original Battery Compliance Levy',
+    'Non-Genuine Battery Warning': 'Original Battery Compliance Levy',
     'Battery Replaced / Duplicate Battery': 'Non-Original Battery Fee',
-    'Non-OEM / Battery Warning Alert':   'Non-Original Battery Warning Levy',
-    'Network, Calling & SIM Issues':     'Cellular Modem / SIM Tray Repair',
-    'Wi-Fi & Bluetooth Issues':          'Antenna & Wireless Module Repair',
-    '3uTools Serial Mismatch':           'Counterfeit Parts Detection Levy',
-    'PC Diagnostic Serial Mismatch':     'Hardware Serial Mismatch Levy',
-    'Speakers / Microphone Faulty':      'Audio Assembly Replacement Fee',
-    'Auto-Restart / Unstable Device':    'PMIC / Board-Level Stabilisation',
-    'Missing Original Box':              'Original Retail Box Missing Deduction',
-    'Missing Original Charger / Cable':  'Original Charger Missing Deduction',
-    'Missing Original Charging Cable':   'Original Charging Cable Missing Deduction',
-    'Missing Original S-Pen':            'Original S-Pen Stylus Missing Deduction',
-    'Missing Original S-Pen / Stylus':   'Original S-Pen Stylus Missing Deduction',
-    'Missing Apple Pencil':              'Apple Pencil Stylus Missing Deduction',
-    'Missing Bill / Customer Photo ID':  'Legal Compliance Documentation Fee',
+    'Non-OEM / Battery Warning Alert': 'Non-Original Battery Warning Levy',
+    'Network, Calling & SIM Issues': 'Cellular Modem / SIM Tray Repair',
+    'Wi-Fi & Bluetooth Issues': 'Antenna & Wireless Module Repair',
+    '3uTools Serial Mismatch': 'Counterfeit Parts Detection Levy',
+    'PC Diagnostic Serial Mismatch': 'Hardware Serial Mismatch Levy',
+    'Speakers / Microphone Faulty': 'Audio Assembly Replacement Fee',
+    'Auto-Restart / Unstable Device': 'PMIC / Board-Level Stabilisation',
+    'Missing Original Box': 'Original Retail Box Missing Deduction',
+    'Missing Original Charger / Cable': 'Original Charger Missing Deduction',
+    'Missing Original Charging Cable': 'Original Charging Cable Missing Deduction',
+    'Missing Original S-Pen': 'Original S-Pen Stylus Missing Deduction',
+    'Missing Original S-Pen / Stylus': 'Original S-Pen Stylus Missing Deduction',
+    'Missing Apple Pencil': 'Apple Pencil Stylus Missing Deduction',
+    'Missing Bill / Customer Photo ID': 'Legal Compliance Documentation Fee',
     'Single SIM Regional Variant Adjustment': 'Single SIM Variant Engineering Adjustment',
     'Dual eSIM Configuration Deduction (iPhone 14–16 Pro Series)': 'US Model Dual eSIM Architecture Adjustment',
     'Dual eSIM Configuration Deduction (iPhone 17 Pro Series)': 'US Model Dual eSIM Architecture Adjustment',
     'Dual eSIM Configuration Deduction (iPhone 17–18 Pro Series)': 'US Model Dual eSIM Architecture Adjustment',
     'Dual eSIM Configuration Deduction (iPhone 17–18 Series)': 'US Model Dual eSIM Architecture Adjustment',
     'Dual eSIM Configuration Deduction (Apple iPhone Series)': 'US Model Dual eSIM Architecture Adjustment',
-    'Device Does Not Turn On':           'Board-Level Hardware Failure',
-    'iCloud / Apple ID Locked':                         'Activation Lock — Zero Resale Value',
+    'Device Does Not Turn On': 'Board-Level Hardware Failure',
+    'iCloud / Apple ID Locked': 'Activation Lock — Zero Resale Value',
     'Google Account / Factory Reset Protection Locked': 'Factory Reset Protection Lock — Zero Resale Value',
-    'Biometrics Faulty (Face ID)':                      'TrueDepth Sensor Array Security Fee',
-    'Biometrics Faulty (Touch ID)':                     'Touch ID Biometric Sensor Security Fee',
-    'Biometrics Faulty (Fingerprint / Face Unlock)':    'Biometric Sensor Security Fee',
-    'Biometrics Faulty (Fingerprint Scanner)':          'Biometric Sensor Security Fee',
-    'Face ID (TrueDepth Sensor) Faulty':                'TrueDepth Sensor Array Security Fee',
-    'Touch ID (Home Button) Sensor Faulty':             'Touch ID Biometric Sensor Security Fee',
-    'Fingerprint Scanner / Biometrics Faulty':          'Biometric Sensor Security Fee',
-    'Battery Health 80% – 85%':                         'Battery Capacity Degradation Fee',
-    'Original Battery Health 80% – 85%':                'Battery Capacity Degradation Fee',
-    'Battery Health 80% – 85% (Moderate Drain)':        'Battery Capacity Degradation Fee',
-    'Battery Health < 80% / Heavy Drain':               'Battery Module Replacement Fee',
-    
+    'Biometrics Faulty (Face ID)': 'TrueDepth Sensor Array Security Fee',
+    'Biometrics Faulty (Touch ID)': 'Touch ID Biometric Sensor Security Fee',
+    'Biometrics Faulty (Fingerprint / Face Unlock)': 'Biometric Sensor Security Fee',
+    'Biometrics Faulty (Fingerprint Scanner)': 'Biometric Sensor Security Fee',
+    'Face ID (TrueDepth Sensor) Faulty': 'TrueDepth Sensor Array Security Fee',
+    'Touch ID (Home Button) Sensor Faulty': 'Touch ID Biometric Sensor Security Fee',
+    'Fingerprint Scanner / Biometrics Faulty': 'Biometric Sensor Security Fee',
+    'Battery Health 80% – 85%': 'Battery Capacity Degradation Fee',
+    'Original Battery Health 80% – 85%': 'Battery Capacity Degradation Fee',
+    'Battery Health 80% – 85% (Moderate Drain)': 'Battery Capacity Degradation Fee',
+    'Battery Health < 80% / Heavy Drain': 'Battery Module Replacement Fee',
+
     // Smartwatch specific engineering fee labels
-    'Cracked Watch Glass / Sapphire Dial':               'Watch Glass / Sapphire Dial Restoration',
-    'Cracked Super AMOLED / Gorilla Glass':              'Super AMOLED Glass Panel Restoration',
-    'Glass Lens & Bezel Micro-Scratches':                'Watch Glass & Bezel Micro-Polishing',
-    'Always-On Display Burn-in / Lines':                 'Watch Display Module Replacement',
-    'Touchscreen / Touch Bezel Unresponsive':            'Digitizer / Rotary Touch Repair',
-    'Titanium / Aluminum Casing Dented':                 'Titanium Casing Structural Re-alignment',
-    'Armor Aluminum / Stainless Casing Dented':          'Armor Aluminum Casing Refinishing',
-    'Digital Crown / Action Button Faulty':              'Digital Crown & Action Flex Repair',
-    'Rotating Bezel / Home Button Faulty':               'Rotary Bezel Mechanism Repair',
-    'Water Resistance Seal Fail (50m/100m)':             '50m/100m Swim Gasket & Seal Replacement',
+    'Cracked Watch Glass / Sapphire Dial': 'Watch Glass / Sapphire Dial Restoration',
+    'Cracked Super AMOLED / Gorilla Glass': 'Super AMOLED Glass Panel Restoration',
+    'Glass Lens & Bezel Micro-Scratches': 'Watch Glass & Bezel Micro-Polishing',
+    'Always-On Display Burn-in / Lines': 'Watch Display Module Replacement',
+    'Touchscreen / Touch Bezel Unresponsive': 'Digitizer / Rotary Touch Repair',
+    'Titanium / Aluminum Casing Dented': 'Titanium Casing Structural Re-alignment',
+    'Armor Aluminum / Stainless Casing Dented': 'Armor Aluminum Casing Refinishing',
+    'Digital Crown / Action Button Faulty': 'Digital Crown & Action Flex Repair',
+    'Rotating Bezel / Home Button Faulty': 'Rotary Bezel Mechanism Repair',
+    'Water Resistance Seal Fail (50m/100m)': '50m/100m Swim Gasket & Seal Replacement',
     'Original Watch Band / Strap Missing or Heavy Damage': 'Original Watch Band Missing Deduction',
-    'PPG Heart Rate & SpO2 Sensor Faulty':               'PPG Health Sensor Array Recalibration',
-    'ECG App / Electrical Heart Sensor Fail':            'ECG Electrode Controller Compliance Levy',
-    'ECG / BIA Body Composition Sensor Fail':            'BIA Body Composition Sensor Recalibration',
-    'Fall & Crash Detection Sensors Faulty':             'Motion Gyroscope & Fall Sensor Repair',
-    'Speaker, Mic or Emergency Siren Faulty':            'Audio & Emergency Siren Assembly Fee',
-    'Speaker / Microphone Call Audio Faulty':            'Speaker & Microphone Assembly Fee',
-    'Wireless Magnetic Receiver Charge Faulty':          'Inductive Charging Receiver Coil Repair',
-    'Cellular / LTE eSIM Functionality Faulty':          'eSIM Modem Transceiver Recalibration',
-    'Wi-Fi, Bluetooth & Dual-Frequency GPS Fail':        'Wireless Antenna & GPS Array Repair',
-    'Missing Original Magnetic Fast Charging Puck':      'Original Magnetic Fast Charger Missing Deduction',
-    'Missing Original Retail Watch Box':                 'Original Watch Retail Box Missing Deduction',
-    'Smartwatch Does Not Turn On':                       'Watch Logic Board Hardware Failure',
-    'iCloud / Apple Watch Activation Locked':            'Activation Lock — Zero Resale Value',
-    'Samsung Account / Google Knox Lock Active':         'Knox Lock — Zero Resale Value',
+    'PPG Heart Rate & SpO2 Sensor Faulty': 'PPG Health Sensor Array Recalibration',
+    'ECG App / Electrical Heart Sensor Fail': 'ECG Electrode Controller Compliance Levy',
+    'ECG / BIA Body Composition Sensor Fail': 'BIA Body Composition Sensor Recalibration',
+    'Fall & Crash Detection Sensors Faulty': 'Motion Gyroscope & Fall Sensor Repair',
+    'Speaker, Mic or Emergency Siren Faulty': 'Audio & Emergency Siren Assembly Fee',
+    'Speaker / Microphone Call Audio Faulty': 'Speaker & Microphone Assembly Fee',
+    'Wireless Magnetic Receiver Charge Faulty': 'Inductive Charging Receiver Coil Repair',
+    'Cellular / LTE eSIM Functionality Faulty': 'eSIM Modem Transceiver Recalibration',
+    'Wi-Fi, Bluetooth & Dual-Frequency GPS Fail': 'Wireless Antenna & GPS Array Repair',
+    'Missing Original Magnetic Fast Charging Puck': 'Original Magnetic Fast Charger Missing Deduction',
+    'Missing Original Retail Watch Box': 'Original Watch Retail Box Missing Deduction',
+    'Smartwatch Does Not Turn On': 'Watch Logic Board Hardware Failure',
+    'iCloud / Apple Watch Activation Locked': 'Activation Lock — Zero Resale Value',
+    'Samsung Account / Google Knox Lock Active': 'Knox Lock — Zero Resale Value',
 
     // Tablet specific engineering fee labels
-    'Tablet Does Not Turn On':                           'Logic Board Hardware Failure',
-    'Cellular Network Not Working':                      'Baseband Cellular Modem Repair',
-    'SIM Tray Missing or Damaged':                       'SIM Tray Hardware Replacement',
-    'Touch Screen Not Working Properly':                 'Digitizer Layer Replacement',
-    'Screen Replaced at Local Shop (Non-Original)':      'Locally Replaced Screen Deduction',
-    '1-2 Scratches on Screen':                           'Display Glass Micro-Polishing',
-    'More Than 2 Scratches on Screen':                   'Display Surface Resurfacing Fee',
-    'Chipped Outside Display Area':                      'Bevel Edge Glass Restoration',
-    'Screen Cracked / Glass Broken':                     'Display Glass Restoration Fee',
-    'Minor Discoloration on Screen':                     'Color Profile Recalibration Fee',
-    'Major Discoloration on Screen':                     'Display Panel Replacement Fee',
-    'Screen Shading / Fading':                           'Backlight Uniformity Restoration',
-    '1-2 Very Small White Spots on Screen':              'Diffuser Pressure Spot Repair',
-    '3 or More White Spots / Coloured Spots':            'Sub-Pixel Defect Recovery Fee',
-    'Lines Visible on Screen':                           'Display Driver IC / Panel Replacement',
-    'Light Leaks Around Edges of Display':               'Bezel Optical Gasket Re-sealing',
-    'Front Camera Not Working':                          'Front Camera Sensor Recalibration',
-    'Back Camera Not Working':                           'Rear Camera Sensor Replacement',
-    'Camera Glass Broken / Missing':                     'Camera Lens Glass Replacement',
-    'Finger / Touch ID Sensor Not Working':              'Biometric Touch ID Security Fee',
-    'Face Sensor (Face ID) Not Working':                 'TrueDepth Sensor Array Security Fee',
-    'Wi-Fi Not Working':                                 'Wi-Fi Transceiver Module Repair',
-    'GPS Not Working':                                   'GPS Satellite Receiver Repair',
-    'Bluetooth Not Working':                             'Bluetooth Antenna Array Repair',
-    'Audio Jack Not Working':                            '3.5mm Headphone Jack Assembly Fee',
-    'Volume Button Missing / Not Working':               'Volume Button Flex Cable Repair',
-    'Power Button Broken / Not Working / Missing':       'Power Button Hardware Replacement',
-    'Charging Defect; Unable to Charge':                 'USB-C / Power Port Repair',
-    'Battery Faulty or Not Working':                     'Battery Module Replacement',
-    'Microphone Not Working':                            'Microphone Array Assembly Fee',
-    'Speaker Not Working; Faulty or Cracked Sound':      'Speaker Chamber Replacement Fee',
-    '1-2 Scratches on Body':                             'Body Micro-Buffing & Clean Fee',
-    'More Than 2 Scratches on Body':                     'Chassis Surface Bead-Blasting',
-    '1-2 Minor Dents on Body':                           'Chassis Edge Re-contouring',
-    'Major Dent(s) or More Than 2 Dents':                'Chassis Structural Re-alignment',
-    'Body Bent':                                         'Chassis Unbending & Frame Trueing',
-    'Loose Screen':                                      'Display Frame Adhesive Re-bonding',
-    'Both Bent and Loose Screen':                        'Chassis Frame & Display Realignment',
-    'Visible Gap Between Body and Back Panel':           'Enclosure Seam Re-alignment',
-    'Back Panel Chipped on Edges':                       'Back Panel Edge Restoration',
-    'Back Panel Broken / Shattered':                     'Rear Enclosure Replacement Fee',
-    'Back Panel Missing':                                'Chassis Housing Replacement Fee',
-    'Missing Original Tablet Charger':                   'Original Tablet Fast Charger Missing Deduction',
-    'Missing Box With Same IMEI / Serial':               'Original Retail Box Missing Deduction',
-    'Missing GST Valid Bill With Same IMEI / Serial':     'GST Tax Compliance Verification Fee'
+    'Tablet Does Not Turn On': 'Logic Board Hardware Failure',
+    'Cellular Network Not Working': 'Baseband Cellular Modem Repair',
+    'SIM Tray Missing or Damaged': 'SIM Tray Hardware Replacement',
+    'Touch Screen Not Working Properly': 'Digitizer Layer Replacement',
+    'Screen Replaced at Local Shop (Non-Original)': 'Locally Replaced Screen Deduction',
+    '1-2 Scratches on Screen': 'Display Glass Micro-Polishing',
+    'More Than 2 Scratches on Screen': 'Display Surface Resurfacing Fee',
+    'Chipped Outside Display Area': 'Bevel Edge Glass Restoration',
+    'Screen Cracked / Glass Broken': 'Display Glass Restoration Fee',
+    'Minor Discoloration on Screen': 'Color Profile Recalibration Fee',
+    'Major Discoloration on Screen': 'Display Panel Replacement Fee',
+    'Screen Shading / Fading': 'Backlight Uniformity Restoration',
+    '1-2 Very Small White Spots on Screen': 'Diffuser Pressure Spot Repair',
+    '3 or More White Spots / Coloured Spots': 'Sub-Pixel Defect Recovery Fee',
+    'Lines Visible on Screen': 'Display Driver IC / Panel Replacement',
+    'Light Leaks Around Edges of Display': 'Bezel Optical Gasket Re-sealing',
+    'Front Camera Not Working': 'Front Camera Sensor Recalibration',
+    'Back Camera Not Working': 'Rear Camera Sensor Replacement',
+    'Camera Glass Broken / Missing': 'Camera Lens Glass Replacement',
+    'Finger / Touch ID Sensor Not Working': 'Biometric Touch ID Security Fee',
+    'Face Sensor (Face ID) Not Working': 'TrueDepth Sensor Array Security Fee',
+    'Wi-Fi Not Working': 'Wi-Fi Transceiver Module Repair',
+    'GPS Not Working': 'GPS Satellite Receiver Repair',
+    'Bluetooth Not Working': 'Bluetooth Antenna Array Repair',
+    'Audio Jack Not Working': '3.5mm Headphone Jack Assembly Fee',
+    'Volume Button Missing / Not Working': 'Volume Button Flex Cable Repair',
+    'Power Button Broken / Not Working / Missing': 'Power Button Hardware Replacement',
+    'Charging Defect; Unable to Charge': 'USB-C / Power Port Repair',
+    'Battery Faulty or Not Working': 'Battery Module Replacement',
+    'Microphone Not Working': 'Microphone Array Assembly Fee',
+    'Speaker Not Working; Faulty or Cracked Sound': 'Speaker Chamber Replacement Fee',
+    '1-2 Scratches on Body': 'Body Micro-Buffing & Clean Fee',
+    'More Than 2 Scratches on Body': 'Chassis Surface Bead-Blasting',
+    '1-2 Minor Dents on Body': 'Chassis Edge Re-contouring',
+    'Major Dent(s) or More Than 2 Dents': 'Chassis Structural Re-alignment',
+    'Body Bent': 'Chassis Unbending & Frame Trueing',
+    'Loose Screen': 'Display Frame Adhesive Re-bonding',
+    'Both Bent and Loose Screen': 'Chassis Frame & Display Realignment',
+    'Visible Gap Between Body and Back Panel': 'Enclosure Seam Re-alignment',
+    'Back Panel Chipped on Edges': 'Back Panel Edge Restoration',
+    'Back Panel Broken / Shattered': 'Rear Enclosure Replacement Fee',
+    'Back Panel Missing': 'Chassis Housing Replacement Fee',
+    'Missing Original Tablet Charger': 'Original Tablet Fast Charger Missing Deduction',
+    'Missing Box With Same IMEI / Serial': 'Original Retail Box Missing Deduction',
+    'Missing GST Valid Bill With Same IMEI / Serial': 'GST Tax Compliance Verification Fee'
   };
   return mapping[description] || description;
 };
@@ -342,7 +342,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
           return;
         }
         sessionStorage.setItem(sessionKey, '1');
-      } catch {}
+      } catch { }
       stepTwoLeadSentRef.current = sessionKey;
 
       sendStepLeadAlertApi({
@@ -932,8 +932,8 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
               <p className="text-xs text-slate-500 font-normal mb-6 leading-relaxed">
                 {criticalModal.type === 'icloud'
                   ? (isApple
-                      ? 'Devices linked to an active Apple ID or Find My cannot be reset or transferred for trade-in. Please sign out in Settings > [Your Name] before continuing, or proceed if this device cannot be unlocked.'
-                      : 'Devices with active Google Factory Reset Protection (FRP) cannot be reactivated by a new owner. Please remove your account in Settings before trading in.')
+                    ? 'Devices linked to an active Apple ID or Find My cannot be reset or transferred for trade-in. Please sign out in Settings > [Your Name] before continuing, or proceed if this device cannot be unlocked.'
+                    : 'Devices with active Google Factory Reset Protection (FRP) cannot be reactivated by a new owner. Please remove your account in Settings before trading in.')
                   : 'Devices that do not power on, are stuck in a boot loop, or have severe liquid damage cannot be verified for trade-in value.'}
               </p>
               <div className="grid grid-cols-2 gap-3">
@@ -962,109 +962,108 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
         {/* Left Column (Sticky Desktop Sidebar / Mobile Top Header): Quotation & Stepper Progress (Hidden on Review/Receipt) */}
         {step < reviewStepIndex && (
           <div className="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-24 space-y-4">
-          <div className="bg-white border border-ice-border rounded-xl p-3 sm:p-5 shadow-xs sm:shadow-sm space-y-2.5 sm:space-y-4 text-left">
-            {/* Top Header Row: Device Info + Live Payout HUD (on sm/tablet) */}
-            <div className="flex flex-row sm:items-center justify-between gap-3 sm:gap-4 pb-2.5 sm:pb-4 border-b border-ice-border/60">
-              <div className="flex items-center gap-3 sm:gap-3.5 min-w-0">
-                <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl bg-slate-50 p-1 border border-slate-200 flex items-center justify-center flex-shrink-0 shadow-xs">
-                  <img 
-                    src={getDeviceImage(model.id, model.brandId, variant?.color, model.imageUrl)} 
-                    alt={model.name} 
-                    className="w-full h-full object-contain" 
-                  />
-                </div>
+            <div className="bg-white border border-ice-border rounded-xl p-3 sm:p-5 shadow-xs sm:shadow-sm space-y-2.5 sm:space-y-4 text-left">
+              {/* Top Header Row: Device Info + Live Payout HUD (on sm/tablet) */}
+              <div className="flex flex-row sm:items-center justify-between gap-3 sm:gap-4 pb-2.5 sm:pb-4 border-b border-ice-border/60">
+                <div className="flex items-center gap-3 sm:gap-3.5 min-w-0">
+                  <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl bg-slate-50 p-1 border border-slate-200 flex items-center justify-center flex-shrink-0 shadow-xs">
+                    <img
+                      src={getDeviceImage(model.id, model.brandId, variant?.color, model.imageUrl)}
+                      alt={model.name}
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
 
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                    <h2 className="font-extrabold text-slate-950 text-sm sm:text-xl tracking-tight truncate">{model.name}</h2>
-                    <span className="text-xs font-medium bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-md border border-slate-200 flex-shrink-0">
-                      {variant.storageGb >= 1024 ? `${variant.storageGb / 1024}TB` : `${variant.storageGb}GB`}
-                    </span>
-                    {isTablet && variant.ramGb && (
-                      <span className="text-xs font-medium bg-blue-50 text-blue-700 px-2.5 py-0.5 rounded-md border border-blue-200 flex-shrink-0">
-                        {variant.ramGb}GB RAM
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                      <h2 className="font-extrabold text-slate-950 text-sm sm:text-xl tracking-tight truncate">{model.name}</h2>
+                      <span className="text-xs font-medium bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-md border border-slate-200 flex-shrink-0">
+                        {variant.storageGb >= 1024 ? `${variant.storageGb / 1024}TB` : `${variant.storageGb}GB`}
                       </span>
-                    )}
-                    {isTablet && (
-                      <span className={`text-xs font-medium px-2.5 py-0.5 rounded-md border flex-shrink-0 ${
-                        variant.connectivity === 'cellular' || variant.color?.toLowerCase().includes('cellular')
+                      {isTablet && variant.ramGb && (
+                        <span className="text-xs font-medium bg-blue-50 text-blue-700 px-2.5 py-0.5 rounded-md border border-blue-200 flex-shrink-0">
+                          {variant.ramGb}GB RAM
+                        </span>
+                      )}
+                      {isTablet && (
+                        <span className={`text-xs font-medium px-2.5 py-0.5 rounded-md border flex-shrink-0 ${variant.connectivity === 'cellular' || variant.color?.toLowerCase().includes('cellular')
                           ? 'bg-purple-50 text-purple-800 border-purple-200'
                           : 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                      }`}>
-                        {variant.connectivity === 'cellular' || variant.color?.toLowerCase().includes('cellular')
-                          ? 'Wi-Fi + Cellular'
-                          : 'Wi-Fi Only'}
-                      </span>
-                    )}
+                          }`}>
+                          {variant.connectivity === 'cellular' || variant.color?.toLowerCase().includes('cellular')
+                            ? 'Wi-Fi + Cellular'
+                            : 'Wi-Fi Only'}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Real-Time Live Payout HUD Badge (Mobile/Tablet < lg) */}
-              {step < reviewStepIndex && (
-                <div className="hidden sm:flex lg:hidden items-center gap-3 bg-slate-50 border border-slate-200 px-3.5 py-2 rounded-xl flex-shrink-0 transition-all">
-                  <div>
-                    <div className="flex items-center justify-between gap-2 mb-0.5">
-                      <span className="text-xs font-medium text-slate-500">
-                        Estimated Payout
-                      </span>
-                      <PriceDeltaBadge currentPrice={valuation.finalPrice} disabled={valuation.isCritical} />
-                    </div>
-                    <div className="flex items-center gap-2.5 mt-0.5">
-                      <AnimatedPrice
-                        value={valuation.finalPrice}
-                        isMasked={false}
-                        isCritical={valuation.isCritical}
-                        className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight"
-                      />
+                {/* Real-Time Live Payout HUD Badge (Mobile/Tablet < lg) */}
+                {step < reviewStepIndex && (
+                  <div className="hidden sm:flex lg:hidden items-center gap-3 bg-slate-50 border border-slate-200 px-3.5 py-2 rounded-xl flex-shrink-0 transition-all">
+                    <div>
+                      <div className="flex items-center justify-between gap-2 mb-0.5">
+                        <span className="text-xs font-medium text-slate-500">
+                          Estimated Payout
+                        </span>
+                        <PriceDeltaBadge currentPrice={valuation.finalPrice} disabled={valuation.isCritical} />
+                      </div>
+                      <div className="flex items-center gap-2.5 mt-0.5">
+                        <AnimatedPrice
+                          value={valuation.finalPrice}
+                          isMasked={false}
+                          isCritical={valuation.isCritical}
+                          className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight"
+                        />
+                      </div>
                     </div>
                   </div>
+                )}
+              </div>
+
+              {/* Desktop Dedicated Estimated Payout Card */}
+              {step < reviewStepIndex && (
+                <div className="hidden lg:block bg-slate-50 border border-slate-200/90 p-4 rounded-xl">
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <span className="text-xs font-semibold text-slate-500">
+                      Estimated Payout
+                    </span>
+                    <PriceDeltaBadge currentPrice={valuation.finalPrice} disabled={valuation.isCritical} />
+                  </div>
+                  <div className="flex items-baseline gap-2 mt-1">
+                    <AnimatedPrice
+                      value={valuation.finalPrice}
+                      isMasked={false}
+                      isCritical={valuation.isCritical}
+                      className="text-3xl font-bold text-slate-900 tracking-tight"
+                    />
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Based on declared device condition
+                  </p>
                 </div>
               )}
-            </div>
 
-            {/* Desktop Dedicated Estimated Payout Card */}
-            {step < reviewStepIndex && (
-              <div className="hidden lg:block bg-slate-50 border border-slate-200/90 p-4 rounded-xl">
-                <div className="flex items-center justify-between gap-2 mb-1">
-                  <span className="text-xs font-semibold text-slate-500">
-                    Estimated Payout
+              {/* Desktop Stepper Progress Rail (Vertical List on lg:) */}
+              <div className="hidden lg:block pt-2">
+                <div className="flex items-center justify-between mb-2.5 px-1">
+                  <span className="text-xs font-semibold text-slate-600">
+                    Evaluation Steps
                   </span>
-                  <PriceDeltaBadge currentPrice={valuation.finalPrice} disabled={valuation.isCritical} />
+                  <span className="text-xs text-slate-500 font-medium">
+                    {Math.min(step + 1, reviewStepIndex + 1)} of {reviewStepIndex + 1}
+                  </span>
                 </div>
-                <div className="flex items-baseline gap-2 mt-1">
-                  <AnimatedPrice
-                    value={valuation.finalPrice}
-                    isMasked={false}
-                    isCritical={valuation.isCritical}
-                    className="text-3xl font-bold text-slate-900 tracking-tight"
-                  />
-                </div>
-                <p className="text-xs text-slate-500 mt-1">
-                  Based on declared device condition
-                </p>
-              </div>
-            )}
 
-            {/* Desktop Stepper Progress Rail (Vertical List on lg:) */}
-            <div className="hidden lg:block pt-2">
-              <div className="flex items-center justify-between mb-2.5 px-1">
-                <span className="text-xs font-semibold text-slate-600">
-                  Evaluation Steps
-                </span>
-                <span className="text-xs text-slate-500 font-medium">
-                  {Math.min(step + 1, reviewStepIndex + 1)} of {reviewStepIndex + 1}
-                </span>
-              </div>
+                <div className="space-y-1">
+                  {stepsList.map((_s, idx) => {
+                    const isCompleted = step > idx;
+                    const isActive = step === idx;
 
-              <div className="space-y-1">
-                {stepsList.map((_s, idx) => {
-                  const isCompleted = step > idx;
-                  const isActive = step === idx;
-
-                  const stepLabels = isTablet
-                    ? ['Core Check', 'Screen & Touch', 'Hardware & Sensors', 'Body & Frame', 'Accessories & Age', 'Review Summary']
-                    : [
+                    const stepLabels = isTablet
+                      ? ['Core Check', 'Screen & Touch', 'Hardware & Sensors', 'Body & Frame', 'Accessories & Age', 'Review Summary']
+                      : [
                         'Boot & Power',
                         'Display & Screen',
                         'Body & Frame',
@@ -1074,70 +1073,67 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         'Review Summary'
                       ];
 
-                  return (
-                    <div
-                      key={idx}
-                      onClick={() => isCompleted && setStep(idx)}
-                      className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                        isActive
+                    return (
+                      <div
+                        key={idx}
+                        onClick={() => isCompleted && setStep(idx)}
+                        className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive
                           ? 'bg-blue-50 text-blue-900 font-semibold'
                           : isCompleted
-                          ? 'text-slate-700 hover:bg-slate-50 cursor-pointer'
-                          : 'text-slate-400 select-none'
-                      }`}
-                    >
-                      <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs transition-colors flex-shrink-0 ${
-                        isCompleted
+                            ? 'text-slate-700 hover:bg-slate-50 cursor-pointer'
+                            : 'text-slate-400 select-none'
+                          }`}
+                      >
+                        <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs transition-colors flex-shrink-0 ${isCompleted
                           ? 'bg-emerald-600 text-white'
                           : isActive
-                          ? 'bg-blue-600 text-white font-semibold'
-                          : 'border border-slate-300 text-slate-400 bg-white'
-                      }`}>
-                        {isCompleted ? <Check className="w-3 h-3 stroke-[2.5]" /> : idx + 1}
+                            ? 'bg-blue-600 text-white font-semibold'
+                            : 'border border-slate-300 text-slate-400 bg-white'
+                          }`}>
+                          {isCompleted ? <Check className="w-3 h-3 stroke-[2.5]" /> : idx + 1}
+                        </div>
+                        <span className={`text-xs flex-1 truncate ${isActive ? 'font-semibold text-blue-900' : isCompleted ? 'font-medium text-slate-700' : 'text-slate-400'
+                          }`}>
+                          {stepLabels[idx]}
+                        </span>
                       </div>
-                      <span className={`text-xs flex-1 truncate ${
-                        isActive ? 'font-semibold text-blue-900' : isCompleted ? 'font-medium text-slate-700' : 'text-slate-400'
-                      }`}>
-                        {stepLabels[idx]}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Mobile / Tablet Horizontal Stepper Progress Indicator (Hidden on lg:) */}
-            <div className="w-full lg:hidden">
-              {/* Mobile Stepper Progress Bar */}
-              <div className="flex sm:hidden items-center gap-3">
-                <span className="text-xs text-slate-700 font-medium flex-shrink-0">
-                  Step {Math.min(step + 1, 7)}/7: {stepsList[Math.min(step, 6)]?.title}
-                </span>
-                <div className="flex-1 h-2.5 rounded-full bg-slate-200 overflow-hidden">
-                  <div
-                    className="h-full bg-blue-600 transition-all duration-300 rounded-full"
-                    style={{ width: `${Math.min(((step + 1) / 7) * 100, 100)}%` }}
-                  />
+                    );
+                  })}
                 </div>
               </div>
 
-              {/* Tablet 7-Step Horizontal Stepper with Connecting Bar */}
-              <div className="hidden sm:flex justify-between relative w-full pt-1">
-                {/* Connecting Track Line — Exactly centered vertically at 18px */}
-                <div className="absolute top-[22px] -translate-y-1/2 left-6 right-6 h-1 bg-slate-200 z-0 rounded-full">
-                  <div 
-                    className="h-full bg-blue-600 transition-all duration-300 rounded-full"
-                    style={{ width: `${(Math.min(step, reviewStepIndex) / reviewStepIndex) * 100}%` }}
-                  />
+              {/* Mobile / Tablet Horizontal Stepper Progress Indicator (Hidden on lg:) */}
+              <div className="w-full lg:hidden">
+                {/* Mobile Stepper Progress Bar */}
+                <div className="flex sm:hidden items-center gap-3">
+                  <span className="text-xs text-slate-700 font-medium flex-shrink-0">
+                    Step {Math.min(step + 1, 7)}/7: {stepsList[Math.min(step, 6)]?.title}
+                  </span>
+                  <div className="flex-1 h-2.5 rounded-full bg-slate-200 overflow-hidden">
+                    <div
+                      className="h-full bg-blue-600 transition-all duration-300 rounded-full"
+                      style={{ width: `${Math.min(((step + 1) / 7) * 100, 100)}%` }}
+                    />
+                  </div>
                 </div>
 
-                {stepsList.map((_s, idx) => {
-                  const isCompleted = step > idx;
-                  const isActive = step === idx;
+                {/* Tablet 7-Step Horizontal Stepper with Connecting Bar */}
+                <div className="hidden sm:flex justify-between relative w-full pt-1">
+                  {/* Connecting Track Line — Exactly centered vertically at 18px */}
+                  <div className="absolute top-[22px] -translate-y-1/2 left-6 right-6 h-1 bg-slate-200 z-0 rounded-full">
+                    <div
+                      className="h-full bg-blue-600 transition-all duration-300 rounded-full"
+                      style={{ width: `${(Math.min(step, reviewStepIndex) / reviewStepIndex) * 100}%` }}
+                    />
+                  </div>
 
-                  const stepLabels = isTablet
-                    ? ['Core', 'Screen', 'Hardware', 'Body', 'Accessories', 'Review']
-                    : [
+                  {stepsList.map((_s, idx) => {
+                    const isCompleted = step > idx;
+                    const isActive = step === idx;
+
+                    const stepLabels = isTablet
+                      ? ['Core', 'Screen', 'Hardware', 'Body', 'Accessories', 'Review']
+                      : [
                         'Core',
                         'Display',
                         'Body',
@@ -1147,856 +1143,823 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         'Review'
                       ];
 
-                  return (
-                    <div key={idx} className="relative z-10 flex flex-col items-center group cursor-pointer" onClick={() => isCompleted && setStep(idx)}>
-                      <div 
-                        className={`w-8 h-8 rounded-full flex items-center justify-center text-xs transition-all duration-200 ${
-                          isCompleted 
-                            ? 'bg-emerald-600 text-white font-medium shadow-xs' 
-                            : isActive 
-                            ? 'bg-blue-600 text-white font-semibold shadow-xs' 
-                            : 'bg-white border border-slate-300 text-slate-500 font-medium'
-                        }`}
-                      >
-                        {isCompleted ? <Check className="w-3.5 h-3.5 stroke-[2.5]" /> : idx + 1}
+                    return (
+                      <div key={idx} className="relative z-10 flex flex-col items-center group cursor-pointer" onClick={() => isCompleted && setStep(idx)}>
+                        <div
+                          className={`w-8 h-8 rounded-full flex items-center justify-center text-xs transition-all duration-200 ${isCompleted
+                            ? 'bg-emerald-600 text-white font-medium shadow-xs'
+                            : isActive
+                              ? 'bg-blue-600 text-white font-semibold shadow-xs'
+                              : 'bg-white border border-slate-300 text-slate-500 font-medium'
+                            }`}
+                        >
+                          {isCompleted ? <Check className="w-3.5 h-3.5 stroke-[2.5]" /> : idx + 1}
+                        </div>
+                        <span className={`text-xs mt-1.5 transition-colors ${isActive
+                          ? 'text-blue-900 font-semibold'
+                          : isCompleted
+                            ? 'text-slate-700 font-medium'
+                            : 'text-slate-400 font-normal'
+                          }`}>
+                          {stepLabels[idx]}
+                        </span>
                       </div>
-                      <span className={`text-xs mt-1.5 transition-colors ${
-                        isActive 
-                          ? 'text-blue-900 font-semibold' 
-                          : isCompleted 
-                          ? 'text-slate-700 font-medium' 
-                          : 'text-slate-400 font-normal'
-                      }`}>
-                        {stepLabels[idx]}
-                      </span>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
         {/* Right Column: Diagnostic Step Content Card */}
         <div className={step < reviewStepIndex ? "lg:col-span-7 xl:col-span-8 min-w-0" : "w-full"}>
-          <motion.div 
-            layout 
+          <motion.div
+            layout
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
             className={step === finalReceiptIndex ? "w-full min-h-0" : "bg-white rounded-xl border border-ice-border p-4 sm:p-7 min-h-0 sm:min-h-[440px] flex flex-col justify-between overflow-hidden shadow-sm sm:shadow-xl pb-20 sm:pb-7"}
           >
-          <AnimatePresence mode="wait">
-            {/* Dedicated Tablet Diagnostic Flow (Cashify Question Set) */}
-            {isTablet && step < reviewStepIndex && (
-              <TabletDiagnosticFlow
-                key={`tablet-flow-step-${step}`}
-                model={model}
-                variant={variant}
-                step={step}
-                rules={rules}
-                selectedDefects={selectedDefects}
-                setSelectedDefects={setSelectedDefects}
-                warrantyAge={warrantyAge}
-                setWarrantyAge={setWarrantyAge}
-                showCriticalModal={showCriticalModal}
-                hasWarranty={hasWarranty}
-                setHasWarranty={setHasWarranty}
-                formatPrice={formatPrice}
-              />
-            )}
+            <AnimatePresence mode="wait">
+              {/* Dedicated Tablet Diagnostic Flow (Cashify Question Set) */}
+              {isTablet && step < reviewStepIndex && (
+                <TabletDiagnosticFlow
+                  key={`tablet-flow-step-${step}`}
+                  model={model}
+                  variant={variant}
+                  step={step}
+                  rules={rules}
+                  selectedDefects={selectedDefects}
+                  setSelectedDefects={setSelectedDefects}
+                  warrantyAge={warrantyAge}
+                  setWarrantyAge={setWarrantyAge}
+                  showCriticalModal={showCriticalModal}
+                  hasWarranty={hasWarranty}
+                  setHasWarranty={setHasWarranty}
+                  formatPrice={formatPrice}
+                />
+              )}
 
-            {/* STEP 0: Boot & iCloud Check */}
-            {!isTablet && step === 0 && (
-              <motion.div
-                key="step-0"
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 1, x: 10 }}
-              >
-                <div className="mb-6 text-left">
-                  <span className="text-xs font-semibold text-slate-500 block mb-1">
-                    Step 1 of {reviewStepIndex + 1}
-                  </span>
-                  <h2 className="text-lg sm:text-2xl font-bold text-slate-900 tracking-tight">
-                    Basic Functionality Check
-                  </h2>
-                  <p className="text-sm text-slate-600 mt-1 leading-relaxed">
-                    Please answer these initial core checks to begin your valuation. (You do not need to sign out or reset your device now).
-                  </p>
-                </div>
-
-                {/* Question 1: Power check */}
-                <div className="mb-6 text-left">
-                  <div className="mb-3">
-                    <h3 className="text-sm font-semibold text-slate-900">
-                      1. Does the phone switch on?
-                    </h3>
-                    
+              {/* STEP 0: Boot & iCloud Check */}
+              {!isTablet && step === 0 && (
+                <motion.div
+                  key="step-0"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 1, x: 10 }}
+                >
+                  <div className="mb-6 text-left">
+                    <span className="text-xs font-semibold text-slate-500 block mb-1">
+                      Step 1 of {reviewStepIndex + 1}
+                    </span>
+                    <h2 className="text-lg sm:text-2xl font-bold text-slate-900 tracking-tight">
+                      Basic Functionality Check
+                    </h2>
+                    <p className="text-sm text-slate-600 mt-1 leading-relaxed">
+                      Please answer these initial core checks to begin your valuation. (You do not need to sign out or reset your device now).
+                    </p>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {/* Powers on */}
-                    <div
-                      role="radio"
-                      tabIndex={0}
-                      aria-checked={powerChecked === 'working'}
-                      onClick={handleSelectPowerOn}
-                      onKeyDown={e => handleKeyDown(e, handleSelectPowerOn)}
-                      className={`p-4 rounded-xl border transition-all cursor-pointer text-left flex items-center gap-3.5 ${
-                        powerChecked === 'working'
-                          ? 'border-emerald-600 bg-emerald-50/50 shadow-xs ring-1 ring-emerald-600/20'
-                          : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
-                      }`}
-                    >
-                      <div className={`w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 transition-colors ${
-                        powerChecked === 'working'
-                          ? 'border-emerald-600 bg-emerald-600 text-white'
-                          : 'border-slate-300 bg-white'
-                      }`}>
-                        {powerChecked === 'working' && <Check className="w-3 h-3 stroke-[3]" />}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <span className="font-semibold text-sm text-slate-900 block">
-                          Yes, powers on normally
-                        </span>
-                        
-                      </div>
+                  {/* Question 1: Power check */}
+                  <div className="mb-6 text-left">
+                    <div className="mb-3">
+                      <h3 className="text-sm font-semibold text-slate-900">
+                        1. Does the phone switch on?
+                      </h3>
+
                     </div>
 
-                    {/* Does not power on */}
-                    <div
-                      role="radio"
-                      tabIndex={0}
-                      aria-checked={powerChecked === 'dead'}
-                      onClick={() => showCriticalModal('power')}
-                      onKeyDown={e => handleKeyDown(e, () => showCriticalModal('power'))}
-                      className={`p-4 rounded-xl border transition-all cursor-pointer text-left flex items-center gap-3.5 ${
-                        powerChecked === 'dead'
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {/* Powers on */}
+                      <div
+                        role="radio"
+                        tabIndex={0}
+                        aria-checked={powerChecked === 'working'}
+                        onClick={handleSelectPowerOn}
+                        onKeyDown={e => handleKeyDown(e, handleSelectPowerOn)}
+                        className={`p-4 rounded-xl border transition-all cursor-pointer text-left flex items-center gap-3.5 ${powerChecked === 'working'
+                          ? 'border-emerald-600 bg-emerald-50/50 shadow-xs ring-1 ring-emerald-600/20'
+                          : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
+                          }`}
+                      >
+                        <div className={`w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 transition-colors ${powerChecked === 'working'
+                          ? 'border-emerald-600 bg-emerald-600 text-white'
+                          : 'border-slate-300 bg-white'
+                          }`}>
+                          {powerChecked === 'working' && <Check className="w-3 h-3 stroke-[3]" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <span className="font-semibold text-sm text-slate-900 block">
+                            Yes, powers on normally
+                          </span>
+
+                        </div>
+                      </div>
+
+                      {/* Does not power on */}
+                      <div
+                        role="radio"
+                        tabIndex={0}
+                        aria-checked={powerChecked === 'dead'}
+                        onClick={() => showCriticalModal('power')}
+                        onKeyDown={e => handleKeyDown(e, () => showCriticalModal('power'))}
+                        className={`p-4 rounded-xl border transition-all cursor-pointer text-left flex items-center gap-3.5 ${powerChecked === 'dead'
                           ? 'border-red-600 bg-red-50/50 shadow-xs ring-1 ring-red-600/20'
                           : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
-                      }`}
-                    >
-                      <div className={`w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 transition-colors ${
-                        powerChecked === 'dead'
+                          }`}
+                      >
+                        <div className={`w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 transition-colors ${powerChecked === 'dead'
                           ? 'border-red-600 bg-red-600 text-white'
                           : 'border-slate-300 bg-white'
-                      }`}>
-                        {powerChecked === 'dead' && <Check className="w-3 h-3 stroke-[3]" />}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <span className="font-semibold text-sm text-slate-900 block">
-                          No, device does not turn on
-                        </span>
-                        
+                          }`}>
+                          {powerChecked === 'dead' && <Check className="w-3 h-3 stroke-[3]" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <span className="font-semibold text-sm text-slate-900 block">
+                            No, device does not turn on
+                          </span>
+
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Question 2: Calling check (Cashify Standard) */}
-                <div className={`transition-opacity duration-200 text-left ${powerChecked === 'working' ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
-                  <div className="mb-3">
-                    <h3 className="text-sm font-semibold text-slate-900">
-                      2. Are you able to make and receive calls?
-                    </h3>
-                    
-                  </div>
+                  {/* Question 2: Calling check (Cashify Standard) */}
+                  <div className={`transition-opacity duration-200 text-left ${powerChecked === 'working' ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
+                    <div className="mb-3">
+                      <h3 className="text-sm font-semibold text-slate-900">
+                        2. Are you able to make and receive calls?
+                      </h3>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {/* Calling works */}
-                    <div
-                      role="radio"
-                      tabIndex={0}
-                      aria-checked={callingChecked === 'working'}
-                      onClick={() => handleSelectCalling('working')}
-                      onKeyDown={e => handleKeyDown(e, () => handleSelectCalling('working'))}
-                      className={`p-4 rounded-xl border transition-all cursor-pointer text-left flex items-center gap-3.5 ${
-                        callingChecked === 'working'
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {/* Calling works */}
+                      <div
+                        role="radio"
+                        tabIndex={0}
+                        aria-checked={callingChecked === 'working'}
+                        onClick={() => handleSelectCalling('working')}
+                        onKeyDown={e => handleKeyDown(e, () => handleSelectCalling('working'))}
+                        className={`p-4 rounded-xl border transition-all cursor-pointer text-left flex items-center gap-3.5 ${callingChecked === 'working'
                           ? 'border-emerald-600 bg-emerald-50/50 shadow-xs ring-1 ring-emerald-600/20'
                           : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
-                      }`}
-                    >
-                      <div className={`w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 transition-colors ${
-                        callingChecked === 'working'
+                          }`}
+                      >
+                        <div className={`w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 transition-colors ${callingChecked === 'working'
                           ? 'border-emerald-600 bg-emerald-600 text-white'
                           : 'border-slate-300 bg-white'
-                      }`}>
-                        {callingChecked === 'working' && <Check className="w-3 h-3 stroke-[3]" />}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <span className="font-semibold text-sm text-slate-900 block">
-                          Yes, calls work properly
-                        </span>
-                        
-                      </div>
-                    </div>
+                          }`}>
+                          {callingChecked === 'working' && <Check className="w-3 h-3 stroke-[3]" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <span className="font-semibold text-sm text-slate-900 block">
+                            Yes, calls work properly
+                          </span>
 
-                    {/* Calling has issues */}
-                    <div
-                      role="radio"
-                      tabIndex={0}
-                      aria-checked={callingChecked === 'faulty'}
-                      onClick={() => handleSelectCalling('faulty')}
-                      onKeyDown={e => handleKeyDown(e, () => handleSelectCalling('faulty'))}
-                      className={`p-4 rounded-xl border transition-all cursor-pointer text-left flex items-center gap-3.5 ${
-                        callingChecked === 'faulty'
+                        </div>
+                      </div>
+
+                      {/* Calling has issues */}
+                      <div
+                        role="radio"
+                        tabIndex={0}
+                        aria-checked={callingChecked === 'faulty'}
+                        onClick={() => handleSelectCalling('faulty')}
+                        onKeyDown={e => handleKeyDown(e, () => handleSelectCalling('faulty'))}
+                        className={`p-4 rounded-xl border transition-all cursor-pointer text-left flex items-center gap-3.5 ${callingChecked === 'faulty'
                           ? 'border-amber-500 bg-amber-50/50 shadow-xs ring-1 ring-amber-500/20'
                           : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
-                      }`}
-                    >
-                      <div className={`w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 transition-colors ${
-                        callingChecked === 'faulty'
+                          }`}
+                      >
+                        <div className={`w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 transition-colors ${callingChecked === 'faulty'
                           ? 'border-amber-500 bg-amber-500 text-white'
                           : 'border-slate-300 bg-white'
-                      }`}>
-                        {callingChecked === 'faulty' && <Check className="w-3 h-3 stroke-[3]" />}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <span className="font-semibold text-sm text-slate-900 block">
-                          No, calling or network issues
-                        </span>
-                        
+                          }`}>
+                          {callingChecked === 'faulty' && <Check className="w-3 h-3 stroke-[3]" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <span className="font-semibold text-sm text-slate-900 block">
+                            No, calling or network issues
+                          </span>
+
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </motion.div>
-            )}
+                </motion.div>
+              )}
 
-            {/* STEP 1: Screen Condition */}
-            {!isTablet && step === 1 && (
-              <motion.div
-                key="step-1"
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 1, x: 10 }}
-              >
-                <div className="mb-6 text-left">
-                  <h3 className="text-2xl sm:text-3xl font-bold text-slate-950 tracking-tight">Screen & Display Panel</h3>
-                  <p className="text-xs sm:text-sm text-slate-800 mt-2 font-medium">Examine the front screen glass and display panel carefully.</p>
-                </div>
-
-                {/* Display Panel Originality Check */}
-                <div className="mb-6 p-4 rounded-2xl border border-slate-200 bg-slate-50/80 shadow-xs text-left">
-                  <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
-                    <span className="text-xs font-semibold text-slate-800 flex items-center gap-1.5">
-                      <ShieldCheck className="w-4 h-4 text-blue-600" />
-                      <span>Display Authenticity</span>
-                    </span>
+              {/* STEP 1: Screen Condition */}
+              {!isTablet && step === 1 && (
+                <motion.div
+                  key="step-1"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 1, x: 10 }}
+                >
+                  <div className="mb-6 text-left">
+                    <h3 className="text-2xl sm:text-3xl font-bold text-slate-950 tracking-tight">Screen & Display Panel</h3>
+                    <p className="text-xs sm:text-sm text-slate-800 mt-2 font-medium">Examine the front screen glass and display panel carefully.</p>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {/* Option 1: Original Factory Display */}
-                    <div
-                      role="radio"
-                      tabIndex={0}
-                      aria-checked={!isScreenNonOriginal}
-                      onClick={() => {
-                        setSelectedDefects(prev => prev.filter(d => d.id !== 'defect-screen-non-original' && d.id !== 'defect-screen-truetone'));
-                      }}
-                      onKeyDown={e => handleKeyDown(e, () => {
-                        setSelectedDefects(prev => prev.filter(d => d.id !== 'defect-screen-non-original' && d.id !== 'defect-screen-truetone'));
-                      })}
-                      className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all duration-200 flex items-center gap-3 ${
-                        !isScreenNonOriginal
+                  {/* Display Panel Originality Check */}
+                  <div className="mb-6 p-4 rounded-2xl border border-slate-200 bg-slate-50/80 shadow-xs text-left">
+                    <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
+                      <span className="text-xs font-semibold text-slate-800 flex items-center gap-1.5">
+                        <ShieldCheck className="w-4 h-4 text-blue-600" />
+                        <span>Display Authenticity</span>
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {/* Option 1: Original Factory Display */}
+                      <div
+                        role="radio"
+                        tabIndex={0}
+                        aria-checked={!isScreenNonOriginal}
+                        onClick={() => {
+                          setSelectedDefects(prev => prev.filter(d => d.id !== 'defect-screen-non-original' && d.id !== 'defect-screen-truetone'));
+                        }}
+                        onKeyDown={e => handleKeyDown(e, () => {
+                          setSelectedDefects(prev => prev.filter(d => d.id !== 'defect-screen-non-original' && d.id !== 'defect-screen-truetone'));
+                        })}
+                        className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all duration-200 flex items-center gap-3 ${!isScreenNonOriginal
                           ? 'border-emerald-500 bg-emerald-500/10 shadow-xs ring-1 ring-emerald-500/30'
                           : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/70'
-                      }`}
-                    >
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                        !isScreenNonOriginal ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-slate-300 bg-white'
-                      }`}>
-                        {!isScreenNonOriginal && <div className="w-2 h-2 rounded-full bg-white" />}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <h4 className="font-black text-sm text-slate-900">Original Factory Display</h4>
+                          }`}
+                      >
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${!isScreenNonOriginal ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-slate-300 bg-white'
+                          }`}>
+                          {!isScreenNonOriginal && <div className="w-2 h-2 rounded-full bg-white" />}
                         </div>
-                        
-                      </div>
-                    </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <h4 className="font-black text-sm text-slate-900">Original Factory Display</h4>
+                          </div>
 
-                    {/* Option 2: Replaced / Non-Original Screen */}
-                    <div
-                      role="radio"
-                      tabIndex={0}
-                      aria-checked={isScreenNonOriginal}
-                      onClick={() => {
-                        const rule = rules.find(r => r.id === 'defect-screen-non-original') || {
-                          id: 'defect-screen-non-original',
-                          category: 'screen' as const,
-                          description: 'Screen Replaced / Non-Original Display',
-                          subText: 'Screen has been replaced with a duplicate or third-party display panel.',
-                          deductionFixed: 0,
-                          deductionPercentage: 0
-                        };
-                        setSelectedDefects(prev => {
-                          const without = prev.filter(d => d.id !== 'defect-screen-non-original');
-                          return [...without, rule];
-                        });
-                        setScreenConfirmed(false);
-                      }}
-                      onKeyDown={e => handleKeyDown(e, () => {
-                        const rule = rules.find(r => r.id === 'defect-screen-non-original') || {
-                          id: 'defect-screen-non-original',
-                          category: 'screen' as const,
-                          description: 'Screen Replaced / Non-Original Display',
-                          subText: 'Screen has been replaced with a duplicate or third-party display panel.',
-                          deductionFixed: 0,
-                          deductionPercentage: 0
-                        };
-                        setSelectedDefects(prev => {
-                          const without = prev.filter(d => d.id !== 'defect-screen-non-original');
-                          return [...without, rule];
-                        });
-                        setScreenConfirmed(false);
-                      })}
-                      className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all duration-200 flex items-center gap-3 ${
-                        isScreenNonOriginal
+                        </div>
+                      </div>
+
+                      {/* Option 2: Replaced / Non-Original Screen */}
+                      <div
+                        role="radio"
+                        tabIndex={0}
+                        aria-checked={isScreenNonOriginal}
+                        onClick={() => {
+                          const rule = rules.find(r => r.id === 'defect-screen-non-original') || {
+                            id: 'defect-screen-non-original',
+                            category: 'screen' as const,
+                            description: 'Screen Replaced / Non-Original Display',
+                            subText: 'Screen has been replaced with a duplicate or third-party display panel.',
+                            deductionFixed: 0,
+                            deductionPercentage: 0
+                          };
+                          setSelectedDefects(prev => {
+                            const without = prev.filter(d => d.id !== 'defect-screen-non-original');
+                            return [...without, rule];
+                          });
+                          setScreenConfirmed(false);
+                        }}
+                        onKeyDown={e => handleKeyDown(e, () => {
+                          const rule = rules.find(r => r.id === 'defect-screen-non-original') || {
+                            id: 'defect-screen-non-original',
+                            category: 'screen' as const,
+                            description: 'Screen Replaced / Non-Original Display',
+                            subText: 'Screen has been replaced with a duplicate or third-party display panel.',
+                            deductionFixed: 0,
+                            deductionPercentage: 0
+                          };
+                          setSelectedDefects(prev => {
+                            const without = prev.filter(d => d.id !== 'defect-screen-non-original');
+                            return [...without, rule];
+                          });
+                          setScreenConfirmed(false);
+                        })}
+                        className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all duration-200 flex items-center gap-3 ${isScreenNonOriginal
                           ? 'border-rose-500 bg-rose-500/10 shadow-xs ring-1 ring-rose-500/30'
                           : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/70'
-                      }`}
-                    >
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                        isScreenNonOriginal ? 'border-rose-600 bg-rose-600 text-white' : 'border-slate-300 bg-white'
-                      }`}>
-                        {isScreenNonOriginal && <div className="w-2 h-2 rounded-full bg-white" />}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <h4 className="font-black text-sm text-rose-950">Screen Replaced / Duplicate</h4>
+                          }`}
+                      >
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${isScreenNonOriginal ? 'border-rose-600 bg-rose-600 text-white' : 'border-slate-300 bg-white'
+                          }`}>
+                          {isScreenNonOriginal && <div className="w-2 h-2 rounded-full bg-white" />}
                         </div>
-                        
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <h4 className="font-black text-sm text-rose-950">Screen Replaced / Duplicate</h4>
+                          </div>
+
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                                {/* Instruction Line Below Display Authenticity */}
-                <p className="text-xs sm:text-sm text-slate-800 mb-4 font-medium text-left">
-                  Select any display issues that apply below. If your screen is in perfect condition, simply tap Continue.
-                </p>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-left">
-                  {/* Screen Defect Options */}
-                  {(() => {
-                    const screenMutualMap: Record<string, string[]> = {
-                      'defect-screen-minor-scratches': ['defect-screen-scratches', 'defect-screen-cracked'],
-                      'defect-screen-scratches': ['defect-screen-minor-scratches', 'defect-screen-cracked'],
-                      'defect-screen-cracked': ['defect-screen-minor-scratches', 'defect-screen-scratches'],
-                    };
-
-                    return rules.filter(r => r.category === 'screen' && r.id !== 'defect-screen-non-original' && r.id !== 'defect-screen-touch').map(defect => {
-                      const isSelected = selectedDefects.some(d => d.id === defect.id);
-                      const mutualIds = screenMutualMap[defect.id];
-
-                      return (
-                      <div
-                        key={defect.id}
-                        role="checkbox"
-                        tabIndex={0}
-                        aria-checked={isSelected}
-                        onKeyDown={e => handleKeyDown(e, () => {
-                          handleToggleDefect(defect, mutualIds);
-                          setScreenConfirmed(false);
-                        })}
-                        onClick={() => {
-                          handleToggleDefect(defect, mutualIds);
-                          setScreenConfirmed(false);
-                        }}
-                        className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-center gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-rose-500 ${
-                          isSelected
-                            ? 'border-rose-400 bg-rose-500/10 shadow-sm ring-1 ring-rose-400/30 scale-[1.01]'
-                            : 'border-ice-border bg-canvas-white hover:border-slate-300 hover:bg-slate-50/60'
-                        }`}
-                      >
-                        <div className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
-                          {getIllustration(defect.id, deviceType)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <h4 className="font-bold text-sm text-ink-navy">{defect.description}</h4>
-                          </div>
-                          
-                        </div>
-                        <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 ${
-                          isSelected ? 'bg-rose-600 border-rose-600 text-white' : 'border-ice-border bg-white'
-                        }`}>
-                          {isSelected && <Check className="w-3.5 h-3.5" />}
-                        </div>
-                      </div>
-                    );
-                  });
-                })()}
-                </div>
-              </motion.div>
-            )}
-
-            {/* STEP 2: Body Frame */}
-            {!isTablet && step === 2 && (
-              <motion.div
-                key="step-2"
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 1, x: 10 }}
-              >
-                <div className="mb-6 text-left">
-                  <h3 className="text-2xl sm:text-3xl font-bold text-slate-950 tracking-tight">Body, Buttons & Frame</h3>
-                  <p className="text-xs sm:text-sm text-slate-800 mt-2 font-medium">Select any physical body defects below. If the frame and body are in perfect condition, simply tap Continue.</p>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-6 text-left">
-                  {/* Body Rules */}
-                  {(() => {
-                    return rules.filter(r => r.category === 'body' && r.id !== 'defect-body-airpass').map(defect => {
-                      const isSelected = selectedDefects.some(d => d.id === defect.id);
-                      return (
-                      <div
-                        key={defect.id}
-                        role="checkbox"
-                        tabIndex={0}
-                        aria-checked={isSelected}
-                        onKeyDown={e => handleKeyDown(e, () => {
-                          handleToggleDefect(
-                            defect, 
-                            defect.id === 'defect-body-dented' 
-                              ? 'defect-body-scuffs' 
-                              : defect.id === 'defect-body-scuffs' 
-                              ? 'defect-body-dented' 
-                              : undefined
-                          );
-                          setBodyConfirmed(false);
-                        })}
-                        onClick={() => {
-                          handleToggleDefect(
-                            defect, 
-                            defect.id === 'defect-body-dented' 
-                              ? 'defect-body-scuffs' 
-                              : defect.id === 'defect-body-scuffs' 
-                              ? 'defect-body-dented' 
-                              : undefined
-                          );
-                          setBodyConfirmed(false);
-                        }}
-                        className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-center gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-amber-500 ${
-                          isSelected
-                            ? 'border-amber-500 bg-amber-500/10 shadow-sm ring-1 ring-amber-500/30 scale-[1.01]'
-                            : 'border-ice-border bg-canvas-white hover:border-slate-300 hover:bg-slate-50/60'
-                        }`}
-                      >
-                        <div className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
-                          {getIllustration(defect.id, deviceType)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <h4 className="font-bold text-sm text-ink-navy">{defect.description}</h4>
-                          </div>
-                          
-                        </div>
-                        <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 ${
-                          isSelected ? 'bg-amber-600 border-amber-600 text-white' : 'border-ice-border bg-white'
-                        }`}>
-                          {isSelected && <Check className="w-3.5 h-3.5" />}
-                        </div>
-                      </div>
-                    );
-                  });
-                })()}
-                </div>
-              </motion.div>
-            )}
-
-            {/* STEP 3: Hardware Diagnostics */}
-            {!isTablet && step === 3 && (
-              <motion.div
-                key="step-3"
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 1, x: 10 }}
-              >
-                <div className="mb-6 text-left">
-                  <h3 className="text-2xl sm:text-3xl font-bold text-slate-950 tracking-tight">Camera & Hardware</h3>
-                  <p className="text-xs sm:text-sm text-slate-800 mt-2 font-medium">Select any failing camera, biometric, audio, or hardware issues below. If all features work in perfect order, simply tap Continue.</p>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-6 text-left">
-                  {/* Hardware / functionality rules */}
-                  {(() => {
-                    return rules.filter(r => ['camera', 'functionality'].includes(r.category)).map(defect => {
-                      const isSelected = selectedDefects.some(d => d.id === defect.id);
-                      return (
-                      <div
-                        key={defect.id}
-                        role="checkbox"
-                        tabIndex={0}
-                        aria-checked={isSelected}
-                        onKeyDown={e => handleKeyDown(e, () => {
-                          handleToggleDefect(defect);
-                          setFuncConfirmed(false);
-                        })}
-                        onClick={() => {
-                          handleToggleDefect(defect);
-                          setFuncConfirmed(false);
-                        }}
-                        className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-center gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-rose-500 ${
-                          isSelected
-                            ? 'border-rose-400 bg-rose-500/10 shadow-sm ring-1 ring-rose-400/30 scale-[1.01]'
-                            : 'border-ice-border bg-canvas-white hover:border-slate-300 hover:bg-slate-50/60'
-                        }`}
-                      >
-                        <div className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
-                          {getIllustration(defect.id, deviceType, biometricType)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <h4 className="font-bold text-sm text-ink-navy">{defect.description}</h4>
-                          </div>
-                          
-                        </div>
-                        <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 ${
-                          isSelected ? 'bg-rose-600 border-rose-600 text-white' : 'border-ice-border bg-white'
-                        }`}>
-                          {isSelected && <Check className="w-3.5 h-3.5" />}
-                        </div>
-                      </div>
-                    );
-                  });
-                })()}
-                </div>
-              </motion.div>
-            )}
-
-            {/* STEP 4: Connectivity & Verification */}
-            {!isTablet && step === 4 && (
-              <motion.div
-                key="step-4"
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 1, x: 10 }}
-              >
-                <div className="mb-6 text-left">
-                  <h3 className="text-2xl sm:text-3xl font-bold text-slate-950 tracking-tight">Connectivity & Verification</h3>
-                  <p className="text-xs sm:text-sm text-slate-800 mt-2 font-medium">Select any battery or wireless connectivity issues below. If battery and connectivity are in perfect condition, simply tap Continue.</p>
-                </div>
-
-                {/* Standard Battery Performance Assumed Banner (Compact - Title Only) */}
-                <div className="mb-6 text-left border border-emerald-500/25 bg-gradient-to-r from-emerald-50/90 via-teal-50/60 to-emerald-50/80 p-3.5 sm:p-4 rounded-2xl relative overflow-hidden shadow-xs">
-                  <div className="flex items-center justify-between flex-wrap gap-2.5">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center flex-shrink-0 text-emerald-600">
-                        <BatteryCharging className="w-5 h-5" />
-                      </div>
-                      <h4 className="text-xs sm:text-sm font-bold text-slate-900">
-                        Standard Battery Performance Assumed
-                      </h4>
-                    </div>
-                    {model && (
-                      <a
-                        href={`https://wa.me/919034997719?text=${encodeURIComponent(`Hi Rephonix Team! My ${model.name} has a degraded / replaced battery. What is the best quote you can offer?`)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-semibold transition-colors shadow-xs touch-manipulation"
-                      >
-                        <MessageSquare className="w-3.5 h-3.5" />
-                        <span>Battery Degraded? Chat with Us</span>
-                      </a>
-                    )}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-6 text-left">
-                  {/* Connectivity & verification rules */}
-                  {(() => {
-                    return rules.filter(r => r.category === 'connectivity').map(defect => {
-                      const isSelected = selectedDefects.some(d => d.id === defect.id);
-                      const mutId = defect.id === 'defect-battery-80-85'
-                        ? 'defect-battery-low'
-                        : defect.id === 'defect-battery-low'
-                        ? 'defect-battery-80-85'
-                        : undefined;
-                      return (
-                      <div
-                        key={defect.id}
-                        role="checkbox"
-                        tabIndex={0}
-                        aria-checked={isSelected}
-                        onKeyDown={e => handleKeyDown(e, () => {
-                          handleToggleDefect(defect, mutId);
-                          setConnectConfirmed(false);
-                        })}
-                        onClick={() => {
-                          handleToggleDefect(defect, mutId);
-                          setConnectConfirmed(false);
-                        }}
-                        className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-center gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-rose-500 ${
-                          isSelected
-                            ? 'border-rose-400 bg-rose-500/10 shadow-sm ring-1 ring-rose-400/30 scale-[1.01]'
-                            : 'border-ice-border bg-canvas-white hover:border-slate-300 hover:bg-slate-50/60'
-                        }`}
-                      >
-                        <div className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
-                          {getIllustration(defect.id, deviceType)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <h4 className="font-bold text-sm text-ink-navy">{defect.description}</h4>
-                          </div>
-                          
-                        </div>
-                        <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 ${
-                          isSelected ? 'bg-rose-600 border-rose-600 text-white' : 'border-ice-border bg-white'
-                        }`}>
-                          {isSelected && <Check className="w-3.5 h-3.5" />}
-                        </div>
-                      </div>
-                    );
-                  });
-                })()}
-                </div>
-              </motion.div>
-            )}
-
-            {/* STEP 5: Accessories & Documentation */}
-            {!isTablet && step === 5 && (
-              <motion.div
-                key="step-5"
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 1, x: 10 }}
-              >
-                <div className="mb-6 text-left">
-                  <h3 className="text-2xl sm:text-3xl font-bold text-slate-950 tracking-tight">Accessories & Documentation</h3>
-                  <p className="text-xs sm:text-sm text-slate-800 mt-2 font-medium">
-                    Select any missing accessories below. If you have all original accessories and box, simply select your warranty status and tap Review.
+                  {/* Instruction Line Below Display Authenticity */}
+                  <p className="text-xs sm:text-sm text-slate-800 mb-4 font-medium text-left">
+                    Select any display issues that apply below. If your screen is in perfect condition, simply tap Continue.
                   </p>
-                </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-6 text-left">
-                  {/* Accessories options */}
-                  {(() => {
-                    return rules.filter(r => r.category === 'accessories' && !r.isCriticalFailure).map(defect => {
-                      const isSelected = selectedDefects.some(d => d.id === defect.id);
-                      return (
-                      <div
-                        key={defect.id}
-                        role="checkbox"
-                        tabIndex={0}
-                        aria-checked={isSelected}
-                        onKeyDown={e => handleKeyDown(e, () => {
-                          handleToggleDefect(defect);
-                          setAccConfirmed(false);
-                        })}
-                        onClick={() => {
-                          handleToggleDefect(defect);
-                          setAccConfirmed(false);
-                        }}
-                        className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-center gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-amber-500 ${
-                          isSelected
-                            ? 'border-amber-500 bg-amber-500/10 shadow-sm ring-1 ring-amber-500/30 scale-[1.01]'
-                            : 'border-ice-border bg-canvas-white hover:border-slate-300 hover:bg-slate-50/60'
-                        }`}
-                      >
-                        <div className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
-                          {getIllustration(defect.id, deviceType)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <h4 className="font-bold text-sm text-ink-navy">{defect.description}</h4>
-                          </div>
-                          
-                        </div>
-                        <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 ${
-                          isSelected ? 'bg-amber-600 border-amber-600 text-white' : 'border-ice-border bg-white'
-                        }`}>
-                          {isSelected && <Check className="w-3.5 h-3.5" />}
-                        </div>
-                      </div>
-                    );
-                  });
-                })()}
-                </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-left">
+                    {/* Screen Defect Options */}
+                    {(() => {
+                      const screenMutualMap: Record<string, string[]> = {
+                        'defect-screen-minor-scratches': ['defect-screen-scratches', 'defect-screen-cracked'],
+                        'defect-screen-scratches': ['defect-screen-minor-scratches', 'defect-screen-cracked'],
+                        'defect-screen-cracked': ['defect-screen-minor-scratches', 'defect-screen-scratches'],
+                      };
 
-                {/* Device Age & Warranty Status Section — Only for eligible devices with original screen */}
-                {showWarrantyQuestion && (
-                  <div className="mt-6 text-left border-t border-ice-border/60 pt-5">
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <h4 className="text-sm font-semibold text-slate-900">
-                          Is your device under brand warranty?
-                        </h4>
-                        {hasWarranty === null ? (
-                          <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
-                            Required
-                          </span>
-                        ) : (
-                          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
-                            <Check className="w-3 h-3 stroke-[3]" /> Answered
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-[11px] text-ink-muted mb-3 font-light">
-                        Devices with a valid purchase invoice under brand warranty receive higher valuation payouts.
-                      </p>
+                      return rules.filter(r => r.category === 'screen' && r.id !== 'defect-screen-non-original' && r.id !== 'defect-screen-touch').map(defect => {
+                        const isSelected = selectedDefects.some(d => d.id === defect.id);
+                        const mutualIds = screenMutualMap[defect.id];
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                        {/* Option: Yes, Under Warranty */}
-                        <div
-                          onClick={() => {
-                            setHasWarranty(true);
-                            setWarrantyStatus('active');
-                          }}
-                          className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center gap-3 ${
-                            hasWarranty === true
-                              ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/20'
-                              : 'border-ice-border bg-canvas-white hover:border-emerald-500/40 hover:bg-slate-50/60'
-                          }`}
-                        >
-                          <div className={`w-9 h-9 rounded-lg border flex items-center justify-center shrink-0 transition-colors ${
-                            hasWarranty === true ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-600' : 'bg-slate-100 border-slate-200 text-slate-500'
-                          }`}>
-                            <FileCheck className="w-5 h-5" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between">
-                              <h5 className="font-bold text-xs text-ink-navy">Yes, Under Warranty</h5>
-                              <span className="text-[11px] font-medium bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded border border-emerald-200">
-                                Valid Bill
-                              </span>
-                            </div>
-                          </div>
-                          <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${
-                            hasWarranty === true ? 'bg-emerald-600 text-white' : 'border border-ice-border bg-white'
-                          }`}>
-                            {hasWarranty === true && <Check className="w-2.5 h-2.5 stroke-[3]" />}
-                          </div>
-                        </div>
-
-                        {/* Option: No, Out of Warranty */}
-                        <div
-                          onClick={() => {
-                            setHasWarranty(false);
-                            setSelectedWarrantyAge(null);
-                            setWarrantyAge('out_of_warranty');
-                            setDeviceAge('out_of_warranty');
-                            setWarrantyStatus('expired');
-                          }}
-                          className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center gap-3 ${
-                            hasWarranty === false
-                              ? 'border-amber-400 bg-amber-500/10 ring-1 ring-amber-400/30'
+                        return (
+                          <div
+                            key={defect.id}
+                            role="checkbox"
+                            tabIndex={0}
+                            aria-checked={isSelected}
+                            onKeyDown={e => handleKeyDown(e, () => {
+                              handleToggleDefect(defect, mutualIds);
+                              setScreenConfirmed(false);
+                            })}
+                            onClick={() => {
+                              handleToggleDefect(defect, mutualIds);
+                              setScreenConfirmed(false);
+                            }}
+                            className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-center gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-rose-500 ${isSelected
+                              ? 'border-rose-400 bg-rose-500/10 shadow-sm ring-1 ring-rose-400/30 scale-[1.01]'
                               : 'border-ice-border bg-canvas-white hover:border-slate-300 hover:bg-slate-50/60'
-                          }`}
-                        >
-                          <div className={`w-9 h-9 rounded-lg border flex items-center justify-center shrink-0 transition-colors ${
-                            hasWarranty === false ? 'bg-amber-500/15 border-amber-500/30 text-amber-600' : 'bg-slate-100 border-slate-200 text-slate-500'
-                          }`}>
-                            <FileX className="w-5 h-5" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between">
-                              <h5 className="font-bold text-xs text-ink-navy">No, Out of Warranty</h5>
-                              <span className="text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded">
-                                Expired / No Bill
-                              </span>
+                              }`}
+                          >
+                            <div className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
+                              {getIllustration(defect.id, deviceType)}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <h4 className="font-bold text-sm text-ink-navy">{defect.description}</h4>
+                              </div>
+
+                            </div>
+                            <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-rose-600 border-rose-600 text-white' : 'border-ice-border bg-white'
+                              }`}>
+                              {isSelected && <Check className="w-3.5 h-3.5" />}
                             </div>
                           </div>
-                          <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${
-                            hasWarranty === false ? 'bg-amber-600 text-white' : 'border border-ice-border bg-white'
-                          }`}>
-                            {hasWarranty === false && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                        );
+                      });
+                    })()}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* STEP 2: Body Frame */}
+              {!isTablet && step === 2 && (
+                <motion.div
+                  key="step-2"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 1, x: 10 }}
+                >
+                  <div className="mb-6 text-left">
+                    <h3 className="text-2xl sm:text-3xl font-bold text-slate-950 tracking-tight">Body, Buttons & Frame</h3>
+                    <p className="text-xs sm:text-sm text-slate-800 mt-2 font-medium">Select any physical body defects below. If the frame and body are in perfect condition, simply tap Continue.</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-6 text-left">
+                    {/* Body Rules */}
+                    {(() => {
+                      return rules.filter(r => r.category === 'body' && r.id !== 'defect-body-airpass').map(defect => {
+                        const isSelected = selectedDefects.some(d => d.id === defect.id);
+                        return (
+                          <div
+                            key={defect.id}
+                            role="checkbox"
+                            tabIndex={0}
+                            aria-checked={isSelected}
+                            onKeyDown={e => handleKeyDown(e, () => {
+                              handleToggleDefect(
+                                defect,
+                                defect.id === 'defect-body-dented'
+                                  ? 'defect-body-scuffs'
+                                  : defect.id === 'defect-body-scuffs'
+                                    ? 'defect-body-dented'
+                                    : undefined
+                              );
+                              setBodyConfirmed(false);
+                            })}
+                            onClick={() => {
+                              handleToggleDefect(
+                                defect,
+                                defect.id === 'defect-body-dented'
+                                  ? 'defect-body-scuffs'
+                                  : defect.id === 'defect-body-scuffs'
+                                    ? 'defect-body-dented'
+                                    : undefined
+                              );
+                              setBodyConfirmed(false);
+                            }}
+                            className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-center gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-amber-500 ${isSelected
+                              ? 'border-amber-500 bg-amber-500/10 shadow-sm ring-1 ring-amber-500/30 scale-[1.01]'
+                              : 'border-ice-border bg-canvas-white hover:border-slate-300 hover:bg-slate-50/60'
+                              }`}
+                          >
+                            <div className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
+                              {getIllustration(defect.id, deviceType)}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <h4 className="font-bold text-sm text-ink-navy">{defect.description}</h4>
+                              </div>
+
+                            </div>
+                            <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-amber-600 border-amber-600 text-white' : 'border-ice-border bg-white'
+                              }`}>
+                              {isSelected && <Check className="w-3.5 h-3.5" />}
+                            </div>
                           </div>
+                        );
+                      });
+                    })()}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* STEP 3: Hardware Diagnostics */}
+              {!isTablet && step === 3 && (
+                <motion.div
+                  key="step-3"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 1, x: 10 }}
+                >
+                  <div className="mb-6 text-left">
+                    <h3 className="text-2xl sm:text-3xl font-bold text-slate-950 tracking-tight">Camera & Hardware</h3>
+                    <p className="text-xs sm:text-sm text-slate-800 mt-2 font-medium">Select any failing camera, biometric, audio, or hardware issues below. If all features work in perfect order, simply tap Continue.</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-6 text-left">
+                    {/* Hardware / functionality rules */}
+                    {(() => {
+                      return rules.filter(r => ['camera', 'functionality'].includes(r.category)).map(defect => {
+                        const isSelected = selectedDefects.some(d => d.id === defect.id);
+                        return (
+                          <div
+                            key={defect.id}
+                            role="checkbox"
+                            tabIndex={0}
+                            aria-checked={isSelected}
+                            onKeyDown={e => handleKeyDown(e, () => {
+                              handleToggleDefect(defect);
+                              setFuncConfirmed(false);
+                            })}
+                            onClick={() => {
+                              handleToggleDefect(defect);
+                              setFuncConfirmed(false);
+                            }}
+                            className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-center gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-rose-500 ${isSelected
+                              ? 'border-rose-400 bg-rose-500/10 shadow-sm ring-1 ring-rose-400/30 scale-[1.01]'
+                              : 'border-ice-border bg-canvas-white hover:border-slate-300 hover:bg-slate-50/60'
+                              }`}
+                          >
+                            <div className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
+                              {getIllustration(defect.id, deviceType, biometricType)}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <h4 className="font-bold text-sm text-ink-navy">{defect.description}</h4>
+                              </div>
+
+                            </div>
+                            <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-rose-600 border-rose-600 text-white' : 'border-ice-border bg-white'
+                              }`}>
+                              {isSelected && <Check className="w-3.5 h-3.5" />}
+                            </div>
+                          </div>
+                        );
+                      });
+                    })()}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* STEP 4: Connectivity & Verification */}
+              {!isTablet && step === 4 && (
+                <motion.div
+                  key="step-4"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 1, x: 10 }}
+                >
+                  <div className="mb-6 text-left">
+                    <h3 className="text-2xl sm:text-3xl font-bold text-slate-950 tracking-tight">Connectivity & Verification</h3>
+                    <p className="text-xs sm:text-sm text-slate-800 mt-2 font-medium">Select any battery or wireless connectivity issues below. If battery and connectivity are in perfect condition, simply tap Continue.</p>
+                  </div>
+
+                  {/* Standard Battery Performance Assumed Banner (Compact - Title Only) */}
+                  <div className="mb-6 text-left border border-emerald-500/25 bg-gradient-to-r from-emerald-50/90 via-teal-50/60 to-emerald-50/80 p-3.5 sm:p-4 rounded-2xl relative overflow-hidden shadow-xs">
+                    <div className="flex items-center justify-between flex-wrap gap-2.5">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center flex-shrink-0 text-emerald-600">
+                          <BatteryCharging className="w-5 h-5" />
                         </div>
+                        <h4 className="text-xs sm:text-sm font-bold text-slate-900">
+                          Standard Battery Performance Assumed
+                        </h4>
                       </div>
-
-                      {/* Sub-duration selection when user selects "Yes, Under Warranty" */}
-                      {hasWarranty === true && (
-                        <div className="pt-3 border-t border-dashed border-ice-border animate-in fade-in slide-in-from-top-2 duration-200">
-                          <div className="flex items-center justify-between mb-2.5">
-                            <p className="text-xs font-semibold text-ink-navy">
-                              Select device age (with valid bill):
-                            </p>
-                            {selectedWarrantyAge === null ? (
-                              <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
-                                Required
-                              </span>
-                            ) : (
-                              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
-                                <Check className="w-3 h-3 stroke-[3]" /> Selected
-                              </span>
-                            )}
-                          </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                            <div
-                              onClick={() => {
-                                setSelectedWarrantyAge('under_3m');
-                                setWarrantyAge('under_3m');
-                                setDeviceAge('under_3m');
-                                setWarrantyStatus('active');
-                              }}
-                              className={`p-3 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
-                                selectedWarrantyAge === 'under_3m'
-                                  ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/30 shadow-xs'
-                                  : 'border-ice-border bg-canvas-white hover:border-emerald-500/40'
-                              }`}
-                            >
-                              <div className="flex items-center justify-between">
-                                <h5 className="font-bold text-xs text-ink-navy">Under 3 Months</h5>
-                                {selectedWarrantyAge === 'under_3m' && (
-                                  <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[2.5]" />
-                                )}
-                              </div>
-                            </div>
-
-                            <div
-                              onClick={() => {
-                                setSelectedWarrantyAge('3_to_6m');
-                                setWarrantyAge('3_to_6m');
-                                setDeviceAge('3_to_6m');
-                                setWarrantyStatus('active');
-                              }}
-                              className={`p-3 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
-                                selectedWarrantyAge === '3_to_6m'
-                                  ? 'border-blue-500 bg-blue-500/10 ring-1 ring-blue-500/30 shadow-xs'
-                                  : 'border-ice-border bg-canvas-white hover:border-blue-400'
-                              }`}
-                            >
-                              <div className="flex items-center justify-between">
-                                <h5 className="font-bold text-xs text-ink-navy">3 to 6 Months</h5>
-                                {selectedWarrantyAge === '3_to_6m' && (
-                                  <Check className="w-3.5 h-3.5 text-blue-600 stroke-[2.5]" />
-                                )}
-                              </div>
-                            </div>
-
-                            <div
-                              onClick={() => {
-                                setSelectedWarrantyAge('6_to_11m');
-                                setWarrantyAge('6_to_11m');
-                                setDeviceAge('6_to_12m');
-                                setWarrantyStatus('expiring_soon');
-                              }}
-                              className={`p-3 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
-                                selectedWarrantyAge === '6_to_11m'
-                                  ? 'border-violet-500 bg-violet-500/10 ring-1 ring-violet-500/30 shadow-xs'
-                                  : 'border-ice-border bg-canvas-white hover:border-violet-500/40'
-                              }`}
-                            >
-                              <div className="flex items-center justify-between">
-                                <h5 className="font-bold text-xs text-ink-navy">6 to 11 Months</h5>
-                                {selectedWarrantyAge === '6_to_11m' && (
-                                  <Check className="w-3.5 h-3.5 text-violet-600 stroke-[2.5]" />
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
+                      {model && (
+                        <a
+                          href={`https://wa.me/919034997719?text=${encodeURIComponent(`Hi Rephonix Team! My ${model.name} has a degraded / replaced battery. What is the best quote you can offer?`)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-semibold transition-colors shadow-xs touch-manipulation"
+                        >
+                          <MessageSquare className="w-3.5 h-3.5" />
+                          <span>Battery Degraded? Chat with Us</span>
+                        </a>
                       )}
                     </div>
                   </div>
-                )}
 
-                {/* Physical SIM / eSIM Question — Apple iPhone models only */}
-                {isApple && !isWatch && !isTablet && (
-                  <div className="mt-5 text-left border-t border-ice-border/60 pt-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-6 text-left">
+                    {/* Connectivity & verification rules */}
+                    {(() => {
+                      return rules.filter(r => r.category === 'connectivity').map(defect => {
+                        const isSelected = selectedDefects.some(d => d.id === defect.id);
+                        const mutId = defect.id === 'defect-battery-80-85'
+                          ? 'defect-battery-low'
+                          : defect.id === 'defect-battery-low'
+                            ? 'defect-battery-80-85'
+                            : undefined;
+                        return (
+                          <div
+                            key={defect.id}
+                            role="checkbox"
+                            tabIndex={0}
+                            aria-checked={isSelected}
+                            onKeyDown={e => handleKeyDown(e, () => {
+                              handleToggleDefect(defect, mutId);
+                              setConnectConfirmed(false);
+                            })}
+                            onClick={() => {
+                              handleToggleDefect(defect, mutId);
+                              setConnectConfirmed(false);
+                            }}
+                            className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-center gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-rose-500 ${isSelected
+                              ? 'border-rose-400 bg-rose-500/10 shadow-sm ring-1 ring-rose-400/30 scale-[1.01]'
+                              : 'border-ice-border bg-canvas-white hover:border-slate-300 hover:bg-slate-50/60'
+                              }`}
+                          >
+                            <div className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
+                              {getIllustration(defect.id, deviceType)}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <h4 className="font-bold text-sm text-ink-navy">{defect.description}</h4>
+                              </div>
+
+                            </div>
+                            <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-rose-600 border-rose-600 text-white' : 'border-ice-border bg-white'
+                              }`}>
+                              {isSelected && <Check className="w-3.5 h-3.5" />}
+                            </div>
+                          </div>
+                        );
+                      });
+                    })()}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* STEP 5: Accessories & Documentation */}
+              {!isTablet && step === 5 && (
+                <motion.div
+                  key="step-5"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 1, x: 10 }}
+                >
+                  <div className="mb-6 text-left">
+                    <h3 className="text-2xl sm:text-3xl font-bold text-slate-950 tracking-tight">Accessories & Documentation</h3>
+                    <p className="text-xs sm:text-sm text-slate-800 mt-2 font-medium">
+                      Select any missing accessories below. If you have all original accessories and box, simply select your warranty status and tap Review.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-6 text-left">
+                    {/* Accessories options */}
+                    {(() => {
+                      return rules.filter(r => r.category === 'accessories' && !r.isCriticalFailure).map(defect => {
+                        const isSelected = selectedDefects.some(d => d.id === defect.id);
+                        return (
+                          <div
+                            key={defect.id}
+                            role="checkbox"
+                            tabIndex={0}
+                            aria-checked={isSelected}
+                            onKeyDown={e => handleKeyDown(e, () => {
+                              handleToggleDefect(defect);
+                              setAccConfirmed(false);
+                            })}
+                            onClick={() => {
+                              handleToggleDefect(defect);
+                              setAccConfirmed(false);
+                            }}
+                            className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-center gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-amber-500 ${isSelected
+                              ? 'border-amber-500 bg-amber-500/10 shadow-sm ring-1 ring-amber-500/30 scale-[1.01]'
+                              : 'border-ice-border bg-canvas-white hover:border-slate-300 hover:bg-slate-50/60'
+                              }`}
+                          >
+                            <div className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
+                              {getIllustration(defect.id, deviceType)}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <h4 className="font-bold text-sm text-ink-navy">{defect.description}</h4>
+                              </div>
+
+                            </div>
+                            <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-amber-600 border-amber-600 text-white' : 'border-ice-border bg-white'
+                              }`}>
+                              {isSelected && <Check className="w-3.5 h-3.5" />}
+                            </div>
+                          </div>
+                        );
+                      });
+                    })()}
+                  </div>
+
+                  {/* Device Age & Warranty Status Section — Only for eligible devices with original screen */}
+                  {showWarrantyQuestion && (
+                    <div className="mt-6 text-left border-t border-ice-border/60 pt-5">
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <h4 className="text-sm font-semibold text-slate-900">
+                            Is your device under brand warranty?
+                          </h4>
+                          {hasWarranty === null ? (
+                            <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                              Required
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
+                              <Check className="w-3 h-3 stroke-[3]" /> Answered
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-ink-muted mb-3 font-light">
+                          Devices with a valid purchase invoice under brand warranty receive higher valuation payouts.
+                        </p>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                          {/* Option: Yes, Under Warranty */}
+                          <div
+                            onClick={() => {
+                              setHasWarranty(true);
+                              setWarrantyStatus('active');
+                            }}
+                            className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center gap-3 ${hasWarranty === true
+                              ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/20'
+                              : 'border-ice-border bg-canvas-white hover:border-emerald-500/40 hover:bg-slate-50/60'
+                              }`}
+                          >
+                            <div className={`w-9 h-9 rounded-lg border flex items-center justify-center shrink-0 transition-colors ${hasWarranty === true ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-600' : 'bg-slate-100 border-slate-200 text-slate-500'
+                              }`}>
+                              <FileCheck className="w-5 h-5" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between">
+                                <h5 className="font-bold text-xs text-ink-navy">Yes, Under Warranty</h5>
+                                <span className="text-[11px] font-medium bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded border border-emerald-200">
+                                  Valid Bill
+                                </span>
+                              </div>
+                            </div>
+                            <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${hasWarranty === true ? 'bg-emerald-600 text-white' : 'border border-ice-border bg-white'
+                              }`}>
+                              {hasWarranty === true && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                            </div>
+                          </div>
+
+                          {/* Option: No, Out of Warranty */}
+                          <div
+                            onClick={() => {
+                              setHasWarranty(false);
+                              setSelectedWarrantyAge(null);
+                              setWarrantyAge('out_of_warranty');
+                              setDeviceAge('out_of_warranty');
+                              setWarrantyStatus('expired');
+                            }}
+                            className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center gap-3 ${hasWarranty === false
+                              ? 'border-amber-400 bg-amber-500/10 ring-1 ring-amber-400/30'
+                              : 'border-ice-border bg-canvas-white hover:border-slate-300 hover:bg-slate-50/60'
+                              }`}
+                          >
+                            <div className={`w-9 h-9 rounded-lg border flex items-center justify-center shrink-0 transition-colors ${hasWarranty === false ? 'bg-amber-500/15 border-amber-500/30 text-amber-600' : 'bg-slate-100 border-slate-200 text-slate-500'
+                              }`}>
+                              <FileX className="w-5 h-5" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between">
+                                <h5 className="font-bold text-xs text-ink-navy">No, Out of Warranty</h5>
+                                <span className="text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded">
+                                  Expired / No Bill
+                                </span>
+                              </div>
+                            </div>
+                            <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${hasWarranty === false ? 'bg-amber-600 text-white' : 'border border-ice-border bg-white'
+                              }`}>
+                              {hasWarranty === false && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Sub-duration selection when user selects "Yes, Under Warranty" */}
+                        {hasWarranty === true && (
+                          <div className="pt-3 border-t border-dashed border-ice-border animate-in fade-in slide-in-from-top-2 duration-200">
+                            <div className="flex items-center justify-between mb-2.5">
+                              <p className="text-xs font-semibold text-ink-navy">
+                                Select device age (with valid bill):
+                              </p>
+                              {selectedWarrantyAge === null ? (
+                                <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                                  Required
+                                </span>
+                              ) : (
+                                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
+                                  <Check className="w-3 h-3 stroke-[3]" /> Selected
+                                </span>
+                              )}
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                              <div
+                                onClick={() => {
+                                  setSelectedWarrantyAge('under_3m');
+                                  setWarrantyAge('under_3m');
+                                  setDeviceAge('under_3m');
+                                  setWarrantyStatus('active');
+                                }}
+                                className={`p-3 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${selectedWarrantyAge === 'under_3m'
+                                  ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/30 shadow-xs'
+                                  : 'border-ice-border bg-canvas-white hover:border-emerald-500/40'
+                                  }`}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <h5 className="font-bold text-xs text-ink-navy">Under 3 Months</h5>
+                                  {selectedWarrantyAge === 'under_3m' && (
+                                    <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[2.5]" />
+                                  )}
+                                </div>
+                              </div>
+
+                              <div
+                                onClick={() => {
+                                  setSelectedWarrantyAge('3_to_6m');
+                                  setWarrantyAge('3_to_6m');
+                                  setDeviceAge('3_to_6m');
+                                  setWarrantyStatus('active');
+                                }}
+                                className={`p-3 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${selectedWarrantyAge === '3_to_6m'
+                                  ? 'border-blue-500 bg-blue-500/10 ring-1 ring-blue-500/30 shadow-xs'
+                                  : 'border-ice-border bg-canvas-white hover:border-blue-400'
+                                  }`}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <h5 className="font-bold text-xs text-ink-navy">3 to 6 Months</h5>
+                                  {selectedWarrantyAge === '3_to_6m' && (
+                                    <Check className="w-3.5 h-3.5 text-blue-600 stroke-[2.5]" />
+                                  )}
+                                </div>
+                              </div>
+
+                              <div
+                                onClick={() => {
+                                  setSelectedWarrantyAge('6_to_11m');
+                                  setWarrantyAge('6_to_11m');
+                                  setDeviceAge('6_to_12m');
+                                  setWarrantyStatus('expiring_soon');
+                                }}
+                                className={`p-3 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${selectedWarrantyAge === '6_to_11m'
+                                  ? 'border-violet-500 bg-violet-500/10 ring-1 ring-violet-500/30 shadow-xs'
+                                  : 'border-ice-border bg-canvas-white hover:border-violet-500/40'
+                                  }`}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <h5 className="font-bold text-xs text-ink-navy">6 to 11 Months</h5>
+                                  {selectedWarrantyAge === '6_to_11m' && (
+                                    <Check className="w-3.5 h-3.5 text-violet-600 stroke-[2.5]" />
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Physical SIM / eSIM Question — Apple iPhone models only */}
+                  {isApple && !isWatch && !isTablet && (
+                    <div className="mt-5 text-left border-t border-ice-border/60 pt-5">
                       <div className="flex items-center justify-between mb-2.5">
                         <h4 className="text-sm font-semibold text-slate-900">
                           Does your phone support physical SIM?
@@ -2018,15 +1981,13 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           tabIndex={0}
                           onClick={() => setDualEsim(false)}
                           onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setDualEsim(false); }}
-                          className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center gap-3 ${
-                            dualEsim === false
-                              ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/30'
-                              : 'border-ice-border bg-canvas-white hover:border-emerald-500/40 hover:bg-slate-50/50'
-                          }`}
+                          className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center gap-3 ${dualEsim === false
+                            ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/30'
+                            : 'border-ice-border bg-canvas-white hover:border-emerald-500/40 hover:bg-slate-50/50'
+                            }`}
                         >
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
-                            dualEsim === false ? 'bg-emerald-500 text-white' : 'bg-emerald-500/10 text-emerald-600'
-                          }`}>
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${dualEsim === false ? 'bg-emerald-500 text-white' : 'bg-emerald-500/10 text-emerald-600'
+                            }`}>
                             <Check className="w-4 h-4 stroke-[2.5]" />
                           </div>
                           <div>
@@ -2039,15 +2000,13 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           tabIndex={0}
                           onClick={() => setDualEsim(true)}
                           onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setDualEsim(true); }}
-                          className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center gap-3 ${
-                            dualEsim === true
-                              ? 'border-rose-500 bg-rose-500/10 ring-1 ring-rose-500/30'
-                              : 'border-ice-border bg-canvas-white hover:border-rose-500/40 hover:bg-slate-50/50'
-                          }`}
+                          className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center gap-3 ${dualEsim === true
+                            ? 'border-rose-500 bg-rose-500/10 ring-1 ring-rose-500/30'
+                            : 'border-ice-border bg-canvas-white hover:border-rose-500/40 hover:bg-slate-50/50'
+                            }`}
                         >
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
-                            dualEsim === true ? 'bg-rose-600 text-white' : 'bg-slate-100 border border-slate-200 text-slate-500'
-                          }`}>
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${dualEsim === true ? 'bg-rose-600 text-white' : 'bg-slate-100 border border-slate-200 text-slate-500'
+                            }`}>
                             <X className="w-4 h-4 stroke-[2.5]" />
                           </div>
                           <div>
@@ -2055,457 +2014,455 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           </div>
                         </div>
                       </div>
-                  </div>
-                )}
-              </motion.div>
-            )}
+                    </div>
+                  )}
+                </motion.div>
+              )}
 
-            {/* Diagnostic Review Stage */}
-            {step === reviewStepIndex && (
-              <motion.div
-                key="step-review"
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 1, x: 10 }}
-                className="space-y-6 text-left"
-              >
-                <div className="border-b border-ice-border pb-4">
-                  <h3 className="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight">Diagnostic Summary Review</h3>
-                  <p className="text-xs sm:text-sm text-slate-800 mt-1.5 font-bold leading-relaxed">
-                    Review your completed {reviewStepIndex}-section diagnostic evaluation before generating your official valuation quote.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 rounded-xl border-2 border-slate-300 bg-slate-50 shadow-xs">
-                    <span className="text-xs font-medium text-slate-500 block mb-1">Selected Device</span>
-                    <h4 className="font-black text-lg text-slate-950">{model.name}</h4>
-                    <p className="text-xs text-slate-600 font-medium mt-0.5">
-                      {variant.storageGb >= 1024 ? `${variant.storageGb / 1024}TB` : `${variant.storageGb}GB`} Storage
-                      {isTablet && variant.ramGb ? ` • ${variant.ramGb}GB RAM` : ''}
-                      {isTablet ? ` • ${variant.connectivity === 'cellular' || variant.color?.toLowerCase().includes('cellular') ? 'Wi-Fi + Cellular' : 'Wi-Fi Only'}` : (isApple && dualEsim !== null ? ` • ${dualEsim === true ? 'eSIM Only (US Model)' : 'Physical SIM'}` : '')}
+              {/* Diagnostic Review Stage */}
+              {step === reviewStepIndex && (
+                <motion.div
+                  key="step-review"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 1, x: 10 }}
+                  className="space-y-6 text-left"
+                >
+                  <div className="border-b border-ice-border pb-4">
+                    <h3 className="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight">Diagnostic Summary Review</h3>
+                    <p className="text-xs sm:text-sm text-slate-800 mt-1.5 font-bold leading-relaxed">
+                      Review your completed {reviewStepIndex}-section diagnostic evaluation before generating your official valuation quote.
                     </p>
                   </div>
 
-                  <div className="p-4 rounded-xl border-2 border-emerald-500 bg-emerald-50 shadow-xs">
-                    <span className="text-xs font-medium text-slate-500 block mb-1">Estimated Valuation</span>
-                    <AnimatedPrice
-                      value={valuation.finalPrice}
-                      className="font-bold text-2xl text-slate-900 block"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2.5">
-                  <h4 className="text-sm font-semibold text-slate-900">
-                    Declared Diagnostic Issues ({selectedDefects.length})
-                  </h4>
-                  {selectedDefects.length === 0 ? (
-                    <div className="p-4 rounded-xl border-2 border-emerald-500 bg-emerald-50 text-emerald-950 text-xs sm:text-sm font-bold flex items-center gap-3 shadow-xs">
-                      <Check className="w-5 h-5 text-emerald-700 flex-shrink-0 stroke-[2.5]" />
-                      <span className="leading-relaxed font-bold text-emerald-950">All hardware, screen, frame, battery and accessory diagnostics passed. Device is in mint condition.</span>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {selectedDefects.map((defect, i) => (
-                        <div key={i} className="p-3 rounded-lg border-2 border-slate-300 bg-slate-50 flex justify-between items-center text-xs">
-                          <span className="font-bold text-slate-950">{defect.description}</span>
-                          <span className="text-amber-800 font-medium text-[11px] bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                            Declared
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className="pt-5 sm:pt-6 border-t border-ice-border flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
-                  <button
-                    type="button"
-                    onClick={() => setStep(reviewStepIndex - 1)}
-                    className="w-full sm:w-auto px-4 py-3 sm:py-2.5 rounded-xl border-2 border-slate-300 bg-white hover:bg-slate-100 text-slate-800 hover:text-slate-950 font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer active:scale-[0.99]"
-                  >
-                    <ArrowLeft className="w-4 h-4 shrink-0" />
-                    <span>Edit Diagnostics</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setStep(finalReceiptIndex);
-                      if (currentUser) {
-                        sendQuoteAlertApi({
-                          customerName: currentUser.name || 'Registered Customer',
-                          customerPhone: currentUser.phone || 'N/A',
-                          customerEmail: currentUser.email,
-                          modelName: model.name,
-                          storageGb: variant.storageGb,
-                          estimatedPayout: valuation.finalPrice,
-                          retentionPercentage: valuation.retentionPercentage,
-                          defects: selectedDefects.map(d => d.description),
-                          refCode: `SCH-${receiptRef}`,
-                        }).catch(err => console.warn('[Diagnostic Wizard] Failed to dispatch quote email alert:', err));
-                      }
-                    }}
-                    className="w-full sm:w-auto px-5 sm:px-6 py-3.5 sm:py-3 bg-gradient-to-r from-cobalt to-indigo-600 hover:from-cobalt-hover hover:to-indigo-700 text-white font-bold rounded-xl text-xs sm:text-sm transition-all shadow-md hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2 text-center cursor-pointer"
-                  >
-                    <span>Confirm Diagnostics &amp; Generate Quote</span>
-                    <ChevronRight className="w-4 h-4 shrink-0" />
-                  </button>
-                </div>
-              </motion.div>
-            )}
-
-            {/* STEP 7: Obsidian Verified Valuation Ledger */}
-            {step === finalReceiptIndex && (
-              <motion.div
-                key="step-receipt"
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.98 }}
-                className="text-left"
-              >
-                <div className="max-w-2xl mx-auto print:max-w-none print:w-full">
-                  <div id="printable-quote" className="bg-white text-slate-900 border-2 border-slate-200 rounded-xl overflow-hidden shadow-xl p-6 print:p-8 relative">
-                    {/* Company Header Logo & Verified Status */}
-                    <div className="flex items-center justify-between pb-4 sm:pb-5 mb-5 border-b border-slate-200 print-border">
-                      <div className="flex items-center gap-3">
-                        <img src="/logo.svg" className="w-9 h-9 sm:w-10 sm:h-10 object-contain rounded-md print-logo-bg flex-shrink-0 shadow-xs" alt="Rephonix Logo" />
-                        <div>
-                          <span className="text-lg sm:text-xl font-extrabold text-slate-950 print-text-dark tracking-tight block leading-none">
-                            Re<span className="text-blue-700 print-text-cobalt">phonix</span>
-                          </span>
-                          <span className="text-[9px] sm:text-[10px] font-sans text-slate-600 print-text-muted tracking-wider uppercase block mt-1 font-bold">
-                            Official Valuation &amp; Diagnostic Certificate
-                          </span>
-                        </div>
-                      </div>
-                      <div className="text-right flex flex-col items-end">
-                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-300 text-emerald-800 text-[11px] font-bold shadow-xs">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                          <span>Verified</span>
-                        </div>
-                        <span className="text-[10px] font-sans text-slate-500 uppercase tracking-wider font-bold mt-1">
-                          REF #{receiptRef}
-                        </span>
-                        <span className="hidden print:block text-[9px] font-sans text-slate-500 mt-0.5">
-                          Date: {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
-                        </span>
-                      </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="p-4 rounded-xl border-2 border-slate-300 bg-slate-50 shadow-xs">
+                      <span className="text-xs font-medium text-slate-500 block mb-1">Selected Device</span>
+                      <h4 className="font-black text-lg text-slate-950">{model.name}</h4>
+                      <p className="text-xs text-slate-600 font-medium mt-0.5">
+                        {variant.storageGb >= 1024 ? `${variant.storageGb / 1024}TB` : `${variant.storageGb}GB`} Storage
+                        {isTablet && variant.ramGb ? ` • ${variant.ramGb}GB RAM` : ''}
+                        {isTablet ? ` • ${variant.connectivity === 'cellular' || variant.color?.toLowerCase().includes('cellular') ? 'Wi-Fi + Cellular' : 'Wi-Fi Only'}` : (isApple && dualEsim !== null ? ` • ${dualEsim === true ? 'eSIM Only (US Model)' : 'Physical SIM'}` : '')}
+                      </p>
                     </div>
 
-                    {/* Specification Audit Box */}
-                    <div className="flex justify-between items-center mb-5 pb-4 border-b border-slate-200 print-border font-sans">
-                      <div>
-                        <span className="text-[10px] text-slate-600 print-text-muted uppercase block font-medium tracking-normal mb-0.5 font-bold">
-                          SPECIFICATION AUDIT RECEIPT
-                        </span>
-                        <span className="font-extrabold text-slate-950 print-text-dark text-xl sm:text-2xl tracking-tight block">
-                          {model.name}
-                        </span>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-[10px] text-slate-600 print-text-muted uppercase block font-medium tracking-normal mb-0.5 font-bold">
-                          CONFIG &amp; STATUS
-                        </span>
-                        <span className="text-xs text-slate-900 print-text-dark font-sans font-bold block">
-                          {variant.storageGb >= 1024 ? `${variant.storageGb / 1024}TB` : `${variant.storageGb}GB`}
-                          {isTablet && variant.ramGb ? ` • ${variant.ramGb}GB RAM` : ''}
-                          {isTablet ? ` • ${variant.connectivity === 'cellular' || variant.color?.toLowerCase().includes('cellular') ? 'Wi-Fi + Cellular' : 'Wi-Fi Only'}` : ` • ${isApple ? 'Apple iOS' : 'Android'}${isApple && dualEsim === true ? ' • eSIM Only (US Model)' : ''}`}
-                        </span>
-                        <span className="hidden print:inline-block text-[10px] font-sans text-emerald-700 font-bold">
-                          7-Day Price Lock
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* 6-Gate Comprehensive Diagnostic Summary (Expanded for Print) */}
-                    <div className="space-y-2.5 text-xs font-sans">
-                      <div className="flex justify-between items-center py-1.5 text-slate-950 print-text-dark border-b border-slate-200 print-border">
-                        <span className="font-semibold">00. Base Specification ({variant.storageGb >= 1024 ? `${variant.storageGb / 1024}TB` : `${variant.storageGb}GB`}{isTablet && variant.ramGb ? `/${variant.ramGb}GB` : ''}{isTablet ? ` • ${variant.connectivity === 'cellular' || variant.color?.toLowerCase().includes('cellular') ? 'Cellular' : 'Wi-Fi'}` : ''})</span>
-                        <span className="text-emerald-700 print-text-emerald font-medium text-xs">Verified Spec</span>
-                      </div>
-
-                      {/* Print-only 6-Gate Diagnostic Breakdown Matrix */}
-                      <div className="hidden print:block py-2 space-y-1.5 border-b border-slate-200 print-border">
-                        <div className="grid grid-cols-2 gap-2 text-[11px] font-sans">
-                          <div className="p-2 rounded bg-slate-50 border border-slate-200 flex justify-between items-center">
-                            <span className="font-semibold text-slate-800">1. Boot &amp; Security Gate</span>
-                            <span className="text-emerald-700 font-medium text-xs">Passed</span>
-                          </div>
-                          <div className="p-2 rounded bg-slate-50 border border-slate-200 flex justify-between items-center">
-                            <span className="font-semibold text-slate-800">2. Display &amp; Touch Digitizer</span>
-                            <span className="text-emerald-700 font-medium text-xs">Verified</span>
-                          </div>
-                          <div className="p-2 rounded bg-slate-50 border border-slate-200 flex justify-between items-center">
-                            <span className="font-semibold text-slate-800">3. Camera &amp; Optical Sensors</span>
-                            <span className="text-emerald-700 font-medium text-xs">Functional</span>
-                          </div>
-                          <div className="p-2 rounded bg-slate-50 border border-slate-200 flex justify-between items-center">
-                            <span className="font-semibold text-slate-800">4. Frame &amp; Housing Integrity</span>
-                            <span className="text-emerald-700 font-medium text-xs">Verified</span>
-                          </div>
-                          <div className="p-2 rounded bg-slate-50 border border-slate-200 flex justify-between items-center">
-                            <span className="font-semibold text-slate-800">5. Battery &amp; Core Hardware</span>
-                            <span className="text-emerald-700 font-medium text-xs">Passed</span>
-                          </div>
-                          <div className="p-2 rounded bg-slate-50 border border-slate-200 flex justify-between items-center">
-                            <span className="font-semibold text-slate-800">{hasSpen ? '6. Box, S-Pen & Accessories' : '6. Original Accessories & Box'}</span>
-                            <span className="text-emerald-700 font-medium text-xs">Verified</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {valuation.deductions.length === 0 ? (
-                        <div className="text-emerald-700 print-text-emerald py-2.5 flex items-center gap-1.5 text-xs font-medium">
-                          <Check className="w-4 h-4 text-emerald-600 stroke-[2.5]" /> No defects declared. Device is in mint condition.
-                        </div>
-                      ) : (
-                        <div className="py-1 space-y-2">
-                          <span className="hidden print:block text-[10px] font-sans font-bold text-slate-600 uppercase">Declared Adjustments:</span>
-                          {valuation.deductions.map((d, i) => (
-                            <motion.div 
-                              key={i} 
-                              initial={{ opacity: 0, x: -8 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: i * 0.15 + 0.1 }}
-                              className="flex justify-between items-center text-slate-900 print-text-dark border-b border-slate-200 print-border py-1"
-                            >
-                              <span className="font-medium">{(i + 1).toString().padStart(2, '0')}. {getEngineeringLabel(d.description)}</span>
-                              <span className="text-slate-600 text-xs font-medium">Assessment Verified</span>
-                            </motion.div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-
-
-                    {/* Payout Summary Box */}
-                    <div className="flex justify-between items-center border-t border-slate-200 print-border pt-4 mt-4 bg-gradient-to-br from-emerald-50/70 via-slate-50 to-emerald-50/30 p-4 sm:p-5 rounded-xl border border-emerald-200/90 shadow-xs">
-                      <div>
-                        <span className="text-slate-600 print-text-muted block text-xs font-semibold">Total Estimated Payout</span>
-                        <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 font-bold mt-0.5">
-                          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                          Payout Rate Locked (7 Days)
-                        </span>
-                      </div>
+                    <div className="p-4 rounded-xl border-2 border-emerald-500 bg-emerald-50 shadow-xs">
+                      <span className="text-xs font-medium text-slate-500 block mb-1">Estimated Valuation</span>
                       <AnimatedPrice
                         value={valuation.finalPrice}
-                        isMasked={isPriceLocked}
-                        isCritical={valuation.isCritical}
-                        className="text-3xl sm:text-4xl font-extrabold text-emerald-600 print-text-emerald tracking-tight font-sans"
+                        className="font-bold text-2xl text-slate-900 block"
                       />
                     </div>
-
-                    {/* Digital Trust & Transparency Badges */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mt-4 print:hidden">
-                      <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200/80 rounded-xl p-3">
-                        <div className="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0 text-emerald-700">
-                          <ShieldCheck className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <span className="text-xs font-semibold text-slate-900 block leading-tight">7-Day Price Lock</span>
-                          <span className="text-[11px] text-slate-500 leading-tight">Rate guaranteed</span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200/80 rounded-xl p-3">
-                        <div className="w-7 h-7 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0 text-blue-700">
-                          <Lock className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <span className="text-xs font-semibold text-slate-900 block leading-tight">DoD Data Wipe</span>
-                          <span className="text-[11px] text-slate-500 leading-tight">Certified zero residual</span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200/80 rounded-xl p-3">
-                        <div className="w-7 h-7 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0 text-amber-700">
-                          <Zap className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <span className="text-xs font-semibold text-slate-900 block leading-tight">Instant Payout</span>
-                          <span className="text-[11px] text-slate-500 leading-tight">Direct UPI / IMPS</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Print-Only Official Terms & Handover Sign-off Block */}
-                    <div className="hidden print:block mt-6 pt-5 border-t border-slate-300 print-border font-sans">
-                      <div className="grid grid-cols-2 gap-6 text-[10px] text-slate-600 mb-6">
-                        <div className="space-y-1">
-                          <span className="font-bold text-slate-900 block uppercase tracking-wider">Guarantee &amp; Sanitization Policy:</span>
-                          <p className="leading-relaxed">
-                            • Guaranteed payout locked for 7 days upon generation of reference #SCH-{receiptRef}.<br />
-                            • Certified data erasure and factory wipe performed before device refurbishment.<br />
-                            • Final payout processed instantly to UPI / Bank Account upon physical IMEI verification.
-                          </p>
-                        </div>
-                        <div className="space-y-1">
-                          <span className="font-bold text-slate-900 block uppercase tracking-wider">Pickup &amp; Support Verification:</span>
-                          <p className="leading-relaxed">
-                            • Scheduled device pickup across Delhi NCR with live tracking.<br />
-                            • Dedicated Valuation Desk: +91 90349 97719 | support@rephonix.in<br />
-                            • Rephonix Smart Device Exchange Services | www.rephonix.in
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-8 pt-4 border-t border-dashed border-slate-300">
-                        <div>
-                          <span className="text-[10px] font-sans text-slate-500 uppercase block mb-6">Customer Verification &amp; Handover</span>
-                          <div className="border-b border-slate-400 w-4/5 mb-1" />
-                          <span className="text-[9px] font-sans text-slate-600">Signature &amp; Date</span>
-                        </div>
-                        <div>
-                          <span className="text-[10px] font-sans text-slate-500 uppercase block mb-6">Rephonix Verification Specialist</span>
-                          <div className="border-b border-slate-400 w-4/5 mb-1" />
-                          <span className="text-[9px] font-sans text-slate-600">Technician ID &amp; Digital Seal</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Not satisfied with the price? Contact Us Banner */}
-                    <div className="mt-5 bg-slate-50 border border-slate-200 rounded-2xl p-4 sm:px-6 sm:py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs print:hidden">
-                      <div>
-                        <h4 className="font-bold text-slate-950 text-sm sm:text-base tracking-tight">
-                          Not satisfied with the price?
-                        </h4>
-                        <p className="text-xs sm:text-sm text-slate-600 mt-0.5 font-medium">
-                          Please connect with our team
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setContactModalOpen(true)}
-                        className="text-blue-700 hover:text-blue-900 font-bold text-xs sm:text-sm hover:underline cursor-pointer transition-colors flex-shrink-0 self-end sm:self-auto"
-                      >
-                        Contact Us
-                      </button>
-                    </div>
-
-                    <p className="text-xs text-slate-500 mt-4 text-center">
-                      Estimated Device Value. Final offer is subject to physical inspection, IMEI/device verification and diagnostic confirmation.
-                    </p>
                   </div>
 
-                  {/* Saved Quote notification banner */}
-                  {saveToast && (
-                    <motion.div 
-                      initial={{ opacity: 0, y: -6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="mt-3 p-3 bg-emerald-50 border border-emerald-300 text-emerald-900 rounded-xl text-xs font-semibold flex items-center justify-between shadow-xs"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-emerald-600 stroke-[3] flex-shrink-0" />
-                        <span>{saveToast}</span>
+                  <div className="space-y-2.5">
+                    <h4 className="text-sm font-semibold text-slate-900">
+                      Declared Diagnostic Issues ({selectedDefects.length})
+                    </h4>
+                    {selectedDefects.length === 0 ? (
+                      <div className="p-4 rounded-xl border-2 border-emerald-500 bg-emerald-50 text-emerald-950 text-xs sm:text-sm font-bold flex items-center gap-3 shadow-xs">
+                        <Check className="w-5 h-5 text-emerald-700 flex-shrink-0 stroke-[2.5]" />
+                        <span className="leading-relaxed font-bold text-emerald-950">All hardware, screen, frame, battery and accessory diagnostics passed. Device is in mint condition.</span>
                       </div>
-                      <button 
-                        type="button" 
-                        onClick={() => setSaveToast(null)} 
-                        className="text-emerald-700 hover:text-emerald-950 ml-2 p-0.5"
-                        aria-label="Dismiss"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    </motion.div>
-                  )}
-
-                  {/* Unified High-Conversion Action Controls */}
-                  <div className="mt-4 space-y-2.5 print:hidden">
-                    {isPriceLocked ? (
-                      <button
-                        type="button"
-                        onClick={() => setLockModalOpen(true)}
-                        className="w-full bg-cobalt hover:bg-cobalt-hover text-white py-3.5 sm:py-4 px-6 rounded-xl font-bold text-sm sm:text-base text-center transition-all flex items-center justify-center gap-2 group hover:scale-[1.005] active:scale-[0.99] shadow-lg shadow-cobalt/25 cursor-pointer"
-                      >
-                        <Lock className="w-4 h-4 text-sky-300" />
-                        <span>Unlock Price &amp; Book Free Pickup</span>
-                      </button>
                     ) : (
-                      <button
-                        type="button"
-                        onClick={() => onComplete(valuation.finalPrice, selectedDefects)}
-                        className="w-full bg-gradient-to-r from-cobalt via-indigo-600 to-cobalt hover:from-cobalt-hover hover:to-indigo-700 text-white py-3.5 sm:py-4 px-6 rounded-xl font-bold text-sm sm:text-base text-center transition-all flex items-center justify-center gap-2 group hover:scale-[1.005] active:scale-[0.99] shadow-lg shadow-cobalt/25 cursor-pointer"
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {selectedDefects.map((defect, i) => (
+                          <div key={i} className="p-3 rounded-lg border-2 border-slate-300 bg-slate-50 flex justify-between items-center text-xs">
+                            <span className="font-bold text-slate-950">{defect.description}</span>
+                            <span className="text-amber-800 font-medium text-[11px] bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                              Declared
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="pt-5 sm:pt-6 border-t border-ice-border flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setStep(reviewStepIndex - 1)}
+                      className="w-full sm:w-auto px-4 py-3 sm:py-2.5 rounded-xl border-2 border-slate-300 bg-white hover:bg-slate-100 text-slate-800 hover:text-slate-950 font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer active:scale-[0.99]"
+                    >
+                      <ArrowLeft className="w-4 h-4 shrink-0" />
+                      <span>Edit Diagnostics</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setStep(finalReceiptIndex);
+                        if (currentUser) {
+                          sendQuoteAlertApi({
+                            customerName: currentUser.name || 'Registered Customer',
+                            customerPhone: currentUser.phone || 'N/A',
+                            customerEmail: currentUser.email,
+                            modelName: model.name,
+                            storageGb: variant.storageGb,
+                            estimatedPayout: valuation.finalPrice,
+                            retentionPercentage: valuation.retentionPercentage,
+                            defects: selectedDefects.map(d => d.description),
+                            refCode: `SCH-${receiptRef}`,
+                          }).catch(err => console.warn('[Diagnostic Wizard] Failed to dispatch quote email alert:', err));
+                        }
+                      }}
+                      className="w-full sm:w-auto px-5 sm:px-6 py-3.5 sm:py-3 bg-gradient-to-r from-cobalt to-indigo-600 hover:from-cobalt-hover hover:to-indigo-700 text-white font-bold rounded-xl text-xs sm:text-sm transition-all shadow-md hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2 text-center cursor-pointer"
+                    >
+                      <span>Confirm Diagnostics &amp; Generate Quote</span>
+                      <ChevronRight className="w-4 h-4 shrink-0" />
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* STEP 7: Obsidian Verified Valuation Ledger */}
+              {step === finalReceiptIndex && (
+                <motion.div
+                  key="step-receipt"
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.98 }}
+                  className="text-left"
+                >
+                  <div className="max-w-2xl mx-auto print:max-w-none print:w-full">
+                    <div id="printable-quote" className="bg-white text-slate-900 border-2 border-slate-200 rounded-xl overflow-hidden shadow-xl p-6 print:p-8 relative">
+                      {/* Company Header Logo & Verified Status */}
+                      <div className="flex items-center justify-between pb-4 sm:pb-5 mb-5 border-b border-slate-200 print-border">
+                        <div className="flex items-center gap-3">
+                          <img src="/logo.svg" className="w-9 h-9 sm:w-10 sm:h-10 object-contain rounded-md print-logo-bg flex-shrink-0 shadow-xs" alt="Rephonix Logo" />
+                          <div>
+                            <span className="text-lg sm:text-xl font-extrabold text-slate-950 print-text-dark tracking-tight block leading-none">
+                              Re<span className="text-blue-700 print-text-cobalt">phonix</span>
+                            </span>
+                            <span className="text-[9px] sm:text-[10px] font-sans text-slate-600 print-text-muted tracking-wider uppercase block mt-1 font-bold">
+                              Official Valuation &amp; Diagnostic Certificate
+                            </span>
+                          </div>
+                        </div>
+                        <div className="text-right flex flex-col items-end">
+                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-300 text-emerald-800 text-[11px] font-bold shadow-xs">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                            <span>Verified</span>
+                          </div>
+                          <span className="text-[10px] font-sans text-slate-500 uppercase tracking-wider font-bold mt-1">
+                            REF #{receiptRef}
+                          </span>
+                          <span className="hidden print:block text-[9px] font-sans text-slate-500 mt-0.5">
+                            Date: {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Specification Audit Box */}
+                      <div className="flex justify-between items-center mb-5 pb-4 border-b border-slate-200 print-border font-sans">
+                        <div>
+                          <span className="text-[10px] text-slate-600 print-text-muted uppercase block font-medium tracking-normal mb-0.5 font-bold">
+                            SPECIFICATION AUDIT RECEIPT
+                          </span>
+                          <span className="font-extrabold text-slate-950 print-text-dark text-xl sm:text-2xl tracking-tight block">
+                            {model.name}
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-[10px] text-slate-600 print-text-muted uppercase block font-medium tracking-normal mb-0.5 font-bold">
+                            CONFIG &amp; STATUS
+                          </span>
+                          <span className="text-xs text-slate-900 print-text-dark font-sans font-bold block">
+                            {variant.storageGb >= 1024 ? `${variant.storageGb / 1024}TB` : `${variant.storageGb}GB`}
+                            {isTablet && variant.ramGb ? ` • ${variant.ramGb}GB RAM` : ''}
+                            {isTablet ? ` • ${variant.connectivity === 'cellular' || variant.color?.toLowerCase().includes('cellular') ? 'Wi-Fi + Cellular' : 'Wi-Fi Only'}` : ` • ${isApple ? 'Apple iOS' : 'Android'}${isApple && dualEsim === true ? ' • eSIM Only (US Model)' : ''}`}
+                          </span>
+                          <span className="hidden print:inline-block text-[10px] font-sans text-emerald-700 font-bold">
+                            7-Day Price Lock
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* 6-Gate Comprehensive Diagnostic Summary (Expanded for Print) */}
+                      <div className="space-y-2.5 text-xs font-sans">
+                        <div className="flex justify-between items-center py-1.5 text-slate-950 print-text-dark border-b border-slate-200 print-border">
+                          <span className="font-semibold">00. Base Specification ({variant.storageGb >= 1024 ? `${variant.storageGb / 1024}TB` : `${variant.storageGb}GB`}{isTablet && variant.ramGb ? `/${variant.ramGb}GB` : ''}{isTablet ? ` • ${variant.connectivity === 'cellular' || variant.color?.toLowerCase().includes('cellular') ? 'Cellular' : 'Wi-Fi'}` : ''})</span>
+                          <span className="text-emerald-700 print-text-emerald font-medium text-xs">Verified Spec</span>
+                        </div>
+
+                        {/* Print-only 6-Gate Diagnostic Breakdown Matrix */}
+                        <div className="hidden print:block py-2 space-y-1.5 border-b border-slate-200 print-border">
+                          <div className="grid grid-cols-2 gap-2 text-[11px] font-sans">
+                            <div className="p-2 rounded bg-slate-50 border border-slate-200 flex justify-between items-center">
+                              <span className="font-semibold text-slate-800">1. Boot &amp; Security Gate</span>
+                              <span className="text-emerald-700 font-medium text-xs">Passed</span>
+                            </div>
+                            <div className="p-2 rounded bg-slate-50 border border-slate-200 flex justify-between items-center">
+                              <span className="font-semibold text-slate-800">2. Display &amp; Touch Digitizer</span>
+                              <span className="text-emerald-700 font-medium text-xs">Verified</span>
+                            </div>
+                            <div className="p-2 rounded bg-slate-50 border border-slate-200 flex justify-between items-center">
+                              <span className="font-semibold text-slate-800">3. Camera &amp; Optical Sensors</span>
+                              <span className="text-emerald-700 font-medium text-xs">Functional</span>
+                            </div>
+                            <div className="p-2 rounded bg-slate-50 border border-slate-200 flex justify-between items-center">
+                              <span className="font-semibold text-slate-800">4. Frame &amp; Housing Integrity</span>
+                              <span className="text-emerald-700 font-medium text-xs">Verified</span>
+                            </div>
+                            <div className="p-2 rounded bg-slate-50 border border-slate-200 flex justify-between items-center">
+                              <span className="font-semibold text-slate-800">5. Battery &amp; Core Hardware</span>
+                              <span className="text-emerald-700 font-medium text-xs">Passed</span>
+                            </div>
+                            <div className="p-2 rounded bg-slate-50 border border-slate-200 flex justify-between items-center">
+                              <span className="font-semibold text-slate-800">{hasSpen ? '6. Box, S-Pen & Accessories' : '6. Original Accessories & Box'}</span>
+                              <span className="text-emerald-700 font-medium text-xs">Verified</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {valuation.deductions.length === 0 ? (
+                          <div className="text-emerald-700 print-text-emerald py-2.5 flex items-center gap-1.5 text-xs font-medium">
+                            <Check className="w-4 h-4 text-emerald-600 stroke-[2.5]" /> No defects declared. Device is in mint condition.
+                          </div>
+                        ) : (
+                          <div className="py-1 space-y-2">
+                            <span className="hidden print:block text-[10px] font-sans font-bold text-slate-600 uppercase">Declared Adjustments:</span>
+                            {valuation.deductions.map((d, i) => (
+                              <motion.div
+                                key={i}
+                                initial={{ opacity: 0, x: -8 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: i * 0.15 + 0.1 }}
+                                className="flex justify-between items-center text-slate-900 print-text-dark border-b border-slate-200 print-border py-1"
+                              >
+                                <span className="font-medium">{(i + 1).toString().padStart(2, '0')}. {getEngineeringLabel(d.description)}</span>
+                                <span className="text-slate-600 text-xs font-medium">Assessment Verified</span>
+                              </motion.div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+
+
+                      {/* Payout Summary Box */}
+                      <div className="flex justify-between items-center border-t border-slate-200 print-border pt-4 mt-4 bg-gradient-to-br from-emerald-50/70 via-slate-50 to-emerald-50/30 p-4 sm:p-5 rounded-xl border border-emerald-200/90 shadow-xs">
+                        <div>
+                          <span className="text-slate-600 print-text-muted block text-xs font-semibold">Total Estimated Payout</span>
+                          <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 font-bold mt-0.5">
+                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                            Payout Rate Locked (7 Days)
+                          </span>
+                        </div>
+                        <AnimatedPrice
+                          value={valuation.finalPrice}
+                          isMasked={isPriceLocked}
+                          isCritical={valuation.isCritical}
+                          className="text-3xl sm:text-4xl font-extrabold text-emerald-600 print-text-emerald tracking-tight font-sans"
+                        />
+                      </div>
+
+                      {/* Digital Trust & Transparency Badges */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mt-4 print:hidden">
+                        <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200/80 rounded-xl p-3">
+                          <div className="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0 text-emerald-700">
+                            <ShieldCheck className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <span className="text-xs font-semibold text-slate-900 block leading-tight">7-Day Price Lock</span>
+                            <span className="text-[11px] text-slate-500 leading-tight">Rate guaranteed</span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200/80 rounded-xl p-3">
+                          <div className="w-7 h-7 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0 text-blue-700">
+                            <Lock className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <span className="text-xs font-semibold text-slate-900 block leading-tight">DoD Data Wipe</span>
+                            <span className="text-[11px] text-slate-500 leading-tight">Certified zero residual</span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200/80 rounded-xl p-3">
+                          <div className="w-7 h-7 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0 text-amber-700">
+                            <Zap className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <span className="text-xs font-semibold text-slate-900 block leading-tight">Instant Payout</span>
+                            <span className="text-[11px] text-slate-500 leading-tight">Direct UPI / IMPS</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Print-Only Official Terms & Handover Sign-off Block */}
+                      <div className="hidden print:block mt-6 pt-5 border-t border-slate-300 print-border font-sans">
+                        <div className="grid grid-cols-2 gap-6 text-[10px] text-slate-600 mb-6">
+                          <div className="space-y-1">
+                            <span className="font-bold text-slate-900 block uppercase tracking-wider">Guarantee &amp; Sanitization Policy:</span>
+                            <p className="leading-relaxed">
+                              • Guaranteed payout locked for 7 days upon generation of reference #SCH-{receiptRef}.<br />
+                              • Certified data erasure and factory wipe performed before device refurbishment.<br />
+                              • Final payout processed instantly to UPI / Bank Account upon physical IMEI verification.
+                            </p>
+                          </div>
+                          <div className="space-y-1">
+                            <span className="font-bold text-slate-900 block uppercase tracking-wider">Pickup &amp; Support Verification:</span>
+                            <p className="leading-relaxed">
+                              • Scheduled device pickup across Delhi NCR with live tracking.<br />
+                              • Dedicated Valuation Desk: +91 90349 97719 | support@rephonix.in<br />
+                              • Rephonix Smart Device Exchange Services | www.rephonix.in
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-8 pt-4 border-t border-dashed border-slate-300">
+                          <div>
+                            <span className="text-[10px] font-sans text-slate-500 uppercase block mb-6">Customer Verification &amp; Handover</span>
+                            <div className="border-b border-slate-400 w-4/5 mb-1" />
+                            <span className="text-[9px] font-sans text-slate-600">Signature &amp; Date</span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] font-sans text-slate-500 uppercase block mb-6">Rephonix Verification Specialist</span>
+                            <div className="border-b border-slate-400 w-4/5 mb-1" />
+                            <span className="text-[9px] font-sans text-slate-600">Technician ID &amp; Digital Seal</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Not satisfied with the price? Contact Us Banner */}
+                      <div className="mt-5 bg-slate-50 border border-slate-200 rounded-2xl p-4 sm:px-6 sm:py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs print:hidden">
+                        <div>
+                          <h4 className="font-bold text-slate-950 text-sm sm:text-base tracking-tight">
+                            Not satisfied with the price?
+                          </h4>
+                          <p className="text-xs sm:text-sm text-slate-600 mt-0.5 font-medium">
+                            Please connect with our team
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setContactModalOpen(true)}
+                          className="text-blue-700 hover:text-blue-900 font-bold text-xs sm:text-sm hover:underline cursor-pointer transition-colors flex-shrink-0 self-end sm:self-auto"
+                        >
+                          Contact Us
+                        </button>
+                      </div>
+
+                      <p className="text-xs text-slate-500 mt-4 text-center">
+                        Estimated Device Value. Final offer is subject to physical inspection, IMEI/device verification and diagnostic confirmation.
+                      </p>
+                    </div>
+
+                    {/* Saved Quote notification banner */}
+                    {saveToast && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mt-3 p-3 bg-emerald-50 border border-emerald-300 text-emerald-900 rounded-xl text-xs font-semibold flex items-center justify-between shadow-xs"
                       >
-                        <span>Book Free Doorstep Pickup (Instant ₹{formatPrice(valuation.finalPrice)})</span>
-                        <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                      </button>
+                        <div className="flex items-center gap-2">
+                          <Check className="w-4 h-4 text-emerald-600 stroke-[3] flex-shrink-0" />
+                          <span>{saveToast}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setSaveToast(null)}
+                          className="text-emerald-700 hover:text-emerald-950 ml-2 p-0.5"
+                          aria-label="Dismiss"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </motion.div>
                     )}
 
-                    <div className="grid grid-cols-3 gap-2 sm:gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setStep(reviewStepIndex)}
-                        className="py-2.5 px-3 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-xs cursor-pointer active:scale-[0.99]"
-                      >
-                        <ArrowLeft className="w-3.5 h-3.5" />
-                        <span>Review</span>
-                      </button>
+                    {/* Unified High-Conversion Action Controls */}
+                    <div className="mt-4 space-y-2.5 print:hidden">
+                      {isPriceLocked ? (
+                        <button
+                          type="button"
+                          onClick={() => setLockModalOpen(true)}
+                          className="w-full bg-cobalt hover:bg-cobalt-hover text-white py-3.5 sm:py-4 px-6 rounded-xl font-bold text-sm sm:text-base text-center transition-all flex items-center justify-center gap-2 group hover:scale-[1.005] active:scale-[0.99] shadow-lg shadow-cobalt/25 cursor-pointer"
+                        >
+                          <Lock className="w-4 h-4 text-sky-300" />
+                          <span>Unlock Price &amp; Book Free Pickup</span>
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => onComplete(valuation.finalPrice, selectedDefects)}
+                          className="w-full bg-gradient-to-r from-cobalt via-indigo-600 to-cobalt hover:from-cobalt-hover hover:to-indigo-700 text-white py-3.5 sm:py-4 px-6 rounded-xl font-bold text-sm sm:text-base text-center transition-all flex items-center justify-center gap-2 group hover:scale-[1.005] active:scale-[0.99] shadow-lg shadow-cobalt/25 cursor-pointer"
+                        >
+                          <span>Book Free Doorstep Pickup (Instant ₹{formatPrice(valuation.finalPrice)})</span>
+                          <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                        </button>
+                      )}
 
-                      <button
-                        type="button"
-                        onClick={() => window.print()}
-                        aria-label="Print diagnostic report and quote"
-                        className="py-2.5 px-3 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-xs cursor-pointer active:scale-[0.99]"
-                      >
-                        <Printer className="w-3.5 h-3.5" />
-                        <span>Print</span>
-                      </button>
+                      <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setStep(reviewStepIndex)}
+                          className="py-2.5 px-3 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-xs cursor-pointer active:scale-[0.99]"
+                        >
+                          <ArrowLeft className="w-3.5 h-3.5" />
+                          <span>Review</span>
+                        </button>
 
-                      <button
-                        type="button"
-                        onClick={handleSaveQuote}
-                        aria-label="Save quote to profile"
-                        className={`py-2.5 px-3 rounded-xl border transition-colors flex items-center justify-center gap-1.5 text-xs font-bold shadow-xs cursor-pointer active:scale-[0.99] ${
-                          isQuoteSaved 
-                            ? 'bg-amber-50 border-amber-300 text-amber-900 font-extrabold' 
+                        <button
+                          type="button"
+                          onClick={() => window.print()}
+                          aria-label="Print diagnostic report and quote"
+                          className="py-2.5 px-3 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-xs cursor-pointer active:scale-[0.99]"
+                        >
+                          <Printer className="w-3.5 h-3.5" />
+                          <span>Print</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={handleSaveQuote}
+                          aria-label="Save quote to profile"
+                          className={`py-2.5 px-3 rounded-xl border transition-colors flex items-center justify-center gap-1.5 text-xs font-bold shadow-xs cursor-pointer active:scale-[0.99] ${isQuoteSaved
+                            ? 'bg-amber-50 border-amber-300 text-amber-900 font-extrabold'
                             : 'border-slate-300 bg-white hover:bg-slate-50 text-slate-700'
-                        }`}
-                      >
-                        <Bookmark className={`w-3.5 h-3.5 ${isQuoteSaved ? 'text-amber-600 fill-amber-500' : 'text-slate-500'}`} />
-                        <span className="truncate">{isQuoteSaved ? 'Saved (7d Lock)' : 'Save (7d Lock)'}</span>
-                      </button>
+                            }`}
+                        >
+                          <Bookmark className={`w-3.5 h-3.5 ${isQuoteSaved ? 'text-amber-600 fill-amber-500' : 'text-slate-500'}`} />
+                          <span className="truncate">{isQuoteSaved ? 'Saved (7d Lock)' : 'Save (7d Lock)'}</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-          {/* Navigation panel */}
-          {step < reviewStepIndex && (
-            <div className="hidden sm:flex flex-row justify-between items-center gap-3 border-t border-slate-200 pt-5 mt-6">
-              <button
-                type="button"
-                onClick={handlePrevStep}
-                className="px-4 py-2 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-medium text-sm transition-colors flex items-center gap-1.5 shadow-xs"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Back</span>
-              </button>
+            {/* Navigation panel */}
+            {step < reviewStepIndex && (
+              <div className="hidden sm:flex flex-row justify-between items-center gap-3 border-t border-slate-200 pt-5 mt-6">
+                <button
+                  type="button"
+                  onClick={handlePrevStep}
+                  className="px-4 py-2 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-medium text-sm transition-colors flex items-center gap-1.5 shadow-xs"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <span>Back</span>
+                </button>
 
-              <span className="hidden sm:inline-block text-xs font-medium text-slate-500">
-                Step {step + 1} of {reviewStepIndex + 1}
-              </span>
+                <span className="hidden sm:inline-block text-xs font-medium text-slate-500">
+                  Step {step + 1} of {reviewStepIndex + 1}
+                </span>
 
-              <button
-                type="button"
-                onClick={handleNextStep}
-                disabled={!isStepValidated}
-                className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-1.5 ${
-                  !isStepValidated
+                <button
+                  type="button"
+                  onClick={handleNextStep}
+                  disabled={!isStepValidated}
+                  className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-1.5 ${!isStepValidated
                     ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
                     : 'bg-slate-950 hover:bg-slate-900 text-white shadow-md shadow-slate-950/20 active:scale-98 touch-manipulation'
-                }`}
-              >
-                <span>{step === (reviewStepIndex - 1) ? 'Review Summary' : 'Continue'}</span>
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          )}
-        </motion.div>
+                    }`}
+                >
+                  <span>{step === (reviewStepIndex - 1) ? 'Review Summary' : 'Continue'}</span>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+          </motion.div>
         </div>
       </div>
 
@@ -2516,9 +2473,9 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
             {/* Mobile Drag Indicator */}
             <div className="w-12 h-1 bg-slate-300 rounded-full mx-auto my-2.5 sm:hidden flex-shrink-0" />
             {/* Close Button */}
-            <button 
+            <button
               type="button"
-              onClick={() => setLockModalOpen(false)} 
+              onClick={() => setLockModalOpen(false)}
               className="absolute top-3 right-3 text-slate-400 hover:text-slate-600 z-10 p-1.5 rounded-full hover:bg-slate-100 transition-colors"
             >
               <X className="w-4 h-4" />
@@ -2532,7 +2489,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                 </span>
                 <h3 className="text-2xl font-bold mt-4 leading-tight">Login / Signup</h3>
               </div>
-              
+
               <div className="my-auto flex flex-col items-center text-center space-y-4 z-10">
                 <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center border border-white/20 shadow-inner">
                   <Lock className="w-8 h-8 text-white fill-current" />
@@ -2547,13 +2504,13 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
             {/* Right Panel: Active Auth Forms */}
             <div className="w-full md:w-7/12 p-6 sm:p-8 flex flex-col justify-center bg-white font-sans">
-              
+
               {/* Product Info Box */}
               <div className="border border-slate-200 rounded-lg p-3.5 flex items-center gap-3.5 mb-5 bg-slate-50">
                 <div className="w-12 h-12 bg-white border border-slate-200 rounded-md flex items-center justify-center p-1 flex-shrink-0">
-                  <img 
-                    src={getDeviceImage(model.id, model.brandId, variant.color, model.imageUrl)} 
-                    alt={model.name} 
+                  <img
+                    src={getDeviceImage(model.id, model.brandId, variant.color, model.imageUrl)}
+                    alt={model.name}
                     referrerPolicy="no-referrer"
                     onError={(e) => {
                       const img = e.target as HTMLImageElement;
@@ -2637,55 +2594,55 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
                   {/* Stage 1: Email address entry */}
                   <form onSubmit={handleEmailSubmit} className="space-y-4">
-                  <div>
-                    <label htmlFor="modalEmail" className="text-xs font-semibold text-slate-700 block mb-1.5">
-                      Enter your email address
-                    </label>
-                    <div className="relative flex rounded-md overflow-hidden border border-slate-300 focus-within:border-blue-500 transition-colors">
-                      <span className="bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 flex items-center border-r border-slate-300">
-                        <Mail className="w-4 h-4 text-slate-500" />
-                      </span>
-                      <input
-                        id="modalEmail"
-                        type="email"
-                        required
-                        value={emailInput}
-                        onChange={(e) => setEmailInput(e.target.value)}
-                        className="w-full px-3 py-2 bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none"
-                        placeholder="Enter your Email"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex items-start">
-                    <div className="flex items-center h-5">
-                      <input
-                        id="modalTerms"
-                        type="checkbox"
-                        checked={termsAccepted}
-                        onChange={(e) => setTermsAccepted(e.target.checked)}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500/30 border-slate-300 rounded"
-                      />
-                    </div>
-                    <div className="ml-2.5 text-xs text-left">
-                      <label htmlFor="modalTerms" className="font-normal text-slate-600">
-                        I agree to the{' '}
-                        <span className="text-blue-600 hover:underline cursor-pointer font-semibold" onClick={() => alert('Terms of Service: By unlocking your price, you verify device details are correctly declared.')}>
-                          Terms &amp; Conditions
-                        </span>{' '}
-                        &amp; Privacy Policy.
+                    <div>
+                      <label htmlFor="modalEmail" className="text-xs font-semibold text-slate-700 block mb-1.5">
+                        Enter your email address
                       </label>
+                      <div className="relative flex rounded-md overflow-hidden border border-slate-300 focus-within:border-blue-500 transition-colors">
+                        <span className="bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 flex items-center border-r border-slate-300">
+                          <Mail className="w-4 h-4 text-slate-500" />
+                        </span>
+                        <input
+                          id="modalEmail"
+                          type="email"
+                          required
+                          value={emailInput}
+                          onChange={(e) => setEmailInput(e.target.value)}
+                          className="w-full px-3 py-2 bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none"
+                          placeholder="Enter your Email"
+                        />
+                      </div>
                     </div>
-                  </div>
 
-                  <button
-                    type="submit"
-                    disabled={modalLoading}
-                    className="w-full flex justify-center py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-bold text-xs uppercase tracking-wider transition-all shadow-md disabled:opacity-50"
-                  >
-                    {modalLoading ? 'Checking...' : 'CONTINUE'}
-                  </button>
-                </form>
+                    <div className="flex items-start">
+                      <div className="flex items-center h-5">
+                        <input
+                          id="modalTerms"
+                          type="checkbox"
+                          checked={termsAccepted}
+                          onChange={(e) => setTermsAccepted(e.target.checked)}
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500/30 border-slate-300 rounded"
+                        />
+                      </div>
+                      <div className="ml-2.5 text-xs text-left">
+                        <label htmlFor="modalTerms" className="font-normal text-slate-600">
+                          I agree to the{' '}
+                          <span className="text-blue-600 hover:underline cursor-pointer font-semibold" onClick={() => alert('Terms of Service: By unlocking your price, you verify device details are correctly declared.')}>
+                            Terms &amp; Conditions
+                          </span>{' '}
+                          &amp; Privacy Policy.
+                        </label>
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={modalLoading}
+                      className="w-full flex justify-center py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-bold text-xs uppercase tracking-wider transition-all shadow-md disabled:opacity-50"
+                    >
+                      {modalLoading ? 'Checking...' : 'CONTINUE'}
+                    </button>
+                  </form>
                 </div>
               )}
 
@@ -2728,7 +2685,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   </div>
 
                   <div className="flex justify-between items-center text-xs pt-1">
-                    <button 
+                    <button
                       type="button"
                       onClick={() => { setModalStage('email'); setModalError(''); }}
                       className="text-blue-600 hover:text-blue-700 hover:underline font-semibold"
@@ -2835,7 +2792,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   </div>
 
                   <div className="flex justify-between items-center text-xs pt-1">
-                    <button 
+                    <button
                       type="button"
                       onClick={() => { setModalStage('email'); setModalError(''); }}
                       className="text-blue-600 hover:underline font-semibold"
@@ -2881,7 +2838,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   </div>
 
                   <div className="flex justify-between items-center text-xs pt-1">
-                    <button 
+                    <button
                       type="button"
                       onClick={() => { setModalStage('email'); setModalError(''); }}
                       className="text-blue-600 hover:underline font-semibold"
@@ -3000,14 +2957,14 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                   </div>
 
                   <div className="flex justify-between items-center text-xs pt-1">
-                    <button 
+                    <button
                       type="button"
                       onClick={() => { setModalStage('password'); setModalError(''); setForgotSuccess(''); }}
                       className="text-blue-600 hover:underline font-semibold"
                     >
                       Back to Login
                     </button>
-                    <button 
+                    <button
                       type="button"
                       onClick={() => { setModalStage('email'); setModalError(''); setForgotSuccess(''); }}
                       className="text-slate-500 hover:text-slate-700 hover:underline font-medium"
@@ -3038,12 +2995,12 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
             {/* Mobile Drag Indicator */}
             <div className="w-12 h-1 bg-slate-300 rounded-full mx-auto mb-3 sm:hidden" />
             {/* Close button */}
-            <button 
+            <button
               type="button"
               onClick={() => {
                 setContactModalOpen(false);
                 setBestPriceSubmitted(false);
-              }} 
+              }}
               className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1.5 rounded-full hover:bg-slate-100 transition-colors"
             >
               <X className="w-5 h-5" />
