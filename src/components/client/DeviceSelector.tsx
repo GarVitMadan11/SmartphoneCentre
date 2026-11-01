@@ -20,7 +20,7 @@ export interface ColorSpec {
 
 function getColorTheme(colorName: string): ColorSpec {
   const name = colorName.toLowerCase();
-  
+
   if (name.includes('natural titanium')) {
     return {
       gradient: 'linear-gradient(180deg, #A69F96 0%, #B8B1A7 50%, #8C867E 100%)',
@@ -191,7 +191,7 @@ function getColorTheme(colorName: string): ColorSpec {
       filter: 'sepia(0.35) saturate(0.75) brightness(0.95) contrast(1.05)',
     };
   }
-  
+
   return {
     gradient: 'linear-gradient(180deg, #D5D8DC 0%, #E5E8EB 50%, #AEB6BF 100%)',
     accentColor: '#8F969E',
@@ -225,8 +225,8 @@ export const PhoneBackPreview: React.FC<{
   const hasOfficialImg = officialImgUrl && (officialImgUrl.startsWith('http') || officialImgUrl.startsWith('data:'));
 
   // 1. Determine Phone shape, aspect ratio and roundedness
-  let chassisClass = "w-32 h-56 rounded-[22px]"; 
-  
+  let chassisClass = "w-32 h-56 rounded-[22px]";
+
   const isFold = id.includes('fold');
   const isFlip = id.includes('flip');
   const isUltra = name.includes('ultra') || id.includes('u');
@@ -257,9 +257,9 @@ export const PhoneBackPreview: React.FC<{
     <div className="flex flex-col items-center justify-center p-6 bg-slate-50 dark:bg-zinc-900/30 rounded-lg border border-ice-border/40 mt-2 mb-4 animate-fadeIn w-full">
       {/* 3D phone presentation pedestal */}
       <div className="relative w-44 h-64 flex items-center justify-center p-2 overflow-visible transition-all duration-300">
-        
+
         {/* Soft drop shadow beneath phone */}
-        <div 
+        <div
           className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[85%] h-4 bg-black/20 rounded-full blur-md filter pointer-events-none"
           style={{
             transform: 'translateX(-50%) scaleY(0.4)',
@@ -268,14 +268,14 @@ export const PhoneBackPreview: React.FC<{
 
         {hasOfficialImg ? (
           /* Render crawled high-quality official product image */
-          <img 
-            src={officialImgUrl} 
-            alt={`${modelName} in ${colorName}`} 
+          <img
+            src={officialImgUrl}
+            alt={`${modelName} in ${colorName}`}
             className="max-h-full max-w-full object-contain transition-all duration-500 hover:scale-[1.04] pointer-events-none drop-shadow-[0_12px_24px_rgba(0,0,0,0.15)]"
           />
         ) : (
           /* Fallback: Dynamic CSS Phone Back */
-          <div 
+          <div
             className={`relative ${chassisClass} border-[3px] flex flex-col justify-between p-3 overflow-hidden transition-all duration-300 shadow-[0_12px_24px_rgba(0,0,0,0.18)]`}
             style={{
               backgroundImage: theme.gradient,
@@ -299,7 +299,7 @@ export const PhoneBackPreview: React.FC<{
               <div className="absolute top-2 left-2">
                 {isSingleCameraApple ? (
                   // Single Camera (SE / XR style)
-                  <div 
+                  <div
                     className="w-5 h-5 rounded-full flex items-center justify-center border border-black/40 shadow-inner"
                     style={{ backgroundColor: theme.accentColor }}
                   >
@@ -318,10 +318,10 @@ export const PhoneBackPreview: React.FC<{
                   </div>
                 ) : isProApple ? (
                   // Apple Pro 3-Camera Module
-                  <div 
+                  <div
                     className="w-11 h-11 sm:w-12 sm:h-12 rounded-[11px] p-1 grid grid-cols-2 gap-1 items-center justify-items-center border border-white/10 shadow-sm relative overflow-hidden"
-                    style={{ 
-                      backgroundColor: 'rgba(255,255,255,0.06)', 
+                    style={{
+                      backgroundColor: 'rgba(255,255,255,0.06)',
                       backdropFilter: 'blur(10px)',
                       boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1)'
                     }}
@@ -345,10 +345,10 @@ export const PhoneBackPreview: React.FC<{
                   </div>
                 ) : (
                   // Apple Dual Camera (iPhone 13, 14, 15, 16, 17 style - vertical pill)
-                  <div 
+                  <div
                     className="w-6 h-11 sm:w-7 sm:h-12 rounded-[10px] p-1 flex flex-col items-center justify-between border border-white/10 shadow-sm"
-                    style={{ 
-                      backgroundColor: 'rgba(255,255,255,0.06)', 
+                    style={{
+                      backgroundColor: 'rgba(255,255,255,0.06)',
                       backdropFilter: 'blur(10px)'
                     }}
                   >
@@ -435,9 +435,9 @@ export const PhoneBackPreview: React.FC<{
 
             {isGoogle && (
               // Google Pixel Visor Bar (Pixel 6, 7, 8, 9)
-              <div 
+              <div
                 className="absolute top-4 left-0 right-0 h-4 border-y border-black/30 shadow-md flex items-center justify-between px-3 relative"
-                style={{ 
+                style={{
                   backgroundColor: theme.accentColor === '#0E0E0F' ? '#222' : '#333',
                   boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1)'
                 }}
@@ -482,14 +482,14 @@ export const PhoneBackPreview: React.FC<{
               {isApple && (
                 <div style={{ color: theme.logoColor }} className="transition-all duration-300 mt-6">
                   <svg viewBox="0 0 24 24" className="w-5 h-5 sm:w-6 sm:h-6" fill="currentColor">
-                    <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 4.17c.66-.81 1.11-1.93.99-3.06-1 .04-2.2.67-2.92 1.49-.62.71-1.16 1.85-1.01 2.96 1.12.09 2.27-.58 2.94-1.39z"/>
+                    <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 4.17c.66-.81 1.11-1.93.99-3.06-1 .04-2.2.67-2.92 1.49-.62.71-1.16 1.85-1.01 2.96 1.12.09 2.27-.58 2.94-1.39z" />
                   </svg>
                 </div>
               )}
               {isGoogle && (
                 <div style={{ color: theme.logoColor }} className="transition-all duration-300">
                   <svg viewBox="0 0 24 24" className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor">
-                    <path d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.114-5.136 4.114-3.513 0-6.36-2.847-6.36-6.36s2.847-6.36 6.36-6.36c1.63 0 3.117.618 4.252 1.628l3.05-3.05C19.342 2.76 16.035 1.5 12.24 1.5 6.42 1.5 1.7 6.22 1.7 12s4.72 10.5 10.54 10.5c5.96 0 10.37-4.19 10.37-10.5 0-.685-.082-1.354-.22-1.715H12.24z"/>
+                    <path d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.114-5.136 4.114-3.513 0-6.36-2.847-6.36-6.36s2.847-6.36 6.36-6.36c1.63 0 3.117.618 4.252 1.628l3.05-3.05C19.342 2.76 16.035 1.5 12.24 1.5 6.42 1.5 1.7 6.22 1.7 12s4.72 10.5 10.54 10.5c5.96 0 10.37-4.19 10.37-10.5 0-.685-.082-1.354-.22-1.715H12.24z" />
                   </svg>
                 </div>
               )}
@@ -534,13 +534,13 @@ export const PhoneBackPreview: React.FC<{
 // ── Brand Logo using official Simple Icons SVG paths ─────────────────────────
 
 const BRAND_ICON_MAP: Record<string, { icon: { path: string; viewBox?: string; hex?: string }; size: number; brandColor?: string }> = {
-  apple:    { icon: siApple,    size: 22 },
-  samsung:  { icon: siSamsung,  size: 48 }, // Adjusted to fit grid card cleanly
-  xiaomi:   { icon: siXiaomi,   size: 22 },
-  vivo:     { icon: siVivo,     size: 38 }, // Adjusted to fit grid card cleanly
-  oneplus:  { icon: siOneplus,  size: 22 },
-  google:   { icon: siGoogle,   size: 22, brandColor: '#4285F4' },
-  oppo:     { icon: siOppo,     size: 42, brandColor: '#008A5E' },
+  apple: { icon: siApple, size: 22 },
+  samsung: { icon: siSamsung, size: 48 }, // Adjusted to fit grid card cleanly
+  xiaomi: { icon: siXiaomi, size: 22 },
+  vivo: { icon: siVivo, size: 38 }, // Adjusted to fit grid card cleanly
+  oneplus: { icon: siOneplus, size: 22 },
+  google: { icon: siGoogle, size: 22, brandColor: '#4285F4' },
+  oppo: { icon: siOppo, size: 42, brandColor: '#008A5E' },
   motorola: { icon: siMotorola, size: 24, brandColor: '#00112C' },
 };
 
@@ -552,19 +552,19 @@ export function BrandLogo({ logo, isActive }: { logo: string; isActive: boolean;
     // N=0, O=22, T=44, H=66, I=88(3wide), N=102, G=124
     const nothingDots: [number, number][] = [
       // N (x=0)
-      [0,0],[16,0],[0,4],[4,4],[16,4],[0,8],[8,8],[16,8],[0,12],[12,12],[16,12],[0,16],[16,16],
+      [0, 0], [16, 0], [0, 4], [4, 4], [16, 4], [0, 8], [8, 8], [16, 8], [0, 12], [12, 12], [16, 12], [0, 16], [16, 16],
       // O (x=22)
-      [26,0],[30,0],[34,0],[22,4],[38,4],[22,8],[38,8],[22,12],[38,12],[26,16],[30,16],[34,16],
+      [26, 0], [30, 0], [34, 0], [22, 4], [38, 4], [22, 8], [38, 8], [22, 12], [38, 12], [26, 16], [30, 16], [34, 16],
       // T (x=44)
-      [44,0],[48,0],[52,0],[56,0],[60,0],[52,4],[52,8],[52,12],[52,16],
+      [44, 0], [48, 0], [52, 0], [56, 0], [60, 0], [52, 4], [52, 8], [52, 12], [52, 16],
       // H (x=66)
-      [66,0],[82,0],[66,4],[82,4],[66,8],[70,8],[74,8],[78,8],[82,8],[66,12],[82,12],[66,16],[82,16],
+      [66, 0], [82, 0], [66, 4], [82, 4], [66, 8], [70, 8], [74, 8], [78, 8], [82, 8], [66, 12], [82, 12], [66, 16], [82, 16],
       // I (x=88, 3-wide)
-      [88,0],[92,0],[96,0],[92,4],[92,8],[92,12],[88,16],[92,16],[96,16],
+      [88, 0], [92, 0], [96, 0], [92, 4], [92, 8], [92, 12], [88, 16], [92, 16], [96, 16],
       // N (x=102)
-      [102,0],[118,0],[102,4],[106,4],[118,4],[102,8],[110,8],[118,8],[102,12],[114,12],[118,12],[102,16],[118,16],
+      [102, 0], [118, 0], [102, 4], [106, 4], [118, 4], [102, 8], [110, 8], [118, 8], [102, 12], [114, 12], [118, 12], [102, 16], [118, 16],
       // G (x=124)
-      [128,0],[132,0],[136,0],[124,4],[124,8],[132,8],[136,8],[140,8],[124,12],[140,12],[128,16],[132,16],[136,16],
+      [128, 0], [132, 0], [136, 0], [124, 4], [124, 8], [132, 8], [136, 8], [140, 8], [124, 12], [140, 12], [128, 16], [132, 16], [136, 16],
     ];
     return (
       <div className="h-8 flex items-center justify-center overflow-visible" style={{ flexShrink: 0 }}>
@@ -598,12 +598,12 @@ export function BrandLogo({ logo, isActive }: { logo: string; isActive: boolean;
     return (
       <div className="h-8 flex items-center justify-center overflow-visible" style={{ flexShrink: 0 }}>
         <svg role="img" viewBox="0 0 48 48" width="22" height="22" aria-label="Google" style={{ flexShrink: 0 }}>
-          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-          <path fill="#FBBC05" d="M10.53 28.59c-.5-1.45-.78-2.99-.78-4.59s.27-3.14.78-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-          <path fill="#4285F4" d="M24 20h22.6v8H24z"/>
-          <path fill="#ffffff" d="M33.17 20H24v8h9.17v-8z"/>
+          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+          <path fill="#FBBC05" d="M10.53 28.59c-.5-1.45-.78-2.99-.78-4.59s.27-3.14.78-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+          <path fill="#4285F4" d="M24 20h22.6v8H24z" />
+          <path fill="#ffffff" d="M33.17 20H24v8h9.17v-8z" />
         </svg>
       </div>
     );
@@ -748,11 +748,10 @@ const SeriesCard: React.FC<{
           {models.slice(0, 6).map((m, idx) => (
             <span
               key={m.id}
-              className={`h-1 rounded-full transition-all duration-300 ${
-                idx === (currentIndex % Math.min(models.length, 6))
+              className={`h-1 rounded-full transition-all duration-300 ${idx === (currentIndex % Math.min(models.length, 6))
                   ? 'w-3.5 bg-cobalt'
                   : 'w-1 bg-zinc-300'
-              }`}
+                }`}
             />
           ))}
         </div>
@@ -887,7 +886,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
     setSelectedStorage(null);
     setTempVariant(null);
     onDefaultBrandConsumed?.();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [defaultBrandId]);
 
   // Handle external model pre-selection (from hero search or direct URL)
@@ -932,7 +931,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
       }, 200);
     }
     onDefaultModelConsumed?.();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [defaultModelId, defaultVariant]);
 
   useEffect(() => {
@@ -1144,8 +1143,8 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
     if (selectedModel) {
       const ram = selectedRam ?? (ramOptions.length > 0 ? ramOptions[0] : 0);
       const vars = generateVariantsForModel(selectedModel);
-      
-      const activeColor = isTablet 
+
+      const activeColor = isTablet
         ? (selectedConnectivity === 'cellular' ? 'Wi-Fi + Cellular (SIM)' : 'Wi-Fi Only')
         : 'Standard';
 
@@ -1255,7 +1254,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
 
           {/* Brand Tabs — hidden when a search query is active */}
           {!debouncedSearchQuery.trim() && (
-            <div className="flex gap-2.5 mb-6 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-none" style={{scrollbarWidth: 'none'}}>
+            <div className="flex gap-2.5 mb-6 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-none" style={{ scrollbarWidth: 'none' }}>
               {BRANDS.map(brand => {
                 const isActive = selectedBrandId === brand.id;
                 return (
@@ -1269,11 +1268,10 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                       setSelectedStorage(null);
                       setTempVariant(null);
                     }}
-                    className={`relative flex-shrink-0 px-4 sm:px-5 py-2.5 sm:py-3 rounded-md font-semibold text-xs sm:text-sm flex flex-col items-center justify-center gap-1.5 border transition-all duration-300 ${
-                      isActive
+                    className={`relative flex-shrink-0 px-4 sm:px-5 py-2.5 sm:py-3 rounded-md font-semibold text-xs sm:text-sm flex flex-col items-center justify-center gap-1.5 border transition-all duration-300 ${isActive
                         ? 'border-transparent text-white shadow-[0_4px_15px_rgba(59,130,246,0.25)]'
                         : 'bg-canvas-pure text-ink-slate border-ice-border hover:border-cobalt/40 hover:bg-cobalt-light/10 opacity-85 hover:opacity-100'
-                    }`}
+                      }`}
                     style={{ minHeight: '64px', minWidth: '72px' }}
                   >
                     {isActive && (
@@ -1297,7 +1295,7 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-8 items-start">
         {/* Left Side: Search and Models list / Series Cards */}
-        <motion.div 
+        <motion.div
           layout="position"
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
           className="lg:col-span-12"
@@ -1392,102 +1390,100 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                 {(() => {
                   const displayModels = (selectedSeries && !debouncedSearchQuery.trim()) ? seriesFilteredModels : filteredModels;
                   return (
-                <div className={`grid grid-cols-2 sm:grid-cols-2 ${selectedModel ? 'lg:grid-cols-2' : 'lg:grid-cols-3'} gap-2.5 sm:gap-6`}>
-                   {displayModels.length === 0 && (
-                    <div className="col-span-full py-12 px-4 text-center border border-dashed border-ice-border rounded-2xl bg-canvas-pure">
-                      <Smartphone className="w-10 h-10 text-ink-muted mx-auto mb-3" />
-                      <h4 className="text-base font-semibold text-ink-navy">No models found</h4>
-                      <p className="text-xs text-ink-muted mt-1 max-w-xs mx-auto">
-                        {seriesSearchQuery
-                          ? <>No results for <span className="font-sans text-cobalt">"{seriesSearchQuery}"</span> in {selectedSeries}.<br />Try a different name.</>  
-                          : <>No results for <span className="font-sans text-cobalt">"{searchQuery}"</span>.<br />Try a brand name or model number.</>}
-                      </p>
-                      <button
-                        onClick={() => seriesSearchQuery ? setSeriesSearchQuery('') : setSearchQuery('')}
-                        className="mt-4 px-4 py-2 bg-cobalt hover:bg-cobalt-hover text-white text-xs font-bold rounded-lg transition-all"
-                        style={{ minHeight: '36px' }}
-                      >
-                        Clear Search
-                      </button>
-                    </div>
-                  )}
-                  <AnimatePresence>
-                    {displayModels.map(model => {
-                      const isSelected = selectedModel?.id === model.id;
-                      const hasSelection = selectedModel !== null;
-                      return (
-                        <motion.div
-                          layout="position"
-                          key={model.id}
-                          whileHover={{ y: -6, boxShadow: "0 10px 25px -5px rgba(59, 130, 246, 0.08), 0 8px 16px -8px rgba(59, 130, 246, 0.08)" }}
-                          whileTap={{ scale: 0.985 }}
-                          onClick={() => handleModelClick(model)}
-                          className={`cursor-pointer bg-canvas-pure border rounded-xl sm:rounded-2xl p-3 sm:p-6 shadow-xs sm:shadow-sm flex flex-col justify-between group transition-colors duration-300 ${
-                            isSelected
-                              ? 'border-cobalt ring-2 ring-cobalt/20 scale-[1.01] opacity-100 z-10 shadow-md'
-                              : hasSelection
-                              ? 'border-ice-border opacity-50 hover:opacity-100 hover:scale-[1.005]'
-                              : 'border-ice-border hover:border-cobalt/40'
-                          }`}
-                        >
-                          <div>
-                            <div className="flex items-center justify-between mb-4">
-                              <span className={`px-2.5 py-1 text-[10px] font-sans font-bold rounded-full uppercase tracking-wider ${
-                                model.category === 'flagship'
-                                  ? 'bg-amber-100 text-amber-800'
-                                  : model.category === 'premium'
-                                  ? 'bg-blue-50 text-blue-700'
-                                  : 'bg-zinc-100 text-zinc-800'
-                              }`}>
-                                {model.category || (model.brandId === 'brand-apple' ? 'Apple iPhone' : 'Smartphone')}
-                              </span>
-                              <span className="text-[10px] font-sans text-zinc-400">{model.releaseYear}</span>
-                            </div>
-
-                            <h3 className="text-xs sm:text-xl font-bold font-sans text-ink-navy uppercase group-hover:text-cobalt transition-colors text-left line-clamp-1">
-                              {model.name}
-                            </h3>
-                            {model.series && (
-                              <p className="text-xs font-sans text-zinc-400 mt-1 text-left">Series: {model.series}</p>
-                            )}
-
-                            {/* Smartphone Image */}
-                            <div className="my-2 sm:my-6 h-28 sm:h-44 flex items-center justify-center pointer-events-none">
-                              <img
-                                src={getDeviceImage(model.id, model.brandId, undefined, model.imageUrl)}
-                                alt={model.name}
-                                referrerPolicy="no-referrer"
-                                onError={(e) => {
-                                  const img = e.target as HTMLImageElement;
-                                  const fallback = getDeviceImage('', model.brandId);
-                                  if (img.src !== fallback) {
-                                    img.src = fallback;
-                                  }
-                                }}
-                                className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
-                                draggable={false}
-                              />
-                            </div>
-                          </div>
-
-                          <div className="pt-4 border-t border-ice-border/60 flex items-center justify-between">
-                            <div className="text-left">
-                              <span className="text-[10px] text-zinc-400 uppercase font-sans block">Up to</span>
-                              <span className="text-sm sm:text-lg font-extrabold text-emerald-600 font-sans">
-                                {formatPrice(getMaxVariantPrice(model))}
-                              </span>
-                            </div>
-                            <button
-                              type="button"
-                              className="px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-lg bg-cobalt text-white text-[10px] sm:text-xs font-bold flex items-center gap-1 group-hover:bg-cobalt/90 transition-all shadow-xs"
+                    <div className={`grid grid-cols-2 sm:grid-cols-2 ${selectedModel ? 'lg:grid-cols-2' : 'lg:grid-cols-3'} gap-2.5 sm:gap-6`}>
+                      {displayModels.length === 0 && (
+                        <div className="col-span-full py-12 px-4 text-center border border-dashed border-ice-border rounded-2xl bg-canvas-pure">
+                          <Smartphone className="w-10 h-10 text-ink-muted mx-auto mb-3" />
+                          <h4 className="text-base font-semibold text-ink-navy">No models found</h4>
+                          <p className="text-xs text-ink-muted mt-1 max-w-xs mx-auto">
+                            {seriesSearchQuery
+                              ? <>No results for <span className="font-sans text-cobalt">"{seriesSearchQuery}"</span> in {selectedSeries}.<br />Try a different name.</>
+                              : <>No results for <span className="font-sans text-cobalt">"{searchQuery}"</span>.<br />Try a brand name or model number.</>}
+                          </p>
+                          <button
+                            onClick={() => seriesSearchQuery ? setSeriesSearchQuery('') : setSearchQuery('')}
+                            className="mt-4 px-4 py-2 bg-cobalt hover:bg-cobalt-hover text-white text-xs font-bold rounded-lg transition-all"
+                            style={{ minHeight: '36px' }}
+                          >
+                            Clear Search
+                          </button>
+                        </div>
+                      )}
+                      <AnimatePresence>
+                        {displayModels.map(model => {
+                          const isSelected = selectedModel?.id === model.id;
+                          const hasSelection = selectedModel !== null;
+                          return (
+                            <motion.div
+                              layout="position"
+                              key={model.id}
+                              whileHover={{ y: -6, boxShadow: "0 10px 25px -5px rgba(59, 130, 246, 0.08), 0 8px 16px -8px rgba(59, 130, 246, 0.08)" }}
+                              whileTap={{ scale: 0.985 }}
+                              onClick={() => handleModelClick(model)}
+                              className={`cursor-pointer bg-canvas-pure border rounded-xl sm:rounded-2xl p-3 sm:p-6 shadow-xs sm:shadow-sm flex flex-col justify-between group transition-colors duration-300 ${isSelected
+                                  ? 'border-cobalt ring-2 ring-cobalt/20 scale-[1.01] opacity-100 z-10 shadow-md'
+                                  : hasSelection
+                                    ? 'border-ice-border opacity-50 hover:opacity-100 hover:scale-[1.005]'
+                                    : 'border-ice-border hover:border-cobalt/40'
+                                }`}
                             >
-                              <span>Sell Now</span>
-                              <ArrowRight className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </motion.div>
-                      );
-                    })}
+                              <div>
+                                <div className="flex items-center justify-between mb-4">
+                                  <span className={`px-2.5 py-1 text-[10px] font-sans font-bold rounded-full uppercase tracking-wider ${model.category === 'flagship'
+                                      ? 'bg-amber-100 text-amber-800'
+                                      : model.category === 'premium'
+                                        ? 'bg-blue-50 text-blue-700'
+                                        : 'bg-zinc-100 text-zinc-800'
+                                    }`}>
+                                    {model.category || (model.brandId === 'brand-apple' ? 'Apple iPhone' : 'Smartphone')}
+                                  </span>
+                                  <span className="text-[10px] font-sans text-zinc-400">{model.releaseYear}</span>
+                                </div>
+
+                                <h3 className="text-xs sm:text-xl font-bold font-sans text-ink-navy uppercase group-hover:text-cobalt transition-colors text-left line-clamp-1">
+                                  {model.name}
+                                </h3>
+                                {model.series && (
+                                  <p className="text-xs font-sans text-zinc-400 mt-1 text-left">Series: {model.series}</p>
+                                )}
+
+                                {/* Smartphone Image */}
+                                <div className="my-2 sm:my-6 h-28 sm:h-44 flex items-center justify-center pointer-events-none">
+                                  <img
+                                    src={getDeviceImage(model.id, model.brandId, undefined, model.imageUrl)}
+                                    alt={model.name}
+                                    referrerPolicy="no-referrer"
+                                    onError={(e) => {
+                                      const img = e.target as HTMLImageElement;
+                                      const fallback = getDeviceImage('', model.brandId);
+                                      if (img.src !== fallback) {
+                                        img.src = fallback;
+                                      }
+                                    }}
+                                    className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
+                                    draggable={false}
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="pt-4 border-t border-ice-border/60 flex items-center justify-between">
+                                <div className="text-left">
+                                  <span className="text-[10px] text-zinc-400 uppercase font-sans block">Up to</span>
+                                  <span className="text-sm sm:text-lg font-extrabold text-emerald-600 font-sans">
+                                    {formatPrice(getMaxVariantPrice(model))}
+                                  </span>
+                                </div>
+                                <button
+                                  type="button"
+                                  className="px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-lg bg-cobalt text-white text-[10px] sm:text-xs font-bold flex items-center gap-1 group-hover:bg-cobalt/90 transition-all shadow-xs"
+                                >
+                                  <span>Sell Now</span>
+                                  <ArrowRight className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </motion.div>
+                          );
+                        })}
                       </AnimatePresence>
                     </div>
                   );
@@ -1497,229 +1493,216 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
           </AnimatePresence>
         </motion.div>
 
-      {/* Specification Selection Modal (Matching Tablet Spec Modal Design) */}
-      {typeof document !== 'undefined' && createPortal(
-        <AnimatePresence>
-          {selectedModel && (
-            <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm overflow-y-auto min-h-screen">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 12 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 12 }}
-                transition={{ type: "spring", stiffness: 320, damping: 28 }}
-                className="bg-canvas-pure border border-ice-border rounded-t-2xl sm:rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl text-left sm:my-auto max-h-[85vh] flex flex-col"
-              >
-                {/* Modal Header */}
-                <div className="p-6 border-b border-ice-border flex items-center justify-between bg-canvas-white">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-cobalt/10 border border-cobalt/20 flex items-center justify-center text-cobalt flex-shrink-0">
-                      <Smartphone className="w-6 h-6 stroke-[2.2]" />
+        {/* Specification Selection Modal (Matching Tablet Spec Modal Design) */}
+        {typeof document !== 'undefined' && createPortal(
+          <AnimatePresence>
+            {selectedModel && (
+              <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm overflow-y-auto min-h-screen">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: 12 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 12 }}
+                  transition={{ type: "spring", stiffness: 320, damping: 28 }}
+                  className="bg-canvas-pure border border-ice-border rounded-t-2xl sm:rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl text-left sm:my-auto max-h-[85vh] flex flex-col transform-gpu will-change-transform"
+                >
+                  {/* Modal Header */}
+                  <div className="p-5 sm:p-6 border-b border-slate-200/80 flex items-center justify-between bg-white">
+                    <div className="flex items-center gap-3.5 min-w-0">
+                      <div className="w-12 h-12 rounded-2xl bg-slate-950 text-white flex items-center justify-center flex-shrink-0 shadow-md shadow-slate-950/15">
+                        <Smartphone className="w-6 h-6 stroke-[2]" />
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="text-lg sm:text-xl font-extrabold text-slate-950 uppercase font-sans tracking-tight truncate">
+                          {selectedModel.name}
+                        </h3>
+                        <div className="flex items-center gap-2 mt-0.5 text-xs font-medium text-slate-500">
+                          <span className="truncate">{selectedModel.series || selectedModel.category}</span>
+                          <span className="text-slate-300">•</span>
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 text-[10px] font-bold text-slate-700">
+                            Release: {selectedModel.releaseYear}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-xl font-bold text-ink-navy uppercase font-sans tracking-wide">
-                        {selectedModel.name}
-                      </h3>
-                      <p className="text-xs font-sans text-zinc-400 mt-0.5">
-                        {selectedModel.series || selectedModel.category} · Release: {selectedModel.releaseYear}
-                      </p>
-                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedModel(null);
+                        onModelDismiss?.();
+                      }}
+                      className="p-2.5 rounded-xl border border-slate-200/80 bg-slate-50 text-slate-500 hover:text-slate-950 hover:bg-slate-100 transition-all ml-2"
+                      aria-label="Close dialog"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedModel(null);
-                      onModelDismiss?.();
-                    }}
-                    className="p-2 rounded-lg border border-ice-border text-zinc-400 hover:text-ink-navy hover:bg-zinc-100 transition-all"
-                    aria-label="Close dialog"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
+                  {/* Modal Body */}
+                  <div className="p-5 sm:p-6 space-y-5 text-left overflow-y-auto flex-1">
 
-                {/* Modal Body */}
-                <div className="p-6 space-y-6 text-left overflow-y-auto flex-1">
-
-                  {/* Connectivity selection for Tablets (Wi-Fi + Cellular vs Wi-Fi Only) */}
-                  {isTablet && (
-                    <div>
-                      <div className="flex items-center justify-between mb-2.5">
-                        <span className="text-xs font-sans font-bold text-ink-navy uppercase tracking-wider flex items-center gap-1.5">
-                          <Wifi className="w-4 h-4 text-cobalt" /> Select Network &amp; Connectivity
-                        </span>
-                        <span className="text-[10px] text-zinc-400 font-sans">SIM / Cellular Specs</span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2.5">
-                        <button
-                          type="button"
-                          onClick={() => handleConnectivitySelect('cellular')}
-                          className={`py-3.5 px-3.5 rounded-xl border text-xs font-bold font-sans transition-all flex items-center justify-between ${
-                            selectedConnectivity === 'cellular'
-                              ? 'bg-cobalt text-white border-cobalt shadow-md shadow-cobalt/20'
-                              : 'bg-canvas-white text-ink-slate border-ice-border hover:border-cobalt/40'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <Radio className="w-4 h-4" />
-                            <div className="text-left">
-                              <span className="block font-bold text-xs">Wi-Fi + Cellular</span>
-                              <span className={`text-[9px] ${selectedConnectivity === 'cellular' ? 'text-white/80' : 'text-zinc-400'}`}>Has SIM Slot / 5G / 4G</span>
-                            </div>
-                          </div>
-                          {selectedConnectivity === 'cellular' && <CheckCircle2 className="w-4 h-4 text-white" />}
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => handleConnectivitySelect('wifi')}
-                          className={`py-3.5 px-3.5 rounded-xl border text-xs font-bold font-sans transition-all flex items-center justify-between ${
-                            selectedConnectivity === 'wifi'
-                              ? 'bg-cobalt text-white border-cobalt shadow-md shadow-cobalt/20'
-                              : 'bg-canvas-white text-ink-slate border-ice-border hover:border-cobalt/40'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <Wifi className="w-4 h-4" />
-                            <div className="text-left">
-                              <span className="block font-bold text-xs">Wi-Fi Only</span>
-                              <span className={`text-[9px] ${selectedConnectivity === 'wifi' ? 'text-white/80' : 'text-zinc-400'}`}>No SIM Card Slot</span>
-                            </div>
-                          </div>
-                          {selectedConnectivity === 'wifi' && <CheckCircle2 className="w-4 h-4 text-white" />}
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* RAM Selection (Android Smartphones & Android Tablets) */}
-                  {ramOptions.length > 0 && (
-                    <div>
-                      <div className="flex items-center justify-between mb-2.5">
-                        <span className="text-xs font-sans font-bold text-ink-navy uppercase tracking-wider flex items-center gap-1.5">
-                          <Cpu className="w-4 h-4 text-cobalt" /> Select RAM Variant
-                        </span>
-                        <span className="text-[10px] text-zinc-400 font-sans">Memory Specs</span>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {ramOptions.map(ram => (
+                    {/* Connectivity selection for Tablets (Wi-Fi + Cellular vs Wi-Fi Only) */}
+                    {isTablet && (
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-sans font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                            <Wifi className="w-4 h-4 text-slate-700" /> Select Network &amp; Connectivity
+                          </span>
+                          <span className="text-[11px] text-slate-500 font-sans font-medium">SIM / Cellular Specs</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2.5">
                           <button
-                            key={ram}
                             type="button"
-                            onClick={() => handleRamSelect(ram)}
-                            className={`px-4 py-2.5 rounded-xl border text-xs font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
-                              selectedRam === ram
-                                ? 'bg-cobalt text-white border-cobalt shadow-md shadow-cobalt/20'
-                                : 'bg-canvas-white text-ink-slate border-ice-border hover:border-cobalt/40'
-                            }`}
+                            onClick={() => handleConnectivitySelect('cellular')}
+                            className={`py-3 px-3.5 rounded-xl border text-xs font-bold font-sans transition-all flex items-center justify-between ${selectedConnectivity === 'cellular'
+                                ? 'bg-slate-950 text-white border-slate-950 shadow-md ring-2 ring-slate-950/15 scale-[1.01]'
+                                : 'bg-white text-slate-800 border-slate-200 hover:border-slate-400 hover:bg-slate-50 shadow-2xs'
+                              }`}
                           >
-                            <span>{ram} GB RAM</span>
-                            {selectedRam === ram && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
+                            <div className="flex items-center gap-2">
+                              <Radio className="w-4 h-4 text-emerald-400" />
+                              <div className="text-left">
+                                <span className="block font-bold text-xs">Wi-Fi + Cellular</span>
+                                <span className={`text-[9px] ${selectedConnectivity === 'cellular' ? 'text-white/80' : 'text-slate-500'}`}>Has SIM Slot / 5G / 4G</span>
+                              </div>
+                            </div>
+                            {selectedConnectivity === 'cellular' && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleConnectivitySelect('wifi')}
+                            className={`py-3 px-3.5 rounded-xl border text-xs font-bold font-sans transition-all flex items-center justify-between ${selectedConnectivity === 'wifi'
+                                ? 'bg-slate-950 text-white border-slate-950 shadow-md ring-2 ring-slate-950/15 scale-[1.01]'
+                                : 'bg-white text-slate-800 border-slate-200 hover:border-slate-400 hover:bg-slate-50 shadow-2xs'
+                              }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <Wifi className="w-4 h-4 text-emerald-400" />
+                              <div className="text-left">
+                                <span className="block font-bold text-xs">Wi-Fi Only</span>
+                                <span className={`text-[9px] ${selectedConnectivity === 'wifi' ? 'text-white/80' : 'text-slate-500'}`}>No SIM Card Slot</span>
+                              </div>
+                            </div>
+                            {selectedConnectivity === 'wifi' && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* RAM Selection (Android Smartphones & Android Tablets) */}
+                    {ramOptions.length > 0 && (
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-sans font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                            <Cpu className="w-4 h-4 text-slate-700" /> Select RAM Variant
+                          </span>
+                          <span className="text-[11px] text-slate-500 font-sans font-medium">Memory Specs</span>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {ramOptions.map(ram => (
+                            <button
+                              key={ram}
+                              type="button"
+                              onClick={() => handleRamSelect(ram)}
+                              className={`px-4 py-2.5 rounded-xl border text-xs font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${selectedRam === ram
+                                  ? 'bg-slate-950 text-white border-slate-950 shadow-md ring-2 ring-slate-950/15 scale-[1.01]'
+                                  : 'bg-white text-slate-800 border-slate-200 hover:border-slate-400 hover:bg-slate-50 shadow-2xs'
+                                }`}
+                            >
+                              <span>{ram} GB RAM</span>
+                              {selectedRam === ram && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Storage selection */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-sans font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                          <Layers className="w-4 h-4 text-slate-700" /> Select Storage Capacity
+                        </span>
+                        <span className="text-[11px] text-slate-500 font-sans font-medium">Internal Storage</span>
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                        {storageOptions.map(storage => (
+                          <button
+                            key={storage}
+                            type="button"
+                            onClick={() => handleStorageSelect(storage)}
+                            className={`py-3 px-3 rounded-xl border text-xs font-extrabold font-sans transition-all flex items-center justify-center gap-1.5 ${selectedStorage === storage
+                                ? 'bg-slate-950 text-white border-slate-950 shadow-md ring-2 ring-slate-950/15 scale-[1.02]'
+                                : 'bg-white text-slate-800 border-slate-200 hover:border-slate-400 hover:bg-slate-50 shadow-2xs'
+                              }`}
+                          >
+                            <span>{storage >= 1024 ? `${storage / 1024} TB` : `${storage} GB`}</span>
+                            {selectedStorage === storage && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />}
                           </button>
                         ))}
                       </div>
                     </div>
-                  )}
 
-                  {/* Storage selection */}
-                  <div>
-                    <div className="flex items-center justify-between mb-2.5">
-                      <span className="text-xs font-sans font-bold text-ink-navy uppercase tracking-wider flex items-center gap-1.5">
-                        <Layers className="w-4 h-4 text-violet-500" /> Select Storage Capacity
-                      </span>
-                      <span className="text-[10px] text-zinc-400 font-sans">Internal Storage</span>
+                    {/* Estimated Payout Banner */}
+                    <div className="bg-gradient-to-br from-emerald-500/[0.08] via-teal-500/[0.04] to-emerald-500/[0.08] border border-emerald-500/25 rounded-2xl p-4 sm:p-5 flex items-center justify-between shadow-xs relative overflow-hidden">
+                      <div className="absolute -right-8 -top-8 w-32 h-32 bg-emerald-400/10 rounded-full blur-2xl pointer-events-none" />
+                      <div className="relative z-10 text-left">
+                        <span className="text-[11px] font-sans font-extrabold text-slate-500 uppercase block tracking-wider mb-1">
+                          Estimated Payout
+                        </span>
+                        <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5 flex-wrap">
+                          <span className="truncate">{selectedModel.name}</span>
+                          <span className="text-slate-300">•</span>
+                          <span className="text-emerald-700 font-extrabold">
+                            {isTablet ? (selectedConnectivity === 'cellular' ? 'Cellular · ' : 'Wi-Fi · ') : ''}
+                            {ramOptions.length > 0 && selectedRam ? `${selectedRam}GB RAM / ` : ''}
+                            {selectedStorage ? (selectedStorage >= 1024 ? `${selectedStorage / 1024}TB` : `${selectedStorage}GB`) : ''}
+                          </span>
+                        </div>
+                        <span className="text-[11px] text-slate-500 font-medium block mt-1">
+                          Free doorstep inspection · Immediate payment
+                        </span>
+                      </div>
+
+                      <div className="relative z-10 text-right shrink-0 pl-3">
+                        <span className="text-2xl sm:text-3xl font-black text-slate-950 font-sans tracking-tight block">
+                          {formatPrice(tempVariant?.basePrice || getMaxVariantPrice(selectedModel))}
+                        </span>
+                        <span className="text-[10px] font-bold text-emerald-700 block mt-0.5">
+                          ★ Best Price Guaranteed
+                        </span>
+                      </div>
                     </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                      {storageOptions.map(storage => (
-                        <button
-                          key={storage}
-                          type="button"
-                          onClick={() => handleStorageSelect(storage)}
-                          className={`py-3 px-3 rounded-xl border text-xs font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
-                            selectedStorage === storage
-                              ? 'bg-violet-600 text-white border-violet-600 shadow-md shadow-violet-600/20'
-                              : 'bg-canvas-white text-ink-slate border-ice-border hover:border-violet-400'
-                          }`}
-                        >
-                          <span>{storage >= 1024 ? `${storage / 1024} TB` : `${storage} GB`}</span>
-                          {selectedStorage === storage && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
-                        </button>
-                      ))}
-                    </div>
+
                   </div>
 
-                  {/* Estimated Payout Banner */}
-                  <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-300/90 rounded-xl p-4 flex items-center justify-between shadow-xs">
-                    <div>
-                      <span className="text-[10px] font-sans font-bold text-emerald-950 uppercase block tracking-wider mb-0.5">
-                        Estimated Payout
-                      </span>
-                      <span className="text-xs font-sans font-semibold text-emerald-900">
-                        {isTablet ? (selectedConnectivity === 'cellular' ? 'Wi-Fi + Cellular · ' : 'Wi-Fi Only · ') : ''}
-                        {ramOptions.length > 0 && selectedRam ? `${selectedRam}GB RAM / ` : ''}
-                        {selectedStorage ? (selectedStorage >= 1024 ? `${selectedStorage / 1024}TB` : `${selectedStorage}GB`) : ''}
-                      </span>
-                    </div>
-                    <span className="text-2xl font-black text-emerald-700 font-sans">
-                      {formatPrice(tempVariant?.basePrice || getMaxVariantPrice(selectedModel))}
-                    </span>
+                  {/* Modal Footer */}
+                  <div className="p-4 sm:p-6 border-t border-slate-200/80 bg-white flex items-center justify-end gap-3" style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedModel(null)}
+                      className="px-5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-all"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleConfirm}
+                      className="px-6 py-2.5 rounded-xl bg-slate-950 hover:bg-slate-900 text-white text-xs sm:text-sm font-bold flex items-center gap-2 shadow-md shadow-slate-950/20 active:scale-98 transition-all"
+                    >
+                      <span>Proceed to Diagnostics</span>
+                      <ArrowRight className="w-4 h-4 text-emerald-400" />
+                    </button>
                   </div>
-
-                </div>
-
-                {/* Modal Footer */}
-                <div className="p-6 border-t border-ice-border bg-canvas-white flex items-center justify-end gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedModel(null)}
-                    className="px-4 py-2.5 rounded-xl border border-ice-border text-xs font-bold text-ink-slate hover:bg-zinc-100 transition-all"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleConfirm}
-                    className="px-5 py-2.5 rounded-xl bg-cobalt hover:bg-cobalt/90 text-white text-xs font-bold flex items-center gap-2 shadow-md shadow-cobalt/20 transition-all"
-                  >
-                    <span>Proceed to Diagnostics</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>,
-        document.body
-      )}
-
-        {/* Mobile Floating Sticky Valuation Action Bar */}
-        <AnimatePresence>
-          {selectedModel && tempVariant && (
-            <motion.div
-              initial={{ y: 100, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 100, opacity: 0 }}
-              className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-xl border-t border-slate-700/80 p-3.5 px-4 flex items-center justify-between shadow-2xl"
-            >
-              <div className="text-left">
-                <span className="text-[10px] font-sans text-slate-400 uppercase tracking-normal block">
-                  {selectedModel.name} ({tempVariant.storageGb >= 1024 ? '1 TB' : `${tempVariant.storageGb} GB`})
-                </span>
-                <span className="text-lg font-black text-emerald-400 font-sans">
-                  {formatPrice(tempVariant.basePrice)}
-                </span>
+                </motion.div>
               </div>
-              <button
-                onClick={handleConfirm}
-                className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold rounded-md shadow-lg flex items-center gap-1.5 active:scale-95 transition-all"
-              >
-                <span>Diagnose Now</span>
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+            )}
+          </AnimatePresence>,
+          document.body
+        )}
+
+        </div>
     </div>
   );
 };

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Smartphone, 
   ArrowRight, 
   Sparkles, 
 } from 'lucide-react';
@@ -232,9 +231,6 @@ export const DeviceCategoryShowcase: React.FC<DeviceCategoryShowcaseProps> = ({
                 <span className="px-3 py-1 bg-cobalt/8 text-cobalt text-[10px] font-bold font-medium tracking-normal uppercase rounded-full border border-cobalt/15">
                   FEATURED CATEGORY
                 </span>
-                <div className="w-10 h-10 rounded-xl bg-cobalt/10 border border-cobalt/15 flex items-center justify-center text-cobalt">
-                  <Smartphone className="w-5 h-5" />
-                </div>
               </div>
               <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black text-ink-navy font-sans uppercase tracking-tight">
                 SMARTPHONES

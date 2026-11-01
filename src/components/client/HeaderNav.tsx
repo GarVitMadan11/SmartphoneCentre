@@ -153,7 +153,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
 
   return (
     <>
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-ice-border shadow-xs">
+      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-slate-200/80 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.03)] transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3 sm:gap-4" ref={navRef}>
           
           {/* Left Brand Logo */}
@@ -161,25 +161,25 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
             className="flex items-center gap-2.5 cursor-pointer flex-shrink-0 group select-none" 
             onClick={() => { setMobileMenuOpen(false); onNavigate('/'); }}
           >
-            <div className="w-8 h-8 rounded-lg bg-[#001736] flex items-center justify-center shadow-xs p-1">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-slate-950 to-slate-900 border border-slate-800 p-1.5 flex items-center justify-center shadow-xs group-hover:scale-105 group-hover:shadow-sm transition-all">
               <img src="/logo.svg" className="w-full h-full object-contain" alt="Rephonix Logo" />
             </div>
-            <span className="text-xl sm:text-2xl font-extrabold font-sans text-ink-navy tracking-tight group-hover:text-cobalt transition-colors">
-              Re<span className="text-secondary">phonix</span>
+            <span className="text-xl sm:text-2xl font-black font-sans text-slate-950 tracking-tight group-hover:text-slate-800 transition-colors">
+              Re<span className="text-emerald-600">phonix</span>
             </span>
           </div>
 
           {/* Center-Left Desktop Nav Links */}
-          <nav aria-label="Main Navigation" className="hidden lg:flex items-center gap-1 xl:gap-1.5 text-xs sm:text-sm font-semibold text-slate-700 shrink-0">
+          <nav aria-label="Main Navigation" className="hidden lg:flex items-center gap-1 xl:gap-2 text-xs sm:text-sm font-semibold text-slate-700 shrink-0">
             
             {/* Home */}
             <button
               type="button"
               onClick={() => { setActiveDropdown(null); onNavigate('/'); }}
-              className={`px-3 py-1.5 rounded-xl transition-all ${
+              className={`px-3.5 py-1.5 rounded-full transition-all ${
                 currentPath === '/' 
-                  ? 'text-cobalt font-bold bg-cobalt/10 shadow-xs' 
-                  : 'hover:text-cobalt hover:bg-slate-100 text-slate-700'
+                  ? 'text-slate-950 font-bold bg-slate-100 shadow-2xs' 
+                  : 'hover:text-slate-950 hover:bg-slate-50 text-slate-600'
               }`}
             >
               Home
@@ -190,15 +190,15 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
               <button
                 type="button"
                 onClick={() => setActiveDropdown(prev => prev === 'phones' ? null : 'phones')}
-                className={`px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all ${
+                className={`px-3.5 py-1.5 rounded-full flex items-center gap-1.5 transition-all ${
                   currentPath === '/smartphones' || activeDropdown === 'phones'
-                    ? 'text-cobalt font-bold bg-cobalt/10 shadow-xs'
-                    : 'hover:text-cobalt hover:bg-slate-100 text-slate-700'
+                    ? 'text-slate-950 font-bold bg-slate-100 shadow-2xs'
+                    : 'hover:text-slate-950 hover:bg-slate-50 text-slate-600'
                 }`}
               >
-                <Smartphone className="w-3.5 h-3.5 text-cobalt" />
+                <Smartphone className="w-3.5 h-3.5 text-slate-500" />
                 <span>Smartphones</span>
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${activeDropdown === 'phones' ? 'rotate-180 text-cobalt' : 'text-slate-400'}`} />
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${activeDropdown === 'phones' ? 'rotate-180 text-slate-950' : 'text-slate-400'}`} />
               </button>
 
               {activeDropdown === 'phones' && (
@@ -282,10 +282,10 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
             <button
               type="button"
               onClick={() => { setActiveDropdown(null); onNavigate('/about'); }}
-              className={`px-3 py-1.5 rounded-xl transition-all ${
+              className={`px-3.5 py-1.5 rounded-full transition-all ${
                 currentPath === '/about' 
-                  ? 'text-cobalt font-bold bg-cobalt/10 shadow-xs' 
-                  : 'hover:text-cobalt hover:bg-slate-100 text-slate-700'
+                  ? 'text-slate-950 font-bold bg-slate-100 shadow-2xs' 
+                  : 'hover:text-slate-950 hover:bg-slate-50 text-slate-600'
               }`}
             >
               About
@@ -295,10 +295,10 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
             <button
               type="button"
               onClick={() => { setActiveDropdown(null); onNavigate('/contact'); }}
-              className={`px-3 py-1.5 rounded-xl transition-all ${
+              className={`px-3.5 py-1.5 rounded-full transition-all ${
                 currentPath === '/contact' 
-                  ? 'text-cobalt font-bold bg-cobalt/10 shadow-xs' 
-                  : 'hover:text-cobalt hover:bg-slate-100 text-slate-700'
+                  ? 'text-slate-950 font-bold bg-slate-100 shadow-2xs' 
+                  : 'hover:text-slate-950 hover:bg-slate-50 text-slate-600'
               }`}
             >
               Contact
@@ -308,15 +308,27 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
 
 
           {/* Right CTA Actions */}
-          <div className="hidden sm:flex items-center gap-2 shrink-0">
+          <div className="hidden sm:flex items-center gap-2.5 shrink-0">
             
+            {/* Search shortcut pill */}
+            <button
+              type="button"
+              onClick={() => setIsSearchOpen(true)}
+              className="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100/70 hover:bg-slate-100 border border-slate-200/80 text-slate-400 hover:text-slate-600 text-xs transition-all shadow-2xs group cursor-pointer"
+              aria-label="Search phone models"
+            >
+              <Search className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600 transition-colors" />
+              <span className="text-slate-500 font-medium">Search models...</span>
+              <kbd className="text-[10px] bg-white border border-slate-200 text-slate-400 px-1.5 py-0.2 rounded font-mono shadow-2xs">⌘K</kbd>
+            </button>
+
             {/* Instant Quote Button */}
             <button
               type="button"
               onClick={() => { setActiveDropdown(null); setUserDropdownOpen(false); onNavigate('/smartphones'); }}
-              className="px-3 py-1.5 rounded-xl bg-cobalt hover:bg-cobalt-hover text-white font-bold text-xs transition-all shadow-sm hover:shadow-md flex items-center gap-1.5 active:scale-95 cursor-pointer shrink-0"
+              className="px-4 py-2 rounded-full bg-slate-950 hover:bg-slate-900 text-white font-bold text-xs transition-all shadow-sm hover:shadow flex items-center gap-1.5 active:scale-95 cursor-pointer shrink-0"
             >
-              <Zap className="w-3.5 h-3.5 fill-current shrink-0" />
+              <Zap className="w-3.5 h-3.5 text-emerald-400 fill-emerald-400 shrink-0" />
               <span className="whitespace-nowrap">Instant Quote</span>
             </button>
 
@@ -325,9 +337,9 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
               <button
                 type="button"
                 onClick={() => { setActiveDropdown(null); setUserDropdownOpen(false); onOpenTrackOrder(); }}
-                className="px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 hover:text-cobalt font-bold text-xs transition-all flex items-center gap-1.5 border border-ice-border hover:border-cobalt/40 cursor-pointer shrink-0"
+                className="px-3.5 py-2 rounded-full bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-950 font-bold text-xs transition-all flex items-center gap-1.5 border border-slate-200/90 hover:border-slate-300 shadow-2xs cursor-pointer shrink-0 active:scale-95"
               >
-                <Truck className="w-3.5 h-3.5 text-cobalt shrink-0" />
+                <Truck className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                 <span className="whitespace-nowrap">Track Order</span>
               </button>
             )}
@@ -338,15 +350,15 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                 <button
                   type="button"
                   onClick={() => { setActiveDropdown(null); setUserDropdownOpen(prev => !prev); }}
-                  className={`px-2.5 sm:px-3 py-1.5 rounded-xl flex items-center gap-1.5 sm:gap-2 border border-ice-border hover:border-cobalt/50 font-bold text-xs transition-all bg-canvas-white hover:bg-slate-50 cursor-pointer shrink-0 ${
-                    userDropdownOpen ? 'border-cobalt text-cobalt ring-2 ring-cobalt/10' : 'text-slate-800'
+                  className={`px-3 py-1.5 rounded-full flex items-center gap-1.5 sm:gap-2 border border-slate-200 hover:border-slate-300 font-bold text-xs transition-all bg-white hover:bg-slate-50 cursor-pointer shrink-0 shadow-2xs ${
+                    userDropdownOpen ? 'border-slate-950 text-slate-950 ring-2 ring-slate-950/10' : 'text-slate-800'
                   }`}
                 >
-                  <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-cobalt to-indigo-600 text-white flex items-center justify-center text-[11px] font-black shadow-xs shrink-0">
+                  <div className="w-6 h-6 rounded-full bg-slate-950 text-white flex items-center justify-center text-[11px] font-black shadow-xs shrink-0">
                     {initial}
                   </div>
                   <span className="truncate max-w-[80px] sm:max-w-[120px] whitespace-nowrap">Hi, {firstName}</span>
-                  <ChevronDown className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${userDropdownOpen ? 'rotate-180 text-cobalt' : 'text-slate-400'}`} />
+                  <ChevronDown className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${userDropdownOpen ? 'rotate-180 text-slate-950' : 'text-slate-400'}`} />
                 </button>
 
                 {userDropdownOpen && (
@@ -407,7 +419,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
               <button
                 type="button"
                 onClick={() => { setActiveDropdown(null); setUserDropdownOpen(false); onNavigate('/login'); }}
-                className="px-4 py-1.5 rounded-xl border border-ice-border hover:border-cobalt hover:text-cobalt text-slate-700 font-bold text-xs transition-all active:scale-95 cursor-pointer bg-white"
+                className="px-4 py-2 rounded-full border border-slate-200/90 hover:border-slate-950 hover:text-slate-950 text-slate-700 font-bold text-xs transition-all active:scale-95 cursor-pointer bg-white shadow-2xs"
               >
                 Login
               </button>
@@ -572,7 +584,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
               ) : (
                 <button
                   onClick={() => { setMobileMenuOpen(false); onNavigate('/login'); }}
-                  className="w-full text-center py-2.5 bg-cobalt text-white font-bold text-xs rounded-xl shadow-xs"
+                  className="w-full text-center py-2.5 bg-slate-950 hover:bg-slate-900 active:scale-98 text-white font-bold text-xs rounded-xl shadow-sm touch-manipulation"
                 >
                   Login / Create Account
                 </button>

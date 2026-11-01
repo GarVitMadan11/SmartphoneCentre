@@ -349,8 +349,8 @@ export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
                   
                   {/* Step Pills Navigation Summary */}
                   <div className="flex flex-wrap items-center gap-2 pb-3 border-b border-ice-border/60">
-                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-sans font-bold bg-violet-50 text-violet-700 border border-violet-200">
-                      <HardDrive className="w-3.5 h-3.5 text-violet-600" />
+                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-sans font-bold bg-slate-950 text-white border border-slate-950">
+                      <HardDrive className="w-3.5 h-3.5 text-slate-700" />
                       <span>1. Storage: {selectedStorage >= 1024 ? `${selectedStorage / 1024}TB` : `${selectedStorage}GB`}</span>
                     </div>
 
@@ -371,7 +371,7 @@ export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
                   <div>
                     <div className="flex items-center justify-between mb-2.5">
                       <span className="text-xs font-sans font-bold text-ink-navy uppercase tracking-wider flex items-center gap-1.5">
-                        <HardDrive className="w-4 h-4 text-violet-600" />
+                        <HardDrive className="w-4 h-4 text-slate-700" />
                         <span>1. Select Storage Capacity</span>
                       </span>
                       <span className="text-[10px] text-zinc-400 font-sans">Internal Storage</span>
@@ -390,8 +390,8 @@ export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
                           }}
                           className={`py-3 px-3 rounded-xl border text-xs font-bold font-sans transition-all flex items-center justify-center gap-1 ${
                             selectedStorage === st
-                              ? 'bg-violet-600 text-white border-violet-600 shadow-md shadow-violet-600/20'
-                              : 'bg-canvas-white text-ink-slate border-ice-border hover:border-violet-400'
+                              ? 'bg-slate-950 text-white border-slate-950 shadow-md ring-2 ring-slate-950/15 scale-[1.02]'
+                              : 'bg-white text-slate-800 border-slate-200 hover:border-slate-400 hover:bg-slate-50 shadow-2xs'
                           }`}
                         >
                           <span>{st >= 1024 ? `${st / 1024} TB` : `${st} GB`}</span>
@@ -511,20 +511,30 @@ export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
                   </div>
 
                   {/* Estimated Payout Banner */}
-                  <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-300/90 rounded-xl p-4 flex items-center justify-between shadow-xs">
-                    <div>
-                      <span className="text-[10px] font-sans font-bold text-emerald-950 uppercase block tracking-wider mb-0.5">
+                  <div className="bg-gradient-to-br from-emerald-500/[0.08] via-teal-500/[0.04] to-emerald-500/[0.08] border border-emerald-500/25 rounded-2xl p-4 sm:p-5 flex items-center justify-between shadow-xs relative overflow-hidden">
+                    <div className="absolute -right-8 -top-8 w-32 h-32 bg-emerald-400/10 rounded-full blur-2xl pointer-events-none" />
+                    <div className="relative z-10 text-left">
+                      <span className="text-[11px] font-sans font-extrabold text-slate-500 uppercase block tracking-wider mb-1">
                         Estimated Payout
                       </span>
-                      <span className="text-xs font-sans font-semibold text-emerald-900">
-                        {selectedStorage >= 1024 ? `${selectedStorage / 1024}TB` : `${selectedStorage}GB`}
-                        {!isApple && ramOptions.length > 0 ? ` · ${selectedRam}GB RAM` : ''}
-                        {` · ${connectivity === 'cellular' ? 'Wi-Fi + Cellular' : 'Wi-Fi Only'}`}
+                      <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5 flex-wrap">
+                        <span className="truncate">{selectedModelForSpec.name}</span>
+                        <span className="text-slate-300">•</span>
+                        <span className="text-emerald-700 font-extrabold">
+                          {selectedStorage >= 1024 ? `${selectedStorage / 1024}TB` : `${selectedStorage}GB`}
+                          {!isApple && ramOptions.length > 0 ? ` · ${selectedRam}GB RAM` : ''}
+                          {` · ${connectivity === 'cellular' ? 'Cellular' : 'Wi-Fi'}`}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="relative z-10 text-right shrink-0 pl-3">
+                      <span className="text-2xl sm:text-3xl font-black text-slate-950 font-sans tracking-tight block">
+                        {formatPrice(calculatedPrice)}
+                      </span>
+                      <span className="text-[10px] font-bold text-emerald-700 block mt-0.5">
+                        ★ Best Price Guaranteed
                       </span>
                     </div>
-                    <span className="text-2xl font-black text-emerald-700 font-sans">
-                      {formatPrice(calculatedPrice)}
-                    </span>
                   </div>
                 </div>
 
@@ -540,10 +550,10 @@ export const TabletsShowcase: React.FC<TabletsShowcaseProps> = ({
                   <button
                     type="button"
                     onClick={handleProceedWithSpec}
-                    className="px-5 py-2.5 rounded-xl bg-cobalt hover:bg-cobalt/90 text-white text-xs font-bold flex items-center gap-2 shadow-md shadow-cobalt/20 transition-all"
+                    className="px-6 py-2.5 rounded-xl bg-slate-950 hover:bg-slate-900 text-white text-xs sm:text-sm font-bold flex items-center gap-2 shadow-md shadow-slate-950/20 active:scale-98 transition-all"
                   >
                     <span>Proceed to Diagnostics</span>
-                    <ArrowRight className="w-4 h-4" />
+                    <ArrowRight className="w-4 h-4 text-emerald-400" />
                   </button>
                 </div>
               </motion.div>

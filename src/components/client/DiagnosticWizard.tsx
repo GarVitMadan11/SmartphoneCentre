@@ -7,7 +7,7 @@ import {
   Smartphone, Box, ShieldCheck, Printer, Receipt,
   X, Lock, Eye, EyeOff, AlertCircle, Mail, User,
   Phone, MessageSquare, ExternalLink, Headphones, Send, Bookmark,
-  AlertTriangle, BatteryCharging, Radio, FileX
+  AlertTriangle, BatteryCharging, Radio, FileX, FileCheck
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getIllustration } from './Illustrations';
@@ -1436,13 +1436,13 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                             setStep(2);
                           }
                         }}
-                        className={`p-3.5 rounded-xl border cursor-pointer transition-all duration-300 flex items-start gap-3.5 text-left focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
+                        className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-start gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
                           isSelected
                             ? 'border-emerald-500 bg-emerald-500/10 shadow-sm ring-1 ring-emerald-500/30 scale-[1.01]'
                             : 'border-ice-border bg-canvas-white hover:border-emerald-500/40 hover:bg-slate-50/60'
                         }`}
                       >
-                        <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-emerald-50/70 border border-emerald-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 rounded-xl bg-emerald-50/70 border border-emerald-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
                           {getIllustration('screen-flawless', deviceType)}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -1484,13 +1484,13 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           handleToggleDefect(defect, mutualIds);
                           setScreenConfirmed(false);
                         }}
-                        className={`p-3.5 rounded-xl border cursor-pointer transition-all duration-300 flex items-start gap-3.5 text-left focus:outline-none focus:ring-2 focus:ring-rose-500 ${
+                        className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-start gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-rose-500 ${
                           isSelected
                             ? 'border-rose-400 bg-rose-500/10 shadow-sm ring-1 ring-rose-400/30 scale-[1.01]'
                             : 'border-ice-border bg-canvas-white hover:border-slate-300 hover:bg-slate-50/60'
                         }`}
                       >
-                        <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
                           {getIllustration(defect.id, deviceType)}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -1553,13 +1553,13 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                             setStep(3);
                           }
                         }}
-                        className={`p-3.5 rounded-xl border cursor-pointer transition-all duration-300 flex items-start gap-3.5 text-left focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
+                        className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-start gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
                           isSelected
                             ? 'border-emerald-500 bg-emerald-500/10 shadow-sm ring-1 ring-emerald-500/30 scale-[1.01]'
                             : 'border-ice-border bg-canvas-white hover:border-emerald-500/40 hover:bg-slate-50/60'
                         }`}
                       >
-                        <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-emerald-50/70 border border-emerald-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 rounded-xl bg-emerald-50/70 border border-emerald-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
                           {getIllustration('body-flawless', deviceType)}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -1607,13 +1607,13 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           );
                           setBodyConfirmed(false);
                         }}
-                        className={`p-3.5 rounded-xl border cursor-pointer transition-all duration-300 flex items-start gap-3.5 text-left focus:outline-none focus:ring-2 focus:ring-amber-500 ${
+                        className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-start gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-amber-500 ${
                           isSelected
                             ? 'border-amber-500 bg-amber-500/10 shadow-sm ring-1 ring-amber-500/30 scale-[1.01]'
                             : 'border-ice-border bg-canvas-white hover:border-slate-300 hover:bg-slate-50/60'
                         }`}
                       >
-                        <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
                           {getIllustration(defect.id, deviceType)}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -1677,13 +1677,13 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                             setStep(4);
                           }
                         }}
-                        className={`p-3.5 rounded-xl border cursor-pointer transition-all duration-300 flex items-start gap-3.5 text-left focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
+                        className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-start gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
                           isSelected
                             ? 'border-emerald-500 bg-emerald-500/10 shadow-sm ring-1 ring-emerald-500/30 scale-[1.01]'
                             : 'border-ice-border bg-canvas-white hover:border-emerald-500/40 hover:bg-slate-50/60'
                         }`}
                       >
-                        <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-emerald-50/70 border border-emerald-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 rounded-xl bg-emerald-50/70 border border-emerald-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
                           {getIllustration('hardware-healthy', deviceType)}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -1723,13 +1723,13 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           handleToggleDefect(defect);
                           setFuncConfirmed(false);
                         }}
-                        className={`p-3.5 rounded-xl border cursor-pointer transition-all duration-300 flex items-start gap-3.5 text-left focus:outline-none focus:ring-2 focus:ring-rose-500 ${
+                        className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-start gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-rose-500 ${
                           isSelected
                             ? 'border-rose-400 bg-rose-500/10 shadow-sm ring-1 ring-rose-400/30 scale-[1.01]'
                             : 'border-ice-border bg-canvas-white hover:border-slate-300 hover:bg-slate-50/60'
                         }`}
                       >
-                        <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
                           {getIllustration(defect.id, deviceType, biometricType)}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -1821,13 +1821,13 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                             setStep(5);
                           }
                         }}
-                        className={`p-3.5 rounded-xl border cursor-pointer transition-all duration-300 flex items-start gap-3.5 text-left focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
+                        className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-start gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
                           isSelected
                             ? 'border-emerald-500 bg-emerald-500/10 shadow-sm ring-1 ring-emerald-500/30 scale-[1.01]'
                             : 'border-ice-border bg-canvas-white hover:border-emerald-500/40 hover:bg-slate-50/60'
                         }`}
                       >
-                        <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-emerald-50/70 border border-emerald-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 rounded-xl bg-emerald-50/70 border border-emerald-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
                           {getIllustration('connectivity-healthy', deviceType)}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -1872,13 +1872,13 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           handleToggleDefect(defect, mutId);
                           setConnectConfirmed(false);
                         }}
-                        className={`p-3.5 rounded-xl border cursor-pointer transition-all duration-300 flex items-start gap-3.5 text-left focus:outline-none focus:ring-2 focus:ring-rose-500 ${
+                        className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-start gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-rose-500 ${
                           isSelected
                             ? 'border-rose-400 bg-rose-500/10 shadow-sm ring-1 ring-rose-400/30 scale-[1.01]'
                             : 'border-ice-border bg-canvas-white hover:border-slate-300 hover:bg-slate-50/60'
                         }`}
                       >
-                        <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
                           {getIllustration(defect.id, deviceType)}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -1942,13 +1942,13 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                             setAccConfirmed(true);
                           }
                         }}
-                        className={`p-3.5 rounded-xl border cursor-pointer transition-all duration-300 flex items-start gap-3.5 text-left focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
+                        className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-start gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
                           isSelected
                             ? 'border-emerald-500 bg-emerald-500/10 shadow-sm ring-1 ring-emerald-500/30 scale-[1.01]'
                             : 'border-ice-border bg-canvas-white hover:border-emerald-500/40 hover:bg-slate-50/60'
                         }`}
                       >
-                        <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-emerald-50/70 border border-emerald-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 rounded-xl bg-emerald-50/70 border border-emerald-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
                           {getIllustration('accessories-all', deviceType)}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -1984,13 +1984,13 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           handleToggleDefect(defect);
                           setAccConfirmed(false);
                         }}
-                        className={`p-3.5 rounded-xl border cursor-pointer transition-all duration-300 flex items-start gap-3.5 text-left focus:outline-none focus:ring-2 focus:ring-amber-500 ${
+                        className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-start gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-amber-500 ${
                           isSelected
                             ? 'border-amber-500 bg-amber-500/10 shadow-sm ring-1 ring-amber-500/30 scale-[1.01]'
                             : 'border-ice-border bg-canvas-white hover:border-slate-300 hover:bg-slate-50/60'
                         }`}
                       >
-                        <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
                           {getIllustration(defect.id, deviceType)}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -2038,8 +2038,10 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                               : 'border-ice-border bg-canvas-white hover:border-emerald-500/40 hover:bg-slate-50/60'
                           }`}
                         >
-                          <div className="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-600 shrink-0">
-                            <ShieldCheck className="w-5 h-5" />
+                          <div className={`w-9 h-9 rounded-lg border flex items-center justify-center shrink-0 transition-colors ${
+                            hasWarranty === true ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-600' : 'bg-slate-100 border-slate-200 text-slate-500'
+                          }`}>
+                            <FileCheck className="w-5 h-5" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between">
@@ -2617,7 +2619,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                 className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-1.5 ${
                   !isStepValidated
                     ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
-                    : 'bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow'
+                    : 'bg-slate-950 hover:bg-slate-900 text-white shadow-md shadow-slate-950/20 active:scale-98 touch-manipulation'
                 }`}
               >
                 <span>{step === (reviewStepIndex - 1) ? 'Review Summary' : 'Continue'}</span>

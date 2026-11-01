@@ -32,7 +32,7 @@ export const MobileBottomHUD: React.FC<MobileBottomHUDProps> = ({
   if (step >= reviewStepIndex) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-[0_-4px_24px_rgba(0,0,0,0.10)] px-3.5 py-2.5 sm:hidden safe-area-bottom">
+    <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-[0_-4px_24px_rgba(0,0,0,0.10)] px-3.5 pt-2.5 sm:hidden safe-area-bottom" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}>
       <div className="flex items-center justify-between gap-2 max-w-md mx-auto">
         {/* Left: Financial Value HUD */}
         <div className="flex items-center gap-2 min-w-0">

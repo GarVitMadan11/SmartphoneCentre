@@ -863,7 +863,7 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
 
                       <div>
                         <label className="text-xs font-semibold text-ink-slate block mb-2">Available Pickup Dates *</label>
-                        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                        <div className="flex gap-2 overflow-x-auto pb-1.5 snap-x snap-mandatory scrollbar-none sm:grid sm:grid-cols-5">
                           {dates.map(d => {
                             const isSelected = selectedDate === d.raw;
                             const isAnyDateSelected = selectedDate !== '';
@@ -872,18 +872,18 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
                                 key={d.raw}
                                 type="button"
                                 onClick={() => setSelectedDate(d.raw)}
-                                className={`py-2 rounded-sm border text-center transition-all duration-300 flex flex-col justify-center items-center focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt ${
+                                className={`min-w-[68px] sm:min-w-0 flex-1 snap-start py-2.5 px-1.5 rounded-xl border text-center transition-all duration-200 flex flex-col justify-center items-center touch-manipulation select-none active:scale-95 focus:outline-none focus:ring-2 focus:ring-slate-900 ${
                                   isSelected
-                                    ? 'bg-cobalt-light border-cobalt text-ink-navy scale-[1.02] opacity-100 z-10 shadow-sm'
+                                    ? 'bg-slate-950 border-slate-950 text-white shadow-md shadow-slate-950/20 scale-[1.02]'
                                     : isAnyDateSelected
-                                    ? 'bg-canvas-white text-ink-slate border-ice-border opacity-40 hover:opacity-75 hover:scale-[1.005]'
-                                    : 'bg-canvas-white text-ink-navy border-ice-border hover:border-cobalt/30 hover:scale-[1.005]'
+                                    ? 'bg-slate-50 text-slate-500 border-slate-200 hover:border-slate-300'
+                                    : 'bg-white text-slate-800 border-slate-200 hover:border-slate-400'
                                 }`}
-                                style={{ minHeight: '52px' }}
+                                style={{ minHeight: '56px' }}
                               >
-                                <span className="text-[8px] font-sans uppercase tracking-wider block">{d.dayName}</span>
-                                <span className="text-base font-semibold leading-none my-0.5">{d.dayNumber}</span>
-                                <span className="text-[8px] font-sans uppercase tracking-wider block">{d.month}</span>
+                                <span className={`text-[9px] uppercase tracking-wider font-semibold block ${isSelected ? 'text-slate-400' : 'text-slate-500'}`}>{d.dayName}</span>
+                                <span className="text-base font-extrabold leading-tight my-0.5">{d.dayNumber}</span>
+                                <span className={`text-[9px] uppercase tracking-wider font-semibold block ${isSelected ? 'text-emerald-400' : 'text-slate-500'}`}>{d.month}</span>
                               </button>
                             );
                           })}

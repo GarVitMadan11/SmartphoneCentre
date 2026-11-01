@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowRight, Smartphone, Award, ShieldCheck, Zap } from 'lucide-react';
+import { ArrowRight, Smartphone, Award, ShieldCheck, Zap, ClipboardCheck, Calculator, Truck, Sparkles } from 'lucide-react';
 import { fetchModels, type ApiUser } from '../../utils/api';
 import { getMaxVariantPrice, type Model } from '../../data/mockDatabase';
 
@@ -120,17 +120,17 @@ interface StepProps {
   description: string;
   icon: React.ReactNode;
   delay: number;
-  isLast?: boolean;
+  badge?: string;
 }
 
-const ProcessStep: React.FC<StepProps> = ({ number, title, description, icon, delay, isLast }) => {
+const ProcessStep: React.FC<StepProps> = ({ number, title, description, icon, delay, badge }) => {
   const [visible, setVisible] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => { if (entry.isIntersecting) { setVisible(true); observer.disconnect(); } },
-      { threshold: 0.2 }
+      { threshold: 0.15 }
     );
     if (ref.current) observer.observe(ref.current);
     return () => observer.disconnect();
@@ -139,27 +139,41 @@ const ProcessStep: React.FC<StepProps> = ({ number, title, description, icon, de
   return (
     <div
       ref={ref}
-      className="relative flex-1"
+      className="relative flex-1 bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs hover:shadow-md hover:border-cobalt/40 transition-all duration-300 flex flex-col justify-between group"
       style={{
         opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0)' : 'translateY(24px)',
-        transition: `opacity 0.6s ease ${delay}ms, transform 0.6s ease ${delay}ms`,
+        transform: visible ? 'translateY(0)' : 'translateY(20px)',
+        transition: `opacity 0.5s ease ${delay}ms, transform 0.5s ease ${delay}ms`,
       }}
     >
-      {!isLast && (
-        <div className="hidden lg:block absolute top-10 left-[calc(50%+2.5rem)] right-0 h-px bg-gradient-to-r from-ice-border to-transparent z-0" />
-      )}
-      <div className="group relative z-10 flex flex-col items-center text-center px-2">
-        <div className="relative mb-5">
-          <div className="absolute inset-0 rounded-2xl bg-secondary/8 blur-md scale-110 group-hover:bg-secondary/14 transition-all duration-500" />
-          <div className="relative w-20 h-20 rounded-2xl bg-gradient-to-br from-cobalt to-[#002652] flex flex-col items-center justify-center gap-1 shadow-lg shadow-cobalt/20 group-hover:scale-105 group-hover:shadow-cobalt/30 transition-all duration-300">
-            <div className="text-white/50 text-[9px] font-medium tracking-normal font-bold">{number}</div>
-            <div className="text-white [&>svg]:w-6 [&>svg]:h-6">{icon}</div>
+      <div>
+        {/* Top Header: Step Number & Icon */}
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-xs font-bold font-sans tracking-wider text-cobalt bg-cobalt/10 border border-cobalt/20 px-2.5 py-0.5 rounded-full">
+            STEP {number}
+          </span>
+          <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200/80 text-cobalt flex items-center justify-center group-hover:bg-cobalt group-hover:text-white group-hover:border-cobalt transition-all duration-300 shadow-2xs">
+            {icon}
           </div>
         </div>
-        <h3 className="text-sm font-bold text-ink-navy font-sans tracking-tight mb-1.5">{title}</h3>
-        <p className="text-ink-slate text-xs leading-relaxed font-light max-w-[180px]">{description}</p>
+
+        {/* Title */}
+        <h4 className="text-base font-bold text-slate-900 font-sans tracking-tight mb-2 group-hover:text-cobalt transition-colors duration-200">
+          {title}
+        </h4>
+
+        {/* Description */}
+        <p className="text-xs text-slate-600 font-normal leading-relaxed">
+          {description}
+        </p>
       </div>
+
+      {badge && (
+        <div className="mt-4 pt-3 border-t border-slate-100 flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+          <span className="text-[11px] font-semibold text-slate-500">{badge}</span>
+        </div>
+      )}
     </div>
   );
 };
@@ -283,83 +297,79 @@ export const SellYourDevice: React.FC<{
         {/* ══ HOW IT WORKS ══ */}
         <div className="mt-20 sm:mt-28">
           {/* Divider */}
-          <div className="border-t border-ice-border mb-16" />
+          <div className="border-t border-slate-200/80 mb-14 sm:mb-16" />
 
           {/* Header */}
-          <div className="text-center mb-12">
-            <span className="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-white/90 backdrop-blur-md border border-cobalt/20 shadow-[0_2px_10px_-2px_rgba(0,32,69,0.08)] hover:border-cobalt/35 hover:shadow-[0_4px_14px_-2px_rgba(0,32,69,0.14)] transition-all duration-300 mb-4 select-none">
-              <span className="text-[11px] font-bold font-sans tracking-[0.18em] text-cobalt uppercase">
-                PROCESS
+          <div className="text-center mb-10 sm:mb-12">
+            <span className="inline-flex items-center justify-center px-3.5 py-1 rounded-full bg-slate-100 border border-slate-200 mb-3 select-none">
+              <span className="text-[11px] font-bold font-sans tracking-wider text-slate-700 uppercase">
+                HOW IT WORKS
               </span>
             </span>
-            <h3 className="text-2xl sm:text-3xl font-black text-ink-navy font-sans tracking-tight">
-              Four steps to get <span className="text-secondary">paid.</span>
+            <h3 className="text-2xl sm:text-4xl font-extrabold text-slate-900 font-sans tracking-tight">
+              Four steps to get <span className="text-emerald-600">paid.</span>
             </h3>
-            <p className="text-ink-slate text-sm mt-2 font-light max-w-md mx-auto">
-              Simple, transparent, and designed to give you the highest value in minimum time.
+            <p className="text-slate-600 text-xs sm:text-sm mt-2 font-normal max-w-lg mx-auto leading-relaxed">
+              Simple, transparent, and engineered to give you the highest guaranteed payout in minimum time.
             </p>
           </div>
 
-          {/* Steps */}
-          <div className="flex flex-col lg:flex-row gap-6 lg:gap-4">
+          {/* Steps Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
             <ProcessStep
               number="01"
               title="Select Your Device"
               description="Choose your smartphone and pick your brand and model."
-              icon={<Smartphone strokeWidth={1.8} />}
+              icon={<Smartphone className="w-5 h-5" />}
               delay={0}
+              badge="100+ Models Supported"
             />
             <ProcessStep
               number="02"
               title="Tell Us the Condition"
               description="Answer a quick diagnostic questionnaire. Honest answers get the best offer."
-              icon={
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
-                  <rect x="9" y="3" width="6" height="4" rx="1" />
-                  <path d="m9 12 2 2 4-4" />
-                </svg>
-              }
-              delay={120}
+              icon={<ClipboardCheck className="w-5 h-5" />}
+              delay={100}
+              badge="Instant AI Mapping"
             />
             <ProcessStep
               number="03"
               title="Get Your Estimate"
               description="Receive an instant estimated valuation based on market rates and device condition."
-              icon={
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10" />
-                  <path d="M12 6v6l4 2" />
-                </svg>
-              }
-              delay={240}
+              icon={<Calculator className="w-5 h-5" />}
+              delay={200}
+              badge="Live Market Pricing"
             />
             <ProcessStep
               number="04"
               title="Complete the Sale"
               description="Confirm your schedule. We verify on-site and transfer payment instantly."
-              icon={
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
-                  <path d="m9 12 2 2 4-4" />
-                </svg>
-              }
-              delay={360}
-              isLast
+              icon={<Truck className="w-5 h-5" />}
+              delay={300}
+              badge="Spot UPI & Direct Transfer"
             />
           </div>
 
           {/* Bottom CTA strip */}
-          <div className="mt-12 flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-5 bg-canvas-white border border-ice-border rounded-2xl shadow-sm">
-            <div>
-              <div className="text-sm font-bold text-ink-navy font-sans">Ready to check your device&apos;s value?</div>
-              <div className="text-xs text-ink-muted font-light mt-0.5">Takes under 2 minutes. No commitment required.</div>
+          <div className="mt-10 sm:mt-12 flex flex-col md:flex-row items-center justify-between gap-5 p-6 sm:p-7 bg-white border border-slate-200/90 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-4 text-left w-full md:w-auto">
+              <div className="w-12 h-12 rounded-xl bg-cobalt/10 border border-cobalt/20 text-cobalt flex items-center justify-center shrink-0">
+                <Sparkles className="w-6 h-6 text-cobalt" />
+              </div>
+              <div>
+                <h4 className="text-base sm:text-lg font-bold text-slate-900 font-sans tracking-tight">
+                  Ready to check your device&apos;s exact value?
+                </h4>
+                <p className="text-xs sm:text-sm text-slate-500 font-normal mt-0.5">
+                  Takes under 2 minutes • 100% free automated valuation • Zero commitment required
+                </p>
+              </div>
             </div>
             <button
               onClick={onGetValuation}
-              className="group flex items-center gap-2.5 px-6 py-3 bg-cobalt hover:bg-cobalt-hover text-white font-bold text-sm rounded-xl transition-all duration-300 hover:shadow-lg flex-shrink-0 font-sans tracking-wide"
+              className="group flex items-center justify-center gap-2.5 px-6 py-3.5 bg-cobalt hover:bg-cobalt-hover text-white font-bold text-sm rounded-xl transition-all duration-300 shadow-sm hover:shadow-md flex-shrink-0 font-sans tracking-wide cursor-pointer w-full md:w-auto active:scale-98"
             >
-              Start Valuation
+              <span>Start Live Valuation</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
             </button>
           </div>

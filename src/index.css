@@ -10,6 +10,7 @@
 
 html {
   color-scheme: light;
+  -webkit-tap-highlight-color: transparent;
 }
 
 @layer base {
@@ -17,6 +18,12 @@ html {
     @apply antialiased text-ink-navy bg-canvas-white font-sans;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     color-scheme: light;
+    -webkit-tap-highlight-color: transparent;
+}
+
+  /* Touch manipulation to eliminate 300ms mobile tap delay */
+  button, a, input, select, textarea, [role="button"], [role="checkbox"], label {
+    touch-action: manipulation;
   }
   /* Enforce clean, professional Inter across ALL typography, removing bubbly or typewriter/monospace styling */
   h1, h2, h3, h4, h5, h6, .font-outfit, .font-mono, code, kbd, samp, pre {
@@ -376,7 +383,12 @@ html {
   display: flex;
   width: max-content;
   will-change: transform;
-  animation: tickerSlide 38s linear infinite !important;
+  animation: tickerSlide 45s linear infinite !important;
+}
+
+.animate-pilot-ticker:hover,
+.ticker-container:hover .animate-pilot-ticker {
+  animation-play-state: paused !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -385,4 +397,16 @@ html {
     width: 100%;
     overflow-x: auto;
   }
+}
+
+
+/* ─── Safe Area Helpers ─── */
+.safe-area-bottom {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+.pb-safe {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+.pb-safe-lg {
+  padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
 }
