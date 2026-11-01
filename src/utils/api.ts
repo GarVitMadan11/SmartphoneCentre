@@ -951,6 +951,10 @@ export function fetchCashifyModels(): Promise<CashifyModelItem[]> {
   return apiFetch<CashifyModelItem[]>('/admin/cashify/models', {}, true);
 }
 
+export function fetchCashifyCustomUrls(): Promise<{ success: boolean; customUrls: Record<string, string> }> {
+  return apiFetch<{ success: boolean; customUrls: Record<string, string> }>('/admin/cashify/custom-urls', {}, true);
+}
+
 export function fetchCashifyPriceAlerts(): Promise<CashifyPriceAlertItem[]> {
   return apiFetch<CashifyPriceAlertItem[]>('/admin/price-alerts', {}, true);
 }

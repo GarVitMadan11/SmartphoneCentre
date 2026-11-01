@@ -875,6 +875,20 @@ router.get('/cashify/models', adminAuth, async (_req: AuthenticatedRequest, res:
 });
 
 /**
+ * GET /api/admin/cashify/custom-urls
+ * Returns dictionary of all saved custom/manual Cashify URLs.
+ */
+router.get('/cashify/custom-urls', adminAuth, async (_req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const urls = getCustomUrls();
+    res.json({ success: true, customUrls: urls });
+  } catch (err: any) {
+    console.error('GET /api/admin/cashify/custom-urls error:', err);
+    res.status(500).json({ error: 'ServerError', message: 'Failed to fetch custom Cashify URLs.' });
+  }
+});
+
+/**
  * Extracts live unmasked buyback price from Cashify variant HTML
  */
 export function extractCashifyPriceFromHtml(htmlText: string): number | null {

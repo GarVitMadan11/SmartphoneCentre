@@ -34,7 +34,7 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { Model, Brand, BRANDS, isSmartwatchDevice, isTabletDevice, buildVariantPricesForModel, isVariantAvailable, predictCashifyPrice, hasSpenSupport, getModelScreenDeduction, getModelWarrantyDeductionPercentage } from '../../../data/mockDatabase';
-import { fetchModels, createModel, updateModel, deleteModel, testCashifyUrlApi, registerApprovedCashifyVariants } from '../../../utils/api';
+import { fetchModels, createModel, updateModel, deleteModel, testCashifyUrlApi, registerApprovedCashifyVariants, saveCashifyCustomUrl, fetchCashifyCustomUrls } from '../../../utils/api';
 import cashifyCustomUrlsData from '../../../data/cashifyCustomUrls.json';
 import {
   saveBrandOrder,
@@ -63,6 +63,22 @@ const STANDARD_RAM_OPTIONS = [0, 2, 3, 4, 6, 8, 12, 16, 24];
 
 export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initialBrands, onRefresh }) => {
   const [models, setModels] = useState<Model[]>([]);
+  const [catalogCustomUrls, setCatalogCustomUrls] = useState<Record<string, string>>({});
+
+  const loadCustomUrls = React.useCallback(async () => {
+    try {
+      const res = await fetchCashifyCustomUrls();
+      if (res && res.customUrls) {
+        setCatalogCustomUrls(res.customUrls);
+      }
+    } catch (err) {
+      console.warn('Failed to load custom Cashify URLs:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadCustomUrls();
+  }, [loadCustomUrls]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -1366,11 +1382,13 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
         brands={orderedBrands.length > 0 ? orderedBrands : initialBrands}
         models={models}
         existingSeries={availableSeriesList}
+        existingCashifyUrls={catalogCustomUrls}
         onClose={() => {
           setEditingModel(null);
           setIsAddingNew(false);
         }}
         onSaveSuccess={async () => {
+          loadCustomUrls();
           setSuccessMsg(
             isAddingNew
               ? 'Model added successfully to database!'
@@ -2109,8 +2127,59 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
   }, [allModels, existingSeries, formData.brandId, resolvedCategory]);
 
   // Cashify variant links, live benchmark prices & approval states
+  const [liveCustomUrls, setLiveCustomUrls] = useState<Record<string, string>>(existingCashifyUrls || {});
   const [variantCashifyUrls, setVariantCashifyUrls] = useState<Record<string, string>>({});
   const [manuallyEditedUrls, setManuallyEditedUrls] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (existingCashifyUrls && Object.keys(existingCashifyUrls).length > 0) {
+      setLiveCustomUrls((prev) => ({ ...prev, ...existingCashifyUrls }));
+    }
+  }, [existingCashifyUrls]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    fetchCashifyCustomUrls()
+      .then((res) => {
+        if (res && res.customUrls) {
+          setLiveCustomUrls((prev) => ({ ...prev, ...res.customUrls }));
+        }
+      })
+      .catch(() => {});
+  }, [isOpen]);
+
+  const resolveCustomUrl = React.useCallback(
+    (k: string, ramNum: number, storageNum: number, conn?: 'wifi' | 'cellular') => {
+      if (!model) return undefined;
+      const mId = model.id;
+      const mLegacy = (model as any).legacyId || mId;
+      const mName = model.name;
+      const mNameNorm = (model.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
+      const candidates = [
+        existingCashifyUrls?.[k],
+        existingCashifyUrls?.[conn ? `${ramNum}_${storageNum}_${conn}` : `${ramNum}_${storageNum}`],
+        existingCashifyUrls?.[conn ? `${storageNum}_${conn}` : `${storageNum}`],
+        liveCustomUrls[k],
+        liveCustomUrls[`${mId}_${k}`],
+        liveCustomUrls[`${mLegacy}_${k}`],
+        liveCustomUrls[`${mName}_${k}`],
+        liveCustomUrls[`${mNameNorm}_${k}`],
+        liveCustomUrls[`${mId}_${ramNum}_${storageNum}`],
+        liveCustomUrls[`${mLegacy}_${ramNum}_${storageNum}`],
+        liveCustomUrls[`${mName}_${ramNum}_${storageNum}`],
+        liveCustomUrls[`${mNameNorm}_${ramNum}_${storageNum}`],
+        (cashifyCustomUrlsData as any)[k],
+        (cashifyCustomUrlsData as any)[`${mId}_${ramNum}_${storageNum}`],
+        (cashifyCustomUrlsData as any)[`${mLegacy}_${ramNum}_${storageNum}`],
+        (cashifyCustomUrlsData as any)[`${mName}_${ramNum}_${storageNum}`],
+        (cashifyCustomUrlsData as any)[`${mNameNorm}_${ramNum}_${storageNum}`],
+      ];
+
+      return candidates.find((u) => u && typeof u === 'string' && u.trim().length > 0)?.trim();
+    },
+    [model, existingCashifyUrls, liveCustomUrls]
+  );
   const [variantCashifyPrices, setVariantCashifyPrices] = useState<Record<string, number>>({});
   const [variantApproved, setVariantApproved] = useState<Record<string, boolean>>({});
   const [editingUrlKey, setEditingUrlKey] = useState<string | null>(null);
@@ -2174,6 +2243,7 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
       const initUrls: Record<string, string> = {};
       const initPrices: Record<string, number> = {};
       const initApproved: Record<string, boolean> = {};
+      const initManuallyEdited: Record<string, boolean> = {};
 
       validRams.forEach((ram) => {
         storages.forEach((storage) => {
@@ -2184,33 +2254,53 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
             const cellKey = `${key}_cellular`;
             const wifiKey = `${key}_wifi`;
 
-            initUrls[cellKey] = generateCashifyVariantUrl(
-              brandName,
-              model.name,
-              ram,
-              storage,
-              'cellular',
-              model.id,
-              model.releaseYear
-            );
-            initUrls[wifiKey] = generateCashifyVariantUrl(
-              brandName,
-              model.name,
-              ram,
-              storage,
-              'wifi',
-              model.id,
-              model.releaseYear
-            );
-            initUrls[key] = existingCashifyUrls?.[key] || existingCashifyUrls?.[`${ram}_${storage}`] || generateCashifyVariantUrl(
-              brandName,
-              model.name,
-              ram,
-              storage,
-              undefined,
-              model.id,
-              model.releaseYear
-            );
+            const savedCell = resolveCustomUrl(cellKey, ram, storage, 'cellular');
+            if (savedCell) {
+              initUrls[cellKey] = savedCell;
+              initManuallyEdited[cellKey] = true;
+            } else {
+              initUrls[cellKey] = generateCashifyVariantUrl(
+                brandName,
+                model.name,
+                ram,
+                storage,
+                'cellular',
+                model.id,
+                model.releaseYear
+              );
+            }
+
+            const savedWifi = resolveCustomUrl(wifiKey, ram, storage, 'wifi');
+            if (savedWifi) {
+              initUrls[wifiKey] = savedWifi;
+              initManuallyEdited[wifiKey] = true;
+            } else {
+              initUrls[wifiKey] = generateCashifyVariantUrl(
+                brandName,
+                model.name,
+                ram,
+                storage,
+                'wifi',
+                model.id,
+                model.releaseYear
+              );
+            }
+
+            const savedBase = resolveCustomUrl(key, ram, storage);
+            if (savedBase) {
+              initUrls[key] = savedBase;
+              initManuallyEdited[key] = true;
+            } else {
+              initUrls[key] = generateCashifyVariantUrl(
+                brandName,
+                model.name,
+                ram,
+                storage,
+                undefined,
+                model.id,
+                model.releaseYear
+              );
+            }
 
             const modelNameLower = (model.name || '').toLowerCase();
             const isModelWifiOnly = (modelNameLower.includes('wi-fi') || modelNameLower.includes('wifi')) && !modelNameLower.includes('cellular') && !modelNameLower.includes('5g') && !modelNameLower.includes('lte');
@@ -2251,15 +2341,21 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
               initPrices[key] = isModelWifiOnly ? initPrices[wifiKey] : initPrices[cellKey];
             }
           } else {
-            initUrls[key] = generateCashifyVariantUrl(
-              brandName,
-              model.name,
-              ram,
-              storage,
-              undefined,
-              model.id,
-              model.releaseYear
-            );
+            const savedUrl = resolveCustomUrl(key, ram, storage);
+            if (savedUrl) {
+              initUrls[key] = savedUrl;
+              initManuallyEdited[key] = true;
+            } else {
+              initUrls[key] = generateCashifyVariantUrl(
+                brandName,
+                model.name,
+                ram,
+                storage,
+                undefined,
+                model.id,
+                model.releaseYear
+              );
+            }
             if (existingPrice && existingPrice > 0) {
               initPrices[key] = Math.round(existingPrice / 1.03);
               initApproved[key] = true;
@@ -2281,7 +2377,7 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
       setVariantCashifyUrls(initUrls);
       setVariantCashifyPrices(initPrices);
       setVariantApproved(initApproved);
-      setManuallyEditedUrls({});
+      setManuallyEditedUrls(initManuallyEdited);
     } else if (isAddingNew) {
       setFormData({
         id: '',
@@ -2331,38 +2427,56 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
             const cellKey = `${key}_cellular`;
             const wifiKey = `${key}_wifi`;
             if (!nextUrls[cellKey] || !manuallyEditedUrls[cellKey]) {
-              nextUrls[cellKey] = generateCashifyVariantUrl(
-                brandName,
-                formData.name,
-                ram,
-                storage,
-                'cellular',
-                formData.id || formData.legacyId,
-                formData.releaseYear
-              );
+              const saved = resolveCustomUrl(cellKey, ram, storage, 'cellular');
+              if (saved) {
+                nextUrls[cellKey] = saved;
+                manuallyEditedUrls[cellKey] = true;
+              } else {
+                nextUrls[cellKey] = generateCashifyVariantUrl(
+                  brandName,
+                  formData.name,
+                  ram,
+                  storage,
+                  'cellular',
+                  formData.id || formData.legacyId,
+                  formData.releaseYear
+                );
+              }
             }
             if (!nextUrls[wifiKey] || !manuallyEditedUrls[wifiKey]) {
-              nextUrls[wifiKey] = generateCashifyVariantUrl(
-                brandName,
-                formData.name,
-                ram,
-                storage,
-                'wifi',
-                formData.id || formData.legacyId,
-                formData.releaseYear
-              );
+              const saved = resolveCustomUrl(wifiKey, ram, storage, 'wifi');
+              if (saved) {
+                nextUrls[wifiKey] = saved;
+                manuallyEditedUrls[wifiKey] = true;
+              } else {
+                nextUrls[wifiKey] = generateCashifyVariantUrl(
+                  brandName,
+                  formData.name,
+                  ram,
+                  storage,
+                  'wifi',
+                  formData.id || formData.legacyId,
+                  formData.releaseYear
+                );
+              }
             }
           }
           if (!nextUrls[key] || !manuallyEditedUrls[key]) {
-            nextUrls[key] = generateCashifyVariantUrl(
-              brandName,
-              formData.name,
-              ram,
-              storage,
-              undefined,
-              formData.id || formData.legacyId,
-              formData.releaseYear
-            );
+            const saved = resolveCustomUrl(key, ram, storage);
+            if (saved) {
+              nextUrls[key] = saved;
+              manuallyEditedUrls[key] = true;
+            } else {
+              nextUrls[key] = generateCashifyVariantUrl(
+                brandName,
+                formData.name,
+                ram,
+                storage,
+                undefined,
+                formData.id || formData.legacyId,
+                formData.releaseYear
+              );
+            }
           }
         });
       });
@@ -2718,8 +2832,19 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
 
   const handleSaveEditedUrl = (key: string) => {
     if (tempUrlInput.trim()) {
-      setVariantCashifyUrls((prev) => ({ ...prev, [key]: tempUrlInput.trim() }));
+      const clean = tempUrlInput.trim();
+      setVariantCashifyUrls((prev) => ({ ...prev, [key]: clean }));
       setManuallyEditedUrls((prev) => ({ ...prev, [key]: true }));
+      setLiveCustomUrls((prev) => ({ ...prev, [key]: clean }));
+
+      // Immediate permanent persistence on the server
+      const mId = formData.id || (model as any)?.id || formData.legacyId;
+      const mLegacy = formData.legacyId || (model as any)?.legacyId || mId;
+      const mName = formData.name || (model as any)?.name;
+
+      if (mId) saveCashifyCustomUrl(`${mId}_${key}`, clean, extractedCashifyPrices[key], formData.variantPrices[key]).catch(() => {});
+      if (mLegacy) saveCashifyCustomUrl(`${mLegacy}_${key}`, clean, extractedCashifyPrices[key], formData.variantPrices[key]).catch(() => {});
+      if (mName) saveCashifyCustomUrl(`${mName}_${key}`, clean, extractedCashifyPrices[key], formData.variantPrices[key]).catch(() => {});
     }
     setEditingUrlKey(null);
   };
@@ -2982,7 +3107,7 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
                 url,
                 extractedPrice: extPrice,
                 rephonixPrice: repPrice,
-                isManuallyEdited: Boolean(manuallyEditedUrls[key]),
+                isManuallyEdited: true, // Permanent link persistence
               });
             }
           }
