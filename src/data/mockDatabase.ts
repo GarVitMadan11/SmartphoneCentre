@@ -2150,9 +2150,10 @@ export function getDeviceImage(
   customImageUrl?: string
 ): string {
   const modelId = typeof modelOrId === 'string' ? modelOrId : modelOrId?.id || '';
-  const bId = brandId || (typeof modelOrId === 'object' ? modelOrId?.brandId : '') || '';
-  const cUrl = customImageUrl || (typeof modelOrId === 'object' ? modelOrId?.imageUrl : undefined);
-  const mName = typeof modelOrId === 'object' ? modelOrId?.name : '';
+  const foundModel = typeof modelOrId === 'object' ? modelOrId : SMARTPHONE_MODELS.find(m => m.id === modelId || m.legacyId === modelId);
+  const bId = brandId || foundModel?.brandId || (typeof modelOrId === 'object' ? modelOrId?.brandId : '') || '';
+  const cUrl = customImageUrl || foundModel?.imageUrl || (typeof modelOrId === 'object' ? modelOrId?.imageUrl : undefined);
+  const mName = foundModel?.name || (typeof modelOrId === 'object' ? modelOrId?.name : '');
 
   if (cUrl && cUrl.trim().length > 0 && !cUrl.trim().toLowerCase().startsWith('file:') && !cUrl.trim().startsWith('/opt/render')) {
     const trimmed = cUrl.trim();

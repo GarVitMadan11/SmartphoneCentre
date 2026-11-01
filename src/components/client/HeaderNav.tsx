@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { Smartphone, Tablet, ChevronDown, ChevronRight, Zap, Truck, Menu, X, User, Package, Search, ArrowRight, Sparkles, FileText, Bookmark, SlidersHorizontal, ArrowUpDown } from 'lucide-react';
+import { Smartphone, Tablet, ChevronDown, ChevronRight, Zap, Truck, Menu, X, User, Package, Search, ArrowRight, FileText, Bookmark } from 'lucide-react';
 import { ApiUser } from '../../utils/api';
 import { BRANDS as STATIC_BRANDS, Model, getDeviceImage, getMaxVariantPrice } from '../../data/mockDatabase';
 import { applyBrandOrder } from '../../utils/ordering';
@@ -42,10 +42,9 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [selectedBrandFilter, setSelectedBrandFilter] = useState<string>('all');
-  const [sortOption, setSortOption] = useState<'payout' | 'year' | 'name'>('payout');
 
   const BRAND_FILTERS = [
-    { id: 'all', label: 'All Brands' },
+    { id: 'all', label: 'All' },
     { id: 'brand-apple', label: 'Apple' },
     { id: 'brand-samsung', label: 'Samsung' },
     { id: 'brand-google', label: 'Google' },
@@ -53,8 +52,6 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
     { id: 'brand-xiaomi', label: 'Xiaomi' },
     { id: 'other', label: 'Others' },
   ];
-
-  const POPULAR_TAGS = ['iPhone 16', 'iPhone 15', 'Galaxy S24', 'OnePlus 12', 'Pixel 9', 'Galaxy Z Fold 6'];
 
   const navRef = useRef<HTMLDivElement>(null);
   const modalInputRef = useRef<HTMLInputElement>(null);
@@ -96,7 +93,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
     }
   }, [isSearchOpen]);
 
-  // Filter and sort models based on query, brand filter, and sort order
+  // Filter models based on query and brand filter
   const { searchResults, totalMatchingCount } = useMemo(() => {
     let list = models.filter(m => !m.hidden);
 
@@ -121,21 +118,11 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
 
     const totalMatchingCount = list.length;
 
-    // 3. Sort results
-    list = [...list].sort((a, b) => {
-      if (sortOption === 'payout') {
-        return getMaxVariantPrice(b) - getMaxVariantPrice(a);
-      } else if (sortOption === 'year') {
-        const yearA = parseInt(String(a.releaseYear || '2024'), 10);
-        const yearB = parseInt(String(b.releaseYear || '2024'), 10);
-        return yearB - yearA;
-      } else {
-        return a.name.localeCompare(b.name);
-      }
-    });
+    // 3. Always sort by highest payout for best discovery
+    list = [...list].sort((a, b) => getMaxVariantPrice(b) - getMaxVariantPrice(a));
 
-    return { searchResults: list.slice(0, 10), totalMatchingCount };
-  }, [models, searchQuery, selectedBrandFilter, sortOption]);
+    return { searchResults: list.slice(0, 8), totalMatchingCount };
+  }, [models, searchQuery, selectedBrandFilter]);
 
   const handleBrandClick = (brandId: string) => {
     setActiveDropdown(null);
@@ -639,56 +626,59 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
       {/* ── Spotlight Command Palette Search Modal ──────────────────── */}
       {isSearchOpen && (
         <div 
-          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md flex items-start justify-center pt-10 sm:pt-20 px-3 sm:px-4 p-4 animate-in fade-in duration-200"
+          className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-start justify-center pt-12 sm:pt-20 px-3 sm:px-4 p-4 animate-in fade-in duration-200"
           onClick={() => setIsSearchOpen(false)}
         >
           <div 
-            className="w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-200/90 overflow-hidden animate-in zoom-in-95 duration-150 flex flex-col"
+            className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200/90 overflow-hidden animate-in zoom-in-95 duration-150 flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Search Input Bar (No outline, crisp modern typography) */}
-            <div className="flex items-center px-4 sm:px-6 py-4 border-b border-slate-100 gap-3 bg-white">
-              <div className="w-9 h-9 rounded-xl bg-cobalt/10 text-cobalt flex items-center justify-center shrink-0">
-                <Search className="w-4 h-4 stroke-[2.5]" />
-              </div>
-              <input
-                ref={modalInputRef}
-                type="text"
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setSelectedIndex(-1);
-                }}
-                onKeyDown={handleModalKeyDown}
-                placeholder="Type device name e.g. iPhone 15 Pro, Samsung S24, OnePlus..."
-                className="w-full bg-transparent text-sm sm:text-base font-medium text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-0 border-0 outline-none"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchQuery('');
-                    modalInputRef.current?.focus();
+            {/* Search Input Bar (Curvy Pill Container with X Close Button) */}
+            <div className="flex items-center px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 gap-3 bg-white">
+              <div className="flex-1 flex items-center bg-slate-50 hover:bg-slate-100/80 focus-within:bg-white focus-within:ring-2 focus-within:ring-cobalt/25 focus-within:border-cobalt/40 border border-slate-200/90 rounded-full px-4 py-2.5 transition-all shadow-2xs">
+                <Search className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400 shrink-0 mr-3 stroke-[2.2]" />
+                <input
+                  ref={modalInputRef}
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setSelectedIndex(-1);
                   }}
-                  className="p-1 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
-                  title="Clear search"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
-              <kbd className="hidden sm:inline-flex text-[10px] font-mono font-bold text-slate-400 bg-slate-100 border border-slate-200/80 px-2 py-0.5 rounded-md select-none shadow-2xs">
-                ESC
-              </kbd>
+                  onKeyDown={handleModalKeyDown}
+                  placeholder="Search smartphone e.g. iPhone 15, S24 Ultra..."
+                  className="w-full bg-transparent text-sm sm:text-base font-medium text-slate-900 placeholder:text-slate-400 border-0 outline-none p-0 focus:outline-none focus:ring-0"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery('');
+                      modalInputRef.current?.focus();
+                    }}
+                    className="p-1 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-200/60 transition-colors cursor-pointer shrink-0 ml-1"
+                    title="Clear query"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+
+              {/* Close Button X replacing ESC */}
+              <button
+                type="button"
+                onClick={() => setIsSearchOpen(false)}
+                className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-600 hover:text-slate-950 flex items-center justify-center shrink-0 transition-all cursor-pointer"
+                title="Close"
+                aria-label="Close search modal"
+              >
+                <X className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.2]" />
+              </button>
             </div>
 
-            {/* Brand Filter & Sort Bar */}
-            <div className="px-4 sm:px-6 py-2.5 bg-slate-50/80 border-b border-slate-100 flex items-center justify-between gap-3 overflow-x-auto select-none no-scrollbar">
-              {/* Brand Filter Pills */}
+            {/* Brand Filter Tabs (Single clean segmented row) */}
+            <div className="px-4 sm:px-6 py-2.5 bg-slate-50/70 border-b border-slate-100 flex items-center justify-between gap-2 overflow-x-auto select-none no-scrollbar">
               <div className="flex items-center gap-1.5 shrink-0">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-sans mr-1 flex items-center gap-1">
-                  <SlidersHorizontal className="w-3 h-3 text-slate-400" />
-                  Filter:
-                </span>
                 {BRAND_FILTERS.map((brand) => {
                   const isActive = selectedBrandFilter === brand.id;
                   return (
@@ -699,10 +689,10 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                         setSelectedBrandFilter(brand.id);
                         setSelectedIndex(-1);
                       }}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
                         isActive
-                          ? 'bg-slate-900 text-white shadow-xs'
-                          : 'bg-white hover:bg-slate-100 text-slate-600 hover:text-slate-950 border border-slate-200/80 shadow-2xs'
+                          ? 'bg-slate-950 text-white shadow-xs'
+                          : 'text-slate-600 hover:text-slate-950 hover:bg-slate-200/60'
                       }`}
                     >
                       {brand.label}
@@ -710,67 +700,30 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                   );
                 })}
               </div>
-
-              {/* Sort Toggle Button */}
-              <div className="shrink-0 flex items-center">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSortOption(prev => prev === 'payout' ? 'year' : prev === 'year' ? 'name' : 'payout');
-                    setSelectedIndex(-1);
-                  }}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-slate-200/80 hover:border-slate-300 text-slate-700 text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
-                  title="Click to cycle sort"
-                >
-                  <ArrowUpDown className="w-3 h-3 text-cobalt" />
-                  <span>
-                    {sortOption === 'payout' ? 'Top Payout' : sortOption === 'year' ? 'Newest' : 'A-Z'}
-                  </span>
-                </button>
-              </div>
+              <span className="text-[11px] font-medium text-slate-400 shrink-0 hidden sm:inline-block">
+                {totalMatchingCount} {totalMatchingCount === 1 ? 'model' : 'models'}
+              </span>
             </div>
 
-            {/* Popular Searches Shortcut Bar (Shown when search query is empty) */}
-            {!searchQuery && (
-              <div className="flex items-center gap-2 px-4 sm:px-6 py-2 bg-white border-b border-slate-100 overflow-x-auto text-xs select-none no-scrollbar">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-sans shrink-0">
-                  Popular:
-                </span>
-                {POPULAR_TAGS.map((tag) => (
-                  <button
-                    key={tag}
-                    type="button"
-                    onClick={() => {
-                      setSearchQuery(tag);
-                      modalInputRef.current?.focus();
-                    }}
-                    className="px-2 py-0.5 rounded-md bg-slate-50 hover:bg-cobalt/10 hover:text-cobalt text-slate-600 text-[11px] font-medium shrink-0 transition-colors cursor-pointer border border-slate-100"
-                  >
-                    {tag}
-                  </button>
-                ))}
-              </div>
-            )}
-
             {/* Results List */}
-            <div className="max-h-[55vh] overflow-y-auto p-2 sm:p-3 divide-y divide-slate-100">
-              <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider font-sans flex items-center justify-between">
+            <div className="max-h-[58vh] overflow-y-auto p-2 sm:p-3">
+              <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider font-sans flex items-center justify-between">
                 <span>
                   {searchQuery 
-                    ? `Matching Devices (${totalMatchingCount})` 
+                    ? `Results (${totalMatchingCount})` 
                     : selectedBrandFilter !== 'all' 
-                      ? `${BRAND_FILTERS.find(b => b.id === selectedBrandFilter)?.label} Devices (${totalMatchingCount})` 
-                      : 'Recommended Flagships'}
+                      ? `${BRAND_FILTERS.find(b => b.id === selectedBrandFilter)?.label} Devices` 
+                      : 'Popular Valuations'}
                 </span>
-                <span className="text-[10px] text-cobalt flex items-center gap-1 font-semibold">
-                  <Sparkles className="w-3 h-3" /> Top Valuations
+                <span className="text-[11px] text-slate-400 font-medium">
+                  Instant Doorstep Quote
                 </span>
               </div>
 
               {searchResults.length > 0 ? (
-                <div className="space-y-1 pt-1">
+                <div className="space-y-1">
                   {searchResults.map((model, idx) => {
-                    const imgUrl = getDeviceImage(model.id);
+                    const imgUrl = getDeviceImage(model, model.brandId, undefined, model.imageUrl);
                     const maxPrice = getMaxVariantPrice(model);
                     const isSelected = idx === selectedIndex;
                     return (
@@ -778,46 +731,56 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                         key={model.id}
                         onClick={() => handleSelectSearchedModel(model)}
                         onMouseEnter={() => setSelectedIndex(idx)}
-                        className={`group flex items-center justify-between p-3 rounded-2xl cursor-pointer transition-all duration-150 ${
+                        className={`group flex items-center justify-between px-3.5 py-3 rounded-xl cursor-pointer transition-all duration-150 ${
                           isSelected 
-                            ? 'bg-cobalt/10 text-cobalt ring-1 ring-cobalt/25 border-transparent shadow-xs' 
-                            : 'hover:bg-slate-50/90 text-slate-800 border border-transparent'
+                            ? 'bg-slate-100 text-slate-900 shadow-2xs' 
+                            : 'hover:bg-slate-50 text-slate-800'
                         }`}
                       >
                         <div className="flex items-center gap-3.5 min-w-0">
-                          <img
-                            src={imgUrl}
-                            alt={model.name}
-                            className="w-12 h-12 object-contain shrink-0 p-1.5 bg-white rounded-xl border border-slate-200/80 shadow-2xs group-hover:scale-105 transition-transform"
-                            loading="lazy"
-                          />
+                          <div className="w-11 h-11 rounded-lg bg-white border border-slate-200/80 p-1 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
+                            <img
+                              src={imgUrl}
+                              alt={model.name}
+                              referrerPolicy="no-referrer"
+                              onError={(e) => {
+                                const target = e.currentTarget;
+                                const fallback = getDeviceImage('', model.brandId);
+                                if (target.src !== fallback) {
+                                  target.src = fallback;
+                                }
+                              }}
+                              className="w-full h-full object-contain"
+                              loading="lazy"
+                            />
+                          </div>
                           <div className="min-w-0">
-                            <p className="text-sm sm:text-base font-extrabold text-slate-900 group-hover:text-cobalt transition-colors truncate">
+                            <p className="text-sm sm:text-[15px] font-bold text-slate-900 group-hover:text-cobalt transition-colors truncate">
                               {model.name}
                             </p>
-                            <div className="flex items-center gap-2 mt-1">
-                              <span className="text-[10px] font-sans font-bold px-2 py-0.5 bg-slate-100 text-slate-700 rounded-md uppercase tracking-wider">
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
                                 {model.brandId.replace('brand-', '')}
                               </span>
-                              <span className="text-[11px] font-medium text-slate-400">
+                              <span className="text-[10px] text-slate-300">•</span>
+                              <span className="text-[11px] text-slate-400">
                                 {model.releaseYear || 'Latest'}
                               </span>
-
                             </div>
                           </div>
                         </div>
 
                         <div className="text-right shrink-0 pl-3 flex items-center gap-3">
                           <div>
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block font-sans">
-                              Max Payout
+                            <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block font-sans">
+                              Up To
                             </span>
-                            <span className="text-sm sm:text-base font-black text-emerald-600 font-sans tracking-tight">
+                            <span className="text-sm sm:text-base font-extrabold text-emerald-600 font-sans tracking-tight tabular-nums">
                               ₹{maxPrice.toLocaleString('en-IN')}
                             </span>
                           </div>
-                          <ChevronRight className={`w-4 h-4 text-cobalt transition-transform duration-200 ${
-                            isSelected ? 'translate-x-1 opacity-100' : 'opacity-0 group-hover:opacity-100'
+                          <ChevronRight className={`w-4 h-4 text-slate-400 group-hover:text-cobalt transition-transform duration-200 ${
+                            isSelected ? 'translate-x-1 opacity-100' : 'opacity-40 group-hover:opacity-100'
                           }`} />
                         </div>
                       </div>
@@ -828,17 +791,17 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                     <button
                       type="button"
                       onClick={() => handleSearchSubmit()}
-                      className="w-full text-left p-3 text-xs font-bold text-cobalt hover:bg-cobalt/5 rounded-xl transition-colors flex items-center justify-between mt-2"
+                      className="w-full text-left p-3 text-xs font-bold text-cobalt hover:bg-cobalt/5 rounded-xl transition-colors flex items-center justify-between mt-1"
                     >
-                      <span>Explore all matching catalogue devices for "{searchQuery}"</span>
+                      <span>View all matching models for "{searchQuery}"</span>
                       <ArrowRight className="w-4 h-4" />
                     </button>
                   )}
                 </div>
               ) : (
                 <div className="py-12 text-center text-sm text-slate-400 space-y-2">
-                  <p className="font-medium text-slate-600">No devices matching your filters</p>
-                  <p className="text-xs text-slate-400">Try selecting "All Brands" or typing a different model name.</p>
+                  <p className="font-medium text-slate-600">No smartphones found for "{searchQuery}"</p>
+                  <p className="text-xs text-slate-400">Check spelling or try browsing by brand above.</p>
                   <button
                     type="button"
                     onClick={() => {
@@ -847,31 +810,30 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                     }}
                     className="text-cobalt font-bold hover:underline text-xs mt-2"
                   >
-                    Reset Filters
+                    Clear Filter
                   </button>
                 </div>
               )}
             </div>
 
             {/* Modal Footer Key Guide */}
-            <div className="px-4 sm:px-6 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500 font-sans">
+            <div className="px-4 sm:px-6 py-2.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400 font-sans">
               <div className="flex items-center gap-3">
                 <span className="flex items-center gap-1">
-                  <kbd className="bg-white border border-slate-200 px-1.5 py-0.5 rounded shadow-2xs font-mono text-slate-700">↑</kbd>
-                  <kbd className="bg-white border border-slate-200 px-1.5 py-0.5 rounded shadow-2xs font-mono text-slate-700">↓</kbd>
+                  <kbd className="bg-white border border-slate-200 px-1.5 py-0.5 rounded text-[10px] font-mono text-slate-600 shadow-2xs">↑</kbd>
+                  <kbd className="bg-white border border-slate-200 px-1.5 py-0.5 rounded text-[10px] font-mono text-slate-600 shadow-2xs">↓</kbd>
                   <span>navigate</span>
                 </span>
                 <span className="flex items-center gap-1">
-                  <kbd className="bg-white border border-slate-200 px-1.5 py-0.5 rounded shadow-2xs font-mono text-slate-700">↵</kbd>
+                  <kbd className="bg-white border border-slate-200 px-1.5 py-0.5 rounded text-[10px] font-mono text-slate-600 shadow-2xs">↵</kbd>
                   <span>select</span>
                 </span>
               </div>
-              <span className="font-medium text-slate-400">Rephonix Smart Valuation</span>
+              <span className="font-medium text-slate-400">Rephonix Valuation</span>
             </div>
           </div>
         </div>
-      )}</>
+      )}
+    </>
   );
 };
-
-export default HeaderNav;

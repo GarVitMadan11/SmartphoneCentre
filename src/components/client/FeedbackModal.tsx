@@ -201,7 +201,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
                 <div className="space-y-1 pr-6">
                   <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-sans font-semibold bg-cobalt/10 text-cobalt border border-cobalt/20">
                     <Sparkles className="w-3 h-3 text-cobalt" />
-                    <span>PILOT PROGRAM FEEDBACK</span>
+                    <span>FEEDBACK &amp; SUGGESTIONS</span>
                   </div>
                   <h3 className="text-xl font-bold font-sans text-ink-navy tracking-tight">
                     Help Shape the Rephonix Experience
