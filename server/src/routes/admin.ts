@@ -110,7 +110,7 @@ function setAdminCookie(res: Response, token: string): void {
  * - PIN auth always uses bcrypt.compare — no plain-text bypass
  * - JWT secret fetched at runtime; fatal error if not configured
  */
-router.post('/auth', async (req: Request, res: Response): Promise<void> => {
+router.post('/auth', authLimiter, async (req: Request, res: Response): Promise<void> => {
   // Check if Admin Panel is locked down
   const lockdownState = getLockdownState();
   if (lockdownState.isLockedDown) {
@@ -802,6 +802,7 @@ import {
   getCashifyVariantsList,
   getCustomUrls,
   saveCustomUrl,
+  saveCustomUrls,
   triggerPriceScan,
   isScanRunning,
 } from '../services/cashifyService.js';
@@ -1174,7 +1175,7 @@ router.post('/cashify/custom-url', adminAuth, async (req: AuthenticatedRequest, 
       return;
     }
 
-    saveCustomUrl(targetKey, customUrl);
+    await saveCustomUrl(targetKey, customUrl);
 
     // If key format is {modelId}_{ram}_{storage}, link all model variations and record alert
     const parts = targetKey.split('_');
@@ -1195,9 +1196,13 @@ router.post('/cashify/custom-url', adminAuth, async (req: AuthenticatedRequest, 
       });
 
       if (model) {
-        saveCustomUrl(`${model.id}_${ram}_${storage}`, customUrl);
-        saveCustomUrl(`${model.legacyId}_${ram}_${storage}`, customUrl);
-        saveCustomUrl(`${model.name}_${ram}_${storage}`, customUrl);
+        await saveCustomUrls({
+          [`${model.id}_${ram}_${storage}`]: customUrl,
+          [`${model.legacyId}_${ram}_${storage}`]: customUrl,
+          [`${model.name}_${ram}_${storage}`]: customUrl,
+        });
+
+
 
         let livePrice: number | null = (typeof extractedPrice === 'number' && extractedPrice > 0)
           ? extractedPrice
@@ -1299,9 +1304,13 @@ router.post('/cashify/register-approved-variants', adminAuth, async (req: Authen
       const urlToSave = (existingUrl && !v.isManuallyEdited) ? existingUrl : cleanUrl;
 
       // Save custom URL under all variations so it can never be missed
-      saveCustomUrl(key1, urlToSave);
-      saveCustomUrl(key2, urlToSave);
-      saveCustomUrl(key3, urlToSave);
+      await saveCustomUrls({
+        [key1]: urlToSave,
+        [key2]: urlToSave,
+        [key3]: urlToSave,
+      });
+
+
       registeredCount++;
 
       // Extract or retrieve price

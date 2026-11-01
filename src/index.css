@@ -544,7 +544,7 @@ html {
   justify-content: center;
   align-items: center;
   width: 100%;
-  margin: 0.5rem auto 0;
+  margin: 0.75rem auto;
   min-height: 0;
   transition: all 0.2s ease-in-out;
 }
@@ -554,24 +554,27 @@ html {
 }
 
 /* Ensure inline reCAPTCHA badge is centered and cleanly styled */
-#recaptcha-login-container .grecaptcha-badge,
-.grecaptcha-badge {
+#recaptcha-login-container .grecaptcha-badge {
+  position: static !important;
+  margin: 0 auto !important;
+  display: block !important;
   box-shadow: 0 4px 14px rgba(0, 32, 69, 0.08) !important;
   border: 1px solid #e2e8f0 !important;
   border-radius: 12px !important;
   overflow: hidden !important;
 }
 
-/* If trapped inside a relative/backdrop-blur container, enforce clean static centering */
-#recaptcha-login-container .grecaptcha-badge {
-  position: static !important;
-  margin: 0 auto !important;
-  display: block !important;
-}
-
-/* If floating directly on document.body, place cleanly at true screen bottom-right */
+/* Floating reCAPTCHA Badge:
+   In accordance with Google reCAPTCHA official guidelines (FAQ: 'I\'d like to hide the reCAPTCHA badge'),
+   the official Google-required attribution and links ('This site is protected by reCAPTCHA and the Google Privacy Policy and Terms of Service apply')
+   are already prominently and visibly displayed directly on the login card.
+   Hiding the floating viewport badge prevents it from awkwardly protruding over the login modal, input fields, or Create Account link. */
+.grecaptcha-badge:not(#recaptcha-login-container .grecaptcha-badge),
+body > div > div > .grecaptcha-badge,
+body > div > .grecaptcha-badge,
 body > .grecaptcha-badge {
-  z-index: 9999 !important;
-  bottom: 24px !important;
-  right: 24px !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  z-index: -1 !important;
 }

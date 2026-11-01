@@ -7,6 +7,15 @@
  */
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+// Safeguard PostgreSQL connection pool limits to prevent connection exhaustion
+let dbUrl = process.env.DATABASE_URL || '';
+if (dbUrl && !dbUrl.includes('connection_limit=')) {
+  const separator = dbUrl.includes('?') ? '&' : '?';
+  dbUrl = `${dbUrl}${separator}connection_limit=15&pool_timeout=20`;
+}
+
+const prisma = new PrismaClient({
+  datasources: dbUrl ? { db: { url: dbUrl } } : undefined,
+});
 
 export default prisma;

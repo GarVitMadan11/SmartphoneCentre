@@ -80,10 +80,18 @@ export function getCustomUrls(): Record<string, string> {
   return {};
 }
 
-export function saveCustomUrl(modelIdOrVariantKey: string, url: string): void {
+export async function saveCustomUrl(modelIdOrVariantKey: string, url: string): Promise<void> {
   const current = getCustomUrls();
   current[modelIdOrVariantKey] = url.trim();
-  fs.writeFileSync(CUSTOM_URLS_FILE, JSON.stringify(current, null, 2), 'utf-8');
+  await fs.promises.writeFile(CUSTOM_URLS_FILE, JSON.stringify(current, null, 2), 'utf-8');
+}
+
+export async function saveCustomUrls(entries: Record<string, string>): Promise<void> {
+  const current = getCustomUrls();
+  for (const [key, val] of Object.entries(entries)) {
+    current[key] = val.trim();
+  }
+  await fs.promises.writeFile(CUSTOM_URLS_FILE, JSON.stringify(current, null, 2), 'utf-8');
 }
 
 export function getFallbackUrls(): Record<string, string> {
@@ -502,6 +510,17 @@ export async function getCashifyModelsList(): Promise<CashifyModelItem[]> {
 }
 
 let activeScanProcess: any = null;
+let activeScanTimeout: NodeJS.Timeout | null = null;
+
+const SCAN_TIMEOUT_MS = 15 * 60 * 1000; // 15-minute watchdog limit
+
+function clearScanProcess() {
+  if (activeScanTimeout) {
+    clearTimeout(activeScanTimeout);
+    activeScanTimeout = null;
+  }
+  activeScanProcess = null;
+}
 
 export function triggerPriceScan(limit: number = 0, headless: boolean = true) {
   if (activeScanProcess) {
@@ -512,22 +531,50 @@ export function triggerPriceScan(limit: number = 0, headless: boolean = true) {
   if (limit > 0) args.push('--limit', String(limit));
   if (!headless) args.push('--visible');
 
-  const py = spawn('python', args, {
-    cwd: BASE_DIR,
-    detached: true,
-    stdio: 'ignore',
-  });
+  try {
+    const py = spawn('python', args, {
+      cwd: BASE_DIR,
+      detached: true,
+      stdio: 'ignore',
+    });
 
-  activeScanProcess = py;
-  py.on('close', () => {
-    activeScanProcess = null;
-  });
-  py.on('error', (err) => {
-    console.error('[CashifyService] Failed to spawn python scan process:', err);
-    activeScanProcess = null;
-  });
+    activeScanProcess = py;
 
-  return { success: true, message: `Price scan initiated in background (limit: ${limit || 'all'}).` };
+    // Safety watchdog: terminate crawler if stalled beyond 15 minutes
+    activeScanTimeout = setTimeout(() => {
+      if (activeScanProcess) {
+        console.warn('[CashifyService] Background price scan exceeded 15 minute limit. Terminating process...');
+        try {
+          activeScanProcess.kill('SIGTERM');
+        } catch {
+          // non-blocking
+        }
+        setTimeout(() => {
+          try {
+            if (activeScanProcess) activeScanProcess.kill('SIGKILL');
+          } catch {
+            // non-blocking
+          }
+          clearScanProcess();
+        }, 3000);
+      }
+    }, SCAN_TIMEOUT_MS);
+    activeScanTimeout.unref();
+
+    py.on('close', () => {
+      clearScanProcess();
+    });
+    py.on('error', (err) => {
+      console.error('[CashifyService] Failed to spawn python scan process:', err);
+      clearScanProcess();
+    });
+
+    return { success: true, message: `Price scan initiated in background (limit: ${limit || 'all'}).` };
+  } catch (err: any) {
+    clearScanProcess();
+    console.error('[CashifyService] Error triggering price scan:', err);
+    return { success: false, message: `Failed to initiate price scan: ${err.message || 'Unknown error'}` };
+  }
 }
 
 export function isScanRunning(): boolean {

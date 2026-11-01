@@ -57,3 +57,13 @@ export const quoteLimiter = rateLimit({
   skip: () => isDev,
 });
 
+export const adminOpsLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: isDev ? 10000 : 1500,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'TooManyRequests', message: 'Too many admin operations. Please slow down.' },
+  skip: () => isDev,
+});
+
+

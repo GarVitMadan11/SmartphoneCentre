@@ -21,7 +21,7 @@ import quotesRouter from './routes/quotes.js';
 import bookingsRouter from './routes/bookings.js';
 
 // Middleware & Validation
-import { globalLimiter, authLimiter } from './middleware/rateLimits.js';
+import { globalLimiter, authLimiter, adminOpsLimiter } from './middleware/rateLimits.js';
 export { validateBookingBody, isValidImageUrl, formatImageUrl } from './validation/booking.js';
 export { encryptImei, decryptImei, mapBooking } from './routes/bookings.js';
 
@@ -218,7 +218,7 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', engineVersion: PRICING_ENGINE_VERSION, timestamp: new Date().toISOString() });
 });
 
-app.use('/api/admin', authLimiter, adminRouter);
+app.use('/api/admin', adminOpsLimiter, adminRouter);
 app.use('/api/support', supportRouter);
 app.use('/api/auth', authLimiter, authRouter);
 app.use('/api/brands', brandsRouter);
