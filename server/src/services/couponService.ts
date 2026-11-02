@@ -29,9 +29,48 @@ export async function validateCoupon(
     return { valid: false, message: 'Invalid device valuation base price.' };
   }
 
-  const coupon = await (prisma as any).referralCoupon.findUnique({
+  let coupon = await (prisma as any).referralCoupon.findUnique({
     where: { code },
   });
+
+  if (!coupon) {
+    if (code === 'WELCOME300') {
+      try {
+        coupon = await (prisma as any).referralCoupon.create({
+          data: {
+            code: 'WELCOME300',
+            type: 'FLAT',
+            value: 300,
+            minDeviceValue: 5000,
+            maxTotalUses: 10000,
+            maxUsesPerUser: 1,
+            active: true,
+            createdBy: 'SYSTEM',
+          },
+        });
+      } catch {
+        coupon = await (prisma as any).referralCoupon.findUnique({ where: { code } });
+      }
+    } else if (code === 'REPHONIX3') {
+      try {
+        coupon = await (prisma as any).referralCoupon.create({
+          data: {
+            code: 'REPHONIX3',
+            type: 'PERCENT',
+            value: 3,
+            minDeviceValue: 10000,
+            maxBonusCap: 1500,
+            maxTotalUses: 10000,
+            maxUsesPerUser: 1,
+            active: true,
+            createdBy: 'SYSTEM',
+          },
+        });
+      } catch {
+        coupon = await (prisma as any).referralCoupon.findUnique({ where: { code } });
+      }
+    }
+  }
 
   if (!coupon || !coupon.active) {
     return { valid: false, message: 'Referral code not found or inactive.' };
@@ -208,5 +247,79 @@ export async function listCouponUsages(limit: number = 100) {
     take: limit,
     orderBy: { usedAt: 'desc' },
   });
+}
+
+/**
+ * Returns active public promotional offers for the customer diagnostic tray.
+ */
+export async function listActivePublicCoupons() {
+  const now = new Date();
+  const dbCoupons = await (prisma as any).referralCoupon.findMany({
+    where: {
+      active: true,
+      OR: [
+        { expiresAt: null },
+        { expiresAt: { gt: now } },
+      ],
+    },
+    select: {
+      code: true,
+      type: true,
+      value: true,
+      minDeviceValue: true,
+      maxBonusCap: true,
+      expiresAt: true,
+    },
+    orderBy: { value: 'desc' },
+    take: 6,
+  });
+
+  const defaults = [
+    {
+      code: 'WELCOME300',
+      type: 'FLAT' as const,
+      value: 300,
+      minDeviceValue: 5000,
+      description: 'Flat ₹300 bonus on your diagnostic valuation',
+    },
+    {
+      code: 'RPX500',
+      type: 'FLAT' as const,
+      value: 500,
+      minDeviceValue: 30000,
+      description: 'Flat ₹500 extra cash for devices valued ₹30,000+',
+    },
+    {
+      code: 'REPHONIX3',
+      type: 'PERCENT' as const,
+      value: 3,
+      minDeviceValue: 10000,
+      maxBonusCap: 1500,
+      description: '+3% extra payout bonus (up to ₹1,500 extra)',
+    },
+  ];
+
+  if (!dbCoupons || dbCoupons.length === 0) {
+    return defaults;
+  }
+
+  const existingCodes = new Set(dbCoupons.map((c: any) => c.code.toUpperCase()));
+  const formattedDb = dbCoupons.map((c: any) => ({
+    code: c.code,
+    type: c.type,
+    value: c.value,
+    minDeviceValue: c.minDeviceValue || 0,
+    maxBonusCap: c.maxBonusCap || null,
+    description: c.type === 'PERCENT'
+      ? `+${c.value}% extra payout bonus${c.maxBonusCap ? ` (up to ₹${c.maxBonusCap})` : ''}`
+      : `Flat ₹${c.value.toLocaleString('en-IN')} extra payout added to your doorside transfer`,
+  }));
+
+  const merged = [
+    ...formattedDb,
+    ...defaults.filter(d => !existingCodes.has(d.code)),
+  ];
+
+  return merged;
 }
 

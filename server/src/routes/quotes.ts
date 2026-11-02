@@ -16,7 +16,7 @@ import {
 } from '../services/bookingMailer.js';
 import { ALLOWED_STORAGE_GB } from '../validation/booking.js';
 import { authLimiter, leadLimiter, quoteLimiter } from '../middleware/rateLimits.js';
-import { validateCoupon } from '../services/couponService.js';
+import { validateCoupon, listActivePublicCoupons } from '../services/couponService.js';
 
 const router = Router();
 
@@ -218,6 +218,17 @@ router.post('/step-lead', leadLimiter, async (req, res) => {
   } catch (err) {
     console.error('POST /api/quotes/step-lead error:', err);
     res.status(500).json({ error: 'ServerError', message: 'Failed to process step lead.' });
+  }
+});
+
+// GET /api/quotes/active-offers - Returns public active coupon offers for the client
+router.get('/active-offers', quoteLimiter, async (_req, res) => {
+  try {
+    const offers = await listActivePublicCoupons();
+    res.json({ success: true, offers });
+  } catch (err: any) {
+    console.error('GET /api/quotes/active-offers error:', err);
+    res.status(500).json({ error: 'ServerError', message: 'Failed to fetch active offers.' });
   }
 });
 

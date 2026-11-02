@@ -33,6 +33,18 @@ export interface PriceLockStatus {
   daysRemaining: number;
 }
 
+export interface PriceLockCountdown {
+  isLocked: boolean;
+  expiresAt: string;
+  totalRemainingMs: number;
+  days: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+  formattedString: string;
+  isExpiringSoon: boolean; // under 24 hours
+}
+
 export function getPriceLockStatus(savedAt: string): PriceLockStatus {
   const savedTime = new Date(savedAt).getTime();
   const expiresAt = new Date(savedTime + PRICE_LOCK_DURATION_MS);
@@ -45,6 +57,39 @@ export function getPriceLockStatus(savedAt: string): PriceLockStatus {
     isLocked,
     expiresAt: expiresAt.toISOString(),
     daysRemaining,
+  };
+}
+
+export function getPriceLockCountdown(savedAt: string): PriceLockCountdown {
+  const savedTime = new Date(savedAt).getTime();
+  const expiresAt = new Date(savedTime + PRICE_LOCK_DURATION_MS);
+  const now = Date.now();
+  const totalRemainingMs = Math.max(0, expiresAt.getTime() - now);
+  const isLocked = totalRemainingMs > 0;
+
+  const seconds = Math.floor((totalRemainingMs / 1000) % 60);
+  const minutes = Math.floor((totalRemainingMs / (1000 * 60)) % 60);
+  const hours = Math.floor((totalRemainingMs / (1000 * 60 * 60)) % 24);
+  const days = Math.floor(totalRemainingMs / (1000 * 60 * 60 * 24));
+
+  const isExpiringSoon = isLocked && totalRemainingMs < 24 * 60 * 60 * 1000;
+
+  const formattedString = isLocked
+    ? days > 0
+      ? `${days}d ${hours.toString().padStart(2, '0')}h ${minutes.toString().padStart(2, '0')}m`
+      : `${hours.toString().padStart(2, '0')}h ${minutes.toString().padStart(2, '0')}m ${seconds.toString().padStart(2, '0')}s`
+    : 'Expired';
+
+  return {
+    isLocked,
+    expiresAt: expiresAt.toISOString(),
+    totalRemainingMs,
+    days,
+    hours,
+    minutes,
+    seconds,
+    formattedString,
+    isExpiringSoon,
   };
 }
 

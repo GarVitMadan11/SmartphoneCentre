@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Booking, Brand, Model } from '../../data/mockDatabase';
 import {
-  ArrowLeft, RefreshCw, ShieldAlert, Cpu, Smartphone, Tablet, Watch,
-  Zap, Truck, MessageSquare, CreditCard, ChevronLeft, ChevronRight,
-  Menu, X, ShieldCheck, Eye, Layers, Users, Tag
+  ArrowLeft, RefreshCw, ShieldAlert, Smartphone, Tablet, Watch,
+  Zap, Truck, MessageSquare, CreditCard, ChevronLeft, ChevronRight, ChevronDown,
+  Menu, X, ShieldCheck, Eye, Layers, Users, Tag, User
 } from 'lucide-react';
 import { fetchBookings, triggerAdminLockdown, fetchCurrentUser, getCurrentAdminUser, AdminUserSession, ApiUser } from '../../utils/api';
 import { AdminContextProvider } from '../../context/AdminContext';
@@ -83,6 +83,28 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
 
   // Super Admin Role Preview Mode
   const [previewRole, setPreviewRole] = useState<'SUPER_ADMIN' | 'CATALOG_EDITOR' | 'OPERATIONS_AGENT' | 'FINANCE_APPROVER'>('SUPER_ADMIN');
+  const [roleMenuOpen, setRoleMenuOpen] = useState(false);
+  const roleDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (roleDropdownRef.current && !roleDropdownRef.current.contains(e.target as Node)) {
+        setRoleMenuOpen(false);
+      }
+    };
+    if (roleMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [roleMenuOpen]);
+
+  const roleOptions: { key: 'SUPER_ADMIN' | 'CATALOG_EDITOR' | 'OPERATIONS_AGENT' | 'FINANCE_APPROVER'; label: string; tag: string }[] = [
+    { key: 'SUPER_ADMIN', label: 'Super Admin', tag: 'All Privs' },
+    { key: 'CATALOG_EDITOR', label: 'Catalog Team', tag: 'Catalog' },
+    { key: 'OPERATIONS_AGENT', label: 'Operations Agent', tag: 'Operations' },
+    { key: 'FINANCE_APPROVER', label: 'Finance Approver', tag: 'Finance' },
+  ];
+  const activeRoleOption = roleOptions.find(o => o.key === previewRole) || roleOptions[0];
 
   useEffect(() => {
     getCurrentAdminUser().then(u => {
@@ -220,7 +242,7 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
     label,
     icon: Icon,
     badge,
-    badgeColor = 'bg-cobalt/20 text-cobalt'
+    badgeColor = 'bg-blue-500/20 text-blue-300'
   }: {
     navKey: AdminNavKey;
     label: string;
@@ -235,14 +257,14 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
           setActiveNav(navKey);
           setMobileMenuOpen(false);
         }}
-        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-medium transition-all group cursor-pointer ${isActive
-          ? 'bg-cobalt text-white shadow-sm font-bold'
-          : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
+        className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-all group cursor-pointer ${isActive
+          ? 'bg-blue-600 text-white shadow-xs font-semibold'
+          : 'text-slate-200 hover:text-white hover:bg-slate-800/80 font-medium'
           }`}
         title={label}
       >
-        <div className="flex items-center gap-3 min-w-0">
-          <Icon className={`w-4 h-4 flex-shrink-0 transition-transform ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'}`} />
+        <div className="flex items-center gap-2.5 min-w-0">
+          <Icon className={`w-4 h-4 flex-shrink-0 transition-colors ${isActive ? 'text-white' : 'text-slate-300 group-hover:text-white'}`} />
           <span
             className={`truncate transition-all duration-200 overflow-hidden whitespace-nowrap ${isSidebarExpanded ? 'opacity-100 max-w-[140px] translate-x-0' : 'opacity-0 max-w-0 -translate-x-2 pointer-events-none'
               }`}
@@ -252,8 +274,8 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
         </div>
         {badge !== undefined && (
           <span
-            className={`px-2 py-0.5 text-[10px] font-mono font-bold rounded-full transition-all duration-200 shrink-0 ${isSidebarExpanded ? 'opacity-100 scale-100' : 'opacity-0 scale-75 pointer-events-none w-0 p-0 overflow-hidden'
-              } ${isActive ? 'bg-white/20 text-white' : badgeColor}`}
+            className={`px-1.5 py-0.5 text-[9px] font-mono font-bold rounded-full transition-all shrink-0 ${isSidebarExpanded ? 'opacity-100' : 'opacity-0 w-0 p-0 overflow-hidden pointer-events-none'
+              } ${isActive ? 'bg-white/25 text-white' : badgeColor}`}
           >
             {badge}
           </span>
@@ -269,259 +291,255 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
       <aside
         onMouseEnter={handleSidebarMouseEnter}
         onMouseLeave={handleSidebarMouseLeave}
-        className={`relative bg-slate-900 border-r border-slate-800/90 text-slate-200 flex flex-col justify-between transition-[width,box-shadow] duration-250 ease-[cubic-bezier(0.16,1,0.3,1)] z-30 ${isSidebarExpanded ? 'w-full md:w-64' : 'w-full md:w-20'
+        className={`relative bg-slate-900 border-r border-slate-800 text-slate-200 flex flex-col transition-[width,box-shadow] duration-200 ease-out z-30 ${isSidebarExpanded ? 'w-full md:w-60' : 'w-full md:w-18'
           } ${mobileMenuOpen ? 'block' : 'hidden md:flex'} ${sidebarCollapsed && sidebarHovered ? 'shadow-2xl ring-1 ring-slate-700/80' : ''
           }`}
       >
-        <div>
-          {/* Top Brand Banner: Unified Persistent Header with Official Rephonix Logo */}
-          <div className="border-b border-slate-800/80">
-            <div className="h-16 px-3.5 flex items-center justify-between relative group select-none">
-              {/* Left: Rephonix Logo & Title */}
-              <div
-                onClick={() => {
-                  if (sidebarCollapsed) {
-                    setSidebarCollapsed(false);
-                    setSidebarHovered(false);
-                  }
-                }}
-                className={`flex items-center gap-3 min-w-0 ${sidebarCollapsed ? 'cursor-pointer' : ''}`}
-                title={sidebarCollapsed ? "Click to pin sidebar open" : undefined}
-              >
-                {/* Premium Rephonix Logo Badge (Pixel-perfect vertical axis alignment with navigation icons) */}
-                <div className="w-10 h-10 rounded-xl bg-[#001736] border border-slate-700/80 p-1.5 flex items-center justify-center shadow-md flex-shrink-0 group-hover:border-cobalt/60 group-hover:shadow-cobalt/20 transition-all duration-200 group-hover:scale-105">
-                  <img src="/logo.svg" className="w-full h-full object-contain filter drop-shadow-xs" alt="Rephonix Logo" />
-                </div>
-
-                {/* Brand Typography & Tagline (Smooth CSS fade/slide, zero DOM unmounting) */}
-                <div
-                  className={`min-w-0 transition-all duration-200 ease-out overflow-hidden whitespace-nowrap ${isSidebarExpanded
-                    ? 'opacity-100 max-w-[160px] translate-x-0'
-                    : 'opacity-0 max-w-0 -translate-x-2 pointer-events-none'
-                    }`}
-                >
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-extrabold tracking-tight text-sm text-white font-sans">
-                      Re<span className="text-secondary">phonix</span>
-                    </span>
-                    <span className="text-[9px] font-mono px-1.5 py-0.5 bg-cobalt/20 text-cobalt rounded font-bold">
-                      OS
-                    </span>
-                  </div>
-                  <div className="text-[10px] text-slate-400 font-mono truncate">Control Studio v2.4</div>
-                </div>
+        {/* Top Brand Banner */}
+        <div className="h-14 px-3 border-b border-slate-800/80 flex items-center justify-between select-none shrink-0">
+          <div
+            onClick={() => {
+              if (sidebarCollapsed) {
+                setSidebarCollapsed(false);
+                setSidebarHovered(false);
+              }
+            }}
+            className={`flex items-center gap-2.5 min-w-0 ${sidebarCollapsed ? 'cursor-pointer' : ''}`}
+            title={sidebarCollapsed ? "Click to expand" : undefined}
+          >
+            <div className="w-8 h-8 rounded-lg bg-[#001736] border border-slate-700 p-1 flex items-center justify-center shrink-0">
+              <img src="/logo.svg" className="w-full h-full object-contain" alt="Rephonix Logo" />
+            </div>
+            <div
+              className={`min-w-0 transition-all duration-200 overflow-hidden whitespace-nowrap ${
+                isSidebarExpanded ? 'opacity-100 max-w-[150px]' : 'opacity-0 max-w-0 pointer-events-none'
+              }`}
+            >
+              <div className="flex items-center gap-1.5">
+                <span className="font-extrabold text-sm text-white font-sans tracking-tight">
+                  Re<span className="text-secondary">phonix</span>
+                </span>
+                <span className="text-[9px] font-mono px-1.5 py-0.5 bg-blue-500/20 text-blue-400 rounded font-bold uppercase tracking-wider">
+                  Admin
+                </span>
               </div>
-
-              {/* Collapse/Expand Toggle Button (Desktop only) */}
-              {isSidebarExpanded ? (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSidebarCollapsed(true);
-                    setSidebarHovered(false);
-                  }}
-                  className="hidden md:flex p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer flex-shrink-0"
-                  title="Collapse Sidebar"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSidebarCollapsed(false);
-                    setSidebarHovered(false);
-                  }}
-                  className="hidden md:flex absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-slate-800 hover:bg-cobalt border border-slate-700 hover:border-cobalt text-slate-300 hover:text-white items-center justify-center shadow-lg transition-all duration-200 cursor-pointer z-40 hover:scale-110 opacity-0 group-hover:opacity-100"
-                  title="Expand Sidebar"
-                >
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </button>
-              )}
             </div>
           </div>
 
-          {/* Navigation Links Grouped by Domain */}
-          <div className="p-3 space-y-4 overflow-y-auto max-h-[calc(100vh-250px)]">
-
-            {/* Group A: Inventory & Valuation */}
-            {(hasAccessTo('smartphones') || hasAccessTo('tablets') || hasAccessTo('smartwatches') || hasAccessTo('cashify')) && (
-              <div>
-                <div
-                  className={`px-3 pb-1.5 text-[10px] font-mono font-bold tracking-wider uppercase text-slate-400 transition-all duration-200 overflow-hidden whitespace-nowrap ${isSidebarExpanded ? 'opacity-100 max-h-6' : 'opacity-0 max-h-0 pointer-events-none'
-                    }`}
-                >
-                  Inventory & Valuation
-                </div>
-                <div className="space-y-1">
-                  {hasAccessTo('smartphones') && <NavItem navKey="smartphones" label="Smartphones" icon={Smartphone} />}
-                  {hasAccessTo('tablets') && <NavItem navKey="tablets" label="Tablets" icon={Tablet} />}
-                  {hasAccessTo('smartwatches') && <NavItem navKey="smartwatches" label="Smartwatches" icon={Watch} />}
-                  {hasAccessTo('cashify') && (
-                    <NavItem
-                      navKey="cashify"
-                      label="Cashify Monitor"
-                      icon={Zap}
-                      badge="Live"
-                      badgeColor="bg-amber-400/20 text-amber-300"
-                    />
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Group B: Operations & Logistics */}
-            {(hasAccessTo('inspections') || hasAccessTo('support')) && (
-              <div>
-                <div
-                  className={`px-3 pb-1.5 text-[10px] font-mono font-bold tracking-wider uppercase text-slate-400 transition-all duration-200 overflow-hidden whitespace-nowrap ${isSidebarExpanded ? 'opacity-100 max-h-6' : 'opacity-0 max-h-0 pointer-events-none'
-                    }`}
-                >
-                  Operations
-                </div>
-                <div className="space-y-1">
-                  {hasAccessTo('inspections') && (
-                    <NavItem
-                      navKey="inspections"
-                      label="Doorstep Pickups"
-                      icon={Truck}
-                      badge={pendingInspections > 0 ? pendingInspections : undefined}
-                      badgeColor="bg-blue-500/20 text-blue-300"
-                    />
-                  )}
-                  {hasAccessTo('support') && <NavItem navKey="support" label="Support Desk" icon={MessageSquare} />}
-                </div>
-              </div>
-            )}
-
-            {/* Group C: Finance & Incentives */}
-            {(hasAccessTo('finance') || hasAccessTo('coupons')) && (
-              <div>
-                <div
-                  className={`px-3 pb-1.5 text-[10px] font-mono font-bold tracking-wider uppercase text-slate-400 transition-all duration-200 overflow-hidden whitespace-nowrap ${isSidebarExpanded ? 'opacity-100 max-h-6' : 'opacity-0 max-h-0 pointer-events-none'
-                    }`}
-                >
-                  Finance & Growth
-                </div>
-                <div className="space-y-1">
-                  {hasAccessTo('finance') && (
-                    <NavItem
-                      navKey="finance"
-                      label="Payouts & Ledger"
-                      icon={CreditCard}
-                      badge={pendingPayouts > 0 ? pendingPayouts : undefined}
-                      badgeColor="bg-emerald-500/20 text-emerald-300"
-                    />
-                  )}
-                  {hasAccessTo('coupons') && (
-                    <NavItem
-                      navKey="coupons"
-                      label="Referral & Coupons"
-                      icon={Tag}
-                    />
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Group D: System & Governance */}
-            {(effectiveRole === 'SUPER_ADMIN' || effectiveRole === 'CATALOG_EDITOR' || effectiveRole === 'FINANCE_APPROVER') && (
-              <div>
-                <div
-                  className={`px-3 pb-1.5 text-[10px] font-mono font-bold tracking-wider uppercase text-slate-400 transition-all duration-200 overflow-hidden whitespace-nowrap ${isSidebarExpanded ? 'opacity-100 max-h-6' : 'opacity-0 max-h-0 pointer-events-none'
-                    }`}
-                >
-                  Governance & Team
-                </div>
-                <div className="space-y-1">
-                  {effectiveRole === 'SUPER_ADMIN' && (
-                    <NavItem navKey="staff" label="Staff & Roles" icon={Users} />
-                  )}
-                  <NavItem navKey="audit" label="Audit Trail" icon={ShieldCheck} />
-                </div>
-              </div>
-            )}
-          </div>
+          {/* Collapse/Expand Toggle Button */}
+          {isSidebarExpanded ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSidebarCollapsed(true);
+                setSidebarHovered(false);
+              }}
+              className="hidden md:flex p-1 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer shrink-0"
+              title="Collapse Sidebar"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSidebarCollapsed(false);
+                setSidebarHovered(false);
+              }}
+              className="hidden md:flex absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-slate-800 hover:bg-blue-600 border border-slate-700 hover:border-blue-500 text-slate-300 hover:text-white items-center justify-center shadow-lg transition-all duration-200 cursor-pointer z-40 hover:scale-110 opacity-0 group-hover:opacity-100"
+              title="Expand Sidebar"
+            >
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
 
-        {/* Bottom Sidebar: User Badge, Role Previewer & Quick Exit */}
-        <div className="p-3 border-t border-slate-800/80 bg-slate-950/60 space-y-2">
-          {/* Role Preview Switcher for Super Admins */}
-          {realRole === 'SUPER_ADMIN' && isSidebarExpanded && (
-            <div className="p-2 bg-slate-900/90 rounded-lg border border-slate-800">
-              <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 mb-1.5">
-                <span className="flex items-center gap-1 font-bold text-emerald-400">
-                  <Eye className="w-3 h-3 text-emerald-400" /> View As:
-                </span>
-                <span className="text-slate-400">{previewRole}</span>
+        {/* Navigation Links Grouped by Domain (Clean Flex-1 with zero clipping) */}
+        <div className="flex-1 min-h-0 overflow-y-auto px-2.5 py-3 space-y-3.5 scrollbar-thin">
+
+          {/* Group A: Catalog */}
+          {(hasAccessTo('smartphones') || hasAccessTo('tablets') || hasAccessTo('smartwatches') || hasAccessTo('cashify')) && (
+            <div>
+              <div
+                className={`px-2.5 pb-1 text-[10px] font-mono font-bold tracking-wider uppercase text-slate-400 transition-all duration-200 overflow-hidden whitespace-nowrap ${isSidebarExpanded ? 'opacity-100 max-h-5' : 'opacity-0 max-h-0 pointer-events-none'
+                  }`}
+              >
+                Catalog & Valuation
               </div>
-              <div className="grid grid-cols-2 gap-1 text-[10px] font-mono">
-                <button
-                  onClick={() => setPreviewRole('SUPER_ADMIN')}
-                  className={`py-1 px-1.5 rounded text-center transition-all cursor-pointer ${previewRole === 'SUPER_ADMIN' ? 'bg-cobalt text-white font-bold' : 'text-slate-400 hover:text-white bg-slate-800/60'
-                    }`}
-                >
-                  All Privs
-                </button>
-                <button
-                  onClick={() => setPreviewRole('CATALOG_EDITOR')}
-                  className={`py-1 px-1.5 rounded text-center transition-all cursor-pointer ${previewRole === 'CATALOG_EDITOR' ? 'bg-purple-600 text-white font-bold' : 'text-slate-400 hover:text-white bg-slate-800/60'
-                    }`}
-                >
-                  Catalog
-                </button>
-                <button
-                  onClick={() => setPreviewRole('OPERATIONS_AGENT')}
-                  className={`py-1 px-1.5 rounded text-center transition-all cursor-pointer ${previewRole === 'OPERATIONS_AGENT' ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white bg-slate-800/60'
-                    }`}
-                >
-                  Operations
-                </button>
-                <button
-                  onClick={() => setPreviewRole('FINANCE_APPROVER')}
-                  className={`py-1 px-1.5 rounded text-center transition-all cursor-pointer ${previewRole === 'FINANCE_APPROVER' ? 'bg-emerald-600 text-white font-bold' : 'text-slate-400 hover:text-white bg-slate-800/60'
-                    }`}
-                >
-                  Finance
-                </button>
+              <div className="space-y-0.5">
+                {hasAccessTo('smartphones') && <NavItem navKey="smartphones" label="Smartphones" icon={Smartphone} />}
+                {hasAccessTo('tablets') && <NavItem navKey="tablets" label="Tablets" icon={Tablet} />}
+                {hasAccessTo('smartwatches') && <NavItem navKey="smartwatches" label="Smartwatches" icon={Watch} />}
+                {hasAccessTo('cashify') && (
+                  <NavItem
+                    navKey="cashify"
+                    label="Cashify Monitor"
+                    icon={Zap}
+                    badge="Live"
+                    badgeColor="bg-amber-400/20 text-amber-300"
+                  />
+                )}
               </div>
             </div>
           )}
 
-          {/* User info card */}
-          <div className="flex items-center gap-2.5 p-2 rounded-lg bg-slate-900/50">
-            <div className="w-7 h-7 rounded-lg bg-slate-800 flex items-center justify-center text-slate-300 font-mono text-xs font-bold border border-slate-700 flex-shrink-0">
-              <Cpu className="w-3.5 h-3.5 text-cobalt" />
-            </div>
-            <div
-              className={`min-w-0 flex-1 transition-all duration-200 overflow-hidden whitespace-nowrap ${isSidebarExpanded ? 'opacity-100 max-w-[160px] translate-x-0' : 'opacity-0 max-w-0 -translate-x-2 pointer-events-none'
-                }`}
-            >
-              <div className="text-xs font-bold text-white truncate">
-                {currentUser?.name || currentUser?.email?.split('@')[0] || 'Admin Operator'}
+          {/* Group B: Operations */}
+          {(hasAccessTo('inspections') || hasAccessTo('support')) && (
+            <div>
+              <div
+                className={`px-2.5 pb-1 text-[10px] font-mono font-bold tracking-wider uppercase text-slate-400 transition-all duration-200 overflow-hidden whitespace-nowrap ${isSidebarExpanded ? 'opacity-100 max-h-5' : 'opacity-0 max-h-0 pointer-events-none'
+                  }`}
+              >
+                Operations
               </div>
-              <div className="text-[10px] font-mono text-emerald-400 truncate">
-                {effectiveRole}
+              <div className="space-y-0.5">
+                {hasAccessTo('inspections') && (
+                  <NavItem
+                    navKey="inspections"
+                    label="Doorstep Pickups"
+                    icon={Truck}
+                    badge={pendingInspections > 0 ? pendingInspections : undefined}
+                    badgeColor="bg-blue-500/20 text-blue-300"
+                  />
+                )}
+                {hasAccessTo('support') && <NavItem navKey="support" label="Support Desk" icon={MessageSquare} />}
               </div>
             </div>
-          </div>
+          )}
 
-          {/* Return to Storefront button */}
-          <button
-            onClick={onBack}
-            className="w-full flex items-center justify-center gap-2 p-2 rounded-lg bg-slate-800 hover:bg-slate-700/80 text-slate-300 hover:text-white text-xs font-semibold transition-all cursor-pointer"
-            title="Return to Main Storefront"
-          >
-            <ArrowLeft className="w-3.5 h-3.5 flex-shrink-0" />
-            <span
-              className={`transition-all duration-200 overflow-hidden whitespace-nowrap ${isSidebarExpanded ? 'opacity-100 max-w-[140px]' : 'opacity-0 max-w-0 pointer-events-none'
-                }`}
-            >
-              Back to Storefront
-            </span>
-          </button>
+          {/* Group C: Finance */}
+          {(hasAccessTo('finance') || hasAccessTo('coupons')) && (
+            <div>
+              <div
+                className={`px-2.5 pb-1 text-[10px] font-mono font-bold tracking-wider uppercase text-slate-400 transition-all duration-200 overflow-hidden whitespace-nowrap ${isSidebarExpanded ? 'opacity-100 max-h-5' : 'opacity-0 max-h-0 pointer-events-none'
+                  }`}
+              >
+                Finance & Growth
+              </div>
+              <div className="space-y-0.5">
+                {hasAccessTo('finance') && (
+                  <NavItem
+                    navKey="finance"
+                    label="Payouts & Ledger"
+                    icon={CreditCard}
+                    badge={pendingPayouts > 0 ? pendingPayouts : undefined}
+                    badgeColor="bg-emerald-500/20 text-emerald-300"
+                  />
+                )}
+                {hasAccessTo('coupons') && (
+                  <NavItem
+                    navKey="coupons"
+                    label="Referral & Coupons"
+                    icon={Tag}
+                  />
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Group D: Governance */}
+          {(effectiveRole === 'SUPER_ADMIN' || effectiveRole === 'CATALOG_EDITOR' || effectiveRole === 'FINANCE_APPROVER') && (
+            <div>
+              <div
+                className={`px-2.5 pb-1 text-[10px] font-mono font-bold tracking-wider uppercase text-slate-400 transition-all duration-200 overflow-hidden whitespace-nowrap ${isSidebarExpanded ? 'opacity-100 max-h-5' : 'opacity-0 max-h-0 pointer-events-none'
+                  }`}
+              >
+                Governance
+              </div>
+              <div className="space-y-0.5">
+                {effectiveRole === 'SUPER_ADMIN' && (
+                  <NavItem navKey="staff" label="Staff & Roles" icon={Users} />
+                )}
+                <NavItem navKey="audit" label="Audit Trail" icon={ShieldCheck} />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Bottom Sidebar: User Badge, High-Contrast Custom Role Picker & Storefront Exit */}
+        <div className="shrink-0 border-t border-slate-800 bg-slate-950 p-2.5 space-y-2">
+          {/* Super Admin Role Preview Popover (Guaranteed High Contrast, Zero Select Glitches) */}
+          {realRole === 'SUPER_ADMIN' && isSidebarExpanded && (
+            <div className="relative" ref={roleDropdownRef}>
+              <button
+                type="button"
+                onClick={() => setRoleMenuOpen(prev => !prev)}
+                className="w-full flex items-center justify-between px-2.5 py-1.5 bg-slate-900 hover:bg-slate-800/90 rounded-lg border border-slate-700/80 transition-colors cursor-pointer text-left shadow-xs"
+                title="Simulate role access"
+              >
+                <span className="flex items-center gap-1.5 text-slate-200 text-[11px] font-semibold">
+                  <Eye className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <span>View As:</span>
+                </span>
+                <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-300 bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-500/40">
+                  <span>{activeRoleOption.tag}</span>
+                  <ChevronDown className={`w-3 h-3 text-emerald-400 transition-transform ${roleMenuOpen ? 'rotate-180' : ''}`} />
+                </span>
+              </button>
+
+              {roleMenuOpen && (
+                <div className="absolute bottom-full left-0 right-0 mb-1.5 bg-slate-900 border border-slate-700 rounded-lg shadow-2xl p-1 z-50 space-y-0.5 backdrop-blur-md">
+                  <div className="px-2 py-1 text-[9px] font-mono font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800 mb-1">
+                    Simulate Role Access
+                  </div>
+                  {roleOptions.map((opt) => (
+                    <button
+                      key={opt.key}
+                      type="button"
+                      onClick={() => {
+                        setPreviewRole(opt.key);
+                        setRoleMenuOpen(false);
+                      }}
+                      className={`w-full flex items-center justify-between px-2 py-1.5 rounded text-xs transition-colors cursor-pointer ${
+                        previewRole === opt.key
+                          ? 'bg-blue-600 text-white font-semibold'
+                          : 'text-slate-200 hover:text-white hover:bg-slate-800'
+                      }`}
+                    >
+                      <span>{opt.label}</span>
+                      <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${
+                        previewRole === opt.key ? 'bg-white/20 text-white' : 'text-emerald-400 bg-emerald-950/60 border border-emerald-800/40'
+                      }`}>
+                        {opt.tag}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* User Profile Card + Exit in Single Clean Row */}
+          <div className="flex items-center justify-between gap-2 p-1.5 rounded-lg bg-slate-900/90 border border-slate-800">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-7 h-7 rounded-lg bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-300 shrink-0">
+                <User className="w-3.5 h-3.5" />
+              </div>
+              {isSidebarExpanded && (
+                <div className="min-w-0 truncate">
+                  <div className="text-xs font-semibold text-white truncate leading-tight">
+                    {currentUser?.name || currentUser?.email?.split('@')[0] || 'Admin'}
+                  </div>
+                  <div className="text-[10px] font-mono font-bold text-emerald-400 leading-none mt-0.5">
+                    {effectiveRole}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {isSidebarExpanded && (
+              <button
+                type="button"
+                onClick={onBack}
+                className="p-1.5 rounded-md hover:bg-slate-800 text-slate-300 hover:text-white transition-colors cursor-pointer shrink-0"
+                title="Return to Main Storefront"
+              >
+                <ArrowLeft className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
       </aside>
 

@@ -12,6 +12,7 @@ import {
   removeSavedQuote,
   evaluateSavedQuote
 } from '../../utils/savedQuotes';
+import { PriceLockCountdownBadge } from './PriceLockCountdownBadge';
 
 interface OrderTrackingModalProps {
   isOpen: boolean;
@@ -695,12 +696,11 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                               <span className="text-[10px] font-sans uppercase text-slate-500 font-bold block">
                                 Estimated Payout
                               </span>
-                              {q.isPriceLocked && (
-                                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-full bg-emerald-50 border border-emerald-300 text-emerald-800 text-[9px] font-bold">
-                                  <ShieldCheck className="w-2.5 h-2.5 text-emerald-600" />
-                                  7d Lock ({q.daysRemaining}d left)
-                                </span>
-                              )}
+                              <PriceLockCountdownBadge
+                                savedAt={q.savedAt || q.createdAt}
+                                isPriceLocked={q.isPriceLocked}
+                                compact
+                              />
                             </div>
                             <div className="flex items-baseline gap-2">
                               <span className="text-xl font-extrabold text-emerald-700 font-sans">

@@ -7,12 +7,12 @@ import {
   Smartphone, Box, ShieldCheck, Printer, Receipt,
   X, Lock, Eye, EyeOff, AlertCircle, Mail, User,
   Phone, MessageSquare, ExternalLink, Headphones, Send, Bookmark,
-  AlertTriangle, BatteryCharging, Radio, FileX, FileCheck, Zap, Tag
+  AlertTriangle, BatteryCharging, Radio, FileX, FileCheck, Zap, Tag, ChevronDown, Sparkles
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getIllustration } from './Illustrations';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
-import { checkEmail, customerLogin, customerSignup, verifyOtp, requestPasswordResetOtp, resetPasswordWithOtp, sendQuoteAlertApi, sendPriceMatchAlertApi, sendStepLeadAlertApi, syncFirebaseUser, validateCouponApi, ApiUser } from '../../utils/api';
+import { checkEmail, customerLogin, customerSignup, verifyOtp, requestPasswordResetOtp, resetPasswordWithOtp, sendQuoteAlertApi, sendPriceMatchAlertApi, sendStepLeadAlertApi, syncFirebaseUser, validateCouponApi, fetchActiveOffers, PublicOffer, ApiUser } from '../../utils/api';
 import { loginWithGoogle } from '../../services/firebaseAuth';
 import { saveQuote, isQuoteAlreadySaved, associateGuestQuotes } from '../../utils/savedQuotes';
 import { TabletDiagnosticFlow } from './TabletDiagnosticFlow';
@@ -579,6 +579,51 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
   } | null>(null);
   const [couponLoading, setCouponLoading] = useState(false);
   const [couponError, setCouponError] = useState('');
+  const [availableOffers, setAvailableOffers] = useState<PublicOffer[]>([]);
+  const [showOffersTray, setShowOffersTray] = useState(false);
+
+  React.useEffect(() => {
+    fetchActiveOffers()
+      .then((offers) => {
+        if (offers && offers.length > 0) {
+          setAvailableOffers(offers);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleApplyOfferCode = async (offerCode: string) => {
+    const clean = offerCode.trim().toUpperCase();
+    setCouponInput(clean);
+    setCouponLoading(true);
+    setCouponError('');
+    try {
+      const res = await validateCouponApi(
+        clean,
+        valuation.finalPrice,
+        currentUser?.phone || undefined,
+        currentUser?.email || undefined
+      );
+      if (res.valid && res.bonusAmount) {
+        setAppliedCoupon({
+          code: res.code || clean,
+          type: res.type || 'FLAT',
+          bonusAmount: res.bonusAmount,
+          message: res.message,
+        });
+        setCouponInput('');
+        setShowOffersTray(false);
+        setSaveToast(`Offer ${res.code || clean} applied! +₹${res.bonusAmount.toLocaleString('en-IN')} bonus added.`);
+        setTimeout(() => setSaveToast(null), 4000);
+      } else {
+        setCouponError(res.message || 'Unable to apply this offer.');
+      }
+    } catch (err: any) {
+      setCouponError(err.message || 'Failed to validate referral code.');
+    } finally {
+      setCouponLoading(false);
+    }
+  };
 
   const finalPayoutWithCoupon = valuation.finalPrice + (appliedCoupon?.bonusAmount || 0);
 
@@ -2400,6 +2445,72 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                                 <AlertCircle className="w-3 h-3 shrink-0" />
                                 <span>{couponError}</span>
                               </p>
+                            )}
+
+                            {/* Available Offers Pill & Tray */}
+                            {availableOffers.length > 0 && (
+                              <div className="mt-2.5 pt-2.5 border-t border-slate-200/80">
+                                <button
+                                  type="button"
+                                  onClick={() => setShowOffersTray(!showOffersTray)}
+                                  className="w-full flex items-center justify-between text-left py-1 text-xs font-semibold text-slate-700 hover:text-blue-700 transition-colors cursor-pointer select-none"
+                                >
+                                  <div className="flex items-center gap-1.5">
+                                    <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+                                    <span>Available Promotional Offers ({availableOffers.length})</span>
+                                  </div>
+                                  <div className="flex items-center gap-1 text-[11px] text-blue-600 font-bold">
+                                    <span>{showOffersTray ? 'Hide' : 'View Offers'}</span>
+                                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${showOffersTray ? 'rotate-180' : ''}`} />
+                                  </div>
+                                </button>
+
+                                {showOffersTray && (
+                                  <div className="mt-2 space-y-2">
+                                    {availableOffers.map((offer) => {
+                                      const isEligible = !offer.minDeviceValue || valuation.finalPrice >= offer.minDeviceValue;
+                                      return (
+                                        <div
+                                          key={offer.code}
+                                          className={`p-2.5 rounded-lg border transition-all flex items-center justify-between gap-3 ${
+                                            isEligible
+                                              ? 'bg-white border-slate-200 hover:border-blue-300 shadow-xs'
+                                              : 'bg-slate-100/70 border-slate-200/60 opacity-60'
+                                          }`}
+                                        >
+                                          <div className="space-y-0.5 text-left">
+                                            <div className="flex items-center gap-2">
+                                              <span className="font-mono font-bold text-xs bg-slate-100 text-slate-900 px-2 py-0.5 rounded border border-slate-300 uppercase">
+                                                {offer.code}
+                                              </span>
+                                              <span className="text-[11px] font-bold text-emerald-700 font-sans">
+                                                {offer.type === 'PERCENT' ? `+${offer.value}% Bonus` : `+₹${offer.value.toLocaleString('en-IN')} Bonus`}
+                                              </span>
+                                            </div>
+                                            <p className="text-[11px] text-slate-600 font-sans">
+                                              {offer.description}
+                                            </p>
+                                            {offer.minDeviceValue && offer.minDeviceValue > 0 ? (
+                                              <p className="text-[10px] text-slate-400 font-sans">
+                                                Min. device valuation: ₹{offer.minDeviceValue.toLocaleString('en-IN')} {isEligible ? '• Eligible' : '• Requires higher valuation'}
+                                              </p>
+                                            ) : null}
+                                          </div>
+
+                                          <button
+                                            type="button"
+                                            onClick={() => handleApplyOfferCode(offer.code)}
+                                            disabled={couponLoading || !isEligible}
+                                            className="px-3 py-1.5 rounded-md bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white border border-blue-200 hover:border-blue-600 text-xs font-bold transition-all shrink-0 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+                                          >
+                                            Apply
+                                          </button>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                              </div>
                             )}
                           </div>
                         ) : (

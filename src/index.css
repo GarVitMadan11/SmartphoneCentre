@@ -54,13 +54,21 @@ html {
     letter-spacing: 0.015em;
   }
 
-  /* Enforce readable dark navy text on all form elements regardless of OS/Browser Dark Mode */
-  input,
-  textarea,
-  select {
+  /* Enforce readable dark navy text on light form elements regardless of OS/Browser Dark Mode */
+  input:not(.dark-input):not([data-theme="dark"] *),
+  textarea:not(.dark-textarea):not([data-theme="dark"] *),
+  select:not(.dark-select):not([data-theme="dark"] *) {
     color: #002045 !important;
     caret-color: #002045 !important;
     -webkit-text-fill-color: #002045 !important;
+  }
+
+  .dark-input,
+  .dark-select,
+  .dark-textarea {
+    color: #f8fafc !important;
+    caret-color: #f8fafc !important;
+    -webkit-text-fill-color: #f8fafc !important;
   }
 
   input::placeholder,

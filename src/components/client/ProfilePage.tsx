@@ -16,6 +16,7 @@ import {
   removeSavedQuote,
   evaluateSavedQuote
 } from '../../utils/savedQuotes';
+import { PriceLockCountdownBadge } from './PriceLockCountdownBadge';
 
 interface ProfilePageProps {
   user: any;
@@ -968,16 +969,10 @@ export default function ProfilePage({
                               Estimated Payout
                             </span>
                             {/* 7-Day Price Lock Status Badge */}
-                            {q.isPriceLocked ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-300 text-emerald-800 text-[10px] font-bold">
-                                <ShieldCheck className="w-3 h-3 text-emerald-600 shrink-0" />
-                                7-Day Price Lock Active ({q.daysRemaining}d left)
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-slate-600 text-[10px] font-medium">
-                                Lock Expired • Live Rate
-                              </span>
-                            )}
+                            <PriceLockCountdownBadge
+                              savedAt={q.savedAt || q.createdAt}
+                              isPriceLocked={q.isPriceLocked}
+                            />
                             {q.appliedCoupon && (
                               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 border border-blue-200 text-blue-800 text-[10px] font-bold">
                                 <Tag className="w-3 h-3 text-blue-600 shrink-0" />

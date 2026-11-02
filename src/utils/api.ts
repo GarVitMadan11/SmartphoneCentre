@@ -1078,6 +1078,52 @@ export interface CouponValidationResponse {
   finalPrice?: number;
 }
 
+export interface PublicOffer {
+  code: string;
+  type: 'FLAT' | 'PERCENT';
+  value: number;
+  minDeviceValue?: number;
+  maxBonusCap?: number;
+  description: string;
+  expiresAt?: string | null;
+}
+
+export async function fetchActiveOffers(): Promise<PublicOffer[]> {
+  try {
+    const res = await apiFetch<any>('/quotes/active-offers', { method: 'GET' });
+    if (res && res.success && Array.isArray(res.offers)) {
+      return res.offers;
+    }
+    return [];
+  } catch (err) {
+    console.warn('Failed to fetch active offers from server:', err);
+    return [
+      {
+        code: 'WELCOME300',
+        type: 'FLAT',
+        value: 300,
+        minDeviceValue: 5000,
+        description: 'Flat ₹300 bonus on your diagnostic valuation',
+      },
+      {
+        code: 'RPX500',
+        type: 'FLAT',
+        value: 500,
+        minDeviceValue: 30000,
+        description: 'Flat ₹500 extra cash for devices valued ₹30,000+',
+      },
+      {
+        code: 'REPHONIX3',
+        type: 'PERCENT',
+        value: 3,
+        minDeviceValue: 10000,
+        maxBonusCap: 1500,
+        description: '+3% extra payout bonus (up to ₹1,500 extra)',
+      },
+    ];
+  }
+}
+
 export function validateCouponApi(
   code: string,
   basePrice: number,
