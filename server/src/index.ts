@@ -19,6 +19,7 @@ import brandsRouter from './routes/brands.js';
 import modelsRouter from './routes/models.js';
 import quotesRouter from './routes/quotes.js';
 import bookingsRouter from './routes/bookings.js';
+import referralsRouter from './routes/referrals.js';
 
 // Middleware & Validation
 import { globalLimiter, authLimiter, adminOpsLimiter } from './middleware/rateLimits.js';
@@ -225,6 +226,7 @@ app.use('/api/brands', brandsRouter);
 app.use('/api/models', modelsRouter);
 app.use('/api/quotes', quotesRouter);
 app.use('/api/bookings', bookingsRouter);
+app.use('/api/referrals', referralsRouter);
 
 // 404 Handler for all unhandled /api/* routes
 app.all(/^\/api(\/|$)/, (_req, res) => {

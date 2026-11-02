@@ -1,1076 +1,1344 @@
-import React, { useState, useEffect } from 'react';
-import {
-  User, Phone, Mail, Calendar, ArrowLeft, LogOut, ShieldCheck, AlertCircle,
-  Package, FileText, Download, Copy, Check, CheckCircle2, MapPin, ArrowRight,
-  Bookmark, Trash2, Sparkles, TrendingUp, Tag
-} from 'lucide-react';
-import {
-  updateCustomerProfile, sendEmailOtp, verifyEmailOtp,
-  fetchMyBookings, downloadBookingPdf, ApiBooking
-} from '../../utils/api';
-import { getDeviceImage, Model } from '../../data/mockDatabase';
-import {
-  SavedQuote,
-  EvaluatedSavedQuote,
-  getSavedQuotes,
-  removeSavedQuote,
-  evaluateSavedQuote
-} from '../../utils/savedQuotes';
-import { PriceLockCountdownBadge } from './PriceLockCountdownBadge';
-
-interface ProfilePageProps {
-  user: any;
-  onLogout: () => void;
-  onUpdateUser: (updatedUser: any) => void;
-  onNavigate: (path: string) => void;
-  models?: Model[];
-  initialTab?: 'profile' | 'bookings' | 'invoices' | 'saved';
-  onResumeQuote?: (quote: SavedQuote) => void;
-}
-
-export default function ProfilePage({
-  user,
-  onLogout,
-  onUpdateUser,
-  onNavigate,
-  models = [],
-  initialTab,
-  onResumeQuote,
-}: ProfilePageProps) {
-  const [activeTab, setActiveTab] = useState<'profile' | 'bookings' | 'invoices' | 'saved'>('bookings');
-
-  // Bookings list state
-  const [myBookings, setMyBookings] = useState<ApiBooking[]>([]);
-  const [fetchingBookings, setFetchingBookings] = useState(false);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
-
-  // Saved quotes state
-  const [savedQuotesList, setSavedQuotesList] = useState<EvaluatedSavedQuote[]>([]);
-
-  // Profile form state
-  const [name, setName] = useState(user?.name || '');
-  const [phone, setPhone] = useState(user?.phone || '');
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Email verification state
-  const [isVerifyingEmail, setIsVerifyingEmail] = useState(false);
-  const [newEmail, setNewEmail] = useState(user?.email || '');
-  const [emailOtp, setEmailOtp] = useState('');
-  const [emailOtpSent, setEmailOtpSent] = useState(false);
-  const [cooldown, setCooldown] = useState(0);
-  const [verificationLoading, setVerificationLoading] = useState(false);
-  const [verificationError, setVerificationError] = useState('');
-  const [verificationSuccess, setVerificationSuccess] = useState('');
-
-  // Handle URL tab search param (e.g. /profile?tab=saved)
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const tabParam = params.get('tab');
-    if (tabParam === 'bookings' || tabParam === 'invoices' || tabParam === 'profile' || tabParam === 'saved') {
-      setActiveTab(tabParam);
-    } else if (initialTab) {
-      setActiveTab(initialTab);
-    }
-  }, [initialTab]);
-
-  // Load and evaluate saved quotes against live catalog
-  const loadSavedQuotes = () => {
-    const rawQuotes = getSavedQuotes(user?.id);
-    const evaluated = rawQuotes.map((q) => evaluateSavedQuote(q, models));
-    setSavedQuotesList(evaluated);
-  };
-
-  useEffect(() => {
-    loadSavedQuotes();
-    const handleSync = () => loadSavedQuotes();
-    window.addEventListener('rephonix_saved_quotes_updated', handleSync);
-    return () => window.removeEventListener('rephonix_saved_quotes_updated', handleSync);
-  }, [user, models]);
-
-  // Load customer bookings on mount
-  useEffect(() => {
-    loadBookings();
-  }, [user]);
-
-  const loadBookings = async () => {
-    setFetchingBookings(true);
-    try {
-      const list = await fetchMyBookings();
-      setMyBookings(list || []);
-    } catch {
-      setMyBookings([]);
-    } finally {
-      setFetchingBookings(false);
-    }
-  };
-
-  useEffect(() => {
-    if (cooldown <= 0) return;
-    const timer = setInterval(() => {
-      setCooldown((prev) => prev - 1);
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [cooldown]);
-
-  const copyBookingId = (id: string) => {
-    navigator.clipboard.writeText(id);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2000);
-  };
-
-  const getStatusStep = (b: { inspectionStatus: string; payoutStatus: string }) => {
-    if (b.payoutStatus === 'completed') return 3;
-    if (b.inspectionStatus === 'approved') return 2;
-    return 1;
-  };
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0
-    }).format(price);
-  };
-
-  const formatDateStr = (dateStr: string) => {
-    if (!dateStr) return '';
-    try {
-      const date = new Date(dateStr);
-      return date.toLocaleDateString('en-IN', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric'
-      });
-    } catch {
-      return dateStr;
-    }
-  };
-
-  const handleSendEmailOtp = async () => {
-    if (!newEmail.trim()) {
-      setVerificationError('Email address is required.');
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(newEmail.trim().toLowerCase())) {
-      setVerificationError('Invalid email format.');
-      return;
-    }
-
-    setVerificationError('');
-    setVerificationSuccess('');
-    setVerificationLoading(true);
-
-    try {
-      await sendEmailOtp(newEmail.trim());
-      setVerificationSuccess('Verification code sent successfully to your email.');
-      setEmailOtpSent(true);
-      setCooldown(60);
-    } catch (err: any) {
-      setVerificationError(err.message || 'Failed to send verification code.');
-    } finally {
-      setVerificationLoading(false);
-    }
-  };
-
-  const handleVerifyEmailOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!emailOtp.trim()) {
-      setVerificationError('Please enter the 6-digit verification code.');
-      return;
-    }
-
-    setVerificationError('');
-    setVerificationSuccess('');
-    setVerificationLoading(true);
-
-    try {
-      const response = await verifyEmailOtp(newEmail.trim(), emailOtp.trim());
-      onUpdateUser(response.user);
-      setVerificationSuccess('Email address verified successfully!');
-      setEmailOtp('');
-      setEmailOtpSent(false);
-      setIsVerifyingEmail(false);
-      setSuccess('Email address verified successfully.');
-    } catch (err: any) {
-      setVerificationError(err.message || 'Failed to verify code.');
-    } finally {
-      setVerificationLoading(false);
-    }
-  };
-
-  const handleUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim() || !phone.trim()) {
-      setError('Name and phone number cannot be empty.');
-      return;
-    }
-
-    setError('');
-    setSuccess('');
-    setIsLoading(true);
-
-    try {
-      const response = await updateCustomerProfile(name.trim(), phone.trim());
-      onUpdateUser(response.user);
-      setSuccess('Profile updated successfully.');
-    } catch (err: any) {
-      setError(err.message || 'Failed to update profile.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const formatDate = (dateStr: string) => {
-    if (!dateStr) return '';
-    try {
-      const date = new Date(dateStr);
-      return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-    } catch {
-      return dateStr;
-    }
-  };
-
-  return (
-    <div className="max-w-4xl mx-auto px-4 py-6 sm:py-8 text-left animate-fadeIn">
-      
-      {/* Header Back button & Logout */}
-      <div className="mb-6 flex justify-between items-center">
-        <button
-          onClick={() => onNavigate('/')}
-          className="flex items-center gap-1.5 text-xs text-cobalt hover:underline font-medium cursor-pointer"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" /> Back to Home
-        </button>
-        <button
-          onClick={onLogout}
-          className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-600 transition-colors font-medium border border-red-500/20 px-3 py-1.5 rounded-sm hover:bg-red-500/5 cursor-pointer"
-        >
-          <LogOut className="w-3.5 h-3.5" /> Logout
-        </button>
-      </div>
-
-      {/* Page Title */}
-      <div className="mb-6">
-        <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-navy font-sans tracking-tight">
-          Customer Account Dashboard
-        </h2>
-        <p className="text-xs text-ink-muted mt-1 font-light">
-          Manage your account profile, track active pickup bookings, and download official sale receipts.
-        </p>
-      </div>
-
-      {/* Top Tab Bar Navigation */}
-      <div className="flex border-b border-ice-border/60 mb-8 gap-2 text-xs font-semibold overflow-x-auto scrollbar-none pb-1">
-        <button
-          type="button"
-          onClick={() => setActiveTab('bookings')}
-          className={`px-4 py-2.5 rounded-xl border flex items-center gap-2 transition-all shrink-0 cursor-pointer ${
-            activeTab === 'bookings'
-              ? 'bg-cobalt text-white border-cobalt shadow-sm font-bold'
-              : 'bg-canvas-pure text-ink-slate hover:text-ink-navy border-ice-border hover:bg-slate-50'
-          }`}
-        >
-          <Package className="w-4 h-4" />
-          <span>Your Bookings</span>
-          {myBookings.length > 0 && (
-            <span className={`px-2 py-0.5 rounded-full text-[10px] font-sans font-bold ${
-              activeTab === 'bookings' ? 'bg-white/20 text-white' : 'bg-cobalt/10 text-cobalt'
-            }`}>
-              {myBookings.length}
-            </span>
-          )}
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('invoices')}
-          className={`px-4 py-2.5 rounded-xl border flex items-center gap-2 transition-all shrink-0 cursor-pointer ${
-            activeTab === 'invoices'
-              ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm font-bold'
-              : 'bg-canvas-pure text-ink-slate hover:text-ink-navy border-ice-border hover:bg-slate-50'
-          }`}
-        >
-          <FileText className="w-4 h-4" />
-          <span>Invoices &amp; Receipts</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('saved')}
-          className={`px-4 py-2.5 rounded-xl border flex items-center gap-2 transition-all shrink-0 cursor-pointer ${
-            activeTab === 'saved'
-              ? 'bg-amber-500 text-white border-amber-500 shadow-sm font-bold'
-              : 'bg-canvas-pure text-ink-slate hover:text-ink-navy border-ice-border hover:bg-slate-50'
-          }`}
-        >
-          <Bookmark className="w-4 h-4" />
-          <span>Saved Quotes</span>
-          {savedQuotesList.length > 0 && (
-            <span className={`px-2 py-0.5 rounded-full text-[10px] font-sans font-bold ${
-              activeTab === 'saved' ? 'bg-white/20 text-white' : 'bg-amber-500/10 text-amber-700'
-            }`}>
-              {savedQuotesList.length}
-            </span>
-          )}
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('profile')}
-          className={`px-4 py-2.5 rounded-xl border flex items-center gap-2 transition-all shrink-0 cursor-pointer ${
-            activeTab === 'profile'
-              ? 'bg-ink-navy text-white border-ink-navy shadow-sm font-bold'
-              : 'bg-canvas-pure text-ink-slate hover:text-ink-navy border-ice-border hover:bg-slate-50'
-          }`}
-        >
-          <User className="w-4 h-4" />
-          <span>Profile &amp; Security</span>
-        </button>
-      </div>
-
-      {/* TAB 1: YOUR BOOKINGS */}
-      {activeTab === 'bookings' && (
-        <div className="space-y-6 animate-fadeIn">
-          {fetchingBookings ? (
-            <div className="py-16 text-center text-ink-muted space-y-3 bg-canvas-pure border border-ice-border rounded-xl">
-              <div className="w-8 h-8 border-2 border-cobalt border-t-transparent rounded-full animate-spin mx-auto" />
-              <p className="text-xs font-medium">Fetching your pickup bookings...</p>
-            </div>
-          ) : myBookings.length === 0 ? (
-            <div className="py-16 text-center text-ink-muted space-y-4 bg-canvas-pure rounded-2xl border border-dashed border-ice-border p-8">
-              <div className="w-14 h-14 rounded-2xl bg-cobalt/10 text-cobalt flex items-center justify-center mx-auto shadow-xs">
-                <Package className="w-7 h-7" />
-              </div>
-              <div className="space-y-1">
-                <h4 className="font-extrabold text-lg text-ink-navy font-sans">No Pickup Bookings Yet</h4>
-                <p className="text-xs text-ink-muted max-w-md mx-auto font-light leading-relaxed">
-                  You haven't scheduled any doorstep device pickup bookings under your account. Get an instant quote to sell your smartphone in under 60 seconds!
-                </p>
-              </div>
-              <button
-                onClick={() => onNavigate('/smartphones')}
-                className="mt-2 inline-flex items-center gap-2 px-6 py-3 bg-cobalt hover:bg-cobalt-hover text-white rounded-xl font-bold text-xs shadow-md transition-all cursor-pointer"
-              >
-                <span>Start Instant Valuation</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {myBookings.map((b) => {
-                const matchedModel = models.find(m => m.id === b.modelId || m.name.toLowerCase() === b.modelName.toLowerCase());
-                const deviceImg = getDeviceImage(
-                  b.modelId,
-                  matchedModel?.brandId || 'apple',
-                  b.color,
-                  matchedModel?.imageUrl
-                );
-                const stepNum = getStatusStep(b);
-
-                return (
-                  <div
-                    key={b.id}
-                    className="bg-canvas-pure border border-ice-border rounded-2xl p-5 sm:p-6 shadow-3d-card hover:shadow-premium transition-all space-y-5 text-left"
-                  >
-                    {/* Header Row: Booking ID, Date & Status */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-ice-border/60">
-                      <div className="flex items-center gap-2.5">
-                        <span className="text-xs font-sans font-extrabold text-cobalt bg-cobalt/10 px-3 py-1 rounded-lg border border-cobalt/20">
-                          #{b.id}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => copyBookingId(b.id)}
-                          className="text-zinc-400 hover:text-cobalt p-1 rounded transition-colors cursor-pointer"
-                          title="Copy Booking ID"
-                        >
-                          {copiedId === b.id ? (
-                            <Check className="w-4 h-4 text-emerald-500" />
-                          ) : (
-                            <Copy className="w-4 h-4" />
-                          )}
-                        </button>
-                      </div>
-
-                      <div className="flex items-center gap-3 text-xs">
-                        <span className="text-[11px] font-sans text-ink-muted">
-                          Booked {formatDateStr(b.dateCreated)}
-                        </span>
-                        <span className={`text-[10px] font-bold font-sans px-2.5 py-1 rounded-full uppercase tracking-wider ${
-                          b.payoutStatus === 'completed'
-                            ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
-                            : b.inspectionStatus === 'approved'
-                            ? 'bg-blue-500/10 text-blue-600 border border-blue-500/20'
-                            : 'bg-amber-500/10 text-amber-600 border border-amber-500/20'
-                        }`}>
-                          {b.payoutStatus === 'completed'
-                            ? 'Paid Out'
-                            : b.inspectionStatus === 'approved'
-                            ? 'Booking Confirmed'
-                            : 'Under Review'}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Middle Row: Device Info & Agreed Price */}
-                    <div className="flex items-center gap-4">
-                      <div className="w-16 h-16 bg-white border border-ice-border rounded-xl p-2 flex items-center justify-center flex-shrink-0 shadow-xs">
-                        <img
-                          src={deviceImg}
-                          alt={b.modelName}
-                          referrerPolicy="no-referrer"
-                          className="w-full h-full object-contain"
-                          onError={(e) => {
-                            (e.target as HTMLElement).style.display = 'none';
-                          }}
-                        />
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-extrabold text-base sm:text-lg text-ink-navy truncate font-sans">
-                          {b.modelName}
-                        </h4>
-                        <p className="text-xs text-ink-muted mt-0.5 truncate font-sans">
-                          Storage: {b.storageGb >= 1024 ? `${b.storageGb / 1024}TB` : `${b.storageGb}GB`}
-                          {b.color && b.color !== 'Standard' ? ` • ${b.color}` : ''}
-                          {b.imei ? ` • IMEI: ${b.imei}` : ''}
-                        </p>
-                      </div>
-
-                      <div className="text-right flex-shrink-0">
-                        <span className="text-[10px] font-sans text-ink-muted uppercase block font-semibold">Agreed Payout</span>
-                        <span className="text-lg sm:text-xl font-black text-emerald-600 font-sans">
-                          {formatPrice(b.finalPayoutAmount || b.finalPrice)}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Logistics Info: Pickup Date & Address */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-xl bg-slate-50/80 border border-ice-border/40 text-xs">
-                      <div>
-                        <span className="text-[10px] font-sans text-ink-muted uppercase font-bold block flex items-center gap-1.5">
-                          <Calendar className="w-3.5 h-3.5 text-cobalt" /> Scheduled Doorstep Pickup
-                        </span>
-                        <p className="font-semibold text-ink-navy mt-1">
-                          {b.pickupDate} ({b.pickupTimeSlot})
-                        </p>
-                      </div>
-
-                      <div>
-                        <span className="text-[10px] font-sans text-ink-muted uppercase font-bold block flex items-center gap-1.5">
-                          <MapPin className="w-3.5 h-3.5 text-cobalt" /> Pickup Address
-                        </span>
-                        <p className="font-medium text-ink-navy truncate mt-1" title={b.address}>
-                          {b.address}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Stepper Progress */}
-                    <div className="pt-2">
-                      <div className="relative flex items-center justify-between text-center">
-                        <div className="absolute left-4 right-4 top-4 -translate-y-1/2 h-1 bg-zinc-200 -z-0" />
-                        {[
-                          { title: 'Booked', desc: 'Order confirmed' },
-                          { title: 'Inspected', desc: 'Doorside audit' },
-                          { title: 'Paid Out', desc: 'Funds transferred' },
-                        ].map((s, idx) => {
-                          const sNum = idx + 1;
-                          const isPassed = stepNum >= sNum;
-                          return (
-                            <div key={idx} className="relative z-10 flex flex-col items-center">
-                              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all ${
-                                isPassed
-                                  ? 'bg-emerald-600 text-white shadow-sm'
-                                  : 'bg-zinc-200 text-zinc-500'
-                              }`}>
-                                {isPassed ? <CheckCircle2 className="w-4.5 h-4.5" /> : sNum}
-                              </div>
-                              <span className="text-[10px] font-bold text-ink-navy mt-1.5">{s.title}</span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    {/* Download PDF invoice footer */}
-                    <div className="pt-3 border-t border-ice-border/60 flex items-center justify-between gap-3">
-                      <span className="text-[11px] text-ink-muted font-sans hidden sm:inline">Official GST &amp; Aadhaar Compliant Receipt</span>
-                      <button
-                        type="button"
-                        onClick={() => downloadBookingPdf(b.id)}
-                        className="w-full sm:w-auto px-4 py-2 rounded-xl bg-cobalt hover:bg-cobalt-hover text-white font-bold text-xs transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer active:scale-95"
-                      >
-                        <Download className="w-3.5 h-3.5" />
-                        <span>Download Tax Invoice (PDF)</span>
-                      </button>
-                    </div>
-
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* TAB 2: INVOICES & RECEIPTS */}
-      {activeTab === 'invoices' && (
-        <div className="space-y-6 animate-fadeIn">
-          {fetchingBookings ? (
-            <div className="py-16 text-center text-ink-muted space-y-3 bg-canvas-pure border border-ice-border rounded-xl">
-              <div className="w-8 h-8 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto" />
-              <p className="text-xs font-medium">Loading official tax invoices &amp; receipts...</p>
-            </div>
-          ) : myBookings.length === 0 ? (
-            <div className="py-16 text-center bg-canvas-pure rounded-2xl border border-dashed border-ice-border p-8 space-y-4">
-              <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center mx-auto shadow-xs">
-                <FileText className="w-7 h-7" />
-              </div>
-              <div className="space-y-1">
-                <h4 className="font-extrabold text-lg text-ink-navy font-sans">No Tax Invoices Available Yet</h4>
-                <p className="text-xs text-ink-muted max-w-md mx-auto font-light leading-relaxed">
-                  Invoices and official sale receipts are generated automatically once you schedule a doorstep pickup order.
-                </p>
-              </div>
-              <button
-                onClick={() => onNavigate('/smartphones')}
-                className="mt-2 inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-md transition-all cursor-pointer"
-              >
-                <span>Book Pickup Order</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {myBookings.map((b) => {
-                const formattedPrice = formatPrice(b.finalPayoutAmount || b.finalPrice);
-                return (
-                  <div key={b.id} className="bg-canvas-pure border border-ice-border rounded-2xl p-5 sm:p-6 shadow-3d-card hover:shadow-premium transition-all space-y-4 text-left">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-ice-border/60 pb-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center font-black text-xs">
-                          TAX
-                        </div>
-                        <div>
-                          <h4 className="font-black text-base text-ink-navy tracking-tight font-sans">OFFICIAL TAX INVOICE</h4>
-                          <span className="text-[11px] font-sans text-ink-muted">Invoice Ref: INV-{b.id}</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-sans font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 uppercase tracking-wider">
-                          OFFICIAL DOCUMENT
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs bg-slate-50/60 p-4 rounded-xl border border-ice-border/40">
-                      <div>
-                        <span className="text-[10px] font-sans text-ink-muted uppercase block font-semibold">Device Model</span>
-                        <span className="font-extrabold text-ink-navy text-sm">{b.modelName} ({b.storageGb}GB)</span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] font-sans text-ink-muted uppercase block font-semibold">Booking Date</span>
-                        <span className="font-semibold text-ink-navy">{formatDateStr(b.dateCreated)}</span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] font-sans text-ink-muted uppercase block font-semibold">Customer Name</span>
-                        <span className="font-semibold text-ink-navy">{b.customerName}</span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] font-sans text-ink-muted uppercase block font-semibold">Final Agreed Payout</span>
-                        <span className="font-black text-emerald-600 font-sans text-base">{formattedPrice}</span>
-                      </div>
-                    </div>
-
-                    <div className="pt-3 border-t border-ice-border/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <span className="text-[11px] text-ink-muted font-sans">Includes NIST data wipe &amp; digital transfer receipt</span>
-                      <button
-                        type="button"
-                        onClick={() => downloadBookingPdf(b.id)}
-                        className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-95"
-                      >
-                        <Download className="w-4 h-4" />
-                        <span>Download Tax Invoice (PDF)</span>
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* TAB 3: PROFILE & SECURITY */}
-      {activeTab === 'profile' && (
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start animate-fadeIn">
-          
-          {/* Left Side: Summary Card */}
-          <div className="md:col-span-5 bg-canvas-pure border border-ice-border rounded-xl p-6 shadow-3d-card space-y-6">
-            <div className="text-center pb-4 border-b border-ice-border/40">
-              <div className="w-16 h-16 bg-cobalt/10 text-cobalt border border-cobalt/20 rounded-full flex items-center justify-center mx-auto text-xl font-bold font-sans mb-3">
-                {user?.name ? user.name.slice(0, 2).toUpperCase() : 'US'}
-              </div>
-              <h3 className="text-lg font-bold text-ink-navy font-sans">{user?.name}</h3>
-              <span className="text-[10px] font-medium tracking-normal bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-2 py-0.5 rounded-full inline-block mt-1 font-semibold uppercase">
-                Verified Customer Account
-              </span>
-            </div>
-
-            <div className="space-y-4 text-xs">
-              {/* Email */}
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <span className="w-8 h-8 rounded-sm bg-ice-gray/40 border border-ice-border/30 flex items-center justify-center text-ink-muted flex-shrink-0">
-                    <Mail className="w-4 h-4" />
-                  </span>
-                  <div>
-                    <span className="text-[10px] font-medium tracking-normal text-ink-muted uppercase block">Email Address</span>
-                    <span className="text-ink-navy font-medium break-all">{user?.email}</span>
-                  </div>
-                </div>
-                <div className="flex-shrink-0">
-                  {user?.emailVerified ? (
-                    <span className="text-[9px] font-semibold tracking-wider bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-2 py-0.5 rounded-sm uppercase">
-                      Verified
-                    </span>
-                  ) : (
-                    <button
-                      onClick={() => {
-                        setIsVerifyingEmail(true);
-                        setNewEmail(user?.email || '');
-                        setEmailOtp('');
-                        setEmailOtpSent(false);
-                        setVerificationError('');
-                        setVerificationSuccess('');
-                      }}
-                      className="text-[9px] font-bold tracking-wider bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 border border-amber-500/20 px-2 py-0.5 rounded-sm uppercase transition-colors cursor-pointer"
-                    >
-                      Verify Now
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Mobile */}
-              <div className="flex items-center gap-3">
-                <span className="w-8 h-8 rounded-sm bg-ice-gray/40 border border-ice-border/30 flex items-center justify-center text-ink-muted flex-shrink-0">
-                  <Phone className="w-4 h-4" />
-                </span>
-                <div>
-                  <span className="text-[10px] font-medium tracking-normal text-ink-muted uppercase block">Mobile Number</span>
-                  <span className="text-ink-navy font-medium">+91 {user?.phone}</span>
-                </div>
-              </div>
-
-              {/* Member Since */}
-              <div className="flex items-center gap-3">
-                <span className="w-8 h-8 rounded-sm bg-ice-gray/40 border border-ice-border/30 flex items-center justify-center text-ink-muted flex-shrink-0">
-                  <Calendar className="w-4 h-4" />
-                </span>
-                <div>
-                  <span className="text-[10px] font-medium tracking-normal text-ink-muted uppercase block">Member Since</span>
-                  <span className="text-ink-navy font-medium">{formatDate(user?.createdAt)}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Side: Edit Form OR Email Verification Form */}
-          <div className="md:col-span-7 space-y-6">
-            {isVerifyingEmail ? (
-              <div className="bg-canvas-pure border border-amber-500/20 rounded-xl p-6 sm:p-8 shadow-3d-card space-y-6 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-500 to-orange-500" />
-                
-                <div className="border-b border-ice-border/40 pb-3 flex justify-between items-start">
-                  <div>
-                    <h4 className="text-xl font-bold text-ink-navy tracking-tight font-sans">Verify Email Address</h4>
-                    <p className="text-xs text-ink-muted font-light mt-1">Enter your email address to receive a secure 6-digit OTP verification code.</p>
-                  </div>
-                  <button
-                    onClick={() => setIsVerifyingEmail(false)}
-                    className="p-1 text-ink-muted hover:text-ink-navy rounded-full hover:bg-ice-gray/40 transition-colors"
-                  >
-                    <span className="sr-only">Close</span>
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-
-                {/* Feedback alerts */}
-                {verificationError && (
-                  <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 text-red-500 p-3 rounded-sm text-xs font-medium">
-                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                    <span>{verificationError}</span>
-                  </div>
-                )}
-
-                {verificationSuccess && (
-                  <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 p-3 rounded-sm text-xs font-medium">
-                    <ShieldCheck className="w-4 h-4 flex-shrink-0 text-emerald-500" />
-                    <span>{verificationSuccess}</span>
-                  </div>
-                )}
-
-                <div className="space-y-4">
-                  {/* Email Input */}
-                  <div>
-                    <label htmlFor="verify-email" className="text-[10px] font-medium tracking-normal text-ink-muted uppercase block mb-1.5">
-                      Email Address
-                    </label>
-                    <div className="flex gap-2">
-                      <div className="relative flex-grow">
-                        <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-ink-muted">
-                          <Mail className="w-4 h-4" />
-                        </span>
-                        <input
-                          id="verify-email"
-                          type="email"
-                          required
-                          disabled={emailOtpSent}
-                          value={newEmail}
-                          onChange={(e) => setNewEmail(e.target.value)}
-                          className="w-full pl-9 pr-3 py-2.5 bg-canvas-pure border border-ice-border rounded-sm text-xs text-ink-navy focus:outline-none focus:border-cobalt transition-all disabled:opacity-60"
-                          placeholder="Enter email to verify"
-                        />
-                      </div>
-                      <button
-                        type="button"
-                        disabled={verificationLoading || cooldown > 0}
-                        onClick={handleSendEmailOtp}
-                        className="px-4 py-2.5 bg-cobalt hover:bg-cobalt-hover text-white rounded-sm font-bold text-xs transition-all shadow-premium disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap min-w-[140px] cursor-pointer"
-                      >
-                        {verificationLoading && !emailOtpSent ? 'Sending...' : cooldown > 0 ? `Resend in ${cooldown}s` : emailOtpSent ? 'Resend Code' : 'Send Code'}
-                      </button>
-                    </div>
-                  </div>
-
-                  {emailOtpSent && (
-                    <form onSubmit={handleVerifyEmailOtp} className="space-y-4 pt-4 border-t border-ice-border/40 animate-in fade-in duration-200">
-                      <div>
-                        <label htmlFor="email-otp" className="text-[10px] font-medium tracking-normal text-ink-muted uppercase block mb-1.5">
-                          Verification Code (6 Digits)
-                        </label>
-                        <input
-                          id="email-otp"
-                          type="text"
-                          maxLength={6}
-                          required
-                          value={emailOtp}
-                          onChange={(e) => setEmailOtp(e.target.value.replace(/\D/g, ''))}
-                          className="w-full tracking-[1em] text-center font-bold pl-3 py-3 bg-canvas-pure border border-ice-border rounded-sm text-sm text-ink-navy focus:outline-none focus:border-cobalt transition-all"
-                          placeholder="000000"
-                        />
-                      </div>
-
-                      <div className="flex gap-2 pt-2">
-                        <button
-                          type="submit"
-                          disabled={verificationLoading || !emailOtp}
-                          className="flex-grow py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-sm font-bold text-xs transition-all shadow-premium disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                        >
-                          {verificationLoading ? 'Verifying...' : 'Verify & Update Email'}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setEmailOtpSent(false);
-                            setEmailOtp('');
-                          }}
-                          className="px-4 py-2.5 border border-ice-border hover:bg-ice-gray/20 text-ink-muted hover:text-ink-navy rounded-sm font-bold text-xs transition-all cursor-pointer"
-                        >
-                          Change Email
-                        </button>
-                      </div>
-                    </form>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="bg-canvas-pure border border-ice-border rounded-xl p-6 sm:p-8 shadow-3d-card space-y-6">
-                <div className="border-b border-ice-border/40 pb-3">
-                  <h4 className="text-xl font-bold text-ink-navy tracking-tight font-sans">Edit Profile Settings</h4>
-                  <p className="text-xs text-ink-muted font-light mt-1">Keep your contact details up to date to ensure seamless pickup scheduling.</p>
-                </div>
-
-                {/* Feedback alerts */}
-                {error && (
-                  <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 text-red-500 p-3 rounded-sm text-xs font-medium">
-                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                    <span>{error}</span>
-                  </div>
-                )}
-
-                {success && (
-                  <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 p-3 rounded-sm text-xs font-medium">
-                    <ShieldCheck className="w-4 h-4 flex-shrink-0" />
-                    <span>{success}</span>
-                  </div>
-                )}
-
-                <form className="space-y-4" onSubmit={handleUpdate}>
-                  
-                  {/* Name Input */}
-                  <div>
-                    <label htmlFor="edit-name" className="text-[10px] font-medium tracking-normal text-ink-muted uppercase block mb-1.5">
-                      Full Name
-                    </label>
-                    <div className="relative">
-                      <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-ink-muted">
-                        <User className="w-4 h-4" />
-                      </span>
-                      <input
-                        id="edit-name"
-                        type="text"
-                        required
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        className="w-full pl-9 pr-3 py-2.5 bg-canvas-pure border border-ice-border rounded-sm text-xs text-ink-navy focus:outline-none focus:border-cobalt transition-all"
-                        placeholder="Enter full name"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Phone Input */}
-                  <div>
-                    <label htmlFor="edit-phone" className="text-[10px] font-medium tracking-normal text-ink-muted uppercase block mb-1.5">
-                      Mobile Number
-                    </label>
-                    <div className="relative">
-                      <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-ink-muted">
-                        <Phone className="w-4 h-4" />
-                      </span>
-                      <input
-                        id="edit-phone"
-                        type="tel"
-                        required
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        className="w-full pl-9 pr-3 py-2.5 bg-canvas-pure border border-ice-border rounded-sm text-xs text-ink-navy focus:outline-none focus:border-cobalt transition-all"
-                        placeholder="Enter 10-digit phone number"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Submit */}
-                  <div className="pt-2">
-                    <button
-                      type="submit"
-                      disabled={isLoading}
-                      className="px-6 py-2.5 bg-cobalt hover:bg-cobalt-hover text-white rounded-sm font-bold text-xs transition-all shadow-premium disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                    >
-                      {isLoading ? 'Saving Changes...' : 'Save Settings'}
-                    </button>
-                  </div>
-
-                </form>
-              </div>
-            )}
-          </div>
-
-        </div>
-      )}
-
-      {/* TAB 4: SAVED QUOTES */}
-      {activeTab === 'saved' && (
-        <div className="space-y-6 animate-fadeIn">
-          {savedQuotesList.length === 0 ? (
-            <div className="py-16 text-center text-ink-muted space-y-4 bg-canvas-pure rounded-2xl border border-dashed border-ice-border p-8">
-              <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center mx-auto shadow-xs">
-                <Bookmark className="w-7 h-7" />
-              </div>
-              <div className="space-y-1">
-                <h4 className="font-extrabold text-lg text-ink-navy font-sans">No Saved Quotes Yet</h4>
-                <p className="text-xs text-ink-muted max-w-md mx-auto font-light leading-relaxed">
-                  Save diagnostic quotes while checking your device value. If our catalog base prices update, your saved quotes automatically adjust to the latest market rate!
-                </p>
-              </div>
-              <button
-                onClick={() => onNavigate('/smartphones')}
-                className="mt-2 inline-flex items-center gap-2 px-6 py-3 bg-cobalt hover:bg-cobalt-hover text-white rounded-xl font-bold text-xs shadow-md transition-all cursor-pointer"
-              >
-                <span>Get Instant Valuation</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-ice-border/60">
-                <div>
-                  <h3 className="font-bold text-base text-ink-navy font-sans">
-                    Saved Valuation Quotes ({savedQuotesList.length})
-                  </h3>
-                  <p className="text-xs text-ink-muted">
-                    Your quotes automatically reflect current catalog rates. Click &ldquo;Resume &amp; Book&rdquo; anytime without restarting the diagnostic questions!
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-4">
-                {savedQuotesList.map((q) => {
-                  const storageLabel = q.storageGb >= 1024 ? `${q.storageGb / 1024}TB` : `${q.storageGb}GB`;
-                  const deviceImg = getDeviceImage(q.modelId, q.brandId, q.color, q.imageUrl);
-
-                  return (
-                    <div
-                      key={q.id}
-                      className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm hover:shadow-md transition-all text-left relative overflow-hidden"
-                    >
-                      {/* Top Bar: Device Info + Delete Action */}
-                      <div className="flex items-start justify-between gap-4 pb-4 border-b border-slate-100">
-                        <div className="flex items-center gap-3.5">
-                          <div className="w-16 h-16 rounded-xl bg-slate-50 border border-slate-200/80 p-1 flex items-center justify-center shrink-0">
-                            <img
-                              src={deviceImg}
-                              alt={q.modelName}
-                              className="w-full h-full object-contain"
-                            />
-                          </div>
-                          <div>
-                            <div className="flex flex-wrap items-center gap-2">
-                              <h4 className="font-extrabold text-base sm:text-lg text-slate-950 font-sans">
-                                {q.modelName}
-                              </h4>
-                              <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-800 text-[11px] font-sans font-bold border border-slate-200">
-                                {storageLabel}
-                              </span>
-                            </div>
-                            <p className="text-xs text-slate-500 mt-1 font-sans">
-                              Saved on {formatDateStr(q.createdAt)} • Ref: #{q.id.slice(-8).toUpperCase()}
-                            </p>
-                          </div>
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            removeSavedQuote(q.id);
-                            loadSavedQuotes();
-                          }}
-                          title="Remove saved quote"
-                          className="p-2 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 border border-transparent hover:border-red-200 transition-colors cursor-pointer"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-
-                      {/* Valuation & Price Recalculation Alert */}
-                      <div className="my-4 bg-slate-50 rounded-xl p-4 border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                        <div className="space-y-1.5">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-slate-500">
-                              Estimated Payout
-                            </span>
-                            {/* 7-Day Price Lock Status Badge */}
-                            <PriceLockCountdownBadge
-                              savedAt={q.savedAt || q.createdAt}
-                              isPriceLocked={q.isPriceLocked}
-                            />
-                            {q.appliedCoupon && (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 border border-blue-200 text-blue-800 text-[10px] font-bold">
-                                <Tag className="w-3 h-3 text-blue-600 shrink-0" />
-                                Referral {q.appliedCoupon} {q.couponBonus ? `(+₹${q.couponBonus})` : ''}
-                              </span>
-                            )}
-                          </div>
-
-                          <div className="flex items-baseline gap-3">
-                            <span className="text-2xl sm:text-3xl font-extrabold text-emerald-700 font-sans">
-                              {formatPrice(q.livePrice)}
-                            </span>
-                            {q.hasPriceChanged && !q.isPriceProtected && (
-                              <span className="text-xs text-slate-400 line-through font-sans">
-                                Was {formatPrice(q.originalPrice)}
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Dynamic price update / price protection notification */}
-                          {q.isPriceProtected ? (
-                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-semibold font-sans">
-                              <ShieldCheck className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-                              <span>7-Day Lock Guarantee: Market dropped to {formatPrice(q.currentPayout)}, but your {formatPrice(q.guaranteedPayout)} rate is locked &amp; guaranteed!</span>
-                            </div>
-                          ) : q.hasPriceChanged && q.priceDifference > 0 ? (
-                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-100/80 border border-emerald-300 text-emerald-800 text-xs font-bold font-sans">
-                              <TrendingUp className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-                              <span>Live Catalog Update: +{formatPrice(q.priceDifference)} applied</span>
-                            </div>
-                          ) : (
-                            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-600 text-[11px] font-medium font-sans">
-                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                              <span>{q.isPriceLocked ? 'Guaranteed locked payout for 7 days' : 'Live catalog base rate active'}</span>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="text-right sm:self-center">
-                          <span className="text-[10px] font-sans uppercase tracking-wider text-slate-400 block font-bold">
-                            Value Retention
-                          </span>
-                          <span className="text-xs sm:text-sm font-bold text-slate-800 font-sans">
-                            {q.retentionPercentage}% Retained
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Declared Condition Summary */}
-                      <div className="mb-4 text-xs">
-                        <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-slate-500 block mb-1.5">
-                          Audit Condition Declared
-                        </span>
-                        {q.selectedDefects.length === 0 ? (
-                          <div className="inline-flex items-center gap-1.5 text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2.5 py-1 rounded-md text-xs font-semibold">
-                            <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-                            <span>No defects declared • Maximum payout tier applied</span>
-                          </div>
-                        ) : (
-                          <div className="flex flex-wrap gap-1.5">
-                            {q.selectedDefects.map((d, i) => (
-                              <span
-                                key={i}
-                                className="px-2.5 py-1 rounded-md bg-slate-100 border border-slate-200 text-slate-700 text-xs font-medium"
-                              >
-                                {d.description || 'Declared condition'}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Action buttons */}
-                      <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 pt-2 border-t border-slate-100">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (onResumeQuote) {
-                              onResumeQuote(q);
-                            } else {
-                              onNavigate('/');
-                            }
-                          }}
-                          className="flex-1 py-3 px-4 bg-cobalt hover:bg-cobalt-hover text-white rounded-xl font-bold text-xs sm:text-sm shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer group hover:scale-[1.01]"
-                        >
-                          <span>Resume &amp; Book Instant Doorstep Payout</span>
-                          <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-    </div>
-  );
-}
+import React, { useState, useEffect } from 'react';
+import {
+  User, Phone, Mail, Calendar, ArrowLeft, LogOut, ShieldCheck, AlertCircle,
+  Package, FileText, Download, Copy, Check, CheckCircle2, MapPin, ArrowRight,
+  Bookmark, Trash2, Sparkles, TrendingUp, Tag, Gift, Share2, IndianRupee
+} from 'lucide-react';
+import {
+  updateCustomerProfile, sendEmailOtp, verifyEmailOtp,
+  fetchMyBookings, downloadBookingPdf, ApiBooking, fetchMyReferralCode, updateReferralPayoutUpi, CustomerReferralDashboard
+} from '../../utils/api';
+import { getDeviceImage, Model } from '../../data/mockDatabase';
+import {
+  SavedQuote,
+  EvaluatedSavedQuote,
+  getSavedQuotes,
+  removeSavedQuote,
+  evaluateSavedQuote
+} from '../../utils/savedQuotes';
+import { PriceLockCountdownBadge } from './PriceLockCountdownBadge';
+
+interface ProfilePageProps {
+  user: any;
+  onLogout: () => void;
+  onUpdateUser: (updatedUser: any) => void;
+  onNavigate: (path: string) => void;
+  models?: Model[];
+  initialTab?: 'profile' | 'bookings' | 'invoices' | 'saved' | 'referrals';
+  onResumeQuote?: (quote: SavedQuote) => void;
+}
+
+export default function ProfilePage({
+  user,
+  onLogout,
+  onUpdateUser,
+  onNavigate,
+  models = [],
+  initialTab,
+  onResumeQuote,
+}: ProfilePageProps) {
+  const [activeTab, setActiveTab] = useState<'profile' | 'bookings' | 'invoices' | 'saved' | 'referrals'>('bookings');
+
+  // Bookings list state
+  const [myBookings, setMyBookings] = useState<ApiBooking[]>([]);
+  const [fetchingBookings, setFetchingBookings] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Saved quotes state
+  const [savedQuotesList, setSavedQuotesList] = useState<EvaluatedSavedQuote[]>([]);
+  // Refer & Earn state
+  const [referralData, setReferralData] = useState<CustomerReferralDashboard | null>(null);
+  const [loadingReferrals, setLoadingReferrals] = useState(false);
+  const [copiedCode, setCopiedCode] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [upiInput, setUpiInput] = useState('');
+  const [savingUpi, setSavingUpi] = useState(false);
+  const [upiSuccess, setUpiSuccess] = useState('');
+
+  const loadReferralData = async () => {
+    setLoadingReferrals(true);
+    try {
+      const res = await fetchMyReferralCode();
+      if (res && res.success) {
+        setReferralData(res);
+      }
+    } catch (err) {
+      console.error('Failed to load referral stats:', err);
+    } finally {
+      setLoadingReferrals(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'referrals') {
+      loadReferralData();
+    }
+  }, [activeTab]);
+
+
+  // Profile form state
+  const [name, setName] = useState(user?.name || '');
+  const [phone, setPhone] = useState(user?.phone || '');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Email verification state
+  const [isVerifyingEmail, setIsVerifyingEmail] = useState(false);
+  const [newEmail, setNewEmail] = useState(user?.email || '');
+  const [emailOtp, setEmailOtp] = useState('');
+  const [emailOtpSent, setEmailOtpSent] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+  const [verificationLoading, setVerificationLoading] = useState(false);
+  const [verificationError, setVerificationError] = useState('');
+  const [verificationSuccess, setVerificationSuccess] = useState('');
+
+  // Handle URL tab search param (e.g. /profile?tab=saved)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tabParam = params.get('tab');
+    if (tabParam === 'bookings' || tabParam === 'invoices' || tabParam === 'profile' || tabParam === 'saved') {
+      setActiveTab(tabParam);
+    } else if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
+
+  // Load and evaluate saved quotes against live catalog
+  const loadSavedQuotes = () => {
+    const rawQuotes = getSavedQuotes(user?.id);
+    const evaluated = rawQuotes.map((q) => evaluateSavedQuote(q, models));
+    setSavedQuotesList(evaluated);
+  };
+
+  useEffect(() => {
+    loadSavedQuotes();
+    const handleSync = () => loadSavedQuotes();
+    window.addEventListener('rephonix_saved_quotes_updated', handleSync);
+    return () => window.removeEventListener('rephonix_saved_quotes_updated', handleSync);
+  }, [user, models]);
+
+  // Load customer bookings on mount
+  useEffect(() => {
+    loadBookings();
+  }, [user]);
+
+  const loadBookings = async () => {
+    setFetchingBookings(true);
+    try {
+      const list = await fetchMyBookings();
+      setMyBookings(list || []);
+    } catch {
+      setMyBookings([]);
+    } finally {
+      setFetchingBookings(false);
+    }
+  };
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setInterval(() => {
+      setCooldown((prev) => prev - 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [cooldown]);
+
+  const copyBookingId = (id: string) => {
+    navigator.clipboard.writeText(id);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const getStatusStep = (b: { inspectionStatus: string; payoutStatus: string }) => {
+    if (b.payoutStatus === 'completed') return 3;
+    if (b.inspectionStatus === 'approved') return 2;
+    return 1;
+  };
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0
+    }).format(price);
+  };
+
+  const formatDateStr = (dateStr: string) => {
+    if (!dateStr) return '';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+      });
+    } catch {
+      return dateStr;
+    }
+  };
+
+  const handleSendEmailOtp = async () => {
+    if (!newEmail.trim()) {
+      setVerificationError('Email address is required.');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newEmail.trim().toLowerCase())) {
+      setVerificationError('Invalid email format.');
+      return;
+    }
+
+    setVerificationError('');
+    setVerificationSuccess('');
+    setVerificationLoading(true);
+
+    try {
+      await sendEmailOtp(newEmail.trim());
+      setVerificationSuccess('Verification code sent successfully to your email.');
+      setEmailOtpSent(true);
+      setCooldown(60);
+    } catch (err: any) {
+      setVerificationError(err.message || 'Failed to send verification code.');
+    } finally {
+      setVerificationLoading(false);
+    }
+  };
+
+  const handleVerifyEmailOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!emailOtp.trim()) {
+      setVerificationError('Please enter the 6-digit verification code.');
+      return;
+    }
+
+    setVerificationError('');
+    setVerificationSuccess('');
+    setVerificationLoading(true);
+
+    try {
+      const response = await verifyEmailOtp(newEmail.trim(), emailOtp.trim());
+      onUpdateUser(response.user);
+      setVerificationSuccess('Email address verified successfully!');
+      setEmailOtp('');
+      setEmailOtpSent(false);
+      setIsVerifyingEmail(false);
+      setSuccess('Email address verified successfully.');
+    } catch (err: any) {
+      setVerificationError(err.message || 'Failed to verify code.');
+    } finally {
+      setVerificationLoading(false);
+    }
+  };
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || !phone.trim()) {
+      setError('Name and phone number cannot be empty.');
+      return;
+    }
+
+    setError('');
+    setSuccess('');
+    setIsLoading(true);
+
+    try {
+      const response = await updateCustomerProfile(name.trim(), phone.trim());
+      onUpdateUser(response.user);
+      setSuccess('Profile updated successfully.');
+    } catch (err: any) {
+      setError(err.message || 'Failed to update profile.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return '';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    } catch {
+      return dateStr;
+    }
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto px-4 py-6 sm:py-8 text-left animate-fadeIn">
+      
+      {/* Header Back button & Logout */}
+      <div className="mb-6 flex justify-between items-center">
+        <button
+          onClick={() => onNavigate('/')}
+          className="flex items-center gap-1.5 text-xs text-cobalt hover:underline font-medium cursor-pointer"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" /> Back to Home
+        </button>
+        <button
+          onClick={onLogout}
+          className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-600 transition-colors font-medium border border-red-500/20 px-3 py-1.5 rounded-sm hover:bg-red-500/5 cursor-pointer"
+        >
+          <LogOut className="w-3.5 h-3.5" /> Logout
+        </button>
+      </div>
+
+      {/* Page Title */}
+      <div className="mb-6">
+        <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-navy font-sans tracking-tight">
+          Customer Account Dashboard
+        </h2>
+        <p className="text-xs text-ink-muted mt-1 font-light">
+          Manage your account profile, track active pickup bookings, and download official sale receipts.
+        </p>
+      </div>
+
+      {/* Top Tab Bar Navigation */}
+      <div className="flex border-b border-ice-border/60 mb-8 gap-2 text-xs font-semibold overflow-x-auto scrollbar-none pb-1">
+        <button
+          type="button"
+          onClick={() => setActiveTab('bookings')}
+          className={`px-4 py-2.5 rounded-xl border flex items-center gap-2 transition-all shrink-0 cursor-pointer ${
+            activeTab === 'bookings'
+              ? 'bg-cobalt text-white border-cobalt shadow-sm font-bold'
+              : 'bg-canvas-pure text-ink-slate hover:text-ink-navy border-ice-border hover:bg-slate-50'
+          }`}
+        >
+          <Package className="w-4 h-4" />
+          <span>Your Bookings</span>
+          {myBookings.length > 0 && (
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-sans font-bold ${
+              activeTab === 'bookings' ? 'bg-white/20 text-white' : 'bg-cobalt/10 text-cobalt'
+            }`}>
+              {myBookings.length}
+            </span>
+          )}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('invoices')}
+          className={`px-4 py-2.5 rounded-xl border flex items-center gap-2 transition-all shrink-0 cursor-pointer ${
+            activeTab === 'invoices'
+              ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm font-bold'
+              : 'bg-canvas-pure text-ink-slate hover:text-ink-navy border-ice-border hover:bg-slate-50'
+          }`}
+        >
+          <FileText className="w-4 h-4" />
+          <span>Invoices &amp; Receipts</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('saved')}
+          className={`px-4 py-2.5 rounded-xl border flex items-center gap-2 transition-all shrink-0 cursor-pointer ${
+            activeTab === 'saved'
+              ? 'bg-amber-500 text-white border-amber-500 shadow-sm font-bold'
+              : 'bg-canvas-pure text-ink-slate hover:text-ink-navy border-ice-border hover:bg-slate-50'
+          }`}
+        >
+          <Bookmark className="w-4 h-4" />
+          <span>Saved Quotes</span>
+          {savedQuotesList.length > 0 && (
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-sans font-bold ${
+              activeTab === 'saved' ? 'bg-white/20 text-white' : 'bg-amber-500/10 text-amber-700'
+            }`}>
+              {savedQuotesList.length}
+            </span>
+          )}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('referrals')}
+          className={`px-4 py-2.5 rounded-xl border flex items-center gap-2 transition-all shrink-0 cursor-pointer ${
+            activeTab === 'referrals'
+              ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-emerald-600 shadow-sm font-bold'
+              : 'bg-canvas-pure text-ink-slate hover:text-ink-navy border-ice-border hover:bg-slate-50'
+          }`}
+        >
+          <Gift className={`w-4 h-4 ${activeTab === 'referrals' ? 'text-white' : 'text-emerald-500'}`} />
+          <span>Refer &amp; Earn</span>
+          <span className="px-1.5 py-0.5 rounded-full text-[9px] font-sans font-bold bg-emerald-500/20 text-emerald-700">
+            Get ₹200
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('profile')}
+          className={`px-4 py-2.5 rounded-xl border flex items-center gap-2 transition-all shrink-0 cursor-pointer ${
+            activeTab === 'profile'
+              ? 'bg-ink-navy text-white border-ink-navy shadow-sm font-bold'
+              : 'bg-canvas-pure text-ink-slate hover:text-ink-navy border-ice-border hover:bg-slate-50'
+          }`}
+        >
+          <User className="w-4 h-4" />
+          <span>Profile &amp; Security</span>
+        </button>
+      </div>
+
+      {/* TAB 1: YOUR BOOKINGS */}
+      {activeTab === 'bookings' && (
+        <div className="space-y-6 animate-fadeIn">
+          {fetchingBookings ? (
+            <div className="py-16 text-center text-ink-muted space-y-3 bg-canvas-pure border border-ice-border rounded-xl">
+              <div className="w-8 h-8 border-2 border-cobalt border-t-transparent rounded-full animate-spin mx-auto" />
+              <p className="text-xs font-medium">Fetching your pickup bookings...</p>
+            </div>
+          ) : myBookings.length === 0 ? (
+            <div className="py-16 text-center text-ink-muted space-y-4 bg-canvas-pure rounded-2xl border border-dashed border-ice-border p-8">
+              <div className="w-14 h-14 rounded-2xl bg-cobalt/10 text-cobalt flex items-center justify-center mx-auto shadow-xs">
+                <Package className="w-7 h-7" />
+              </div>
+              <div className="space-y-1">
+                <h4 className="font-extrabold text-lg text-ink-navy font-sans">No Pickup Bookings Yet</h4>
+                <p className="text-xs text-ink-muted max-w-md mx-auto font-light leading-relaxed">
+                  You haven't scheduled any doorstep device pickup bookings under your account. Get an instant quote to sell your smartphone in under 60 seconds!
+                </p>
+              </div>
+              <button
+                onClick={() => onNavigate('/smartphones')}
+                className="mt-2 inline-flex items-center gap-2 px-6 py-3 bg-cobalt hover:bg-cobalt-hover text-white rounded-xl font-bold text-xs shadow-md transition-all cursor-pointer"
+              >
+                <span>Start Instant Valuation</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {myBookings.map((b) => {
+                const matchedModel = models.find(m => m.id === b.modelId || m.name.toLowerCase() === b.modelName.toLowerCase());
+                const deviceImg = getDeviceImage(
+                  b.modelId,
+                  matchedModel?.brandId || 'apple',
+                  b.color,
+                  matchedModel?.imageUrl
+                );
+                const stepNum = getStatusStep(b);
+
+                return (
+                  <div
+                    key={b.id}
+                    className="bg-canvas-pure border border-ice-border rounded-2xl p-5 sm:p-6 shadow-3d-card hover:shadow-premium transition-all space-y-5 text-left"
+                  >
+                    {/* Header Row: Booking ID, Date & Status */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-ice-border/60">
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-xs font-sans font-extrabold text-cobalt bg-cobalt/10 px-3 py-1 rounded-lg border border-cobalt/20">
+                          #{b.id}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => copyBookingId(b.id)}
+                          className="text-zinc-400 hover:text-cobalt p-1 rounded transition-colors cursor-pointer"
+                          title="Copy Booking ID"
+                        >
+                          {copiedId === b.id ? (
+                            <Check className="w-4 h-4 text-emerald-500" />
+                          ) : (
+                            <Copy className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
+
+                      <div className="flex items-center gap-3 text-xs">
+                        <span className="text-[11px] font-sans text-ink-muted">
+                          Booked {formatDateStr(b.dateCreated)}
+                        </span>
+                        <span className={`text-[10px] font-bold font-sans px-2.5 py-1 rounded-full uppercase tracking-wider ${
+                          b.payoutStatus === 'completed'
+                            ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
+                            : b.inspectionStatus === 'approved'
+                            ? 'bg-blue-500/10 text-blue-600 border border-blue-500/20'
+                            : 'bg-amber-500/10 text-amber-600 border border-amber-500/20'
+                        }`}>
+                          {b.payoutStatus === 'completed'
+                            ? 'Paid Out'
+                            : b.inspectionStatus === 'approved'
+                            ? 'Booking Confirmed'
+                            : 'Under Review'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Middle Row: Device Info & Agreed Price */}
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 bg-white border border-ice-border rounded-xl p-2 flex items-center justify-center flex-shrink-0 shadow-xs">
+                        <img
+                          src={deviceImg}
+                          alt={b.modelName}
+                          referrerPolicy="no-referrer"
+                          className="w-full h-full object-contain"
+                          onError={(e) => {
+                            (e.target as HTMLElement).style.display = 'none';
+                          }}
+                        />
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-extrabold text-base sm:text-lg text-ink-navy truncate font-sans">
+                          {b.modelName}
+                        </h4>
+                        <p className="text-xs text-ink-muted mt-0.5 truncate font-sans">
+                          Storage: {b.storageGb >= 1024 ? `${b.storageGb / 1024}TB` : `${b.storageGb}GB`}
+                          {b.color && b.color !== 'Standard' ? ` • ${b.color}` : ''}
+                          {b.imei ? ` • IMEI: ${b.imei}` : ''}
+                        </p>
+                      </div>
+
+                      <div className="text-right flex-shrink-0">
+                        <span className="text-[10px] font-sans text-ink-muted uppercase block font-semibold">Agreed Payout</span>
+                        <span className="text-lg sm:text-xl font-black text-emerald-600 font-sans">
+                          {formatPrice(b.finalPayoutAmount || b.finalPrice)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Logistics Info: Pickup Date & Address */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-xl bg-slate-50/80 border border-ice-border/40 text-xs">
+                      <div>
+                        <span className="text-[10px] font-sans text-ink-muted uppercase font-bold block flex items-center gap-1.5">
+                          <Calendar className="w-3.5 h-3.5 text-cobalt" /> Scheduled Doorstep Pickup
+                        </span>
+                        <p className="font-semibold text-ink-navy mt-1">
+                          {b.pickupDate} ({b.pickupTimeSlot})
+                        </p>
+                      </div>
+
+                      <div>
+                        <span className="text-[10px] font-sans text-ink-muted uppercase font-bold block flex items-center gap-1.5">
+                          <MapPin className="w-3.5 h-3.5 text-cobalt" /> Pickup Address
+                        </span>
+                        <p className="font-medium text-ink-navy truncate mt-1" title={b.address}>
+                          {b.address}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Stepper Progress */}
+                    <div className="pt-2">
+                      <div className="relative flex items-center justify-between text-center">
+                        <div className="absolute left-4 right-4 top-4 -translate-y-1/2 h-1 bg-zinc-200 -z-0" />
+                        {[
+                          { title: 'Booked', desc: 'Order confirmed' },
+                          { title: 'Inspected', desc: 'Doorside audit' },
+                          { title: 'Paid Out', desc: 'Funds transferred' },
+                        ].map((s, idx) => {
+                          const sNum = idx + 1;
+                          const isPassed = stepNum >= sNum;
+                          return (
+                            <div key={idx} className="relative z-10 flex flex-col items-center">
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all ${
+                                isPassed
+                                  ? 'bg-emerald-600 text-white shadow-sm'
+                                  : 'bg-zinc-200 text-zinc-500'
+                              }`}>
+                                {isPassed ? <CheckCircle2 className="w-4.5 h-4.5" /> : sNum}
+                              </div>
+                              <span className="text-[10px] font-bold text-ink-navy mt-1.5">{s.title}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Download PDF invoice footer */}
+                    <div className="pt-3 border-t border-ice-border/60 flex items-center justify-between gap-3">
+                      <span className="text-[11px] text-ink-muted font-sans hidden sm:inline">Official GST &amp; Aadhaar Compliant Receipt</span>
+                      <button
+                        type="button"
+                        onClick={() => downloadBookingPdf(b.id)}
+                        className="w-full sm:w-auto px-4 py-2 rounded-xl bg-cobalt hover:bg-cobalt-hover text-white font-bold text-xs transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        <span>Download Tax Invoice (PDF)</span>
+                      </button>
+                    </div>
+
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* TAB 2: INVOICES & RECEIPTS */}
+      {activeTab === 'invoices' && (
+        <div className="space-y-6 animate-fadeIn">
+          {fetchingBookings ? (
+            <div className="py-16 text-center text-ink-muted space-y-3 bg-canvas-pure border border-ice-border rounded-xl">
+              <div className="w-8 h-8 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto" />
+              <p className="text-xs font-medium">Loading official tax invoices &amp; receipts...</p>
+            </div>
+          ) : myBookings.length === 0 ? (
+            <div className="py-16 text-center bg-canvas-pure rounded-2xl border border-dashed border-ice-border p-8 space-y-4">
+              <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center mx-auto shadow-xs">
+                <FileText className="w-7 h-7" />
+              </div>
+              <div className="space-y-1">
+                <h4 className="font-extrabold text-lg text-ink-navy font-sans">No Tax Invoices Available Yet</h4>
+                <p className="text-xs text-ink-muted max-w-md mx-auto font-light leading-relaxed">
+                  Invoices and official sale receipts are generated automatically once you schedule a doorstep pickup order.
+                </p>
+              </div>
+              <button
+                onClick={() => onNavigate('/smartphones')}
+                className="mt-2 inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-md transition-all cursor-pointer"
+              >
+                <span>Book Pickup Order</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {myBookings.map((b) => {
+                const formattedPrice = formatPrice(b.finalPayoutAmount || b.finalPrice);
+                return (
+                  <div key={b.id} className="bg-canvas-pure border border-ice-border rounded-2xl p-5 sm:p-6 shadow-3d-card hover:shadow-premium transition-all space-y-4 text-left">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-ice-border/60 pb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center font-black text-xs">
+                          TAX
+                        </div>
+                        <div>
+                          <h4 className="font-black text-base text-ink-navy tracking-tight font-sans">OFFICIAL TAX INVOICE</h4>
+                          <span className="text-[11px] font-sans text-ink-muted">Invoice Ref: INV-{b.id}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-sans font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 uppercase tracking-wider">
+                          OFFICIAL DOCUMENT
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs bg-slate-50/60 p-4 rounded-xl border border-ice-border/40">
+                      <div>
+                        <span className="text-[10px] font-sans text-ink-muted uppercase block font-semibold">Device Model</span>
+                        <span className="font-extrabold text-ink-navy text-sm">{b.modelName} ({b.storageGb}GB)</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-sans text-ink-muted uppercase block font-semibold">Booking Date</span>
+                        <span className="font-semibold text-ink-navy">{formatDateStr(b.dateCreated)}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-sans text-ink-muted uppercase block font-semibold">Customer Name</span>
+                        <span className="font-semibold text-ink-navy">{b.customerName}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-sans text-ink-muted uppercase block font-semibold">Final Agreed Payout</span>
+                        <span className="font-black text-emerald-600 font-sans text-base">{formattedPrice}</span>
+                      </div>
+                    </div>
+
+                    <div className="pt-3 border-t border-ice-border/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <span className="text-[11px] text-ink-muted font-sans">Includes NIST data wipe &amp; digital transfer receipt</span>
+                      <button
+                        type="button"
+                        onClick={() => downloadBookingPdf(b.id)}
+                        className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                      >
+                        <Download className="w-4 h-4" />
+                        <span>Download Tax Invoice (PDF)</span>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* TAB 3: PROFILE & SECURITY */}
+      {activeTab === 'profile' && (
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start animate-fadeIn">
+          
+          {/* Left Side: Summary Card */}
+          <div className="md:col-span-5 bg-canvas-pure border border-ice-border rounded-xl p-6 shadow-3d-card space-y-6">
+            <div className="text-center pb-4 border-b border-ice-border/40">
+              <div className="w-16 h-16 bg-cobalt/10 text-cobalt border border-cobalt/20 rounded-full flex items-center justify-center mx-auto text-xl font-bold font-sans mb-3">
+                {user?.name ? user.name.slice(0, 2).toUpperCase() : 'US'}
+              </div>
+              <h3 className="text-lg font-bold text-ink-navy font-sans">{user?.name}</h3>
+              <span className="text-[10px] font-medium tracking-normal bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-2 py-0.5 rounded-full inline-block mt-1 font-semibold uppercase">
+                Verified Customer Account
+              </span>
+            </div>
+
+            <div className="space-y-4 text-xs">
+              {/* Email */}
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <span className="w-8 h-8 rounded-sm bg-ice-gray/40 border border-ice-border/30 flex items-center justify-center text-ink-muted flex-shrink-0">
+                    <Mail className="w-4 h-4" />
+                  </span>
+                  <div>
+                    <span className="text-[10px] font-medium tracking-normal text-ink-muted uppercase block">Email Address</span>
+                    <span className="text-ink-navy font-medium break-all">{user?.email}</span>
+                  </div>
+                </div>
+                <div className="flex-shrink-0">
+                  {user?.emailVerified ? (
+                    <span className="text-[9px] font-semibold tracking-wider bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-2 py-0.5 rounded-sm uppercase">
+                      Verified
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setIsVerifyingEmail(true);
+                        setNewEmail(user?.email || '');
+                        setEmailOtp('');
+                        setEmailOtpSent(false);
+                        setVerificationError('');
+                        setVerificationSuccess('');
+                      }}
+                      className="text-[9px] font-bold tracking-wider bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 border border-amber-500/20 px-2 py-0.5 rounded-sm uppercase transition-colors cursor-pointer"
+                    >
+                      Verify Now
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Mobile */}
+              <div className="flex items-center gap-3">
+                <span className="w-8 h-8 rounded-sm bg-ice-gray/40 border border-ice-border/30 flex items-center justify-center text-ink-muted flex-shrink-0">
+                  <Phone className="w-4 h-4" />
+                </span>
+                <div>
+                  <span className="text-[10px] font-medium tracking-normal text-ink-muted uppercase block">Mobile Number</span>
+                  <span className="text-ink-navy font-medium">+91 {user?.phone}</span>
+                </div>
+              </div>
+
+              {/* Member Since */}
+              <div className="flex items-center gap-3">
+                <span className="w-8 h-8 rounded-sm bg-ice-gray/40 border border-ice-border/30 flex items-center justify-center text-ink-muted flex-shrink-0">
+                  <Calendar className="w-4 h-4" />
+                </span>
+                <div>
+                  <span className="text-[10px] font-medium tracking-normal text-ink-muted uppercase block">Member Since</span>
+                  <span className="text-ink-navy font-medium">{formatDate(user?.createdAt)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Side: Edit Form OR Email Verification Form */}
+          <div className="md:col-span-7 space-y-6">
+            {isVerifyingEmail ? (
+              <div className="bg-canvas-pure border border-amber-500/20 rounded-xl p-6 sm:p-8 shadow-3d-card space-y-6 relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-500 to-orange-500" />
+                
+                <div className="border-b border-ice-border/40 pb-3 flex justify-between items-start">
+                  <div>
+                    <h4 className="text-xl font-bold text-ink-navy tracking-tight font-sans">Verify Email Address</h4>
+                    <p className="text-xs text-ink-muted font-light mt-1">Enter your email address to receive a secure 6-digit OTP verification code.</p>
+                  </div>
+                  <button
+                    onClick={() => setIsVerifyingEmail(false)}
+                    className="p-1 text-ink-muted hover:text-ink-navy rounded-full hover:bg-ice-gray/40 transition-colors"
+                  >
+                    <span className="sr-only">Close</span>
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Feedback alerts */}
+                {verificationError && (
+                  <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 text-red-500 p-3 rounded-sm text-xs font-medium">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                    <span>{verificationError}</span>
+                  </div>
+                )}
+
+                {verificationSuccess && (
+                  <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 p-3 rounded-sm text-xs font-medium">
+                    <ShieldCheck className="w-4 h-4 flex-shrink-0 text-emerald-500" />
+                    <span>{verificationSuccess}</span>
+                  </div>
+                )}
+
+                <div className="space-y-4">
+                  {/* Email Input */}
+                  <div>
+                    <label htmlFor="verify-email" className="text-[10px] font-medium tracking-normal text-ink-muted uppercase block mb-1.5">
+                      Email Address
+                    </label>
+                    <div className="flex gap-2">
+                      <div className="relative flex-grow">
+                        <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-ink-muted">
+                          <Mail className="w-4 h-4" />
+                        </span>
+                        <input
+                          id="verify-email"
+                          type="email"
+                          required
+                          disabled={emailOtpSent}
+                          value={newEmail}
+                          onChange={(e) => setNewEmail(e.target.value)}
+                          className="w-full pl-9 pr-3 py-2.5 bg-canvas-pure border border-ice-border rounded-sm text-xs text-ink-navy focus:outline-none focus:border-cobalt transition-all disabled:opacity-60"
+                          placeholder="Enter email to verify"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        disabled={verificationLoading || cooldown > 0}
+                        onClick={handleSendEmailOtp}
+                        className="px-4 py-2.5 bg-cobalt hover:bg-cobalt-hover text-white rounded-sm font-bold text-xs transition-all shadow-premium disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap min-w-[140px] cursor-pointer"
+                      >
+                        {verificationLoading && !emailOtpSent ? 'Sending...' : cooldown > 0 ? `Resend in ${cooldown}s` : emailOtpSent ? 'Resend Code' : 'Send Code'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {emailOtpSent && (
+                    <form onSubmit={handleVerifyEmailOtp} className="space-y-4 pt-4 border-t border-ice-border/40 animate-in fade-in duration-200">
+                      <div>
+                        <label htmlFor="email-otp" className="text-[10px] font-medium tracking-normal text-ink-muted uppercase block mb-1.5">
+                          Verification Code (6 Digits)
+                        </label>
+                        <input
+                          id="email-otp"
+                          type="text"
+                          maxLength={6}
+                          required
+                          value={emailOtp}
+                          onChange={(e) => setEmailOtp(e.target.value.replace(/\D/g, ''))}
+                          className="w-full tracking-[1em] text-center font-bold pl-3 py-3 bg-canvas-pure border border-ice-border rounded-sm text-sm text-ink-navy focus:outline-none focus:border-cobalt transition-all"
+                          placeholder="000000"
+                        />
+                      </div>
+
+                      <div className="flex gap-2 pt-2">
+                        <button
+                          type="submit"
+                          disabled={verificationLoading || !emailOtp}
+                          className="flex-grow py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-sm font-bold text-xs transition-all shadow-premium disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                        >
+                          {verificationLoading ? 'Verifying...' : 'Verify & Update Email'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEmailOtpSent(false);
+                            setEmailOtp('');
+                          }}
+                          className="px-4 py-2.5 border border-ice-border hover:bg-ice-gray/20 text-ink-muted hover:text-ink-navy rounded-sm font-bold text-xs transition-all cursor-pointer"
+                        >
+                          Change Email
+                        </button>
+                      </div>
+                    </form>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="bg-canvas-pure border border-ice-border rounded-xl p-6 sm:p-8 shadow-3d-card space-y-6">
+                <div className="border-b border-ice-border/40 pb-3">
+                  <h4 className="text-xl font-bold text-ink-navy tracking-tight font-sans">Edit Profile Settings</h4>
+                  <p className="text-xs text-ink-muted font-light mt-1">Keep your contact details up to date to ensure seamless pickup scheduling.</p>
+                </div>
+
+                {/* Feedback alerts */}
+                {error && (
+                  <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 text-red-500 p-3 rounded-sm text-xs font-medium">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                    <span>{error}</span>
+                  </div>
+                )}
+
+                {success && (
+                  <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 p-3 rounded-sm text-xs font-medium">
+                    <ShieldCheck className="w-4 h-4 flex-shrink-0" />
+                    <span>{success}</span>
+                  </div>
+                )}
+
+                <form className="space-y-4" onSubmit={handleUpdate}>
+                  
+                  {/* Name Input */}
+                  <div>
+                    <label htmlFor="edit-name" className="text-[10px] font-medium tracking-normal text-ink-muted uppercase block mb-1.5">
+                      Full Name
+                    </label>
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-ink-muted">
+                        <User className="w-4 h-4" />
+                      </span>
+                      <input
+                        id="edit-name"
+                        type="text"
+                        required
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="w-full pl-9 pr-3 py-2.5 bg-canvas-pure border border-ice-border rounded-sm text-xs text-ink-navy focus:outline-none focus:border-cobalt transition-all"
+                        placeholder="Enter full name"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Phone Input */}
+                  <div>
+                    <label htmlFor="edit-phone" className="text-[10px] font-medium tracking-normal text-ink-muted uppercase block mb-1.5">
+                      Mobile Number
+                    </label>
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-ink-muted">
+                        <Phone className="w-4 h-4" />
+                      </span>
+                      <input
+                        id="edit-phone"
+                        type="tel"
+                        required
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        className="w-full pl-9 pr-3 py-2.5 bg-canvas-pure border border-ice-border rounded-sm text-xs text-ink-navy focus:outline-none focus:border-cobalt transition-all"
+                        placeholder="Enter 10-digit phone number"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Submit */}
+                  <div className="pt-2">
+                    <button
+                      type="submit"
+                      disabled={isLoading}
+                      className="px-6 py-2.5 bg-cobalt hover:bg-cobalt-hover text-white rounded-sm font-bold text-xs transition-all shadow-premium disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      {isLoading ? 'Saving Changes...' : 'Save Settings'}
+                    </button>
+                  </div>
+
+                </form>
+              </div>
+            )}
+          </div>
+
+        </div>
+      )}
+
+
+      {/* TAB 5: REFER & EARN (TWO-SIDED REFERRAL LOOP) */}
+      {activeTab === 'referrals' && (
+        <div className="space-y-6 animate-fadeIn">
+          {loadingReferrals && !referralData ? (
+            <div className="py-16 text-center text-ink-muted space-y-3 bg-canvas-pure border border-ice-border rounded-xl">
+              <div className="w-8 h-8 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto" />
+              <p className="text-xs">Generating your personal referral link...</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Hero Banner Card */}
+              <div className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 rounded-2xl p-6 sm:p-8 text-white border border-emerald-500/30 shadow-xl">
+                <div className="absolute top-0 right-0 -mt-6 -mr-6 w-36 h-36 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
+                
+                <div className="max-w-xl">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-xs font-semibold mb-3">
+                    <Gift className="w-3.5 h-3.5" />
+                    <span>Two-Sided Referral Bonus Program</span>
+                  </div>
+                  <h3 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+                    Give ₹300, Get ₹200 Cash
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-300 mt-2 font-light leading-relaxed">
+                    Share your unique referral code with friends. When they sell their smartphone on Rephonix, they get an extra <strong>+₹300 bonus</strong> and you receive <strong>₹200 direct cash</strong> credited to your UPI!
+                  </p>
+                </div>
+
+                {/* Personalized Code & Share Action Box */}
+                <div className="mt-6 pt-6 border-t border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  <div className="bg-slate-900/90 border border-slate-700/80 rounded-xl p-3 flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] uppercase font-mono text-slate-400 block tracking-wider">Your Referral Code</span>
+                      <span className="text-base sm:text-lg font-mono font-extrabold text-emerald-400 tracking-wider">
+                        {referralData?.referralCode || 'REF-VIP-999'}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (referralData?.referralCode) {
+                          navigator.clipboard?.writeText(referralData.referralCode);
+                          setCopiedCode(true);
+                          setTimeout(() => setCopiedCode(false), 2000);
+                        }
+                      }}
+                      className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer flex items-center gap-1"
+                    >
+                      {copiedCode ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                      <span>{copiedCode ? 'Copied' : 'Copy'}</span>
+                    </button>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <a
+                      href={`https://wa.me/?text=${encodeURIComponent(
+                        `Hey! Sell your old phone for top market price on Rephonix. Use my referral code ${referralData?.referralCode || ''} to get an EXTRA ₹300 doorstep cash bonus: ${referralData?.shareUrl || 'https://rephonix.in/sell'}`
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 px-4 py-3 bg-[#25D366] hover:bg-[#20ba5a] text-slate-950 font-bold text-xs sm:text-sm rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <Share2 className="w-4 h-4 text-slate-950" />
+                      <span>Share on WhatsApp</span>
+                    </a>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (referralData?.shareUrl) {
+                          navigator.clipboard?.writeText(referralData.shareUrl);
+                          setCopiedLink(true);
+                          setTimeout(() => setCopiedLink(false), 2000);
+                        }
+                      }}
+                      className="px-3.5 py-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1"
+                      title="Copy Share Link"
+                    >
+                      {copiedLink ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* 4 Stats Cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+                <div className="bg-canvas-pure border border-ice-border rounded-xl p-4 shadow-xs">
+                  <span className="text-[11px] text-ink-muted block font-medium">Friends Invited</span>
+                  <div className="text-xl sm:text-2xl font-bold text-ink-navy mt-1 font-mono">
+                    {referralData?.stats?.totalInvited || 0}
+                  </div>
+                </div>
+
+                <div className="bg-canvas-pure border border-ice-border rounded-xl p-4 shadow-xs">
+                  <span className="text-[11px] text-ink-muted block font-medium">Completed Trades</span>
+                  <div className="text-xl sm:text-2xl font-bold text-emerald-600 mt-1 font-mono">
+                    {referralData?.stats?.totalCompleted || 0}
+                  </div>
+                </div>
+
+                <div className="bg-canvas-pure border border-ice-border rounded-xl p-4 shadow-xs">
+                  <span className="text-[11px] text-ink-muted block font-medium">Pending Rewards</span>
+                  <div className="text-xl sm:text-2xl font-bold text-amber-600 mt-1 font-mono">
+                    ₹{(referralData?.stats?.pendingRewards || 0).toLocaleString('en-IN')}
+                  </div>
+                </div>
+
+                <div className="bg-canvas-pure border border-ice-border rounded-xl p-4 shadow-xs">
+                  <span className="text-[11px] text-ink-muted block font-medium">Total Cash Earned</span>
+                  <div className="text-xl sm:text-2xl font-bold text-emerald-700 mt-1 font-mono">
+                    ₹{(referralData?.stats?.totalEarned || 0).toLocaleString('en-IN')}
+                  </div>
+                </div>
+              </div>
+
+              {/* UPI Payout Settings */}
+              <div className="bg-canvas-pure border border-ice-border rounded-xl p-4 sm:p-5 shadow-xs">
+                <h4 className="text-xs font-bold text-ink-navy uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                  <IndianRupee className="w-4 h-4 text-emerald-600" />
+                  <span>Referral Payout Destination (UPI)</span>
+                </h4>
+                <p className="text-xs text-ink-muted mb-3 font-light">
+                  When your friends complete their phone pickup and inspection, your referral bonus is transferred directly to this UPI ID.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-2 max-w-md">
+                  <input
+                    type="text"
+                    value={upiInput}
+                    onChange={(e) => setUpiInput(e.target.value)}
+                    placeholder="e.g. mobile@okaxis or name@upi"
+                    className="flex-1 px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!upiInput.trim() || !upiInput.includes('@')) {
+                        alert('Please enter a valid UPI address containing @');
+                        return;
+                      }
+                      setSavingUpi(true);
+                      try {
+                        await updateReferralPayoutUpi(upiInput.trim());
+                        setUpiSuccess('UPI ID saved successfully!');
+                        setTimeout(() => setUpiSuccess(''), 3000);
+                      } catch (err: any) {
+                        alert(err.message || 'Failed to save UPI ID');
+                      } finally {
+                        setSavingUpi(false);
+                      }
+                    }}
+                    disabled={savingUpi}
+                    className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer shrink-0 disabled:opacity-50"
+                  >
+                    {savingUpi ? 'Saving...' : 'Save UPI ID'}
+                  </button>
+                </div>
+                {upiSuccess && (
+                  <p className="text-xs text-emerald-600 font-semibold mt-1.5 flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5" /> {upiSuccess}
+                  </p>
+                )}
+              </div>
+
+              {/* Referral Activity / Rewards History Table */}
+              <div className="bg-canvas-pure border border-ice-border rounded-xl p-4 sm:p-5 shadow-xs">
+                <h4 className="text-xs font-bold text-ink-navy uppercase tracking-wider mb-3">
+                  Referral Reward History
+                </h4>
+
+                {(!referralData?.stats?.rewards || referralData.stats.rewards.length === 0) ? (
+                  <div className="py-8 text-center text-ink-muted text-xs border border-dashed border-ice-border rounded-lg">
+                    No referrals yet. Share your code above with friends to start earning ₹200 per trade-in!
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead>
+                        <tr className="border-b border-ice-border text-ink-muted font-mono uppercase text-[10px]">
+                          <th className="pb-2">Date</th>
+                          <th className="pb-2">Friend</th>
+                          <th className="pb-2">Booking ID</th>
+                          <th className="pb-2">Reward Amount</th>
+                          <th className="pb-2 text-right">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-ice-border/60">
+                        {referralData.stats.rewards.map((r) => (
+                          <tr key={r.id} className="hover:bg-slate-50/50">
+                            <td className="py-2.5 text-ink-slate font-mono text-[11px]">
+                              {new Date(r.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                            </td>
+                            <td className="py-2.5 font-semibold text-ink-navy">
+                              {r.referredPhoneMasked}
+                            </td>
+                            <td className="py-2.5 font-mono text-[11px] text-cobalt">
+                              {r.bookingId}
+                            </td>
+                            <td className="py-2.5 font-bold text-emerald-600 font-mono">
+                              +₹{r.rewardAmount.toLocaleString('en-IN')}
+                            </td>
+                            <td className="py-2.5 text-right">
+                              <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                r.status === 'PAID'
+                                  ? 'bg-emerald-100 text-emerald-800'
+                                  : r.status === 'APPROVED'
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : 'bg-amber-100 text-amber-800'
+                              }`}>
+                                {r.status === 'PENDING' ? 'Pending Inspection' : r.status === 'APPROVED' ? 'Approved for Payout' : 'Paid to UPI'}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* TAB 4: SAVED QUOTES */}
+      {activeTab === 'saved' && (
+        <div className="space-y-6 animate-fadeIn">
+          {savedQuotesList.length === 0 ? (
+            <div className="py-16 text-center text-ink-muted space-y-4 bg-canvas-pure rounded-2xl border border-dashed border-ice-border p-8">
+              <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center mx-auto shadow-xs">
+                <Bookmark className="w-7 h-7" />
+              </div>
+              <div className="space-y-1">
+                <h4 className="font-extrabold text-lg text-ink-navy font-sans">No Saved Quotes Yet</h4>
+                <p className="text-xs text-ink-muted max-w-md mx-auto font-light leading-relaxed">
+                  Save diagnostic quotes while checking your device value. If our catalog base prices update, your saved quotes automatically adjust to the latest market rate!
+                </p>
+              </div>
+              <button
+                onClick={() => onNavigate('/smartphones')}
+                className="mt-2 inline-flex items-center gap-2 px-6 py-3 bg-cobalt hover:bg-cobalt-hover text-white rounded-xl font-bold text-xs shadow-md transition-all cursor-pointer"
+              >
+                <span>Get Instant Valuation</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-ice-border/60">
+                <div>
+                  <h3 className="font-bold text-base text-ink-navy font-sans">
+                    Saved Valuation Quotes ({savedQuotesList.length})
+                  </h3>
+                  <p className="text-xs text-ink-muted">
+                    Your quotes automatically reflect current catalog rates. Click &ldquo;Resume &amp; Book&rdquo; anytime without restarting the diagnostic questions!
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4">
+                {savedQuotesList.map((q) => {
+                  const storageLabel = q.storageGb >= 1024 ? `${q.storageGb / 1024}TB` : `${q.storageGb}GB`;
+                  const deviceImg = getDeviceImage(q.modelId, q.brandId, q.color, q.imageUrl);
+
+                  return (
+                    <div
+                      key={q.id}
+                      className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm hover:shadow-md transition-all text-left relative overflow-hidden"
+                    >
+                      {/* Top Bar: Device Info + Delete Action */}
+                      <div className="flex items-start justify-between gap-4 pb-4 border-b border-slate-100">
+                        <div className="flex items-center gap-3.5">
+                          <div className="w-16 h-16 rounded-xl bg-slate-50 border border-slate-200/80 p-1 flex items-center justify-center shrink-0">
+                            <img
+                              src={deviceImg}
+                              alt={q.modelName}
+                              className="w-full h-full object-contain"
+                            />
+                          </div>
+                          <div>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h4 className="font-extrabold text-base sm:text-lg text-slate-950 font-sans">
+                                {q.modelName}
+                              </h4>
+                              <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-800 text-[11px] font-sans font-bold border border-slate-200">
+                                {storageLabel}
+                              </span>
+                            </div>
+                            <p className="text-xs text-slate-500 mt-1 font-sans">
+                              Saved on {formatDateStr(q.createdAt)} • Ref: #{q.id.slice(-8).toUpperCase()}
+                            </p>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeSavedQuote(q.id);
+                            loadSavedQuotes();
+                          }}
+                          title="Remove saved quote"
+                          className="p-2 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 border border-transparent hover:border-red-200 transition-colors cursor-pointer"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      {/* Valuation & Price Recalculation Alert */}
+                      <div className="my-4 bg-slate-50 rounded-xl p-4 border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                        <div className="space-y-1.5">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-slate-500">
+                              Estimated Payout
+                            </span>
+                            {/* 7-Day Price Lock Status Badge */}
+                            <PriceLockCountdownBadge
+                              savedAt={q.savedAt || q.createdAt}
+                              isPriceLocked={q.isPriceLocked}
+                            />
+                            {q.appliedCoupon && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 border border-blue-200 text-blue-800 text-[10px] font-bold">
+                                <Tag className="w-3 h-3 text-blue-600 shrink-0" />
+                                Referral {q.appliedCoupon} {q.couponBonus ? `(+₹${q.couponBonus})` : ''}
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="flex items-baseline gap-3">
+                            <span className="text-2xl sm:text-3xl font-extrabold text-emerald-700 font-sans">
+                              {formatPrice(q.livePrice)}
+                            </span>
+                            {q.hasPriceChanged && !q.isPriceProtected && (
+                              <span className="text-xs text-slate-400 line-through font-sans">
+                                Was {formatPrice(q.originalPrice)}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Dynamic price update / price protection notification */}
+                          {q.isPriceProtected ? (
+                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-semibold font-sans">
+                              <ShieldCheck className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                              <span>7-Day Lock Guarantee: Market dropped to {formatPrice(q.currentPayout)}, but your {formatPrice(q.guaranteedPayout)} rate is locked &amp; guaranteed!</span>
+                            </div>
+                          ) : q.hasPriceChanged && q.priceDifference > 0 ? (
+                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-100/80 border border-emerald-300 text-emerald-800 text-xs font-bold font-sans">
+                              <TrendingUp className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                              <span>Live Catalog Update: +{formatPrice(q.priceDifference)} applied</span>
+                            </div>
+                          ) : (
+                            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-600 text-[11px] font-medium font-sans">
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                              <span>{q.isPriceLocked ? 'Guaranteed locked payout for 7 days' : 'Live catalog base rate active'}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="text-right sm:self-center">
+                          <span className="text-[10px] font-sans uppercase tracking-wider text-slate-400 block font-bold">
+                            Value Retention
+                          </span>
+                          <span className="text-xs sm:text-sm font-bold text-slate-800 font-sans">
+                            {q.retentionPercentage}% Retained
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Declared Condition Summary */}
+                      <div className="mb-4 text-xs">
+                        <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-slate-500 block mb-1.5">
+                          Audit Condition Declared
+                        </span>
+                        {q.selectedDefects.length === 0 ? (
+                          <div className="inline-flex items-center gap-1.5 text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2.5 py-1 rounded-md text-xs font-semibold">
+                            <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                            <span>No defects declared • Maximum payout tier applied</span>
+                          </div>
+                        ) : (
+                          <div className="flex flex-wrap gap-1.5">
+                            {q.selectedDefects.map((d, i) => (
+                              <span
+                                key={i}
+                                className="px-2.5 py-1 rounded-md bg-slate-100 border border-slate-200 text-slate-700 text-xs font-medium"
+                              >
+                                {d.description || 'Declared condition'}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Action buttons */}
+                      <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 pt-2 border-t border-slate-100">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (onResumeQuote) {
+                              onResumeQuote(q);
+                            } else {
+                              onNavigate('/');
+                            }
+                          }}
+                          className="flex-1 py-3 px-4 bg-cobalt hover:bg-cobalt-hover text-white rounded-xl font-bold text-xs sm:text-sm shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer group hover:scale-[1.01]"
+                        >
+                          <span>Resume &amp; Book Instant Doorstep Payout</span>
+                          <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+    </div>
+  );
+}
