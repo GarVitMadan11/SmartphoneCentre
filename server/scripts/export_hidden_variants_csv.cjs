@@ -5,7 +5,16 @@ const prisma = new PrismaClient();
 
 async function generateCSV() {
   const hiddenModels = await prisma.model.findMany({
-    where: { hidden: true },
+    where: {
+      hidden: true,
+      deviceType: 'smartphones',
+      brand: { name: { not: 'Apple' } },
+      NOT: [
+        { name: { contains: 'Tab', mode: 'insensitive' } },
+        { name: { contains: 'Watch', mode: 'insensitive' } },
+        { name: { contains: 'iPad', mode: 'insensitive' } }
+      ]
+    },
     include: { brand: true },
     orderBy: [
       { brand: { name: 'asc' } },
@@ -13,7 +22,7 @@ async function generateCSV() {
     ]
   });
 
-  console.log('Total hidden models fetched:', hiddenModels.length);
+  console.log('Total hidden 5G smartphones fetched:', hiddenModels.length);
 
   const cashifyFile = path.join(__dirname, '../data/cashify_custom_urls.json');
   const cashifyUrls = fs.existsSync(cashifyFile) ? JSON.parse(fs.readFileSync(cashifyFile, 'utf8')) : {};
