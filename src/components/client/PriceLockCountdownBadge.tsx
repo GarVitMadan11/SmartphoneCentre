@@ -98,3 +98,4 @@ export const PriceLockCountdownBadge: React.FC<PriceLockCountdownBadgeProps> = (
     </div>
   );
 };
+
