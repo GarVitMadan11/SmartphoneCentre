@@ -65,23 +65,47 @@ html {
 
   .dark-input,
   .dark-select,
-  .dark-textarea {
+  .dark-textarea,
+  [data-theme="dark"] input,
+  [data-theme="dark"] textarea,
+  [data-theme="dark"] select {
     color: #f8fafc !important;
     caret-color: #f8fafc !important;
     -webkit-text-fill-color: #f8fafc !important;
   }
 
-  input::placeholder,
-  textarea::placeholder {
+  .dark-input::placeholder,
+  .dark-textarea::placeholder,
+  [data-theme="dark"] input::placeholder,
+  [data-theme="dark"] textarea::placeholder {
+    color: #94a3b8 !important;
+    -webkit-text-fill-color: #94a3b8 !important;
+    opacity: 0.85;
+  }
+
+  input:not(.dark-input):not([data-theme="dark"] *)::placeholder,
+  textarea:not(.dark-textarea):not([data-theme="dark"] *)::placeholder {
     color: #74777f !important;
     -webkit-text-fill-color: #74777f !important;
     opacity: 0.85;
   }
 
   /* Autofill styling override for Chrome/Safari in dark mode */
-  input:-webkit-autofill,
-  input:-webkit-autofill:hover,
-  input:-webkit-autofill:focus,
+  .dark-input:-webkit-autofill,
+  .dark-input:-webkit-autofill:hover,
+  .dark-input:-webkit-autofill:focus,
+  [data-theme="dark"] input:-webkit-autofill,
+  [data-theme="dark"] input:-webkit-autofill:hover,
+  [data-theme="dark"] input:-webkit-autofill:focus {
+    -webkit-text-fill-color: #f8fafc !important;
+    -webkit-box-shadow: 0 0 0px 1000px #020617 inset !important;
+    box-shadow: 0 0 0px 1000px #020617 inset !important;
+    transition: background-color 5000s ease-in-out 0s;
+  }
+
+  input:not(.dark-input):not([data-theme="dark"] *):-webkit-autofill,
+  input:not(.dark-input):not([data-theme="dark"] *):-webkit-autofill:hover,
+  input:not(.dark-input):not([data-theme="dark"] *):-webkit-autofill:focus,
   textarea:-webkit-autofill,
   textarea:-webkit-autofill:hover,
   textarea:-webkit-autofill:focus,

@@ -122,7 +122,16 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
 
   // Granular Service-based Access Check
   const hasAccessTo = useCallback((serviceKey: string) => {
+    // If Super Admin (or in Super Admin preview), grant full access
     if (effectiveRole === 'SUPER_ADMIN') return true;
+
+    // Granular permissions assigned to this user always take highest priority
+    const perms = adminUser?.permissions;
+    if (Array.isArray(perms) && perms.length > 0) {
+      return perms.includes(serviceKey);
+    }
+
+    // Role-based defaults when no granular permissions array is present
     if (effectiveRole === 'CATALOG_EDITOR') {
       return ['smartphones', 'tablets', 'smartwatches', 'pricing', 'cashify'].includes(serviceKey);
     }
@@ -132,8 +141,7 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
     if (effectiveRole === 'FINANCE_APPROVER') {
       return ['finance', 'coupons'].includes(serviceKey);
     }
-    const perms = adminUser?.permissions || [];
-    return perms.includes(serviceKey);
+    return false;
   }, [effectiveRole, adminUser]);
 
   // Auto-switch navigation if current active item is prohibited by permissions
@@ -453,7 +461,7 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
           )}
 
           {/* Group D: Governance */}
-          {(effectiveRole === 'SUPER_ADMIN' || effectiveRole === 'CATALOG_EDITOR' || effectiveRole === 'FINANCE_APPROVER') && (
+          {(effectiveRole === 'SUPER_ADMIN' || (Array.isArray(adminUser?.permissions) && adminUser.permissions.includes('audit')) || (!adminUser?.permissions && (effectiveRole === 'CATALOG_EDITOR' || effectiveRole === 'FINANCE_APPROVER'))) && (
             <div>
               <div
                 className={`px-2.5 pb-1 text-[10px] font-mono font-bold tracking-wider uppercase text-slate-400 transition-all duration-200 overflow-hidden whitespace-nowrap ${isSidebarExpanded ? 'opacity-100 max-h-5' : 'opacity-0 max-h-0 pointer-events-none'
@@ -465,7 +473,7 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
                 {effectiveRole === 'SUPER_ADMIN' && (
                   <NavItem navKey="staff" label="Staff & Roles" icon={Users} />
                 )}
-                <NavItem navKey="audit" label="Audit Trail" icon={ShieldCheck} />
+                {hasAccessTo('audit') && <NavItem navKey="audit" label="Audit Trail" icon={ShieldCheck} />}
               </div>
             </div>
           )}

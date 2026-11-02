@@ -368,8 +368,11 @@ export default function App() {
       if (brandName === 'samsung') brandAliases.push('galaxy');
       if (brandName === 'google')  brandAliases.push('pixel');
       if (brandName === 'oneplus') brandAliases.push('1plus', 'nord');
-      if (brandName === 'xiaomi')  brandAliases.push('mi', 'redmi', 'poco');
-      if (brandName === 'vivo')    brandAliases.push('iqoo');
+      if (brandName === 'poco')    brandAliases.push('poco', 'pocophone');
+      if (brandName === 'redmi')   brandAliases.push('redmi', 'mi redmi');
+      if (brandName === 'iqoo')    brandAliases.push('iqoo', 'i-qoo');
+      if (brandName === 'xiaomi')  brandAliases.push('mi');
+      if (brandName === 'vivo')    brandAliases.push('vivo');
       return (
         fullText.includes(q) || modelName.includes(q) || seriesName.includes(q) ||
         brandAliases.some((a) => a.includes(q)) ||

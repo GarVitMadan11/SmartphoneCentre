@@ -545,6 +545,27 @@ const BRAND_ICON_MAP: Record<string, { icon: { path: string; viewBox?: string; h
 };
 
 export function BrandLogo({ logo, isActive }: { logo: string; isActive: boolean; compact?: boolean }) {
+  if (logo === 'poco' || logo === 'redmi' || logo === 'iqoo') {
+    let imgClass = 'w-auto object-contain transition-all duration-200';
+    if (logo === 'poco') {
+      imgClass += ' h-[11.5px] max-w-[38px]';
+    } else if (logo === 'redmi') {
+      imgClass += ' h-[10px] max-w-[44px]';
+    } else if (logo === 'iqoo') {
+      imgClass += ' h-[10px] max-w-[42px]';
+    }
+    return (
+      <div className="h-8 flex items-center justify-center overflow-visible" style={{ flexShrink: 0 }}>
+        <img
+          src={`/brand-logos/${logo}.svg`}
+          alt={logo}
+          className={`${imgClass} ${isActive ? 'brightness-0 invert' : ''}`}
+          loading="eager"
+        />
+      </div>
+    );
+  }
+
   if (logo === 'nothing') {
     // Full dot-matrix NOTHING wordmark
     const fillColor = isActive ? '#ffffff' : '#000000';
@@ -1008,10 +1029,16 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
         brandAliases.push('google', 'pixel');
       } else if (model.brandId === 'brand-oneplus' || brandName === 'oneplus') {
         brandAliases.push('oneplus', '1plus', 'nord');
+      } else if (model.brandId === 'brand-poco' || brandName === 'poco') {
+        brandAliases.push('poco', 'pocophone');
+      } else if (model.brandId === 'brand-redmi' || brandName === 'redmi') {
+        brandAliases.push('redmi', 'mi redmi');
+      } else if (model.brandId === 'brand-iqoo' || brandName === 'iqoo') {
+        brandAliases.push('iqoo', 'i-qoo');
       } else if (model.brandId === 'brand-xiaomi' || brandName === 'xiaomi') {
-        brandAliases.push('xiaomi', 'mi', 'redmi', 'poco');
+        brandAliases.push('xiaomi', 'mi');
       } else if (model.brandId === 'brand-vivo' || brandName === 'vivo') {
-        brandAliases.push('vivo', 'iqoo');
+        brandAliases.push('vivo');
       }
 
       const matchesSearch =

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldAlert, Lock, Eye, EyeOff, LogOut, AlertCircle, Clock, Key, ShieldX, Unlock, Mail } from 'lucide-react';
+import { ShieldAlert, Lock, Eye, EyeOff, LogOut, AlertCircle, Clock, ShieldX, Unlock, Mail, Key } from 'lucide-react';
 import { adminLogin, adminLogout, getCurrentAdminUser, fetchAdminSecurityStatus, unlockAdminPanel, AdminSecurityStatus } from '../../utils/api';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// AdminPinGate — server-authenticated PIN gate & Emergency Security Shield
+// AdminPinGate — server-authenticated credentials gate & Emergency Security Shield
 // ─────────────────────────────────────────────────────────────────────────────
 
 const MAX_LOCAL_ATTEMPTS = 5; // client-side guard (server also enforces 10/15min)
@@ -15,11 +15,9 @@ interface AdminPinGateProps {
 
 export const AdminPinGate: React.FC<AdminPinGateProps> = ({ children, onExit }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [authMode, setAuthMode] = useState<'pin' | 'user'>('user');
-  const [pin, setPin] = useState('');
   const [usernameInput, setUsernameInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
-  const [showPin, setShowPin] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [attempts, setAttempts] = useState(0);
@@ -83,19 +81,15 @@ export const AdminPinGate: React.FC<AdminPinGateProps> = ({ children, onExit }) 
     e.preventDefault();
     if (isLocked || isLoading) return;
 
-    if (authMode === 'pin' && pin.length < 4) return;
-    if (authMode === 'user' && (!usernameInput.trim() || !passwordInput.trim())) return;
+    if (!usernameInput.trim() || !passwordInput.trim()) return;
 
     setIsLoading(true);
     setError('');
 
     try {
-      const creds = authMode === 'pin'
-        ? { pin }
-        : { email: usernameInput.trim(), username: usernameInput.trim(), password: passwordInput.trim() };
+      const creds = { email: usernameInput.trim(), username: usernameInput.trim(), password: passwordInput.trim() };
 
       const session = await adminLogin(creds);
-      setPin('');
       setPasswordInput('');
       setAttempts(0);
       setIsAuthenticated(true);
@@ -131,7 +125,6 @@ export const AdminPinGate: React.FC<AdminPinGateProps> = ({ children, onExit }) 
   const handleSignOut = async () => {
     await adminLogout();
     setIsAuthenticated(false);
-    setPin('');
     setError('');
     setAttempts(0);
     setIsLocked(false);
@@ -285,38 +278,8 @@ export const AdminPinGate: React.FC<AdminPinGateProps> = ({ children, onExit }) 
           </div>
           <h2 className="text-2xl font-bold text-white tracking-tight font-sans">Admin Access</h2>
           <p className="text-xs text-slate-400 mt-1.5 text-center font-normal leading-relaxed max-w-xs">
-            {authMode === 'user'
-              ? 'Enter your company email and password to access administrative controls.'
-              : 'Enter your 4 to 8-digit master PIN to authenticate and unlock panel.'}
+            Enter your company email and password to access administrative controls.
           </p>
-        </div>
-
-        {/* Segmented Auth Mode Switcher */}
-        <div className="flex p-1 bg-slate-950/70 border border-slate-800 rounded-xl mb-6">
-          <button
-            type="button"
-            onClick={() => { setAuthMode('user'); setError(''); }}
-            className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-              authMode === 'user'
-                ? 'bg-blue-600 text-white shadow-sm font-bold'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Mail className="w-3.5 h-3.5" />
-            <span>Email & Password</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => { setAuthMode('pin'); setError(''); }}
-            className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-              authMode === 'pin'
-                ? 'bg-blue-600 text-white shadow-sm font-bold'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Key className="w-3.5 h-3.5" />
-            <span>Master PIN</span>
-          </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4" noValidate>
@@ -331,106 +294,54 @@ export const AdminPinGate: React.FC<AdminPinGateProps> = ({ children, onExit }) 
             </div>
           )}
 
-          {authMode === 'user' ? (
-            <div className="space-y-3.5">
-              <div>
-                <label className="text-xs font-semibold text-slate-300 block mb-1.5 font-mono">
-                  Company Email
-                </label>
-                <div className="relative">
-                  <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  <input
-                    type="email"
-                    value={usernameInput}
-                    onChange={e => setUsernameInput(e.target.value)}
-                    placeholder="partner@rephonix.in or admin"
-                    disabled={isLocked || isLoading}
-                    autoFocus
-                    className="w-full pl-10 pr-4 py-2.5 bg-slate-950/80 border border-slate-700/80 rounded-xl text-white placeholder:text-slate-500 text-xs sm:text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-inner"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-slate-300 block mb-1.5 font-mono">
-                  Password
-                </label>
-                <div className="relative">
-                  <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  <input
-                    type={showPin ? 'text' : 'password'}
-                    value={passwordInput}
-                    onChange={e => setPasswordInput(e.target.value)}
-                    placeholder="Enter account password"
-                    disabled={isLocked || isLoading}
-                    className="w-full pl-10 pr-10 py-2.5 bg-slate-950/80 border border-slate-700/80 rounded-xl text-white placeholder:text-slate-500 text-xs sm:text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-inner"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPin(v => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white p-1 transition-colors cursor-pointer"
-                  >
-                    {showPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
+          <div className="space-y-3.5">
+            <div>
+              <label className="text-xs font-semibold text-slate-300 block mb-1.5 font-mono">
+                Company Email
+              </label>
+              <div className="relative">
+                <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="email"
+                  value={usernameInput}
+                  onChange={e => setUsernameInput(e.target.value)}
+                  placeholder="partner@rephonix.in or admin"
+                  disabled={isLocked || isLoading}
+                  autoFocus
+                  className="dark-input w-full pl-10 pr-4 py-2.5 bg-slate-950/80 border border-slate-700/80 rounded-xl text-white placeholder:text-slate-400 text-xs sm:text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-inner"
+                />
               </div>
             </div>
-          ) : (
             <div>
-              <label htmlFor="admin-pin-input" className="text-xs font-semibold text-slate-300 block mb-1.5 font-mono">
-                Admin Master PIN
+              <label className="text-xs font-semibold text-slate-300 block mb-1.5 font-mono">
+                Password
               </label>
               <div className="relative">
                 <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
-                  id="admin-pin-input"
-                  type={showPin ? 'text' : 'password'}
-                  inputMode="numeric"
-                  value={pin}
-                  onChange={e => {
-                    setPin(e.target.value.replace(/\D/g, '').slice(0, 8));
-                    if (error) setError('');
-                  }}
-                  placeholder="Enter 4 to 8-digit PIN"
+                  type={showPassword ? 'text' : 'password'}
+                  value={passwordInput}
+                  onChange={e => setPasswordInput(e.target.value)}
+                  placeholder="Enter account password"
                   disabled={isLocked || isLoading}
-                  autoFocus
-                  autoComplete="current-password"
-                  className={`w-full pl-10 pr-10 py-3 rounded-xl border bg-slate-950/80 text-white placeholder:text-slate-500 text-sm font-mono tracking-[0.25em] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-inner ${
-                    isLocked || isLoading ? 'opacity-50 cursor-not-allowed border-red-500/50' :
-                    error ? 'border-red-400' : 'border-slate-700/80'
-                  }`}
-                  style={{ minHeight: '48px' }}
+                  className="dark-input w-full pl-10 pr-10 py-2.5 bg-slate-950/80 border border-slate-700/80 rounded-xl text-white placeholder:text-slate-400 text-xs sm:text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-inner"
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPin(v => !v)}
-                  disabled={isLocked || isLoading}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors p-1 cursor-pointer"
-                  aria-label={showPin ? 'Hide PIN' : 'Show PIN'}
-                  tabIndex={-1}
+                  onClick={() => setShowPassword(v => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white p-1 transition-colors cursor-pointer"
                 >
-                  {showPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-
-              {/* Attempt dots */}
-              {attempts > 0 && !isLocked && (
-                <div className="mt-3 flex gap-1.5 justify-center" aria-hidden="true">
-                  {Array.from({ length: MAX_LOCAL_ATTEMPTS }).map((_, i) => (
-                    <div
-                      key={i}
-                      className={`w-2 h-2 rounded-full transition-colors ${i < attempts ? 'bg-red-500 shadow-sm shadow-red-500/50' : 'bg-slate-700'}`}
-                    />
-                  ))}
-                </div>
-              )}
             </div>
-          )}
+          </div>
 
           <button
             type="submit"
-            disabled={(authMode === 'pin' && pin.length < 4) || (authMode === 'user' && (!usernameInput.trim() || !passwordInput.trim())) || isLocked || isLoading}
+            disabled={!usernameInput.trim() || !passwordInput.trim() || isLocked || isLoading}
             className={`w-full py-3.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg ${
-              ((authMode === 'pin' && pin.length < 4) || (authMode === 'user' && (!usernameInput.trim() || !passwordInput.trim())) || isLocked || isLoading)
+              (!usernameInput.trim() || !passwordInput.trim() || isLocked || isLoading)
                 ? 'bg-slate-800 text-slate-500 cursor-not-allowed shadow-none'
                 : 'bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-blue-600/30 active:scale-[0.99] cursor-pointer'
             }`}

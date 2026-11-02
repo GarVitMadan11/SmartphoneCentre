@@ -26,11 +26,23 @@ export const DEFAULT_SERIES_ORDER: Record<string, string[]> = {
   ],
   'brand-xiaomi': [
     'Xiaomi Series',
-    'Redmi Note Series',
-    'Redmi Series',
+    'Civi Series'
+  ],
+  'brand-poco': [
     'POCO F Series',
     'POCO X Series',
-    'POCO M Series'
+    'POCO M Series',
+    'POCO C Series'
+  ],
+  'brand-redmi': [
+    'Redmi Note Series',
+    'Redmi K & Turbo Series',
+    'Redmi Series'
+  ],
+  'brand-iqoo': [
+    'iQOO Number Series',
+    'iQOO Neo Series',
+    'iQOO Z Series'
   ],
   'brand-vivo': [
     'X Series & Folds',
@@ -296,6 +308,9 @@ export const DEFAULT_BRAND_ORDER: string[] = [
   'brand-google',
   'brand-oneplus',
   'brand-xiaomi',
+  'brand-poco',
+  'brand-redmi',
+  'brand-iqoo',
   'brand-vivo',
   'brand-oppo',
   'brand-nothing',

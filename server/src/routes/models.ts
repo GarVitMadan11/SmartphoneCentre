@@ -11,8 +11,11 @@ export function inferBrandId(legacyId: string, explicit?: string): string {
   if (legacyId.startsWith('apple-') || legacyId.startsWith('iphone-')) return 'brand-apple';
   if (legacyId.startsWith('sam-') || legacyId.startsWith('samsung-')) return 'brand-samsung';
   if (legacyId.startsWith('op-') || legacyId.startsWith('oneplus-')) return 'brand-oneplus';
+  if (legacyId.startsWith('iqoo-') || legacyId.includes('-iqoo-')) return 'brand-iqoo';
+  if (legacyId.startsWith('poco-') || legacyId.includes('-poco-') || legacyId.startsWith('xi-poc')) return 'brand-poco';
+  if (legacyId.startsWith('redmi-') || legacyId.includes('-redmi-') || legacyId.startsWith('xi-n') || legacyId.startsWith('xi-red')) return 'brand-redmi';
   if (legacyId.startsWith('vi-') || legacyId.startsWith('vivo-')) return 'brand-vivo';
-  if (legacyId.startsWith('xi-') || legacyId.startsWith('xiaomi-') || legacyId.startsWith('redmi-') || legacyId.startsWith('poco-')) return 'brand-xiaomi';
+  if (legacyId.startsWith('xi-') || legacyId.startsWith('xiaomi-')) return 'brand-xiaomi';
   return 'brand-apple';
 }
 
@@ -76,14 +79,18 @@ router.get('/', async (req, res) => {
       try { parsedVariantPrices = JSON.parse((m as any).variantPrices ?? '{}'); } catch { parsedVariantPrices = {}; }
 
       let resolvedSeries = m.series || '';
-      if (m.brandId === 'brand-xiaomi') {
+      if (m.brandId === 'brand-xiaomi' || m.brandId === 'brand-poco' || m.brandId === 'brand-redmi' || m.brandId === 'brand-iqoo') {
         const lower = m.name.toLowerCase();
         if (lower.includes('poco f')) resolvedSeries = 'POCO F Series';
         else if (lower.includes('poco x')) resolvedSeries = 'POCO X Series';
         else if (lower.includes('poco m')) resolvedSeries = 'POCO M Series';
         else if (lower.includes('poco c')) resolvedSeries = 'POCO C Series';
         else if (lower.includes('redmi note')) resolvedSeries = 'Redmi Note Series';
+        else if (lower.includes('redmi k') || lower.includes('turbo')) resolvedSeries = 'Redmi K & Turbo Series';
         else if (lower.includes('redmi')) resolvedSeries = 'Redmi Series';
+        else if (lower.includes('iqoo neo')) resolvedSeries = 'iQOO Neo Series';
+        else if (lower.includes('iqoo z')) resolvedSeries = 'iQOO Z Series';
+        else if (lower.includes('iqoo')) resolvedSeries = 'iQOO Number Series';
         else if (lower.includes('xiaomi') || lower.includes('mi')) resolvedSeries = 'Xiaomi Series';
       }
 

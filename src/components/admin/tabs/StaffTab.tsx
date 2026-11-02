@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Users, UserPlus, Shield, Check, X, AlertCircle, RefreshCw, 
   Trash2, Key, CheckCircle2, Lock, Mail, Smartphone, 
-  Tablet, Watch, Zap, Truck, MessageSquare, CreditCard, ShieldCheck 
+  Tablet, Watch, Zap, Truck, MessageSquare, CreditCard, ShieldCheck, DollarSign 
 } from 'lucide-react';
 import { 
   fetchAdminStaff, createAdminStaff, updateAdminStaff, deleteAdminStaff, 
@@ -13,6 +13,7 @@ export const SERVICE_DEFINITIONS = [
   { key: 'smartphones', label: 'Smartphones Catalog', icon: Smartphone, group: 'Catalog & Inventory' },
   { key: 'tablets', label: 'Tablets Catalog', icon: Tablet, group: 'Catalog & Inventory' },
   { key: 'smartwatches', label: 'Smartwatches Catalog', icon: Watch, group: 'Catalog & Inventory' },
+  { key: 'pricing', label: 'Price Matrix & Valuation', icon: DollarSign, group: 'Catalog & Valuation' },
   { key: 'cashify', label: 'Cashify Market Monitor', icon: Zap, group: 'Market Intelligence' },
   { key: 'inspections', label: 'Doorstep Inspections', icon: Truck, group: 'Field Operations' },
   { key: 'support', label: 'Customer Support Desk', icon: MessageSquare, group: 'Customer Operations' },
@@ -465,7 +466,7 @@ export const StaffTab: React.FC = () => {
                     } else if (r === 'OPERATIONS_AGENT') {
                       setNewPermissions(['inspections', 'support']);
                     } else if (r === 'CATALOG_EDITOR') {
-                      setNewPermissions(['smartphones', 'tablets', 'smartwatches', 'cashify']);
+                      setNewPermissions(['smartphones', 'tablets', 'smartwatches', 'pricing', 'cashify']);
                     } else if (r === 'FINANCE_APPROVER') {
                       setNewPermissions(['finance']);
                     }
