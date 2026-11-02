@@ -291,3 +291,4 @@ async function verifyAndFixHiddenCashifyUrls() {
 verifyAndFixHiddenCashifyUrls()
   .catch(console.error)
   .finally(() => prisma.$disconnect());
+

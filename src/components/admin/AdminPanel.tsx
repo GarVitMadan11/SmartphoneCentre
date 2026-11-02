@@ -3,7 +3,7 @@ import { Booking, Brand, Model } from '../../data/mockDatabase';
 import {
   ArrowLeft, RefreshCw, ShieldAlert, Smartphone, Tablet, Watch,
   Zap, Truck, MessageSquare, CreditCard, ChevronLeft, ChevronRight, ChevronDown,
-  Menu, X, ShieldCheck, Eye, Layers, Users, Tag, User
+  Menu, X, ShieldCheck, Eye, Layers, Users, Tag, User, DollarSign
 } from 'lucide-react';
 import { fetchBookings, triggerAdminLockdown, fetchCurrentUser, getCurrentAdminUser, AdminUserSession, ApiUser } from '../../utils/api';
 import { AdminContextProvider } from '../../context/AdminContext';
@@ -14,11 +14,13 @@ import SupportTab from './tabs/SupportTab';
 import AuditLogTab from './tabs/AuditLogTab';
 import StaffTab from './tabs/StaffTab';
 import { CouponsTab } from './tabs/CouponsTab';
+import PriceMatrixTab from './tabs/PriceMatrixTab';
 
 export type AdminNavKey =
   | 'smartphones'
   | 'tablets'
   | 'smartwatches'
+  | 'pricing'
   | 'cashify'
   | 'inspections'
   | 'support'
@@ -122,7 +124,7 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
   const hasAccessTo = useCallback((serviceKey: string) => {
     if (effectiveRole === 'SUPER_ADMIN') return true;
     if (effectiveRole === 'CATALOG_EDITOR') {
-      return ['smartphones', 'tablets', 'smartwatches', 'cashify'].includes(serviceKey);
+      return ['smartphones', 'tablets', 'smartwatches', 'pricing', 'cashify'].includes(serviceKey);
     }
     if (effectiveRole === 'OPERATIONS_AGENT') {
       return ['inspections', 'support'].includes(serviceKey);
@@ -138,7 +140,7 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
   useEffect(() => {
     if (effectiveRole === 'SUPER_ADMIN') return;
     if (!hasAccessTo(activeNav)) {
-      const allServices: AdminNavKey[] = ['smartphones', 'tablets', 'smartwatches', 'cashify', 'inspections', 'support', 'finance'];
+      const allServices: AdminNavKey[] = ['smartphones', 'tablets', 'smartwatches', 'pricing', 'cashify', 'inspections', 'support', 'finance'];
       const firstAllowed = allServices.find(s => hasAccessTo(s));
       if (firstAllowed) {
         setActiveNav(firstAllowed);
@@ -215,6 +217,8 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
         return { section: 'Inventory & Pricing', title: 'Tablets Catalog', icon: Tablet };
       case 'smartwatches':
         return { section: 'Inventory & Pricing', title: 'Smartwatches Catalog', icon: Watch };
+      case 'pricing':
+        return { section: 'Inventory & Valuation', title: 'Price Matrix & Valuation Editor', icon: DollarSign };
       case 'cashify':
         return { section: 'Market Intelligence', title: 'Cashify Parity Monitor', icon: Zap };
       case 'inspections':
@@ -360,7 +364,7 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
         <div className="flex-1 min-h-0 overflow-y-auto px-2.5 py-3 space-y-3.5 scrollbar-thin">
 
           {/* Group A: Catalog */}
-          {(hasAccessTo('smartphones') || hasAccessTo('tablets') || hasAccessTo('smartwatches') || hasAccessTo('cashify')) && (
+          {(hasAccessTo('smartphones') || hasAccessTo('tablets') || hasAccessTo('smartwatches') || hasAccessTo('pricing') || hasAccessTo('cashify')) && (
             <div>
               <div
                 className={`px-2.5 pb-1 text-[10px] font-mono font-bold tracking-wider uppercase text-slate-400 transition-all duration-200 overflow-hidden whitespace-nowrap ${isSidebarExpanded ? 'opacity-100 max-h-5' : 'opacity-0 max-h-0 pointer-events-none'
@@ -372,6 +376,15 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
                 {hasAccessTo('smartphones') && <NavItem navKey="smartphones" label="Smartphones" icon={Smartphone} />}
                 {hasAccessTo('tablets') && <NavItem navKey="tablets" label="Tablets" icon={Tablet} />}
                 {hasAccessTo('smartwatches') && <NavItem navKey="smartwatches" label="Smartwatches" icon={Watch} />}
+                {hasAccessTo('pricing') && (
+                  <NavItem
+                    navKey="pricing"
+                    label="Price Matrix"
+                    icon={DollarSign}
+                    badge="Fast Edit"
+                    badgeColor="bg-emerald-500/20 text-emerald-300"
+                  />
+                )}
                 {hasAccessTo('cashify') && (
                   <NavItem
                     navKey="cashify"
@@ -650,6 +663,14 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
           {activeNav === 'smartwatches' && (
             <CatalogTab
               category="smartwatches"
+              brands={brands}
+              onRefresh={onRefreshCatalog}
+            />
+          )}
+
+          {/* Hierarchical Price Matrix: Brand -> Series -> Variant -> Price */}
+          {activeNav === 'pricing' && (
+            <PriceMatrixTab
               brands={brands}
               onRefresh={onRefreshCatalog}
             />
