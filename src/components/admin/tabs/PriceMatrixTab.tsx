@@ -403,9 +403,6 @@ export const PriceMatrixTab: React.FC<PriceMatrixTabProps> = ({ brands, onRefres
                   Direct Valuation Control
                 </span>
               </div>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Hierarchical view: <span className="font-semibold text-slate-700">Brand ➔ Series ➔ Variant (Storage &amp; RAM) ➔ Price</span>. Click any price to edit directly.
-              </p>
             </div>
           </div>
         </div>

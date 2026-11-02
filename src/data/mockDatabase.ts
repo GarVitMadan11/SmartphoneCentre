@@ -1174,6 +1174,7 @@ export const BRANDS: Brand[] = [
   { id: 'brand-oppo', name: 'OPPO', logo: 'oppo' },
   { id: 'brand-nothing', name: 'Nothing', logo: 'nothing' },
   { id: 'brand-motorola', name: 'Motorola', logo: 'motorola' },
+  { id: 'brand-realme', name: 'Realme', logo: 'realme' },
 ];
 
 const catalogId = (brandId: string, name: string) => {

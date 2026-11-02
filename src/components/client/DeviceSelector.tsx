@@ -545,7 +545,7 @@ const BRAND_ICON_MAP: Record<string, { icon: { path: string; viewBox?: string; h
 };
 
 export function BrandLogo({ logo, isActive }: { logo: string; isActive: boolean; compact?: boolean }) {
-  if (logo === 'poco' || logo === 'redmi' || logo === 'iqoo') {
+  if (logo === 'poco' || logo === 'redmi' || logo === 'iqoo' || logo === 'realme') {
     let imgClass = 'w-auto object-contain transition-all duration-200';
     if (logo === 'poco') {
       imgClass += ' h-[11.5px] max-w-[38px]';
@@ -553,6 +553,8 @@ export function BrandLogo({ logo, isActive }: { logo: string; isActive: boolean;
       imgClass += ' h-[10px] max-w-[44px]';
     } else if (logo === 'iqoo') {
       imgClass += ' h-[10px] max-w-[42px]';
+    } else if (logo === 'realme') {
+      imgClass += ' h-[11px] max-w-[46px]';
     }
     return (
       <div className="h-8 flex items-center justify-center overflow-visible" style={{ flexShrink: 0 }}>

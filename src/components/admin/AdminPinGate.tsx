@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldAlert, Lock, Eye, EyeOff, LogOut, AlertCircle, Clock, ShieldX, Unlock, Mail, Key } from 'lucide-react';
-import { adminLogin, adminLogout, getCurrentAdminUser, fetchAdminSecurityStatus, unlockAdminPanel, AdminSecurityStatus } from '../../utils/api';
+import { ShieldAlert, Lock, Eye, EyeOff, AlertCircle, ShieldX, Unlock, Mail, Key } from 'lucide-react';
+import { adminLogin, getCurrentAdminUser, fetchAdminSecurityStatus, unlockAdminPanel, AdminSecurityStatus } from '../../utils/api';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // AdminPinGate — server-authenticated credentials gate & Emergency Security Shield
@@ -22,7 +22,6 @@ export const AdminPinGate: React.FC<AdminPinGateProps> = ({ children, onExit }) 
   const [isLoading, setIsLoading] = useState(false);
   const [attempts, setAttempts] = useState(0);
   const [isLocked, setIsLocked] = useState(false);
-  const [sessionExpiry, setSessionExpiry] = useState<number | null>(null);
 
   // Security Lockdown Shield States
   const [securityStatus, setSecurityStatus] = useState<AdminSecurityStatus>({ isLockedDown: false });
@@ -59,12 +58,6 @@ export const AdminPinGate: React.FC<AdminPinGateProps> = ({ children, onExit }) 
     }
   };
 
-  // Countdown display for session expiry
-  useEffect(() => {
-    if (!isAuthenticated) return;
-    setSessionExpiry(null);
-  }, [isAuthenticated]);
-
   // Close / Exit on Escape key when unauthenticated
   useEffect(() => {
     if (isAuthenticated) return;
@@ -89,11 +82,10 @@ export const AdminPinGate: React.FC<AdminPinGateProps> = ({ children, onExit }) 
     try {
       const creds = { email: usernameInput.trim(), username: usernameInput.trim(), password: passwordInput.trim() };
 
-      const session = await adminLogin(creds);
+      await adminLogin(creds);
       setPasswordInput('');
       setAttempts(0);
       setIsAuthenticated(true);
-      setSessionExpiry(session.expiresAt);
     } catch (err: unknown) {
       const message = (err as Error).message ?? '';
       if (message.includes('suspended') || message.includes('Lockdown')) {
@@ -122,22 +114,7 @@ export const AdminPinGate: React.FC<AdminPinGateProps> = ({ children, onExit }) 
     }
   };
 
-  const handleSignOut = async () => {
-    await adminLogout();
-    setIsAuthenticated(false);
-    setError('');
-    setAttempts(0);
-    setIsLocked(false);
-    setSessionExpiry(null);
-    onExit();
-  };
 
-  const formatExpiry = (ts: number) => {
-    const mins = Math.max(0, Math.round((ts - Date.now()) / 60000));
-    if (mins <= 0) return 'Expiring soon';
-    if (mins < 60) return `~${mins}m remaining`;
-    return `~${Math.round(mins / 60)}h remaining`;
-  };
 
   // RENDER 1: Emergency Security Shield (when locked down)
   if (securityStatus.isLockedDown) {
@@ -231,26 +208,6 @@ export const AdminPinGate: React.FC<AdminPinGateProps> = ({ children, onExit }) 
   if (isAuthenticated) {
     return (
       <div className="w-full h-screen flex flex-col overflow-hidden bg-slate-950">
-        {/* Slim top Admin session banner */}
-        <div className="flex items-center justify-between px-4 py-1.5 bg-slate-900 border-b border-slate-800 text-xs font-mono flex-shrink-0 z-40">
-          <span className="flex items-center gap-2 text-amber-400">
-            <ShieldAlert className="w-3.5 h-3.5" />
-            <span>Admin session active — JWT authenticated</span>
-            {sessionExpiry && (
-              <span className="flex items-center gap-1 text-slate-400 ml-2">
-                <Clock className="w-3 h-3" />
-                <span>Expires: {formatExpiry(sessionExpiry)}</span>
-              </span>
-            )}
-          </span>
-          <button
-            onClick={handleSignOut}
-            className="flex items-center gap-1.5 text-amber-400 hover:text-amber-300 font-bold transition-colors cursor-pointer"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            Sign Out
-          </button>
-        </div>
         <div className="flex-1 w-full min-h-0 overflow-hidden">
           {children}
         </div>

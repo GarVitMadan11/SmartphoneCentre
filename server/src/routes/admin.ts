@@ -52,6 +52,10 @@ router.post('/unlock', authLimiter, async (req: Request, res: Response): Promise
  * Emergency Kill Switch: Immediately locks down Admin Panel access.
  */
 router.post('/lockdown', adminAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  if (req.user?.role !== 'SUPER_ADMIN') {
+    res.status(403).json({ error: 'Forbidden', message: 'Only Super Admins can trigger emergency platform lockdown.' });
+    return;
+  }
   const reason = (req.body.reason as string) || 'Manual emergency kill switch triggered from Admin Control Panel.';
   const ipAddress = String(req.headers['x-forwarded-for'] || req.ip || 'Unknown');
   const userAgent = String(req.headers['user-agent'] || 'Unknown');
@@ -230,6 +234,17 @@ router.post('/auth', authLimiter, async (req: Request, res: Response): Promise<v
     await prisma.adminUser.update({
       where: { id: user.id },
       data: { failedLoginAttempts: 0, lockedUntil: null, lastLoginAt: now },
+    });
+
+    // Log successful login audit trail
+    await logAdminAudit({
+      adminUserId: user.id,
+      action: 'login_success',
+      targetType: 'adminUser',
+      targetId: user.email,
+      payload: { role: user.role, email: user.email, ipAddress },
+      ipAddress,
+      userAgent,
     });
 
     sub = user.id;
@@ -608,11 +623,11 @@ router.post('/staff', adminAuth, requireRole(['SUPER_ADMIN']), async (req: Authe
     }
 
     const cleanEmail = String(email).trim().toLowerCase();
-    const cleanUsername = String(username).trim().toLowerCase();
+    const cleanUsername = String(username).trim();
 
     const existing = await prisma.adminUser.findFirst({
       where: {
-        OR: [{ email: cleanEmail }, { username: cleanUsername }],
+        OR: [{ email: cleanEmail }, { username: { equals: cleanUsername, mode: "insensitive" } }],
       },
     });
 

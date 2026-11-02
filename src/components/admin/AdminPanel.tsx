@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Booking, Brand, Model } from '../../data/mockDatabase';
 import {
-  ArrowLeft, RefreshCw, ShieldAlert, Smartphone, Tablet, Watch,
+  ArrowLeft, RefreshCw, ShieldAlert, Smartphone, Tablet, Watch, LogOut,
   Zap, Truck, MessageSquare, CreditCard, ChevronLeft, ChevronRight, ChevronDown,
   Menu, X, ShieldCheck, Eye, Layers, Users, Tag, User, DollarSign
 } from 'lucide-react';
-import { fetchBookings, triggerAdminLockdown, fetchCurrentUser, getCurrentAdminUser, AdminUserSession, ApiUser } from '../../utils/api';
+import { fetchBookings, triggerAdminLockdown, fetchCurrentUser, getCurrentAdminUser, adminLogout, AdminUserSession, ApiUser } from '../../utils/api';
 import { AdminContextProvider } from '../../context/AdminContext';
 import CatalogTab from './tabs/CatalogTab';
 import CashifyMonitorTab from './tabs/CashifyMonitorTab';
@@ -47,7 +47,6 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
   const [currentUser, setCurrentUser] = useState<ApiUser | null>(null);
   const [bookings, setBookings] = useState<Booking[]>(initialBookings);
   const [loadingBookings, setLoadingBookings] = useState(false);
-  const [isApiOffline, setIsApiOffline] = useState(false);
 
   // Modern Navigation & Layout State
   const [activeNav, setActiveNav] = useState<AdminNavKey>('smartphones');
@@ -82,6 +81,7 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
   }, []);
 
   const [adminUser, setAdminUser] = useState<AdminUserSession | null>(null);
+  const [loadingUserPrivileges, setLoadingUserPrivileges] = useState(true);
 
   // Super Admin Role Preview Mode
   const [previewRole, setPreviewRole] = useState<'SUPER_ADMIN' | 'CATALOG_EDITOR' | 'OPERATIONS_AGENT' | 'FINANCE_APPROVER'>('SUPER_ADMIN');
@@ -109,12 +109,27 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
   const activeRoleOption = roleOptions.find(o => o.key === previewRole) || roleOptions[0];
 
   useEffect(() => {
-    getCurrentAdminUser().then(u => {
-      setAdminUser(u);
-    }).catch(() => setAdminUser(null));
-    fetchCurrentUser().then(res => {
-      setCurrentUser(res.user);
-    }).catch(() => setCurrentUser(null));
+    Promise.all([
+      getCurrentAdminUser().catch(() => null),
+      fetchCurrentUser().catch(() => null)
+    ]).then(([u, res]) => {
+      if (u) {
+        setAdminUser(u);
+        const perms = u.permissions;
+        if (u.role !== 'SUPER_ADMIN' && Array.isArray(perms) && perms.length > 0) {
+          const allServices: AdminNavKey[] = ['smartphones', 'tablets', 'smartwatches', 'pricing', 'cashify', 'inspections', 'support', 'finance'];
+          const firstAllowed = allServices.find(s => perms.includes(s));
+          if (firstAllowed) {
+            setActiveNav(firstAllowed);
+          }
+        }
+      }
+      if (res && res.user) {
+        setCurrentUser(res.user);
+      }
+    }).finally(() => {
+      setLoadingUserPrivileges(false);
+    });
   }, []);
 
   const realRole = adminUser?.role ?? (currentUser?.role as any) ?? 'SUPER_ADMIN';
@@ -167,7 +182,6 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
       const data = await fetchBookings();
       if (data && Array.isArray(data)) {
         setBookings(data as unknown as Booking[]);
-        setIsApiOffline(false);
       }
     } catch (err) {
       console.error('Failed to load bookings:', err);
@@ -189,6 +203,15 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
     if (!window.confirm('Reset all bookings ledger state to defaults?')) return;
     setBookings(initialBookings);
     if (onRefreshBookings) onRefreshBookings(initialBookings);
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await adminLogout();
+    } catch {
+      // ignore
+    }
+    onBack();
   };
 
   const handleLockdown = async () => {
@@ -370,112 +393,118 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
 
         {/* Navigation Links Grouped by Domain (Clean Flex-1 with zero clipping) */}
         <div className="flex-1 min-h-0 overflow-y-auto px-2.5 py-3 space-y-3.5 scrollbar-thin">
-
-          {/* Group A: Catalog */}
-          {(hasAccessTo('smartphones') || hasAccessTo('tablets') || hasAccessTo('smartwatches') || hasAccessTo('pricing') || hasAccessTo('cashify')) && (
-            <div>
-              <div
-                className={`px-2.5 pb-1 text-[10px] font-mono font-bold tracking-wider uppercase text-slate-400 transition-all duration-200 overflow-hidden whitespace-nowrap ${isSidebarExpanded ? 'opacity-100 max-h-5' : 'opacity-0 max-h-0 pointer-events-none'
-                  }`}
-              >
-                Catalog & Valuation
-              </div>
-              <div className="space-y-0.5">
-                {hasAccessTo('smartphones') && <NavItem navKey="smartphones" label="Smartphones" icon={Smartphone} />}
-                {hasAccessTo('tablets') && <NavItem navKey="tablets" label="Tablets" icon={Tablet} />}
-                {hasAccessTo('smartwatches') && <NavItem navKey="smartwatches" label="Smartwatches" icon={Watch} />}
-                {hasAccessTo('pricing') && (
-                  <NavItem
-                    navKey="pricing"
-                    label="Price Matrix"
-                    icon={DollarSign}
-                    badge="Fast Edit"
-                    badgeColor="bg-emerald-500/20 text-emerald-300"
-                  />
-                )}
-                {hasAccessTo('cashify') && (
-                  <NavItem
-                    navKey="cashify"
-                    label="Cashify Monitor"
-                    icon={Zap}
-                    badge="Live"
-                    badgeColor="bg-amber-400/20 text-amber-300"
-                  />
-                )}
-              </div>
+          {loadingUserPrivileges ? (
+            <div className="py-8 flex flex-col items-center justify-center space-y-2.5 opacity-70">
+              <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+              {isSidebarExpanded && (
+                <span className="text-[10px] font-mono text-slate-400">Verifying access…</span>
+              )}
             </div>
-          )}
+          ) : (
+            <>
+              {/* Group A: Catalog */}
+              {(hasAccessTo('smartphones') || hasAccessTo('tablets') || hasAccessTo('smartwatches') || hasAccessTo('pricing') || hasAccessTo('cashify')) && (
+                <div>
+                  <div
+                    className={`px-2.5 pb-1 text-[10px] font-mono font-bold tracking-wider uppercase text-slate-400 transition-all duration-200 overflow-hidden whitespace-nowrap ${isSidebarExpanded ? 'opacity-100 max-h-5' : 'opacity-0 max-h-0 pointer-events-none'
+                      }`}
+                  >
+                    Catalog & Valuation
+                  </div>
+                  <div className="space-y-0.5">
+                    {hasAccessTo('smartphones') && <NavItem navKey="smartphones" label="Smartphones" icon={Smartphone} />}
+                    {hasAccessTo('tablets') && <NavItem navKey="tablets" label="Tablets" icon={Tablet} />}
+                    {hasAccessTo('smartwatches') && <NavItem navKey="smartwatches" label="Smartwatches" icon={Watch} />}
+                    {hasAccessTo('pricing') && (
+                      <NavItem
+                        navKey="pricing"
+                        label="Price Matrix"
+                        icon={DollarSign}
+                      />
+                    )}
+                    {hasAccessTo('cashify') && (
+                      <NavItem
+                        navKey="cashify"
+                        label="Cashify Monitor"
+                        icon={Zap}
+                      />
+                    )}
+                  </div>
+                </div>
+              )}
 
-          {/* Group B: Operations */}
-          {(hasAccessTo('inspections') || hasAccessTo('support')) && (
-            <div>
-              <div
-                className={`px-2.5 pb-1 text-[10px] font-mono font-bold tracking-wider uppercase text-slate-400 transition-all duration-200 overflow-hidden whitespace-nowrap ${isSidebarExpanded ? 'opacity-100 max-h-5' : 'opacity-0 max-h-0 pointer-events-none'
-                  }`}
-              >
-                Operations
-              </div>
-              <div className="space-y-0.5">
-                {hasAccessTo('inspections') && (
-                  <NavItem
-                    navKey="inspections"
-                    label="Doorstep Pickups"
-                    icon={Truck}
-                    badge={pendingInspections > 0 ? pendingInspections : undefined}
-                    badgeColor="bg-blue-500/20 text-blue-300"
-                  />
-                )}
-                {hasAccessTo('support') && <NavItem navKey="support" label="Support Desk" icon={MessageSquare} />}
-              </div>
-            </div>
-          )}
+              {/* Group B: Operations */}
+              {(hasAccessTo('inspections') || hasAccessTo('support')) && (
+                <div>
+                  <div
+                    className={`px-2.5 pb-1 text-[10px] font-mono font-bold tracking-wider uppercase text-slate-400 transition-all duration-200 overflow-hidden whitespace-nowrap ${isSidebarExpanded ? 'opacity-100 max-h-5' : 'opacity-0 max-h-0 pointer-events-none'
+                      }`}
+                  >
+                    Operations
+                  </div>
+                  <div className="space-y-0.5">
+                    {hasAccessTo('inspections') && (
+                      <NavItem
+                        navKey="inspections"
+                        label="Doorstep Pickups"
+                        icon={Truck}
+                        badge={pendingInspections > 0 ? pendingInspections : undefined}
+                        badgeColor="bg-blue-500/20 text-blue-300"
+                      />
+                    )}
+                    {hasAccessTo('support') && <NavItem navKey="support" label="Support Desk" icon={MessageSquare} />}
+                  </div>
+                </div>
+              )}
 
-          {/* Group C: Finance */}
-          {(hasAccessTo('finance') || hasAccessTo('coupons')) && (
-            <div>
-              <div
-                className={`px-2.5 pb-1 text-[10px] font-mono font-bold tracking-wider uppercase text-slate-400 transition-all duration-200 overflow-hidden whitespace-nowrap ${isSidebarExpanded ? 'opacity-100 max-h-5' : 'opacity-0 max-h-0 pointer-events-none'
-                  }`}
-              >
-                Finance & Growth
-              </div>
-              <div className="space-y-0.5">
-                {hasAccessTo('finance') && (
-                  <NavItem
-                    navKey="finance"
-                    label="Payouts & Ledger"
-                    icon={CreditCard}
-                    badge={pendingPayouts > 0 ? pendingPayouts : undefined}
-                    badgeColor="bg-emerald-500/20 text-emerald-300"
-                  />
-                )}
-                {hasAccessTo('coupons') && (
-                  <NavItem
-                    navKey="coupons"
-                    label="Referral & Coupons"
-                    icon={Tag}
-                  />
-                )}
-              </div>
-            </div>
-          )}
+              {/* Group C: Finance */}
+              {(hasAccessTo('finance') || hasAccessTo('coupons')) && (
+                <div>
+                  <div
+                    className={`px-2.5 pb-1 text-[10px] font-mono font-bold tracking-wider uppercase text-slate-400 transition-all duration-200 overflow-hidden whitespace-nowrap ${isSidebarExpanded ? 'opacity-100 max-h-5' : 'opacity-0 max-h-0 pointer-events-none'
+                      }`}
+                  >
+                    Finance & Growth
+                  </div>
+                  <div className="space-y-0.5">
+                    {hasAccessTo('finance') && (
+                      <NavItem
+                        navKey="finance"
+                        label="Payouts & Ledger"
+                        icon={CreditCard}
+                        badge={pendingPayouts > 0 ? pendingPayouts : undefined}
+                        badgeColor="bg-emerald-500/20 text-emerald-300"
+                      />
+                    )}
+                    {hasAccessTo('coupons') && (
+                      <NavItem
+                        navKey="coupons"
+                        label="Referral & Coupons"
+                        icon={Tag}
+                      />
+                    )}
+                  </div>
+                </div>
+              )}
 
-          {/* Group D: Governance */}
-          {(effectiveRole === 'SUPER_ADMIN' || (Array.isArray(adminUser?.permissions) && adminUser.permissions.includes('audit')) || (!adminUser?.permissions && (effectiveRole === 'CATALOG_EDITOR' || effectiveRole === 'FINANCE_APPROVER'))) && (
-            <div>
-              <div
-                className={`px-2.5 pb-1 text-[10px] font-mono font-bold tracking-wider uppercase text-slate-400 transition-all duration-200 overflow-hidden whitespace-nowrap ${isSidebarExpanded ? 'opacity-100 max-h-5' : 'opacity-0 max-h-0 pointer-events-none'
-                  }`}
-              >
-                Governance
-              </div>
-              <div className="space-y-0.5">
-                {effectiveRole === 'SUPER_ADMIN' && (
-                  <NavItem navKey="staff" label="Staff & Roles" icon={Users} />
-                )}
-                {hasAccessTo('audit') && <NavItem navKey="audit" label="Audit Trail" icon={ShieldCheck} />}
-              </div>
-            </div>
+              {/* Group D: Governance */}
+              {(effectiveRole === 'SUPER_ADMIN' || (Array.isArray(adminUser?.permissions) && adminUser.permissions.includes('audit')) || (!adminUser?.permissions && (effectiveRole === 'CATALOG_EDITOR' || effectiveRole === 'FINANCE_APPROVER'))) && (
+                <div>
+                  <div
+                    className={`px-2.5 pb-1 text-[10px] font-mono font-bold tracking-wider uppercase text-slate-400 transition-all duration-200 overflow-hidden whitespace-nowrap ${isSidebarExpanded ? 'opacity-100 max-h-5' : 'opacity-0 max-h-0 pointer-events-none'
+                      }`}
+                  >
+                    Governance
+                  </div>
+                  <div className="space-y-0.5">
+                    {effectiveRole === 'SUPER_ADMIN' && (
+                      <NavItem navKey="staff" label="Staff & Roles" icon={Users} />
+                    )}
+                    {hasAccessTo('audit') && <NavItem navKey="audit" label="Audit Trail" icon={ShieldCheck} />}
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
 
@@ -541,7 +570,7 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
               {isSidebarExpanded && (
                 <div className="min-w-0 truncate">
                   <div className="text-xs font-semibold text-white truncate leading-tight">
-                    {currentUser?.name || currentUser?.email?.split('@')[0] || 'Admin'}
+                    {adminUser?.username || currentUser?.name || currentUser?.email?.split('@')[0] || 'Admin'}
                   </div>
                   <div className="text-[10px] font-mono font-bold text-emerald-400 leading-none mt-0.5">
                     {effectiveRole}
@@ -599,22 +628,6 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
 
           {/* Quick Action Tools & System Health */}
           <div className="flex flex-wrap items-center gap-2">
-            {/* Real-time DB Status */}
-            {isApiOffline ? (
-              <span className="px-2.5 py-1 text-[10px] font-mono font-bold tracking-wider rounded-md bg-amber-500/10 text-amber-600 border border-amber-500/20 uppercase flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                <span>Demo Mode</span>
-              </span>
-            ) : (
-              <span className="px-2.5 py-1 text-[10px] font-mono font-bold tracking-wider rounded-md bg-emerald-500/10 text-emerald-700 border border-emerald-500/20 uppercase flex items-center gap-1.5">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                </span>
-                <span>Postgres Online</span>
-              </span>
-            )}
-
             {/* Refresh Data */}
             <button
               onClick={handleGlobalRefresh}
@@ -626,23 +639,37 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
               <span className="hidden sm:inline">Refresh</span>
             </button>
 
-            {/* Reset Demo Data */}
-            <button
-              onClick={handleResetDemoData}
-              className="px-3 py-1.5 border border-ice-border text-ink-slate hover:text-ink-navy bg-canvas-pure hover:bg-zinc-100 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer"
-              title="Reset Demo Ledger Data"
-            >
-              <span className="hidden sm:inline">Reset Ledger</span>
-            </button>
+            {/* Reset Demo Data (Super Admin Only) */}
+            {effectiveRole === 'SUPER_ADMIN' && (
+              <button
+                onClick={handleResetDemoData}
+                className="px-3 py-1.5 border border-ice-border text-ink-slate hover:text-ink-navy bg-canvas-pure hover:bg-zinc-100 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer"
+                title="Reset Demo Ledger Data (Super Admin Only)"
+              >
+                <span className="hidden sm:inline">Reset Ledger</span>
+              </button>
+            )}
 
-            {/* Emergency Lockdown */}
+            {/* Emergency Lockdown (Super Admin Only) */}
+            {effectiveRole === 'SUPER_ADMIN' && (
+              <button
+                onClick={handleLockdown}
+                className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
+                title="Emergency Lockdown: Instantly revoke admin sessions (Super Admin Only)"
+              >
+                <ShieldAlert className="w-3.5 h-3.5" />
+                <span>Lockdown</span>
+              </button>
+            )}
+
+            {/* Clean Sign Out */}
             <button
-              onClick={handleLockdown}
-              className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
-              title="Emergency Lockdown: Instantly revoke admin sessions"
+              onClick={handleSignOut}
+              className="px-3 py-1.5 border border-slate-200 hover:border-rose-200 bg-white hover:bg-rose-50 text-slate-700 hover:text-rose-600 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer shadow-xs ml-1"
+              title="Sign Out of Admin Session"
             >
-              <ShieldAlert className="w-3.5 h-3.5" />
-              <span>Lockdown</span>
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Sign Out</span>
             </button>
           </div>
         </header>

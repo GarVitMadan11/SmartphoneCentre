@@ -71,7 +71,7 @@ export const StaffTab: React.FC = () => {
     try {
       await createAdminStaff({
         email: newEmail.trim().toLowerCase(),
-        username: newUsername.trim().toLowerCase(),
+        username: newUsername.trim(),
         password: newPassword.trim(),
         role: newRole,
         permissions: newRole === 'SUPER_ADMIN' 
@@ -418,6 +418,17 @@ export const StaffTab: React.FC = () => {
             <form onSubmit={handleCreateStaff} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
+                  <label className="text-xs font-semibold text-slate-700 block mb-1">Full Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={newUsername}
+                    onChange={e => setNewUsername(e.target.value)}
+                    placeholder="e.g. Brij Bhushan"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  />
+                </div>
+                <div>
                   <label className="text-xs font-semibold text-slate-700 block mb-1">Company Email</label>
                   <input
                     type="email"
@@ -425,17 +436,6 @@ export const StaffTab: React.FC = () => {
                     value={newEmail}
                     onChange={e => setNewEmail(e.target.value)}
                     placeholder="e.g. employee@rephonix.in"
-                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-slate-700 block mb-1">Username / Handle</label>
-                  <input
-                    type="text"
-                    required
-                    value={newUsername}
-                    onChange={e => setNewUsername(e.target.value)}
-                    placeholder="e.g. rohit_ops"
                     className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                   />
                 </div>
