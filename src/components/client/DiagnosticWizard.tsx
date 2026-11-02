@@ -14,11 +14,12 @@ import { getIllustration } from './Illustrations';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { checkEmail, customerLogin, customerSignup, verifyOtp, requestPasswordResetOtp, resetPasswordWithOtp, sendQuoteAlertApi, sendPriceMatchAlertApi, sendStepLeadAlertApi, syncFirebaseUser, validateCouponApi, fetchActiveOffers, PublicOffer, ApiUser } from '../../utils/api';
 import { loginWithGoogle } from '../../services/firebaseAuth';
-import { saveQuote, isQuoteAlreadySaved, associateGuestQuotes } from '../../utils/savedQuotes';
+import { saveQuote, isQuoteAlreadySaved, associateGuestQuotes, getSavedQuotes } from '../../utils/savedQuotes';
 import { TabletDiagnosticFlow } from './TabletDiagnosticFlow';
 import { AnimatedPrice } from './wizard/AnimatedPrice';
 import { PriceDeltaBadge } from './wizard/PriceDeltaBadge';
 import { MobileBottomHUD } from './wizard/MobileBottomHUD';
+import { PriceLockCountdownBadge } from './PriceLockCountdownBadge';
 
 const getEngineeringLabel = (description: string) => {
   const mapping: { [key: string]: string } = {
@@ -568,6 +569,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
   // Saved quote state
   const [isQuoteSaved, setIsQuoteSaved] = useState(false);
+  const [quoteSavedAt, setQuoteSavedAt] = useState<string>(() => new Date().toISOString());
 
   // Referral / Promo Coupon states
   const [couponInput, setCouponInput] = useState('');
@@ -675,6 +677,11 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
         currentUser?.id
       );
       setIsQuoteSaved(alreadySaved);
+      if (alreadySaved) {
+        const existingQuotes = getSavedQuotes(currentUser?.id);
+        const match = existingQuotes.find((q) => q.modelId === model.id && q.storageGb === variant.storageGb);
+        if (match?.savedAt) setQuoteSavedAt(match.savedAt);
+      }
 
       // Automatically secure the 7-day price lock quote in the Saved tab
       if (!alreadySaved) {
@@ -2378,7 +2385,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           </div>
                           <div>
                             <span className="text-xs font-semibold text-slate-900 block leading-tight">7-Day Price Lock</span>
-                            <span className="text-[11px] text-slate-500 leading-tight">Rate guaranteed</span>
+                            <PriceLockCountdownBadge savedAt={quoteSavedAt} compact className="mt-0.5" />
                           </div>
                         </div>
 
