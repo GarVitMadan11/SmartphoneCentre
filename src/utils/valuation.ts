@@ -53,6 +53,7 @@ export function calculateValuation(
     marketDemand?: MarketDemandKey;
     variantType?: VariantFactorKey;
     dualEsim?: boolean;
+    esimDeduction?: number;
     screenDeduction?: number;
     warrantyDeductionPercentage?: number;
     supportsWarrantyQuestion?: boolean;
@@ -74,6 +75,7 @@ export function calculateValuation(
     marketDemand: options?.marketDemand,
     variantType: options?.variantType,
     dualEsim: options?.dualEsim,
+    esimDeduction: options?.esimDeduction,
     screenDeduction: options?.screenDeduction,
     warrantyDeductionPercentage: options?.warrantyDeductionPercentage,
     supportsWarrantyQuestion: options?.supportsWarrantyQuestion

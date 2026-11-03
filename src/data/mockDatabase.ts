@@ -74,6 +74,7 @@ export interface Model {
   supportsWarrantyQuestion?: boolean;     // If true, diagnostic wizard asks warranty & SIM questions
   screenDeduction?: number;               // Model-specific deduction in INR when non-original/replaced screen
   warrantyDeductionPercentage?: number;   // Model-specific deduction percentage when out of warranty (e.g. 25.5 for 25.5%)
+  esimDeduction?: number;                 // Model-specific flat deduction in INR for international / eSIM only variant (resets to default % when undefined)
 }
 
 export interface Variant {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
-  Search, RefreshCw, Check, CheckCircle2,
+  Search, RefreshCw, Check, CheckCircle2, Bot,
   AlertCircle, ChevronDown, ChevronRight, SlidersHorizontal,
   Download, Smartphone, Tablet, Watch, Save, IndianRupee
 } from 'lucide-react';
@@ -12,8 +12,10 @@ import {
   getModelSupportedRam,
   getModelSupportedStorage,
   getDeviceImage,
+  isAppleDevice,
 } from '../../../data/mockDatabase';
 import { fetchModels, updateModel } from '../../../utils/api';
+import PriceAssistantChatbot from './PriceAssistantChatbot';
 
 interface PriceMatrixTabProps {
   brands: Brand[];
@@ -35,6 +37,9 @@ interface VariantPriceEntry {
   variantLabel: string;
   originalPrice: number;
   currentPrice: number;
+  intlOriginalPrice?: number;
+  intlCurrentPrice?: number;
+  isApple: boolean;
   isEdited: boolean;
   isSaving: boolean;
   saveSuccess: boolean;
@@ -48,6 +53,7 @@ export const PriceMatrixTab: React.FC<PriceMatrixTabProps> = ({ brands, onRefres
   const [models, setModels] = useState<Model[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Local price editing state: map of "modelId:variantKey" -> new edited price
@@ -85,6 +91,19 @@ export const PriceMatrixTab: React.FC<PriceMatrixTabProps> = ({ brands, onRefres
     loadModels();
   }, [loadModels]);
 
+  // Optimistically update a single model without triggering full 1,400 variant reload
+  const handleAssistantPriceUpdated = useCallback((updatedModel?: Model) => {
+    if (updatedModel) {
+      setModels((prev) =>
+        prev.map((m) =>
+          m.id === updatedModel.id || m.legacyId === updatedModel.legacyId ? { ...m, ...updatedModel } : m
+        )
+      );
+    } else {
+      loadModels();
+    }
+  }, [loadModels]);
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
@@ -109,6 +128,7 @@ export const PriceMatrixTab: React.FC<PriceMatrixTabProps> = ({ brands, onRefres
       const rams = getModelSupportedRam(m);
       const storages = getModelSupportedStorage(m);
       const variantPrices = buildVariantPricesForModel(m);
+      const isApple = isAppleDevice(m.brandId, m.name);
 
       rams.forEach((r) => {
         storages.forEach((s) => {
@@ -116,7 +136,20 @@ export const PriceMatrixTab: React.FC<PriceMatrixTabProps> = ({ brands, onRefres
           const originalPrice = variantPrices[variantKey] || m.basePrice128GB || 0;
           const editKey = `${m.id}:${variantKey}`;
           const currentPrice = editedPrices[editKey] !== undefined ? editedPrices[editKey] : originalPrice;
-          const isEdited = editedPrices[editKey] !== undefined && editedPrices[editKey] !== originalPrice;
+
+          // International Variant Price (Apple only)
+          const intlKey = `${variantKey}_intl`;
+          const intlEditKey = `${m.id}:${intlKey}`;
+          const is17or18 = (m.name || '').toLowerCase().includes('17') || (m.name || '').toLowerCase().includes('18');
+          const defaultIntl = Math.round(originalPrice * (is17or18 ? 0.92 : 0.95));
+          const intlOriginalPrice = isApple ? (variantPrices[intlKey] || defaultIntl) : undefined;
+          const intlCurrentPrice = isApple
+            ? (editedPrices[intlEditKey] !== undefined ? editedPrices[intlEditKey] : intlOriginalPrice)
+            : undefined;
+
+          const isEdited =
+            (editedPrices[editKey] !== undefined && editedPrices[editKey] !== originalPrice) ||
+            (isApple && editedPrices[intlEditKey] !== undefined && editedPrices[intlEditKey] !== intlOriginalPrice);
 
           let variantLabel = `${s >= 1024 ? `${s / 1024} TB` : `${s} GB`}`;
           if (r > 0) {
@@ -138,9 +171,12 @@ export const PriceMatrixTab: React.FC<PriceMatrixTabProps> = ({ brands, onRefres
             variantLabel,
             originalPrice,
             currentPrice,
+            intlOriginalPrice,
+            intlCurrentPrice,
+            isApple,
             isEdited,
-            isSaving: Boolean(savingKeys[editKey]),
-            saveSuccess: Boolean(successKeys[editKey]),
+            isSaving: Boolean(savingKeys[editKey] || savingKeys[intlEditKey]),
+            saveSuccess: Boolean(successKeys[editKey] || successKeys[intlEditKey]),
           });
         });
       });
@@ -241,10 +277,16 @@ export const PriceMatrixTab: React.FC<PriceMatrixTabProps> = ({ brands, onRefres
     try {
       // Build full updated variantPrices dictionary for this model
       const currentMap = buildVariantPricesForModel(targetModel);
-      const updatedMap = {
+      const updatedMap: Record<string, number> = {
         ...currentMap,
         [entry.variantKey]: entry.currentPrice,
       };
+
+      const intlKey = `${entry.variantKey}_intl`;
+      const intlEditKey = `${entry.modelId}:${intlKey}`;
+      if (entry.isApple && entry.intlCurrentPrice !== undefined) {
+        updatedMap[intlKey] = entry.intlCurrentPrice;
+      }
 
       // If updating 128GB or lowest tier, also update basePrice128GB
       let updatedBasePrice = targetModel.basePrice128GB;
@@ -270,6 +312,7 @@ export const PriceMatrixTab: React.FC<PriceMatrixTabProps> = ({ brands, onRefres
       setEditedPrices((prev) => {
         const next = { ...prev };
         delete next[editKey];
+        delete next[intlEditKey];
         return next;
       });
 
@@ -409,6 +452,17 @@ export const PriceMatrixTab: React.FC<PriceMatrixTabProps> = ({ brands, onRefres
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2.5">
+          <button
+            type="button"
+            onClick={() => setIsChatbotOpen(true)}
+            className="px-3.5 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer ring-2 ring-blue-500/20"
+            title="Open conversational price assistant"
+          >
+            <Bot className="w-3.5 h-3.5" />
+            <span>Price Assistant</span>
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse ml-0.5" />
+          </button>
+
           <button
             type="button"
             onClick={loadModels}
@@ -720,60 +774,133 @@ export const PriceMatrixTab: React.FC<PriceMatrixTabProps> = ({ brands, onRefres
                                       </div>
 
                                       {/* Price Input & Quick Adjust Steppers */}
-                                      <div className="space-y-1.5">
-                                        <div className="flex items-center gap-1.5">
-                                          <div className="relative flex-1">
-                                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
-                                              ₹
+                                      <div className="space-y-2">
+                                        {/* Indian / Physical SIM Price */}
+                                        <div>
+                                          {entry.isApple && (
+                                            <span className="text-[10px] font-bold text-slate-600 flex items-center gap-1 mb-1">
+                                              <span>🇮🇳 Indian (Physical SIM)</span>
                                             </span>
-                                            <input
-                                              type="number"
-                                              value={entry.currentPrice || ''}
-                                              onChange={(e) =>
-                                                handlePriceChange(
-                                                  entry.modelId,
-                                                  entry.variantKey,
-                                                  parseInt(e.target.value, 10) || 0
-                                                )
-                                              }
-                                              onKeyDown={(e) => {
-                                                if (e.key === 'Enter') {
-                                                  e.preventDefault();
-                                                  handleSaveVariant(entry);
+                                          )}
+                                          <div className="flex items-center gap-1.5">
+                                            <div className="relative flex-1">
+                                              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
+                                                ₹
+                                              </span>
+                                              <input
+                                                type="number"
+                                                value={entry.currentPrice || ''}
+                                                onChange={(e) =>
+                                                  handlePriceChange(
+                                                    entry.modelId,
+                                                    entry.variantKey,
+                                                    parseInt(e.target.value, 10) || 0
+                                                  )
                                                 }
-                                              }}
-                                              className="w-full pl-6 pr-2 py-1.5 bg-slate-50 focus:bg-white border border-slate-300 rounded-lg text-xs font-bold font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
-                                            />
-                                          </div>
+                                                onKeyDown={(e) => {
+                                                  if (e.key === 'Enter') {
+                                                    e.preventDefault();
+                                                    handleSaveVariant(entry);
+                                                  }
+                                                }}
+                                                className="w-full pl-6 pr-2 py-1.5 bg-slate-50 focus:bg-white border border-slate-300 rounded-lg text-xs font-bold font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
+                                              />
+                                            </div>
 
-                                          <button
-                                            type="button"
-                                            onClick={() => handleSaveVariant(entry)}
-                                            disabled={entry.isSaving || !entry.isEdited}
-                                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shrink-0 ${
-                                              entry.saveSuccess
-                                                ? 'bg-emerald-600 text-white'
-                                                : entry.isEdited
-                                                ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-xs'
-                                                : 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                                            }`}
-                                            title="Save price to database (or hit Enter)"
-                                          >
-                                            {entry.isSaving ? (
-                                              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                                            ) : entry.saveSuccess ? (
-                                              <>
-                                                <Check className="w-3.5 h-3.5" />
-                                                <span>Saved</span>
-                                              </>
-                                            ) : (
-                                              <>
-                                                <Save className="w-3.5 h-3.5" />
-                                                <span>Save</span>
-                                              </>
+                                            {!entry.isApple && (
+                                              <button
+                                                type="button"
+                                                onClick={() => handleSaveVariant(entry)}
+                                                disabled={entry.isSaving || !entry.isEdited}
+                                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shrink-0 ${
+                                                  entry.saveSuccess
+                                                    ? 'bg-emerald-600 text-white'
+                                                    : entry.isEdited
+                                                    ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-xs'
+                                                    : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                                                }`}
+                                                title="Save price to database"
+                                              >
+                                                {entry.isSaving ? (
+                                                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                                                ) : entry.saveSuccess ? (
+                                                  <>
+                                                    <Check className="w-3.5 h-3.5" />
+                                                    <span>Saved</span>
+                                                  </>
+                                                ) : (
+                                                  <>
+                                                    <Save className="w-3.5 h-3.5" />
+                                                    <span>Save</span>
+                                                  </>
+                                                )}
+                                              </button>
                                             )}
-                                          </button>
+                                          </div>
                                         </div>
+
+                                        {/* International / eSIM Price (Apple models only) */}
+                                        {entry.isApple && (
+                                          <div>
+                                            <span className="text-[10px] font-bold text-slate-600 flex items-center gap-1 mb-1">
+                                              <span>🌐 International (eSIM Only)</span>
+                                            </span>
+                                            <div className="flex items-center gap-1.5">
+                                              <div className="relative flex-1">
+                                                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
+                                                  ₹
+                                                </span>
+                                                <input
+                                                  type="number"
+                                                  value={entry.intlCurrentPrice || ''}
+                                                  onChange={(e) =>
+                                                    handlePriceChange(
+                                                      entry.modelId,
+                                                      `${entry.variantKey}_intl`,
+                                                      parseInt(e.target.value, 10) || 0
+                                                    )
+                                                  }
+                                                  onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') {
+                                                      e.preventDefault();
+                                                      handleSaveVariant(entry);
+                                                    }
+                                                  }}
+                                                  className="w-full pl-6 pr-2 py-1.5 bg-slate-50 focus:bg-white border border-slate-300 rounded-lg text-xs font-bold font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
+                                                  placeholder="e.g. 56000"
+                                                />
+                                              </div>
+
+                                              <button
+                                                type="button"
+                                                onClick={() => handleSaveVariant(entry)}
+                                                disabled={entry.isSaving || !entry.isEdited}
+                                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shrink-0 ${
+                                                  entry.saveSuccess
+                                                    ? 'bg-emerald-600 text-white'
+                                                    : entry.isEdited
+                                                    ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-xs'
+                                                    : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                                                }`}
+                                                title="Save both Indian & International prices"
+                                              >
+                                                {entry.isSaving ? (
+                                                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                                                ) : entry.saveSuccess ? (
+                                                  <>
+                                                    <Check className="w-3.5 h-3.5" />
+                                                    <span>Saved</span>
+                                                  </>
+                                                ) : (
+                                                  <>
+                                                    <Save className="w-3.5 h-3.5" />
+                                                    <span>Save</span>
+                                                  </>
+                                                )}
+                                              </button>
+                                            </div>
+                                          </div>
+                                        )}
 
                                         {/* Quick Step Buttons: -500, +500, +5% */}
                                         <div className="flex items-center gap-1 pt-1">
@@ -814,9 +941,11 @@ export const PriceMatrixTab: React.FC<PriceMatrixTabProps> = ({ brands, onRefres
                                               type="button"
                                               onClick={() => {
                                                 const editKey = `${entry.modelId}:${entry.variantKey}`;
+                                                const intlEditKey = `${entry.modelId}:${entry.variantKey}_intl`;
                                                 setEditedPrices((prev) => {
                                                   const next = { ...prev };
                                                   delete next[editKey];
+                                                  delete next[intlEditKey];
                                                   return next;
                                                 });
                                               }}
@@ -844,6 +973,15 @@ export const PriceMatrixTab: React.FC<PriceMatrixTabProps> = ({ brands, onRefres
           ))}
         </div>
       )}
+
+      {/* Price Assistant Chatbot Drawer */}
+      <PriceAssistantChatbot
+        isOpen={isChatbotOpen}
+        onClose={() => setIsChatbotOpen(false)}
+        models={models}
+        brands={brands}
+        onPriceUpdated={handleAssistantPriceUpdated}
+      />
 
       {/* BULK SERIES ADJUSTMENT MODAL */}
       {bulkModalSeries && (

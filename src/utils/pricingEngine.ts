@@ -34,6 +34,8 @@ export interface PricingInput {
   configOverride?: Partial<PricingRulesConfig>;
   /** Dual eSIM question answer — only relevant for Apple Pro/Pro Max iPhone 14+ */
   dualEsim?: boolean;
+  /** Explicit flat eSIM / international deduction in INR (overrides standard % when set; undefined reverts to default) */
+  esimDeduction?: number;
   /** Explicit screen deduction amount configured in Admin Panel (or empirical CSV fallback) */
   screenDeduction?: number;
   /** Explicit warranty deduction percentage configured in Admin Panel (or empirical CSV fallback) */
@@ -479,11 +481,22 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
   const preAccessoryValue = Math.round(basePrice * fAge * fMarket * fCondition * fVariant);
 
   // Dual eSIM Deduction — Apple iPhone models (eSIM only / no physical SIM tray)
+  // Custom flat deduction if configured by admin, otherwise standard fallback:
   // iPhone 14/15/16 series: -5% | iPhone 17 & 18 Pro/Pro Max (and 17/18 series): -8%
   // Only applies if not already factored into fVariant (imported_esim_only)
   let dualEsimDeduction = 0;
   if (input.dualEsim === true && isApple && variantKey !== 'imported_esim_only') {
-    if (isIphone17or18) {
+    if (input.esimDeduction !== undefined && input.esimDeduction > 0) {
+      dualEsimDeduction = input.esimDeduction;
+      adjustments.push({
+        id: 'dual-esim-custom-deduction',
+        name: 'International Variant (eSIM Only) Adjustment',
+        category: 'configuration',
+        type: 'TYPE_B_FIXED',
+        rateOrValue: -input.esimDeduction,
+        impactAmount: -dualEsimDeduction
+      });
+    } else if (isIphone17or18) {
       dualEsimDeduction = Math.round(preAccessoryValue * 0.08);
       adjustments.push({
         id: 'dual-esim-deduction-17-18',

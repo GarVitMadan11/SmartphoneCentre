@@ -110,6 +110,12 @@ router.get('/', async (req, res) => {
         ? Number((m as any).warrantyDeductionPercentage)
         : undefined;
 
+      const esimDeduction = (parsedVariantPrices as any)?._esimDeduction !== undefined
+        ? Number((parsedVariantPrices as any)._esimDeduction)
+        : (m as any).esimDeduction !== undefined
+        ? Number((m as any).esimDeduction)
+        : undefined;
+
       return {
         id: m.legacyId,
         legacyId: m.legacyId,
@@ -129,6 +135,7 @@ router.get('/', async (req, res) => {
         supportsWarrantyQuestion,
         screenDeduction,
         warrantyDeductionPercentage,
+        esimDeduction,
       };
     });
 
@@ -145,7 +152,7 @@ router.get('/', async (req, res) => {
 router.post('/', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITOR']), async (req, res) => {
   try {
     const { legacyId, brandId, name, category, deviceType, releaseYear, basePrice128GB,
-            series, imageUrl, supportedStorageGb, supportedRamGb, variantPrices, hidden, supportsWarrantyQuestion, screenDeduction, warrantyDeductionPercentage } = req.body;
+            series, imageUrl, supportedStorageGb, supportedRamGb, variantPrices, hidden, supportsWarrantyQuestion, screenDeduction, warrantyDeductionPercentage, esimDeduction } = req.body;
     if (!legacyId || !brandId || !name || !category || !releaseYear || !basePrice128GB) {
       res.status(400).json({ error: 'BadRequest', message: 'Missing required fields' });
       return;
@@ -170,6 +177,9 @@ router.post('/', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITOR']), asyn
     }
     if (warrantyDeductionPercentage !== undefined && Number.isFinite(Number(warrantyDeductionPercentage))) {
       (pricesObj as any)._warrantyDeductionPercentage = Number(warrantyDeductionPercentage);
+    }
+    if (esimDeduction !== undefined && Number.isFinite(Number(esimDeduction))) {
+      (pricesObj as any)._esimDeduction = Number(esimDeduction);
     }
     // Auto-compute basePrice128GB from minimum variant price if prices are set
     const allPrices = Object.values(pricesObj).filter((v): v is number => typeof v === 'number' && v > 0);
@@ -224,6 +234,7 @@ router.post('/', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITOR']), asyn
       supportsWarrantyQuestion: resSupportsWarrantyQuestion,
       screenDeduction: resScreenDeduction,
       warrantyDeductionPercentage: resWarrantyDeductionPercentage,
+      esimDeduction: createdVP._esimDeduction !== undefined ? Number(createdVP._esimDeduction) : undefined,
     });
   } catch (err) {
     console.error('POST /api/models error:', err);
@@ -408,6 +419,20 @@ router.patch('/:legacyId', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITO
       (data as any).variantPrices = JSON.stringify(vp);
     }
 
+    if (updates.esimDeduction !== undefined) {
+      let vp: Record<string, any> = {};
+      try {
+        const rawVP = (data as any).variantPrices || existing?.variantPrices || '{}';
+        vp = typeof rawVP === 'string' ? JSON.parse(rawVP) : { ...rawVP };
+      } catch { vp = {}; }
+      if (updates.esimDeduction === null || Number(updates.esimDeduction) <= 0) {
+        delete vp._esimDeduction;
+      } else {
+        vp._esimDeduction = Number(updates.esimDeduction);
+      }
+      (data as any).variantPrices = JSON.stringify(vp);
+    }
+
     if (Object.keys(data).length === 0) {
       res.status(400).json({ error: 'BadRequest', message: 'No valid model fields supplied.' });
       return;
@@ -464,6 +489,7 @@ router.patch('/:legacyId', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITO
           : (created.releaseYear >= 2023),
         screenDeduction: createdVP._screenDeduction !== undefined ? Number(createdVP._screenDeduction) : undefined,
         warrantyDeductionPercentage: createdVP._warrantyDeductionPercentage !== undefined ? Number(createdVP._warrantyDeductionPercentage) : undefined,
+        esimDeduction: createdVP._esimDeduction !== undefined ? Number(createdVP._esimDeduction) : undefined,
       });
       return;
     }
@@ -496,6 +522,7 @@ router.patch('/:legacyId', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITO
         : (model.releaseYear >= 2023),
       screenDeduction: updatedVP._screenDeduction !== undefined ? Number(updatedVP._screenDeduction) : undefined,
       warrantyDeductionPercentage: updatedVP._warrantyDeductionPercentage !== undefined ? Number(updatedVP._warrantyDeductionPercentage) : undefined,
+      esimDeduction: updatedVP._esimDeduction !== undefined ? Number(updatedVP._esimDeduction) : undefined,
     });
   } catch (err) {
     console.error('PATCH /api/models error:', err);

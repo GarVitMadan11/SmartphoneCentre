@@ -130,7 +130,7 @@ const getEngineeringLabel = (description: string) => {
 
     'Single SIM Regional Variant Adjustment': 'Single SIM Variant Engineering Adjustment',
 
-    'Dual eSIM Configuration Deduction (iPhone 14–16 Pro Series)': 'US Model Dual eSIM Architecture Adjustment',
+    'Dual eSIM Configuration Deduction (iPhone 14–16 Pro Series)': 'International Variant (eSIM Only) Adjustment',
 
     'Dual eSIM Configuration Deduction (iPhone 17 Pro Series)': 'US Model Dual eSIM Architecture Adjustment',
 
@@ -538,6 +538,8 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
       { title: 'Core Assessment', icon: ShieldCheck, desc: 'Device power & calling assessment' },
 
+      { title: showWarrantyQuestion ? 'Docs & Warranty' : 'Packaging & Box', icon: Box, desc: showWarrantyQuestion ? (hasSpen ? 'S-Pen, accessories & warranty' : 'Accessories, age & warranty') : (hasSpen ? 'Box, S-Pen, charger & invoice' : 'Original box, accessories & invoice') },
+
       { title: 'Display Panel', icon: Smartphone, desc: 'Touch, screen glass & burn-in' },
 
       { title: 'Body & Frame', icon: Smartphone, desc: 'Chassis, buttons, screws & seal' },
@@ -545,8 +547,6 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
       { title: 'Hardware', icon: Activity, desc: 'Cameras, biometrics & audio' },
 
       { title: 'Connectivity', icon: Radio, desc: 'Battery, cellular, Wi-Fi & serial' },
-
-      { title: showWarrantyQuestion ? 'Docs & Warranty' : 'Packaging & Box', icon: Box, desc: showWarrantyQuestion ? (hasSpen ? 'S-Pen, accessories & warranty' : 'Accessories, age & warranty') : (hasSpen ? 'Box, S-Pen, charger & invoice' : 'Original box, accessories & invoice') },
 
       { title: 'Review & Valuation', icon: Receipt, desc: 'Diagnostic review & breakdown' }
 
@@ -808,15 +808,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
     if (step === 0) return powerChecked === 'working' && callingChecked !== null;
 
-    if (step === 1) return true; // Screen defects - optional, defaults to perfect
-
-    if (step === 2) return true; // Body defects - optional, defaults to perfect
-
-    if (step === 3) return true; // Hardware defects - optional, defaults to perfect
-
-    if (step === 4) return true; // Connectivity defects - optional, defaults to perfect
-
-    if (step === 5) {
+    if (step === 1) {
 
       const warrantyOk = !showWarrantyQuestion || (
 
@@ -831,6 +823,14 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
       return warrantyOk && simOk;
 
     }
+
+    if (step === 2) return true; // Screen defects - optional, defaults to perfect
+
+    if (step === 3) return true; // Body defects - optional, defaults to perfect
+
+    if (step === 4) return true; // Hardware defects - optional, defaults to perfect
+
+    if (step === 5) return true; // Connectivity defects - optional, defaults to perfect
 
     return true;
 
@@ -881,6 +881,8 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
       deviceAge: isScreenNonOriginal ? 'out_of_warranty' : (hasWarranty === false ? 'out_of_warranty' : (selectedWarrantyAge ? (selectedWarrantyAge === '6_to_11m' ? '6_to_12m' : selectedWarrantyAge) : 'under_3m')),
 
       dualEsim: dualEsim === true,
+
+      esimDeduction: model.esimDeduction,
 
       screenDeduction: modelScreenDeduction,
 
@@ -2392,6 +2394,8 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
                         'Boot & Power',
 
+                        showWarrantyQuestion ? 'Docs & Warranty' : 'Packaging & Box',
+
                         'Display & Screen',
 
                         'Body & Frame',
@@ -2399,8 +2403,6 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         'Hardware & Sensors',
 
                         'Connectivity & Battery',
-
-                        showWarrantyQuestion ? 'Docs & Warranty' : 'Packaging & Box',
 
                         'Review Summary'
 
@@ -2532,6 +2534,8 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
                         'Core',
 
+                        showWarrantyQuestion ? 'Docs & Age' : 'Packaging',
+
                         'Display',
 
                         'Body',
@@ -2539,8 +2543,6 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                         'Hardware',
 
                         'Connectivity',
-
-                        showWarrantyQuestion ? 'Docs & Age' : 'Packaging',
 
                         'Review'
 
@@ -2960,7 +2962,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
 
 
-              {/* STEP 1: Screen Condition */}
+              {/* STEP 1: Accessories & Documentation */}
 
               {!isTablet && step === 1 && (
 
@@ -2978,773 +2980,11 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
                   <div className="mb-6 text-left">
 
-                    <h3 className="text-2xl sm:text-3xl font-bold text-slate-950 tracking-tight">Screen & Display Panel</h3>
-
-                    <p className="text-xs sm:text-sm text-slate-800 mt-2 font-medium">Examine the front screen glass and display panel carefully.</p>
-
-                  </div>
-
-
-
-                  {/* Display Panel Originality Check */}
-
-                  <div className="mb-6 p-4 rounded-2xl border border-slate-200 bg-slate-50/80 shadow-xs text-left">
-
-                    <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
-
-                      <span className="text-xs font-semibold text-slate-800 flex items-center gap-1.5">
-
-                        <ShieldCheck className="w-4 h-4 text-blue-600" />
-
-                        <span>Display Authenticity</span>
-
-                      </span>
-
-                    </div>
-
-
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-
-                      {/* Option 1: Original Factory Display */}
-
-                      <div
-
-                        role="radio"
-
-                        tabIndex={0}
-
-                        aria-checked={!isScreenNonOriginal}
-
-                        onClick={() => {
-
-                          setSelectedDefects(prev => prev.filter(d => d.id !== 'defect-screen-non-original' && d.id !== 'defect-screen-truetone'));
-
-                        }}
-
-                        onKeyDown={e => handleKeyDown(e, () => {
-
-                          setSelectedDefects(prev => prev.filter(d => d.id !== 'defect-screen-non-original' && d.id !== 'defect-screen-truetone'));
-
-                        })}
-
-                        className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all duration-200 flex items-center gap-3 ${!isScreenNonOriginal
-
-                          ? 'border-emerald-500 bg-emerald-500/10 shadow-xs ring-1 ring-emerald-500/30'
-
-                          : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/70'
-
-                          }`}
-
-                      >
-
-                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${!isScreenNonOriginal ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-slate-300 bg-white'
-
-                          }`}>
-
-                          {!isScreenNonOriginal && <div className="w-2 h-2 rounded-full bg-white" />}
-
-                        </div>
-
-                        <div className="flex-1 min-w-0">
-
-                          <div className="flex items-center gap-1.5 flex-wrap">
-
-                            <h4 className="font-black text-sm text-slate-900">Original Factory Display</h4>
-
-                          </div>
-
-
-
-                        </div>
-
-                      </div>
-
-
-
-                      {/* Option 2: Replaced / Non-Original Screen */}
-
-                      <div
-
-                        role="radio"
-
-                        tabIndex={0}
-
-                        aria-checked={isScreenNonOriginal}
-
-                        onClick={() => {
-
-                          const rule = rules.find(r => r.id === 'defect-screen-non-original') || {
-
-                            id: 'defect-screen-non-original',
-
-                            category: 'screen' as const,
-
-                            description: 'Screen Replaced / Non-Original Display',
-
-                            subText: 'Screen has been replaced with a duplicate or third-party display panel.',
-
-                            deductionFixed: 0,
-
-                            deductionPercentage: 0
-
-                          };
-
-                          setSelectedDefects(prev => {
-
-                            const without = prev.filter(d => d.id !== 'defect-screen-non-original');
-
-                            return [...without, rule];
-
-                          });
-
-                          setScreenConfirmed(false);
-
-                        }}
-
-                        onKeyDown={e => handleKeyDown(e, () => {
-
-                          const rule = rules.find(r => r.id === 'defect-screen-non-original') || {
-
-                            id: 'defect-screen-non-original',
-
-                            category: 'screen' as const,
-
-                            description: 'Screen Replaced / Non-Original Display',
-
-                            subText: 'Screen has been replaced with a duplicate or third-party display panel.',
-
-                            deductionFixed: 0,
-
-                            deductionPercentage: 0
-
-                          };
-
-                          setSelectedDefects(prev => {
-
-                            const without = prev.filter(d => d.id !== 'defect-screen-non-original');
-
-                            return [...without, rule];
-
-                          });
-
-                          setScreenConfirmed(false);
-
-                        })}
-
-                        className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all duration-200 flex items-center gap-3 ${isScreenNonOriginal
-
-                          ? 'border-rose-500 bg-rose-500/10 shadow-xs ring-1 ring-rose-500/30'
-
-                          : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/70'
-
-                          }`}
-
-                      >
-
-                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${isScreenNonOriginal ? 'border-rose-600 bg-rose-600 text-white' : 'border-slate-300 bg-white'
-
-                          }`}>
-
-                          {isScreenNonOriginal && <div className="w-2 h-2 rounded-full bg-white" />}
-
-                        </div>
-
-                        <div className="flex-1 min-w-0">
-
-                          <div className="flex items-center gap-1.5 flex-wrap">
-
-                            <h4 className="font-black text-sm text-rose-950">Screen Replaced / Duplicate</h4>
-
-                          </div>
-
-
-
-                        </div>
-
-                      </div>
-
-                    </div>
-
-                  </div>
-
-
-
-                  {/* Instruction Line Below Display Authenticity */}
-
-                  <p className="text-xs sm:text-sm text-slate-800 mb-4 font-medium text-left">
-
-                    Select any display issues that apply below. If your screen is in perfect condition, simply tap Continue.
-
-                  </p>
-
-
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-left">
-
-                    {/* Screen Defect Options */}
-
-                    {(() => {
-
-                      const screenMutualMap: Record<string, string[]> = {
-
-                        'defect-screen-minor-scratches': ['defect-screen-scratches', 'defect-screen-cracked'],
-
-                        'defect-screen-scratches': ['defect-screen-minor-scratches', 'defect-screen-cracked'],
-
-                        'defect-screen-cracked': ['defect-screen-minor-scratches', 'defect-screen-scratches'],
-
-                      };
-
-
-
-                      return rules.filter(r => r.category === 'screen' && r.id !== 'defect-screen-non-original' && r.id !== 'defect-screen-touch').map(defect => {
-
-                        const isSelected = selectedDefects.some(d => d.id === defect.id);
-
-                        const mutualIds = screenMutualMap[defect.id];
-
-
-
-                        return (
-
-                          <div
-
-                            key={defect.id}
-
-                            role="checkbox"
-
-                            tabIndex={0}
-
-                            aria-checked={isSelected}
-
-                            onKeyDown={e => handleKeyDown(e, () => {
-
-                              handleToggleDefect(defect, mutualIds);
-
-                              setScreenConfirmed(false);
-
-                            })}
-
-                            onClick={() => {
-
-                              handleToggleDefect(defect, mutualIds);
-
-                              setScreenConfirmed(false);
-
-                            }}
-
-                            className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-center gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-rose-500 ${isSelected
-
-                              ? 'border-rose-400 bg-rose-500/10 shadow-sm ring-1 ring-rose-400/30 scale-[1.01]'
-
-                              : 'border-ice-border bg-canvas-white hover:border-slate-300 hover:bg-slate-50/60'
-
-                              }`}
-
-                          >
-
-                            <div className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
-
-                              {getIllustration(defect.id, deviceType)}
-
-                            </div>
-
-                            <div className="flex-1 min-w-0">
-
-                              <div className="flex items-center gap-1.5 flex-wrap">
-
-                                <h4 className="font-bold text-sm text-ink-navy">{defect.description}</h4>
-
-                              </div>
-
-
-
-                            </div>
-
-                            <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-rose-600 border-rose-600 text-white' : 'border-ice-border bg-white'
-
-                              }`}>
-
-                              {isSelected && <Check className="w-3.5 h-3.5" />}
-
-                            </div>
-
-                          </div>
-
-                        );
-
-                      });
-
-                    })()}
-
-                  </div>
-
-                </motion.div>
-
-              )}
-
-
-
-              {/* STEP 2: Body Frame */}
-
-              {!isTablet && step === 2 && (
-
-                <motion.div
-
-                  key="step-2"
-
-                  initial={{ opacity: 0, x: -10 }}
-
-                  animate={{ opacity: 1, x: 0 }}
-
-                  exit={{ opacity: 1, x: 10 }}
-
-                >
-
-                  <div className="mb-6 text-left">
-
-                    <h3 className="text-2xl sm:text-3xl font-bold text-slate-950 tracking-tight">Body, Buttons & Frame</h3>
-
-                    <p className="text-xs sm:text-sm text-slate-800 mt-2 font-medium">Select any physical body defects below. If the frame and body are in perfect condition, simply tap Continue.</p>
-
-                  </div>
-
-
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-6 text-left">
-
-                    {/* Body Rules */}
-
-                    {(() => {
-
-                      return rules.filter(r => r.category === 'body' && r.id !== 'defect-body-airpass').map(defect => {
-
-                        const isSelected = selectedDefects.some(d => d.id === defect.id);
-
-                        return (
-
-                          <div
-
-                            key={defect.id}
-
-                            role="checkbox"
-
-                            tabIndex={0}
-
-                            aria-checked={isSelected}
-
-                            onKeyDown={e => handleKeyDown(e, () => {
-
-                              handleToggleDefect(
-
-                                defect,
-
-                                defect.id === 'defect-body-dented'
-
-                                  ? 'defect-body-scuffs'
-
-                                  : defect.id === 'defect-body-scuffs'
-
-                                    ? 'defect-body-dented'
-
-                                    : undefined
-
-                              );
-
-                              setBodyConfirmed(false);
-
-                            })}
-
-                            onClick={() => {
-
-                              handleToggleDefect(
-
-                                defect,
-
-                                defect.id === 'defect-body-dented'
-
-                                  ? 'defect-body-scuffs'
-
-                                  : defect.id === 'defect-body-scuffs'
-
-                                    ? 'defect-body-dented'
-
-                                    : undefined
-
-                              );
-
-                              setBodyConfirmed(false);
-
-                            }}
-
-                            className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-center gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-amber-500 ${isSelected
-
-                              ? 'border-amber-500 bg-amber-500/10 shadow-sm ring-1 ring-amber-500/30 scale-[1.01]'
-
-                              : 'border-ice-border bg-canvas-white hover:border-slate-300 hover:bg-slate-50/60'
-
-                              }`}
-
-                          >
-
-                            <div className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
-
-                              {getIllustration(defect.id, deviceType)}
-
-                            </div>
-
-                            <div className="flex-1 min-w-0">
-
-                              <div className="flex items-center gap-1.5 flex-wrap">
-
-                                <h4 className="font-bold text-sm text-ink-navy">{defect.description}</h4>
-
-                              </div>
-
-
-
-                            </div>
-
-                            <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-amber-600 border-amber-600 text-white' : 'border-ice-border bg-white'
-
-                              }`}>
-
-                              {isSelected && <Check className="w-3.5 h-3.5" />}
-
-                            </div>
-
-                          </div>
-
-                        );
-
-                      });
-
-                    })()}
-
-                  </div>
-
-                </motion.div>
-
-              )}
-
-
-
-              {/* STEP 3: Hardware Diagnostics */}
-
-              {!isTablet && step === 3 && (
-
-                <motion.div
-
-                  key="step-3"
-
-                  initial={{ opacity: 0, x: -10 }}
-
-                  animate={{ opacity: 1, x: 0 }}
-
-                  exit={{ opacity: 1, x: 10 }}
-
-                >
-
-                  <div className="mb-6 text-left">
-
-                    <h3 className="text-2xl sm:text-3xl font-bold text-slate-950 tracking-tight">Camera & Hardware</h3>
-
-                    <p className="text-xs sm:text-sm text-slate-800 mt-2 font-medium">Select any failing camera, biometric, audio, or hardware issues below. If all features work in perfect order, simply tap Continue.</p>
-
-                  </div>
-
-
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-6 text-left">
-
-                    {/* Hardware / functionality rules */}
-
-                    {(() => {
-
-                      return rules.filter(r => ['camera', 'functionality'].includes(r.category)).map(defect => {
-
-                        const isSelected = selectedDefects.some(d => d.id === defect.id);
-
-                        return (
-
-                          <div
-
-                            key={defect.id}
-
-                            role="checkbox"
-
-                            tabIndex={0}
-
-                            aria-checked={isSelected}
-
-                            onKeyDown={e => handleKeyDown(e, () => {
-
-                              handleToggleDefect(defect);
-
-                              setFuncConfirmed(false);
-
-                            })}
-
-                            onClick={() => {
-
-                              handleToggleDefect(defect);
-
-                              setFuncConfirmed(false);
-
-                            }}
-
-                            className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-center gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-rose-500 ${isSelected
-
-                              ? 'border-rose-400 bg-rose-500/10 shadow-sm ring-1 ring-rose-400/30 scale-[1.01]'
-
-                              : 'border-ice-border bg-canvas-white hover:border-slate-300 hover:bg-slate-50/60'
-
-                              }`}
-
-                          >
-
-                            <div className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
-
-                              {getIllustration(defect.id, deviceType, biometricType)}
-
-                            </div>
-
-                            <div className="flex-1 min-w-0">
-
-                              <div className="flex items-center gap-1.5 flex-wrap">
-
-                                <h4 className="font-bold text-sm text-ink-navy">{defect.description}</h4>
-
-                              </div>
-
-
-
-                            </div>
-
-                            <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-rose-600 border-rose-600 text-white' : 'border-ice-border bg-white'
-
-                              }`}>
-
-                              {isSelected && <Check className="w-3.5 h-3.5" />}
-
-                            </div>
-
-                          </div>
-
-                        );
-
-                      });
-
-                    })()}
-
-                  </div>
-
-                </motion.div>
-
-              )}
-
-
-
-              {/* STEP 4: Connectivity & Verification */}
-
-              {!isTablet && step === 4 && (
-
-                <motion.div
-
-                  key="step-4"
-
-                  initial={{ opacity: 0, x: -10 }}
-
-                  animate={{ opacity: 1, x: 0 }}
-
-                  exit={{ opacity: 1, x: 10 }}
-
-                >
-
-                  <div className="mb-6 text-left">
-
-                    <h3 className="text-2xl sm:text-3xl font-bold text-slate-950 tracking-tight">Connectivity & Verification</h3>
-
-                    <p className="text-xs sm:text-sm text-slate-800 mt-2 font-medium">Select any battery or wireless connectivity issues below. If battery and connectivity are in perfect condition, simply tap Continue.</p>
-
-                  </div>
-
-
-
-                  {/* Standard Battery Performance Assumed Banner (Compact - Title Only) */}
-
-                  <div className="mb-6 text-left border border-emerald-500/25 bg-gradient-to-r from-emerald-50/90 via-teal-50/60 to-emerald-50/80 p-3.5 sm:p-4 rounded-2xl relative overflow-hidden shadow-xs">
-
-                    <div className="flex items-center justify-between flex-wrap gap-2.5">
-
-                      <div className="flex items-center gap-3">
-
-                        <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center flex-shrink-0 text-emerald-600">
-
-                          <BatteryCharging className="w-5 h-5" />
-
-                        </div>
-
-                        <h4 className="text-xs sm:text-sm font-bold text-slate-900">
-
-                          Standard Battery Performance Assumed
-
-                        </h4>
-
-                      </div>
-
-                      {model && (
-
-                        <a
-
-                          href={`https://wa.me/919034997719?text=${encodeURIComponent(`Hi Rephonix Team! My ${model.name} has a degraded / replaced battery. What is the best quote you can offer?`)}`}
-
-                          target="_blank"
-
-                          rel="noopener noreferrer"
-
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-semibold transition-colors shadow-xs touch-manipulation"
-
-                        >
-
-                          <MessageSquare className="w-3.5 h-3.5" />
-
-                          <span>Battery Degraded? Chat with Us</span>
-
-                        </a>
-
-                      )}
-
-                    </div>
-
-                  </div>
-
-
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-6 text-left">
-
-                    {/* Connectivity & verification rules */}
-
-                    {(() => {
-
-                      return rules.filter(r => r.category === 'connectivity').map(defect => {
-
-                        const isSelected = selectedDefects.some(d => d.id === defect.id);
-
-                        const mutId = defect.id === 'defect-battery-80-85'
-
-                          ? 'defect-battery-low'
-
-                          : defect.id === 'defect-battery-low'
-
-                            ? 'defect-battery-80-85'
-
-                            : undefined;
-
-                        return (
-
-                          <div
-
-                            key={defect.id}
-
-                            role="checkbox"
-
-                            tabIndex={0}
-
-                            aria-checked={isSelected}
-
-                            onKeyDown={e => handleKeyDown(e, () => {
-
-                              handleToggleDefect(defect, mutId);
-
-                              setConnectConfirmed(false);
-
-                            })}
-
-                            onClick={() => {
-
-                              handleToggleDefect(defect, mutId);
-
-                              setConnectConfirmed(false);
-
-                            }}
-
-                            className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-center gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-rose-500 ${isSelected
-
-                              ? 'border-rose-400 bg-rose-500/10 shadow-sm ring-1 ring-rose-400/30 scale-[1.01]'
-
-                              : 'border-ice-border bg-canvas-white hover:border-slate-300 hover:bg-slate-50/60'
-
-                              }`}
-
-                          >
-
-                            <div className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
-
-                              {getIllustration(defect.id, deviceType)}
-
-                            </div>
-
-                            <div className="flex-1 min-w-0">
-
-                              <div className="flex items-center gap-1.5 flex-wrap">
-
-                                <h4 className="font-bold text-sm text-ink-navy">{defect.description}</h4>
-
-                              </div>
-
-
-
-                            </div>
-
-                            <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-rose-600 border-rose-600 text-white' : 'border-ice-border bg-white'
-
-                              }`}>
-
-                              {isSelected && <Check className="w-3.5 h-3.5" />}
-
-                            </div>
-
-                          </div>
-
-                        );
-
-                      });
-
-                    })()}
-
-                  </div>
-
-                </motion.div>
-
-              )}
-
-
-
-              {/* STEP 5: Accessories & Documentation */}
-
-              {!isTablet && step === 5 && (
-
-                <motion.div
-
-                  key="step-5"
-
-                  initial={{ opacity: 0, x: -10 }}
-
-                  animate={{ opacity: 1, x: 0 }}
-
-                  exit={{ opacity: 1, x: 10 }}
-
-                >
-
-                  <div className="mb-6 text-left">
-
                     <h3 className="text-2xl sm:text-3xl font-bold text-slate-950 tracking-tight">Accessories & Documentation</h3>
 
                     <p className="text-xs sm:text-sm text-slate-800 mt-2 font-medium">
 
-                      Select any missing accessories below. If you have all original accessories and box, simply select your warranty status and tap Review.
+                      Confirm your regional variant, official warranty status, and original accessories to calibrate the baseline value.
 
                     </p>
 
@@ -3752,91 +2992,125 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
 
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-6 text-left">
+                  
 
-                    {/* Accessories options */}
+                  {/* Physical SIM / eSIM Question — Apple iPhone models only */}
 
-                    {(() => {
+                  {isApple && !isWatch && !isTablet && (
 
-                      return rules.filter(r => r.category === 'accessories' && !r.isCriticalFailure).map(defect => {
+                    <div className="mt-5 text-left border-t border-ice-border/60 pt-5">
 
-                        const isSelected = selectedDefects.some(d => d.id === defect.id);
+                      <div className="flex items-center justify-between mb-2.5">
 
-                        return (
+                        <h4 className="text-sm font-semibold text-slate-900">
 
-                          <div
+                          Does your iPhone support a physical SIM card?
 
-                            key={defect.id}
+                        </h4>
 
-                            role="checkbox"
+                        {dualEsim === null ? (
 
-                            tabIndex={0}
+                          <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
 
-                            aria-checked={isSelected}
+                            Required
 
-                            onKeyDown={e => handleKeyDown(e, () => {
+                          </span>
 
-                              handleToggleDefect(defect);
+                        ) : (
 
-                              setAccConfirmed(false);
+                          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
 
-                            })}
+                            <Check className="w-3 h-3 stroke-[3]" /> Answered
 
-                            onClick={() => {
+                          </span>
 
-                              handleToggleDefect(defect);
+                        )}
 
-                              setAccConfirmed(false);
-
-                            }}
-
-                            className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-center gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-amber-500 ${isSelected
-
-                              ? 'border-amber-500 bg-amber-500/10 shadow-sm ring-1 ring-amber-500/30 scale-[1.01]'
-
-                              : 'border-ice-border bg-canvas-white hover:border-slate-300 hover:bg-slate-50/60'
-
-                              }`}
-
-                          >
-
-                            <div className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
-
-                              {getIllustration(defect.id, deviceType)}
-
-                            </div>
-
-                            <div className="flex-1 min-w-0">
-
-                              <div className="flex items-center gap-1.5 flex-wrap">
-
-                                <h4 className="font-bold text-sm text-ink-navy">{defect.description}</h4>
-
-                              </div>
+                      </div>
 
 
 
-                            </div>
+                      <div className="grid grid-cols-2 gap-3">
 
-                            <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-amber-600 border-amber-600 text-white' : 'border-ice-border bg-white'
+                        <div
 
-                              }`}>
+                          role="button"
 
-                              {isSelected && <Check className="w-3.5 h-3.5" />}
+                          tabIndex={0}
 
-                            </div>
+                          onClick={() => setDualEsim(false)}
+
+                          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setDualEsim(false); }}
+
+                          className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center gap-3 ${dualEsim === false
+
+                            ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/30'
+
+                            : 'border-ice-border bg-canvas-white hover:border-emerald-500/40 hover:bg-slate-50/50'
+
+                            }`}
+
+                        >
+
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${dualEsim === false ? 'bg-emerald-500 text-white' : 'bg-emerald-500/10 text-emerald-600'
+
+                            }`}>
+
+                            <Check className="w-4 h-4 stroke-[2.5]" />
 
                           </div>
 
-                        );
+                          <div>
 
-                      });
+                            <h5 className="font-bold text-xs text-ink-navy">Yes</h5>
 
-                    })()}
+                          </div>
 
-                  </div>
+                        </div>
 
 
+
+                        <div
+
+                          role="button"
+
+                          tabIndex={0}
+
+                          onClick={() => setDualEsim(true)}
+
+                          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setDualEsim(true); }}
+
+                          className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center gap-3 ${dualEsim === true
+
+                            ? 'border-rose-500 bg-rose-500/10 ring-1 ring-rose-500/30'
+
+                            : 'border-ice-border bg-canvas-white hover:border-rose-500/40 hover:bg-slate-50/50'
+
+                            }`}
+
+                        >
+
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${dualEsim === true ? 'bg-rose-600 text-white' : 'bg-slate-100 border border-slate-200 text-slate-500'
+
+                            }`}>
+
+                            <X className="w-4 h-4 stroke-[2.5]" />
+
+                          </div>
+
+                          <div>
+
+                            <h5 className="font-bold text-xs text-ink-navy">No</h5>
+
+                          </div>
+
+                        </div>
+
+                      </div>
+
+                    </div>
+
+                  )}
 
                   {/* Device Age & Warranty Status Section — Only for eligible devices with original screen */}
 
@@ -4174,117 +3448,315 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
                   )}
 
-
-
-                  {/* Physical SIM / eSIM Question — Apple iPhone models only */}
-
-                  {isApple && !isWatch && !isTablet && (
-
-                    <div className="mt-5 text-left border-t border-ice-border/60 pt-5">
+                  <div className="mt-5 text-left border-t border-ice-border/60 pt-5">
 
                       <div className="flex items-center justify-between mb-2.5">
 
                         <h4 className="text-sm font-semibold text-slate-900">
 
-                          Does your phone support physical SIM?
+                          Original Accessories Available
 
                         </h4>
 
-                        {dualEsim === null ? (
+                        <span className="text-[10px] text-slate-500 font-medium">
 
-                          <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                          Select any missing items
 
-                            Required
+                        </span>
 
-                          </span>
+                      </div>
 
-                        ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-6 text-left">
 
-                          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
+                    {/* Accessories options */}
 
-                            <Check className="w-3 h-3 stroke-[3]" /> Answered
+                    {(() => {
 
-                          </span>
+                      return rules.filter(r => r.category === 'accessories' && !r.isCriticalFailure).map(defect => {
 
-                        )}
+                        const isSelected = selectedDefects.some(d => d.id === defect.id);
+
+                        return (
+
+                          <div
+
+                            key={defect.id}
+
+                            role="checkbox"
+
+                            tabIndex={0}
+
+                            aria-checked={isSelected}
+
+                            onKeyDown={e => handleKeyDown(e, () => {
+
+                              handleToggleDefect(defect);
+
+                              setAccConfirmed(false);
+
+                            })}
+
+                            onClick={() => {
+
+                              handleToggleDefect(defect);
+
+                              setAccConfirmed(false);
+
+                            }}
+
+                            className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-center gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-amber-500 ${isSelected
+
+                              ? 'border-amber-500 bg-amber-500/10 shadow-sm ring-1 ring-amber-500/30 scale-[1.01]'
+
+                              : 'border-ice-border bg-canvas-white hover:border-slate-300 hover:bg-slate-50/60'
+
+                              }`}
+
+                          >
+
+                            <div className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
+
+                              {getIllustration(defect.id, deviceType)}
+
+                            </div>
+
+                            <div className="flex-1 min-w-0">
+
+                              <div className="flex items-center gap-1.5 flex-wrap">
+
+                                <h4 className="font-bold text-sm text-ink-navy">{defect.description}</h4>
+
+                              </div>
+
+
+
+                            </div>
+
+                            <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-amber-600 border-amber-600 text-white' : 'border-ice-border bg-white'
+
+                              }`}>
+
+                              {isSelected && <Check className="w-3.5 h-3.5" />}
+
+                            </div>
+
+                          </div>
+
+                        );
+
+                      });
+
+                    })()}
+
+                  </div>
+
+                    </div>
+
+                </motion.div>
+
+              )}
+
+
+
+              {/* STEP 2: Screen Condition */}
+
+              {!isTablet && step === 2 && (
+
+                <motion.div
+
+                  key="step-2"
+
+                  initial={{ opacity: 0, x: -10 }}
+
+                  animate={{ opacity: 1, x: 0 }}
+
+                  exit={{ opacity: 1, x: 10 }}
+
+                >
+
+                  <div className="mb-6 text-left">
+
+                    <h3 className="text-2xl sm:text-3xl font-bold text-slate-950 tracking-tight">Screen & Display Panel</h3>
+
+                    <p className="text-xs sm:text-sm text-slate-800 mt-2 font-medium">Examine the front screen glass and display panel carefully.</p>
+
+                  </div>
+
+
+
+                  {/* Display Panel Originality Check */}
+
+                  <div className="mb-6 p-4 rounded-2xl border border-slate-200 bg-slate-50/80 shadow-xs text-left">
+
+                    <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
+
+                      <span className="text-xs font-semibold text-slate-800 flex items-center gap-1.5">
+
+                        <ShieldCheck className="w-4 h-4 text-blue-600" />
+
+                        <span>Display Authenticity</span>
+
+                      </span>
+
+                    </div>
+
+
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+                      {/* Option 1: Original Factory Display */}
+
+                      <div
+
+                        role="radio"
+
+                        tabIndex={0}
+
+                        aria-checked={!isScreenNonOriginal}
+
+                        onClick={() => {
+
+                          setSelectedDefects(prev => prev.filter(d => d.id !== 'defect-screen-non-original' && d.id !== 'defect-screen-truetone'));
+
+                        }}
+
+                        onKeyDown={e => handleKeyDown(e, () => {
+
+                          setSelectedDefects(prev => prev.filter(d => d.id !== 'defect-screen-non-original' && d.id !== 'defect-screen-truetone'));
+
+                        })}
+
+                        className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all duration-200 flex items-center gap-3 ${!isScreenNonOriginal
+
+                          ? 'border-emerald-500 bg-emerald-500/10 shadow-xs ring-1 ring-emerald-500/30'
+
+                          : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/70'
+
+                          }`}
+
+                      >
+
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${!isScreenNonOriginal ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-slate-300 bg-white'
+
+                          }`}>
+
+                          {!isScreenNonOriginal && <div className="w-2 h-2 rounded-full bg-white" />}
+
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+
+                          <div className="flex items-center gap-1.5 flex-wrap">
+
+                            <h4 className="font-black text-sm text-slate-900">Original Factory Display</h4>
+
+                          </div>
+
+
+
+                        </div>
 
                       </div>
 
 
 
-                      <div className="grid grid-cols-2 gap-3">
+                      {/* Option 2: Replaced / Non-Original Screen */}
 
-                        <div
+                      <div
 
-                          role="button"
+                        role="radio"
 
-                          tabIndex={0}
+                        tabIndex={0}
 
-                          onClick={() => setDualEsim(false)}
+                        aria-checked={isScreenNonOriginal}
 
-                          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setDualEsim(false); }}
+                        onClick={() => {
 
-                          className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center gap-3 ${dualEsim === false
+                          const rule = rules.find(r => r.id === 'defect-screen-non-original') || {
 
-                            ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/30'
+                            id: 'defect-screen-non-original',
 
-                            : 'border-ice-border bg-canvas-white hover:border-emerald-500/40 hover:bg-slate-50/50'
+                            category: 'screen' as const,
 
-                            }`}
+                            description: 'Screen Replaced / Non-Original Display',
 
-                        >
+                            subText: 'Screen has been replaced with a duplicate or third-party display panel.',
 
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${dualEsim === false ? 'bg-emerald-500 text-white' : 'bg-emerald-500/10 text-emerald-600'
+                            deductionFixed: 0,
 
-                            }`}>
+                            deductionPercentage: 0
 
-                            <Check className="w-4 h-4 stroke-[2.5]" />
+                          };
 
-                          </div>
+                          setSelectedDefects(prev => {
 
-                          <div>
+                            const without = prev.filter(d => d.id !== 'defect-screen-non-original');
 
-                            <h5 className="font-bold text-xs text-ink-navy">Yes</h5>
+                            return [...without, rule];
 
-                          </div>
+                          });
+
+                          setScreenConfirmed(false);
+
+                        }}
+
+                        onKeyDown={e => handleKeyDown(e, () => {
+
+                          const rule = rules.find(r => r.id === 'defect-screen-non-original') || {
+
+                            id: 'defect-screen-non-original',
+
+                            category: 'screen' as const,
+
+                            description: 'Screen Replaced / Non-Original Display',
+
+                            subText: 'Screen has been replaced with a duplicate or third-party display panel.',
+
+                            deductionFixed: 0,
+
+                            deductionPercentage: 0
+
+                          };
+
+                          setSelectedDefects(prev => {
+
+                            const without = prev.filter(d => d.id !== 'defect-screen-non-original');
+
+                            return [...without, rule];
+
+                          });
+
+                          setScreenConfirmed(false);
+
+                        })}
+
+                        className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all duration-200 flex items-center gap-3 ${isScreenNonOriginal
+
+                          ? 'border-rose-500 bg-rose-500/10 shadow-xs ring-1 ring-rose-500/30'
+
+                          : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/70'
+
+                          }`}
+
+                      >
+
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${isScreenNonOriginal ? 'border-rose-600 bg-rose-600 text-white' : 'border-slate-300 bg-white'
+
+                          }`}>
+
+                          {isScreenNonOriginal && <div className="w-2 h-2 rounded-full bg-white" />}
 
                         </div>
 
+                        <div className="flex-1 min-w-0">
 
+                          <div className="flex items-center gap-1.5 flex-wrap">
 
-                        <div
-
-                          role="button"
-
-                          tabIndex={0}
-
-                          onClick={() => setDualEsim(true)}
-
-                          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setDualEsim(true); }}
-
-                          className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center gap-3 ${dualEsim === true
-
-                            ? 'border-rose-500 bg-rose-500/10 ring-1 ring-rose-500/30'
-
-                            : 'border-ice-border bg-canvas-white hover:border-rose-500/40 hover:bg-slate-50/50'
-
-                            }`}
-
-                        >
-
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${dualEsim === true ? 'bg-rose-600 text-white' : 'bg-slate-100 border border-slate-200 text-slate-500'
-
-                            }`}>
-
-                            <X className="w-4 h-4 stroke-[2.5]" />
+                            <h4 className="font-black text-sm text-rose-950">Screen Replaced / Duplicate</h4>
 
                           </div>
 
-                          <div>
 
-                            <h5 className="font-bold text-xs text-ink-navy">No</h5>
-
-                          </div>
 
                         </div>
 
@@ -4292,7 +3764,555 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
                     </div>
 
-                  )}
+                  </div>
+
+
+
+                  {/* Instruction Line Below Display Authenticity */}
+
+                  <p className="text-xs sm:text-sm text-slate-800 mb-4 font-medium text-left">
+
+                    Select any display issues that apply below. If your screen is in perfect condition, simply tap Continue.
+
+                  </p>
+
+
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-left">
+
+                    {/* Screen Defect Options */}
+
+                    {(() => {
+
+                      const screenMutualMap: Record<string, string[]> = {
+
+                        'defect-screen-minor-scratches': ['defect-screen-scratches', 'defect-screen-cracked'],
+
+                        'defect-screen-scratches': ['defect-screen-minor-scratches', 'defect-screen-cracked'],
+
+                        'defect-screen-cracked': ['defect-screen-minor-scratches', 'defect-screen-scratches'],
+
+                      };
+
+
+
+                      return rules.filter(r => r.category === 'screen' && r.id !== 'defect-screen-non-original' && r.id !== 'defect-screen-touch').map(defect => {
+
+                        const isSelected = selectedDefects.some(d => d.id === defect.id);
+
+                        const mutualIds = screenMutualMap[defect.id];
+
+
+
+                        return (
+
+                          <div
+
+                            key={defect.id}
+
+                            role="checkbox"
+
+                            tabIndex={0}
+
+                            aria-checked={isSelected}
+
+                            onKeyDown={e => handleKeyDown(e, () => {
+
+                              handleToggleDefect(defect, mutualIds);
+
+                              setScreenConfirmed(false);
+
+                            })}
+
+                            onClick={() => {
+
+                              handleToggleDefect(defect, mutualIds);
+
+                              setScreenConfirmed(false);
+
+                            }}
+
+                            className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-center gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-rose-500 ${isSelected
+
+                              ? 'border-rose-400 bg-rose-500/10 shadow-sm ring-1 ring-rose-400/30 scale-[1.01]'
+
+                              : 'border-ice-border bg-canvas-white hover:border-slate-300 hover:bg-slate-50/60'
+
+                              }`}
+
+                          >
+
+                            <div className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
+
+                              {getIllustration(defect.id, deviceType)}
+
+                            </div>
+
+                            <div className="flex-1 min-w-0">
+
+                              <div className="flex items-center gap-1.5 flex-wrap">
+
+                                <h4 className="font-bold text-sm text-ink-navy">{defect.description}</h4>
+
+                              </div>
+
+
+
+                            </div>
+
+                            <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-rose-600 border-rose-600 text-white' : 'border-ice-border bg-white'
+
+                              }`}>
+
+                              {isSelected && <Check className="w-3.5 h-3.5" />}
+
+                            </div>
+
+                          </div>
+
+                        );
+
+                      });
+
+                    })()}
+
+                  </div>
+
+                </motion.div>
+
+              )}
+
+
+
+              {/* STEP 3: Body Frame */}
+
+              {!isTablet && step === 3 && (
+
+                <motion.div
+
+                  key="step-3"
+
+                  initial={{ opacity: 0, x: -10 }}
+
+                  animate={{ opacity: 1, x: 0 }}
+
+                  exit={{ opacity: 1, x: 10 }}
+
+                >
+
+                  <div className="mb-6 text-left">
+
+                    <h3 className="text-2xl sm:text-3xl font-bold text-slate-950 tracking-tight">Body, Buttons & Frame</h3>
+
+                    <p className="text-xs sm:text-sm text-slate-800 mt-2 font-medium">Select any physical body defects below. If the frame and body are in perfect condition, simply tap Continue.</p>
+
+                  </div>
+
+
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-6 text-left">
+
+                    {/* Body Rules */}
+
+                    {(() => {
+
+                      return rules.filter(r => r.category === 'body' && r.id !== 'defect-body-airpass').map(defect => {
+
+                        const isSelected = selectedDefects.some(d => d.id === defect.id);
+
+                        return (
+
+                          <div
+
+                            key={defect.id}
+
+                            role="checkbox"
+
+                            tabIndex={0}
+
+                            aria-checked={isSelected}
+
+                            onKeyDown={e => handleKeyDown(e, () => {
+
+                              handleToggleDefect(
+
+                                defect,
+
+                                defect.id === 'defect-body-dented'
+
+                                  ? 'defect-body-scuffs'
+
+                                  : defect.id === 'defect-body-scuffs'
+
+                                    ? 'defect-body-dented'
+
+                                    : undefined
+
+                              );
+
+                              setBodyConfirmed(false);
+
+                            })}
+
+                            onClick={() => {
+
+                              handleToggleDefect(
+
+                                defect,
+
+                                defect.id === 'defect-body-dented'
+
+                                  ? 'defect-body-scuffs'
+
+                                  : defect.id === 'defect-body-scuffs'
+
+                                    ? 'defect-body-dented'
+
+                                    : undefined
+
+                              );
+
+                              setBodyConfirmed(false);
+
+                            }}
+
+                            className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-center gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-amber-500 ${isSelected
+
+                              ? 'border-amber-500 bg-amber-500/10 shadow-sm ring-1 ring-amber-500/30 scale-[1.01]'
+
+                              : 'border-ice-border bg-canvas-white hover:border-slate-300 hover:bg-slate-50/60'
+
+                              }`}
+
+                          >
+
+                            <div className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
+
+                              {getIllustration(defect.id, deviceType)}
+
+                            </div>
+
+                            <div className="flex-1 min-w-0">
+
+                              <div className="flex items-center gap-1.5 flex-wrap">
+
+                                <h4 className="font-bold text-sm text-ink-navy">{defect.description}</h4>
+
+                              </div>
+
+
+
+                            </div>
+
+                            <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-amber-600 border-amber-600 text-white' : 'border-ice-border bg-white'
+
+                              }`}>
+
+                              {isSelected && <Check className="w-3.5 h-3.5" />}
+
+                            </div>
+
+                          </div>
+
+                        );
+
+                      });
+
+                    })()}
+
+                  </div>
+
+                </motion.div>
+
+              )}
+
+
+
+              {/* STEP 4: Hardware Diagnostics */}
+
+              {!isTablet && step === 4 && (
+
+                <motion.div
+
+                  key="step-4"
+
+                  initial={{ opacity: 0, x: -10 }}
+
+                  animate={{ opacity: 1, x: 0 }}
+
+                  exit={{ opacity: 1, x: 10 }}
+
+                >
+
+                  <div className="mb-6 text-left">
+
+                    <h3 className="text-2xl sm:text-3xl font-bold text-slate-950 tracking-tight">Camera & Hardware</h3>
+
+                    <p className="text-xs sm:text-sm text-slate-800 mt-2 font-medium">Select any failing camera, biometric, audio, or hardware issues below. If all features work in perfect order, simply tap Continue.</p>
+
+                  </div>
+
+
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-6 text-left">
+
+                    {/* Hardware / functionality rules */}
+
+                    {(() => {
+
+                      return rules.filter(r => ['camera', 'functionality'].includes(r.category)).map(defect => {
+
+                        const isSelected = selectedDefects.some(d => d.id === defect.id);
+
+                        return (
+
+                          <div
+
+                            key={defect.id}
+
+                            role="checkbox"
+
+                            tabIndex={0}
+
+                            aria-checked={isSelected}
+
+                            onKeyDown={e => handleKeyDown(e, () => {
+
+                              handleToggleDefect(defect);
+
+                              setFuncConfirmed(false);
+
+                            })}
+
+                            onClick={() => {
+
+                              handleToggleDefect(defect);
+
+                              setFuncConfirmed(false);
+
+                            }}
+
+                            className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-center gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-rose-500 ${isSelected
+
+                              ? 'border-rose-400 bg-rose-500/10 shadow-sm ring-1 ring-rose-400/30 scale-[1.01]'
+
+                              : 'border-ice-border bg-canvas-white hover:border-slate-300 hover:bg-slate-50/60'
+
+                              }`}
+
+                          >
+
+                            <div className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
+
+                              {getIllustration(defect.id, deviceType, biometricType)}
+
+                            </div>
+
+                            <div className="flex-1 min-w-0">
+
+                              <div className="flex items-center gap-1.5 flex-wrap">
+
+                                <h4 className="font-bold text-sm text-ink-navy">{defect.description}</h4>
+
+                              </div>
+
+
+
+                            </div>
+
+                            <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-rose-600 border-rose-600 text-white' : 'border-ice-border bg-white'
+
+                              }`}>
+
+                              {isSelected && <Check className="w-3.5 h-3.5" />}
+
+                            </div>
+
+                          </div>
+
+                        );
+
+                      });
+
+                    })()}
+
+                  </div>
+
+                </motion.div>
+
+              )}
+
+
+
+              {/* STEP 5: Connectivity & Verification */}
+
+              {!isTablet && step === 5 && (
+
+                <motion.div
+
+                  key="step-5"
+
+                  initial={{ opacity: 0, x: -10 }}
+
+                  animate={{ opacity: 1, x: 0 }}
+
+                  exit={{ opacity: 1, x: 10 }}
+
+                >
+
+                  <div className="mb-6 text-left">
+
+                    <h3 className="text-2xl sm:text-3xl font-bold text-slate-950 tracking-tight">Connectivity & Verification</h3>
+
+                    <p className="text-xs sm:text-sm text-slate-800 mt-2 font-medium">Select any battery or wireless connectivity issues below. If battery and connectivity are in perfect condition, simply tap Continue.</p>
+
+                  </div>
+
+
+
+                  {/* Standard Battery Performance Assumed Banner (Compact - Title Only) */}
+
+                  <div className="mb-6 text-left border border-emerald-500/25 bg-gradient-to-r from-emerald-50/90 via-teal-50/60 to-emerald-50/80 p-3.5 sm:p-4 rounded-2xl relative overflow-hidden shadow-xs">
+
+                    <div className="flex items-center justify-between flex-wrap gap-2.5">
+
+                      <div className="flex items-center gap-3">
+
+                        <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center flex-shrink-0 text-emerald-600">
+
+                          <BatteryCharging className="w-5 h-5" />
+
+                        </div>
+
+                        <h4 className="text-xs sm:text-sm font-bold text-slate-900">
+
+                          Standard Battery Performance Assumed
+
+                        </h4>
+
+                      </div>
+
+                      {model && (
+
+                        <a
+
+                          href={`https://wa.me/919034997719?text=${encodeURIComponent(`Hi Rephonix Team! My ${model.name} has a degraded / replaced battery. What is the best quote you can offer?`)}`}
+
+                          target="_blank"
+
+                          rel="noopener noreferrer"
+
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-semibold transition-colors shadow-xs touch-manipulation"
+
+                        >
+
+                          <MessageSquare className="w-3.5 h-3.5" />
+
+                          <span>Battery Degraded? Chat with Us</span>
+
+                        </a>
+
+                      )}
+
+                    </div>
+
+                  </div>
+
+
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-6 text-left">
+
+                    {/* Connectivity & verification rules */}
+
+                    {(() => {
+
+                      return rules.filter(r => r.category === 'connectivity').map(defect => {
+
+                        const isSelected = selectedDefects.some(d => d.id === defect.id);
+
+                        const mutId = defect.id === 'defect-battery-80-85'
+
+                          ? 'defect-battery-low'
+
+                          : defect.id === 'defect-battery-low'
+
+                            ? 'defect-battery-80-85'
+
+                            : undefined;
+
+                        return (
+
+                          <div
+
+                            key={defect.id}
+
+                            role="checkbox"
+
+                            tabIndex={0}
+
+                            aria-checked={isSelected}
+
+                            onKeyDown={e => handleKeyDown(e, () => {
+
+                              handleToggleDefect(defect, mutId);
+
+                              setConnectConfirmed(false);
+
+                            })}
+
+                            onClick={() => {
+
+                              handleToggleDefect(defect, mutId);
+
+                              setConnectConfirmed(false);
+
+                            }}
+
+                            className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-center gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-rose-500 ${isSelected
+
+                              ? 'border-rose-400 bg-rose-500/10 shadow-sm ring-1 ring-rose-400/30 scale-[1.01]'
+
+                              : 'border-ice-border bg-canvas-white hover:border-slate-300 hover:bg-slate-50/60'
+
+                              }`}
+
+                          >
+
+                            <div className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
+
+                              {getIllustration(defect.id, deviceType)}
+
+                            </div>
+
+                            <div className="flex-1 min-w-0">
+
+                              <div className="flex items-center gap-1.5 flex-wrap">
+
+                                <h4 className="font-bold text-sm text-ink-navy">{defect.description}</h4>
+
+                              </div>
+
+
+
+                            </div>
+
+                            <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-rose-600 border-rose-600 text-white' : 'border-ice-border bg-white'
+
+                              }`}>
+
+                              {isSelected && <Check className="w-3.5 h-3.5" />}
+
+                            </div>
+
+                          </div>
+
+                        );
+
+                      });
+
+                    })()}
+
+                  </div>
 
                 </motion.div>
 
@@ -4346,7 +4366,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
                         {isTablet && variant.ramGb ? ` • ${variant.ramGb}GB RAM` : ''}
 
-                        {isTablet ? ` • ${variant.connectivity === 'cellular' || variant.color?.toLowerCase().includes('cellular') ? 'Wi-Fi + Cellular' : 'Wi-Fi Only'}` : (isApple && dualEsim !== null ? ` • ${dualEsim === true ? 'eSIM Only (US Model)' : 'Physical SIM'}` : '')}
+                        {isTablet ? ` • ${variant.connectivity === 'cellular' || variant.color?.toLowerCase().includes('cellular') ? 'Wi-Fi + Cellular' : 'Wi-Fi Only'}` : (isApple && dualEsim !== null ? ` • ${dualEsim === true ? 'International (eSIM Only)' : 'Indian / Physical SIM'}` : '')}
 
                       </p>
 
@@ -4602,7 +4622,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
                             {isTablet && variant.ramGb ? ` • ${variant.ramGb}GB RAM` : ''}
 
-                            {isTablet ? ` • ${variant.connectivity === 'cellular' || variant.color?.toLowerCase().includes('cellular') ? 'Wi-Fi + Cellular' : 'Wi-Fi Only'}` : ` • ${isApple ? 'Apple iOS' : 'Android'}${isApple && dualEsim === true ? ' • eSIM Only (US Model)' : ''}`}
+                            {isTablet ? ` • ${variant.connectivity === 'cellular' || variant.color?.toLowerCase().includes('cellular') ? 'Wi-Fi + Cellular' : 'Wi-Fi Only'}` : ` • ${isApple ? 'Apple iOS' : 'Android'}${isApple && dualEsim === true ? ' • International (eSIM Only)' : (isApple && dualEsim === false ? ' • Indian / Physical SIM' : '')}`}
 
                           </span>
 
