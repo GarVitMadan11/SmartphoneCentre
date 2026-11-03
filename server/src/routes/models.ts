@@ -116,6 +116,10 @@ router.get('/', async (req, res) => {
         ? Number((m as any).esimDeduction)
         : undefined;
 
+      const batteryUnder80Deduction = (parsedVariantPrices as any)?._batteryUnder80Deduction !== undefined
+        ? Number((parsedVariantPrices as any)._batteryUnder80Deduction)
+        : undefined;
+
       return {
         id: m.legacyId,
         legacyId: m.legacyId,
@@ -136,6 +140,7 @@ router.get('/', async (req, res) => {
         screenDeduction,
         warrantyDeductionPercentage,
         esimDeduction,
+        batteryUnder80Deduction,
       };
     });
 
@@ -433,6 +438,20 @@ router.patch('/:legacyId', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITO
       (data as any).variantPrices = JSON.stringify(vp);
     }
 
+    if (updates.batteryUnder80Deduction !== undefined) {
+      let vp: Record<string, any> = {};
+      try {
+        const rawVP = (data as any).variantPrices || existing?.variantPrices || '{}';
+        vp = typeof rawVP === 'string' ? JSON.parse(rawVP) : { ...rawVP };
+      } catch { vp = {}; }
+      if (updates.batteryUnder80Deduction === null || Number(updates.batteryUnder80Deduction) <= 0) {
+        delete vp._batteryUnder80Deduction;
+      } else {
+        vp._batteryUnder80Deduction = Number(updates.batteryUnder80Deduction);
+      }
+      (data as any).variantPrices = JSON.stringify(vp);
+    }
+
     if (Object.keys(data).length === 0) {
       res.status(400).json({ error: 'BadRequest', message: 'No valid model fields supplied.' });
       return;
@@ -490,6 +509,7 @@ router.patch('/:legacyId', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITO
         screenDeduction: createdVP._screenDeduction !== undefined ? Number(createdVP._screenDeduction) : undefined,
         warrantyDeductionPercentage: createdVP._warrantyDeductionPercentage !== undefined ? Number(createdVP._warrantyDeductionPercentage) : undefined,
         esimDeduction: createdVP._esimDeduction !== undefined ? Number(createdVP._esimDeduction) : undefined,
+        batteryUnder80Deduction: createdVP._batteryUnder80Deduction !== undefined ? Number(createdVP._batteryUnder80Deduction) : undefined,
       });
       return;
     }
@@ -523,6 +543,7 @@ router.patch('/:legacyId', adminAuth, requireRole(['SUPER_ADMIN', 'CATALOG_EDITO
       screenDeduction: updatedVP._screenDeduction !== undefined ? Number(updatedVP._screenDeduction) : undefined,
       warrantyDeductionPercentage: updatedVP._warrantyDeductionPercentage !== undefined ? Number(updatedVP._warrantyDeductionPercentage) : undefined,
       esimDeduction: updatedVP._esimDeduction !== undefined ? Number(updatedVP._esimDeduction) : undefined,
+      batteryUnder80Deduction: updatedVP._batteryUnder80Deduction !== undefined ? Number(updatedVP._batteryUnder80Deduction) : undefined,
     });
   } catch (err) {
     console.error('PATCH /api/models error:', err);

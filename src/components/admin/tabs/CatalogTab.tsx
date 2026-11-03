@@ -32,8 +32,10 @@ import {
   Wifi,
   Radio,
   ChevronDown,
+  ChevronUp,
+  Copy,
 } from 'lucide-react';
-import { Model, Brand, BRANDS, isSmartwatchDevice, isTabletDevice, buildVariantPricesForModel, isVariantAvailable, predictCashifyPrice, hasSpenSupport, getModelScreenDeduction, getModelWarrantyDeductionPercentage } from '../../../data/mockDatabase';
+import { Model, Brand, BRANDS, isSmartwatchDevice, isTabletDevice, isAppleDevice, buildVariantPricesForModel, isVariantAvailable, predictCashifyPrice, hasSpenSupport, getModelScreenDeduction, getModelWarrantyDeductionPercentage, calculateApple80to85Deduction, getDefaultAppleBatteryDeduction } from '../../../data/mockDatabase';
 import { fetchModels, createModel, updateModel, deleteModel, testCashifyUrlApi, registerApprovedCashifyVariants, saveCashifyCustomUrl, fetchCashifyCustomUrls } from '../../../utils/api';
 import cashifyCustomUrlsData from '../../../data/cashifyCustomUrls.json';
 import {
@@ -311,6 +313,18 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
   const handleStartEdit = (model: Model) => {
     setEditingModel(model);
     setIsAddingNew(false);
+  };
+
+  // Clone / Duplicate Model Handler (Quick-Add Flow)
+  const handleStartClone = (model: Model) => {
+    const clonedModel: Model = {
+      ...model,
+      id: '',
+      legacyId: '',
+      name: `${model.name} (Copy)`,
+    };
+    setEditingModel(clonedModel);
+    setIsAddingNew(true);
   };
 
   // Open Add New Model Modal
@@ -1222,7 +1236,7 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
               </div>
 
               {/* Models Grid in Series */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="admin-catalog-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {group.models.map((model) => {
                   const brand = initialBrands.find((b) => b.id === model.brandId);
                   const storages = model.supportedStorageGb && model.supportedStorageGb.length > 0 ? model.supportedStorageGb : [128, 256, 512];
@@ -1329,6 +1343,14 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
                             <span className="text-rose-700" title="Non-Original Screen Deduction Amount">
                               ₹{(model.screenDeduction ?? getModelScreenDeduction(model)).toLocaleString('en-IN')} Scr.
                             </span>
+                            {isAppleDevice(model.brandId, model.name) ? (
+                              <>
+                                <span className="text-zinc-400 mx-1">|</span>
+                                <span className="text-emerald-700" title="Apple Battery Health Deductions: <80% (80-85%)">
+                                  Batt &lt;80%: ₹{(model.batteryUnder80Deduction ?? getDefaultAppleBatteryDeduction(model.name).under80).toLocaleString('en-IN')} (80-85%: ₹{calculateApple80to85Deduction(model.batteryUnder80Deduction ?? getDefaultAppleBatteryDeduction(model.name).under80).toLocaleString('en-IN')})
+                                </span>
+                              </>
+                            ) : null}
                           </span>
                         </div>
 
@@ -1346,6 +1368,15 @@ export const CatalogTab: React.FC<CatalogTabProps> = ({ category, brands: initia
                         >
                           <Edit2 className="w-3.5 h-3.5" />
                           <span>Edit Specs & Prices</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleStartClone(model)}
+                          className="p-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg transition-all cursor-pointer"
+                          title="Clone / Duplicate this model into a new release"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
                         </button>
 
                         <button
@@ -2014,6 +2045,8 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
     supportsWarrantyQuestion: boolean;
     screenDeduction?: number;
     warrantyDeductionPercentage?: number;
+    esimDeduction?: number | null;
+    batteryUnder80Deduction?: number | null;
   }>({
     id: '',
     legacyId: '',
@@ -2031,6 +2064,8 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
     supportsWarrantyQuestion: true,
     screenDeduction: 15000,
     warrantyDeductionPercentage: 22.0,
+    esimDeduction: null,
+    batteryUnder80Deduction: null,
   });
 
   const [saving, setSaving] = useState(false);
@@ -2190,6 +2225,8 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
   >({});
   const [extractedCashifyPrices, setExtractedCashifyPrices] = useState<Record<string, number>>({});
   const [isVerifyingAll, setIsVerifyingAll] = useState<boolean>(false);
+  const [pricingViewMode, setPricingViewMode] = useState<'list' | 'matrix'>('list');
+  const [expandedCashifyKeys, setExpandedCashifyKeys] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (!isOpen) return;
@@ -2229,6 +2266,8 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
           model.supportsWarrantyQuestion ?? ((model.releaseYear || 2024) >= 2023),
         screenDeduction: model.screenDeduction ?? getModelScreenDeduction(model),
         warrantyDeductionPercentage: model.warrantyDeductionPercentage ?? getModelWarrantyDeductionPercentage(model),
+        esimDeduction: model.esimDeduction ?? null,
+        batteryUnder80Deduction: model.batteryUnder80Deduction ?? (isAppleDevice(model.brandId, model.name) ? getDefaultAppleBatteryDeduction(model.name).under80 : null),
       });
       setIsCustomSeriesInput(Boolean(sVal && !brandExistingSeries.includes(sVal)));
       setUrlTestResults({});
@@ -2394,6 +2433,7 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
         variantPrices: {},
         hidden: false,
         supportsWarrantyQuestion: true,
+        esimDeduction: null,
       });
       setIsCustomSeriesInput(false);
       setVariantApproved({});
@@ -3041,6 +3081,8 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
         supportsWarrantyQuestion: formData.supportsWarrantyQuestion,
         screenDeduction: formData.screenDeduction !== undefined ? Number(formData.screenDeduction) : undefined,
         warrantyDeductionPercentage: formData.warrantyDeductionPercentage !== undefined ? Number(formData.warrantyDeductionPercentage) : undefined,
+        esimDeduction: formData.esimDeduction !== undefined ? formData.esimDeduction : null,
+        batteryUnder80Deduction: formData.batteryUnder80Deduction !== undefined ? formData.batteryUnder80Deduction : null,
       };
 
       let result;
@@ -3502,6 +3544,128 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
             )}
           </div>
 
+          {/* International (eSIM Only) Deduction for Apple models */}
+          {(formData.brandId === 'brand-apple' || formData.name.toLowerCase().includes('iphone')) && (
+            <div className="p-4 bg-blue-50/70 border border-blue-200 rounded-lg space-y-2">
+              <label className="block text-[11px] font-bold text-blue-950 uppercase font-mono flex items-center justify-between">
+                <span>International Variant (eSIM Only) Flat Deduction (₹)</span>
+                <span className="text-[9px] text-blue-700 font-bold bg-white px-2 py-0.5 rounded border border-blue-200">
+                  {formData.esimDeduction ? 'Custom Flat Override' : 'Standard Formula Active'}
+                </span>
+              </label>
+              <div className="flex gap-2 items-center">
+                <input
+                  type="number"
+                  min="0"
+                  step="100"
+                  value={formData.esimDeduction ?? ''}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      esimDeduction: e.target.value === '' ? null : parseInt(e.target.value, 10) || 0,
+                    })
+                  }
+                  placeholder="Leave blank for standard % formula, or enter e.g. 12000"
+                  className="flex-1 px-3 py-2 bg-white border border-blue-300 rounded font-mono font-bold text-blue-900 focus:border-blue-600 focus:outline-none"
+                />
+                {formData.esimDeduction && (
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, esimDeduction: null })}
+                    className="px-3 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded cursor-pointer"
+                  >
+                    Reset to Standard %
+                  </button>
+                )}
+              </div>
+              <span className="text-[10px] text-blue-800/80 font-mono block">
+                Applies when customer selects "No — International (eSIM Only)". Keeps Indian base valuations completely intact.
+              </span>
+            </div>
+          )}
+
+          {/* Apple Battery Health Deductions */}
+          {(formData.brandId === 'brand-apple' || formData.name.toLowerCase().includes('iphone')) && (() => {
+            const tierDefault = getDefaultAppleBatteryDeduction(formData.name);
+            const currentUnder80 = formData.batteryUnder80Deduction ?? tierDefault.under80;
+            const calculated80to85 = calculateApple80to85Deduction(currentUnder80);
+            const isCustomOverride = formData.batteryUnder80Deduction !== null && formData.batteryUnder80Deduction !== undefined && formData.batteryUnder80Deduction !== tierDefault.under80;
+
+            return (
+              <div className="p-4 bg-emerald-50/70 border border-emerald-200 rounded-lg space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] font-bold text-emerald-950 uppercase font-mono flex items-center gap-2">
+                    <span>🔋 Apple Battery Health Deductions</span>
+                  </label>
+                  <span className="text-[9px] text-emerald-700 font-bold bg-white px-2 py-0.5 rounded border border-emerald-200 font-mono">
+                    {isCustomOverride ? 'Custom Model Override' : 'Model-Tier Benchmark Active'}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                  {/* Question: Battery < 80% / Service Alert Input */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-emerald-950 mb-1 uppercase font-mono flex items-center justify-between">
+                      <span>Battery Health &lt; 80% (₹)</span>
+                      <span className="text-[9px] text-rose-700 font-bold bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">
+                        Service Alert
+                      </span>
+                    </label>
+                    <div className="flex gap-2 items-center">
+                      <input
+                        type="number"
+                        min="0"
+                        step="50"
+                        value={formData.batteryUnder80Deduction ?? ''}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            batteryUnder80Deduction: e.target.value === '' ? null : parseInt(e.target.value, 10) || 0,
+                          })
+                        }
+                        placeholder={`Tier default: ₹${tierDefault.under80.toLocaleString('en-IN')}`}
+                        className="flex-1 px-3 py-2 bg-white border border-emerald-300 rounded font-mono font-bold text-emerald-900 focus:border-emerald-600 focus:outline-none"
+                      />
+                      {isCustomOverride && (
+                        <button
+                          type="button"
+                          onClick={() => setFormData({ ...formData, batteryUnder80Deduction: null })}
+                          className="px-2.5 py-2 bg-white border border-emerald-300 hover:bg-emerald-50 text-emerald-800 text-[11px] font-semibold rounded cursor-pointer shrink-0"
+                          title={`Reset to tier default: ₹${tierDefault.under80.toLocaleString('en-IN')}`}
+                        >
+                          Reset
+                        </button>
+                      )}
+                    </div>
+                    <span className="text-[10px] text-emerald-800/80 font-mono block mt-1">
+                      Flat deduction when battery health is below 80% or requires service.
+                    </span>
+                  </div>
+
+                  {/* Auto-Calculated: Battery 80% – 85% */}
+                  <div className="bg-white/90 border border-emerald-200 rounded p-2.5 flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[11px] font-bold text-emerald-950 uppercase font-mono">
+                          Battery Health 80% – 85% (₹)
+                        </span>
+                        <span className="text-[9px] text-blue-700 font-bold bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200">
+                          Auto-Calculated
+                        </span>
+                      </div>
+                      <div className="text-lg font-bold font-mono text-emerald-700">
+                        ₹{calculated80to85.toLocaleString('en-IN')}
+                      </div>
+                    </div>
+                    <span className="text-[10px] text-emerald-700/80 font-mono block mt-1">
+                      Math: ₹{currentUnder80.toLocaleString('en-IN')} × 30% (Cashify 10/3 ratio) = ₹{calculated80to85.toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
           {/* Image URL Section */}
           <div className="p-4 bg-canvas-pure border border-ice-border rounded-lg space-y-3">
             <label className="block text-[11px] font-bold text-ink-navy uppercase font-mono flex items-center justify-between">
@@ -3786,17 +3950,212 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
                   </div>
                 </div>
 
-                <div className="flex justify-between items-center">
-                  <label className="block text-[11px] font-bold text-ink-navy uppercase font-mono flex items-center gap-1.5">
-                    <Grid className="w-4 h-4 text-emerald-600" />
-                    <span>Variant Price & Cashify Matrix (INR ₹)</span>
-                  </label>
-                  <span className="text-[10px] font-mono text-zinc-500">
-                    Verify Cashify link & listed price per variant • Approve link to activate +3% payout
-                  </span>
+                <div className="flex flex-wrap justify-between items-center gap-2">
+                  <div className="flex items-center gap-3">
+                    <label className="block text-[11px] font-bold text-ink-navy uppercase font-mono flex items-center gap-1.5">
+                      <Grid className="w-4 h-4 text-emerald-600" />
+                      <span>Configured Variants & Payout Prices</span>
+                    </label>
+                    <span className="text-[10px] font-mono text-zinc-500 hidden sm:inline">
+                      Clean real variants view • Adjust prices directly
+                    </span>
+                  </div>
+
+                  {/* Clean List vs Spreadsheet Matrix Switcher */}
+                  <div className="flex items-center bg-zinc-200/80 p-0.5 rounded-lg border border-ice-border">
+                    <button
+                      type="button"
+                      onClick={() => setPricingViewMode('list')}
+                      className={`px-2.5 py-1 rounded-md text-[10.5px] font-bold font-mono transition-all cursor-pointer ${
+                        pricingViewMode === 'list'
+                          ? 'bg-white text-ink-navy shadow-xs border border-ice-border'
+                          : 'text-zinc-600 hover:text-ink-navy'
+                      }`}
+                    >
+                      Linear Clean List (Recommended)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPricingViewMode('matrix')}
+                      className={`px-2.5 py-1 rounded-md text-[10.5px] font-bold font-mono transition-all cursor-pointer ${
+                        pricingViewMode === 'matrix'
+                          ? 'bg-white text-ink-navy shadow-xs border border-ice-border'
+                          : 'text-zinc-600 hover:text-ink-navy'
+                      }`}
+                    >
+                      Full 2D Spreadsheet
+                    </button>
+                  </div>
                 </div>
 
-                <div className="overflow-x-auto border border-ice-border rounded-lg bg-white shadow-xs">
+                {pricingViewMode === 'list' ? (
+                  <div className="space-y-2.5">
+                    {(() => {
+                      const validRams = formData.supportedRamGb.length === 1 && formData.supportedRamGb[0] === 0
+                        ? [0]
+                        : formData.supportedRamGb;
+
+                      const realVariants: Array<{ ram: number; storage: number; key: string; label: string }> = [];
+                      validRams.forEach((r) => {
+                        formData.supportedStorageGb.forEach((s) => {
+                          const k = `${r}_${s}`;
+                          let label = s >= 1024 ? `${s / 1024} TB` : `${s} GB`;
+                          if (r > 0) label = `${r} GB RAM • ${label}`;
+                          realVariants.push({ ram: r, storage: s, key: k, label });
+                        });
+                      });
+
+                      return (
+                        <div className="space-y-2.5 max-w-4xl">
+                          {realVariants.map(({ ram, storage, key, label }) => {
+                            const priceVal = formData.variantPrices[key];
+                            const isEnabled = priceVal !== undefined;
+                            const cUrl = variantCashifyUrls[key] || '';
+                            const cPrice = variantCashifyPrices[key] || 0;
+                            const targetPlus3 = Math.round((cPrice || 10000) * 1.03);
+                            const isApproved = Boolean(variantApproved[key]);
+                            const isExpanded = Boolean(expandedCashifyKeys[key]);
+
+                            return (
+                              <div
+                                key={key}
+                                className={`border rounded-xl p-3.5 transition-all shadow-xs ${
+                                  !isEnabled
+                                    ? 'bg-zinc-50 border-dashed border-zinc-300 opacity-60'
+                                    : isApproved
+                                    ? 'bg-emerald-50/20 border-emerald-300'
+                                    : 'bg-white border-ice-border hover:border-zinc-300'
+                                }`}
+                              >
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                  {/* Left: Active Toggle & Variant Name */}
+                                  <div className="flex items-center gap-2.5 min-w-[200px]">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleToggleVariant(ram, storage, !isEnabled)}
+                                      className={`relative inline-flex h-4 w-7 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
+                                        isEnabled ? 'bg-emerald-500' : 'bg-zinc-300'
+                                      }`}
+                                    >
+                                      <span
+                                        className={`pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                                          isEnabled ? 'translate-x-3' : 'translate-x-0'
+                                        }`}
+                                      />
+                                    </button>
+                                    <div>
+                                      <span className="text-xs font-bold font-mono text-ink-navy block leading-tight">{label}</span>
+                                      {isEnabled && (
+                                        <span className="text-[10px] font-extrabold text-emerald-700 font-mono">
+                                          {modalFormatPrice(Number(priceVal || 0))}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  {/* Right: Payout Input & Badges */}
+                                  {isEnabled && (
+                                    <div className="flex flex-wrap items-center gap-2.5 justify-end">
+                                      {isApproved ? (
+                                        <span className="px-2 py-1 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1 shrink-0">
+                                          <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                          <span>Approved (+3%)</span>
+                                        </span>
+                                      ) : (
+                                        <span className="px-2 py-1 rounded text-[9px] font-bold bg-amber-50 text-amber-800 border border-amber-200 shrink-0">
+                                          Manual Override
+                                        </span>
+                                      )}
+
+                                      <div className="flex items-center gap-1 bg-zinc-50 px-2 py-1 rounded-lg border border-zinc-200">
+                                        <span className="text-[10px] font-bold text-zinc-500 font-mono">₹</span>
+                                        <input
+                                          type="number"
+                                          value={priceVal === 0 ? '' : priceVal}
+                                          onChange={(e) => handleVariantPriceChange(ram, storage, e.target.value)}
+                                          className="w-28 px-2 py-0.5 bg-white border border-zinc-300 rounded font-mono font-bold text-right text-xs text-ink-navy focus:border-cobalt focus:outline-none"
+                                          placeholder="0"
+                                        />
+                                      </div>
+
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          setExpandedCashifyKeys((prev) => ({ ...prev, [key]: !prev[key] }))
+                                        }
+                                        className="p-1 hover:bg-zinc-100 rounded text-zinc-500 cursor-pointer flex items-center gap-0.5 text-[10px] font-mono font-semibold"
+                                        title="View/Edit Cashify link & target"
+                                      >
+                                        <span>Link</span>
+                                        {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+
+                                {isEnabled ? (
+                                  <div className="space-y-2">
+
+                                    {/* Collapsible Cashify Benchmark Settings */}
+                                    {isExpanded && (
+                                      <div className="p-2.5 bg-blue-50/40 border border-blue-200 rounded-lg space-y-2 text-[10px] animate-in fade-in">
+                                        <div className="flex items-center justify-between">
+                                          <span className="font-bold text-blue-900">Cashify Listed: ₹{cPrice.toLocaleString('en-IN')}</span>
+                                          <span className="font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-200">
+                                            Target (+3%): ₹{targetPlus3.toLocaleString('en-IN')}
+                                          </span>
+                                        </div>
+
+                                        <div className="flex items-center justify-between gap-1 pt-1 border-t border-blue-100">
+                                          <a
+                                            href={cUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="truncate text-[9px] text-blue-600 hover:underline max-w-[200px]"
+                                          >
+                                            {cUrl || 'Auto-generating link...'}
+                                          </a>
+                                          {!isApproved ? (
+                                            <button
+                                              type="button"
+                                              onClick={() => handleApproveVariant(ram, storage)}
+                                              className="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-bold text-[9px] cursor-pointer"
+                                            >
+                                              Apply +3%
+                                            </button>
+                                          ) : (
+                                            <button
+                                              type="button"
+                                              onClick={() => handleRevokeApproval(ram, storage)}
+                                              className="text-[9px] text-zinc-500 hover:text-rose-600 underline cursor-pointer"
+                                            >
+                                              Revoke
+                                            </button>
+                                          )}
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <div className="py-3 text-center">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleToggleVariant(ram, storage, true)}
+                                      className="px-3 py-1 bg-white border border-zinc-300 hover:border-emerald-500 hover:text-emerald-700 rounded-md text-[10px] font-bold font-mono text-zinc-600 cursor-pointer"
+                                    >
+                                      + Activate this Variant
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto border border-ice-border rounded-lg bg-white shadow-xs">
                   <table className="w-full text-xs font-mono border-collapse">
                     <thead>
                       <tr className="bg-zinc-100/80 border-b border-ice-border text-zinc-600 text-[10px] uppercase font-bold">
@@ -4487,6 +4846,7 @@ export const EditSpecsAndPricesModal: React.FC<EditSpecsAndPricesModalProps> = (
                     </tbody>
                   </table>
                 </div>
+                )}
               </div>
             );
           })()}

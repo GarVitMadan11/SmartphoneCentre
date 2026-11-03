@@ -75,6 +75,7 @@ export interface Model {
   screenDeduction?: number;               // Model-specific deduction in INR when non-original/replaced screen
   warrantyDeductionPercentage?: number;   // Model-specific deduction percentage when out of warranty (e.g. 25.5 for 25.5%)
   esimDeduction?: number;                 // Model-specific flat deduction in INR for international / eSIM only variant (resets to default % when undefined)
+  batteryUnder80Deduction?: number;       // Model-specific flat deduction in INR for Battery Health < 80% / Service Alert (Apple iPhones). 80-85% is auto-computed via 30% ratio.
 }
 
 export interface Variant {
@@ -103,6 +104,73 @@ export function isAppleDevice(brandId?: string, modelName?: string): boolean {
   const b = (brandId || '').toLowerCase();
   const m = (modelName || '').toLowerCase();
   return b === 'brand-apple' || b === 'apple' || m.includes('iphone') || m.includes('ipad') || m.includes('apple') || m.includes('watch');
+}
+
+/**
+ * Universal Apple Battery Deduction Math (Empirical Constant 10/3 ratio = 30%)
+ * Deduction(80-85%) = Math.round((Deduction(<80%) * 0.3) / 10) * 10
+ */
+export function calculateApple80to85Deduction(under80Deduction: number): number {
+  if (!under80Deduction || under80Deduction <= 0) return 0;
+  return Math.round((under80Deduction * 0.3) / 10) * 10;
+}
+
+/**
+ * Option A: Model-Tier Empirical Battery Flat Deductions for Apple iPhones
+ * Calibrated against 65 live Cashify observations.
+ */
+export function getDefaultAppleBatteryDeduction(modelName: string): { under80: number; between80and85: number } {
+  const m = (modelName || '').toLowerCase();
+  let under80 = 3000; // default baseline for modern iPhones
+
+  if (m.includes('se 2020') || m.includes('se 2022') || m.includes('se (2020)') || m.includes('se (2022)') || m.includes('se 3') || m.includes('se 2') || m.includes('iphone se')) {
+    under80 = 1200;
+  } else if (m.includes('iphone 16 pro max') || m.includes('16 pro max') || m.includes('iphone 16 pro') || m.includes('16 pro')) {
+    under80 = 4200;
+  } else if (m.includes('iphone 16 plus') || m.includes('16 plus') || m.includes('iphone 16') || m.includes('16')) {
+    under80 = 3800;
+  } else if (m.includes('iphone 15 pro max') || m.includes('15 pro max') || m.includes('iphone 15 pro') || m.includes('15 pro')) {
+    under80 = 4000;
+  } else if (m.includes('iphone 15 plus') || m.includes('15 plus') || m.includes('iphone 15') || m.includes('15')) {
+    under80 = 3400;
+  } else if (m.includes('iphone 14 pro max') || m.includes('14 pro max')) {
+    under80 = 3400;
+  } else if (m.includes('iphone 14 pro') || m.includes('14 pro')) {
+    under80 = 3200;
+  } else if (m.includes('iphone 14 plus') || m.includes('14 plus') || m.includes('iphone 14') || m.includes('14')) {
+    under80 = 3000;
+  } else if (m.includes('iphone 13 pro max') || m.includes('13 pro max')) {
+    under80 = 3200;
+  } else if (m.includes('iphone 13 pro') || m.includes('13 pro')) {
+    under80 = 3000;
+  } else if (m.includes('iphone 13 mini') || m.includes('13 mini')) {
+    under80 = 2660;
+  } else if (m.includes('iphone 13') || m.includes('13')) {
+    under80 = 3000;
+  } else if (m.includes('iphone 12 pro max') || m.includes('12 pro max')) {
+    under80 = 2400;
+  } else if (m.includes('iphone 12 pro') || m.includes('12 pro')) {
+    under80 = 2200;
+  } else if (m.includes('iphone 12 mini') || m.includes('12 mini')) {
+    under80 = 1600;
+  } else if (m.includes('iphone 12') || m.includes('12')) {
+    under80 = 1800;
+  } else if (m.includes('iphone 11 pro max') || m.includes('11 pro max')) {
+    under80 = 2200;
+  } else if (m.includes('iphone 11 pro') || m.includes('11 pro')) {
+    under80 = 2000;
+  } else if (m.includes('iphone 11') || m.includes('11')) {
+    under80 = 1500;
+  } else if (m.includes('xs max') || m.includes('xs') || m.includes('xr') || m.includes('iphone x')) {
+    under80 = 1400;
+  } else if (m.includes('iphone 8') || m.includes('iphone 7') || m.includes('iphone 6')) {
+    under80 = 1000;
+  }
+
+  return {
+    under80,
+    between80and85: calculateApple80to85Deduction(under80),
+  };
 }
 
 export function isSmartwatchDevice(brandId?: string, modelName?: string, modelId?: string): boolean {

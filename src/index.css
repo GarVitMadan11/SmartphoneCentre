@@ -33,6 +33,17 @@ html {
     touch-action: manipulation;
   }
 
+  /* GPU Containment for large catalog grids and matrix tables */
+  .admin-catalog-grid > * {
+    content-visibility: auto;
+    contain-intrinsic-size: 0 160px;
+  }
+
+  .admin-matrix-row {
+    content-visibility: auto;
+    contain-intrinsic-size: 0 60px;
+  }
+
   /* Enforce clean, professional Inter across ALL typography, removing bubbly or typewriter/monospace styling */
   h1,
   h2,

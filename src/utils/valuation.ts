@@ -57,6 +57,7 @@ export function calculateValuation(
     screenDeduction?: number;
     warrantyDeductionPercentage?: number;
     supportsWarrantyQuestion?: boolean;
+    batteryUnder80Deduction?: number;
   }
 ): ValuationBreakdown {
   const result: Stage1ValuationResult = calculateStage1Valuation({

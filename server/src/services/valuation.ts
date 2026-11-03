@@ -137,8 +137,82 @@ export interface QuoteBreakdown {
   signature: string;
 }
 
-export function calculateServerValuation(basePrice: number, category: DeviceCategory, defectIds: string[]): number | null {
-  const rules = rulesFor(category);
+export function calculateApple80to85Deduction(under80Deduction: number): number {
+  if (!under80Deduction || under80Deduction <= 0) return 0;
+  return Math.round((under80Deduction * 0.3) / 10) * 10;
+}
+
+export function getDefaultAppleBatteryDeduction(modelName: string): { under80: number; between80and85: number } {
+  const m = (modelName || '').toLowerCase();
+  let under80 = 3000;
+
+  if (m.includes('se 2020') || m.includes('se 2022') || m.includes('se (2020)') || m.includes('se (2022)') || m.includes('se 3') || m.includes('se 2') || m.includes('iphone se')) {
+    under80 = 1200;
+  } else if (m.includes('iphone 16 pro max') || m.includes('16 pro max') || m.includes('iphone 16 pro') || m.includes('16 pro')) {
+    under80 = 4200;
+  } else if (m.includes('iphone 16 plus') || m.includes('16 plus') || m.includes('iphone 16') || m.includes('16')) {
+    under80 = 3800;
+  } else if (m.includes('iphone 15 pro max') || m.includes('15 pro max') || m.includes('iphone 15 pro') || m.includes('15 pro')) {
+    under80 = 4000;
+  } else if (m.includes('iphone 15 plus') || m.includes('15 plus') || m.includes('iphone 15') || m.includes('15')) {
+    under80 = 3400;
+  } else if (m.includes('iphone 14 pro max') || m.includes('14 pro max')) {
+    under80 = 3400;
+  } else if (m.includes('iphone 14 pro') || m.includes('14 pro')) {
+    under80 = 3200;
+  } else if (m.includes('iphone 14 plus') || m.includes('14 plus') || m.includes('iphone 14') || m.includes('14')) {
+    under80 = 3000;
+  } else if (m.includes('iphone 13 pro max') || m.includes('13 pro max')) {
+    under80 = 3200;
+  } else if (m.includes('iphone 13 pro') || m.includes('13 pro')) {
+    under80 = 3000;
+  } else if (m.includes('iphone 13 mini') || m.includes('13 mini')) {
+    under80 = 2660;
+  } else if (m.includes('iphone 13') || m.includes('13')) {
+    under80 = 3000;
+  } else if (m.includes('iphone 12 pro max') || m.includes('12 pro max')) {
+    under80 = 2400;
+  } else if (m.includes('iphone 12 pro') || m.includes('12 pro')) {
+    under80 = 2200;
+  } else if (m.includes('iphone 12 mini') || m.includes('12 mini')) {
+    under80 = 1600;
+  } else if (m.includes('iphone 12') || m.includes('12')) {
+    under80 = 1800;
+  } else if (m.includes('iphone 11 pro max') || m.includes('11 pro max')) {
+    under80 = 2200;
+  } else if (m.includes('iphone 11 pro') || m.includes('11 pro')) {
+    under80 = 2000;
+  } else if (m.includes('iphone 11') || m.includes('11')) {
+    under80 = 1500;
+  } else if (m.includes('xs max') || m.includes('xs') || m.includes('xr') || m.includes('iphone x')) {
+    under80 = 1400;
+  } else if (m.includes('iphone 8') || m.includes('iphone 7') || m.includes('iphone 6')) {
+    under80 = 1000;
+  }
+
+  return {
+    under80,
+    between80and85: calculateApple80to85Deduction(under80),
+  };
+}
+
+export function calculateServerValuation(
+  basePrice: number,
+  category: DeviceCategory,
+  defectIds: string[],
+  options?: { modelName?: string; brandId?: string; batteryUnder80Deduction?: number }
+): number | null {
+  const rules = { ...rulesFor(category) };
+
+  // Calibrate Apple battery health deductions using Option A flat model-tier rules
+  const isApple = options?.brandId === 'brand-apple' || (options?.modelName && (options.modelName.toLowerCase().includes('iphone') || options.modelName.toLowerCase().includes('apple')));
+  if (isApple && (defectIds.includes('defect-battery-low') || defectIds.includes('defect-battery-80-85'))) {
+    const under80 = options?.batteryUnder80Deduction ?? (options?.modelName ? getDefaultAppleBatteryDeduction(options.modelName).under80 : 3000);
+    const between80and85 = calculateApple80to85Deduction(under80);
+    rules['defect-battery-low'] = { category: 'connectivity', fixed: under80, percentage: 0 };
+    rules['defect-battery-80-85'] = { category: 'connectivity', fixed: between80and85, percentage: 0 };
+  }
+
   const selected = [...new Set(defectIds)].map(id => rules[id]);
   if (selected.some(rule => !rule)) return null;
   if (selected.some(rule => rule.critical)) return 0;

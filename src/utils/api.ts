@@ -289,6 +289,7 @@ export interface ApiModel {
   screenDeduction?: number;
   warrantyDeductionPercentage?: number;
   esimDeduction?: number | null;
+  batteryUnder80Deduction?: number | null;
 }
 
 const MODEL_CACHE_KEY = 'stc_cached_models_v2';
@@ -353,6 +354,8 @@ export async function createModel(data: {
   supportsWarrantyQuestion?: boolean;
   screenDeduction?: number;
   warrantyDeductionPercentage?: number;
+  esimDeduction?: number | null;
+  batteryUnder80Deduction?: number | null;
 }): Promise<ApiModel> {
   const res = await apiFetch<ApiModel>('/models', { method: 'POST', body: JSON.stringify(data) }, true);
   try {

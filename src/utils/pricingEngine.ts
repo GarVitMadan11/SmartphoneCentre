@@ -42,6 +42,8 @@ export interface PricingInput {
   warrantyDeductionPercentage?: number;
   /** Whether the model asks brand warranty question in diagnostics (when false, skips warranty deduction) */
   supportsWarrantyQuestion?: boolean;
+  /** Explicit flat deduction in INR for battery health < 80% / service alert on Apple iPhones (defaults to model-tier if unset) */
+  batteryUnder80Deduction?: number;
 }
 
 export interface AdjustmentDetail {

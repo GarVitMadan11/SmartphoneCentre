@@ -717,7 +717,7 @@ export const PriceMatrixTab: React.FC<PriceMatrixTabProps> = ({ brands, onRefres
 
                       {/* Models and Variant Price Matrix */}
                       {!isCollapsed && (
-                        <div className="space-y-4 pt-1">
+                        <div className="space-y-4 pt-1 admin-catalog-grid">
                           {Object.entries(modelsMap).map(([modelName, variantsList]) => {
                             const first = variantsList[0];
                             const deviceImg = first?.imageUrl || getDeviceImage(first?.modelLegacyId, first?.modelName);

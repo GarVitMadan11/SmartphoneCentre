@@ -631,82 +631,82 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
         {/* ── 3. DIRECT TAB CONTENT CONTAINER (ZERO NESTED HEADERS, 100% SPACE) ─ */}
         <main className="flex-1 p-4 md:p-6 overflow-y-auto w-full min-w-0">
           {/* Smartphones Catalog */}
-          {activeNav === 'smartphones' && (
+          <div className={activeNav === 'smartphones' ? 'block' : 'hidden'}>
             <CatalogTab
               category="smartphones"
               brands={brands}
               onRefresh={onRefreshCatalog}
             />
-          )}
+          </div>
 
           {/* Tablets Catalog */}
-          {activeNav === 'tablets' && (
+          <div className={activeNav === 'tablets' ? 'block' : 'hidden'}>
             <CatalogTab
               category="tablets"
               brands={brands}
               onRefresh={onRefreshCatalog}
             />
-          )}
+          </div>
 
           {/* Smartwatches Catalog */}
-          {activeNav === 'smartwatches' && (
+          <div className={activeNav === 'smartwatches' ? 'block' : 'hidden'}>
             <CatalogTab
               category="smartwatches"
               brands={brands}
               onRefresh={onRefreshCatalog}
             />
-          )}
+          </div>
 
           {/* Hierarchical Price Matrix: Brand -> Series -> Variant -> Price */}
-          {activeNav === 'pricing' && (
+          <div className={activeNav === 'pricing' ? 'block' : 'hidden'}>
             <PriceMatrixTab
               brands={brands}
               onRefresh={onRefreshCatalog}
             />
-          )}
+          </div>
 
           {/* Cashify Live Market Monitor */}
-          {activeNav === 'cashify' && (
+          <div className={activeNav === 'cashify' ? 'block' : 'hidden'}>
             <CashifyMonitorTab />
-          )}
+          </div>
 
           {/* Operations: Doorstep Inspections */}
-          {activeNav === 'inspections' && (
+          <div className={activeNav === 'inspections' ? 'block' : 'hidden'}>
             <LedgerTab
               bookings={bookings}
               onRefresh={loadBookings}
               currentUser={currentUser}
             />
-          )}
+          </div>
 
           {/* Operations: Support Inbox */}
-          {activeNav === 'support' && (
+          <div className={activeNav === 'support' ? 'block' : 'hidden'}>
             <SupportTab />
-          )}
+          </div>
 
           {/* Finance: Payouts & Disbursements */}
-          {activeNav === 'finance' && (
+          <div className={activeNav === 'finance' ? 'block' : 'hidden'}>
             <LedgerTab
               bookings={bookings}
               onRefresh={loadBookings}
               currentUser={currentUser}
             />
-          )}
+          </div>
 
           {/* Growth & Incentives: Referral & Promo Codes */}
-          {activeNav === 'coupons' && (
+          <div className={activeNav === 'coupons' ? 'block' : 'hidden'}>
             <CouponsTab />
-          )}
+          </div>
 
           {/* Governance: Audit Trail */}
-          {activeNav === 'audit' && (
+          <div className={activeNav === 'audit' ? 'block' : 'hidden'}>
             <AuditLogTab />
-          )}
+          </div>
 
           {/* Team & Role Access Control */}
-          {activeNav === 'staff' && (
+          <div className={activeNav === 'staff' ? 'block' : 'hidden'}>
             <StaffTab />
-          )}
+          </div>
         </main>
       </div>
     </div>
