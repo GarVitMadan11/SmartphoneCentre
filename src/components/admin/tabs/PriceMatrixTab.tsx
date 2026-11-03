@@ -376,11 +376,11 @@ export const PriceMatrixTab: React.FC<PriceMatrixTabProps> = ({ brands, onRefres
     }
   };
 
-  // Toggle series collapse
+  // Toggle series collapse (default is collapsed for fast 60fps rendering)
   const toggleSeriesExpand = (seriesKey: string) => {
     setExpandedSeries((prev) => ({
       ...prev,
-      [seriesKey]: prev[seriesKey] === undefined ? false : !prev[seriesKey],
+      [seriesKey]: !prev[seriesKey],
     }));
   };
 
@@ -668,7 +668,10 @@ export const PriceMatrixTab: React.FC<PriceMatrixTabProps> = ({ brands, onRefres
               <div className="divide-y divide-ice-border/70">
                 {Object.entries(seriesGroup).map(([seriesName, modelsMap]) => {
                   const seriesKey = `${brandName}:${seriesName}`;
-                  const isCollapsed = expandedSeries[seriesKey] === false;
+                  // If searching or single series filtered, default open; otherwise collapsed for high performance
+                  const isCollapsed = expandedSeries[seriesKey] !== undefined
+                    ? !expandedSeries[seriesKey]
+                    : (searchQuery.trim() === '' && selectedSeries === 'all');
                   const allModelIdsInSeries = Object.values(modelsMap).flatMap((entries) => entries.map((e) => e.modelId));
                   const uniqueModelIdsInSeries = Array.from(new Set(allModelIdsInSeries));
                   const totalVariantsInSeries = Object.values(modelsMap).reduce((acc, arr) => acc + arr.length, 0);
