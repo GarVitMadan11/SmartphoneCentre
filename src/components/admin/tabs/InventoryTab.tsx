@@ -775,49 +775,50 @@ export const InventoryTab: React.FC = () => {
 
       {/* ── 4. ADD / EDIT DEVICE MODAL ────────────────────────────────────── */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 overflow-y-auto">
-          <div className="bg-canvas-pure border border-ice-border rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden my-8 animate-in fade-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-xs p-0 sm:p-4 overflow-y-auto">
+          <div className="bg-canvas-pure border border-ice-border rounded-t-2xl sm:rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] sm:max-h-[90vh] flex flex-col overflow-hidden my-0 sm:my-8 animate-in fade-in slide-in-from-bottom-4 sm:zoom-in-95 duration-150">
             {/* Modal Header */}
-            <div className="px-6 py-4 border-b border-ice-border flex items-center justify-between bg-slate-50/60">
-              <div className="flex items-center gap-2">
-                <div className="p-2 rounded-xl bg-cobalt/10 text-cobalt font-bold">
+            <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-ice-border flex items-center justify-between bg-slate-50/80 shrink-0">
+              <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+                <div className="p-1.5 sm:p-2 rounded-xl bg-cobalt/10 text-cobalt font-bold shrink-0">
                   <Package className="w-4 h-4" />
                 </div>
-                <div>
-                  <h3 className="font-extrabold text-sm text-ink-navy">
+                <div className="min-w-0">
+                  <h3 className="font-extrabold text-sm sm:text-base text-ink-navy truncate">
                     {editingItem ? 'Edit Inventory Device' : 'Add Device to Inventory'}
                   </h3>
-                  <p className="text-[11px] text-slate-500 font-mono">
+                  <p className="text-[10px] sm:text-[11px] text-slate-500 font-mono truncate">
                     Auto-assigns unique barcode and tracks buying cost & channel
                   </p>
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => setIsAddModalOpen(false)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-ink-navy hover:bg-slate-100 cursor-pointer"
+                className="p-1.5 sm:p-2 rounded-lg text-slate-400 hover:text-ink-navy hover:bg-slate-200/60 transition-colors cursor-pointer shrink-0"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
             </div>
 
             {/* Modal Body Form */}
-            <form onSubmit={handleSubmitDevice} className="p-6 space-y-4">
+            <form onSubmit={handleSubmitDevice} className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
               {/* Acquisition Channel (Online vs Offline) */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1.5">
                   Acquisition Channel (How did you get this phone?) *
                 </label>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
                   <button
                     type="button"
                     onClick={() => setFormChannel('OFFLINE')}
                     className={`p-3 rounded-xl border text-left flex items-start gap-3 transition-all cursor-pointer ${
                       formChannel === 'OFFLINE'
-                        ? 'border-amber-500 bg-amber-50/60 text-amber-900 ring-2 ring-amber-500/20'
+                        ? 'border-amber-500 bg-amber-50/70 text-amber-900 ring-2 ring-amber-500/20'
                         : 'border-ice-border bg-slate-50/50 hover:bg-slate-100 text-slate-700'
                     }`}
                   >
-                    <Store className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                    <Store className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
                     <div>
                       <div className="text-xs font-bold">Store Walk-in / Offline</div>
                       <div className="text-[10px] text-slate-500">Bought directly at retail store / offline partner</div>
@@ -829,11 +830,11 @@ export const InventoryTab: React.FC = () => {
                     onClick={() => setFormChannel('ONLINE')}
                     className={`p-3 rounded-xl border text-left flex items-start gap-3 transition-all cursor-pointer ${
                       formChannel === 'ONLINE'
-                        ? 'border-blue-500 bg-blue-50/60 text-blue-900 ring-2 ring-blue-500/20'
+                        ? 'border-blue-500 bg-blue-50/70 text-blue-900 ring-2 ring-blue-500/20'
                         : 'border-ice-border bg-slate-50/50 hover:bg-slate-100 text-slate-700'
                     }`}
                   >
-                    <Globe className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <Globe className="w-5 h-5 text-blue-600 mt-0.5 shrink-0" />
                     <div>
                       <div className="text-xs font-bold">Online Order / Pickup</div>
                       <div className="text-[10px] text-slate-500">Acquired via Rephonix website doorstep order</div>
@@ -843,7 +844,7 @@ export const InventoryTab: React.FC = () => {
               </div>
 
               {/* Brand & Model */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">Brand *</label>
                   <input
@@ -869,7 +870,7 @@ export const InventoryTab: React.FC = () => {
               </div>
 
               {/* Variant, Storage & RAM */}
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">Storage (GB)</label>
                   <input
@@ -909,7 +910,7 @@ export const InventoryTab: React.FC = () => {
               </div>
 
               {/* Buying Price & Buying Date */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-3 bg-emerald-50/40 border border-emerald-200/60 rounded-xl">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-emerald-50/50 border border-emerald-200/70 rounded-xl">
                 <div>
                   <label className="block text-xs font-bold text-emerald-900 mb-1">
                     Buying Price (₹) *
@@ -942,7 +943,7 @@ export const InventoryTab: React.FC = () => {
               </div>
 
               {/* Bought From (Seller info) */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
                     Bought From (Customer / Vendor Name) *
@@ -969,7 +970,7 @@ export const InventoryTab: React.FC = () => {
               </div>
 
               {/* IMEI & Custom Barcode (optional) */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">IMEI / Serial Number</label>
                   <input
@@ -1007,7 +1008,7 @@ export const InventoryTab: React.FC = () => {
               </div>
 
               {/* Modal Footer Buttons */}
-              <div className="pt-3 border-t border-ice-border flex items-center justify-end gap-2">
+              <div className="pt-3 border-t border-ice-border flex items-center justify-end gap-2 shrink-0">
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
@@ -1018,14 +1019,14 @@ export const InventoryTab: React.FC = () => {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-5 py-2 bg-cobalt hover:bg-cobalt/90 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50"
+                  className="px-4 sm:px-5 py-2 bg-cobalt hover:bg-cobalt/90 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50"
                 >
                   {submitting ? (
                     <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                   ) : (
                     <Check className="w-3.5 h-3.5" />
                   )}
-                  <span>{editingItem ? 'Update Device' : 'Save Device & Generate Barcode'}</span>
+                  <span>{editingItem ? 'Update Device' : 'Save Device'}</span>
                 </button>
               </div>
             </form>
@@ -1035,29 +1036,30 @@ export const InventoryTab: React.FC = () => {
 
       {/* ── 5. MARK AS SOLD MODAL ─────────────────────────────────────────── */}
       {sellingItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 overflow-y-auto">
-          <div className="bg-canvas-pure border border-ice-border rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-            <div className="px-5 py-4 border-b border-ice-border flex items-center justify-between bg-emerald-50/60">
-              <div className="flex items-center gap-2">
-                <div className="p-2 rounded-xl bg-emerald-600 text-white font-bold">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-xs p-0 sm:p-4 overflow-y-auto">
+          <div className="bg-canvas-pure border border-ice-border rounded-t-2xl sm:rounded-2xl shadow-2xl w-full max-w-md max-h-[92vh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 sm:zoom-in-95 duration-150">
+            <div className="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-ice-border flex items-center justify-between bg-emerald-50/80 shrink-0">
+              <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+                <div className="p-1.5 sm:p-2 rounded-xl bg-emerald-600 text-white font-bold shrink-0">
                   <CheckCircle className="w-4 h-4" />
                 </div>
-                <div>
-                  <h3 className="font-extrabold text-sm text-ink-navy">Mark Device as Sold</h3>
-                  <p className="text-[11px] text-slate-500 font-mono">
+                <div className="min-w-0">
+                  <h3 className="font-extrabold text-sm sm:text-base text-ink-navy truncate">Mark Device as Sold</h3>
+                  <p className="text-[10px] sm:text-[11px] text-slate-500 font-mono truncate">
                     Record buyer details and calculate realized profit
                   </p>
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => setSellingItem(null)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-ink-navy hover:bg-slate-100 cursor-pointer"
+                className="p-1.5 sm:p-2 rounded-lg text-slate-400 hover:text-ink-navy hover:bg-slate-200/60 cursor-pointer shrink-0"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleConfirmSold} className="p-5 space-y-4">
+            <form onSubmit={handleConfirmSold} className="p-4 sm:p-5 space-y-4 overflow-y-auto flex-1">
               {/* Device Quick Recap Card */}
               <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
                 <div>
@@ -1108,7 +1110,7 @@ export const InventoryTab: React.FC = () => {
               </div>
 
               {/* Sold Date & Buyer Details */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">Sale Date *</label>
                   <input
@@ -1135,7 +1137,7 @@ export const InventoryTab: React.FC = () => {
               </div>
 
               {/* Buyer Contact */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">Buyer Name</label>
                   <input
@@ -1150,7 +1152,7 @@ export const InventoryTab: React.FC = () => {
                   <label className="block text-xs font-bold text-slate-700 mb-1">Buyer Phone</label>
                   <input
                     type="tel"
-                    placeholder="Phone Number"
+                    placeholder="e.g. 9876543210"
                     value={buyerContact}
                     onChange={(e) => setBuyerContact(e.target.value)}
                     className="w-full px-3 py-2 bg-slate-50 border border-ice-border rounded-lg text-xs font-medium focus:bg-white"
@@ -1158,6 +1160,7 @@ export const InventoryTab: React.FC = () => {
                 </div>
               </div>
 
+              {/* Remarks */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">Sale Remarks</label>
                 <input
@@ -1169,7 +1172,8 @@ export const InventoryTab: React.FC = () => {
                 />
               </div>
 
-              <div className="pt-3 border-t border-ice-border flex items-center justify-end gap-2">
+              {/* Modal Footer Buttons */}
+              <div className="pt-3 border-t border-ice-border flex items-center justify-end gap-2 shrink-0">
                 <button
                   type="button"
                   onClick={() => setSellingItem(null)}
@@ -1187,7 +1191,7 @@ export const InventoryTab: React.FC = () => {
                   ) : (
                     <CheckCircle className="w-3.5 h-3.5" />
                   )}
-                  <span>Confirm Sale</span>
+                  <span>Confirm Sale & Record Profit</span>
                 </button>
               </div>
             </form>
@@ -1197,18 +1201,19 @@ export const InventoryTab: React.FC = () => {
 
       {/* ── 6. PRINT BARCODE LABEL MODAL ──────────────────────────────────── */}
       {printItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
-          <div className="bg-canvas-pure border border-ice-border rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-            <div className="px-5 py-3 border-b border-ice-border flex items-center justify-between bg-slate-50">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-xs p-0 sm:p-4 overflow-y-auto">
+          <div className="bg-canvas-pure border border-ice-border rounded-t-2xl sm:rounded-2xl shadow-2xl w-full max-w-sm max-h-[92vh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 sm:zoom-in-95 duration-150">
+            <div className="px-4 sm:px-5 py-3 border-b border-ice-border flex items-center justify-between bg-slate-50 shrink-0">
               <span className="text-xs font-bold text-ink-navy flex items-center gap-1.5">
                 <Printer className="w-4 h-4 text-cobalt" />
                 <span>Print Barcode Label Tag</span>
               </span>
               <button
+                type="button"
                 onClick={() => setPrintItem(null)}
-                className="p-1 text-slate-400 hover:text-ink-navy cursor-pointer"
+                className="p-1.5 text-slate-400 hover:text-ink-navy hover:bg-slate-200/60 rounded-md cursor-pointer shrink-0"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
             </div>
 
@@ -1272,31 +1277,32 @@ export const InventoryTab: React.FC = () => {
 
       {/* ── 7. IMPORT ONLINE BOOKING MODAL ────────────────────────────────── */}
       {isBookingImportOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 overflow-y-auto">
-          <div className="bg-canvas-pure border border-ice-border rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden my-8 animate-in fade-in zoom-in-95 duration-150">
-            <div className="px-6 py-4 border-b border-ice-border flex items-center justify-between bg-blue-50/60">
-              <div className="flex items-center gap-2">
-                <div className="p-2 rounded-xl bg-blue-600 text-white font-bold">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-xs p-0 sm:p-4 overflow-y-auto">
+          <div className="bg-canvas-pure border border-ice-border rounded-t-2xl sm:rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] sm:max-h-[90vh] flex flex-col overflow-hidden my-0 sm:my-8 animate-in fade-in slide-in-from-bottom-4 sm:zoom-in-95 duration-150">
+            <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-ice-border flex items-center justify-between bg-blue-50/80 shrink-0">
+              <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+                <div className="p-1.5 sm:p-2 rounded-xl bg-blue-600 text-white font-bold shrink-0">
                   <Globe className="w-4 h-4" />
                 </div>
-                <div>
-                  <h3 className="font-extrabold text-sm text-ink-navy">
+                <div className="min-w-0">
+                  <h3 className="font-extrabold text-sm sm:text-base text-ink-navy truncate">
                     Import from Online Doorstep Pickups
                   </h3>
-                  <p className="text-[11px] text-slate-500 font-mono">
+                  <p className="text-[10px] sm:text-[11px] text-slate-500 font-mono truncate">
                     Select a completed customer order to prefill device details into inventory
                   </p>
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => setIsBookingImportOpen(false)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-ink-navy hover:bg-slate-100 cursor-pointer"
+                className="p-1.5 sm:p-2 rounded-lg text-slate-400 hover:text-ink-navy hover:bg-slate-200/60 cursor-pointer shrink-0"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
             </div>
 
-            <div className="p-6 max-h-[60vh] overflow-y-auto">
+            <div className="p-4 sm:p-6 overflow-y-auto flex-1">
               {loadingBookings ? (
                 <div className="py-12 flex flex-col items-center justify-center text-slate-400">
                   <RefreshCw className="w-6 h-6 animate-spin text-blue-600 mb-2" />

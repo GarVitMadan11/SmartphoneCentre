@@ -564,29 +564,30 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
       <div className="flex-1 flex flex-col bg-canvas-white min-w-0 overflow-hidden">
 
         {/* Top App Header Bar */}
-        <header className="bg-canvas-white/95 backdrop-blur-md border-b border-ice-border px-4 md:px-6 py-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-xs">
+        <header className="bg-canvas-white/95 backdrop-blur-md border-b border-ice-border px-3 sm:px-4 md:px-6 py-2.5 sm:py-3.5 flex items-center justify-between gap-2 shadow-xs shrink-0">
 
           {/* Breadcrumb Path & Active View Title */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             {/* Mobile Hamburger Menu Toggle */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-lg border border-ice-border text-ink-slate hover:text-ink-navy cursor-pointer"
+              className="md:hidden p-1.5 sm:p-2 rounded-lg border border-ice-border text-ink-slate hover:text-ink-navy bg-white shadow-2xs cursor-pointer shrink-0"
+              aria-label="Toggle Navigation Menu"
             >
               {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
             </button>
 
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-lg bg-cobalt/10 text-cobalt border border-cobalt/20">
+            <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+              <div className="p-1.5 sm:p-2 rounded-lg bg-cobalt/10 text-cobalt border border-cobalt/20 shrink-0">
                 <ActiveIcon className="w-4 h-4" />
               </div>
-              <div>
-                <div className="flex items-center gap-1.5 text-[11px] font-mono text-ink-muted">
+              <div className="min-w-0">
+                <div className="hidden xs:flex items-center gap-1.5 text-[10px] sm:text-[11px] font-mono text-ink-muted truncate">
                   <span>Admin</span>
                   <span>/</span>
-                  <span>{breadcrumbInfo.section}</span>
+                  <span className="truncate">{breadcrumbInfo.section}</span>
                 </div>
-                <h1 className="text-lg md:text-xl font-extrabold text-ink-navy tracking-tight leading-none mt-0.5">
+                <h1 className="text-sm sm:text-base md:text-xl font-extrabold text-ink-navy tracking-tight leading-tight truncate">
                   {breadcrumbInfo.title}
                 </h1>
               </div>
@@ -594,12 +595,12 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
           </div>
 
           {/* Quick Action Tools & System Health */}
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {/* Refresh Data */}
             <button
               onClick={handleGlobalRefresh}
               disabled={loadingBookings}
-              className="px-3 py-1.5 border border-ice-border hover:border-cobalt/40 text-ink-navy hover:text-cobalt bg-canvas-pure text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+              className="px-2 sm:px-3 py-1.5 border border-ice-border hover:border-cobalt/40 text-ink-navy hover:text-cobalt bg-canvas-pure text-xs font-bold rounded-lg transition-all flex items-center gap-1 sm:gap-1.5 cursor-pointer shadow-xs"
               title="Refresh Catalog and Bookings"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${loadingBookings ? 'animate-spin text-cobalt' : 'text-slate-500'}`} />
@@ -610,10 +611,10 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
             {effectiveRole === 'SUPER_ADMIN' && (
               <button
                 onClick={handleResetDemoData}
-                className="px-3 py-1.5 border border-ice-border text-ink-slate hover:text-ink-navy bg-canvas-pure hover:bg-zinc-100 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer"
+                className="hidden lg:flex px-3 py-1.5 border border-ice-border text-ink-slate hover:text-ink-navy bg-canvas-pure hover:bg-zinc-100 text-xs font-semibold rounded-lg transition-all items-center gap-1.5 cursor-pointer"
                 title="Reset Demo Ledger Data (Super Admin Only)"
               >
-                <span className="hidden sm:inline">Reset Ledger</span>
+                <span>Reset Ledger</span>
               </button>
             )}
 
@@ -621,22 +622,22 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
             {effectiveRole === 'SUPER_ADMIN' && (
               <button
                 onClick={handleLockdown}
-                className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
+                className="hidden sm:flex px-2.5 sm:px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-lg transition-all items-center gap-1 sm:gap-1.5 shadow-sm cursor-pointer"
                 title="Emergency Lockdown: Instantly revoke admin sessions (Super Admin Only)"
               >
                 <ShieldAlert className="w-3.5 h-3.5" />
-                <span>Lockdown</span>
+                <span className="hidden md:inline">Lockdown</span>
               </button>
             )}
 
             {/* Clean Sign Out */}
             <button
               onClick={handleSignOut}
-              className="px-3 py-1.5 border border-slate-200 hover:border-rose-200 bg-white hover:bg-rose-50 text-slate-700 hover:text-rose-600 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer shadow-xs ml-1"
+              className="px-2 sm:px-3 py-1.5 border border-slate-200 hover:border-rose-200 bg-white hover:bg-rose-50 text-slate-700 hover:text-rose-600 text-xs font-bold rounded-lg transition-all flex items-center gap-1 sm:gap-1.5 cursor-pointer shadow-xs"
               title="Sign Out of Admin Session"
             >
               <LogOut className="w-3.5 h-3.5" />
-              <span>Sign Out</span>
+              <span className="hidden sm:inline">Sign Out</span>
             </button>
           </div>
         </header>
