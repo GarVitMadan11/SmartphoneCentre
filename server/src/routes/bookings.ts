@@ -642,4 +642,29 @@ router.delete('/:id/payout-details', adminAuth, requireRole(['SUPER_ADMIN', 'FIN
   }
 });
 
+// POST /api/bookings/reset-ledger — SUPER_ADMIN ONLY: Purge all orders/transactions
+router.post('/reset-ledger', adminAuth, requireRole(['SUPER_ADMIN']), async (req: AuthenticatedRequest, res) => {
+  try {
+    await prisma.$transaction([
+      prisma.inventoryItem.updateMany({ data: { associatedBookingId: null } }),
+      prisma.bookingEvent.deleteMany({}),
+      prisma.booking.deleteMany({}),
+      prisma.adminAuditLog.create({
+        data: {
+          adminUserId: req.user?.sub ?? '',
+          action: 'reset_ledger',
+          targetType: 'booking',
+          targetId: 'all',
+          ipAddress: String(req.ip ?? ''),
+          userAgent: String(req.headers['user-agent'] ?? '')
+        }
+      })
+    ]);
+    res.json({ success: true, message: 'All bookings and transaction records have been reset successfully.' });
+  } catch (err) {
+    console.error('POST /api/bookings/reset-ledger error:', err);
+    res.status(500).json({ error: 'ServerError', message: 'Failed to reset bookings ledger.' });
+  }
+});
+
 export default router;

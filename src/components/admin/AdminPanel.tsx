@@ -5,7 +5,7 @@ import {
   Zap, Truck, MessageSquare, CreditCard, ChevronLeft, ChevronRight, ChevronDown,
   Menu, X, ShieldCheck, Eye, Layers, Users, Tag, User, DollarSign, Package
 } from 'lucide-react';
-import { fetchBookings, triggerAdminLockdown, fetchCurrentUser, getCurrentAdminUser, adminLogout, AdminUserSession, ApiUser } from '../../utils/api';
+import { fetchBookings, triggerAdminLockdown, fetchCurrentUser, getCurrentAdminUser, adminLogout, resetLedgerBookings, AdminUserSession, ApiUser } from '../../utils/api';
 import { AdminContextProvider } from '../../context/AdminContext';
 import CatalogTab from './tabs/CatalogTab';
 import CashifyMonitorTab from './tabs/CashifyMonitorTab';
@@ -177,9 +177,19 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
   };
 
   const handleResetDemoData = async () => {
-    if (!window.confirm('Reset all bookings ledger state to defaults?')) return;
-    setBookings(initialBookings);
-    if (onRefreshBookings) onRefreshBookings(initialBookings);
+    if (!window.confirm('Are you sure you want to PERMANENTLY reset and clear all orders/transactions from the ledger and database?')) return;
+    try {
+      setLoadingBookings(true);
+      const res = await resetLedgerBookings();
+      setBookings([]);
+      if (onRefreshBookings) onRefreshBookings([]);
+      alert(`✅ ${res.message || 'Ledger reset successfully!'}`);
+    } catch (err: any) {
+      alert(`Failed to reset ledger: ${err.message || 'Server error'}`);
+    } finally {
+      setLoadingBookings(false);
+      await loadBookings();
+    }
   };
 
   const handleSignOut = async () => {

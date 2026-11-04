@@ -545,6 +545,12 @@ export function updateBooking(
   }, true);
 }
 
+export function resetLedgerBookings(): Promise<{ success: boolean; message: string }> {
+  return apiFetch<{ success: boolean; message: string }>('/bookings/reset-ledger', {
+    method: 'POST',
+  }, true);
+}
+
 // ── Customer Authentication API Helpers ─────────────────────────────────────
 
 export interface ApiUser {
