@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -252,7 +252,6 @@ model CashifyPriceAlert {
   @@index([alertDate])
 }
 
-
 model ReferralCoupon {
   id             String        @id @default(uuid())
   code           String        @unique
@@ -292,4 +291,41 @@ model CouponUsage {
   @@index([customerPhone])
   @@index([customerEmail])
   @@index([usedAt])
+}
+
+model InventoryItem {
+  id                  String    @id @default(uuid())
+  barcode             String    @unique
+  brand               String
+  model               String
+  variant             String    @default("") // e.g. "8GB / 128GB"
+  storageGb           Int?
+  ramGb               Int?
+  color               String    @default("")
+  imei                String    @default("") // IMEI / Serial number
+  condition           String    @default("Good") // "Flawless", "Good", "Fair", "Needs Repair"
+  buyingPrice         Int       // Purchase cost in INR
+  buyingDate          DateTime  @default(now()) // When acquired
+  boughtFrom          String    // Seller name / supplier / customer
+  sellerPhone         String    @default("")
+  sellerEmail         String    @default("")
+  acquisitionChannel  String    @default("OFFLINE") // "ONLINE" | "OFFLINE"
+  associatedBookingId String?   // optional reference to doorstep booking
+  status              String    @default("IN_STOCK") // "IN_STOCK" | "SOLD" | "IN_REPAIR" | "RETURNED"
+  sellingPrice        Int?      // Sale price in INR
+  soldDate            DateTime? // When sold
+  soldTo              String?   // Buyer name
+  buyerContact        String?   // Buyer phone/email
+  paymentMethod       String?   // "CASH", "UPI", "CARD", "BANK_TRANSFER"
+  notes               String    @default("") // Remarks, accessories, condition notes
+  createdBy           String    @default("ADMIN")
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([barcode])
+  @@index([status])
+  @@index([acquisitionChannel])
+  @@index([buyingDate])
+  @@index([soldDate])
+  @@index([imei])
 }

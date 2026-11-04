@@ -3,7 +3,7 @@ import { Booking, Brand, Model } from '../../data/mockDatabase';
 import {
   ArrowLeft, RefreshCw, ShieldAlert, Smartphone, Tablet, Watch, LogOut,
   Zap, Truck, MessageSquare, CreditCard, ChevronLeft, ChevronRight, ChevronDown,
-  Menu, X, ShieldCheck, Eye, Layers, Users, Tag, User, DollarSign
+  Menu, X, ShieldCheck, Eye, Layers, Users, Tag, User, DollarSign, Package
 } from 'lucide-react';
 import { fetchBookings, triggerAdminLockdown, fetchCurrentUser, getCurrentAdminUser, adminLogout, AdminUserSession, ApiUser } from '../../utils/api';
 import { AdminContextProvider } from '../../context/AdminContext';
@@ -15,8 +15,10 @@ import AuditLogTab from './tabs/AuditLogTab';
 import StaffTab from './tabs/StaffTab';
 import { CouponsTab } from './tabs/CouponsTab';
 import PriceMatrixTab from './tabs/PriceMatrixTab';
+import InventoryTab from './tabs/InventoryTab';
 
 export type AdminNavKey =
+  | 'inventory'
   | 'smartphones'
   | 'tablets'
   | 'smartwatches'
@@ -123,13 +125,13 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
 
     // Role-based defaults when no granular permissions array is present
     if (effectiveRole === 'CATALOG_EDITOR') {
-      return ['smartphones', 'tablets', 'smartwatches', 'pricing', 'cashify'].includes(serviceKey);
+      return ['inventory', 'smartphones', 'tablets', 'smartwatches', 'pricing', 'cashify'].includes(serviceKey);
     }
     if (effectiveRole === 'OPERATIONS_AGENT') {
-      return ['inspections', 'support'].includes(serviceKey);
+      return ['inventory', 'inspections', 'support'].includes(serviceKey);
     }
     if (effectiveRole === 'FINANCE_APPROVER') {
-      return ['finance', 'coupons'].includes(serviceKey);
+      return ['inventory', 'finance', 'coupons'].includes(serviceKey);
     }
     return false;
   }, [effectiveRole, adminUser]);
@@ -138,7 +140,7 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
   useEffect(() => {
     if (effectiveRole === 'SUPER_ADMIN') return;
     if (!hasAccessTo(activeNav)) {
-      const allServices: AdminNavKey[] = ['smartphones', 'tablets', 'smartwatches', 'pricing', 'cashify', 'inspections', 'support', 'finance'];
+      const allServices: AdminNavKey[] = ['inventory', 'smartphones', 'tablets', 'smartwatches', 'pricing', 'cashify', 'inspections', 'support', 'finance', 'coupons'];
       const firstAllowed = allServices.find(s => hasAccessTo(s));
       if (firstAllowed) {
         setActiveNav(firstAllowed);
@@ -217,6 +219,8 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
   // Breadcrumbs text helper
   const breadcrumbInfo = useMemo(() => {
     switch (activeNav) {
+      case 'inventory':
+        return { section: 'Device Stock', title: 'Device Inventory & Barcodes', icon: Package };
       case 'smartphones':
         return { section: 'Inventory & Pricing', title: 'Smartphones Catalog', icon: Smartphone };
       case 'tablets':
@@ -359,8 +363,8 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
             </div>
           ) : (
             <>
-              {/* Group A: Catalog */}
-              {(hasAccessTo('smartphones') || hasAccessTo('tablets') || hasAccessTo('smartwatches') || hasAccessTo('pricing') || hasAccessTo('cashify')) && (
+              {/* Group A: Catalog & Stock */}
+              {(hasAccessTo('inventory') || hasAccessTo('smartphones') || hasAccessTo('tablets') || hasAccessTo('smartwatches') || hasAccessTo('pricing') || hasAccessTo('cashify')) && (
                 <div>
                   <div
                     className={`px-2.5 pb-1 text-[10px] font-mono font-bold tracking-wider uppercase text-slate-400 transition-all duration-200 overflow-hidden whitespace-nowrap ${isSidebarExpanded ? 'block' : 'hidden'
@@ -369,6 +373,15 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
                     Catalog & Valuation
                   </div>
                   <div className="space-y-0.5">
+                    {hasAccessTo('inventory') && (
+                      <NavItem
+                        navKey="inventory"
+                        label="Device Inventory"
+                        icon={Package}
+                        badge="New"
+                        badgeColor="bg-emerald-400/20 text-emerald-300"
+                      />
+                    )}
                     {hasAccessTo('smartphones') && <NavItem navKey="smartphones" label="Smartphones" icon={Smartphone} />}
                     {hasAccessTo('tablets') && <NavItem navKey="tablets" label="Tablets" icon={Tablet} />}
                     {hasAccessTo('smartwatches') && <NavItem navKey="smartwatches" label="Smartwatches" icon={Watch} />}
@@ -630,6 +643,11 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
 
         {/* ── 3. DIRECT TAB CONTENT CONTAINER (ZERO NESTED HEADERS, 100% SPACE) ─ */}
         <main className="flex-1 p-4 md:p-6 overflow-y-auto w-full min-w-0">
+          {/* Device Stock & Physical Inventory */}
+          {activeNav === 'inventory' && (
+            <InventoryTab />
+          )}
+
           {/* Smartphones Catalog */}
           <div className={activeNav === 'smartphones' ? 'block' : 'hidden'}>
             <CatalogTab
