@@ -4,7 +4,7 @@ import {
   TrendingUp, DollarSign, Calendar, Phone,
   RefreshCw, Trash2, Edit3, X,
   ShoppingBag, Globe, Store, Check,
-  ArrowRight
+  ArrowRight, FileText
 } from 'lucide-react';
 import {
   InventoryItem,
@@ -122,6 +122,7 @@ export const InventoryTab: React.FC = () => {
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [sellingItem, setSellingItem] = useState<InventoryItem | null>(null);
   const [printItem, setPrintItem] = useState<InventoryItem | null>(null);
+  const [invoiceItem, setInvoiceItem] = useState<InventoryItem | null>(null);
   const [isBookingImportOpen, setIsBookingImportOpen] = useState(false);
   const [convertibleBookings, setConvertibleBookings] = useState<any[]>([]);
   const [loadingBookings, setLoadingBookings] = useState(false);
@@ -331,7 +332,7 @@ export const InventoryTab: React.FC = () => {
 
     setSellingSubmitting(true);
     try {
-      const res = await markInventorySold(sellingItem.id, {
+      await markInventorySold(sellingItem.id, {
         sellingPrice: price,
         soldDate: new Date(soldDate).toISOString(),
         soldTo: soldTo.trim() || 'Retail Customer',
@@ -340,9 +341,23 @@ export const InventoryTab: React.FC = () => {
         notes: sellNotes.trim(),
       });
 
-      alert(`✅ Device marked as SOLD!\n\n${res.message}`);
+      // Prepare updated item for the bill invoice view
+      const updatedItemForBill: InventoryItem = {
+        ...sellingItem,
+        status: 'SOLD',
+        sellingPrice: price,
+        soldDate: new Date(soldDate).toISOString(),
+        soldTo: soldTo.trim() || 'Retail Customer',
+        buyerContact: buyerContact.trim(),
+        paymentMethod,
+        notes: sellNotes.trim(),
+      };
+
       setSellingItem(null);
       await loadData();
+
+      // Instantly open the invoice receipt dialog with print option
+      setInvoiceItem(updatedItemForBill);
     } catch (err: any) {
       alert(`Failed to mark sold: ${err.message}`);
     } finally {
@@ -738,13 +753,23 @@ export const InventoryTab: React.FC = () => {
                               <span>Mark Sold</span>
                             </button>
                           ) : (
-                            <button
-                              onClick={() => handleRevertSold(item)}
-                              className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[11px] font-semibold transition-all cursor-pointer"
-                              title="Revert back to In Stock"
-                            >
-                              Revert Sale
-                            </button>
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => setInvoiceItem(item)}
+                                className="px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold flex items-center gap-1 shadow-2xs transition-all cursor-pointer"
+                                title="Print Sale Bill / Invoice"
+                              >
+                                <FileText className="w-3 h-3" />
+                                <span>Bill</span>
+                              </button>
+                              <button
+                                onClick={() => handleRevertSold(item)}
+                                className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[11px] font-semibold transition-all cursor-pointer"
+                                title="Revert back to In Stock"
+                              >
+                                Revert
+                              </button>
+                            </div>
                           )}
 
                           <button
@@ -1275,7 +1300,174 @@ export const InventoryTab: React.FC = () => {
         </div>
       )}
 
-      {/* ── 7. IMPORT ONLINE BOOKING MODAL ────────────────────────────────── */}
+      {/* ── 7. PRINT SALE BILL / INVOICE MODAL ──────────────────────────── */}
+      {invoiceItem && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-xs p-0 sm:p-4 overflow-y-auto">
+          <div className="bg-canvas-pure border border-ice-border rounded-t-2xl sm:rounded-2xl shadow-2xl w-full max-w-lg max-h-[94vh] sm:max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 sm:zoom-in-95 duration-150">
+            {/* Header */}
+            <div className="px-4 sm:px-5 py-3.5 border-b border-ice-border flex items-center justify-between bg-slate-50 shrink-0">
+              <span className="text-xs sm:text-sm font-extrabold text-ink-navy flex items-center gap-2">
+                <FileText className="w-4 h-4 text-cobalt" />
+                <span>Customer Sale Invoice & Bill</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setInvoiceItem(null)}
+                className="p-1.5 text-slate-400 hover:text-ink-navy hover:bg-slate-200/60 rounded-md cursor-pointer shrink-0"
+              >
+                <X className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+            </div>
+
+            {/* Printable Invoice Container */}
+            <div className="p-4 sm:p-6 overflow-y-auto flex-1 bg-slate-100/60">
+              <div
+                id="rephonix-sale-invoice"
+                className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-sm text-slate-800 space-y-4"
+              >
+                {/* Store Header */}
+                <div className="flex items-start justify-between pb-4 border-b border-slate-200 gap-3">
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-black text-lg text-slate-900 tracking-tight">
+                        Re<span className="text-blue-600">phonix</span>
+                      </span>
+                      <span className="text-[10px] font-mono px-1.5 py-0.2 bg-emerald-100 text-emerald-800 rounded font-bold">
+                        SALE INVOICE
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-slate-500 mt-0.5">
+                      Refurbished & Certified Pre-Owned Tech
+                    </div>
+                    <div className="text-[10px] text-slate-400 font-mono">
+                      support@rephonix.in • https://rephonix.in
+                    </div>
+                  </div>
+
+                  <div className="text-right">
+                    <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider font-semibold">
+                      INVOICE NO.
+                    </div>
+                    <div className="font-mono font-bold text-xs text-slate-900">
+                      INV-{invoiceItem.barcode.replace('RPX-', '')}
+                    </div>
+                    <div className="text-[10px] font-mono text-slate-500 mt-0.5">
+                      {invoiceItem.soldDate ? invoiceItem.soldDate.split('T')[0] : new Date().toISOString().split('T')[0]}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Buyer & Payment Meta */}
+                <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 rounded-lg text-xs border border-slate-100">
+                  <div>
+                    <span className="text-[10px] font-mono text-slate-400 uppercase font-bold block">Billed To (Buyer)</span>
+                    <span className="font-bold text-slate-800 block text-xs mt-0.5">
+                      {invoiceItem.soldTo || 'Retail Customer'}
+                    </span>
+                    {invoiceItem.buyerContact && (
+                      <span className="text-[11px] font-mono text-slate-500 block">
+                        Ph: {invoiceItem.buyerContact}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[10px] font-mono text-slate-400 uppercase font-bold block">Payment Mode</span>
+                    <span className="font-bold text-emerald-700 block text-xs mt-0.5">
+                      {invoiceItem.paymentMethod || 'UPI / CASH'}
+                    </span>
+                    <span className="text-[10px] font-mono text-slate-500 block">
+                      Status: PAID IN FULL
+                    </span>
+                  </div>
+                </div>
+
+                {/* Line Item Table */}
+                <div className="border border-slate-200 rounded-lg overflow-hidden">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-mono text-[10px] uppercase">
+                        <th className="py-2 px-3">Item Description</th>
+                        <th className="py-2 px-3">Condition</th>
+                        <th className="py-2 px-3 text-right">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td className="py-3 px-3 align-top">
+                          <div className="font-bold text-slate-900 text-xs">
+                            {invoiceItem.brand} {invoiceItem.model}
+                          </div>
+                          <div className="text-[10px] font-mono text-slate-500 mt-0.5">
+                            {invoiceItem.variant} {invoiceItem.color ? `• ${invoiceItem.color}` : ''}
+                          </div>
+                          {invoiceItem.imei && (
+                            <div className="text-[10px] font-mono text-slate-400 mt-0.5">
+                              IMEI / S/N: {invoiceItem.imei}
+                            </div>
+                          )}
+                          <div className="text-[10px] font-mono text-blue-600 mt-0.5">
+                            Tag Barcode: {invoiceItem.barcode}
+                          </div>
+                        </td>
+                        <td className="py-3 px-3 align-top font-mono text-[11px] font-semibold text-slate-700">
+                          {invoiceItem.condition}
+                        </td>
+                        <td className="py-3 px-3 align-top text-right font-mono font-black text-sm text-slate-900">
+                          ₹{invoiceItem.sellingPrice?.toLocaleString('en-IN') || 0}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Total Summary */}
+                <div className="pt-2 border-t border-slate-200 flex justify-between items-baseline">
+                  <div className="text-[10px] text-slate-400 font-mono">
+                    Includes test verification & testing warranty
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[10px] font-mono text-slate-500 uppercase mr-2 font-bold">TOTAL PAID:</span>
+                    <span className="font-mono font-black text-lg text-emerald-700">
+                      ₹{invoiceItem.sellingPrice?.toLocaleString('en-IN') || 0}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Barcode & Footer Note */}
+                <div className="pt-3 border-t border-dashed border-slate-200 flex flex-col items-center text-center">
+                  <BarcodeSvg value={invoiceItem.barcode} width={200} height={45} />
+                  <p className="text-[9px] text-slate-400 mt-2">
+                    Thank you for buying from Rephonix! Keep this bill for testing warranty & support.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="p-3.5 sm:p-4 bg-slate-50 border-t border-ice-border flex items-center justify-between shrink-0">
+              <button
+                type="button"
+                onClick={() => setInvoiceItem(null)}
+                className="px-3.5 py-2 border border-ice-border text-slate-600 hover:bg-slate-100 rounded-lg text-xs font-semibold cursor-pointer"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  window.print();
+                }}
+                className="px-4 py-2 bg-cobalt hover:bg-cobalt/90 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm cursor-pointer"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>Print Bill (PDF / Paper)</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── 8. IMPORT ONLINE BOOKING MODAL ────────────────────────────────── */}
       {isBookingImportOpen && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-xs p-0 sm:p-4 overflow-y-auto">
           <div className="bg-canvas-pure border border-ice-border rounded-t-2xl sm:rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] sm:max-h-[90vh] flex flex-col overflow-hidden my-0 sm:my-8 animate-in fade-in slide-in-from-bottom-4 sm:zoom-in-95 duration-150">
