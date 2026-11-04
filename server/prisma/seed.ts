@@ -34,6 +34,7 @@ const DEFAULT_ADMIN_PASSWORD_HASH = bcrypt.hashSync(seedPassword, 12);
 const isGeneratedPassword = !(process.env.ADMIN_SEED_PASSWORD ?? '').trim();
 
 const DEFAULT_ADMIN_USERS = [
+  { username: 'dhruv', email: 'dhruv@rephonix.in', passwordHash: bcrypt.hashSync('admin@rpx30', 12), role: 'SUPER_ADMIN', active: true },
   { username: 'superadmin', email: 'admin@smartphonecentre.com', passwordHash: DEFAULT_ADMIN_PASSWORD_HASH, role: 'SUPER_ADMIN', active: true },
   { username: 'finance_lead', email: 'finance@smartphonecentre.com', passwordHash: DEFAULT_ADMIN_PASSWORD_HASH, role: 'FINANCE_APPROVER', active: true },
   { username: 'ops_agent1', email: 'ops@smartphonecentre.com', passwordHash: DEFAULT_ADMIN_PASSWORD_HASH, role: 'OPERATIONS_AGENT', active: true },
