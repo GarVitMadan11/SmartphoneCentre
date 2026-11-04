@@ -1327,20 +1327,25 @@ export const InventoryTab: React.FC = () => {
               >
                 {/* Store Header */}
                 <div className="flex items-start justify-between pb-4 border-b border-slate-200 gap-3">
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-black text-lg text-slate-900 tracking-tight">
-                        Re<span className="text-blue-600">phonix</span>
-                      </span>
-                      <span className="text-[10px] font-mono px-1.5 py-0.2 bg-emerald-100 text-emerald-800 rounded font-bold">
-                        SALE INVOICE
-                      </span>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-[#001736] p-1.5 flex items-center justify-center border border-slate-200 shrink-0">
+                      <img src="/logo.svg" className="w-full h-full object-contain" alt="Rephonix Logo" />
                     </div>
-                    <div className="text-[11px] text-slate-500 mt-0.5">
-                      Refurbished & Certified Pre-Owned Tech
-                    </div>
-                    <div className="text-[10px] text-slate-400 font-mono">
-                      support@rephonix.in • https://rephonix.in
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-black text-xl text-slate-900 tracking-tight font-sans">
+                          Re<span className="text-blue-600">phonix</span>
+                        </span>
+                        <span className="text-[10px] font-mono px-1.5 py-0.2 bg-emerald-100 text-emerald-800 rounded font-bold">
+                          TAX INVOICE
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-slate-500 font-medium mt-0.5">
+                        Certified Pre-Owned & Refurbished Devices
+                      </div>
+                      <div className="text-[10px] text-slate-400 font-mono">
+                        support@rephonix.in
+                      </div>
                     </div>
                   </div>
 
