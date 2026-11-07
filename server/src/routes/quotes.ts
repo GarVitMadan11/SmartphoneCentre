@@ -13,6 +13,7 @@ import {
   sendAdminQuoteAlertEmail,
   sendAdminPriceMatchAlertEmail,
   sendAdminStepLeadEmail,
+  sendAdminReviewSummaryEmail,
 } from '../services/bookingMailer.js';
 import { ALLOWED_STORAGE_GB } from '../validation/booking.js';
 import { authLimiter, leadLimiter, quoteLimiter } from '../middleware/rateLimits.js';
@@ -218,6 +219,59 @@ router.post('/step-lead', leadLimiter, async (req, res) => {
   } catch (err) {
     console.error('POST /api/quotes/step-lead error:', err);
     res.status(500).json({ error: 'ServerError', message: 'Failed to process step lead.' });
+  }
+});
+
+// POST /api/quotes/review-alert
+router.post('/review-alert', leadLimiter, async (req, res) => {
+  try {
+    const {
+      modelName,
+      brandName,
+      storageGb,
+      ramGb,
+      estimatedPayout,
+      retentionPercentage,
+      defects,
+      customerName,
+      customerPhone,
+      customerEmail,
+      deviceType,
+      sourceUrl,
+    } = req.body || {};
+
+    if (!modelName || typeof modelName !== 'string') {
+      res.status(400).json({ error: 'ValidationError', message: 'modelName is required.' });
+      return;
+    }
+
+    const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || req.socket.remoteAddress || undefined;
+    const userAgent = req.headers['user-agent'] as string | undefined;
+
+    // Dispatch review summary alert email asynchronously so user experiences zero latency
+    sendAdminReviewSummaryEmail({
+      modelName: String(modelName).trim(),
+      brandName: brandName ? String(brandName).trim() : undefined,
+      storageGb: Number(storageGb) || 128,
+      ramGb: ramGb ? Number(ramGb) : undefined,
+      estimatedPayout: Number(estimatedPayout) || 0,
+      retentionPercentage: retentionPercentage !== undefined ? Number(retentionPercentage) : undefined,
+      defects: Array.isArray(defects) ? defects.map(d => String(d)) : [],
+      customerName: customerName ? String(customerName).trim() : undefined,
+      customerPhone: customerPhone ? String(customerPhone).trim() : undefined,
+      customerEmail: customerEmail ? String(customerEmail).trim() : undefined,
+      deviceType: deviceType ? String(deviceType).trim() : undefined,
+      sourceUrl: sourceUrl ? String(sourceUrl).trim() : undefined,
+      ip,
+      userAgent,
+    }).catch((err) => {
+      console.error('[POST /api/quotes/review-alert] Failed to dispatch admin review summary email:', err);
+    });
+
+    res.json({ success: true, message: 'Review summary email notification processed.' });
+  } catch (err) {
+    console.error('POST /api/quotes/review-alert error:', err);
+    res.status(500).json({ error: 'ServerError', message: 'Failed to process review alert.' });
   }
 });
 

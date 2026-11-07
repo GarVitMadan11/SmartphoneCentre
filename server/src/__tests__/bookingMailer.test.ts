@@ -16,6 +16,7 @@ import {
   sendAdminBookingNotificationEmail,
   sendAdminQuoteAlertEmail,
   sendAdminStepLeadEmail,
+  sendAdminReviewSummaryEmail,
 } from '../services/bookingMailer';
 
 describe('Booking Mailer & Admin Alert Email', () => {
@@ -81,6 +82,23 @@ describe('Booking Mailer & Admin Alert Email', () => {
       customerEmail: 'garvitmadan511@gmail.com',
       deviceType: 'phone',
       sourceUrl: 'http://localhost:5173/sell-used-samsung-galaxy-s24-ultra-256gb',
+    });
+    expect(result).toBe(true);
+  }, 15000);
+
+  it('should run sendAdminReviewSummaryEmail when user clicks Review Summary without throwing errors', async () => {
+    const result = await sendAdminReviewSummaryEmail({
+      modelName: 'iPhone 16 Pro Max',
+      brandName: 'APPLE',
+      storageGb: 256,
+      estimatedPayout: 72400,
+      retentionPercentage: 88,
+      defects: ['Original Battery Health 80% - 85%'],
+      customerName: 'Garvit Madan (Unit Test)',
+      customerPhone: '9034997719',
+      customerEmail: 'garvitmadan511@gmail.com',
+      deviceType: 'phone',
+      sourceUrl: 'http://localhost:5173/sell-used-apple-iphone-16-pro-max-256gb',
     });
     expect(result).toBe(true);
   }, 15000);

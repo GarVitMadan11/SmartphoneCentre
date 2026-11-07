@@ -853,6 +853,29 @@ export function sendStepLeadAlertApi(payload: StepLeadAlertPayload): Promise<{ s
 }
 
 
+export interface ReviewSummaryAlertPayload {
+  modelName: string;
+  brandName?: string | null;
+  storageGb: number;
+  ramGb?: number | null;
+  estimatedPayout: number;
+  retentionPercentage?: number | null;
+  defects: string[];
+  customerName?: string | null;
+  customerEmail?: string | null;
+  customerPhone?: string | null;
+  deviceType?: string | null;
+  sourceUrl?: string | null;
+}
+
+/** Send Review Summary alert email to admin when a user reaches and views the Review Summary */
+export function sendReviewSummaryAlertApi(payload: ReviewSummaryAlertPayload): Promise<{ success: boolean }> {
+  return apiFetch<{ success: boolean }>('/quotes/review-alert', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
 // ── Cashify Price Monitor Admin APIs ──────────────────────────────────────────
 
 export interface CashifySummaryData {

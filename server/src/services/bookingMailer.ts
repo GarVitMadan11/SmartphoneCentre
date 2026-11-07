@@ -784,6 +784,181 @@ export async function sendAdminPriceMatchAlertEmail(data: PriceMatchAlertData): 
   }
 }
 
+export interface ReviewSummaryAlertData {
+  modelName: string;
+  brandName?: string;
+  storageGb: number;
+  ramGb?: number;
+  estimatedPayout: number;
+  retentionPercentage?: number;
+  defects: string[];
+  customerName?: string;
+  customerPhone?: string;
+  customerEmail?: string;
+  deviceType?: string;
+  sourceUrl?: string;
+  ip?: string;
+  userAgent?: string;
+}
+
+export async function sendAdminReviewSummaryEmail(data: ReviewSummaryAlertData): Promise<boolean> {
+  const adminRecipient = getAdminAlertRecipient();
+  const transporter = getTransporter();
+
+  const formattedPayout = data.estimatedPayout && data.estimatedPayout > 0
+    ? `₹${data.estimatedPayout.toLocaleString('en-IN')}`
+    : '₹0';
+
+  const specLabel = `${Number(data.storageGb) >= 1024 ? (Number(data.storageGb) / 1024) + ' TB' : Number(data.storageGb) + ' GB'}${data.ramGb ? ` • ${data.ramGb} GB RAM` : ''}`;
+
+  const cleanPhone = data.customerPhone ? String(data.customerPhone).replace(/[^\d+]/g, '') : '';
+  const isGuest = !data.customerName && !data.customerPhone && !data.customerEmail;
+  const leadTitle = isGuest ? 'Guest Website Visitor' : (data.customerName || 'Registered User');
+
+  const nowIst = new Date().toLocaleString('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  });
+
+  const subject = `[Review Summary Alert] ${data.modelName} (${specLabel}) - Payout: ${formattedPayout} (${leadTitle})`;
+
+  const defectListHtml = data.defects && data.defects.length > 0
+    ? data.defects.map(d => `<li style="padding: 2px 0; color: #b45309;">${escapeHtml(d)}</li>`).join('')
+    : '<li style="padding: 2px 0; color: #15803d; font-weight: 500;">All diagnostics passed (Mint Condition / No Defects)</li>';
+
+  if (!transporter) {
+    console.log(`[Review Summary Mailer] SMTP credentials not set. Alert ready for ${adminRecipient}: ${leadTitle} reached Review Summary for ${data.modelName} (${specLabel}, ${formattedPayout})`);
+    return true;
+  }
+
+  const waLeadMsg = encodeURIComponent(
+    `Hello! We saw you reached the diagnostic summary for ${data.modelName} (${specLabel}) with an estimated payout of ${formattedPayout} on Rephonix. Would you like us to confirm your valuation and book a free doorstep pickup?`
+  );
+  const waUrl = cleanPhone ? `https://wa.me/91${cleanPhone.replace(/^(\+?91)/, '')}?text=${waLeadMsg}` : '';
+  const callUrl = cleanPhone ? `tel:${cleanPhone}` : '';
+
+  const htmlBody = `
+    <div style="background-color: #f8fafc; padding: 32px 16px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+      <div style="max-width: 580px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 32px 28px; color: #111827;">
+        
+        <!-- Header -->
+        <div style="border-bottom: 1px solid #f1f5f9; padding-bottom: 18px; margin-bottom: 24px;">
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td>
+                <span style="font-size: 16px; font-weight: 700; color: #111827; letter-spacing: -0.2px;">Rephonix Review Summary Alert</span>
+              </td>
+              <td style="text-align: right;">
+                <span style="display: inline-block; background-color: #fef3c7; color: #92400e; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 9999px; text-transform: uppercase;">Review Clicked</span>
+              </td>
+            </tr>
+          </table>
+        </div>
+
+        <h1 style="font-size: 18px; font-weight: 600; color: #111827; margin: 0 0 8px 0; letter-spacing: -0.2px;">User Clicked Review Summary</h1>
+        <p style="font-size: 13px; color: #4b5563; margin: 0 0 24px 0; line-height: 20px;">
+          A customer finished all 6 diagnostic assessment steps and clicked <strong>"Review Summary"</strong> to inspect their final diagnostic breakdown.
+        </p>
+
+        <!-- Device & Valuation Info -->
+        <div style="border-top: 1px solid #f1f5f9; padding-top: 18px; margin-bottom: 20px;">
+          <h2 style="font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 12px 0;">Device &amp; Valuation</h2>
+          <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+            <tr>
+              <td style="padding: 6px 0; color: #6b7280; width: 140px;">Model</td>
+              <td style="padding: 6px 0; color: #111827; font-weight: 600;">${escapeHtml(data.modelName)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 6px 0; color: #6b7280;">Configuration</td>
+              <td style="padding: 6px 0; color: #111827; font-weight: 500;">${escapeHtml(specLabel)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 6px 0; color: #6b7280;">Estimated Payout</td>
+              <td style="padding: 6px 0; color: #047857; font-weight: 700; font-size: 16px;">${escapeHtml(formattedPayout)}</td>
+            </tr>
+            ${data.retentionPercentage !== undefined ? `
+            <tr>
+              <td style="padding: 6px 0; color: #6b7280;">Retention</td>
+              <td style="padding: 6px 0; color: #111827; font-weight: 500;">${Number(data.retentionPercentage)}%</td>
+            </tr>` : ''}
+          </table>
+        </div>
+
+        <!-- Declared Defects -->
+        <div style="border-top: 1px solid #f1f5f9; padding-top: 18px; margin-bottom: 20px;">
+          <h2 style="font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 10px 0;">Declared Diagnostics (${data.defects ? data.defects.length : 0})</h2>
+          <ul style="margin: 0; padding-left: 20px; font-size: 13px; line-height: 20px;">
+            ${defectListHtml}
+          </ul>
+        </div>
+
+        <!-- Customer Identity & Visitor Info -->
+        <div style="border-top: 1px solid #f1f5f9; padding-top: 18px; margin-bottom: 20px;">
+          <h2 style="font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 12px 0;">Customer / Visitor Details</h2>
+          <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+            <tr>
+              <td style="padding: 6px 0; color: #6b7280; width: 140px;">Status</td>
+              <td style="padding: 6px 0; color: #111827; font-weight: 500;">${isGuest ? 'Guest visitor (not logged in)' : 'Logged-in customer'}</td>
+            </tr>
+            ${data.customerName ? `
+            <tr>
+              <td style="padding: 6px 0; color: #6b7280;">Name</td>
+              <td style="padding: 6px 0; color: #111827; font-weight: 500;">${escapeHtml(data.customerName)}</td>
+            </tr>` : ''}
+            ${cleanPhone ? `
+            <tr>
+              <td style="padding: 6px 0; color: #6b7280;">Phone</td>
+              <td style="padding: 6px 0;"><a href="tel:${encodeURIComponent(cleanPhone)}" style="color: #111827; text-decoration: none; font-weight: 500;">+91 ${escapeHtml(cleanPhone)}</a></td>
+            </tr>` : ''}
+            ${data.customerEmail ? `
+            <tr>
+              <td style="padding: 6px 0; color: #6b7280;">Email</td>
+              <td style="padding: 6px 0;"><a href="mailto:${encodeURIComponent(data.customerEmail)}" style="color: #111827; text-decoration: underline;">${escapeHtml(data.customerEmail)}</a></td>
+            </tr>` : ''}
+            <tr>
+              <td style="padding: 6px 0; color: #6b7280;">Time (IST)</td>
+              <td style="padding: 6px 0; color: #4b5563;">${escapeHtml(nowIst)}</td>
+            </tr>
+          </table>
+        </div>
+
+        ${cleanPhone ? `
+        <!-- Direct Quick Actions -->
+        <div style="margin: 24px 0 16px 0;">
+          <a href="${escapeHtml(waUrl)}" style="background-color: #111827; color: #ffffff; padding: 10px 18px; text-decoration: none; border-radius: 6px; font-weight: 500; font-size: 13px; display: inline-block; margin-right: 8px;">WhatsApp Customer</a>
+          <a href="${escapeHtml(callUrl)}" style="background-color: #f3f4f6; color: #111827; border: 1px solid #e5e7eb; padding: 9px 18px; text-decoration: none; border-radius: 6px; font-weight: 500; font-size: 13px; display: inline-block;">Call Directly</a>
+        </div>
+        ` : ''}
+
+        <!-- Footer -->
+        <div style="border-top: 1px solid #f1f5f9; padding-top: 20px; margin-top: 28px; font-size: 11px; color: #9ca3af;">
+          <p style="margin: 0;">Diagnostic wizard review summary notification &bull; Rephonix</p>
+        </div>
+      </div>
+    </div>
+  `;
+
+  try {
+    await transporter.sendMail({
+      from: getFromAddress(),
+      to: adminRecipient,
+      subject,
+      html: htmlBody,
+    });
+
+    console.log(`[Review Summary Mailer] Successfully sent review summary alert email to ${adminRecipient} for model "${data.modelName}"!`);
+    return true;
+  } catch (err) {
+    console.error('[Review Summary Mailer] Failed to send review summary alert email via Nodemailer:', err);
+    return false;
+  }
+}
+
 export interface StepLeadAlertData {
   modelName: string;
   brandName?: string;

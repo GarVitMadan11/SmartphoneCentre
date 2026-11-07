@@ -361,25 +361,36 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
 
     fCosmetic = fSurface * fStructural * fPanel;
   } else {
-    // Phone logic: Evaluate frame condition (scratches/dents/bent) and back glass panel condition independently (matching Cashify's 2-question model)
-    const frameDefects = cosmeticDefects.filter(d => d.id !== 'defect-body-backglass');
-    let fFrame = 1.00;
-    frameDefects.forEach(defect => {
-      const penalty = defect.deductionPercentage || (defect.deductionFixed > 0 ? defect.deductionFixed / basePrice : 0);
-      const factor = Math.max(0, 1.0 - penalty);
-      if (factor < fFrame) {
-        fFrame = factor;
-      }
+    // Phone logic: Evaluate frame (scratches/dents), structural (bent/loose), and panel (backglass/broken panel) independently (matching Cashify's 3-subgroup cosmetic model)
+    const scratchDefects = cosmeticDefects.filter(d => d.id.includes('scratches') || d.id === 'defect-body-scuffs');
+    let fScratches = 1.00;
+    scratchDefects.forEach(d => {
+      const p = d.deductionPercentage || (d.deductionFixed > 0 ? d.deductionFixed / basePrice : 0.02);
+      fScratches = Math.min(fScratches, Math.max(0, 1.0 - p));
     });
 
-    const backGlassDefect = cosmeticDefects.find(d => d.id === 'defect-body-backglass');
-    let fBackGlass = 1.00;
-    if (backGlassDefect) {
-      const penalty = backGlassDefect.deductionPercentage || (backGlassDefect.deductionFixed > 0 ? backGlassDefect.deductionFixed / basePrice : 0.05);
-      fBackGlass = Math.max(0.80, 1.0 - penalty);
-    }
+    const dentDefects = cosmeticDefects.filter(d => d.id.includes('dents') || d.id === 'defect-body-dented');
+    let fDents = 1.00;
+    dentDefects.forEach(d => {
+      const p = d.deductionPercentage || (d.deductionFixed > 0 ? d.deductionFixed / basePrice : 0.05);
+      fDents = Math.min(fDents, Math.max(0, 1.0 - p));
+    });
 
-    fCosmetic = fFrame * fBackGlass;
+    const structuralDefects = cosmeticDefects.filter(d => d.id.includes('bent') || d.id.includes('loose'));
+    let fStructural = 1.00;
+    structuralDefects.forEach(d => {
+      const p = d.deductionPercentage || 0.14;
+      fStructural = Math.min(fStructural, Math.max(0, 1.0 - p));
+    });
+
+    const panelDefects = cosmeticDefects.filter(d => d.id.includes('panel') || d.id === 'defect-body-backglass');
+    let fPanel = 1.00;
+    panelDefects.forEach(d => {
+      const p = d.deductionPercentage || (d.deductionFixed > 0 ? d.deductionFixed / basePrice : 0.08);
+      fPanel = Math.min(fPanel, Math.max(0, 1.0 - p));
+    });
+
+    fCosmetic = fScratches * fDents * fStructural * fPanel;
   }
 
   // Group B — Display (Scratches, cracks, touch, OLED/LCD, non-original display)
@@ -406,19 +417,20 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
   } else {
     // Phone logic: Deduplicate screen defects — full panel replacement (cracked glass, burn-in) automatically absorbs surface scratches
     const hasScreenPanelReplacement = displayDefects.some(d => 
-      d.id === 'defect-screen-cracked' || d.id === 'defect-screen-burn'
+      d.id === 'defect-screen-cracked' || d.id === 'defect-screen-burn' || d.id === 'defect-screen-lines' || d.id === 'defect-screen-spots-heavy'
     );
 
     displayDefects.forEach(defect => {
       if (defect.id === 'defect-screen-non-original' || defect.id === 'defect-screen-truetone' || defect.id === 'defect-screen-touch') {
         return; // Handled separately as model-specific screenDeductionAmount fixed adjustment
       }
-      if (hasScreenPanelReplacement && (defect.id === 'defect-screen-scratches' || defect.id === 'defect-screen-minor-scratches')) {
+      if (hasScreenPanelReplacement && (defect.id === 'defect-screen-scratches' || defect.id === 'defect-screen-minor-scratches' || defect.id === 'defect-screen-scratches-minor' || defect.id === 'defect-screen-scratches-major' || defect.id === 'defect-screen-chipped')) {
         return; // Waived: replacing entire display panel includes new scratch-free glass
       }
       let penalty = defect.deductionPercentage || 0;
-      if (defect.id === 'defect-screen-cracked' && penalty === 0) {
-        penalty = 0.28; // Standard ~28% display panel deduction
+      if ((defect.id === 'defect-screen-cracked' || defect.id === 'defect-screen-lines' || defect.id === 'defect-screen-spots-heavy') && (penalty === 0 || penalty > 0.22)) {
+        // Calibrate panel replacement penalty to exact market replacement cost ratio (~18% - 20% on ultra-premium flagships)
+        penalty = basePrice > 50000 ? 0.18 : 0.22;
       }
       if (defect.deductionFixed > 0) {
         const fixedPenalty = Math.min(0.30, defect.deductionFixed / basePrice);
@@ -590,16 +602,25 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
 
   let vendorMultiplier = 1.0;
   let vendorMultiplierPercentage = '+0%';
+  const hasAnyDefectsOrDeductions = fCondition < 0.98 || dAccessoriesCapped > 0 || screenDeductionAmount > 0 || dualEsimDeduction > 0 || singleSimDeduction > 0;
+
   if (config.vendorConditionTiers) {
-    if (fCondition >= 0.98) {
+    if (!hasAnyDefectsOrDeductions) {
+      // Flawless device: maintain basePrice (+3.0% over Cashify)
       vendorMultiplier = config.vendorConditionTiers.flawlessMultiplier ?? 1.0;
       vendorMultiplierPercentage = vendorMultiplier > 1 ? `+${((vendorMultiplier - 1) * 100).toFixed(1)}%` : '+0%';
-    } else if (fCondition >= 0.80) {
-      vendorMultiplier = config.vendorConditionTiers.minorDefectMultiplier ?? 1.0;
-      vendorMultiplierPercentage = vendorMultiplier > 1 ? `+${((vendorMultiplier - 1) * 100).toFixed(1)}%` : '+0%';
+    } else if (fCondition >= 0.85 && dAccessoriesCapped === 0 && screenDeductionAmount === 0) {
+      // Minor defect (1-2 scratches, 1 dent, 80-85% battery): compress +3% anchor to net +1.8% over Cashify (multiplier = 1.018 / 1.030)
+      vendorMultiplier = 0.988;
+      vendorMultiplierPercentage = '+1.8%';
+    } else if (fCondition >= 0.65) {
+      // Moderate defect (cracked screen, back panel broken): compress to net +1.5% over Cashify (multiplier = 1.015 / 1.030)
+      vendorMultiplier = 0.985;
+      vendorMultiplierPercentage = '+1.5%';
     } else {
-      vendorMultiplier = config.vendorConditionTiers.heavyDefectMultiplier ?? 1.0;
-      vendorMultiplierPercentage = vendorMultiplier > 1 ? `+${((vendorMultiplier - 1) * 100).toFixed(1)}%` : '+0%';
+      // Heavy / multiple defects: compress to net +1.0% over Cashify (multiplier = 1.010 / 1.030)
+      vendorMultiplier = 0.981;
+      vendorMultiplierPercentage = '+1.0%';
     }
   } else {
     const isHighThreshold = adjustedBenchmark > config.vendorThreshold;
@@ -610,7 +631,7 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
   // Rephonix Buyback Offer calculates starting from the pre-increased catalog base price
   const rawCalculatedPrice = Math.round(adjustedBenchmark * vendorMultiplier);
   // When device is in initial flawless condition (no defects/deductions), preserve exact configured basePrice
-  const isFlawlessInitialState = adjustedBenchmark === basePrice && vendorMultiplier === 1.0;
+  const isFlawlessInitialState = adjustedBenchmark === basePrice && !hasAnyDefectsOrDeductions;
   const finalRephonixPrice = isFlawlessInitialState
     ? basePrice
     : roundToCleanIndianPrice(rawCalculatedPrice, config.roundingStrategy);

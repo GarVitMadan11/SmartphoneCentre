@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef } from 'react';
 
-import { Model, Variant, getDefectRulesForCategory, DefectRule, isAppleDevice, isSmartwatchDevice, isTabletDevice, hasSpenSupport, getBiometricType, getDeviceImage, getModelScreenDeduction, getModelWarrantyDeductionPercentage } from '../../data/mockDatabase';
+import { Model, Variant, getDefectRulesForCategory, DefectRule, isAppleDevice, isSmartwatchDevice, isTabletDevice, isFoldableDevice, hasSpenSupport, getBiometricType, getDeviceImage, getModelScreenDeduction, getModelWarrantyDeductionPercentage } from '../../data/mockDatabase';
 
 import { calculateValuation } from '../../utils/valuation';
 
@@ -23,10 +23,23 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { getIllustration } from './Illustrations';
+import { 
+  ScreenScratchesArt, 
+  ScreenCrackedArt, 
+  ScreenChippedArt, 
+  ScreenDeadSpotsArt, 
+  ScreenLinesArt, 
+  ScreenDiscolorArt, 
+  BodyScratchesArt, 
+  BodyDentsArt, 
+  BackPanelCrackedArt, 
+  DeviceBentArt, 
+  ScreenLooseArt 
+} from './DefectLineArt';
 
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 
-import { checkEmail, customerLogin, customerSignup, verifyOtp, requestPasswordResetOtp, resetPasswordWithOtp, sendQuoteAlertApi, sendPriceMatchAlertApi, sendStepLeadAlertApi, syncFirebaseUser, validateCouponApi, fetchActiveOffers, PublicOffer, ApiUser } from '../../utils/api';
+import { checkEmail, customerLogin, customerSignup, verifyOtp, requestPasswordResetOtp, resetPasswordWithOtp, sendQuoteAlertApi, sendPriceMatchAlertApi, sendStepLeadAlertApi, sendReviewSummaryAlertApi, syncFirebaseUser, validateCouponApi, fetchActiveOffers, PublicOffer, ApiUser } from '../../utils/api';
 
 import { loginWithGoogle } from '../../services/firebaseAuth';
 
@@ -389,6 +402,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
   const isWatch = useMemo(() => isSmartwatchDevice(model.brandId, model.name, model.id), [model]);
 
   const isTablet = useMemo(() => isTabletDevice(model.brandId, model.name, model.id), [model]);
+  const isFoldable = useMemo(() => isFoldableDevice(model.brandId, model.name, model.id), [model]);
 
   const hasSpen = useMemo(() => hasSpenSupport(model.brandId, model.name, model.id), [model]);
 
@@ -560,7 +574,9 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
   const [screenConfirmed, setScreenConfirmed] = useState(false);
 
-  const [bodyConfirmed, setBodyConfirmed] = useState(false);
+  const [bodyConfirmed] = useState(false);
+  const [screenTriage, setScreenTriage] = useState<{ physical: boolean; linesSpots: boolean }>({ physical: false, linesSpots: false });
+  const [bodyTriage, setBodyTriage] = useState<{ scratchesDents: boolean; panelBent: boolean }>({ scratchesDents: false, panelBent: false });
 
   const [funcConfirmed, setFuncConfirmed] = useState(false);
 
@@ -824,9 +840,65 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
     }
 
-    if (step === 2) return true; // Screen defects - optional, defaults to perfect
+    if (step === 2) {
+      if (screenTriage.physical) {
+        const hasGlass = selectedDefects.some(d => 
+          d.id === 'defect-screen-cracked' || 
+          d.id === 'defect-screen-chipped' || 
+          d.id === 'defect-screen-scratches-major' || 
+          d.id === 'defect-screen-scratches-minor'
+        );
+        if (!hasGlass) return false;
+      }
+      if (screenTriage.linesSpots) {
+        const hasSpot = selectedDefects.some(d => 
+          d.id === 'defect-screen-spots-heavy' || 
+          d.id === 'defect-screen-spots-multi' || 
+          d.id === 'defect-screen-spots-white-minor'
+        );
+        const hasLine = selectedDefects.some(d => 
+          d.id === 'defect-screen-lines' || 
+          d.id === 'defect-screen-shading'
+        );
+        const hasDiscolor = selectedDefects.some(d => 
+          d.id === 'defect-screen-discolor-major' || 
+          d.id === 'defect-screen-discolor-minor' ||
+          d.id === 'defect-screen-burn'
+        );
+        if (!hasSpot || !hasLine || !hasDiscolor) return false;
+      }
+      return true;
+    }
 
-    if (step === 3) return true; // Body defects - optional, defaults to perfect
+    if (step === 3) {
+      if (bodyTriage.scratchesDents) {
+        const hasScratch = selectedDefects.some(d => 
+          d.id === 'defect-body-scratches-major' || 
+          d.id === 'defect-body-scratches-minor' ||
+          d.id === 'defect-body-scuffs'
+        );
+        const hasDent = selectedDefects.some(d => 
+          d.id === 'defect-body-dents-major' || 
+          d.id === 'defect-body-dents-minor' ||
+          d.id === 'defect-body-dented'
+        );
+        if (!hasScratch || !hasDent) return false;
+      }
+      if (bodyTriage.panelBent) {
+        const hasPanel = selectedDefects.some(d => 
+          d.id === 'defect-body-panel-broken' || 
+          d.id === 'defect-body-panel-missing' ||
+          d.id === 'defect-body-backglass'
+        );
+        const hasBent = selectedDefects.some(d => 
+          d.id === 'defect-body-bent' || 
+          d.id === 'defect-body-screen-loose' ||
+          d.id === 'defect-body-bent-and-loose'
+        );
+        if (!hasPanel || !hasBent) return false;
+      }
+      return true;
+    }
 
     if (step === 4) return true; // Hardware defects - optional, defaults to perfect
 
@@ -893,6 +965,41 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
     });
 
   }, [variant, selectedDefects, model, simType, warrantyAge, deviceAge, dualEsim, hasSpen, isScreenNonOriginal, modelScreenDeduction, modelWarrantyDeductionPct, isEligibleForWarranty, hasWarranty, selectedWarrantyAge]);
+
+  // Dispatch Review Summary alert email to admin when user reaches Step reviewStepIndex (Review Summary)
+  const reviewSummarySentRef = useRef<string | null>(null);
+  React.useEffect(() => {
+    if (step === reviewStepIndex && model?.name && variant) {
+      const sessionKey = `stc_review_summary_${model.id}_${variant.storageGb}_${variant.ramGb || ''}`;
+      if (reviewSummarySentRef.current === sessionKey) return;
+      try {
+        if (sessionStorage.getItem(sessionKey)) {
+          reviewSummarySentRef.current = sessionKey;
+          return;
+        }
+        sessionStorage.setItem(sessionKey, '1');
+      } catch { }
+
+      reviewSummarySentRef.current = sessionKey;
+
+      sendReviewSummaryAlertApi({
+        modelName: model.name,
+        brandName: model.brandId ? model.brandId.replace(/^brand-/, '').toUpperCase() : undefined,
+        storageGb: variant.storageGb,
+        ramGb: variant.ramGb,
+        estimatedPayout: valuation.finalPrice,
+        retentionPercentage: valuation.retentionPercentage,
+        defects: selectedDefects.map(d => d.description),
+        customerName: currentUser?.name || undefined,
+        customerEmail: currentUser?.email || undefined,
+        customerPhone: currentUser?.phone || undefined,
+        deviceType,
+        sourceUrl: typeof window !== 'undefined' ? window.location.href : undefined,
+      }).catch((err) => {
+        console.warn('[DiagnosticWizard] Review Summary alert notification completed/logged:', err?.message || err);
+      });
+    }
+  }, [step, reviewStepIndex, model, variant, valuation, selectedDefects, currentUser, deviceType]);
 
 
 
@@ -3768,265 +3875,722 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
 
 
-                  {/* Instruction Line Below Display Authenticity */}
-
-                  <p className="text-xs sm:text-sm text-slate-800 mb-4 font-medium text-left">
-
-                    Select any display issues that apply below. If your screen is in perfect condition, simply tap Continue.
-
-                  </p>
-
-
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-left">
-
-                    {/* Screen Defect Options */}
-
-                    {(() => {
-
-                      const screenMutualMap: Record<string, string[]> = {
-
-                        'defect-screen-minor-scratches': ['defect-screen-scratches', 'defect-screen-cracked'],
-
-                        'defect-screen-scratches': ['defect-screen-minor-scratches', 'defect-screen-cracked'],
-
-                        'defect-screen-cracked': ['defect-screen-minor-scratches', 'defect-screen-scratches'],
-
-                      };
-
-
-
-                      return rules.filter(r => r.category === 'screen' && r.id !== 'defect-screen-non-original' && r.id !== 'defect-screen-touch').map(defect => {
-
-                        const isSelected = selectedDefects.some(d => d.id === defect.id);
-
-                        const mutualIds = screenMutualMap[defect.id];
-
-
-
-                        return (
-
-                          <div
-
-                            key={defect.id}
-
-                            role="checkbox"
-
-                            tabIndex={0}
-
-                            aria-checked={isSelected}
-
-                            onKeyDown={e => handleKeyDown(e, () => {
-
-                              handleToggleDefect(defect, mutualIds);
-
-                              setScreenConfirmed(false);
-
-                            })}
-
-                            onClick={() => {
-
-                              handleToggleDefect(defect, mutualIds);
-
-                              setScreenConfirmed(false);
-
-                            }}
-
-                            className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-center gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-rose-500 ${isSelected
-
-                              ? 'border-rose-400 bg-rose-500/10 shadow-sm ring-1 ring-rose-400/30 scale-[1.01]'
-
-                              : 'border-ice-border bg-canvas-white hover:border-slate-300 hover:bg-slate-50/60'
-
-                              }`}
-
-                          >
-
-                            <div className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
-
-                              {getIllustration(defect.id, deviceType)}
-
-                            </div>
-
-                            <div className="flex-1 min-w-0">
-
-                              <div className="flex items-center gap-1.5 flex-wrap">
-
-                                <h4 className="font-bold text-sm text-ink-navy">{defect.description}</h4>
-
-                              </div>
-
-
-
-                            </div>
-
-                            <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-rose-600 border-rose-600 text-white' : 'border-ice-border bg-white'
-
-                              }`}>
-
-                              {isSelected && <Check className="w-3.5 h-3.5" />}
-
-                            </div>
-
+                                    {/* Rephonix Distinct Multi-Stage Inspection: Screen & Display Diagnostics */}
+                  <div className="space-y-6 text-left">
+                    {/* Foldable Policy: Pristine Crease Quality Guarantee Banner */}
+                    {isFoldable && (
+                      <div className="p-3.5 bg-gradient-to-r from-indigo-50/90 via-sky-50/80 to-indigo-50/90 border border-indigo-200/90 rounded-2xl flex items-center justify-between shadow-2xs">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center flex-shrink-0 shadow-xs">
+                            <Sparkles className="w-4 h-4" />
                           </div>
+                          <div>
+                            <h5 className="font-bold text-xs text-indigo-950 flex items-center gap-1.5">
+                              <span>Premium Foldable Standard: Flawless Crease Assumed</span>
+                            </h5>
+                            <p className="text-[11px] text-indigo-800/90 mt-0.5">
+                              Top-tier quote assumes smooth inner display with zero crease cracks, line bleed or film bubbling.
+                            </p>
+                          </div>
+                        </div>
+                        <span className="hidden sm:inline-flex text-[10px] font-bold text-indigo-700 bg-white px-2.5 py-1 rounded-full border border-indigo-200 shadow-2xs">
+                          Grade-A Assumed
+                        </span>
+                      </div>
+                    )}
 
-                        );
+                    {/* Stage 1: Screen Triage Multi-Select with Familiar Line Art */}
+                    <div className="p-4 rounded-2xl border border-slate-200 bg-white shadow-xs">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-bold text-slate-900 tracking-tight flex items-center gap-1.5">
+                          <Eye className="w-4 h-4 text-indigo-600" />
+                          <span>Screen Condition</span>
+                        </span>
+                        <span className="text-[10px] font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-full">
+                          Select all that apply
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-700 mb-3.5">Does your screen have scratches, cracks, lines or spots? (Skip if perfect / flawless)</p>
 
-                      });
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                        {/* Card 1: Front Glass (Line Art Phone with Scratches/Crack) */}
+                        <div
+                          role="checkbox"
+                          tabIndex={0}
+                          aria-checked={screenTriage.physical}
+                          onClick={() => {
+                            setScreenTriage(prev => {
+                              const next = { ...prev, physical: !prev.physical };
+                              if (!next.physical) {
+                                setSelectedDefects(dPrev => dPrev.filter(d => 
+                                  d.id !== 'defect-screen-scratches-minor' && 
+                                  d.id !== 'defect-screen-scratches-major' && 
+                                  d.id !== 'defect-screen-chipped' && 
+                                  d.id !== 'defect-screen-cracked' &&
+                                  d.id !== 'defect-screen-minor-scratches' &&
+                                  d.id !== 'defect-screen-scratches'
+                                ));
+                              }
+                              return next;
+                            });
+                          }}
+                          className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all duration-200 flex items-center gap-3.5 ${
+                            screenTriage.physical 
+                              ? 'border-indigo-600 bg-indigo-50/20 shadow-xs ring-1 ring-indigo-500/30' 
+                              : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/70'
+                          }`}
+                        >
+                          <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center flex-shrink-0 shadow-2xs">
+                            <ScreenCrackedArt className="w-10 h-10" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-bold text-sm text-slate-900">Broken or Scratched Glass</h4>
+                            <p className="text-[11px] text-slate-600 mt-0.5">Scratches, chipped corners, cracked or broken front glass</p>
+                          </div>
+                          <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 ${
+                            screenTriage.physical ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-slate-300 bg-white'
+                          }`}>
+                            {screenTriage.physical && <Check className="w-3 h-3 stroke-[3]" />}
+                          </div>
+                        </div>
 
-                    })()}
+                        {/* Card 2: Display Panel (Line Art Phone with Laser Line & Dead Spot) */}
+                        <div
+                          role="checkbox"
+                          tabIndex={0}
+                          aria-checked={screenTriage.linesSpots}
+                          onClick={() => {
+                            setScreenTriage(prev => {
+                              const next = { ...prev, linesSpots: !prev.linesSpots };
+                              if (!next.linesSpots) {
+                                setSelectedDefects(dPrev => dPrev.filter(d => 
+                                  d.id !== 'defect-screen-spots-white-minor' && 
+                                  d.id !== 'defect-screen-spots-multi' && 
+                                  d.id !== 'defect-screen-spots-heavy' && 
+                                  d.id !== 'defect-screen-lines' && 
+                                  d.id !== 'defect-screen-shading' && 
+                                  d.id !== 'defect-screen-discolor-minor' && 
+                                  d.id !== 'defect-screen-discolor-major' &&
+                                  d.id !== 'defect-screen-burn'
+                                ));
+                              }
+                              return next;
+                            });
+                          }}
+                          className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all duration-200 flex items-center gap-3.5 ${
+                            screenTriage.linesSpots 
+                              ? 'border-indigo-600 bg-indigo-50/20 shadow-xs ring-1 ring-indigo-500/30' 
+                              : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/70'
+                          }`}
+                        >
+                          <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center flex-shrink-0 shadow-2xs">
+                            <ScreenLinesArt className="w-10 h-10" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-bold text-sm text-slate-900">Lines, Spots or Color Issues</h4>
+                            <p className="text-[11px] text-slate-600 mt-0.5">Colored lines, black ink spots, yellow shade or screen burn</p>
+                          </div>
+                          <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 ${
+                            screenTriage.linesSpots ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-slate-300 bg-white'
+                          }`}>
+                            {screenTriage.linesSpots && <Check className="w-3 h-3 stroke-[3]" />}
+                          </div>
+                        </div>
+                      </div>
 
+                      {/* Fast-Track Flawless Screen Pill */}
+                      {!screenTriage.physical && !screenTriage.linesSpots && (
+                        <div className="mt-3 py-2 px-3 bg-emerald-50 border border-emerald-200/80 rounded-xl flex items-center justify-between">
+                          <span className="text-xs font-semibold text-emerald-800 flex items-center gap-1.5">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                            <span>Screen glass and display are in clean, flawless condition</span>
+                          </span>
+                          <span className="text-[10px] font-bold text-emerald-700 bg-white px-2 py-0.5 rounded-full border border-emerald-200">
+                            No Deductions
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Stage 2A: Front Glass Condition */}
+                    {screenTriage.physical && (
+                      <div className="p-4 rounded-2xl border border-indigo-200 bg-indigo-50/30 text-left">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="font-bold text-sm text-slate-900 flex items-center gap-1.5">
+                            <Smartphone className="w-4 h-4 text-indigo-600" />
+                            <span>Screen Physical Condition</span>
+                          </h4>
+                          <span className="text-[10px] font-bold text-indigo-700 bg-indigo-100 px-2.5 py-0.5 rounded-full">Required</span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                          {[
+                            { id: 'defect-screen-cracked', label: 'Screen cracked / glass broken', Art: ScreenCrackedArt },
+                            { id: 'defect-screen-chipped', label: 'Chipped on corner or edge', Art: ScreenChippedArt },
+                            { id: 'defect-screen-scratches-major', label: 'More than 2 scratches on screen', Art: ScreenScratchesArt },
+                            { id: 'defect-screen-scratches-minor', label: '1–2 minor scratches on screen', Art: ScreenScratchesArt },
+                          ].map(opt => {
+                            const isChosen = selectedDefects.some(d => d.id === opt.id);
+                            const ArtComponent = opt.Art;
+                            return (
+                              <div
+                                key={opt.id}
+                                role="radio"
+                                tabIndex={0}
+                                aria-checked={isChosen}
+                                onClick={() => {
+                                  const physicalIds = ['defect-screen-cracked', 'defect-screen-chipped', 'defect-screen-scratches-major', 'defect-screen-scratches-minor', 'defect-screen-scratches', 'defect-screen-minor-scratches'];
+                                  const rule = rules.find(r => r.id === opt.id) || {
+                                    id: opt.id,
+                                    category: 'screen' as const,
+                                    description: opt.label,
+                                    subText: 'Glass wear',
+                                    deductionFixed: opt.id.includes('minor') ? 600 : opt.id.includes('major') ? 1200 : 1500,
+                                    deductionPercentage: opt.id === 'defect-screen-cracked' ? 0.28 : 0.04
+                                  };
+                                  setSelectedDefects(prev => [...prev.filter(d => !physicalIds.includes(d.id)), rule]);
+                                }}
+                                className={`p-3 rounded-xl border-2 cursor-pointer transition-all duration-150 flex items-center gap-3 ${
+                                  isChosen 
+                                    ? 'border-indigo-600 bg-white shadow-xs ring-1 ring-indigo-500/20' 
+                                    : 'border-slate-200 bg-white hover:border-slate-300'
+                                }`}
+                              >
+                                <div className="w-10 h-10 rounded-lg bg-slate-50 border border-slate-200/80 flex items-center justify-center flex-shrink-0">
+                                  <ArtComponent className="w-8 h-8" />
+                                </div>
+                                <div className="font-bold text-xs text-slate-900 flex-1">{opt.label}</div>
+                                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                                  isChosen ? 'border-indigo-600 bg-indigo-600' : 'border-slate-300'
+                                }`}>
+                                  {isChosen && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Stage 2B: Display Panel Diagnostics (Required Selection, No "No..." Option) */}
+                    {screenTriage.linesSpots && (
+                      <div className="space-y-4 p-4 rounded-2xl border border-indigo-200 bg-indigo-50/20 text-left">
+                        {/* 1. Dead Pixels & Spots on Screen */}
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
+                              <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                              <span>1. Dead Pixels / Spots on Screen</span>
+                            </h4>
+                            <span className="text-[10px] font-bold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-full">Required</span>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            {[
+                              { id: 'defect-screen-spots-heavy', label: 'Large / heavy spots on screen', Art: ScreenDeadSpotsArt },
+                              { id: 'defect-screen-spots-multi', label: '3 or more minor spots', Art: ScreenDeadSpotsArt },
+                              { id: 'defect-screen-spots-white-minor', label: '1–2 minor spots on screen', Art: ScreenDeadSpotsArt },
+                            ].map(opt => {
+                              const spotIds = ['defect-screen-spots-heavy', 'defect-screen-spots-multi', 'defect-screen-spots-white-minor'];
+                              const isChosen = selectedDefects.some(d => d.id === opt.id);
+                              const ArtComponent = opt.Art;
+                              return (
+                                <div
+                                  key={opt.id}
+                                  role="radio"
+                                  tabIndex={0}
+                                  aria-checked={isChosen}
+                                  onClick={() => {
+                                    const rule = rules.find(r => r.id === opt.id) || {
+                                      id: opt.id,
+                                      category: 'screen' as const,
+                                      description: opt.label,
+                                      subText: 'Pixel spots',
+                                      deductionFixed: opt.id.includes('minor') ? 1000 : 1800,
+                                      deductionPercentage: opt.id.includes('heavy') ? 0.28 : 0.08
+                                    };
+                                    setSelectedDefects(prev => [...prev.filter(d => !spotIds.includes(d.id)), rule]);
+                                  }}
+                                  className={`p-2.5 rounded-xl border-2 cursor-pointer transition-all duration-150 flex items-center gap-2.5 ${
+                                    isChosen ? 'border-indigo-600 bg-white shadow-xs font-semibold' : 'border-slate-200 bg-white hover:border-slate-300'
+                                  }`}
+                                >
+                                  <div className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-200/80 flex items-center justify-center flex-shrink-0">
+                                    <ArtComponent className="w-6 h-6" />
+                                  </div>
+                                  <div className="text-xs text-slate-900 flex-1">{opt.label}</div>
+                                  <div className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                                    isChosen ? 'border-indigo-600 bg-indigo-600' : 'border-slate-300'
+                                  }`}>
+                                    {isChosen && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* 2. Visible Lines on Screen */}
+                        <div className="pt-3 border-t border-indigo-100">
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
+                              <Activity className="w-3.5 h-3.5 text-indigo-600" />
+                              <span>2. Visible Lines on Screen</span>
+                            </h4>
+                            <span className="text-[10px] font-bold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-full">Required</span>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {[
+                              { id: 'defect-screen-lines', label: 'Visible line(s) on display', Art: ScreenLinesArt },
+                              { id: 'defect-screen-shading', label: 'Display faded along edges', Art: ScreenDiscolorArt },
+                            ].map(opt => {
+                              const lineIds = ['defect-screen-lines', 'defect-screen-shading'];
+                              const isChosen = selectedDefects.some(d => d.id === opt.id);
+                              const ArtComponent = opt.Art;
+                              return (
+                                <div
+                                  key={opt.id}
+                                  role="radio"
+                                  tabIndex={0}
+                                  aria-checked={isChosen}
+                                  onClick={() => {
+                                    const rule = rules.find(r => r.id === opt.id) || {
+                                      id: opt.id,
+                                      category: 'screen' as const,
+                                      description: opt.label,
+                                      subText: 'Screen line/shading defect',
+                                      deductionFixed: 0,
+                                      deductionPercentage: opt.id === 'defect-screen-lines' ? 0.28 : 0.10
+                                    };
+                                    setSelectedDefects(prev => [...prev.filter(d => !lineIds.includes(d.id)), rule]);
+                                  }}
+                                  className={`p-2.5 rounded-xl border-2 cursor-pointer transition-all duration-150 flex items-center gap-2.5 ${
+                                    isChosen ? 'border-indigo-600 bg-white shadow-xs font-semibold' : 'border-slate-200 bg-white hover:border-slate-300'
+                                  }`}
+                                >
+                                  <div className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-200/80 flex items-center justify-center flex-shrink-0">
+                                    <ArtComponent className="w-6 h-6" />
+                                  </div>
+                                  <div className="text-xs text-slate-900 flex-1">{opt.label}</div>
+                                  <div className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                                    isChosen ? 'border-indigo-600 bg-indigo-600' : 'border-slate-300'
+                                  }`}>
+                                    {isChosen && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* 3. Discoloration on Screen */}
+                        <div className="pt-3 border-t border-indigo-100">
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
+                              <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                              <span>3. Discoloration on Screen</span>
+                            </h4>
+                            <span className="text-[10px] font-bold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-full">Required</span>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {[
+                              { id: 'defect-screen-discolor-major', label: 'Major discoloration / burn-in', Art: ScreenDiscolorArt },
+                              { id: 'defect-screen-discolor-minor', label: 'Minor discoloration / yellow tint', Art: ScreenDiscolorArt },
+                            ].map(opt => {
+                              const discolorIds = ['defect-screen-discolor-major', 'defect-screen-discolor-minor', 'defect-screen-burn'];
+                              const isChosen = selectedDefects.some(d => d.id === opt.id);
+                              const ArtComponent = opt.Art;
+                              return (
+                                <div
+                                  key={opt.id}
+                                  role="radio"
+                                  tabIndex={0}
+                                  aria-checked={isChosen}
+                                  onClick={() => {
+                                    const rule = rules.find(r => r.id === opt.id) || {
+                                      id: opt.id,
+                                      category: 'screen' as const,
+                                      description: opt.label,
+                                      subText: 'Screen discoloration',
+                                      deductionFixed: 0,
+                                      deductionPercentage: opt.id.includes('major') ? 0.15 : 0.06
+                                    };
+                                    setSelectedDefects(prev => [...prev.filter(d => !discolorIds.includes(d.id)), rule]);
+                                  }}
+                                  className={`p-2.5 rounded-xl border-2 cursor-pointer transition-all duration-150 flex items-center gap-2.5 ${
+                                    isChosen ? 'border-indigo-600 bg-white shadow-xs font-semibold' : 'border-slate-200 bg-white hover:border-slate-300'
+                                  }`}
+                                >
+                                  <div className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-200/80 flex items-center justify-center flex-shrink-0">
+                                    <ArtComponent className="w-6 h-6" />
+                                  </div>
+                                  <div className="text-xs text-slate-900 flex-1">{opt.label}</div>
+                                  <div className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                                    isChosen ? 'border-indigo-600 bg-indigo-600' : 'border-slate-300'
+                                  }`}>
+                                    {isChosen && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-
                 </motion.div>
-
               )}
 
-
-
-              {/* STEP 3: Body Frame */}
-
+              {/* STEP 3: Body Condition Diagnostics */}
               {!isTablet && step === 3 && (
-
                 <motion.div
-
                   key="step-3"
-
                   initial={{ opacity: 0, x: -10 }}
-
                   animate={{ opacity: 1, x: 0 }}
-
                   exit={{ opacity: 1, x: 10 }}
-
                 >
-
                   <div className="mb-6 text-left">
-
-                    <h3 className="text-2xl sm:text-3xl font-bold text-slate-950 tracking-tight">Body, Buttons & Frame</h3>
-
-                    <p className="text-xs sm:text-sm text-slate-800 mt-2 font-medium">Select any physical body defects below. If the frame and body are in perfect condition, simply tap Continue.</p>
-
+                    <h3 className="text-2xl sm:text-3xl font-bold text-slate-950 tracking-tight">Body Condition</h3>
+                    <p className="text-xs sm:text-sm text-slate-800 mt-2 font-medium">Check your phone body, side frame, and back panel for scratches, dents, or cracks.</p>
                   </div>
 
+                  <div className="space-y-6 text-left">
+                    {/* Stage 1: Body Triage Multi-Select with Line Art */}
+                    <div className="p-4 rounded-2xl border border-slate-200 bg-white shadow-xs">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-bold text-slate-900 tracking-tight flex items-center gap-1.5">
+                          <ShieldCheck className="w-4 h-4 text-amber-600" />
+                          <span>Body Condition Overview</span>
+                        </span>
+                        <span className="text-[10px] font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-full">
+                          Select all that apply
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-700 mb-3.5">Does your phone body have scratches, dents, bent frame or broken back panel? (Skip if perfect)</p>
 
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-6 text-left">
-
-                    {/* Body Rules */}
-
-                    {(() => {
-
-                      return rules.filter(r => r.category === 'body' && r.id !== 'defect-body-airpass').map(defect => {
-
-                        const isSelected = selectedDefects.some(d => d.id === defect.id);
-
-                        return (
-
-                          <div
-
-                            key={defect.id}
-
-                            role="checkbox"
-
-                            tabIndex={0}
-
-                            aria-checked={isSelected}
-
-                            onKeyDown={e => handleKeyDown(e, () => {
-
-                              handleToggleDefect(
-
-                                defect,
-
-                                defect.id === 'defect-body-dented'
-
-                                  ? 'defect-body-scuffs'
-
-                                  : defect.id === 'defect-body-scuffs'
-
-                                    ? 'defect-body-dented'
-
-                                    : undefined
-
-                              );
-
-                              setBodyConfirmed(false);
-
-                            })}
-
-                            onClick={() => {
-
-                              handleToggleDefect(
-
-                                defect,
-
-                                defect.id === 'defect-body-dented'
-
-                                  ? 'defect-body-scuffs'
-
-                                  : defect.id === 'defect-body-scuffs'
-
-                                    ? 'defect-body-dented'
-
-                                    : undefined
-
-                              );
-
-                              setBodyConfirmed(false);
-
-                            }}
-
-                            className={`p-3 sm:p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex items-center gap-3 sm:gap-3.5 text-left select-none touch-manipulation active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-amber-500 ${isSelected
-
-                              ? 'border-amber-500 bg-amber-500/10 shadow-sm ring-1 ring-amber-500/30 scale-[1.01]'
-
-                              : 'border-ice-border bg-canvas-white hover:border-slate-300 hover:bg-slate-50/60'
-
-                              }`}
-
-                          >
-
-                            <div className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center overflow-hidden shadow-2xs">
-
-                              {getIllustration(defect.id, deviceType)}
-
-                            </div>
-
-                            <div className="flex-1 min-w-0">
-
-                              <div className="flex items-center gap-1.5 flex-wrap">
-
-                                <h4 className="font-bold text-sm text-ink-navy">{defect.description}</h4>
-
-                              </div>
-
-
-
-                            </div>
-
-                            <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-amber-600 border-amber-600 text-white' : 'border-ice-border bg-white'
-
-                              }`}>
-
-                              {isSelected && <Check className="w-3.5 h-3.5" />}
-
-                            </div>
-
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                        {/* Card 1: Scratches & Dents on Body */}
+                        <div
+                          role="checkbox"
+                          tabIndex={0}
+                          aria-checked={bodyTriage.scratchesDents}
+                          onClick={() => {
+                            setBodyTriage(prev => {
+                              const next = { ...prev, scratchesDents: !prev.scratchesDents };
+                              if (!next.scratchesDents) {
+                                setSelectedDefects(dPrev => dPrev.filter(d => 
+                                  d.id !== 'defect-body-scratches-minor' && 
+                                  d.id !== 'defect-body-scratches-major' && 
+                                  d.id !== 'defect-body-dents-minor' && 
+                                  d.id !== 'defect-body-dents-major' &&
+                                  d.id !== 'defect-body-scuffs' &&
+                                  d.id !== 'defect-body-dented'
+                                ));
+                              }
+                              return next;
+                            });
+                          }}
+                          className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all duration-200 flex items-center gap-3.5 ${
+                            bodyTriage.scratchesDents 
+                              ? 'border-amber-500 bg-amber-50/20 shadow-xs ring-1 ring-amber-500/30' 
+                              : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/70'
+                          }`}
+                        >
+                          <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center flex-shrink-0 shadow-2xs">
+                            <BodyDentsArt className="w-10 h-10" />
                           </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-bold text-sm text-slate-900">Scratches or Dents on Body</h4>
+                            <p className="text-[11px] text-slate-600 mt-0.5">Scratches on sides, paint peel, corner dents or drop marks</p>
+                          </div>
+                          <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 ${
+                            bodyTriage.scratchesDents ? 'border-amber-600 bg-amber-600 text-white' : 'border-slate-300 bg-white'
+                          }`}>
+                            {bodyTriage.scratchesDents && <Check className="w-3 h-3 stroke-[3]" />}
+                          </div>
+                        </div>
 
-                        );
+                        {/* Card 2: Back Panel & Bent Frame */}
+                        <div
+                          role="checkbox"
+                          tabIndex={0}
+                          aria-checked={bodyTriage.panelBent}
+                          onClick={() => {
+                            setBodyTriage(prev => {
+                              const next = { ...prev, panelBent: !prev.panelBent };
+                              if (!next.panelBent) {
+                                setSelectedDefects(dPrev => dPrev.filter(d => 
+                                  d.id !== 'defect-body-bent' && 
+                                  d.id !== 'defect-body-screen-loose' && 
+                                  d.id !== 'defect-body-bent-and-loose' && 
+                                  d.id !== 'defect-body-panel-gap' && 
+                                  d.id !== 'defect-body-panel-chipped' && 
+                                  d.id !== 'defect-body-panel-broken' && 
+                                  d.id !== 'defect-body-panel-missing' &&
+                                  d.id !== 'defect-body-backglass'
+                                ));
+                              }
+                              return next;
+                            });
+                          }}
+                          className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all duration-200 flex items-center gap-3.5 ${
+                            bodyTriage.panelBent 
+                              ? 'border-amber-500 bg-amber-50/20 shadow-xs ring-1 ring-amber-500/30' 
+                              : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/70'
+                          }`}
+                        >
+                          <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center flex-shrink-0 shadow-2xs">
+                            <BackPanelCrackedArt className="w-10 h-10" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-bold text-sm text-slate-900">Back Panel or Bent Phone</h4>
+                            <p className="text-[11px] text-slate-600 mt-0.5">Cracked back glass, curved/bent body or loose screen gap</p>
+                          </div>
+                          <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 ${
+                            bodyTriage.panelBent ? 'border-amber-600 bg-amber-600 text-white' : 'border-slate-300 bg-white'
+                          }`}>
+                            {bodyTriage.panelBent && <Check className="w-3 h-3 stroke-[3]" />}
+                          </div>
+                        </div>
+                      </div>
 
-                      });
+                      {/* Fast-Track Flawless Body Pill */}
+                      {!bodyTriage.scratchesDents && !bodyTriage.panelBent && (
+                        <div className="mt-3 py-2 px-3 bg-emerald-50 border border-emerald-200/80 rounded-xl flex items-center justify-between">
+                          <span className="text-xs font-semibold text-emerald-800 flex items-center gap-1.5">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                            <span>Phone body, sides and back panel are in clean, flawless condition</span>
+                          </span>
+                          <span className="text-[10px] font-bold text-emerald-700 bg-white px-2 py-0.5 rounded-full border border-emerald-200">
+                            No Deductions
+                          </span>
+                        </div>
+                      )}
+                    </div>
 
-                    })()}
+                    {/* Stage 2A: Frame Scratches & Dents */}
+                    {bodyTriage.scratchesDents && (
+                      <div className="space-y-4 p-4 rounded-2xl border border-amber-200 bg-amber-50/20 text-left">
+                        {/* 1. Scratches on Body */}
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
+                              <Tag className="w-3.5 h-3.5 text-amber-600" />
+                              <span>1. Scratches on Device Body</span>
+                            </h4>
+                            <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">Required</span>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {[
+                              { id: 'defect-body-scratches-major', label: 'More than 2 scratches', Art: BodyScratchesArt },
+                              { id: 'defect-body-scratches-minor', label: '1–2 minor scratches', Art: BodyScratchesArt },
+                            ].map(opt => {
+                              const scratchIds = ['defect-body-scratches-major', 'defect-body-scratches-minor', 'defect-body-scuffs'];
+                              const isChosen = selectedDefects.some(d => d.id === opt.id);
+                              const ArtComponent = opt.Art;
+                              return (
+                                <div
+                                  key={opt.id}
+                                  role="radio"
+                                  tabIndex={0}
+                                  aria-checked={isChosen}
+                                  onClick={() => {
+                                    const rule = rules.find(r => r.id === opt.id) || {
+                                      id: opt.id,
+                                      category: 'body' as const,
+                                      description: opt.label,
+                                      subText: 'Body scratches',
+                                      deductionFixed: opt.id.includes('minor') ? 500 : 1000,
+                                      deductionPercentage: opt.id.includes('minor') ? 0.015 : 0.03
+                                    };
+                                    setSelectedDefects(prev => [...prev.filter(d => !scratchIds.includes(d.id)), rule]);
+                                  }}
+                                  className={`p-2.5 rounded-xl border-2 cursor-pointer transition-all duration-150 flex items-center gap-2.5 ${
+                                    isChosen ? 'border-amber-600 bg-white shadow-xs font-semibold' : 'border-slate-200 bg-white hover:border-slate-300'
+                                  }`}
+                                >
+                                  <div className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-200/80 flex items-center justify-center flex-shrink-0">
+                                    <ArtComponent className="w-6 h-6" />
+                                  </div>
+                                  <div className="text-xs text-slate-900 flex-1">{opt.label}</div>
+                                  <div className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                                    isChosen ? 'border-amber-600 bg-amber-600' : 'border-slate-300'
+                                  }`}>
+                                    {isChosen && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
 
+                        {/* 2. Dents on Body */}
+                        <div className="pt-3 border-t border-amber-100">
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
+                              <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
+                              <span>2. Dents on Device Body</span>
+                            </h4>
+                            <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">Required</span>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {[
+                              { id: 'defect-body-dents-major', label: 'Major dent(s) or more than 2 dents', Art: BodyDentsArt },
+                              { id: 'defect-body-dents-minor', label: '1–2 minor dents', Art: BodyDentsArt },
+                            ].map(opt => {
+                              const dentIds = ['defect-body-dents-major', 'defect-body-dents-minor', 'defect-body-dented'];
+                              const isChosen = selectedDefects.some(d => d.id === opt.id);
+                              const ArtComponent = opt.Art;
+                              return (
+                                <div
+                                  key={opt.id}
+                                  role="radio"
+                                  tabIndex={0}
+                                  aria-checked={isChosen}
+                                  onClick={() => {
+                                    const rule = rules.find(r => r.id === opt.id) || {
+                                      id: opt.id,
+                                      category: 'body' as const,
+                                      description: opt.label,
+                                      subText: 'Body dents',
+                                      deductionFixed: opt.id.includes('minor') ? 800 : 1800,
+                                      deductionPercentage: opt.id.includes('minor') ? 0.035 : 0.07
+                                    };
+                                    setSelectedDefects(prev => [...prev.filter(d => !dentIds.includes(d.id)), rule]);
+                                  }}
+                                  className={`p-2.5 rounded-xl border-2 cursor-pointer transition-all duration-150 flex items-center gap-2.5 ${
+                                    isChosen ? 'border-amber-600 bg-white shadow-xs font-semibold' : 'border-slate-200 bg-white hover:border-slate-300'
+                                  }`}
+                                >
+                                  <div className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-200/80 flex items-center justify-center flex-shrink-0">
+                                    <ArtComponent className="w-6 h-6" />
+                                  </div>
+                                  <div className="text-xs text-slate-900 flex-1">{opt.label}</div>
+                                  <div className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                                    isChosen ? 'border-amber-600 bg-amber-600' : 'border-slate-300'
+                                  }`}>
+                                    {isChosen && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Stage 2B: Structural & Back Glass Condition */}
+                    {bodyTriage.panelBent && (
+                      <div className="space-y-4 p-4 rounded-2xl border border-amber-200 bg-amber-50/20 text-left">
+                        {/* 1. Rear Panel Condition */}
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
+                              <Smartphone className="w-3.5 h-3.5 text-amber-600" />
+                              <span>1. Side / Back Panel Condition</span>
+                            </h4>
+                            <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">Required</span>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {[
+                              { id: 'defect-body-panel-broken', label: 'Cracked / broken side or back panel', Art: BackPanelCrackedArt },
+                              { id: 'defect-body-panel-missing', label: 'Missing side or back panel', Art: BackPanelCrackedArt },
+                            ].map(opt => {
+                              const panelIds = ['defect-body-panel-broken', 'defect-body-panel-missing', 'defect-body-panel-chipped', 'defect-body-panel-gap', 'defect-body-backglass'];
+                              const isChosen = selectedDefects.some(d => d.id === opt.id);
+                              const ArtComponent = opt.Art;
+                              return (
+                                <div
+                                  key={opt.id}
+                                  role="radio"
+                                  tabIndex={0}
+                                  aria-checked={isChosen}
+                                  onClick={() => {
+                                    const rule = rules.find(r => r.id === opt.id) || {
+                                      id: opt.id,
+                                      category: 'body' as const,
+                                      description: opt.label,
+                                      subText: 'Back panel damage',
+                                      deductionFixed: opt.id.includes('broken') ? 1800 : 2500,
+                                      deductionPercentage: opt.id.includes('missing') ? 0.08 : 0
+                                    };
+                                    setSelectedDefects(prev => [...prev.filter(d => !panelIds.includes(d.id)), rule]);
+                                  }}
+                                  className={`p-2.5 rounded-xl border-2 cursor-pointer transition-all duration-150 flex items-center gap-2.5 ${
+                                    isChosen ? 'border-amber-600 bg-white shadow-xs font-semibold' : 'border-slate-200 bg-white hover:border-slate-300'
+                                  }`}
+                                >
+                                  <div className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-200/80 flex items-center justify-center flex-shrink-0">
+                                    <ArtComponent className="w-6 h-6" />
+                                  </div>
+                                  <div className="text-xs text-slate-900 flex-1">{opt.label}</div>
+                                  <div className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                                    isChosen ? 'border-amber-600 bg-amber-600' : 'border-slate-300'
+                                  }`}>
+                                    {isChosen && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* 2. Device Bent / Screen Loose */}
+                        <div className="pt-3 border-t border-amber-100">
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
+                              <Activity className="w-3.5 h-3.5 text-amber-600" />
+                              <span>2. Device Bent / Screen Loose</span>
+                            </h4>
+                            <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">Required</span>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {[
+                              { id: 'defect-body-bent', label: 'Bent / curved phone body', Art: DeviceBentArt },
+                              { id: 'defect-body-screen-loose', label: 'Loose screen (gap in screen and body)', Art: ScreenLooseArt },
+                            ].map(opt => {
+                              const bentIds = ['defect-body-bent', 'defect-body-screen-loose', 'defect-body-bent-and-loose'];
+                              const isChosen = selectedDefects.some(d => d.id === opt.id);
+                              const ArtComponent = opt.Art;
+                              return (
+                                <div
+                                  key={opt.id}
+                                  role="radio"
+                                  tabIndex={0}
+                                  aria-checked={isChosen}
+                                  onClick={() => {
+                                    const rule = rules.find(r => r.id === opt.id) || {
+                                      id: opt.id,
+                                      category: 'body' as const,
+                                      description: opt.label,
+                                      subText: 'Bent / loose frame',
+                                      deductionFixed: 0,
+                                      deductionPercentage: opt.id === 'defect-body-bent' ? 0.16 : 0.12
+                                    };
+                                    setSelectedDefects(prev => [...prev.filter(d => !bentIds.includes(d.id)), rule]);
+                                  }}
+                                  className={`p-2.5 rounded-xl border-2 cursor-pointer transition-all duration-150 flex items-center gap-2.5 ${
+                                    isChosen ? 'border-amber-600 bg-white shadow-xs font-semibold' : 'border-slate-200 bg-white hover:border-slate-300'
+                                  }`}
+                                >
+                                  <div className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-200/80 flex items-center justify-center flex-shrink-0">
+                                    <ArtComponent className="w-6 h-6" />
+                                  </div>
+                                  <div className="text-xs text-slate-900 flex-1">{opt.label}</div>
+                                  <div className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                                    isChosen ? 'border-amber-600 bg-amber-600' : 'border-slate-300'
+                                  }`}>
+                                    {isChosen && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-
                 </motion.div>
-
               )}
-
-
 
               {/* STEP 4: Hardware Diagnostics */}
 

@@ -125,6 +125,10 @@ export function getDefaultAppleBatteryDeduction(modelName: string): { under80: n
 
   if (m.includes('se 2020') || m.includes('se 2022') || m.includes('se (2020)') || m.includes('se (2022)') || m.includes('se 3') || m.includes('se 2') || m.includes('iphone se')) {
     under80 = 1200;
+  } else if (m.includes('iphone 18 pro max') || m.includes('18 pro max') || m.includes('iphone 18 pro') || m.includes('18 pro') || m.includes('iphone 17 pro max') || m.includes('17 pro max') || m.includes('iphone 17 pro') || m.includes('17 pro')) {
+    under80 = 4200;
+  } else if (m.includes('iphone 18') || m.includes('18') || m.includes('iphone 17 air') || m.includes('17 air') || m.includes('iphone 17e') || m.includes('17e') || m.includes('iphone 17 plus') || m.includes('17 plus') || m.includes('iphone 17') || m.includes('17')) {
+    under80 = 3800;
   } else if (m.includes('iphone 16 pro max') || m.includes('16 pro max') || m.includes('iphone 16 pro') || m.includes('16 pro')) {
     under80 = 4200;
   } else if (m.includes('iphone 16 plus') || m.includes('16 plus') || m.includes('iphone 16') || m.includes('16')) {
@@ -937,6 +941,88 @@ export function getDefectRulesForCategory(
 
   return [
     // ── SCREEN ───────────────────────────────────────────────────────────
+    // ── GRANULAR SCREEN PHYSICAL & DISPLAY RULES (Cashify Hierarchy) ──────
+    {
+      id: 'defect-screen-scratches-minor',
+      category: 'screen',
+      description: '1-2 Scratches on Screen',
+      subText: '1-2 faint hairline scratches visible only under direct light.',
+      deductionFixed: 600,
+      deductionPercentage: 0.015
+    },
+    {
+      id: 'defect-screen-scratches-major',
+      category: 'screen',
+      description: 'More Than 2 Scratches on Screen',
+      subText: 'Multiple scratches across display glass visible under normal light.',
+      deductionFixed: 1200,
+      deductionPercentage: 0.03
+    },
+    {
+      id: 'defect-screen-chipped',
+      category: 'screen',
+      description: 'Chipped Outside Display Area',
+      subText: 'Minor glass chip or bezel nick outside the active viewing area.',
+      deductionFixed: 1500,
+      deductionPercentage: 0.08
+    },
+    {
+      id: 'defect-screen-spots-white-minor',
+      category: 'screen',
+      description: '1-2 Minor Spots on Screen',
+      subText: '1-2 faint white pressure spots visible on light background.',
+      deductionFixed: 1000,
+      deductionPercentage: 0.05
+    },
+    {
+      id: 'defect-screen-spots-multi',
+      category: 'screen',
+      description: '3 or More Minor Spots on Screen',
+      subText: 'Multiple visible spots or blemishes on screen.',
+      deductionFixed: 1800,
+      deductionPercentage: 0.12
+    },
+    {
+      id: 'defect-screen-spots-heavy',
+      category: 'screen',
+      description: 'Large / Heavy Visible Spots on Screen',
+      subText: 'Large black ink spots or heavy pressure patches on display panel.',
+      deductionFixed: 0,
+      deductionPercentage: screenPct
+    },
+    {
+      id: 'defect-screen-lines',
+      category: 'screen',
+      description: 'Visible Lines on Screen',
+      subText: 'Permanent vertical or horizontal colored laser lines across display panel.',
+      deductionFixed: 0,
+      deductionPercentage: screenPct
+    },
+    {
+      id: 'defect-screen-shading',
+      category: 'screen',
+      description: 'Display Faded Along Edges',
+      subText: 'Backlight fade, gradient drop or edge darkening.',
+      deductionFixed: 0,
+      deductionPercentage: 0.10
+    },
+    {
+      id: 'defect-screen-discolor-minor',
+      category: 'screen',
+      description: 'Minor Discoloration on Screen',
+      subText: 'Faint yellow/pink tint or slight uneven warm patches along screen edges.',
+      deductionFixed: 0,
+      deductionPercentage: 0.06
+    },
+    {
+      id: 'defect-screen-discolor-major',
+      category: 'screen',
+      description: 'Major Discoloration on Screen',
+      subText: 'Severe color tint shift, heavy burn-in or patch discoloration.',
+      deductionFixed: 0,
+      deductionPercentage: 0.15
+    },
+
     {
       id: 'defect-screen-minor-scratches',
       category: 'screen',
@@ -987,16 +1073,99 @@ export function getDefectRulesForCategory(
       deductionFixed: 0,
       deductionPercentage: 0
     },
-    ...(isFoldable ? [{
-      id: 'defect-screen-crease',
-      category: 'screen' as const,
-      description: 'Inner Display Crease Damage / Bubbling',
-      subText: 'Protective layer bubbling, discoloration, or dead line along the folding crease of the inner flexible display.',
-      deductionFixed: 1500,
-      deductionPercentage: 0.35
-    }] : []),
+    // Note: Inner folding crease question excluded in client wizard (Assumed Pristine Policy)
 
     // ── BODY ─────────────────────────────────────────────────────────────
+    // ── GRANULAR BODY RULES (Cashify Hierarchy) ──────────────────────────
+    {
+      id: 'defect-body-scratches-minor',
+      category: 'body',
+      description: '1-2 Scratches on Body',
+      subText: 'Minor faint scuffs on the aluminum/chassis from ordinary handling.',
+      deductionFixed: 500,
+      deductionPercentage: 0.02
+    },
+    {
+      id: 'defect-body-scratches-major',
+      category: 'body',
+      description: 'More Than 2 Scratches on Body',
+      subText: 'Multiple noticeable scratches or deep metal abrasions on body.',
+      deductionFixed: 1000,
+      deductionPercentage: 0.04
+    },
+    {
+      id: 'defect-body-dents-minor',
+      category: 'body',
+      description: '1-2 Minor Dents on Body',
+      subText: 'Small cosmetic corner or rim dimples that do not affect internal assembly.',
+      deductionFixed: 800,
+      deductionPercentage: 0.035
+    },
+    {
+      id: 'defect-body-dents-major',
+      category: 'body',
+      description: 'Major Dent(s) or More Than 2 Dents',
+      subText: 'Heavy frame dents, gouged corner metal, or structural impact marks.',
+      deductionFixed: 1800,
+      deductionPercentage: bodyDentPct
+    },
+    {
+      id: 'defect-body-bent',
+      category: 'body',
+      description: 'Device Bent / Curved Panel',
+      subText: 'Chassis visibly warped or curved when laid flat on a level tabletop.',
+      deductionFixed: 0,
+      deductionPercentage: 0.16
+    },
+    {
+      id: 'defect-body-screen-loose',
+      category: 'body',
+      description: 'Loose Screen (Gap in Screen and Body)',
+      subText: 'Screen lifting away from the metal frame adhesive along sides or corners.',
+      deductionFixed: 0,
+      deductionPercentage: 0.12
+    },
+    {
+      id: 'defect-body-bent-and-loose',
+      category: 'body',
+      description: 'Both Bent and Loose Screen',
+      subText: 'Severe structural bend causing the glass display assembly to pop out.',
+      deductionFixed: 0,
+      deductionPercentage: 0.22
+    },
+    {
+      id: 'defect-body-panel-gap',
+      category: 'body',
+      description: 'Visible Gap in Side/Back Panel',
+      subText: 'Enclosure seam separation or swelling gap between rear shell and frame.',
+      deductionFixed: 0,
+      deductionPercentage: 0.08
+    },
+    {
+      id: 'defect-body-panel-chipped',
+      category: 'body',
+      description: 'Side/Back Panel Chipped on Edges',
+      subText: 'Corner metal or composite back panel chipped/damaged from hard fall.',
+      deductionFixed: 1000,
+      deductionPercentage: 0.05
+    },
+    {
+      id: 'defect-body-panel-broken',
+      category: 'body',
+      description: 'Cracked / Broken Side or Back Panel',
+      subText: 'Rear enclosure or side housing cracked or shattered.',
+      deductionFixed: category === 'flagship' ? 2200 : category === 'premium' ? 1600 : 1000,
+      deductionPercentage: 0.08
+    },
+    {
+      id: 'defect-body-panel-missing',
+      category: 'body',
+      description: 'Missing Side or Back Panel',
+      subText: 'Part of side or rear panel cover is missing or detached completely.',
+      deductionFixed: category === 'flagship' ? 3000 : 2000,
+      deductionPercentage: 0.12
+    },
+
     ...(isFoldable ? [{
       id: 'defect-body-hinge',
       category: 'body' as const,
