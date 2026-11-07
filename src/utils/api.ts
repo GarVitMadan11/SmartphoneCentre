@@ -545,6 +545,12 @@ export function updateBooking(
   }, true);
 }
 
+export function resetLedgerBookings(): Promise<{ success: boolean; message: string }> {
+  return apiFetch<{ success: boolean; message: string }>('/bookings/reset-ledger', {
+    method: 'POST',
+  }, true);
+}
+
 // ── Customer Authentication API Helpers ─────────────────────────────────────
 
 export interface ApiUser {
@@ -1090,6 +1096,155 @@ export function triggerCashifyScan(limit: number = 0): Promise<{ success: boolea
 export function fetchCashifyScanStatus(): Promise<{ isRunning: boolean }> {
   return apiFetch<{ isRunning: boolean }>('/admin/cashify/scan-status', {}, true);
 }
+
+// ─────────────────────────────────────────────────────────────
+// DEVICE INVENTORY & BARCODE MANAGEMENT API
+// ─────────────────────────────────────────────────────────────
+
+export interface InventoryItem {
+  id: string;
+  barcode: string;
+  brand: string;
+  model: string;
+  variant: string;
+  storageGb?: number | null;
+  ramGb?: number | null;
+  color?: string;
+  imei?: string;
+  condition: string; // 'Flawless' | 'Good' | 'Fair' | 'Needs Repair'
+  buyingPrice: number;
+  buyingDate: string;
+  boughtFrom: string;
+  sellerPhone?: string;
+  sellerEmail?: string;
+  acquisitionChannel: 'ONLINE' | 'OFFLINE';
+  associatedBookingId?: string | null;
+  status: 'IN_STOCK' | 'SOLD' | 'IN_REPAIR' | 'RETURNED';
+  sellingPrice?: number | null;
+  soldDate?: string | null;
+  soldTo?: string | null;
+  buyerContact?: string | null;
+  paymentMethod?: string | null;
+  notes?: string;
+  createdBy?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface InventoryStats {
+  totalCount: number;
+  inStockCount: number;
+  inStockValue: number;
+  soldCount: number;
+  totalRevenue: number;
+  costOfSold: number;
+  totalProfit: number;
+  onlineCount: number;
+  offlineCount: number;
+}
+
+export interface InventoryFilters {
+  status?: string;
+  channel?: string;
+  search?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}
+
+export function fetchInventory(
+  filters?: InventoryFilters
+): Promise<{ items: InventoryItem[]; stats: InventoryStats }> {
+  const params = new URLSearchParams();
+  if (filters?.status && filters.status !== 'ALL') params.append('status', filters.status);
+  if (filters?.channel && filters.channel !== 'ALL') params.append('channel', filters.channel);
+  if (filters?.search) params.append('search', filters.search);
+  if (filters?.dateFrom) params.append('dateFrom', filters.dateFrom);
+  if (filters?.dateTo) params.append('dateTo', filters.dateTo);
+
+  const queryStr = params.toString() ? `?${params.toString()}` : '';
+  return apiFetch<{ items: InventoryItem[]; stats: InventoryStats }>(
+    `/admin/inventory${queryStr}`,
+    {},
+    true
+  );
+}
+
+export function fetchConvertibleBookings(): Promise<any[]> {
+  return apiFetch<any[]>('/admin/inventory/convertible-bookings', {}, true);
+}
+
+export function createInventoryItem(
+  data: Partial<InventoryItem>
+): Promise<InventoryItem> {
+  return apiFetch<InventoryItem>(
+    '/admin/inventory',
+    {
+      method: 'POST',
+      body: JSON.stringify(data),
+    },
+    true
+  );
+}
+
+export function updateInventoryItem(
+  id: string,
+  data: Partial<InventoryItem>
+): Promise<InventoryItem> {
+  return apiFetch<InventoryItem>(
+    `/admin/inventory/${encodeURIComponent(id)}`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    },
+    true
+  );
+}
+
+export function markInventorySold(
+  id: string,
+  data: {
+    sellingPrice: number;
+    soldDate?: string;
+    soldTo?: string;
+    buyerContact?: string;
+    paymentMethod?: string;
+    notes?: string;
+  }
+): Promise<{ item: InventoryItem; profit: number; message: string }> {
+  return apiFetch<{ item: InventoryItem; profit: number; message: string }>(
+    `/admin/inventory/${encodeURIComponent(id)}/mark-sold`,
+    {
+      method: 'POST',
+      body: JSON.stringify(data),
+    },
+    true
+  );
+}
+
+export function revertInventorySold(
+  id: string
+): Promise<{ item: InventoryItem; message: string }> {
+  return apiFetch<{ item: InventoryItem; message: string }>(
+    `/admin/inventory/${encodeURIComponent(id)}/revert-sold`,
+    {
+      method: 'POST',
+    },
+    true
+  );
+}
+
+export function deleteInventoryItem(
+  id: string
+): Promise<{ success: boolean; message: string }> {
+  return apiFetch<{ success: boolean; message: string }>(
+    `/admin/inventory/${encodeURIComponent(id)}`,
+    {
+      method: 'DELETE',
+    },
+    true
+  );
+}
+
 
 
 

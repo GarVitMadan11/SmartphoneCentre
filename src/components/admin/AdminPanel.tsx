@@ -3,9 +3,9 @@ import { Booking, Brand, Model } from '../../data/mockDatabase';
 import {
   ArrowLeft, RefreshCw, ShieldAlert, Smartphone, Tablet, Watch, LogOut,
   Zap, Truck, MessageSquare, CreditCard, ChevronLeft, ChevronRight, ChevronDown,
-  Menu, X, ShieldCheck, Eye, Layers, Users, Tag, User, DollarSign
+  Menu, X, ShieldCheck, Eye, Layers, Users, Tag, User, DollarSign, Package
 } from 'lucide-react';
-import { fetchBookings, triggerAdminLockdown, fetchCurrentUser, getCurrentAdminUser, adminLogout, AdminUserSession, ApiUser } from '../../utils/api';
+import { fetchBookings, triggerAdminLockdown, fetchCurrentUser, getCurrentAdminUser, adminLogout, resetLedgerBookings, AdminUserSession, ApiUser } from '../../utils/api';
 import { AdminContextProvider } from '../../context/AdminContext';
 import CatalogTab from './tabs/CatalogTab';
 import CashifyMonitorTab from './tabs/CashifyMonitorTab';
@@ -15,8 +15,10 @@ import AuditLogTab from './tabs/AuditLogTab';
 import StaffTab from './tabs/StaffTab';
 import { CouponsTab } from './tabs/CouponsTab';
 import PriceMatrixTab from './tabs/PriceMatrixTab';
+import InventoryTab from './tabs/InventoryTab';
 
 export type AdminNavKey =
+  | 'inventory'
   | 'smartphones'
   | 'tablets'
   | 'smartwatches'
@@ -123,13 +125,13 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
 
     // Role-based defaults when no granular permissions array is present
     if (effectiveRole === 'CATALOG_EDITOR') {
-      return ['smartphones', 'tablets', 'smartwatches', 'pricing', 'cashify'].includes(serviceKey);
+      return ['inventory', 'smartphones', 'tablets', 'smartwatches', 'pricing', 'cashify'].includes(serviceKey);
     }
     if (effectiveRole === 'OPERATIONS_AGENT') {
-      return ['inspections', 'support'].includes(serviceKey);
+      return ['inventory', 'inspections', 'support'].includes(serviceKey);
     }
     if (effectiveRole === 'FINANCE_APPROVER') {
-      return ['finance', 'coupons'].includes(serviceKey);
+      return ['inventory', 'finance', 'coupons'].includes(serviceKey);
     }
     return false;
   }, [effectiveRole, adminUser]);
@@ -138,7 +140,7 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
   useEffect(() => {
     if (effectiveRole === 'SUPER_ADMIN') return;
     if (!hasAccessTo(activeNav)) {
-      const allServices: AdminNavKey[] = ['smartphones', 'tablets', 'smartwatches', 'pricing', 'cashify', 'inspections', 'support', 'finance'];
+      const allServices: AdminNavKey[] = ['inventory', 'smartphones', 'tablets', 'smartwatches', 'pricing', 'cashify', 'inspections', 'support', 'finance', 'coupons'];
       const firstAllowed = allServices.find(s => hasAccessTo(s));
       if (firstAllowed) {
         setActiveNav(firstAllowed);
@@ -175,9 +177,19 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
   };
 
   const handleResetDemoData = async () => {
-    if (!window.confirm('Reset all bookings ledger state to defaults?')) return;
-    setBookings(initialBookings);
-    if (onRefreshBookings) onRefreshBookings(initialBookings);
+    if (!window.confirm('Are you sure you want to PERMANENTLY reset and clear all orders/transactions from the ledger and database?')) return;
+    try {
+      setLoadingBookings(true);
+      const res = await resetLedgerBookings();
+      setBookings([]);
+      if (onRefreshBookings) onRefreshBookings([]);
+      alert(`✅ ${res.message || 'Ledger reset successfully!'}`);
+    } catch (err: any) {
+      alert(`Failed to reset ledger: ${err.message || 'Server error'}`);
+    } finally {
+      setLoadingBookings(false);
+      await loadBookings();
+    }
   };
 
   const handleSignOut = async () => {
@@ -217,6 +229,8 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
   // Breadcrumbs text helper
   const breadcrumbInfo = useMemo(() => {
     switch (activeNav) {
+      case 'inventory':
+        return { section: 'Device Stock', title: 'Device Inventory & Barcodes', icon: Package };
       case 'smartphones':
         return { section: 'Inventory & Pricing', title: 'Smartphones Catalog', icon: Smartphone };
       case 'tablets':
@@ -359,8 +373,8 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
             </div>
           ) : (
             <>
-              {/* Group A: Catalog */}
-              {(hasAccessTo('smartphones') || hasAccessTo('tablets') || hasAccessTo('smartwatches') || hasAccessTo('pricing') || hasAccessTo('cashify')) && (
+              {/* Group A: Catalog & Stock */}
+              {(hasAccessTo('inventory') || hasAccessTo('smartphones') || hasAccessTo('tablets') || hasAccessTo('smartwatches') || hasAccessTo('pricing') || hasAccessTo('cashify')) && (
                 <div>
                   <div
                     className={`px-2.5 pb-1 text-[10px] font-mono font-bold tracking-wider uppercase text-slate-400 transition-all duration-200 overflow-hidden whitespace-nowrap ${isSidebarExpanded ? 'block' : 'hidden'
@@ -369,6 +383,15 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
                     Catalog & Valuation
                   </div>
                   <div className="space-y-0.5">
+                    {hasAccessTo('inventory') && (
+                      <NavItem
+                        navKey="inventory"
+                        label="Device Inventory"
+                        icon={Package}
+                        badge="New"
+                        badgeColor="bg-emerald-400/20 text-emerald-300"
+                      />
+                    )}
                     {hasAccessTo('smartphones') && <NavItem navKey="smartphones" label="Smartphones" icon={Smartphone} />}
                     {hasAccessTo('tablets') && <NavItem navKey="tablets" label="Tablets" icon={Tablet} />}
                     {hasAccessTo('smartwatches') && <NavItem navKey="smartwatches" label="Smartwatches" icon={Watch} />}
@@ -551,29 +574,30 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
       <div className="flex-1 flex flex-col bg-canvas-white min-w-0 overflow-hidden">
 
         {/* Top App Header Bar */}
-        <header className="bg-canvas-white/95 backdrop-blur-md border-b border-ice-border px-4 md:px-6 py-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-xs">
+        <header className="bg-canvas-white/95 backdrop-blur-md border-b border-ice-border px-3 sm:px-4 md:px-6 py-2.5 sm:py-3.5 flex items-center justify-between gap-2 shadow-xs shrink-0">
 
           {/* Breadcrumb Path & Active View Title */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             {/* Mobile Hamburger Menu Toggle */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-lg border border-ice-border text-ink-slate hover:text-ink-navy cursor-pointer"
+              className="md:hidden p-1.5 sm:p-2 rounded-lg border border-ice-border text-ink-slate hover:text-ink-navy bg-white shadow-2xs cursor-pointer shrink-0"
+              aria-label="Toggle Navigation Menu"
             >
               {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
             </button>
 
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-lg bg-cobalt/10 text-cobalt border border-cobalt/20">
+            <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+              <div className="p-1.5 sm:p-2 rounded-lg bg-cobalt/10 text-cobalt border border-cobalt/20 shrink-0">
                 <ActiveIcon className="w-4 h-4" />
               </div>
-              <div>
-                <div className="flex items-center gap-1.5 text-[11px] font-mono text-ink-muted">
+              <div className="min-w-0">
+                <div className="hidden xs:flex items-center gap-1.5 text-[10px] sm:text-[11px] font-mono text-ink-muted truncate">
                   <span>Admin</span>
                   <span>/</span>
-                  <span>{breadcrumbInfo.section}</span>
+                  <span className="truncate">{breadcrumbInfo.section}</span>
                 </div>
-                <h1 className="text-lg md:text-xl font-extrabold text-ink-navy tracking-tight leading-none mt-0.5">
+                <h1 className="text-sm sm:text-base md:text-xl font-extrabold text-ink-navy tracking-tight leading-tight truncate">
                   {breadcrumbInfo.title}
                 </h1>
               </div>
@@ -581,12 +605,12 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
           </div>
 
           {/* Quick Action Tools & System Health */}
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {/* Refresh Data */}
             <button
               onClick={handleGlobalRefresh}
               disabled={loadingBookings}
-              className="px-3 py-1.5 border border-ice-border hover:border-cobalt/40 text-ink-navy hover:text-cobalt bg-canvas-pure text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+              className="px-2 sm:px-3 py-1.5 border border-ice-border hover:border-cobalt/40 text-ink-navy hover:text-cobalt bg-canvas-pure text-xs font-bold rounded-lg transition-all flex items-center gap-1 sm:gap-1.5 cursor-pointer shadow-xs"
               title="Refresh Catalog and Bookings"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${loadingBookings ? 'animate-spin text-cobalt' : 'text-slate-500'}`} />
@@ -597,10 +621,10 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
             {effectiveRole === 'SUPER_ADMIN' && (
               <button
                 onClick={handleResetDemoData}
-                className="px-3 py-1.5 border border-ice-border text-ink-slate hover:text-ink-navy bg-canvas-pure hover:bg-zinc-100 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer"
+                className="hidden lg:flex px-3 py-1.5 border border-ice-border text-ink-slate hover:text-ink-navy bg-canvas-pure hover:bg-zinc-100 text-xs font-semibold rounded-lg transition-all items-center gap-1.5 cursor-pointer"
                 title="Reset Demo Ledger Data (Super Admin Only)"
               >
-                <span className="hidden sm:inline">Reset Ledger</span>
+                <span>Reset Ledger</span>
               </button>
             )}
 
@@ -608,28 +632,33 @@ export const AdminPanelInner: React.FC<AdminPanelProps> = ({
             {effectiveRole === 'SUPER_ADMIN' && (
               <button
                 onClick={handleLockdown}
-                className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
+                className="hidden sm:flex px-2.5 sm:px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-lg transition-all items-center gap-1 sm:gap-1.5 shadow-sm cursor-pointer"
                 title="Emergency Lockdown: Instantly revoke admin sessions (Super Admin Only)"
               >
                 <ShieldAlert className="w-3.5 h-3.5" />
-                <span>Lockdown</span>
+                <span className="hidden md:inline">Lockdown</span>
               </button>
             )}
 
             {/* Clean Sign Out */}
             <button
               onClick={handleSignOut}
-              className="px-3 py-1.5 border border-slate-200 hover:border-rose-200 bg-white hover:bg-rose-50 text-slate-700 hover:text-rose-600 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer shadow-xs ml-1"
+              className="px-2 sm:px-3 py-1.5 border border-slate-200 hover:border-rose-200 bg-white hover:bg-rose-50 text-slate-700 hover:text-rose-600 text-xs font-bold rounded-lg transition-all flex items-center gap-1 sm:gap-1.5 cursor-pointer shadow-xs"
               title="Sign Out of Admin Session"
             >
               <LogOut className="w-3.5 h-3.5" />
-              <span>Sign Out</span>
+              <span className="hidden sm:inline">Sign Out</span>
             </button>
           </div>
         </header>
 
         {/* ── 3. DIRECT TAB CONTENT CONTAINER (ZERO NESTED HEADERS, 100% SPACE) ─ */}
         <main className="flex-1 p-4 md:p-6 overflow-y-auto w-full min-w-0">
+          {/* Device Stock & Physical Inventory */}
+          {activeNav === 'inventory' && (
+            <InventoryTab />
+          )}
+
           {/* Smartphones Catalog */}
           <div className={activeNav === 'smartphones' ? 'block' : 'hidden'}>
             <CatalogTab

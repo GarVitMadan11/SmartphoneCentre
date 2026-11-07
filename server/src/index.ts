@@ -20,6 +20,7 @@ import modelsRouter from './routes/models.js';
 import quotesRouter from './routes/quotes.js';
 import bookingsRouter from './routes/bookings.js';
 import referralsRouter from './routes/referrals.js';
+import inventoryRouter from './routes/inventory.js';
 
 // Middleware & Validation
 import { globalLimiter, authLimiter, adminOpsLimiter } from './middleware/rateLimits.js';
@@ -219,6 +220,7 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', engineVersion: PRICING_ENGINE_VERSION, timestamp: new Date().toISOString() });
 });
 
+app.use('/api/admin/inventory', inventoryRouter);
 app.use('/api/admin', adminOpsLimiter, adminRouter);
 app.use('/api/support', supportRouter);
 app.use('/api/auth', authLimiter, authRouter);
