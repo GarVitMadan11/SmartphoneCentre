@@ -939,6 +939,9 @@ export function getDefectRulesForCategory(
   const bodyDentPct = category === 'flagship' ? 0.08 : category === 'premium' ? 0.07 : 0.06;
   const cameraPct   = category === 'flagship' ? 0.08 : category === 'premium' ? 0.07 : 0.06;
 
+  // Resolve empirical flat battery deduction for Apple iPhone models (e.g. ₹3,000 for iPhone 13)
+  const appleBattery = isApple && modelName ? getDefaultAppleBatteryDeduction(modelName) : { under80: 3000, between80and85: 900 };
+
   return [
     // ── SCREEN ───────────────────────────────────────────────────────────
     // ── GRANULAR SCREEN PHYSICAL & DISPLAY RULES (Cashify Hierarchy) ──────
@@ -1309,16 +1312,16 @@ export function getDefectRulesForCategory(
         category: 'connectivity' as const,
         description: 'Original Battery Health 80% – 85%',
         subText: 'Maximum capacity is between 80% and 85% in Settings → Battery → Battery Health (Original Battery).',
-        deductionFixed: 0,
-        deductionPercentage: 0.015 // Calibrated 1.5% to match Cashify empirical drops
+        deductionFixed: appleBattery.between80and85,
+        deductionPercentage: 0
       },
       {
         id: 'defect-battery-low' as const,
         category: 'connectivity' as const,
         description: 'Battery Health < 80% or Service Alert',
         subText: 'Maximum capacity is below 80% or shows "Service / Important Battery Message" in Settings → Battery.',
-        deductionFixed: 0,
-        deductionPercentage: 0.045 // Calibrated 4.5% to beat Cashify empirical drops
+        deductionFixed: appleBattery.under80,
+        deductionPercentage: 0
       }
     ] : []),
     {

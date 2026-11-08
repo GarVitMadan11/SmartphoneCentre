@@ -558,29 +558,6 @@ export async function updateReferralRewardStatus(
  * Returns active public promotional offers for the customer diagnostic tray.
  */
 export async function listActivePublicCoupons() {
-  const now = new Date();
-  const dbCoupons = await (prisma as any).referralCoupon.findMany({
-    where: {
-      active: true,
-      OR: [
-        { expiresAt: null },
-        { expiresAt: { gt: now } },
-      ],
-    },
-    select: {
-      code: true,
-      type: true,
-      value: true,
-      tierRules: true,
-      targetBrands: true,
-      minDeviceValue: true,
-      maxBonusCap: true,
-      expiresAt: true,
-    },
-    orderBy: { value: 'desc' },
-    take: 8,
-  });
-
   const defaults = [
     {
       code: 'WELCOME300',
@@ -605,6 +582,35 @@ export async function listActivePublicCoupons() {
       description: '+3% extra payout bonus (up to ₹1,500 extra)',
     },
   ];
+
+  let dbCoupons: any[] = [];
+  try {
+    const now = new Date();
+    dbCoupons = await (prisma as any).referralCoupon.findMany({
+      where: {
+        active: true,
+        OR: [
+          { expiresAt: null },
+          { expiresAt: { gt: now } },
+        ],
+      },
+      select: {
+        code: true,
+        type: true,
+        value: true,
+        tierRules: true,
+        targetBrands: true,
+        minDeviceValue: true,
+        maxBonusCap: true,
+        expiresAt: true,
+      },
+      orderBy: { value: 'desc' },
+      take: 8,
+    });
+  } catch (err: any) {
+    console.warn('[Coupon Service] Could not query referralCoupon table, serving default promotions:', err?.message || err);
+    return defaults;
+  }
 
   if (!dbCoupons || dbCoupons.length === 0) {
     return defaults;

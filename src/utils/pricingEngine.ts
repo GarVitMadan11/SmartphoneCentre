@@ -479,9 +479,14 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
   // Group D — Battery (Health degradation, service warning)
   const batteryDefects = input.selectedDefects.filter(d => d.id.includes('battery'));
   let fBattery = 1.00;
+  let batteryFixedDeduction = 0;
   batteryDefects.forEach(defect => {
-    const penalty = defect.deductionPercentage ?? 0.05;
-    fBattery *= Math.max(0, 1.0 - penalty);
+    if (defect.deductionFixed > 0) {
+      batteryFixedDeduction += defect.deductionFixed;
+    } else {
+      const penalty = defect.deductionPercentage ?? 0.05;
+      fBattery *= Math.max(0, 1.0 - penalty);
+    }
   });
 
   // Total Multiplicative Condition Score
@@ -591,8 +596,21 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
     });
   }
 
-  // Calculate Pre-Vendor Adjusted Benchmark (includes screen deduction, dual eSIM & single SIM deduction)
-  let adjustedBenchmark = preAccessoryValue - screenDeductionAmount - dualEsimDeduction - singleSimDeduction - dAccessoriesCapped;
+  // Battery Fixed Deduction for Apple iPhones
+  if (batteryFixedDeduction > 0) {
+    const isUnder80 = batteryDefects.some(d => d.id === 'defect-battery-low');
+    adjustments.push({
+      id: isUnder80 ? 'defect-battery-low' : 'defect-battery-80-85',
+      name: isUnder80 ? 'Battery Health < 80% / Service Alert' : 'Battery Health 80% – 85%',
+      category: 'battery',
+      type: 'TYPE_B_FIXED',
+      rateOrValue: -batteryFixedDeduction,
+      impactAmount: -batteryFixedDeduction
+    });
+  }
+
+  // Calculate Pre-Vendor Adjusted Benchmark (includes screen deduction, battery deduction, dual eSIM & single SIM deduction)
+  let adjustedBenchmark = preAccessoryValue - screenDeductionAmount - batteryFixedDeduction - dualEsimDeduction - singleSimDeduction - dAccessoriesCapped;
 
   // Minimum Valuation / Salvage Floor Check (Empirically beats competitor scrap floor of ₹1,180)
   const minimumRecycleFloor = Math.max(1200, Math.round(basePrice * 0.08));
@@ -602,7 +620,7 @@ export function calculateStage1Valuation(input: PricingInput): Stage1ValuationRe
 
   let vendorMultiplier = 1.0;
   let vendorMultiplierPercentage = '+0%';
-  const hasAnyDefectsOrDeductions = fCondition < 0.98 || dAccessoriesCapped > 0 || screenDeductionAmount > 0 || dualEsimDeduction > 0 || singleSimDeduction > 0;
+  const hasAnyDefectsOrDeductions = fCondition < 0.98 || batteryFixedDeduction > 0 || dAccessoriesCapped > 0 || screenDeductionAmount > 0 || dualEsimDeduction > 0 || singleSimDeduction > 0;
 
   if (config.vendorConditionTiers) {
     if (!hasAnyDefectsOrDeductions) {
