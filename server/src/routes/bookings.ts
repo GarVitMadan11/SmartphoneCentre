@@ -162,6 +162,24 @@ router.post('/track', trackingLimiter, async (req, res) => {
   }
 });
 
+// POST /api/bookings/verify-imei — Validate IMEI against Luhn & CEIR database
+router.post('/verify-imei', trackingLimiter, async (req, res) => {
+  try {
+    const { imei } = req.body;
+    if (!imei || typeof imei !== 'string') {
+      res.status(400).json({ error: 'BadRequest', message: '15-digit IMEI number is required.' });
+      return;
+    }
+
+    const { checkCeirStatus } = await import('../services/ceirService.js');
+    const result = await checkCeirStatus(imei);
+    res.json(result);
+  } catch (err) {
+    console.error('POST /api/bookings/verify-imei error:', err);
+    res.status(500).json({ error: 'ServerError', message: 'Failed to verify IMEI with CEIR gateway.' });
+  }
+});
+
 // GET /api/bookings — ADMIN ONLY
 router.get('/', adminAuth, requireRole(['SUPER_ADMIN', 'FINANCE_APPROVER', 'OPERATIONS_AGENT']), async (req: AuthenticatedRequest, res) => {
   try {

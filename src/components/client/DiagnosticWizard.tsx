@@ -5916,45 +5916,33 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
                     <div className="mt-4 space-y-2.5 print:hidden">
 
-                      {isPriceLocked ? (
-
+                      {/* Primary Action Button */}
+                      {!isPriceLocked && (
                         <button
-
                           type="button"
-
-                          onClick={() => setLockModalOpen(true)}
-
-                          className="w-full bg-cobalt hover:bg-cobalt-hover text-white py-3.5 sm:py-4 px-6 rounded-xl font-bold text-sm sm:text-base text-center transition-all flex items-center justify-center gap-2 group hover:scale-[1.005] active:scale-[0.99] shadow-lg shadow-cobalt/25 cursor-pointer"
-
-                        >
-
-                          <Lock className="w-4 h-4 text-sky-300" />
-
-                          <span>Unlock Price &amp; Book Free Pickup</span>
-
-                        </button>
-
-                      ) : (
-
-                        <button
-
-                          type="button"
-
                           onClick={() => onComplete(finalPayoutWithCoupon, selectedDefects, { appliedCoupon: appliedCoupon?.code, bonusAmount: appliedCoupon?.bonusAmount })}
-
                           className="w-full bg-gradient-to-r from-cobalt via-indigo-600 to-cobalt hover:from-cobalt-hover hover:to-indigo-700 text-white py-3.5 sm:py-4 px-6 rounded-xl font-bold text-sm sm:text-base text-center transition-all flex items-center justify-center gap-2 group hover:scale-[1.005] active:scale-[0.99] shadow-lg shadow-cobalt/25 cursor-pointer"
-
                         >
-
                           <span>Book Free Doorstep Pickup (Instant ₹{formatPrice(finalPayoutWithCoupon)})</span>
-
                           <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-
                         </button>
-
                       )}
 
-
+                      {/* WhatsApp Instant Quote & Price Lock Button */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const modelText = `${model?.name || 'Phone'} (${variant?.storageGb ? (variant.storageGb >= 1024 ? variant.storageGb / 1024 + 'TB' : variant.storageGb + 'GB') : ''})`;
+                          const priceText = `₹${formatPrice(finalPayoutWithCoupon)}`;
+                          const text = `Hi Rephonix! I evaluated my ${modelText} on your website. My guaranteed valuation is ${priceText} (Ref #${receiptRef}). I would like to lock this price and schedule my free doorstep pickup!`;
+                          const waUrl = `https://wa.me/919034997719?text=${encodeURIComponent(text)}`;
+                          window.open(waUrl, '_blank', 'noopener,noreferrer');
+                        }}
+                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 px-5 rounded-xl font-bold text-xs sm:text-sm text-center transition-all flex items-center justify-center gap-2 shadow-md shadow-emerald-600/20 active:scale-[0.99] cursor-pointer"
+                      >
+                        <MessageSquare className="w-4 h-4 text-emerald-100" />
+                        <span>Lock Price &amp; Share via WhatsApp</span>
+                      </button>
 
                       <div className="grid grid-cols-3 gap-2 sm:gap-3">
 

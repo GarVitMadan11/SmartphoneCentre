@@ -28,6 +28,7 @@ import { AboutPage } from './components/client/AboutPage';
 import { ContactPage } from './components/client/ContactPage';
 import LoginPage from './components/client/LoginPage';
 import SignupPage from './components/client/SignupPage';
+import { TechnicianPortal } from './components/client/TechnicianPortal';
 import ProfilePage from './components/client/ProfilePage';
 import ForgotPasswordPage from './components/client/ForgotPasswordPage';
 import ResetPasswordPage from './components/client/ResetPasswordPage';
@@ -583,6 +584,10 @@ export default function App() {
 
           {path.startsWith('/profile') && !currentUser && (
             <LoginPage onLoginSuccess={(user) => setCurrentUser(user)} onNavigate={navigate} />
+          )}
+
+          {path.startsWith('/technician') && (
+            <TechnicianPortal onBackToHome={() => navigate('/')} />
           )}
 
           {cleanPath === '/about' && <AboutPage onNavigate={navigate} />}
