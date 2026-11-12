@@ -259,7 +259,11 @@ router.post('/', bookingLimiter, optionalCustomerAuth, async (req: Authenticated
     const defectIds = Array.isArray(b.defectIds) ? (b.defectIds as string[]) : [];
     const maxQuote = maximumQuoteFor(model.basePrice128GB, storageGb, model.variantPrices, ramGb);
 
-    const calculatedPrice = calculateServerValuation(maxQuote, model.category as DeviceCategory, defectIds);
+    const calculatedPrice = calculateServerValuation(maxQuote, model.category as DeviceCategory, defectIds, {
+      modelName: model.name,
+      brandId: model.brandId,
+      batteryUnder80Deduction: (model as any).batteryUnder80Deduction,
+    });
     if (calculatedPrice === null || isNaN(calculatedPrice)) {
       res.status(400).json({ error: 'ValidationError', message: 'One or more declared device conditions are invalid.' });
       return;

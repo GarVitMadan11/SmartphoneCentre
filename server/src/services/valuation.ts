@@ -146,8 +146,12 @@ export function getDefaultAppleBatteryDeduction(modelName: string): { under80: n
   const m = (modelName || '').toLowerCase();
   let under80 = 3000;
 
-  if (m.includes('se 2020') || m.includes('se 2022') || m.includes('se (2020)') || m.includes('se (2022)') || m.includes('se 3') || m.includes('se 2') || m.includes('iphone se')) {
+  if (m.includes('se 2020') || m.includes('se 2022') || m.includes('se (2020)') || m.includes('se (2020)') || m.includes('se 3') || m.includes('se 2') || m.includes('iphone se')) {
     under80 = 1200;
+  } else if (m.includes('iphone 18 pro max') || m.includes('18 pro max') || m.includes('iphone 18 pro') || m.includes('18 pro') || m.includes('iphone 17 pro max') || m.includes('17 pro max') || m.includes('iphone 17 pro') || m.includes('17 pro')) {
+    under80 = 4200;
+  } else if (m.includes('iphone 18') || m.includes('18') || m.includes('iphone 17 air') || m.includes('17 air') || m.includes('iphone 17e') || m.includes('17e') || m.includes('iphone 17 plus') || m.includes('17 plus') || m.includes('iphone 17') || m.includes('17')) {
+    under80 = 3800;
   } else if (m.includes('iphone 16 pro max') || m.includes('16 pro max') || m.includes('iphone 16 pro') || m.includes('16 pro')) {
     under80 = 4200;
   } else if (m.includes('iphone 16 plus') || m.includes('16 plus') || m.includes('iphone 16') || m.includes('16')) {

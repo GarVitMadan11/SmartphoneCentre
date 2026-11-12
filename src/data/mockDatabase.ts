@@ -246,11 +246,11 @@ export function isNoChargerDevice(brandId?: string, modelName?: string, modelId?
     if (
       m.includes('iphone 12') || m.includes('iphone 13') || m.includes('iphone 14') ||
       m.includes('iphone 15') || m.includes('iphone 16') || m.includes('iphone 17') ||
-      m.includes('iphone 18') || m.includes('iphone air') ||
+      m.includes('iphone 18') || m.includes('iphone air') || m.includes('duo') ||
       m.includes('se3') || m.includes('se 3') || m.includes('se (3rd') || m.includes('se 2022') || m.includes('se (2022)') ||
       id.includes('iphone-12') || id.includes('iphone-13') || id.includes('iphone-14') ||
       id.includes('iphone-15') || id.includes('iphone-16') || id.includes('iphone-17') ||
-      id.includes('iphone-18') || id.includes('iphone-air') || id.includes('iphone-se3') || id.includes('iphone-se-2022')
+      id.includes('iphone-18') || id.includes('iphone-air') || id.includes('duo') || id.includes('iphone-se3') || id.includes('iphone-se-2022')
     ) {
       return true;
     }
@@ -265,10 +265,10 @@ export function isNoChargerDevice(brandId?: string, modelName?: string, modelId?
     return true;
   }
 
-  // Google Pixel 6, 7, 8, 9, 10 series and Pixel Fold
+  // Google Pixel 6, 7, 8, 9, 10, 11 series and Pixel Fold
   if (
-    /pixel\s*(6|7|8|9|10|fold)/i.test(m) ||
-    /pixel-(6|7|8|9|10|fold)/i.test(id)
+    /pixel\s*(6|7|8|9|10|11|fold)/i.test(m) ||
+    /pixel-(6|7|8|9|10|11|fold)/i.test(id)
   ) {
     return true;
   }
@@ -1353,11 +1353,11 @@ export function getDefectRulesForCategory(
     {
       id: 'defect-charger-missing',
       category: 'accessories',
-      description: isNoChargerDevice(brandId, modelName, modelId) ? 'Missing Original Charging Cable' : 'Missing Original Charger / Cable',
+      description: isNoChargerDevice(brandId, modelName, modelId) ? 'Missing Original Charging Cable' : 'Missing Original Fast Charger & Cable',
       subText: isNoChargerDevice(brandId, modelName, modelId)
-        ? 'Original USB-C charging cable bundled in retail box is not included.'
-        : 'Original in-box charging adapter or cable is not included.',
-      deductionFixed: isNoChargerDevice(brandId, modelName, modelId) ? 500 : (category === 'flagship' ? 1500 : 1000),
+        ? 'Original in-box USB-C charging cable is not included (Note: Manufacturer never bundled a power adapter in the retail box).'
+        : 'Original high-wattage power adapter or charging cable bundled in retail box is not included.',
+      deductionFixed: isNoChargerDevice(brandId, modelName, modelId) ? 0 : (category === 'flagship' ? 800 : category === 'premium' ? 500 : 300),
       deductionPercentage: 0
     },
     {

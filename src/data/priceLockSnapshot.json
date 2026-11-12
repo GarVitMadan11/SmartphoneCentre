@@ -1,0 +1,12 @@
+{
+  "lockedAt": "2026-11-12T04:57:00.000Z",
+  "status": "LOCKED",
+  "enforcedBy": "USER_DIRECTIVE",
+  "message": "Catalog prices and variant maps are permanently locked against automatic drift or modification.",
+  "catalogChecksums": {
+    "src/data/actualPrices.json": "a8c6e0b2af308fe93399c7e5c43458da6614d0dd1910d47e41d8dcd1ca957288",
+    "src/data/fallbackModels.json": "24c1b6a10ee0020d27b7809fbd558e127d30cfd9175a977d0dac7f547e43b1b2",
+    "src/data/screenDeductionsMap.json": "0a6f96a7cc7ac1c1103a4c4fe3402194a13f17a835546448d43fe08db4e1a1f9",
+    "src/data/warrantyDeductionsMap.json": "51c21808d3735961f64a6d3b00f0783320d6a3fcac896a0984851dee0640984a"
+  }
+}

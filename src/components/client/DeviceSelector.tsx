@@ -1457,11 +1457,16 @@ export const DeviceSelector: React.FC<DeviceSelectorProps> = ({
                                 }`}
                             >
                               <div>
-                                <div className="flex items-center justify-end mb-2">
-                                  <span className="text-[11px] font-sans font-semibold text-slate-400">{model.releaseYear}</span>
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                                    {model.series ? model.series.replace(/ Series$/i, '') : 'Flagship'}
+                                  </span>
+                                  <span className="text-[11px] font-bold text-slate-500 bg-slate-50 px-2 py-0.5 rounded border border-slate-200/60">
+                                    {model.releaseYear || '2023+'}
+                                  </span>
                                 </div>
 
-                                <h3 className="text-base sm:text-xl font-bold font-sans text-ink-navy uppercase group-hover:text-cobalt transition-colors text-left line-clamp-1">
+                                <h3 className="text-base sm:text-lg font-black font-sans text-ink-navy group-hover:text-cobalt transition-colors text-left line-clamp-1">
                                   {model.name}
                                 </h3>
                                 {model.series && !selectedSeries && (

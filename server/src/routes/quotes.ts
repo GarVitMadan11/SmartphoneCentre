@@ -46,7 +46,11 @@ router.post('/', quoteLimiter, async (req, res) => {
     const ramGb = req.body.ramGb ? Number(req.body.ramGb) : undefined;
     const maxPrice = maximumQuoteFor(model.basePrice128GB, Number(storageGb), model.variantPrices, ramGb);
     const defectList = Array.isArray(defectIds) ? defectIds.map(String) : [];
-    const calculatedPrice = calculateServerValuation(maxPrice, model.category as DeviceCategory, defectList);
+    const calculatedPrice = calculateServerValuation(maxPrice, model.category as DeviceCategory, defectList, {
+      modelName: model.name,
+      brandId: model.brandId,
+      batteryUnder80Deduction: (model as any).batteryUnder80Deduction,
+    });
 
     if (calculatedPrice === null) {
       res.status(400).json({ error: 'ValidationError', message: 'Invalid defect identifiers supplied.' });

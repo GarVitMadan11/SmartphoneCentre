@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect } from 'react';
+import { motion, useSpring, useTransform } from 'framer-motion';
 
 interface AnimatedPriceProps {
   value: number;
@@ -11,72 +12,47 @@ export const AnimatedPrice: React.FC<AnimatedPriceProps> = ({
   value,
   className = '',
   isMasked = false,
-  isCritical = false
+  isCritical = false,
 }) => {
-  const [displayValue, setDisplayValue] = useState(value);
-  const prevValueRef = useRef(value);
-  const animRef = useRef<number | null>(null);
+  const safeVal = Math.max(0, Math.round(value || 0));
+
+  // High performance spring for smooth physics-based counting transition
+  const spring = useSpring(safeVal, {
+    stiffness: 75,
+    damping: 18,
+    mass: 0.6,
+  });
 
   useEffect(() => {
-    if (isMasked || isCritical) {
-      setDisplayValue(value);
-      prevValueRef.current = value;
-      return;
-    }
+    spring.set(safeVal);
+  }, [safeVal, spring]);
 
-    const startValue = prevValueRef.current;
-    const endValue = value;
-    prevValueRef.current = value;
-
-    if (startValue === endValue) return;
-
-    const startTime = performance.now();
-    const duration = 380; // ms
-
-    const step = (currentTime: number) => {
-      const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      // easeOutCubic curve for smooth decelerating rolling counter
-      const ease = 1 - Math.pow(1 - progress, 3);
-      const current = Math.round(startValue + (endValue - startValue) * ease);
-      setDisplayValue(current);
-
-      if (progress < 1) {
-        animRef.current = requestAnimationFrame(step);
-      } else {
-        setDisplayValue(endValue);
-      }
-    };
-
-    animRef.current = requestAnimationFrame(step);
-
-    return () => {
-      if (animRef.current) cancelAnimationFrame(animRef.current);
-    };
-  }, [value, isMasked, isCritical]);
+  const display = useTransform(spring, (current) => {
+    return Math.max(0, Math.round(current)).toLocaleString('en-IN');
+  });
 
   if (isMasked) {
     return (
-      <span className={`tabular-nums ${className}`}>
-        <span className="text-[0.85em] font-medium mr-0.5">₹</span>XX,XXX
+      <span className={`tabular-nums font-bold inline-flex items-baseline ${className}`}>
+        <span className="text-[0.9em] mr-0.5 select-none font-sans">₹</span>XX,XXX
       </span>
     );
   }
 
   if (isCritical) {
     return (
-      <span className={`tabular-nums ${className}`}>
-        <span className="text-[0.85em] font-medium mr-0.5">₹</span>0 (Locked)
+      <span className={`tabular-nums font-bold inline-flex items-baseline text-rose-600 ${className}`}>
+        <span className="text-[0.9em] mr-0.5 select-none font-sans">₹</span>0 (Locked)
       </span>
     );
   }
 
   return (
-    <span className={`tabular-nums ${className}`}>
-      <span className="text-[0.85em] font-medium mr-0.5">₹</span>
-      {displayValue.toLocaleString('en-IN')}
+    <span className={`tabular-nums font-bold inline-flex items-baseline leading-none ${className}`}>
+      <span className="text-[0.88em] mr-0.5 select-none font-sans opacity-95">₹</span>
+      <motion.span className="inline-block tracking-tight">
+        {display}
+      </motion.span>
     </span>
   );
 };
-
-export default AnimatedPrice;

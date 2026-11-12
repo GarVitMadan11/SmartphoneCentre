@@ -24,15 +24,23 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 import { getIllustration } from './Illustrations';
 import { 
-  ScreenScratchesArt, 
   ScreenCrackedArt, 
   ScreenChippedArt, 
-  ScreenDeadSpotsArt, 
+  ScreenScratchesMajorArt, 
+  ScreenScratchesMinorArt,
+  ScreenSpotsHeavyArt,
+  ScreenSpotsMultiArt,
+  ScreenSpotsMinorArt,
   ScreenLinesArt, 
-  ScreenDiscolorArt, 
-  BodyScratchesArt, 
-  BodyDentsArt, 
+  ScreenShadingArt,
+  ScreenDiscolorMajorArt,
+  ScreenDiscolorMinorArt,
+  BodyScratchesMajorArt,
+  BodyScratchesMinorArt,
+  BodyDentsMajorArt,
+  BodyDentsMinorArt,
   BackPanelCrackedArt, 
+  BackPanelMissingArt,
   DeviceBentArt, 
   ScreenLooseArt 
 } from './DefectLineArt';
@@ -418,67 +426,34 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
 
 
-  // Dynamic Cycle Tier: Only ask for warranty if model is Tier 1 (Current/Recent Cycle <= 1 year old, releaseYear >= 2024)
-
+  // Inclusive Smart Warranty: Allow warranty verification on all modern models (including late Amazon/Flipkart festival sales),
+  // while smoothly bypassing obsolete legacy devices (> 5-6 years old like iPhone 8/7/6 or Galaxy S10).
   const isEligibleForWarranty = useMemo(() => {
-
     if (model.supportsWarrantyQuestion !== undefined) {
-
       return model.supportsWarrantyQuestion;
-
     }
-
     const resolvedYear = model.releaseYear ?? 2024;
-
-    // Matured models (< 2024) trade on secondary market rates with zero warranty penalty (matches Cashify)
-
-    if (resolvedYear < 2024) {
-
+    // Ancient legacy devices (> 5-6 years old) are fully matured and never sold new under brand warranty
+    if (resolvedYear < 2020) {
       return false;
-
     }
-
     const nm = model.name.toLowerCase();
-
-    if (model.brandId === 'brand-apple' || nm.includes('iphone') || isApple) {
-
-      if (
-
-        nm.includes('iphone 14') ||
-
-        nm.includes('iphone 13') ||
-
-        nm.includes('iphone 12') ||
-
-        nm.includes('iphone 11') ||
-
-        nm.includes('iphone x') ||
-
-        nm.includes('iphone xs') ||
-
-        nm.includes('iphone xr') ||
-
-        nm.includes('iphone 8') ||
-
-        nm.includes('iphone 7') ||
-
-        nm.includes('iphone 6') ||
-
-        nm.includes('iphone se')
-
-      ) {
-
-        return false;
-
-      }
-
-      return true;
-
+    if (
+      nm.includes('iphone 8') ||
+      nm.includes('iphone 7') ||
+      nm.includes('iphone 6') ||
+      nm.includes('iphone 5') ||
+      nm.includes('iphone x') ||
+      nm.includes('iphone xs') ||
+      nm.includes('iphone xr') ||
+      nm.includes('galaxy s8') ||
+      nm.includes('galaxy s9') ||
+      nm.includes('galaxy s10')
+    ) {
+      return false;
     }
-
     return true;
-
-  }, [model, isApple]);
+  }, [model]);
 
 
 
@@ -851,51 +826,44 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
         if (!hasGlass) return false;
       }
       if (screenTriage.linesSpots) {
-        const hasSpot = selectedDefects.some(d => 
+        // User only needs to select the defects that actually apply to their device
+        const hasAnyDisplayDefect = selectedDefects.some(d => 
           d.id === 'defect-screen-spots-heavy' || 
           d.id === 'defect-screen-spots-multi' || 
-          d.id === 'defect-screen-spots-white-minor'
-        );
-        const hasLine = selectedDefects.some(d => 
+          d.id === 'defect-screen-spots-white-minor' ||
           d.id === 'defect-screen-lines' || 
-          d.id === 'defect-screen-shading'
-        );
-        const hasDiscolor = selectedDefects.some(d => 
+          d.id === 'defect-screen-shading' ||
           d.id === 'defect-screen-discolor-major' || 
           d.id === 'defect-screen-discolor-minor' ||
           d.id === 'defect-screen-burn'
         );
-        if (!hasSpot || !hasLine || !hasDiscolor) return false;
+        if (!hasAnyDisplayDefect) return false;
       }
       return true;
     }
 
     if (step === 3) {
       if (bodyTriage.scratchesDents) {
-        const hasScratch = selectedDefects.some(d => 
+        const hasAnyScratchDent = selectedDefects.some(d => 
           d.id === 'defect-body-scratches-major' || 
           d.id === 'defect-body-scratches-minor' ||
-          d.id === 'defect-body-scuffs'
-        );
-        const hasDent = selectedDefects.some(d => 
+          d.id === 'defect-body-scuffs' ||
           d.id === 'defect-body-dents-major' || 
           d.id === 'defect-body-dents-minor' ||
           d.id === 'defect-body-dented'
         );
-        if (!hasScratch || !hasDent) return false;
+        if (!hasAnyScratchDent) return false;
       }
       if (bodyTriage.panelBent) {
-        const hasPanel = selectedDefects.some(d => 
+        const hasAnyPanelBent = selectedDefects.some(d => 
           d.id === 'defect-body-panel-broken' || 
           d.id === 'defect-body-panel-missing' ||
-          d.id === 'defect-body-backglass'
-        );
-        const hasBent = selectedDefects.some(d => 
+          d.id === 'defect-body-backglass' ||
           d.id === 'defect-body-bent' || 
           d.id === 'defect-body-screen-loose' ||
           d.id === 'defect-body-bent-and-loose'
         );
-        if (!hasPanel || !hasBent) return false;
+        if (!hasAnyPanelBent) return false;
       }
       return true;
     }
@@ -3912,8 +3880,8 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                       </div>
                       <p className="text-xs text-slate-700 mb-3.5">Does your screen have scratches, cracks, lines or spots? (Skip if perfect / flawless)</p>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                        {/* Card 1: Front Glass (Line Art Phone with Scratches/Crack) */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {/* Card 1: Front Glass (Cashify Vertical Spotlight Card) */}
                         <div
                           role="checkbox"
                           tabIndex={0}
@@ -3934,27 +3902,40 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                               return next;
                             });
                           }}
-                          className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all duration-200 flex items-center gap-3.5 ${
+                          className={`group relative rounded-2xl border-2 cursor-pointer transition-all duration-200 flex flex-col justify-between overflow-hidden bg-white hover:shadow-md ${
                             screenTriage.physical 
-                              ? 'border-indigo-600 bg-indigo-50/20 shadow-xs ring-1 ring-indigo-500/30' 
-                              : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/70'
+                              ? 'border-indigo-600 ring-2 ring-indigo-500/30 shadow-sm' 
+                              : 'border-slate-200/90 hover:border-slate-300'
                           }`}
                         >
-                          <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center flex-shrink-0 shadow-2xs">
-                            <ScreenCrackedArt className="w-10 h-10" />
+                          <div className="absolute top-3 right-3 z-10">
+                            <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
+                              screenTriage.physical ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-slate-300 bg-white/90 group-hover:border-slate-400'
+                            }`}>
+                              {screenTriage.physical && <Check className="w-4 h-4 stroke-[3]" />}
+                            </div>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-bold text-sm text-slate-900">Broken or Scratched Glass</h4>
-                            <p className="text-[11px] text-slate-600 mt-0.5">Scratches, chipped corners, cracked or broken front glass</p>
+
+                          <div className="w-full h-40 sm:h-44 bg-white flex items-center justify-center p-4">
+                            <img 
+                              src="/images/defects/screen_broken_scratch.png" 
+                              alt="Broken or scratched screen" 
+                              className="h-28 sm:h-32 w-auto object-contain transition-transform duration-300 group-hover:scale-105" 
+                              loading="lazy"
+                            />
                           </div>
-                          <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 ${
-                            screenTriage.physical ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-slate-300 bg-white'
+
+                          <div className={`p-3.5 border-t text-center transition-colors ${
+                            screenTriage.physical 
+                              ? 'bg-indigo-50/70 border-indigo-200/80 text-indigo-950' 
+                              : 'bg-slate-50/80 border-slate-100 text-slate-800'
                           }`}>
-                            {screenTriage.physical && <Check className="w-3 h-3 stroke-[3]" />}
+                            <h4 className="font-bold text-xs sm:text-sm leading-snug">Broken / scratch on device screen</h4>
+                            <p className="text-[11px] text-slate-500 mt-0.5">Scratches, chipped edges, cracked front glass</p>
                           </div>
                         </div>
 
-                        {/* Card 2: Display Panel (Line Art Phone with Laser Line & Dead Spot) */}
+                        {/* Card 2: Display Panel (Cashify Vertical Spotlight Card) */}
                         <div
                           role="checkbox"
                           tabIndex={0}
@@ -3977,23 +3958,36 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                               return next;
                             });
                           }}
-                          className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all duration-200 flex items-center gap-3.5 ${
+                          className={`group relative rounded-2xl border-2 cursor-pointer transition-all duration-200 flex flex-col justify-between overflow-hidden bg-white hover:shadow-md ${
                             screenTriage.linesSpots 
-                              ? 'border-indigo-600 bg-indigo-50/20 shadow-xs ring-1 ring-indigo-500/30' 
-                              : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/70'
+                              ? 'border-indigo-600 ring-2 ring-indigo-500/30 shadow-sm' 
+                              : 'border-slate-200/90 hover:border-slate-300'
                           }`}
                         >
-                          <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center flex-shrink-0 shadow-2xs">
-                            <ScreenLinesArt className="w-10 h-10" />
+                          <div className="absolute top-3 right-3 z-10">
+                            <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
+                              screenTriage.linesSpots ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-slate-300 bg-white/90 group-hover:border-slate-400'
+                            }`}>
+                              {screenTriage.linesSpots && <Check className="w-4 h-4 stroke-[3]" />}
+                            </div>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-bold text-sm text-slate-900">Lines, Spots or Color Issues</h4>
-                            <p className="text-[11px] text-slate-600 mt-0.5">Colored lines, black ink spots, yellow shade or screen burn</p>
+
+                          <div className="w-full h-40 sm:h-44 bg-white flex items-center justify-center p-4">
+                            <img 
+                              src="/images/defects/screen_dead_spots_lines.png" 
+                              alt="Dead spots, lines or discoloration" 
+                              className="h-28 sm:h-32 w-auto object-contain transition-transform duration-300 group-hover:scale-105" 
+                              loading="lazy"
+                            />
                           </div>
-                          <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 ${
-                            screenTriage.linesSpots ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-slate-300 bg-white'
+
+                          <div className={`p-3.5 border-t text-center transition-colors ${
+                            screenTriage.linesSpots 
+                              ? 'bg-indigo-50/70 border-indigo-200/80 text-indigo-950' 
+                              : 'bg-slate-50/80 border-slate-100 text-slate-800'
                           }`}>
-                            {screenTriage.linesSpots && <Check className="w-3 h-3 stroke-[3]" />}
+                            <h4 className="font-bold text-xs sm:text-sm leading-snug">Dead Spot / Visible line and Discoloration on screen</h4>
+                            <p className="text-[11px] text-slate-500 mt-0.5">Vertical colored lines, ink bleed, screen burn-in</p>
                           </div>
                         </div>
                       </div>
@@ -4027,8 +4021,8 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                           {[
                             { id: 'defect-screen-cracked', label: 'Screen cracked / glass broken', Art: ScreenCrackedArt },
                             { id: 'defect-screen-chipped', label: 'Chipped on corner or edge', Art: ScreenChippedArt },
-                            { id: 'defect-screen-scratches-major', label: 'More than 2 scratches on screen', Art: ScreenScratchesArt },
-                            { id: 'defect-screen-scratches-minor', label: '1–2 minor scratches on screen', Art: ScreenScratchesArt },
+                            { id: 'defect-screen-scratches-major', label: 'More than 2 scratches on screen', Art: ScreenScratchesMajorArt },
+                            { id: 'defect-screen-scratches-minor', label: '1–2 minor scratches on screen', Art: ScreenScratchesMinorArt },
                           ].map(opt => {
                             const isChosen = selectedDefects.some(d => d.id === opt.id);
                             const ArtComponent = opt.Art;
@@ -4050,20 +4044,20 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                                   };
                                   setSelectedDefects(prev => [...prev.filter(d => !physicalIds.includes(d.id)), rule]);
                                 }}
-                                className={`p-3 rounded-xl border-2 cursor-pointer transition-all duration-150 flex items-center gap-3 ${
+                                className={`p-4 rounded-2xl border-2 cursor-pointer transition-all duration-150 flex items-center gap-4 ${
                                   isChosen 
-                                    ? 'border-indigo-600 bg-white shadow-xs ring-1 ring-indigo-500/20' 
-                                    : 'border-slate-200 bg-white hover:border-slate-300'
+                                    ? 'border-indigo-600 bg-white shadow-sm ring-1 ring-indigo-500/25' 
+                                    : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-xs'
                                 }`}
                               >
-                                <div className="w-10 h-10 rounded-lg bg-slate-50 border border-slate-200/80 flex items-center justify-center flex-shrink-0">
-                                  <ArtComponent className="w-8 h-8" />
+                                <div className="w-16 h-20 sm:w-20 sm:h-24 rounded-xl bg-slate-50/70 border border-slate-200/80 flex items-center justify-center flex-shrink-0 p-1">
+                                  <ArtComponent className="w-14 h-18 sm:w-16 sm:h-20" />
                                 </div>
-                                <div className="font-bold text-xs text-slate-900 flex-1">{opt.label}</div>
-                                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                                <div className="font-bold text-xs sm:text-sm text-slate-900 flex-1 leading-snug">{opt.label}</div>
+                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
                                   isChosen ? 'border-indigo-600 bg-indigo-600' : 'border-slate-300'
                                 }`}>
-                                  {isChosen && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                                  {isChosen && <div className="w-2 h-2 rounded-full bg-white" />}
                                 </div>
                               </div>
                             );
@@ -4082,7 +4076,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                               <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
                               <span>1. Dead Pixels / Spots on Screen</span>
                             </h4>
-                            <span className="text-[10px] font-bold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-full">Required</span>
+                            <span className="text-[10px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">Optional</span>
                           </div>
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                             {[
@@ -4110,18 +4104,18 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                                     };
                                     setSelectedDefects(prev => [...prev.filter(d => !spotIds.includes(d.id)), rule]);
                                   }}
-                                  className={`p-2.5 rounded-xl border-2 cursor-pointer transition-all duration-150 flex items-center gap-2.5 ${
+                                  className={`p-3 sm:p-3.5 rounded-2xl border-2 cursor-pointer transition-all duration-150 flex items-center gap-3.5 ${
                                     isChosen ? 'border-indigo-600 bg-white shadow-xs font-semibold' : 'border-slate-200 bg-white hover:border-slate-300'
                                   }`}
                                 >
-                                  <div className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-200/80 flex items-center justify-center flex-shrink-0">
-                                    <ArtComponent className="w-6 h-6" />
+                                  <div className="w-14 h-16 sm:w-16 sm:h-20 rounded-xl bg-slate-50/70 border border-slate-200/80 flex items-center justify-center flex-shrink-0 p-1">
+                                    <ArtComponent className="w-12 h-14 sm:w-14 sm:h-16" />
                                   </div>
-                                  <div className="text-xs text-slate-900 flex-1">{opt.label}</div>
-                                  <div className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                                  <div className="text-xs sm:text-sm text-slate-900 flex-1 leading-snug">{opt.label}</div>
+                                  <div className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
                                     isChosen ? 'border-indigo-600 bg-indigo-600' : 'border-slate-300'
                                   }`}>
-                                    {isChosen && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                                    {isChosen && <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-white" />}
                                   </div>
                                 </div>
                               );
@@ -4136,7 +4130,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                               <Activity className="w-3.5 h-3.5 text-indigo-600" />
                               <span>2. Visible Lines on Screen</span>
                             </h4>
-                            <span className="text-[10px] font-bold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-full">Required</span>
+                            <span className="text-[10px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">Optional</span>
                           </div>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             {[
@@ -4163,18 +4157,18 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                                     };
                                     setSelectedDefects(prev => [...prev.filter(d => !lineIds.includes(d.id)), rule]);
                                   }}
-                                  className={`p-2.5 rounded-xl border-2 cursor-pointer transition-all duration-150 flex items-center gap-2.5 ${
+                                  className={`p-3 sm:p-3.5 rounded-2xl border-2 cursor-pointer transition-all duration-150 flex items-center gap-3.5 ${
                                     isChosen ? 'border-indigo-600 bg-white shadow-xs font-semibold' : 'border-slate-200 bg-white hover:border-slate-300'
                                   }`}
                                 >
-                                  <div className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-200/80 flex items-center justify-center flex-shrink-0">
-                                    <ArtComponent className="w-6 h-6" />
+                                  <div className="w-14 h-16 sm:w-16 sm:h-20 rounded-xl bg-slate-50/70 border border-slate-200/80 flex items-center justify-center flex-shrink-0 p-1">
+                                    <ArtComponent className="w-12 h-14 sm:w-14 sm:h-16" />
                                   </div>
-                                  <div className="text-xs text-slate-900 flex-1">{opt.label}</div>
-                                  <div className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                                  <div className="text-xs sm:text-sm text-slate-900 flex-1 leading-snug">{opt.label}</div>
+                                  <div className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
                                     isChosen ? 'border-indigo-600 bg-indigo-600' : 'border-slate-300'
                                   }`}>
-                                    {isChosen && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                                    {isChosen && <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-white" />}
                                   </div>
                                 </div>
                               );
@@ -4189,7 +4183,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                               <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
                               <span>3. Discoloration on Screen</span>
                             </h4>
-                            <span className="text-[10px] font-bold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-full">Required</span>
+                            <span className="text-[10px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">Optional</span>
                           </div>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             {[
@@ -4216,18 +4210,18 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                                     };
                                     setSelectedDefects(prev => [...prev.filter(d => !discolorIds.includes(d.id)), rule]);
                                   }}
-                                  className={`p-2.5 rounded-xl border-2 cursor-pointer transition-all duration-150 flex items-center gap-2.5 ${
+                                  className={`p-3 sm:p-3.5 rounded-2xl border-2 cursor-pointer transition-all duration-150 flex items-center gap-3.5 ${
                                     isChosen ? 'border-indigo-600 bg-white shadow-xs font-semibold' : 'border-slate-200 bg-white hover:border-slate-300'
                                   }`}
                                 >
-                                  <div className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-200/80 flex items-center justify-center flex-shrink-0">
-                                    <ArtComponent className="w-6 h-6" />
+                                  <div className="w-14 h-16 sm:w-16 sm:h-20 rounded-xl bg-slate-50/70 border border-slate-200/80 flex items-center justify-center flex-shrink-0 p-1">
+                                    <ArtComponent className="w-12 h-14 sm:w-14 sm:h-16" />
                                   </div>
-                                  <div className="text-xs text-slate-900 flex-1">{opt.label}</div>
-                                  <div className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                                  <div className="text-xs sm:text-sm text-slate-900 flex-1 leading-snug">{opt.label}</div>
+                                  <div className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
                                     isChosen ? 'border-indigo-600 bg-indigo-600' : 'border-slate-300'
                                   }`}>
-                                    {isChosen && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                                    {isChosen && <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-white" />}
                                   </div>
                                 </div>
                               );
@@ -4267,8 +4261,8 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                       </div>
                       <p className="text-xs text-slate-700 mb-3.5">Does your phone body have scratches, dents, bent frame or broken back panel? (Skip if perfect)</p>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                        {/* Card 1: Scratches & Dents on Body */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {/* Card 1: Scratches & Dents on Body (Cashify Vertical Spotlight Card) */}
                         <div
                           role="checkbox"
                           tabIndex={0}
@@ -4289,27 +4283,40 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                               return next;
                             });
                           }}
-                          className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all duration-200 flex items-center gap-3.5 ${
+                          className={`group relative rounded-2xl border-2 cursor-pointer transition-all duration-200 flex flex-col justify-between overflow-hidden bg-white hover:shadow-md ${
                             bodyTriage.scratchesDents 
-                              ? 'border-amber-500 bg-amber-50/20 shadow-xs ring-1 ring-amber-500/30' 
-                              : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/70'
+                              ? 'border-amber-500 ring-2 ring-amber-500/30 shadow-sm' 
+                              : 'border-slate-200/90 hover:border-slate-300'
                           }`}
                         >
-                          <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center flex-shrink-0 shadow-2xs">
-                            <BodyDentsArt className="w-10 h-10" />
+                          <div className="absolute top-3 right-3 z-10">
+                            <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
+                              bodyTriage.scratchesDents ? 'border-amber-600 bg-amber-600 text-white' : 'border-slate-300 bg-white/90 group-hover:border-slate-400'
+                            }`}>
+                              {bodyTriage.scratchesDents && <Check className="w-4 h-4 stroke-[3]" />}
+                            </div>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-bold text-sm text-slate-900">Scratches or Dents on Body</h4>
-                            <p className="text-[11px] text-slate-600 mt-0.5">Scratches on sides, paint peel, corner dents or drop marks</p>
+
+                          <div className="w-full h-40 sm:h-44 bg-white flex items-center justify-center p-4">
+                            <img 
+                              src="/images/defects/body_scratch_dent.png" 
+                              alt="Scratch or dent on body" 
+                              className="h-28 sm:h-32 w-auto object-contain transition-transform duration-300 group-hover:scale-105" 
+                              loading="lazy"
+                            />
                           </div>
-                          <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 ${
-                            bodyTriage.scratchesDents ? 'border-amber-600 bg-amber-600 text-white' : 'border-slate-300 bg-white'
+
+                          <div className={`p-3.5 border-t text-center transition-colors ${
+                            bodyTriage.scratchesDents 
+                              ? 'bg-amber-50/70 border-amber-200/80 text-amber-950' 
+                              : 'bg-slate-50/80 border-slate-100 text-slate-800'
                           }`}>
-                            {bodyTriage.scratchesDents && <Check className="w-3 h-3 stroke-[3]" />}
+                            <h4 className="font-bold text-xs sm:text-sm leading-snug">Scratch / Dent on device body</h4>
+                            <p className="text-[11px] text-slate-500 mt-0.5">Scratches on sides, paint peel, corner dents or drop marks</p>
                           </div>
                         </div>
 
-                        {/* Card 2: Back Panel & Bent Frame */}
+                        {/* Card 2: Back Panel & Bent Frame (Cashify Vertical Spotlight Card) */}
                         <div
                           role="checkbox"
                           tabIndex={0}
@@ -4332,23 +4339,36 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                               return next;
                             });
                           }}
-                          className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all duration-200 flex items-center gap-3.5 ${
+                          className={`group relative rounded-2xl border-2 cursor-pointer transition-all duration-200 flex flex-col justify-between overflow-hidden bg-white hover:shadow-md ${
                             bodyTriage.panelBent 
-                              ? 'border-amber-500 bg-amber-50/20 shadow-xs ring-1 ring-amber-500/30' 
-                              : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/70'
+                              ? 'border-amber-500 ring-2 ring-amber-500/30 shadow-sm' 
+                              : 'border-slate-200/90 hover:border-slate-300'
                           }`}
                         >
-                          <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center flex-shrink-0 shadow-2xs">
-                            <BackPanelCrackedArt className="w-10 h-10" />
+                          <div className="absolute top-3 right-3 z-10">
+                            <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
+                              bodyTriage.panelBent ? 'border-amber-600 bg-amber-600 text-white' : 'border-slate-300 bg-white/90 group-hover:border-slate-400'
+                            }`}>
+                              {bodyTriage.panelBent && <Check className="w-4 h-4 stroke-[3]" />}
+                            </div>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-bold text-sm text-slate-900">Back Panel or Bent Phone</h4>
-                            <p className="text-[11px] text-slate-600 mt-0.5">Cracked back glass, curved/bent body or loose screen gap</p>
+
+                          <div className="w-full h-40 sm:h-44 bg-white flex items-center justify-center p-4">
+                            <img 
+                              src="/images/defects/body_panel_broken.png" 
+                              alt="Device panel missing or broken" 
+                              className="h-28 sm:h-32 w-auto object-contain transition-transform duration-300 group-hover:scale-105" 
+                              loading="lazy"
+                            />
                           </div>
-                          <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 ${
-                            bodyTriage.panelBent ? 'border-amber-600 bg-amber-600 text-white' : 'border-slate-300 bg-white'
+
+                          <div className={`p-3.5 border-t text-center transition-colors ${
+                            bodyTriage.panelBent 
+                              ? 'bg-amber-50/70 border-amber-200/80 text-amber-950' 
+                              : 'bg-slate-50/80 border-slate-100 text-slate-800'
                           }`}>
-                            {bodyTriage.panelBent && <Check className="w-3 h-3 stroke-[3]" />}
+                            <h4 className="font-bold text-xs sm:text-sm leading-snug">Device panel missing / broken</h4>
+                            <p className="text-[11px] text-slate-500 mt-0.5">Cracked rear back glass, curved/bent body or loose screen seam</p>
                           </div>
                         </div>
                       </div>
@@ -4377,7 +4397,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                               <Tag className="w-3.5 h-3.5 text-amber-600" />
                               <span>1. Scratches on Device Body</span>
                             </h4>
-                            <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">Required</span>
+                            <span className="text-[10px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">Optional</span>
                           </div>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             {[
@@ -4408,8 +4428,8 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                                     isChosen ? 'border-amber-600 bg-white shadow-xs font-semibold' : 'border-slate-200 bg-white hover:border-slate-300'
                                   }`}
                                 >
-                                  <div className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-200/80 flex items-center justify-center flex-shrink-0">
-                                    <ArtComponent className="w-6 h-6" />
+                                  <div className="w-14 h-16 sm:w-16 sm:h-20 rounded-xl bg-slate-50/70 border border-slate-200/80 flex items-center justify-center flex-shrink-0 p-1">
+                                    <ArtComponent className="w-12 h-14 sm:w-14 sm:h-16" />
                                   </div>
                                   <div className="text-xs text-slate-900 flex-1">{opt.label}</div>
                                   <div className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
@@ -4430,7 +4450,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                               <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
                               <span>2. Dents on Device Body</span>
                             </h4>
-                            <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">Required</span>
+                            <span className="text-[10px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">Optional</span>
                           </div>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             {[
@@ -4461,8 +4481,8 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                                     isChosen ? 'border-amber-600 bg-white shadow-xs font-semibold' : 'border-slate-200 bg-white hover:border-slate-300'
                                   }`}
                                 >
-                                  <div className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-200/80 flex items-center justify-center flex-shrink-0">
-                                    <ArtComponent className="w-6 h-6" />
+                                  <div className="w-14 h-16 sm:w-16 sm:h-20 rounded-xl bg-slate-50/70 border border-slate-200/80 flex items-center justify-center flex-shrink-0 p-1">
+                                    <ArtComponent className="w-12 h-14 sm:w-14 sm:h-16" />
                                   </div>
                                   <div className="text-xs text-slate-900 flex-1">{opt.label}</div>
                                   <div className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
@@ -4488,7 +4508,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                               <Smartphone className="w-3.5 h-3.5 text-amber-600" />
                               <span>1. Side / Back Panel Condition</span>
                             </h4>
-                            <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">Required</span>
+                            <span className="text-[10px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">Optional</span>
                           </div>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             {[
@@ -4519,8 +4539,8 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                                     isChosen ? 'border-amber-600 bg-white shadow-xs font-semibold' : 'border-slate-200 bg-white hover:border-slate-300'
                                   }`}
                                 >
-                                  <div className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-200/80 flex items-center justify-center flex-shrink-0">
-                                    <ArtComponent className="w-6 h-6" />
+                                  <div className="w-14 h-16 sm:w-16 sm:h-20 rounded-xl bg-slate-50/70 border border-slate-200/80 flex items-center justify-center flex-shrink-0 p-1">
+                                    <ArtComponent className="w-12 h-14 sm:w-14 sm:h-16" />
                                   </div>
                                   <div className="text-xs text-slate-900 flex-1">{opt.label}</div>
                                   <div className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
@@ -4541,7 +4561,7 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                               <Activity className="w-3.5 h-3.5 text-amber-600" />
                               <span>2. Device Bent / Screen Loose</span>
                             </h4>
-                            <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">Required</span>
+                            <span className="text-[10px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">Optional</span>
                           </div>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             {[
@@ -4572,8 +4592,8 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
                                     isChosen ? 'border-amber-600 bg-white shadow-xs font-semibold' : 'border-slate-200 bg-white hover:border-slate-300'
                                   }`}
                                 >
-                                  <div className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-200/80 flex items-center justify-center flex-shrink-0">
-                                    <ArtComponent className="w-6 h-6" />
+                                  <div className="w-14 h-16 sm:w-16 sm:h-20 rounded-xl bg-slate-50/70 border border-slate-200/80 flex items-center justify-center flex-shrink-0 p-1">
+                                    <ArtComponent className="w-12 h-14 sm:w-14 sm:h-16" />
                                   </div>
                                   <div className="text-xs text-slate-900 flex-1">{opt.label}</div>
                                   <div className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
@@ -4938,18 +4958,21 @@ export const DiagnosticWizard: React.FC<DiagnosticWizardProps> = ({
 
 
 
-                    <div className="p-4 rounded-xl border-2 border-emerald-500 bg-emerald-50 shadow-xs">
-
-                      <span className="text-xs font-medium text-slate-500 block mb-1">Estimated Valuation</span>
-
+                    <div className="p-4 rounded-xl border-2 border-emerald-500 bg-emerald-50 shadow-xs relative overflow-hidden">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs font-semibold text-slate-600 block">Estimated Valuation</span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-200 text-emerald-900">
+                          Guaranteed 7 Days
+                        </span>
+                      </div>
                       <AnimatedPrice
-
                         value={finalPayoutWithCoupon}
-
-                        className="font-bold text-2xl text-slate-900 block"
-
+                        className="font-black text-2xl sm:text-3xl text-emerald-700 block tracking-tight"
                       />
-
+                      <div className="mt-2 pt-2 border-t border-emerald-200/60 flex items-center justify-between text-[11px] text-emerald-900">
+                        <span>⚡ Direct UPI / Bank Transfer</span>
+                        <span className="font-bold">₹0 Pickup Fee</span>
+                      </div>
                     </div>
 
                   </div>

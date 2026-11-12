@@ -485,12 +485,30 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
     setIsSubmitting(false);
     setIsConfirmed(true);
 
+    // Multi-stage celebratory particle burst
     confetti({
-      particleCount: 150,
-      spread: 80,
+      particleCount: 120,
+      spread: 70,
       origin: { y: 0.6 },
-      colors: ['#3B82F6', '#60A5FA', '#93C5FD', '#1E3A8A', '#FAFAFA']
+      colors: ['#10B981', '#3B82F6', '#F59E0B', '#6366F1', '#EC4899']
     });
+
+    setTimeout(() => {
+      confetti({
+        particleCount: 80,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0 },
+        colors: ['#10B981', '#3B82F6', '#F59E0B']
+      });
+      confetti({
+        particleCount: 80,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1 },
+        colors: ['#10B981', '#3B82F6', '#F59E0B']
+      });
+    }, 250);
   };
 
   const handleNextStep = () => {
@@ -1136,20 +1154,37 @@ export const PickupScheduler: React.FC<PickupSchedulerProps> = ({
             </div>
           </motion.div>
         ) : (
-          /* Booking Success Screen with specific overview and defects summary */
+          /* Booking Success Screen with Holographic Guaranteed Seal & Details */
           <motion.div
             key="success-card"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="max-w-xl mx-auto bg-canvas-pure dark:bg-zinc-900 border border-ice-border dark:border-zinc-800 rounded-xl p-5 sm:p-8 text-center flex flex-col items-center justify-center relative overflow-hidden shadow-premium"
+            initial={{ opacity: 0, scale: 0.92, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            className="max-w-xl mx-auto bg-canvas-pure dark:bg-zinc-900 border border-ice-border dark:border-zinc-800 rounded-2xl p-5 sm:p-8 text-center flex flex-col items-center justify-center relative overflow-hidden shadow-2xl"
           >
-            <div className="absolute -right-12 -top-12 w-32 h-32 bg-emerald-500/10 rounded-sm opacity-40 -z-10" />
+            {/* Holographic Glowing Ambient Backing */}
+            <div className="absolute -top-24 -left-24 w-64 h-64 bg-gradient-to-tr from-emerald-500/20 via-blue-500/20 to-purple-500/20 rounded-full blur-3xl pointer-events-none -z-10 animate-pulse" />
 
-            <div className="w-16 h-16 bg-emerald-500/10 rounded-sm flex items-center justify-center text-emerald-400 mb-6 border border-emerald-500/20 animate-bounce">
-              <CheckCircle className="w-10 h-10 fill-emerald-500/10" />
-            </div>
+            {/* Official Holographic Guarantee Seal */}
+            <motion.div 
+              initial={{ scale: 0, rotate: -20 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ delay: 0.15, type: "spring", stiffness: 350, damping: 20 }}
+              className="relative w-20 h-20 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 p-[2px] shadow-lg shadow-emerald-500/30 mb-5"
+            >
+              <div className="w-full h-full rounded-full bg-slate-950 flex flex-col items-center justify-center text-white relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-[shimmer_2.5s_infinite]" />
+                <CheckCircle className="w-8 h-8 text-emerald-400 stroke-[2.5]" />
+                <span className="text-[8px] font-black uppercase tracking-widest text-emerald-300 mt-0.5">VERIFIED</span>
+              </div>
+            </motion.div>
 
-            <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Pickup Booking Confirmed</h2>
+            <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+              Pickup Booking Confirmed!
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-1 max-w-sm">
+              Your valuation has been locked and our certified doorstep technician will arrive within your designated time slot.
+            </p>
 
             {/* Receipt Details with declared defects summary & Side-by-side Phone Preview */}
             <div className="w-full my-6">

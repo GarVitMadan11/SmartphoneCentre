@@ -1,7 +1,86 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { ArrowRight, Smartphone, Award, ShieldCheck, Zap, ClipboardCheck, Calculator, Truck, Sparkles } from 'lucide-react';
 import { fetchModels, type ApiUser } from '../../utils/api';
 import { getMaxVariantPrice, type Model } from '../../data/mockDatabase';
+
+/* ─────────────────────────────────────────────
+   Apple-grade 3D Perspective Tilt Card with Specular Glare
+───────────────────────────────────────────── */
+const Tilt3DCard: React.FC<{
+  children: React.ReactNode;
+  ambientColor?: string;
+  className?: string;
+}> = ({ children, ambientColor = 'emerald', className = '' }) => {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+
+  // Buttery-smooth spring physics without jitter
+  const mouseXSpring = useSpring(x, { stiffness: 220, damping: 24, mass: 0.7 });
+  const mouseYSpring = useSpring(y, { stiffness: 220, damping: 24, mass: 0.7 });
+
+  const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ["9deg", "-9deg"]);
+  const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ["-9deg", "9deg"]);
+  const glareX = useTransform(mouseXSpring, [-0.5, 0.5], ["0%", "100%"]);
+  const glareOpacity = useTransform(mouseXSpring, [-0.5, 0, 0.5], [0.25, 0.05, 0.25]);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const xPct = (e.clientX - rect.left) / rect.width - 0.5;
+    const yPct = (e.clientY - rect.top) / rect.height - 0.5;
+    x.set(xPct);
+    y.set(yPct);
+  };
+
+  const handleMouseLeave = () => {
+    x.set(0);
+    y.set(0);
+  };
+
+  return (
+    <div
+      style={{ perspective: 1100 }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      className={`w-full sm:w-64 flex justify-center ${className}`}
+    >
+      <motion.div
+        ref={cardRef}
+        style={{
+          rotateX,
+          rotateY,
+          transformStyle: "preserve-3d",
+        }}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        transition={{ type: "spring", stiffness: 350, damping: 25 }}
+        className="w-full h-[290px] sm:h-[360px] bg-white/95 backdrop-blur-md border border-slate-200/90 rounded-2xl p-4 sm:p-6 shadow-md sm:shadow-xl hover:shadow-2xl transition-shadow duration-300 relative group overflow-hidden flex flex-col items-center justify-between text-center select-none cursor-pointer"
+      >
+        {/* Dynamic Specular Glare Layer */}
+        <motion.div
+          style={{
+            left: glareX,
+            opacity: glareOpacity,
+          }}
+          className="pointer-events-none absolute -inset-full w-[200%] h-[200%] bg-gradient-to-tr from-transparent via-white/40 to-transparent transform -rotate-45"
+        />
+
+        {/* Dynamic Ambient Halo behind Card */}
+        <div
+          className={`absolute -top-12 -right-12 w-40 h-40 ${
+            ambientColor === 'blue' ? 'bg-blue-500/10' : 'bg-emerald-500/10'
+          } rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform duration-500`}
+        />
+
+        <div style={{ transform: "translateZ(30px)", width: "100%", height: "100%" }} className="flex flex-col items-center justify-between">
+          {children}
+        </div>
+      </motion.div>
+    </div>
+  );
+};
 
 /* ─────────────────────────────────────────────
    2D Premium Device Composition Cards
@@ -54,22 +133,18 @@ const FloatingComposition: React.FC<{ currentUser?: ApiUser | null }> = () => {
 
       <div className="relative w-full max-w-2xl flex flex-col sm:flex-row items-center justify-center gap-6">
         
-        {/* ── CARD 1: iPhone 18 Pro Max ── */}
-        <div className="w-full sm:w-64 h-[280px] sm:h-[350px] bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-6 shadow-md sm:shadow-xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 relative group overflow-hidden flex flex-col items-center justify-between text-center">
-          <div className="absolute top-0 right-0 w-36 h-36 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none group-hover:bg-emerald-500/10 transition-all" />
-          
-          {/* Image - flush with dividing line below */}
+        {/* ── CARD 1: iPhone 18 Pro Max with 3D Tilt ── */}
+        <Tilt3DCard ambientColor="emerald">
           <div className="w-full h-32 sm:h-44 flex items-end justify-center relative z-10 mt-auto">
             <img
               src={iphone18Model?.imageUrl || "https://fdn2.gsmarena.com/vv/bigpic/apple-iphone18-pro-max.jpg"}
               alt="iPhone 18 Pro Max"
               referrerPolicy="no-referrer"
               style={{ mixBlendMode: 'multiply' }}
-              className="max-h-full max-w-full object-contain object-bottom block group-hover:scale-105 transition-transform duration-300"
+              className="max-h-full max-w-full object-contain object-bottom block group-hover:scale-108 transition-transform duration-300 drop-shadow-md"
             />
           </div>
 
-          {/* Model Name & Max Price */}
           <div className="w-full pt-4 border-t border-slate-100 space-y-1 relative z-10">
             <h4 className="text-lg font-black text-slate-900 font-sans tracking-tight">
               iPhone 18 Pro Max
@@ -78,24 +153,20 @@ const FloatingComposition: React.FC<{ currentUser?: ApiUser | null }> = () => {
               {formatPriceStr(iphone18MaxPrice, '₹1,69,950')}
             </div>
           </div>
-        </div>
+        </Tilt3DCard>
 
-        {/* ── CARD 2: Google Pixel 11 Fold ── */}
-        <div className="w-full sm:w-64 h-[280px] sm:h-[350px] bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-6 shadow-md sm:shadow-xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 relative group overflow-hidden flex flex-col items-center justify-between text-center">
-          <div className="absolute top-0 right-0 w-36 h-36 bg-blue-500/5 rounded-full blur-2xl pointer-events-none group-hover:bg-blue-500/10 transition-all" />
-          
-          {/* Image - flush with dividing line below */}
+        {/* ── CARD 2: Google Pixel 11 Fold with 3D Tilt ── */}
+        <Tilt3DCard ambientColor="blue">
           <div className="w-full h-32 sm:h-44 flex items-end justify-center relative z-10 mt-auto">
             <img
               src={pixelFoldModel?.imageUrl || "https://fdn2.gsmarena.com/vv/bigpic/google-pixel-11-pro-fold.jpg"}
               alt="Google Pixel 11 Fold"
               referrerPolicy="no-referrer"
               style={{ mixBlendMode: 'multiply' }}
-              className="max-h-full max-w-full object-contain object-bottom block group-hover:scale-105 transition-transform duration-300"
+              className="max-h-full max-w-full object-contain object-bottom block group-hover:scale-108 transition-transform duration-300 drop-shadow-md"
             />
           </div>
 
-          {/* Model Name & Max Price */}
           <div className="w-full pt-4 border-t border-slate-100 space-y-1 relative z-10">
             <h4 className="text-lg font-black text-slate-900 font-sans tracking-tight">
               Google Pixel 11 Fold
@@ -104,7 +175,7 @@ const FloatingComposition: React.FC<{ currentUser?: ApiUser | null }> = () => {
               {formatPriceStr(pixelFoldMaxPrice, '₹1,04,288')}
             </div>
           </div>
-        </div>
+        </Tilt3DCard>
 
       </div>
     </div>
@@ -124,27 +195,19 @@ interface StepProps {
 }
 
 const ProcessStep: React.FC<StepProps> = ({ number, title, description, icon, delay, badge }) => {
-  const [visible, setVisible] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) { setVisible(true); observer.disconnect(); } },
-      { threshold: 0.15 }
-    );
-    if (ref.current) observer.observe(ref.current);
-    return () => observer.disconnect();
-  }, []);
-
   return (
-    <div
-      ref={ref}
-      className="relative flex-1 bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs hover:shadow-md hover:border-cobalt/40 transition-all duration-300 flex flex-col justify-between group"
-      style={{
-        opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0)' : 'translateY(20px)',
-        transition: `opacity 0.5s ease ${delay}ms, transform 0.5s ease ${delay}ms`,
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-40px" }}
+      transition={{
+        type: "spring",
+        stiffness: 260,
+        damping: 24,
+        delay: delay / 1000,
       }}
+      whileHover={{ y: -4 }}
+      className="relative flex-1 bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs hover:shadow-lg hover:border-cobalt/40 transition-shadow duration-300 flex flex-col justify-between group select-none"
     >
       <div>
         {/* Top Header: Step Number & Icon */}
@@ -170,11 +233,11 @@ const ProcessStep: React.FC<StepProps> = ({ number, title, description, icon, de
 
       {badge && (
         <div className="mt-4 pt-3 border-t border-slate-100 flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
           <span className="text-[11px] font-semibold text-slate-500">{badge}</span>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 };
 

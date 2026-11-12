@@ -40,6 +40,9 @@ import { PilotFeedbackSection } from './components/client/PilotFeedbackSection';
 import { FeedbackModal } from './components/client/FeedbackModal';
 import { PILOT_MODE_ENABLED } from './config/pilotMode';
 import { FaqSection } from './components/client/FaqSection';
+import { NotFoundPage } from './components/common/NotFoundPage';
+import { MaintenancePage } from './components/common/MaintenancePage';
+import { ScrollProgressBar, FadeInOnScroll } from './components/common/ScrollProgressBar';
 import { safeLazy } from './utils/safeLazy';
 import { SECRET_ADMIN_PATH, DECOY_ADMIN_PATHS } from './constants/routes';
 
@@ -478,6 +481,18 @@ export default function App() {
     selectedModel !== null && selectedVariant !== null;
   const cleanPath = path.split('?')[0];
 
+  const isKnownRoute = useMemo(() => {
+    if (cleanPath === '/' || cleanPath === '/smartphones' || cleanPath === '/about' || cleanPath === '/contact' || cleanPath === '/tablets') return true;
+    if (cleanPath.startsWith('/login') || cleanPath.startsWith('/signup') || cleanPath.startsWith('/forgot-password') || cleanPath.startsWith('/reset-password') || cleanPath.startsWith('/verify-email') || cleanPath.startsWith('/profile') || cleanPath.startsWith('/technician')) return true;
+    if (matchModelFromPath(cleanPath, MODELS, BRANDS)) return true;
+    return false;
+  }, [cleanPath, MODELS, BRANDS]);
+
+  // ── Maintenance Mode Check ──────────────────────────────────────────────────
+  if (import.meta.env.VITE_MAINTENANCE_MODE === 'true') {
+    return <MaintenancePage />;
+  }
+
   if (import.meta.env.VITE_COMING_SOON === 'true') return <ComingSoon />;
 
   // ── Dedicated Full-Screen Immersive Workspace for Admin Operations ───────────
@@ -532,6 +547,9 @@ export default function App() {
         currentUser={currentUser}
         onLogout={handleLogout}
       />
+
+      {/* Top-to-Bottom Scroll Progress Glow Bar */}
+      <ScrollProgressBar />
 
       {/* ── Main Layout ── */}
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 pb-20 sm:py-8 flex flex-col">
@@ -708,14 +726,14 @@ export default function App() {
                   )}
 
                   {/* Functional Hero Search Bar */}
-                  <div ref={heroSearchRef} className="w-full max-w-lg relative mb-8">
-                    <div className="bg-canvas-pure p-2 rounded-lg border border-ice-border flex items-center gap-2 shadow-sm">
+                  <div ref={heroSearchRef} className="w-full max-w-lg relative mb-4">
+                    <div className="bg-canvas-pure p-2 rounded-xl border-2 border-slate-200/90 hover:border-cobalt/60 focus-within:border-cobalt flex items-center gap-2 shadow-sm transition-all">
                       <div className="flex-1 relative">
                         <Search className="w-5 h-5 text-ink-muted absolute left-3 top-3.5" />
                         <input
                           id="hero-search"
                           type="text"
-                          placeholder="Search model (e.g. iPhone 15 Pro, Galaxy S24)..."
+                          placeholder="Search phone or tablet (e.g. iPhone 15 Pro, S24 Ultra)..."
                           value={heroSearch}
                           onChange={(e) => { setHeroSearch(e.target.value); setHeroSearchOpen(true); }}
                           onFocus={() => setHeroSearchOpen(true)}
@@ -727,10 +745,20 @@ export default function App() {
                               navigate(heroSearch.trim() ? `/smartphones?q=${encodeURIComponent(heroSearch.trim())}` : '/smartphones');
                             }
                           }}
-                          className="w-full pl-10 pr-4 py-3 text-sm bg-transparent text-ink-navy placeholder:text-ink-muted focus:outline-none"
+                          className="w-full pl-10 pr-4 py-3 text-sm bg-transparent text-ink-navy placeholder:text-slate-400 focus:outline-none"
                           aria-label="Search for a smartphone model"
                           autoComplete="off"
                         />
+                        {heroSearch.trim().length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => { setHeroSearch(''); setHeroSearchOpen(false); }}
+                            className="absolute right-2 top-3 w-6 h-6 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center text-xs"
+                            aria-label="Clear search"
+                          >
+                            ✕
+                          </button>
+                        )}
                       </div>
                       <button
                         onClick={() => {
@@ -738,52 +766,89 @@ export default function App() {
                           handleReset();
                           navigate(heroSearch.trim() ? `/smartphones?q=${encodeURIComponent(heroSearch.trim())}` : '/smartphones');
                         }}
-                        className="bg-cobalt hover:bg-cobalt-hover text-white px-5 py-3 rounded-sm text-sm font-semibold transition-all shadow-sm flex-shrink-0"
+                        className="bg-cobalt hover:bg-cobalt-hover text-white px-5 py-3 rounded-lg text-sm font-bold transition-all shadow-sm flex-shrink-0 active:scale-98"
                       >
-                        Find My Device
+                        Find Value
                       </button>
+                    </div>
+
+                    {/* Popular Quick Search Pills (Rec 1 & 2) */}
+                    <div className="flex items-center gap-1.5 mt-2.5 overflow-x-auto no-scrollbar py-0.5 select-none">
+                      <span className="text-[11px] font-bold text-slate-500 flex-shrink-0 uppercase tracking-wider mr-1">Trending:</span>
+                      {['iPhone 15 Pro', 'iPhone 14', 'iPhone 13', 'Galaxy S24', 'OnePlus 12'].map((tag) => (
+                        <button
+                          key={tag}
+                          type="button"
+                          onClick={() => {
+                            setHeroSearch(tag);
+                            setHeroSearchOpen(true);
+                            const matched = MODELS.find((m: Model) => m.name.toLowerCase() === tag.toLowerCase() || m.name.toLowerCase().includes(tag.toLowerCase()));
+                            if (matched) {
+                              handleHeroSearchSelect(matched);
+                            } else {
+                              handleReset();
+                              navigate(`/smartphones?q=${encodeURIComponent(tag)}`);
+                            }
+                          }}
+                          className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-slate-100/90 hover:bg-cobalt-light hover:text-cobalt text-slate-700 transition-colors border border-slate-200/80 flex-shrink-0 cursor-pointer active:scale-95"
+                        >
+                          {tag}
+                        </button>
+                      ))}
                     </div>
 
                     {/* Live search results dropdown */}
                     {heroSearchOpen && heroSearchResults.length > 0 && (
-                      <div className="absolute top-full left-0 right-0 mt-1 bg-canvas-pure border border-ice-border rounded-sm shadow-premium z-30 overflow-hidden animate-fadeIn">
+                      <div className="absolute top-full left-0 right-0 mt-1.5 bg-canvas-pure border border-ice-border rounded-xl shadow-2xl z-30 overflow-hidden animate-fadeIn max-h-80 overflow-y-auto">
                         {heroSearchResults.map((model: Model) => {
                           const brand = BRANDS.find((b: Brand) => b.id === model.brandId);
                           return (
                             <button
                               key={model.id}
                               onClick={() => handleHeroSearchSelect(model)}
-                              className="w-full flex items-center gap-3 px-4 py-3 hover:bg-cobalt-light/30 transition-colors text-left border-b border-ice-border/40 last:border-0 group"
+                              className="w-full flex items-center gap-3 px-4 py-3 hover:bg-cobalt-light/40 transition-colors text-left border-b border-ice-border/40 last:border-0 group cursor-pointer"
                             >
-                              <div className="w-8 h-8 rounded-sm bg-ice-gray border border-ice-border flex items-center justify-center flex-shrink-0 overflow-hidden">
+                              <div className="w-9 h-9 rounded-lg bg-ice-gray border border-ice-border flex items-center justify-center flex-shrink-0 overflow-hidden">
                                 {brand ? <BrandLogo logo={brand.logo} isActive={false} /> : <span className="text-[10px] font-bold text-cobalt">??</span>}
                               </div>
                               <div className="flex-1 min-w-0">
-                                <span className="block text-sm font-semibold text-ink-navy group-hover:text-cobalt transition-colors truncate">{model.name}</span>
-                                <span className="block text-[10px] text-ink-muted font-sans">{brand?.name} · Up to ₹{getMaxVariantPrice(model).toLocaleString('en-IN')}</span>
+                                <span className="block text-sm font-bold text-ink-navy group-hover:text-cobalt transition-colors truncate">{model.name}</span>
+                                <span className="block text-[11px] text-slate-500 font-sans">{brand?.name} · Up to <strong className="text-emerald-700 font-bold">₹{getMaxVariantPrice(model).toLocaleString('en-IN')}</strong></span>
                               </div>
-                              <svg className="w-4 h-4 text-ink-muted group-hover:text-cobalt transition-colors flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                              </svg>
+                              <span className="text-xs font-semibold text-cobalt bg-cobalt-light/70 px-2 py-1 rounded group-hover:bg-cobalt group-hover:text-white transition-all">Get Quote →</span>
                             </button>
                           );
                         })}
-                        <div className="px-4 py-2 text-[10px] text-ink-muted font-sans border-t border-ice-border/40 bg-canvas-white">
-                          Showing {heroSearchResults.length} result{heroSearchResults.length !== 1 ? 's' : ''} — or{' '}
-                          <button onClick={() => { setHeroSearchOpen(false); handleReset(); navigate('/smartphones'); }} className="text-cobalt underline">
-                            browse all models
+                        <div className="px-4 py-2.5 text-[11px] text-slate-600 font-sans border-t border-ice-border/40 bg-slate-50/80 flex items-center justify-between">
+                          <span>Showing top {heroSearchResults.length} matches</span>
+                          <button onClick={() => { setHeroSearchOpen(false); handleReset(); navigate('/smartphones'); }} className="text-cobalt font-bold underline cursor-pointer">
+                            Browse all models
                           </button>
                         </div>
                       </div>
                     )}
                     {heroSearchOpen && heroSearch.trim().length >= 2 && heroSearchResults.length === 0 && (
-                      <div className="absolute top-full left-0 right-0 mt-1 bg-canvas-pure border border-ice-border rounded-sm shadow-premium z-30 px-4 py-4 text-sm text-ink-muted text-center animate-fadeIn">
-                        No models found for <span className="font-sans text-cobalt">"{heroSearch}"</span>.
-                        <button onClick={() => { setHeroSearchOpen(false); handleReset(); navigate('/smartphones'); }} className="block text-xs text-cobalt mt-1 underline mx-auto">
-                          Browse all models instead →
+                      <div className="absolute top-full left-0 right-0 mt-1.5 bg-canvas-pure border border-ice-border rounded-xl shadow-2xl z-30 px-4 py-5 text-sm text-ink-muted text-center animate-fadeIn">
+                        No models found for <span className="font-bold text-cobalt">"{heroSearch}"</span>.
+                        <button onClick={() => { setHeroSearchOpen(false); handleReset(); navigate('/smartphones'); }} className="block text-xs font-bold text-cobalt mt-2 underline mx-auto cursor-pointer">
+                          Browse all smartphone &amp; tablet models →
                         </button>
                       </div>
                     )}
+                  </div>
+
+                  {/* Live Real-time Trust Marquee Strip (Rec 6, 7, 20) */}
+                  <div className="w-full max-w-lg mb-6 py-2 px-3 rounded-lg bg-emerald-50/80 border border-emerald-200/90 flex items-center justify-between text-[11px] font-medium text-emerald-950">
+                    <div className="flex items-center gap-1.5 font-bold">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                      <span>Verified Doorstep Service</span>
+                    </div>
+                    <span className="text-emerald-700/80 font-mono text-[10px] hidden sm:inline">•</span>
+                    <span className="font-semibold text-emerald-900 hidden sm:inline">15,000+ Phones Evaluated</span>
+                    <span className="text-emerald-700/80 font-mono text-[10px] hidden sm:inline">•</span>
+                    <div className="flex items-center gap-1 font-bold text-emerald-800">
+                      <span>★ 4.9/5 Rating</span>
+                    </div>
                   </div>
 
                   {/* Trust Badge Indicators */}
@@ -821,79 +886,93 @@ export default function App() {
                 </div>
               </div>
 
-              {/* 1.5 Premium 3D Device Category Showcase */}
-              <DeviceCategoryShowcase
-                models={MODELS}
-                onSelectModel={(modelId) => {
-                  handleReset();
-                  handleDirectSelectModel(modelId);
-                }}
-                onSelectCategory={(cat) => {
-                  handleReset();
-                  navigate(cat === 'tablets' ? '/tablets' : '/smartphones');
-                }}
-              />
+              {/* 1.5 Premium 3D Device Category Showcase with Scroll Reveal */}
+              <FadeInOnScroll yOffset={28}>
+                <DeviceCategoryShowcase
+                  models={MODELS}
+                  onSelectModel={(modelId) => {
+                    handleReset();
+                    handleDirectSelectModel(modelId);
+                  }}
+                  onSelectCategory={(cat) => {
+                    handleReset();
+                    navigate(cat === 'tablets' ? '/tablets' : '/smartphones');
+                  }}
+                />
+              </FadeInOnScroll>
 
               {/* Sell Your Device Section with Most Valued Devices Bento above the Process segment */}
-              <SellYourDevice
-                currentUser={currentUser}
-                onGetValuation={() => { handleReset(); navigate('/smartphones'); }}
-              >
-                {/* Featured Device Showcase (3-column bento with sliding phones) */}
-                <FeaturedDevicesBento
-                  onSelectModel={handleDirectSelectModel}
-                  onNavigate={(dest: string) => { handleReset(); navigate(dest); }}
-                />
-              </SellYourDevice>
+              <FadeInOnScroll yOffset={32}>
+                <SellYourDevice
+                  currentUser={currentUser}
+                  onGetValuation={() => { handleReset(); navigate('/smartphones'); }}
+                >
+                  {/* Featured Device Showcase (3-column bento with sliding phones) */}
+                  <FeaturedDevicesBento
+                    onSelectModel={handleDirectSelectModel}
+                    onNavigate={(dest: string) => { handleReset(); navigate(dest); }}
+                  />
+                </SellYourDevice>
+              </FadeInOnScroll>
 
-              {/* FAQ Section */}
-              <FaqSection />
+              {/* FAQ Section with Smooth Scroll Entrance */}
+              <FadeInOnScroll yOffset={28}>
+                <FaqSection />
+              </FadeInOnScroll>
             </div>
           )}
 
-          {/* ── Diagnostic Wizard ── */}
-          {isWorkflow && activeStage === 'diagnose' && selectedModel && selectedVariant && (
-            <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]" role="status"><div className="w-8 h-8 border-2 border-cobalt border-t-transparent rounded-full animate-spin" /></div>}>
-              <DiagnosticWizard
-                model={selectedModel}
-                variant={selectedVariant}
-                onBack={() => setActiveStage('select')}
-                onComplete={handleDiagnosticsComplete}
-                selectedDefects={selectedDefects}
-                setSelectedDefects={setSelectedDefects}
-                step={wizardStep}
-                setStep={setWizardStep}
-                currentUser={currentUser}
-                onLoginSuccess={(user: ApiUser) => setCurrentUser(user)}
-                onNavigate={navigate}
-              />
-            </Suspense>
-          )}
+          {/* ── Custom 404 Not Found Page for Unmatched Routes ── */}
+          {!isKnownRoute ? (
+            <NotFoundPage
+              onNavigate={(dest) => { handleReset(); navigate(dest); }}
+              models={MODELS}
+            />
+          ) : (
+            <>
+              {/* ── Diagnostic Wizard ── */}
+              {isWorkflow && activeStage === 'diagnose' && selectedModel && selectedVariant && (
+                <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]" role="status"><div className="w-8 h-8 border-2 border-cobalt border-t-transparent rounded-full animate-spin" /></div>}>
+                  <DiagnosticWizard
+                    model={selectedModel}
+                    variant={selectedVariant}
+                    onBack={() => setActiveStage('select')}
+                    onComplete={handleDiagnosticsComplete}
+                    selectedDefects={selectedDefects}
+                    setSelectedDefects={setSelectedDefects}
+                    step={wizardStep}
+                    setStep={setWizardStep}
+                    currentUser={currentUser}
+                    onLoginSuccess={(user: ApiUser) => setCurrentUser(user)}
+                    onNavigate={navigate}
+                  />
+                </Suspense>
+              )}
 
-          {/* ── Pickup Scheduler ── */}
-          {isWorkflow && activeStage === 'schedule' && selectedModel && selectedVariant && (
-            <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]" role="status"><div className="w-8 h-8 border-2 border-cobalt border-t-transparent rounded-full animate-spin" /></div>}>
-              <PickupScheduler
-                finalPrice={finalPrice}
-                appliedCoupon={appliedCoupon}
-                couponBonus={couponBonus}
-                onBack={() => setActiveStage('diagnose')}
-                onSuccess={() => { handleReset(); navigate('/'); }}
-                selectedDefects={selectedDefects}
-                selectedModel={selectedModel}
-                selectedVariant={selectedVariant}
-                onEditDevice={() => setActiveStage('select')}
-                currentUser={currentUser}
-                onNavigate={navigate}
-              />
-            </Suspense>
-          )}
+              {/* ── Pickup Scheduler ── */}
+              {isWorkflow && activeStage === 'schedule' && selectedModel && selectedVariant && (
+                <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]" role="status"><div className="w-8 h-8 border-2 border-cobalt border-t-transparent rounded-full animate-spin" /></div>}>
+                  <PickupScheduler
+                    finalPrice={finalPrice}
+                    appliedCoupon={appliedCoupon}
+                    couponBonus={couponBonus}
+                    onBack={() => setActiveStage('diagnose')}
+                    onSuccess={() => { handleReset(); navigate('/'); }}
+                    selectedDefects={selectedDefects}
+                    selectedModel={selectedModel}
+                    selectedVariant={selectedVariant}
+                    onEditDevice={() => setActiveStage('select')}
+                    currentUser={currentUser}
+                    onNavigate={navigate}
+                  />
+                </Suspense>
+              )}
 
-
-
-          {/* ── Pilot Mode Feedback ── */}
-          {PILOT_MODE_ENABLED && !isWorkflow && path === '/' && (
-            <PilotFeedbackSection currentUser={currentUser} onNavigate={navigate} />
+              {/* ── Pilot Mode Feedback ── */}
+              {PILOT_MODE_ENABLED && !isWorkflow && path === '/' && (
+                <PilotFeedbackSection currentUser={currentUser} onNavigate={navigate} />
+              )}
+            </>
           )}
 
         </section>
